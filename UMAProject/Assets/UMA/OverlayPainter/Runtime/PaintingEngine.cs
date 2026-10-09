@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -24,6 +25,16 @@ namespace UMA.TexturePaint
         private readonly MaterialPropertyBlock ribbonProperties = new MaterialPropertyBlock();
         private readonly StrokeHistory history = new StrokeHistory();
         private StrokeContext activeContext;
+        private ITexturePaintPathGenerator activePathGenerator;
+        private IDisposable pathGeneratorResources;
+        private TexturePaintStencilRenderer stencilRenderer;
+        private readonly Dictionary<Texture, Texture2D> stencilReadbacks = new Dictionary<Texture, Texture2D>();
+        private Texture StrokeStencil(ActiveTarget active)
+        {
+            if (activeContext?.stencil?.IsActive != true || activeContext.directUV) return Texture2D.whiteTexture;
+            stencilRenderer ??= new TexturePaintStencilRenderer();
+            return stencilRenderer.GetMask(activeContext.stencil, active.textures, active.target.Width, active.target.Height);
+        }
         private readonly List<ActiveTarget> activeTargets = new List<ActiveTarget>();
         private readonly HashSet<TextureLayerCompositor> activeCompositors =
             new HashSet<TextureLayerCompositor>();
@@ -80,8 +91,15 @@ namespace UMA.TexturePaint
             public TexturePaintChannel channel;
             public EditableTextureTarget target;
             public Texture paintSource;
+            public Texture ribbonCoverageSource;
+            public float ribbonCoverageAlpha = 1f;
+            public float ribbonCoverageAdditive;
+            public bool useRibbonCoverage;
             public TexturePaintBrushSource sourceKind = TexturePaintBrushSource.Color;
             public Color color = Color.white;
+            public Color multiplier = Color.white;
+            public Color additive = Color.clear;
+            public int sourceBlur;
             public float contribution = 1f;
             public bool isLayerMask;
             public float maskBaseValue = 1f;
@@ -311,6 +329,12 @@ namespace UMA.TexturePaint
                 {
                     TextureSet required = textureSets[i];
                     if (required == null || ContainsTextureSet(required)) continue;
+                    // Generated channels are optional per material. Keep these members in the
+                    // replacement set so stale outputs are cleared, even when no output maps here.
+                    if (context.hemSeam?.enabled == true && !context.hemSeam.SupportsAnyOutput(required)) continue;
+                    if (context.garment?.enabled == true && !context.garment.SupportsAnyOutput(required)) continue;
+                    if (context.pathGenerator?.enabled == true &&
+                        !context.channelSources.Keys.Any(channel => required.GetChannel(channel) != null)) continue;
                     string targetName = !string.IsNullOrEmpty(required.Name)
                         ? required.Name
                         : !string.IsNullOrEmpty(required.persistentId)
@@ -322,6 +346,19 @@ namespace UMA.TexturePaint
                     return FailStrokeStart($"Paint target '{targetName}' has no writable raster target. " +
                         "Its selected channel may be missing, locked, set to zero contribution, or use an invalid source.");
                 }
+            }
+            if (context.pathGenerator?.enabled == true)
+            {
+                activePathGenerator = TexturePaintPathGenerators.Find(context.pathGenerator.generatorId);
+                if (activePathGenerator == null) return FailStrokeStart("The path generator is not installed.");
+                try
+                {
+                    context.pathGenerator = context.pathGenerator.Clone();
+                    context.pathGenerator.Normalize();
+                    pathGeneratorResources = activePathGenerator.Prepare(context.pathGenerator);
+                }
+                catch (Exception exception)
+                { return FailStrokeStart("Path generator: " + exception.Message); }
             }
             captureActiveStrokeHistory = !context.derivedLayerRaster;
             if (context.replaceHistoryGroup && !string.IsNullOrEmpty(context.historyGroupKey))
@@ -433,11 +470,15 @@ namespace UMA.TexturePaint
                     strokeShader.SetInt("_BlendMode", (int)activeContext.brush.blendMode);
                     strokeShader.SetInt("_MaskMode", active.isLayerMask ? 1 : 0);
                     strokeShader.SetFloat("_MaskEraseValue", active.maskBaseValue);
-                    strokeShader.SetVector("_PaintColor", active.color);
+                    strokeShader.SetVector("_PaintColor", TexturePaintChannelUtility.WorkingColor(active.channel, active.color));
                     strokeShader.SetInt("_PaintSourceKind", (int)active.sourceKind);
+                    strokeShader.SetVector("_SourceMultiplier", active.multiplier);
+                    strokeShader.SetVector("_SourceAdditive", active.additive);
                     strokeShader.SetTexture(kernel, "_PaintSource",
                         active.paintSource != null ? active.paintSource : Texture2D.whiteTexture);
                     strokeShader.SetTexture(kernel, "_GeometryMask", geometry);
+                    strokeShader.SetTexture(kernel, "_RegionMask", active.textures?.RegionTexture != null ? active.textures.RegionTexture : Texture2D.whiteTexture);
+                    strokeShader.SetTexture(kernel, "_PaintMask", StrokeStencil(active));
                     strokeShader.SetTexture(kernel, "_Source", active.target.Front);
                     strokeShader.SetTexture(kernel, "_Destination", active.target.Back);
                     strokeShader.Dispatch(kernel, Mathf.CeilToInt(active.target.Width / 16f),
@@ -681,9 +722,41 @@ namespace UMA.TexturePaint
                 minimumAlong = Mathf.Min(minimumAlong, data[i].leftStartAlong.w, data[i].leftEndAlong.w);
                 maximumAlong = Mathf.Max(maximumAlong, data[i].leftStartAlong.w, data[i].leftEndAlong.w);
             }
+            var generatorSettings = activeContext.pathGenerator?.enabled == true ? activeContext.pathGenerator : null;
+            var generator = activePathGenerator;
+            // One layout for every material channel: prefer visible albedo coverage, even if
+            // another channel is selected or its maps have different pixel dimensions.
+            Texture aspectSource = null;
+            foreach (ActiveTarget target in activeTargets)
+                if (target.channel == TexturePaintChannel.Albedo && target.paintSource != null)
+                { aspectSource = target.paintSource; break; }
+            if (aspectSource == null)
+                foreach (ActiveTarget target in activeTargets)
+                    if (target.ribbonCoverageSource != null) { aspectSource = target.ribbonCoverageSource; break; }
+            if (aspectSource == null)
+                foreach (ActiveTarget target in activeTargets)
+                    if (target.paintSource != null) { aspectSource = target.paintSource; break; }
+            float ImageAspect(Texture image) => image == null ? 1f : sourceAlongY
+                ? (float)image.height / Mathf.Max(1, image.width)
+                : (float)image.width / Mathf.Max(1, image.height);
+            Vector4 imageAspects = new Vector4(ImageAspect(aspectSource),
+                ImageAspect(activeContext.ribbonBeginningTexture), ImageAspect(activeContext.ribbonEndTexture), 0);
+            // Fit complete images, including both caps, with one common longitudinal scale.
+            // Choose the nearest repeat count to the natural length at the current path width.
+            if (activeContext.ribbonPreserveTextureAspect)
+            {
+                float span = Mathf.Max(.00001f, maximumAlong - minimumAlong);
+                float caps = closed ? 0f :
+                    (activeContext.ribbonBeginningTexture != null ? imageAspects.y : 0f) +
+                    (activeContext.ribbonEndTexture != null ? imageAspects.z : 0f);
+                int repeats = Mathf.Max(caps > 0f ? 0 : 1,
+                    Mathf.RoundToInt((span - caps) / imageAspects.x));
+                float scale = span / (caps + repeats * imageAspects.x);
+                imageAspects *= scale;
+                imageAspects.w = repeats;
+            }
             using ComputeBuffer segmentBuffer = new ComputeBuffer(data.Length,
                 Marshal.SizeOf<TexturePaintRibbonSegment>(), ComputeBufferType.Structured);
-            segmentBuffer.SetData(data);
 
             foreach (KeyValuePair<TextureSet, TexturePaintStrokeRecord> pair in activeStrokeRecords)
             {
@@ -700,13 +773,33 @@ namespace UMA.TexturePaint
                     pair.Value.samples.Add(centerlineSamples[0]);
             }
 
+            // Edge Fade changes coverage for the entire ribbon, regardless of the preview
+            // channel. Legacy paths without that effect retain their saved brush softness.
+            TexturePaintLayerEffectSettings sideFade = null;
+            if (generatorSettings == null && activeContext.ribbonEffects != null)
+                foreach (TexturePaintLayerEffectSettings effect in activeContext.ribbonEffects.Stack)
+                    if (effect?.enabled == true && effect.kind == TexturePaintLayerEffectKind.EdgeFade)
+                    { sideFade = effect; break; }
+            float fadeStart = sideFade != null ? sideFade.edgeFadeStart : activeContext.ribbonEdgeFadeEnabled
+                ? activeContext.ribbonEdgeFadeStart : activeContext.brush.hardness - Mathf.Clamp01(activeContext.ribbonSideFadeExtra);
+            float fadeSize = sideFade != null ? sideFade.edgeFadeSize : activeContext.ribbonEdgeFadeEnabled
+                ? activeContext.ribbonEdgeFadeSize : 1f;
+            bool fadeEnabled = sideFade != null || activeContext.ribbonEdgeFadeEnabled || fadeStart < 1f;
+
             bool changed = false;
             HashSet<TextureSet> changedSets = new HashSet<TextureSet>();
+            using RibbonUVPadding ribbonPadding = directUV ? null : new RibbonUVPadding(ribbonMaterial);
             for (int targetIndex = 0; targetIndex < activeTargets.Count; targetIndex++)
             {
                 ActiveTarget active = activeTargets[targetIndex];
                 Mesh mesh = directUV ? GetDirectUVRibbonMesh() : active.textures?.surface?.mesh;
                 if (mesh == null || active.target?.Front == null || active.target.Back == null) continue;
+                for (int i = 0; i < data.Length; i++)
+                {
+                    data[i].colorStart = TexturePaintChannelUtility.WorkingColor(active.channel, segments[i].colorStart);
+                    data[i].colorEnd = TexturePaintChannelUtility.WorkingColor(active.channel, segments[i].colorEnd);
+                }
+                segmentBuffer.SetData(data);
                 RectInt rect = new RectInt(0, 0, active.target.Width, active.target.Height);
                 IncludeHistoryTiles("Texture Paint Ribbon", active.target, rect,
                     Performance.StrokeDiagnostics);
@@ -724,17 +817,30 @@ namespace UMA.TexturePaint
                 Texture2D geometryMask = !directUV && HasGeometryRestrictions(activeContext.geometrySelection)
                     ? GetGeometryMask(active, unrestricted) : null;
                 ribbonProperties.Clear();
+                ribbonProperties.SetInt("_PathGeneratorEnabled", 0);
+                ribbonProperties.SetInt("_GarmentEnabled", 0);
+                if (activeContext.garment?.enabled == true) activeContext.garment.Bind(ribbonProperties, active.channel,
+                    new Vector2(activeContext.brush.size * 2, (maximumAlong-minimumAlong)*activeContext.brush.size*2));
+                ribbonProperties.SetInt("_HemEnabled", 0);
+                activeContext.hemSeam?.Bind(ribbonProperties, active.channel);
+                generator?.Bind(ribbonProperties, generatorSettings, pathGeneratorResources, active.channel, active.color,
+                    new Vector2(activeContext.brush.size * 2, (maximumAlong-minimumAlong)*activeContext.brush.size*2));
                 ribbonProperties.SetBuffer("_RibbonSegments", segmentBuffer);
                 ribbonProperties.SetInt("_RibbonSegmentCount", data.Length);
                 ribbonProperties.SetTexture("_DestinationTexture", active.target.Front);
                 ribbonProperties.SetTexture("_PaintSource",
                     active.paintSource != null ? active.paintSource : Texture2D.whiteTexture);
+                ribbonProperties.SetTexture("_RibbonCoverage",
+                    active.ribbonCoverageSource != null ? active.ribbonCoverageSource : Texture2D.whiteTexture);
+                ribbonProperties.SetFloat("_RibbonCoverageAlpha", active.ribbonCoverageAlpha);
+                ribbonProperties.SetFloat("_RibbonCoverageAdditive", active.ribbonCoverageAdditive);
+                ribbonProperties.SetInt("_UseRibbonCoverage", active.useRibbonCoverage ? 1 : 0);
                 ribbonProperties.SetTexture("_BeginningSource",
                     activeContext.ribbonBeginningTexture != null
-                        ? activeContext.ribbonBeginningTexture : Texture2D.whiteTexture);
+                        ? ResolveRibbonCap(activeContext.ribbonBeginningTexture, active) : Texture2D.whiteTexture);
                 ribbonProperties.SetTexture("_EndSource",
                     activeContext.ribbonEndTexture != null
-                        ? activeContext.ribbonEndTexture : Texture2D.whiteTexture);
+                        ? ResolveRibbonCap(activeContext.ribbonEndTexture, active) : Texture2D.whiteTexture);
                 ribbonProperties.SetInt("_HasBeginningSource",
                     !closed && activeContext.ribbonBeginningTexture != null ? 1 : 0);
                 ribbonProperties.SetInt("_HasEndSource",
@@ -743,7 +849,8 @@ namespace UMA.TexturePaint
                 ribbonProperties.SetFloat("_RibbonMaximumAlong", maximumAlong);
                 ribbonProperties.SetTexture("_GeometryMask",
                     geometryMask != null ? geometryMask : Texture2D.whiteTexture);
-                ribbonProperties.SetColor("_PaintColor", active.color);
+                ribbonProperties.SetTexture("_RegionMask", active.textures?.RegionTexture != null ? active.textures.RegionTexture : Texture2D.whiteTexture);
+                ribbonProperties.SetVector("_PaintColor", TexturePaintChannelUtility.WorkingColor(active.channel, active.color));
                 ribbonProperties.SetFloat("_Strength", activeContext.strength * active.contribution);
                 ribbonProperties.SetFloat("_BrushFlow", activeContext.brush.flow);
                 ribbonProperties.SetFloat("_ProjectionDepth",
@@ -753,14 +860,28 @@ namespace UMA.TexturePaint
                 ribbonProperties.SetInt("_PaintBackfaces", activeContext.paintBackfaces ? 1 : 0);
                 ribbonProperties.SetInt("_PressureAffectsFlow", activeContext.pressureAffectsFlow ? 1 : 0);
                 ribbonProperties.SetInt("_PaintSourceKind", (int)active.sourceKind);
+                ribbonProperties.SetVector("_SourceMultiplier", active.multiplier);
+                ribbonProperties.SetVector("_SourceAdditive", active.additive);
                 ribbonProperties.SetInt("_BlendMode", (int)activeContext.brush.blendMode);
                 ribbonProperties.SetInt("_VectorNormal", active.channel == TexturePaintChannel.Normal ? 1 : 0);
+                ribbonProperties.SetInt("_TextureFlipX", (int)activeContext.textureFlipX);
+                ribbonProperties.SetInt("_TextureFlipY", (int)activeContext.textureFlipY);
+                ribbonProperties.SetInt("_TextureFlipSeed", activeContext.textureFlipSeed);
+                ribbonProperties.SetFloat("_JoinOverlap", activeContext.ribbonCrossfadeJoins && float.IsFinite(activeContext.ribbonJoinOverlap)
+                    ? Mathf.Clamp01(activeContext.ribbonJoinOverlap) : 0f);
                 ribbonProperties.SetInt("_SourceAlongY", sourceAlongY ? 1 : 0);
                 ribbonProperties.SetInt("_ReverseSourceAxis", reverseSourceAxis ? 1 : 0);
                 ribbonProperties.SetInt("_RibbonClosed", closed ? 1 : 0);
-                ribbonProperties.SetInt("_EdgeFadeEnabled", activeContext.ribbonEdgeFadeEnabled ? 1 : 0);
-                ribbonProperties.SetFloat("_EdgeFadeStart", Mathf.Clamp01(activeContext.ribbonEdgeFadeStart));
-                ribbonProperties.SetFloat("_EdgeFadeSize", Mathf.Clamp01(activeContext.ribbonEdgeFadeSize));
+                ribbonProperties.SetInt("_RibbonPreserveAspect", activeContext.ribbonPreserveTextureAspect ? 1 : 0);
+                ribbonProperties.SetVector("_RibbonImageAspects", imageAspects);
+                ribbonProperties.SetInt("_EdgeFadeEnabled", fadeEnabled ? 1 : 0);
+                ribbonProperties.SetFloat("_EdgeFadeStart", Mathf.Clamp(fadeStart, -1f, 1f));
+                ribbonProperties.SetTexture("_EdgeFadeCurve", GetRibbonCurveTexture(sideFade?.curve ?? activeContext.ribbonSideFadeCurve));
+                ribbonProperties.SetTexture("_StartFadeCurve", GetRibbonCurveTexture(activeContext.ribbonStartFadeCurve));
+                ribbonProperties.SetTexture("_EndFadeCurve", GetRibbonCurveTexture(activeContext.ribbonEndFadeCurve));
+                ribbonProperties.SetFloat("_EdgeFadeSize", Mathf.Clamp01(fadeSize));
+                ribbonProperties.SetFloat("_StartFade", Mathf.Clamp(activeContext.ribbonStartFade, 0f, TexturePaintFadeUtility.MaximumDistance));
+                ribbonProperties.SetFloat("_EndFade", Mathf.Clamp(activeContext.ribbonEndFade, 0f, TexturePaintFadeUtility.MaximumDistance));
                 Matrix4x4 localToWorld = !directUV && active.textures.surface.gameObject != null
                     ? active.textures.surface.gameObject.transform.localToWorldMatrix
                     : Matrix4x4.identity;
@@ -774,6 +895,7 @@ namespace UMA.TexturePaint
                         TexturePaintLayerEffectSettings effect = ribbonEffects.Stack[effectIndex];
                         if (!TexturePaintLayerEffects.EnabledFor(effect, active.channel) ||
                             effect.kind == TexturePaintLayerEffectKind.EdgeFade ||
+                            (generatorSettings != null && TexturePaintLayerEffects.IsDistanceEffect(effect.kind)) ||
                             TexturePaintLayerEffects.IsCompositeOnlyEffect(effect.kind)) continue;
                         effectPasses.Add(effect);
                     }
@@ -803,9 +925,11 @@ namespace UMA.TexturePaint
                     Graphics.ExecuteCommandBuffer(command);
                     active.target.Swap();
                 }
+                ribbonPadding?.Pad(mesh, localToWorld, active.target);
                 active.target.CopyFrontToBack(rect);
                 CompositeChangedTarget(active, rect);
-                Performance.copiedPixels += (long)rect.width * rect.height * (renderPassCount + 1L);
+                Performance.copiedPixels += (long)rect.width * rect.height *
+                    (renderPassCount + 1L + (directUV ? 0L : 1L));
                 Performance.composedPixels += (long)rect.width * rect.height;
                 TextureChanged?.Invoke(active.textures,
                     active.isLayerMask ? TexturePaintChannel.Custom : active.channel);
@@ -816,6 +940,48 @@ namespace UMA.TexturePaint
             if (!deferInteractiveRefresh)
                 Performance.RecordPreview(ElapsedMilliseconds(previewStarted));
             return changed;
+        }
+
+        // Mesh rasterization covers texel centres inside each UV island. Bilinear sampling at
+        // its edge also reads the exterior texel, so even overlapping world-space paths used to
+        // expose a thin transparent line at a split UV seam. Share occupancy across channels and
+        // extend only into the UV gutter; source alpha never determines which texel owns it.
+        private sealed class RibbonUVPadding : IDisposable
+        {
+            private readonly Material material;
+            private readonly Dictionary<(Mesh mesh, int width, int height), RenderTexture> geometry =
+                new Dictionary<(Mesh mesh, int width, int height), RenderTexture>();
+
+            public RibbonUVPadding(Material material) { this.material = material; }
+
+            public void Pad(Mesh mesh, Matrix4x4 localToWorld, EditableTextureTarget target)
+            {
+                var key = (mesh, target.Width, target.Height);
+                if (!geometry.TryGetValue(key, out RenderTexture coverage))
+                {
+                    coverage = RenderTexture.GetTemporary(target.Width, target.Height, 0,
+                        RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+                    geometry.Add(key, coverage);
+                    coverage.filterMode = FilterMode.Point;
+                    coverage.wrapMode = TextureWrapMode.Clamp;
+                    using CommandBuffer command = new CommandBuffer { name = "Ribbon UV Geometry Coverage" };
+                    command.SetRenderTarget(coverage);
+                    command.ClearRenderTarget(false, true, Color.clear);
+                    for (int subMesh = 0; subMesh < Mathf.Max(1, mesh.subMeshCount); subMesh++)
+                        command.DrawMesh(mesh, localToWorld, material, subMesh, 2);
+                    Graphics.ExecuteCommandBuffer(command);
+                }
+                material.SetTexture("_RibbonGeometryCoverage", coverage);
+                Graphics.Blit(target.Front, target.Back, material, 1);
+                target.Swap();
+            }
+
+            public void Dispose()
+            {
+                material.SetTexture("_RibbonGeometryCoverage", Texture2D.blackTexture);
+                foreach (RenderTexture coverage in geometry.Values) RenderTexture.ReleaseTemporary(coverage);
+                geometry.Clear();
+            }
         }
 
         private Mesh GetDirectUVRibbonMesh()
@@ -877,8 +1043,8 @@ namespace UMA.TexturePaint
                 case TexturePaintLayerEffectKind.BevelEdge:
                     properties.SetInt("_BevelEnabled", 1);
                     properties.SetInt("_BevelSide", (int)effect.ribbonSide);
-                    properties.SetColor("_BevelLightColor", effect.color);
-                    properties.SetColor("_BevelDarkColor", effect.secondaryColor);
+                    properties.SetVector("_BevelLightColor", TexturePaintChannelUtility.WorkingColor(channel, effect.color));
+                    properties.SetVector("_BevelDarkColor", TexturePaintChannelUtility.WorkingColor(channel, effect.secondaryColor));
                     properties.SetFloat("_BevelWidth", effect.width);
                     properties.SetFloat("_BevelSmoothness", effect.smoothness);
                     properties.SetFloat("_BevelLevel", effect.level);
@@ -890,7 +1056,7 @@ namespace UMA.TexturePaint
                 case TexturePaintLayerEffectKind.ProceduralStitch:
                     properties.SetInt("_StitchEnabled", 1);
                     properties.SetInt("_StitchSide", (int)effect.ribbonSide);
-                    properties.SetColor("_StitchColor", effect.color);
+                    properties.SetVector("_StitchColor", TexturePaintChannelUtility.WorkingColor(channel, effect.color));
                     properties.SetInt("_StitchRows",
                         effect.stitchRows == TexturePaintRibbonStitchRows.Double ? 2 : 1);
                     properties.SetFloat("_StitchThreadSize", effect.stitchThreadSize);
@@ -906,7 +1072,7 @@ namespace UMA.TexturePaint
         {
             bool enabled = TexturePaintLayerEffects.EnabledFor(effect, channel);
             properties.SetInt("_StrokeEnabled", enabled ? 1 : 0);
-            properties.SetColor("_StrokeColor", effect?.color ?? Color.clear);
+            properties.SetVector("_StrokeColor", TexturePaintChannelUtility.WorkingColor(channel, effect?.color ?? Color.clear));
             properties.SetVector("_StrokeParameters", new Vector4(
                 effect?.width ?? 2f,
                 effect?.offset.x ?? 0f,
@@ -921,7 +1087,7 @@ namespace UMA.TexturePaint
             properties.SetInt("_" + prefix + "Enabled", enabled ? 1 : 0);
             properties.SetInt("_" + prefix + "Side",
                 (int)(effect?.ribbonSide ?? TexturePaintRibbonSide.Both));
-            properties.SetColor("_" + prefix + "Color", effect?.color ?? Color.clear);
+            properties.SetVector("_" + prefix + "Color", TexturePaintChannelUtility.WorkingColor(channel, effect?.color ?? Color.clear));
             properties.SetFloat("_" + prefix + "Width", effect?.width ?? 8f);
             properties.SetFloat("_" + prefix + "Offset", effect?.offset.x ?? 0f);
             properties.SetFloat("_" + prefix + "Level", effect?.level ?? 1f);
@@ -930,8 +1096,8 @@ namespace UMA.TexturePaint
 
         private Texture2D GetRibbonCurveTexture(AnimationCurve curve)
         {
-            curve ??= TexturePaintLayerEffectSettings.DefaultCurve();
-            int signature = RibbonCurveSignature(curve);
+            if (curve == null || curve.length == 0) curve = TexturePaintFadeUtility.DefaultCurve();
+            int signature = TexturePaintFadeUtility.CurveSignature(curve);
             if (ribbonCurveTextures.TryGetValue(signature, out Texture2D cached) && cached != null)
                 return cached;
             Texture2D texture = new Texture2D(256, 1, TextureFormat.RFloat, false, true)
@@ -948,29 +1114,6 @@ namespace UMA.TexturePaint
             texture.Apply(false, true);
             ribbonCurveTextures[signature] = texture;
             return texture;
-        }
-
-        private static int RibbonCurveSignature(AnimationCurve curve)
-        {
-            unchecked
-            {
-                int hash = 17;
-                hash = hash * 31 + (int)curve.preWrapMode;
-                hash = hash * 31 + (int)curve.postWrapMode;
-                Keyframe[] keys = curve.keys;
-                for (int i = 0; i < keys.Length; i++)
-                {
-                    Keyframe key = keys[i];
-                    hash = hash * 31 + key.time.GetHashCode();
-                    hash = hash * 31 + key.value.GetHashCode();
-                    hash = hash * 31 + key.inTangent.GetHashCode();
-                    hash = hash * 31 + key.outTangent.GetHashCode();
-                    hash = hash * 31 + key.inWeight.GetHashCode();
-                    hash = hash * 31 + key.outWeight.GetHashCode();
-                    hash = hash * 31 + (int)key.weightedMode;
-                }
-                return hash;
-            }
         }
 
         private bool ApplyBatchGroup(List<StrokeDispatchSample> samples, int offset, int count)
@@ -1134,7 +1277,7 @@ namespace UMA.TexturePaint
                 flow = activeContext.brush.flow * (activeContext.pressureAffectsFlow
                     ? Mathf.Clamp01(sample.pressure) : 1f) *
                     Mathf.Max(0f, sample.flowMultiplier),
-                color = TexturePaintChannelUtility.ConstrainColor(active.channel,
+                color = TexturePaintChannelUtility.WorkingColor(active.channel,
                     sample.hasColor ? sample.color : active.color),
                 footprintScale = EffectiveScale(sample.footprintScale),
                 sourceUVScale = EffectiveScale(sample.sourceUVScale),
@@ -1205,6 +1348,8 @@ namespace UMA.TexturePaint
             strokeShader.SetInt("_Operation", ToShaderOperation(activeContext.tool));
             strokeShader.SetInt("_BlendMode", (int)activeContext.brush.blendMode);
             strokeShader.SetInt("_PaintSourceKind", (int)active.sourceKind);
+            strokeShader.SetVector("_SourceMultiplier", active.multiplier);
+            strokeShader.SetVector("_SourceAdditive", active.additive);
             strokeShader.SetInt("_VectorNormal", active.channel == TexturePaintChannel.Normal ? 1 : 0);
             strokeShader.SetInt("_MaskMode", active.isLayerMask ? 1 : 0);
             strokeShader.SetFloat("_MaskEraseValue", active.maskBaseValue);
@@ -1215,6 +1360,8 @@ namespace UMA.TexturePaint
             strokeShader.SetTexture(kernel, "_PaintSource", active.paintSource != null ? active.paintSource : Texture2D.whiteTexture);
             strokeShader.SetTexture(kernel, "_Stamp", activeStampTexture != null ? activeStampTexture : Texture2D.whiteTexture);
             strokeShader.SetTexture(kernel, "_GeometryMask", geometryMask != null ? geometryMask : Texture2D.whiteTexture);
+            strokeShader.SetTexture(kernel, "_RegionMask", active.textures?.RegionTexture != null ? active.textures.RegionTexture : Texture2D.whiteTexture);
+                    strokeShader.SetTexture(kernel, "_PaintMask", StrokeStencil(active));
             if (activeContext.limitStrokeCoverage)
             {
                 const int tileSize = 128;
@@ -1256,6 +1403,7 @@ namespace UMA.TexturePaint
 
         public void EndStroke(bool commit = true)
         {
+            pathGeneratorResources?.Dispose(); pathGeneratorResources = null; activePathGenerator = null;
             if (!strokeStarted)
             {
                 EndInteractiveCompositing();
@@ -1495,25 +1643,8 @@ namespace UMA.TexturePaint
                     context.channelSources)
                 {
                     TexturePaintChannel channel = pair.Key;
-                    TexturePaintChannelSourceSettings source = pair.Value;
-                    Texture paintTexture = null;
-                    bool sourceUsable = TryResolveChannelPaintSource(textures, channel, source,
-                        out paintTexture);
-                    if (mode != TexturePaintSourceMode.SourceTexture && textures != null &&
-                        (uint)textures.activeLayerIndex < (uint)textures.layers.Count)
-                    {
-                        TexturePaintChannelSourceSettings memberSource = textures.layers[textures.activeLayerIndex]
-                            .GetChannelSettings(channel, false)?.sourceSettings;
-                        if (TryResolveChannelPaintSource(textures, channel, memberSource,
-                            out Texture memberPaintTexture))
-                        {
-                            source = memberSource;
-                            paintTexture = memberPaintTexture;
-                            sourceUsable = true;
-                        }
-                        // A linked physical layer can retain legacy Texture-with-null metadata.
-                        // That metadata must not erase the valid source selected for this stroke.
-                    }
+                    bool sourceUsable = TryResolveStrokeChannelSource(context, textures, mode, channel,
+                        pair.Value, out TexturePaintChannelSourceSettings source, out Texture paintTexture);
                     if (!sourceUsable || ContainsChannel(textures, channel)) continue;
                     EditableTextureTarget target = textures.GetPaintTarget(channel, mode);
                     if (target != null &&
@@ -1526,7 +1657,12 @@ namespace UMA.TexturePaint
                             target = target,
                             paintSource = paintTexture,
                             sourceKind = source.source,
+                            sourceBlur = source.source == TexturePaintBrushSource.Texture ? source.blur : 0,
                             color = TexturePaintChannelUtility.ConstrainColor(channel, source.color),
+                            multiplier = source.source == TexturePaintBrushSource.Texture
+                                ? TexturePaintChannelUtility.WorkingColor(channel, source.multiplier) : Color.white,
+                            additive = source.source == TexturePaintBrushSource.Texture
+                                ? TexturePaintChannelUtility.WorkingColor(channel, source.additive) : Color.clear,
                             contribution = contribution
                         });
                 }
@@ -1594,6 +1730,87 @@ namespace UMA.TexturePaint
                         contribution = contribution
                     });
             }
+            ConfigureRibbonCoverage(context, textures, mode);
+        }
+
+        private static bool TryResolveStrokeChannelSource(StrokeContext context, TextureSet textures,
+            TexturePaintSourceMode mode, TexturePaintChannel channel, TexturePaintChannelSourceSettings selected,
+            out TexturePaintChannelSourceSettings source, out Texture paintTexture, bool coverageOnly = false)
+        {
+            source = selected;
+            bool usable = coverageOnly ? TryResolveRibbonCoverageSource(textures, source, out paintTexture) :
+                TryResolveChannelPaintSource(textures, channel, source, out paintTexture);
+            if (context.pathGenerator?.enabled != true && context.hemSeam?.enabled != true && context.garment?.enabled != true &&
+                mode != TexturePaintSourceMode.SourceTexture && textures != null &&
+                (uint)textures.activeLayerIndex < (uint)textures.layers.Count)
+            {
+                TexturePaintChannelSourceSettings memberSource = textures.layers[textures.activeLayerIndex]
+                    .GetChannelSettings(channel, false)?.sourceSettings;
+                Texture memberTexture;
+                bool memberUsable = coverageOnly ? TryResolveRibbonCoverageSource(textures, memberSource, out memberTexture) :
+                    TryResolveChannelPaintSource(textures, channel, memberSource, out memberTexture);
+                if (memberUsable)
+                {
+                    source = memberSource;
+                    paintTexture = memberTexture;
+                    usable = true;
+                }
+                // Legacy Texture-with-null metadata must not erase a valid selected source.
+            }
+            return usable;
+        }
+
+        private static Texture ResolveRibbonCap(Texture2D texture, ActiveTarget active)
+            => active.sourceBlur > 0 ? TexturePaintSpriteSource.Resolve(texture, null, active.channel,
+                TexturePaintNormalConvention.OpenGL, false, active.sourceBlur) : texture;
+
+        private void ConfigureRibbonCoverage(StrokeContext context, TextureSet textures, TexturePaintSourceMode mode)
+        {
+            if (context.editLayerMask || context.pathGenerator?.enabled == true || context.hemSeam?.enabled == true || context.garment?.enabled == true) return;
+            Texture coverage = null;
+            float alpha = 1f;
+            float additive = 0f;
+            TexturePaintChannelSourceSettings coverageSettings = null;
+            if (context.channelSources.Count > 0)
+            {
+                if (!context.channelSources.TryGetValue(TexturePaintChannel.Albedo, out var selected) ||
+                    !TryResolveStrokeChannelSource(context, textures, mode, TexturePaintChannel.Albedo,
+                        selected, out var source, out coverage, coverageOnly: true)) return;
+                if (source.source == TexturePaintBrushSource.Color) alpha = source.color.a;
+                else if (source.source == TexturePaintBrushSource.Texture)
+                { alpha = source.multiplier.a; additive = source.additive.a; coverageSettings = source; }
+            }
+            else if (context.paintSource == TexturePaintBrushSource.Overlay)
+                coverage = TextureSet.GetOverlayFillCoverage(context.ResolveSourceOverlay(textures));
+            else return;
+            if (coverage == null && context.channelSources.Count == 0) return;
+            // Resolve even when Albedo is locked or has no writable destination. Coverage belongs
+            // to the authored source, and linked physical members can have different sources.
+            foreach (ActiveTarget active in activeTargets)
+                if (ReferenceEquals(active.textures, textures))
+                {
+                    active.ribbonCoverageSource = coverageSettings != null
+                        ? TexturePaintSpriteSource.Resolve(coverageSettings.sourceTexture, coverageSettings.sourceSprite,
+                            TexturePaintChannel.Albedo, coverageSettings.normalConvention, coverageSettings.invert, active.sourceBlur)
+                        : coverage;
+                    active.ribbonCoverageAlpha = alpha;
+                    active.ribbonCoverageAdditive = additive;
+                    if (active.channel != TexturePaintChannel.Albedo)
+                    {
+                        active.ribbonCoverageAlpha *= active.multiplier.a;
+                        active.ribbonCoverageAdditive = additive * active.multiplier.a + active.additive.a;
+                    }
+                    active.useRibbonCoverage = true;
+                }
+        }
+
+        private static bool TryResolveRibbonCoverageSource(TextureSet textures,
+            TexturePaintChannelSourceSettings source, out Texture coverage)
+        {
+            coverage = source?.source == TexturePaintBrushSource.Overlay
+                ? TextureSet.GetOverlayFillCoverage(source.sourceOverlay) : null;
+            return coverage != null ||
+                TryResolveChannelPaintSource(textures, TexturePaintChannel.Albedo, source, out coverage);
         }
 
         private static bool TryResolveChannelPaintSource(TextureSet textures, TexturePaintChannel channel,
@@ -1608,6 +1825,7 @@ namespace UMA.TexturePaint
 
         private bool FailStrokeStart(string error)
         {
+            pathGeneratorResources?.Dispose(); pathGeneratorResources = null; activePathGenerator = null;
             LastStrokeError = error;
             activeTargets.Clear();
             activeStampTexture = null;
@@ -1623,7 +1841,7 @@ namespace UMA.TexturePaint
             if (source == null || source.source == TexturePaintBrushSource.Color) return null;
             if (source.source == TexturePaintBrushSource.Texture)
                 return TexturePaintSpriteSource.Resolve(source.sourceTexture, source.sourceSprite,
-                    channel, source.normalConvention, source.invert);
+                    channel, source.normalConvention, source.invert, source.blur);
             if (source.source != TexturePaintBrushSource.Overlay || source.sourceOverlay == null ||
                 textures == null) return null;
             var fillSettings = new TexturePaintFillSettings
@@ -1678,7 +1896,8 @@ namespace UMA.TexturePaint
                     historyGroupKey = activeContext.historyGroupKey,
                     tool = activeContext.tool,
                     channel = activeContext.channel,
-                    directUV = activeContext.directUV
+                    directUV = activeContext.directUV,
+                    stencil = activeContext.stencil?.Clone()
                 };
                 if (owner != null) owner.strokes.Add(record); else target.textures.baseStrokes.Add(record);
                 activeStrokeRecords[target.textures] = record;
@@ -2076,8 +2295,9 @@ namespace UMA.TexturePaint
             shader.SetTexture(kernel, "_Source", active.target.Front);
             shader.SetTexture(kernel, "_Destination", active.target.Back);
             shader.SetTexture(kernel, "_Stamp", activeStampTexture != null ? activeStampTexture : Texture2D.whiteTexture);
-            shader.SetTexture(kernel, "_PaintMask", Texture2D.whiteTexture);
+            shader.SetTexture(kernel, "_PaintMask", StrokeStencil(active));
             shader.SetTexture(kernel, "_GeometryMask", geometryMask != null ? geometryMask : Texture2D.whiteTexture);
+            shader.SetTexture(kernel, "_RegionMask", active.textures?.RegionTexture != null ? active.textures.RegionTexture : Texture2D.whiteTexture);
             if (shader == strokeShader)
             {
                 Vector2 sourceUVScale = EffectiveScale(sample.sourceUVScale);
@@ -2087,9 +2307,11 @@ namespace UMA.TexturePaint
                 shader.SetVector("_CloneSourceUV", activeContext.cloneSourceUV);
                 shader.SetInt("_Operation", ToShaderOperation(activeContext.tool));
                 shader.SetInt("_BlendMode", (int)activeContext.brush.blendMode);
-                shader.SetVector("_PaintColor", TexturePaintChannelUtility.ConstrainColor(active.channel,
+                shader.SetVector("_PaintColor", TexturePaintChannelUtility.WorkingColor(active.channel,
                     sample.hasColor ? sample.color : active.color));
                 shader.SetInt("_PaintSourceKind", (int)active.sourceKind);
+                shader.SetVector("_SourceMultiplier", active.multiplier);
+                shader.SetVector("_SourceAdditive", active.additive);
                 shader.SetInt("_VectorNormal", active.channel == TexturePaintChannel.Normal ? 1 : 0);
                 shader.SetInt("_MaskMode", active.isLayerMask ? 1 : 0);
                 shader.SetFloat("_MaskEraseValue", active.maskBaseValue);
@@ -2148,6 +2370,10 @@ namespace UMA.TexturePaint
             Vector4 uvToBrush, RectInt rect,
             Texture2D geometryMask)
         {
+            Texture stencil = StrokeStencil(active);
+            Texture2D stencilPixels = null;
+            if (stencil is RenderTexture stencilTarget && !stencilReadbacks.TryGetValue(stencil, out stencilPixels))
+            { stencilPixels = Readback(stencilTarget); stencilReadbacks.Add(stencil, stencilPixels); }
             Texture2D source = Readback(active.target.Front);
             Color[] pixels = source.GetPixels();
             Color[] original = (Color[])pixels.Clone();
@@ -2163,8 +2389,9 @@ namespace UMA.TexturePaint
                 float falloff = EvaluateBrush(uv, sample.uv, uvToBrush, activeContext.brush,
                     activeStampTexture, sample);
                 if (falloff <= 0f) continue;
-                float mask = 1f;
+                float mask = stencilPixels != null ? stencilPixels.GetPixelBilinear(uv.x, uv.y).r : 1f;
                 if (geometryMask != null) mask *= geometryMask.GetPixelBilinear(uv.x, uv.y).r;
+                if (active.textures?.RegionTexture != null) mask *= active.textures.RegionTexture.GetPixelBilinear(uv.x, uv.y).r;
                 float coverageLimit = Mathf.Clamp01(falloff * mask * activeContext.strength * active.contribution);
                 float pressure = activeContext.pressureAffectsFlow ? Mathf.Clamp01(sample.pressure) : 1f;
                 float weight = Mathf.Clamp01(coverageLimit * activeContext.brush.flow * pressure * Mathf.Max(0f, sample.flowMultiplier));
@@ -2345,13 +2572,26 @@ namespace UMA.TexturePaint
                 float angle = -(brush.rotation + sample.rotation) * Mathf.Deg2Rad;
                 delta = new Vector2(delta.x * Mathf.Cos(angle) - delta.y * Mathf.Sin(angle), delta.x * Mathf.Sin(angle) + delta.y * Mathf.Cos(angle));
                 Vector2 footprintScale = EffectiveScale(sample.footprintScale);
-                delta = new Vector2(delta.x / Mathf.Abs(footprintScale.x),
-                    delta.y / Mathf.Abs(footprintScale.y));
+                delta = new Vector2(delta.x / footprintScale.x,
+                    delta.y / footprintScale.y);
                 Vector2 localUV = delta * 0.5f + Vector2.one * 0.5f;
                 Vector2 sourceScale = EffectiveScale(sample.sourceUVScale);
                 sampleUV = Vector2.Scale(localUV, sourceScale) + sample.sourceUVOffset;
             }
-            try { return texture.GetPixelBilinear(sampleUV.x, sampleUV.y); }
+            try
+            {
+                Color value = texture.GetPixelBilinear(sampleUV.x, sampleUV.y);
+                value.r = value.r * active.multiplier.r + active.additive.r;
+                value.g = value.g * active.multiplier.g + active.additive.g;
+                value.b = value.b * active.multiplier.b + active.additive.b;
+                value.a = value.a * active.multiplier.a + active.additive.a;
+                if (active.channel == TexturePaintChannel.Normal && active.sourceKind == TexturePaintBrushSource.Texture)
+                {
+                    if (sample.sourceUVScale.x < 0) value.r = 1f - value.r;
+                    if (sample.sourceUVScale.y < 0) value.g = 1f - value.g;
+                }
+                return value;
+            }
             catch (UnityException) { return active.color; }
         }
 
@@ -2411,8 +2651,8 @@ namespace UMA.TexturePaint
             float angle = -(brush.rotation + sample.rotation) * Mathf.Deg2Rad;
             delta = new Vector2(delta.x * Mathf.Cos(angle) - delta.y * Mathf.Sin(angle), delta.x * Mathf.Sin(angle) + delta.y * Mathf.Cos(angle));
             Vector2 footprintScale = EffectiveScale(sample.footprintScale);
-            delta = new Vector2(delta.x / Mathf.Abs(footprintScale.x),
-                delta.y / Mathf.Abs(footprintScale.y));
+            delta = new Vector2(delta.x / footprintScale.x,
+                delta.y / footprintScale.y);
             float distance = brush.shape == BrushPreset.Shape.Square ? Mathf.Max(Mathf.Abs(delta.x), Mathf.Abs(delta.y)) : delta.magnitude;
             if (distance >= 1f) return 0f;
             float softStart = Mathf.Clamp01(brush.hardness);
@@ -2464,7 +2704,8 @@ namespace UMA.TexturePaint
         private static Texture2D Readback(RenderTexture source)
         {
             RenderTexture previous = RenderTexture.active; RenderTexture.active = source;
-            Texture2D result = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false, true);
+            Texture2D result = new Texture2D(source.width, source.height, source.format == RenderTextureFormat.ARGBHalf ? TextureFormat.RGBAHalf :
+                source.format == RenderTextureFormat.ARGBFloat ? TextureFormat.RGBAFloat : TextureFormat.RGBA32, false, true);
             result.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0, false); result.Apply(false, false);
             RenderTexture.active = previous; return result;
         }
@@ -2637,6 +2878,9 @@ namespace UMA.TexturePaint
 
         private void ReleaseStrokeBuffers()
         {
+            stencilRenderer?.Dispose(); stencilRenderer = null;
+            foreach (var pixels in stencilReadbacks.Values) Destroy(pixels);
+            stencilReadbacks.Clear();
             for (int i = 0; i < activeTargets.Count; i++)
             {
                 ActiveTarget active = activeTargets[i];

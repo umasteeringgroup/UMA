@@ -72,7 +72,7 @@ namespace UMA.CharacterSystem.Editors
                     if (GUI.Button(editRect, "Edit"))
                     {
                         serializedObject.ApplyModifiedProperties();
-                        PopupWindow.Show(editRect, new SharedColorEditorPopup(this, current));
+                        SharedColorEditorWindow.Open(thisDCA, current);
                         GUIUtility.ExitGUI();
                     }
                     if (!current.isBaseColor)
@@ -262,28 +262,46 @@ namespace UMA.CharacterSystem.Editors
             Repaint();
         }
 
-        private sealed class SharedColorEditorPopup : StandardPopupContent
+        private sealed class SharedColorEditorWindow : EditorWindow
         {
-            private readonly DynamicCharacterAvatarEditor owner;
-            private readonly OverlayColorData color;
+            private DynamicCharacterAvatarEditor owner;
+            private OverlayColorData color;
             private readonly OverlayColorDataPropertyDrawer drawer = new OverlayColorDataPropertyDrawer();
             private Vector2 scroll;
             private bool initialized;
 
-            internal SharedColorEditorPopup(DynamicCharacterAvatarEditor owner, OverlayColorData color)
+            internal static SharedColorEditorWindow Open(DynamicCharacterAvatar avatar, OverlayColorData color)
             {
-                this.owner = owner;
-                this.color = color;
+                var window = CreateInstance<SharedColorEditorWindow>();
+                // Keep a dedicated editor: selecting a renderer can destroy the source Inspector.
+                window.owner = (DynamicCharacterAvatarEditor)Editor.CreateEditor(avatar);
+                window.color = color;
+                window.titleContent = new GUIContent("Edit shared color");
+                window.minSize = new Vector2(420, 300);
+                window.position = new Rect(window.position.position, new Vector2(560, 580));
+                // Utility windows stay open while focus moves to the Hierarchy or Project for a drag.
+                window.ShowUtility();
+                return window;
             }
 
-            protected override Vector2 GetContentSize() => new Vector2(560, 580);
-
-            protected override void DrawPopupContent(Rect rect)
+            private void OnEnable()
             {
-                if (owner == null || owner.thisDCA == null) { editorWindow.Close(); return; }
+                AssemblyReloadEvents.beforeAssemblyReload += Close;
+            }
+
+            private void OnDisable()
+            {
+                AssemblyReloadEvents.beforeAssemblyReload -= Close;
+                if (owner != null) DestroyImmediate(owner);
+                owner = null;
+            }
+
+            private void OnGUI()
+            {
+                if (owner == null || owner.thisDCA == null) { Close(); return; }
                 var colors = owner.thisDCA.characterColors._colors;
                 int index = colors.FindIndex(entry => ReferenceEquals(entry, color));
-                if (index < 0) { editorWindow.Close(); return; }
+                if (index < 0) { Close(); return; }
                 var serialized = owner.serializedObject;
                 serialized.Update();
                 var property = serialized.FindProperty("characterColors._colors").GetArrayElementAtIndex(index);
@@ -309,7 +327,7 @@ namespace UMA.CharacterSystem.Editors
                     owner.thisDCA.characterColors.RemoveDeletedItems();
                     owner.CommitStandardColorEdit();
                 }
-                if (GUILayout.Button("Done")) editorWindow.Close();
+                if (GUILayout.Button("Done")) Close();
             }
         }
 

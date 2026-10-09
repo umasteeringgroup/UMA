@@ -42,9 +42,6 @@ namespace UMA.Editors.Tests
                         root.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase), Is.True, root);
             Assert.That(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(
                 UMAPathUtility.ResolveInstallAssetPath("Core/UMA_Core.asmdef")), Is.Not.Null);
-            Assert.That(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(
-                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/StrokeRasterize.compute")),
-                Is.Not.Null);
             UMASettings settings =
                 AssetDatabase.LoadAssetAtPath<UMASettings>(
                     UMAPathUtility.ResolveInstallAssetPath(
@@ -122,17 +119,17 @@ namespace UMA.Editors.Tests
             Assert.That(UMAPathUtility.ResolveUma3ContentPath("Races/Test.asset"),
                 Is.EqualTo("Assets/UMA/UMA3/Races/Test.asset"));
             Assert.That(UMAPathUtility.ResolveUma2ContentPath("Races/Test.asset"),
-                Is.EqualTo("Assets/UMA/UMA2/Races/Test.asset"));
+                Is.EqualTo("Assets/UMA2/Races/Test.asset"));
             Assert.That(UMAPathUtility.ResolveLegacyInstallAssetPath(
                     "Assets/UMA2/Races/Test.asset"),
-                Is.EqualTo("Assets/UMA/UMA2/Races/Test.asset"));
+                Is.EqualTo("Assets/UMA2/Races/Test.asset"));
             Assert.That(UMAPathUtility.ResolveLegacyInstallAssetPath(
                     "Assets/UMA/UMA2/Races/Test.asset"),
-                Is.EqualTo("Assets/UMA/UMA2/Races/Test.asset"));
+                Is.EqualTo("Assets/UMA2/Races/Test.asset"));
             Assert.That(UMAPathUtility.IsProjectOwnedUmaAssetPath(
                 "Assets/UMA/UMA3/Wearables/Icons"), Is.True);
             Assert.That(UMAPathUtility.IsProjectOwnedUmaAssetPath(
-                "Assets/UMA/UMA2/Races"), Is.True);
+                "Assets/UMA2/Races"), Is.True);
             Assert.That(UMAPathUtility.IsProjectOwnedUmaAssetPath(
                 "Assets/UMA/SRP/ShaderGraphs"), Is.True);
             Assert.That(UMAPathUtility.IsProjectOwnedUmaAssetPath(

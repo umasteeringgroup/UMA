@@ -10,7 +10,7 @@ namespace UMA.HairCards.Editor
     public sealed partial class HairGroomWorkspace : EditorWindow
     {
         private readonly HairCharacterBindingEditor characterBindingEditor = new HairCharacterBindingEditor();
-        private const string QuickStartPath = "Assets/UMA/Docs/Hair Cards - Quick Start.md";
+        private const string QuickStartPath = "Assets/UMA/HairCards/Documentation/Hair Cards - Quick Start.md";
         private const string MapClipboardKey = "UMA.HairCards.GrowthMapClipboard.v1";
         private static HairGrowthMapClipboard mapClipboard;
         private static string mapClipboardStatus;

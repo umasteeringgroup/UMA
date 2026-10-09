@@ -129,7 +129,7 @@ Judge the result on the generated atlas and final shader at lower mip levels. A 
 
 An overlay rect defines where a cropped overlay is placed relative to the full texture area. This is useful for small localized details such as tattoos, scars, makeup, emblems, or decals.
 
-![A cropped overlay placed within the full UV texture area](Images/ContentCreation/cropped-overlay-rect.jpg)
+![A cropped overlay placed within the full UV texture area](Images/ContentCreation/cropped-overlay-rect.png)
 
 When authoring cropped overlays:
 

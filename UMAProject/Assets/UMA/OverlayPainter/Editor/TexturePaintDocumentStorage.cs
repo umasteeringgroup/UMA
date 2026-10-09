@@ -188,6 +188,7 @@ namespace UMA.TexturePaint.Editor
         {
             if (store == null) throw new ArgumentNullException(nameof(store));
             AssignStableSurfaceIds(store);
+            store.RefreshLayerLinks();
             return new CaptureOperation(source, store, persistedRevisions, recoverySnapshot);
         }
 
@@ -216,6 +217,8 @@ namespace UMA.TexturePaint.Editor
             bool recoverySnapshot = false)
         {
             if (document == null || store == null) return;
+            AssignStableSurfaceIds(store);
+            store.RefreshLayerLinks();
             document.Migrate();
             document.revisionId = Guid.NewGuid().ToString("N");
             document.recoverySnapshot = recoverySnapshot;
@@ -249,6 +252,8 @@ namespace UMA.TexturePaint.Editor
                     materialSignature = MaterialSignature(set),
                     fallbackRendererIndex = set.surface?.rendererIndex ?? -1,
                     fallbackSubmeshIndex = set.surface?.sourceSubmeshIndex ?? -1,
+                    activeRegion = set.activeRegion?.Clone(),
+                    savedRegions = set.savedRegions.ConvertAll(region => region.Clone()),
                     activeLayer = set.activeLayerIndex,
                     normalControlStrength = set.normalControlStrength,
                     normalControlRadius = set.normalControlRadius,
@@ -315,6 +320,8 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
                 bool uvChanged = !string.IsNullOrEmpty(saved.uvSignature) &&
                     !string.Equals(saved.uvSignature, current.uv, StringComparison.Ordinal);
+                set.activeRegion = uvChanged ? null : saved.activeRegion?.Clone();
+                set.savedRegions = uvChanged ? new List<TexturePaintRegion>() : saved.savedRegions?.FindAll(region => region?.IsValid == true).ConvertAll(region => region.Clone()) ?? new List<TexturePaintRegion>();
                 if (uvChanged)
                 {
                     RestoreReprojectableContent(saved, set);
@@ -332,6 +339,8 @@ namespace UMA.TexturePaint.Editor
                 set.activeLayerIndex = Mathf.Clamp(saved.activeLayer, -1, set.layers.Count - 1);
                 set.BindPreviewTextures();
             }
+            RegenerateProjections(store);
+            store.RefreshLayerLinks();
             int unboundSurfaces = 0;
             int unboundLayers = 0;
             for (int i = 0; i < document.surfaces.Count; i++)
@@ -348,6 +357,40 @@ namespace UMA.TexturePaint.Editor
                     (unboundLayers == 1 ? string.Empty : "s") + " could not be rebound to the current " +
                     "character surfaces. The unmatched content remains in the document.", document);
             return new RestoreReport(restoredSurfaces, restoredLayers, unboundSurfaces, unboundLayers);
+        }
+
+        // Fixed world-space definitions are evaluated against the current geometry after all tiles exist.
+        internal static void RegenerateProjections(TextureStore store)
+        {
+            var groups = new Dictionary<string, List<TexturePaintLogicalLayerMember>>(StringComparer.Ordinal);
+            foreach (TextureSet set in store.Sets)
+                foreach (TexturePaintLayer layer in set.layers)
+                {
+                    if (layer.kind != TexturePaintLayerKind.Projection) continue;
+                    string key = !string.IsNullOrEmpty(layer.logicalLayerId) ? layer.paintTargetId + ":" + layer.logicalLayerId : set.persistentId + ":" + layer.id;
+                    if (!groups.TryGetValue(key, out var members)) groups[key] = members = new List<TexturePaintLogicalLayerMember>();
+                    members.Add(new TexturePaintLogicalLayerMember { textureSet = set, layer = layer });
+                }
+            if (groups.Count == 0) return;
+            using var renderer = new TexturePaintProjectionRenderer();
+            foreach (var members in groups.Values)
+            {
+                var sets = new List<TextureSet>(); var copies = new List<TexturePaintLayer>();
+                foreach (var member in members)
+                { sets.Add(member.textureSet); copies.Add(member.textureSet.CloneLayer(member.layer, member.layer.name, true, false)); }
+                if (!renderer.Generate(store.Sets, sets, copies, members[0].layer.projectionSettings, out string error))
+                {
+                    foreach (var copy in copies) copy.Dispose();
+                    Debug.LogWarning("Overlay Painter retained the saved Projection output: " + error);
+                    continue;
+                }
+                for (int i = 0; i < members.Count; i++)
+                {
+                    TextureSet set = members[i].textureSet; TexturePaintLayer original = members[i].layer;
+                    int index = set.layers.IndexOf(original); set.layers[index] = copies[i]; original.Dispose();
+                    set.BindPreviewTextures();
+                }
+            }
         }
 
         public static List<TexturePaintBindingReport> AnalyzeBindings(TexturePaintDocument document, TextureStore store)
@@ -418,6 +461,7 @@ namespace UMA.TexturePaint.Editor
         public static void AssignStableSurfaceIds(TextureStore store)
         {
             if (store == null) return;
+            var remapped = new Dictionary<string,string>(StringComparer.Ordinal);
             for (int i = 0; i < store.Sets.Count; i++)
             {
                 TextureSet set = store.Sets[i];
@@ -433,7 +477,15 @@ namespace UMA.TexturePaint.Editor
                     string.Join(",", slots),
                     MeshSignature(set.surface?.mesh)
                 });
-                set.persistentId = Hash128.Compute(identity).ToString();
+                string id=Hash128.Compute(identity).ToString();
+                if(!string.IsNullOrEmpty(set.persistentId))remapped[set.persistentId]=id;
+                set.persistentId = id;
+            }
+            foreach(var set in store.Sets)foreach(var layer in set.layers)
+            {
+                foreach(var reference in new[]{layer.links?.content,layer.links?.mask,layer.links?.instance,layer.projectionSettings?.garment?.foldInput,layer.projectionSettings?.garment?.protectionInput})
+                    if(reference?.surfaceId!=null && remapped.TryGetValue(reference.surfaceId,out string mapped))reference.surfaceId=mapped;
+                if(layer.projectionSettings?.regionSurfaceId!=null && remapped.TryGetValue(layer.projectionSettings.regionSurfaceId,out string region))layer.projectionSettings.regionSurfaceId=region;
             }
         }
 
@@ -482,6 +534,8 @@ namespace UMA.TexturePaint.Editor
                     materialSignature = MaterialSignature(set),
                     fallbackRendererIndex = set.surface?.rendererIndex ?? -1,
                     fallbackSubmeshIndex = set.surface?.sourceSubmeshIndex ?? -1,
+                    activeRegion = set.activeRegion?.Clone(),
+                    savedRegions = set.savedRegions.ConvertAll(region => region.Clone()),
                     activeLayer = set.activeLayerIndex,
                     normalControlStrength = set.normalControlStrength,
                     normalControlRadius = set.normalControlRadius,
@@ -609,7 +663,13 @@ namespace UMA.TexturePaint.Editor
                 fillChannel = layer.fillChannel,
                 fillColor = layer.fillColor,
                 fillSettings = layer.fillSettings?.Clone(),
+                fillTileSources = layer.fillTileSources?.Clone(),
+                projectionSettings = layer.projectionSettings?.Clone(),
+                links = layer.links?.Clone(),
+                cachedLinkedMask = layer.linkedMask != null ? TexturePaintRegionRenderer.Read(layer.linkedMask) : null,
                 paintSettings = layer.paintSettings?.Clone(),
+                layerSymmetry = layer.layerSymmetry?.Clone(),
+                layerSymmetryVersion = layer.layerSymmetryVersion,
                 spline = layer.IsSplineLayer ? CloneSpline(layer.spline) : null,
                 splineSettings = layer.IsSplineLayer ? CloneSplineSettings(layer.splineSettings) : null,
                 pluginId = layer.pluginId,
@@ -625,6 +685,7 @@ namespace UMA.TexturePaint.Editor
                 hasMask = layer.layerMask?.target != null,
                 maskBaseValue = layer.layerMask?.baseValue ?? 1f,
                 maskEffects = layer.layerMask?.effects?.Clone() ?? new TexturePaintLayerMaskEffects(),
+                maskReferenceCaches = layer.layerMask?.CaptureReferenceOutputs() ?? new List<TexturePaintMaskReferenceCache>(),
                 maskSourceSettings = layer.layerMask?.sourceSettings?.Clone() ??
                     TexturePaintLayerMask.DefaultSourceSettings(),
                 maskSourceChannel = layer.layerMask?.sourceChannel ?? TexturePaintChannel.Albedo,
@@ -656,6 +717,8 @@ namespace UMA.TexturePaint.Editor
                 slotNames = source.slotNames != null ? new List<string>(source.slotNames) : new List<string>(),
                 fallbackRendererIndex = source.fallbackRendererIndex,
                 fallbackSubmeshIndex = source.fallbackSubmeshIndex,
+                activeRegion = source.activeRegion?.Clone(),
+                savedRegions = source.savedRegions?.ConvertAll(region => region.Clone()) ?? new List<TexturePaintRegion>(),
                 activeLayer = source.activeLayer,
                 normalControlStrength = source.normalControlStrength,
                 normalControlRadius = source.normalControlRadius,
@@ -703,7 +766,13 @@ namespace UMA.TexturePaint.Editor
                 fillChannel = source.fillChannel,
                 fillColor = source.fillColor,
                 fillSettings = source.fillSettings?.Clone(),
+                fillTileSources = source.fillTileSources?.Clone(),
+                projectionSettings = source.projectionSettings?.Clone(),
+                links = source.links?.Clone(),
+                cachedLinkedMask = source.cachedLinkedMask?.Clone(),
                 paintSettings = source.paintSettings?.Clone(),
+                layerSymmetry = source.layerSymmetry?.Clone(),
+                layerSymmetryVersion = source.layerSymmetryVersion,
                 spline = CloneSpline(source.spline),
                 splineSettings = CloneSplineSettings(source.splineSettings),
                 pluginId = source.pluginId,
@@ -719,6 +788,7 @@ namespace UMA.TexturePaint.Editor
                 hasMask = source.hasMask,
                 maskBaseValue = source.maskBaseValue,
                 maskEffects = source.maskEffects?.Clone() ?? new TexturePaintLayerMaskEffects(),
+                maskReferenceCaches = TexturePaintMaskReferenceCache.CloneList(source.maskReferenceCaches),
                 maskSourceSettings = source.maskSourceSettings?.Clone() ??
                     TexturePaintLayerMask.DefaultSourceSettings(),
                 maskSourceChannel = source.maskSourceChannel,
@@ -838,6 +908,14 @@ namespace UMA.TexturePaint.Editor
             return saved;
         }
 
+        internal static void RestoreCachedLinkedMask(TexturePaintLayer layer,TexturePaintRegion cache)
+        {
+            if(cache?.IsValid!=true)return;
+            Texture2D texture=cache.CreateTexture();
+            try {layer.linkedMask=EditableTextureTarget.Create("Cached reference mask",cache.width,cache.height,RenderTextureFormat.ARGB32);Graphics.Blit(texture,layer.linkedMask);}
+            finally{UnityEngine.Object.DestroyImmediate(texture);}
+        }
+
         private static void RestoreBaseChannels(TexturePaintDocumentSurface saved, TextureSet set)
         {
             for (int i = 0; i < saved.baseChannels.Count; i++)
@@ -878,7 +956,13 @@ namespace UMA.TexturePaint.Editor
             layer.fillChannel = saved.fillChannel;
             layer.fillColor = saved.fillColor;
             layer.fillSettings = saved.fillSettings?.Clone();
+            layer.fillTileSources = saved.fillTileSources?.Clone();
+            layer.projectionSettings = saved.projectionSettings?.Clone();
+            layer.links = saved.links?.Clone();
+            RestoreCachedLinkedMask(layer,saved.cachedLinkedMask);
             layer.paintSettings = saved.paintSettings?.Clone();
+            layer.layerSymmetry = saved.layerSymmetry?.Clone();
+            layer.layerSymmetryVersion = saved.layerSymmetryVersion;
             layer.spline = layer.IsSplineLayer ? CloneSpline(saved.spline) : null;
             layer.splineSettings = layer.IsSplineLayer ? CloneSplineSettings(saved.splineSettings) : null;
             layer.pluginId = saved.pluginId;
@@ -902,7 +986,8 @@ namespace UMA.TexturePaint.Editor
                 TextureChannelTarget baseChannel = set.GetChannel(savedChannel.channel);
                 if (baseChannel == null) continue;
                 EditableTextureTarget target = new EditableTextureTarget(layer.name + " " + savedChannel.channel,
-                    baseChannel.Texture.width, baseChannel.Texture.height, baseChannel.format, null, Color.clear);
+                    baseChannel.Texture.width, baseChannel.Texture.height,
+                    RestoredLayerFormat(savedChannel.pixels, baseChannel.format), null, Color.clear);
                 Restore(savedChannel.pixels, target);
                 layer.channels[savedChannel.channel] = target;
                 TexturePaintLayerChannelSettings settings = savedChannel.settings?.Clone() ??
@@ -917,6 +1002,7 @@ namespace UMA.TexturePaint.Editor
                 if (mask != null)
                 {
                     mask.effects = saved.maskEffects?.Clone() ?? new TexturePaintLayerMaskEffects();
+                    mask.RestoreReferenceOutputs(saved.maskReferenceCaches);
                     mask.sourceSettings = saved.maskSourceSettings?.Clone() ??
                         TexturePaintLayerMask.DefaultSourceSettings();
                     mask.sourceChannel = saved.maskSourceChannel;
@@ -1024,7 +1110,12 @@ namespace UMA.TexturePaint.Editor
                 layer.effects = source.effects?.Clone() ?? new TexturePaintLayerEffects();
                 layer.fillChannel = source.fillChannel; layer.fillColor = source.fillColor;
                 layer.fillSettings = source.fillSettings?.Clone();
+                layer.fillTileSources = source.fillTileSources?.Clone();
+                layer.projectionSettings = source.projectionSettings?.Clone();
+                layer.links = source.links?.Clone();
                 layer.paintSettings = source.paintSettings?.Clone();
+                layer.layerSymmetry = source.layerSymmetry?.Clone();
+                layer.layerSymmetryVersion = source.layerSymmetryVersion;
                 layer.spline = layer.IsSplineLayer ? CloneSpline(source.spline) : null;
                 layer.splineSettings = layer.IsSplineLayer ? CloneSplineSettings(source.splineSettings) : null;
                 layer.pluginId = source.pluginId; layer.pluginVersion = source.pluginVersion;
@@ -1043,6 +1134,27 @@ namespace UMA.TexturePaint.Editor
                 layer.sourceMaterialPresetLayerId = source.sourceMaterialPresetLayerId;
                 layer.NormalizeKindPayload();
                 layer.strokes.AddRange(CloneStrokes(source.strokes));
+                if (layer.kind == TexturePaintLayerKind.Fill && layer.fillTileSources != null &&
+                    (layer.fillTileSources.mode != TexturePaintFillTileMode.Shared || layer.fillTileSources.bakeOverlayCoverage))
+                {
+                    // Rebuild from source definitions, never the old layout's cached pixels.
+                    foreach (TexturePaintDocumentLayerChannel savedChannel in source.channels)
+                    {
+                        TextureChannelTarget baseChannel = set.GetChannel(savedChannel.channel);
+                        if (baseChannel?.Texture == null) continue;
+                        if (!layer.channels.ContainsKey(savedChannel.channel))
+                            layer.channels[savedChannel.channel] = new EditableTextureTarget(
+                                layer.name + " " + savedChannel.channel, baseChannel.Texture.width,
+                                baseChannel.Texture.height, RestoredLayerFormat(savedChannel.pixels,
+                                    baseChannel.format), null, Color.clear);
+                        TexturePaintLayerChannelSettings settings = savedChannel.settings?.Clone() ??
+                            new TexturePaintLayerChannelSettings { channel = savedChannel.channel };
+                        settings.sourceSettings = savedChannel.GetSourceSettings();
+                        layer.channelSettings[savedChannel.channel] = settings;
+                    }
+                    if (!set.RegenerateFillLayer(layer))
+                        Debug.LogWarning($"Overlay Painter could not regenerate tile Fill '{layer.name}' on '{set.Name}'.");
+                }
                 if (source.hasMask)
                 {
                     TexturePaintLayerMask mask = set.AddLayerMask(layer, source.maskBaseValue);
@@ -1209,6 +1321,21 @@ namespace UMA.TexturePaint.Editor
             }
         }
 
+        private static RenderTextureFormat RestoredLayerFormat(TexturePaintPixelData pixels,
+            RenderTextureFormat fallback)
+        {
+            // An effect baked through partial alpha can require straight RGB above one. Its
+            // saved floating-point pixels must survive reopening even on an 8-bit base channel.
+            switch (pixels?.textureFormat)
+            {
+                case TextureFormat.RGBAHalf: return RenderTextureFormat.ARGBHalf;
+                case TextureFormat.RGBAFloat: return RenderTextureFormat.ARGBFloat;
+                case TextureFormat.RHalf: return RenderTextureFormat.RHalf;
+                case TextureFormat.RFloat: return RenderTextureFormat.RFloat;
+                default: return fallback;
+            }
+        }
+
         private static TexturePaintSpline CloneSpline(TexturePaintSpline source)
         {
             return source == null ? null : JsonUtility.FromJson<TexturePaintSpline>(JsonUtility.ToJson(source));
@@ -1234,6 +1361,7 @@ namespace UMA.TexturePaint.Editor
                     historyGroupKey = stroke.historyGroupKey,
                     tool = stroke.tool,
                     channel = stroke.channel,
+                    directUV = stroke.directUV, stencil = stroke.stencil?.Clone(),
                     samples = stroke.samples != null ? new List<StrokeSample>(stroke.samples) : new List<StrokeSample>()
                 });
             }

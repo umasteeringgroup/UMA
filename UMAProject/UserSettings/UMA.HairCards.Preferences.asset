@@ -133,10 +133,22 @@ MonoBehaviour:
     json: '{"fields":[{"name":"selectedId","json":"{\"value\":\"fcc857d3527f49ea968697cfa269257e\"}"},{"name":"channel","json":"{\"value\":0}"},{"name":"checkerboard","json":"{\"value\":true}"},{"name":"checkerLight","json":"{\"value\":{\"r\":0.75,\"g\":0.75,\"b\":0.75,\"a\":1.0}}"},{"name":"checkerDark","json":"{\"value\":{\"r\":0.550000011920929,\"g\":0.550000011920929,\"b\":0.550000011920929,\"a\":1.0}}"},{"name":"solidBackground","json":"{\"value\":{\"r\":0.2199999988079071,\"g\":0.2199999988079071,\"b\":0.2199999988079071,\"a\":1.0}}"},{"name":"checkerSize","json":"{\"value\":12.0}"},{"name":"backgroundExpanded","json":"{\"value\":false}"},{"name":"snapToPixels","json":"{\"value\":true}"},{"name":"showOutlines","json":"{\"value\":true}"},{"name":"pixelUnits","json":"{\"value\":false}"},{"name":"zoom","json":"{\"value\":1.0}"},{"name":"pan","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"listScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"tool","json":"{\"value\":0}"},{"name":"materialPreviewExpanded","json":"{\"value\":true}"},{"name":"previewYaw","json":"{\"value\":0.0}"}]}'
   - key: atlas-panel:GlobalObjectId_V1-3-a44c37fbbbca05a48bb707708a612b56-11400000-0
     json: '{"fields":[{"name":"selectedId","json":"{\"value\":\"fcc857d3527f49ea968697cfa269257e\"}"},{"name":"channel","json":"{\"value\":0}"},{"name":"checkerboard","json":"{\"value\":true}"},{"name":"checkerLight","json":"{\"value\":{\"r\":0.75,\"g\":0.75,\"b\":0.75,\"a\":1.0}}"},{"name":"checkerDark","json":"{\"value\":{\"r\":0.550000011920929,\"g\":0.550000011920929,\"b\":0.550000011920929,\"a\":1.0}}"},{"name":"solidBackground","json":"{\"value\":{\"r\":0.2199999988079071,\"g\":0.2199999988079071,\"b\":0.2199999988079071,\"a\":1.0}}"},{"name":"checkerSize","json":"{\"value\":12.0}"},{"name":"backgroundExpanded","json":"{\"value\":false}"},{"name":"snapToPixels","json":"{\"value\":true}"},{"name":"showOutlines","json":"{\"value\":true}"},{"name":"pixelUnits","json":"{\"value\":false}"},{"name":"zoom","json":"{\"value\":1.0}"},{"name":"pan","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"listScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"tool","json":"{\"value\":0}"},{"name":"materialPreviewExpanded","json":"{\"value\":true}"},{"name":"previewYaw","json":"{\"value\":0.0}"}]}'
+  - key: stage:GlobalObjectId_V1-3-e88ae6147515c9f4bb8bf71ed33604c6-11400000-0
+    json: '{"fields":[{"name":"selectedFlowSplineId","json":"{\"value\":\"d84552a82721420eb66ff2c7f92eb6ec\"}"},{"name":"selectedFlowPoint","json":"{\"value\":7}"},{"name":"activeNodeKey","json":"{\"value\":\"Cards:9703133581084b4ca295d5442ff4f03b\"}"},{"name":"workflowStep","json":"{\"value\":4}"},{"name":"sceneTool","json":"{\"value\":0}"},{"name":"previewMode","json":"{\"value\":2}"},{"name":"hasGeneratedCardPreview","json":"{\"value\":true}"},{"name":"lastGrowthTool","json":"{\"value\":1}"},{"name":"lastGuideTool","json":"{\"value\":0}"},{"name":"lastGroomTool","json":"{\"value\":0}"},{"name":"activeGroupId","json":"{\"value\":\"9703133581084b4ca295d5442ff4f03b\"}"},{"name":"activeMapId","json":"{\"value\":\"0f9683c7bf97464cbd95e773d3df1c9e\"}"},{"name":"activeGuideId","json":"{\"value\":\"\"}"},{"name":"activeLayerId","json":"{\"value\":\"\"}"},{"name":"activeModifierId","json":"{\"value\":\"\"}"},{"name":"activeHelperId","json":"{\"value\":\"\"}"},{"name":"activeGuidePoint","json":"{\"value\":-1}"},{"name":"lodLevel","json":"{\"value\":0}"},{"name":"brushRadius","json":"{\"value\":0.007000000216066837}"},{"name":"brushHardness","json":"{\"value\":1.0}"},{"name":"brushStrength","json":"{\"value\":1.0}"},{"name":"brushRootInfluence","json":"{\"value\":0.28299999237060549}"},{"name":"affectThroughDepth","json":"{\"value\":true}"},{"name":"brushScope","json":"{\"value\":0}"},{"name":"previewQuality","json":"{\"value\":0}"},{"name":"selectedGuideIds","json":"{\"value\":[]}"},{"name":"isolateSelectedGuides","json":"{\"value\":false}"},{"name":"soloLayerId","json":"{\"value\":\"\"}"},{"name":"gravityCollision","json":"{\"value\":true}"},{"name":"gravityClearance","json":"{\"value\":0.041019998490810397}"},{"name":"gravityStrength","json":"{\"value\":1.3300000429153443}"},{"name":"gravitySeparation","json":"{\"value\":0.10100000351667404}"},{"name":"paintValue","json":"{\"value\":1.0}"},{"name":"mirrorPaintX","json":"{\"value\":true}"},{"name":"mirrorCutX","json":"{\"value\":false}"},{"name":"showScalp","json":"{\"value\":true}"},{"name":"showAvatar","json":"{\"value\":true}"},{"name":"showChildren","json":"{\"value\":true}"},{"name":"showChildSplines","json":"{\"value\":true}"},{"name":"showHelpers","json":"{\"value\":false}"},{"name":"showControlPoints","json":"{\"value\":true}"},{"name":"showGuideRoots","json":"{\"value\":true}"},{"name":"showGuideSplines","json":"{\"value\":true}"},{"name":"showCardWireframe","json":"{\"value\":false}"},{"name":"depthTestGuides","json":"{\"value\":true}"},{"name":"showFreezeMask","json":"{\"value\":false}"},{"name":"rootHandleScale","json":"{\"value\":1.0}"},{"name":"hiddenAvatarSlots","json":"{\"value\":[\"Beard_Gunslinger_slot\",\"male_shoes_tall_slot\",\"male_shorts_black_cotton_slot\",\"male_tshirt_white_slot\",\"UMA30_InnerMouth\"]}"},{"name":"guideGeneration","json":"{\"value\":{\"guideCount\":404,\"pointsPerGuide\":4,\"defaultLength\":0.05000000074505806,\"minimumRootSpacing\":0.0008999999845400453,\"rootUniformity\":0.8460000157356262,\"surfaceFlow\":0.5690000057220459,\"lift\":0.8500000238418579,\"seed\":1737,\"maximumAttemptsPerGuide\":32}}"},{"name":"selectedVertices","json":"{\"value\":[]}"},{"name":"FormPointIndex","json":"{\"value\":0}"},{"name":"FormEditAll","json":"{\"value\":true}"},{"name":"FormSoftRadius","json":"{\"value\":0.0}"}]}'
+  - key: nodes:GlobalObjectId_V1-3-e88ae6147515c9f4bb8bf71ed33604c6-11400000-0
+    json: '{"fields":[{"name":"nodeScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"nodeSearch","json":"{\"value\":\"\"}"},{"name":"collapsedNodeKeys","json":"{\"value\":[]}"},{"name":"expandedOptionalMapKeys","json":"{\"value\":[]}"},{"name":"initialPlacementDone","json":"{\"value\":true}"}]}'
+  - key: preview:GlobalObjectId_V1-3-e88ae6147515c9f4bb8bf71ed33604c6-11400000-0
+    json: '{"fields":[{"name":"previewPage","json":"{\"value\":0}"},{"name":"previewScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"settingsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"visibilitySearch","json":"{\"value\":\"\"}"},{"name":"recipeVisibilityExpanded","json":"{\"value\":true}"},{"name":"udimVisibilityExpanded","json":"{\"value\":true}"},{"name":"slotVisibilityExpanded","json":"{\"value\":true}"},{"name":"initialPlacementDone","json":"{\"value\":true}"}]}'
+  - key: workspace:GlobalObjectId_V1-3-e88ae6147515c9f4bb8bf71ed33604c6-11400000-0
+    json: '{"fields":[{"name":"initialPlacementDone","json":"{\"value\":true}"},{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"cardGeometryExpanded","json":"{\"value\":false}"},{"name":"childSettingsExpanded","json":"{\"value\":false}"},{"name":"atlasMapsExpanded","json":"{\"value\":false}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guidePage","json":"{\"value\":0}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"authoredGuidesExpanded","json":"{\"value\":false}"}]}'
+  - key: preview-visibility:GlobalObjectId_V1-3-e88ae6147515c9f4bb8bf71ed33604c6-11400000-0
+    json: '{"fields":[{"name":"initialPlacementDone","json":"{\"value\":true}"},{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"cardGeometryExpanded","json":"{\"value\":false}"},{"name":"childSettingsExpanded","json":"{\"value\":false}"},{"name":"atlasMapsExpanded","json":"{\"value\":false}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guidePage","json":"{\"value\":0}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"authoredGuidesExpanded","json":"{\"value\":false}"}]}'
+  - key: workspace:GlobalObjectId_V1-3-f1c314f9457f4bf45b983b8d33692379-11400000-0
+    json: '{"fields":[{"name":"initialPlacementDone","json":"{\"value\":true}"},{"name":"explorerScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"detailsScroll","json":"{\"value\":{\"x\":0.0,\"y\":0.0}}"},{"name":"cardGeometryExpanded","json":"{\"value\":false}"},{"name":"childSettingsExpanded","json":"{\"value\":false}"},{"name":"atlasMapsExpanded","json":"{\"value\":false}"},{"name":"guideSearch","json":"{\"value\":\"\"}"},{"name":"guidePage","json":"{\"value\":0}"},{"name":"guideLibraryExpanded","json":"{\"value\":false}"},{"name":"authoredGuidesExpanded","json":"{\"value\":false}"}]}'
   lastSetup:
-    profile: {fileID: 11400000, guid: ac42861f66780bb40a76792815dc41f2, type: 2}
-    atlas: {fileID: 11400000, guid: ab6380aa22568544cb1f490699273896, type: 2}
-    resourceRevision: e5fe6343580ef7c35f0be3d9a9abd92e:e1916984ad15c61d9fc8ea0c7d09d131
+    profile: {fileID: 11400000, guid: 3d49117b5896dd240b2c96ecb0680c56, type: 2}
+    atlas: {fileID: 11400000, guid: d24ecc69e4445134d84e83fd34bd9033, type: 2}
+    resourceRevision: 4ad0bf2038800eec61adc5722b6a50c8:fdad2ecc119cf8ecc6106134f2661945
     children:
       childrenPerGuide: 3
       includeGuideCard: 1
@@ -151,7 +163,7 @@ MonoBehaviour:
       enabled: 1
       clumps: []
       cards:
-        id: d35ef37a6661f4af9d7de27d0a316ad7
+        id: be688fb02f1d45ca9313281c9fe82c1f
         name: "02 \xB7 Gathered sweep"
         enabled: 1
         source: 3
@@ -353,7 +365,7 @@ MonoBehaviour:
             variation: 0.2
             fullCardClearance: 1
             clearance: 0.0006
-          id: 79cd1d3ec6f947e2989fc5656340ba98
+          id: ddc88c6117d146e38098e3f1f0aa7fca
           name: Gather to bun - dual bend
           type: 24
           domain: 0
@@ -467,7 +479,7 @@ MonoBehaviour:
             m_PreInfinity: 2
             m_PostInfinity: 2
             m_RotationOrder: 4
-          helperId: 0f9d920527cc4ad08c2061400641697b
+          helperId: 
           clumpRadius: 0.03
           rootInfluence: 1
           liftNormalMode: 0
@@ -542,7 +554,7 @@ MonoBehaviour:
       locked: 0
     bake:
       outputFolder: Assets/UMAProjectData/HairCards/Generated
-      assetName: BraidedBun_HairGroom
+      assetName: UMADynamicCharacterAvatar
       createMesh: 1
       createSlot: 0
       createOverlay: 0

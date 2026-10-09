@@ -2,6 +2,11 @@
 
 ## Implementation status
 
+UMA2 packaging was revised on 2026-10-07: its current official plugin is
+**UMA2Compatibility**, installed at `Assets/UMA2` with separate Examples and Tests companions
+and managed from Welcome's Plugins page. The earlier nested UMA2 destination and
+`UMA2Content` filename described below are superseded; see [official plugins](../Docs/UMAPlugins.md).
+
 Completed and hardened on 2026-08-16. All five phases are implemented. The
 release builder produces reproducible, revalidated content archives and uses a
 verified, recoverable Core staging swap without raw SRP/UMA2/UMA3 trees. The

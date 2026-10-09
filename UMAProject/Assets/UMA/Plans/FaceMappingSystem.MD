@@ -244,7 +244,7 @@ File import and webcam capture are adapters that produce a texture for this same
 
 ### Webcam
 
-Use `WebCamTexture` behind a dedicated capture service. Unity documents webcam textures as live video textures and requires appropriate camera authorization on applicable platforms. [Unity WebCamTexture API](https://docs.unity.cn/ScriptReference/WebCamTexture.html)
+Use `WebCamTexture` behind a dedicated capture service. Unity documents webcam textures as live video textures and requires appropriate camera authorization on applicable platforms. [Unity WebCamTexture API](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/WebCamTexture.html)
 
 Capture UI should include:
 

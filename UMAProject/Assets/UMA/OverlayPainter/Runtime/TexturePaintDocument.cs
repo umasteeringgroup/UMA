@@ -14,6 +14,7 @@ namespace UMA.TexturePaint
         public TexturePaintTool tool;
         public TexturePaintChannel channel;
         public bool directUV;
+        public TexturePaintStencil stencil;
         public List<StrokeSample> samples = new List<StrokeSample>();
     }
 
@@ -23,7 +24,9 @@ namespace UMA.TexturePaint
         Fill,
         Spline,
         Group,
-        Plugin
+        Plugin,
+        Projection,
+        Reference
     }
 
     public enum TexturePaintFillProjection
@@ -38,9 +41,58 @@ namespace UMA.TexturePaint
         CrossFade
     }
 
+    public enum TexturePaintFillTileMode { Shared, Override, NoContribution }
+
+    [Serializable]
+    public sealed class TexturePaintFillTileTexture
+    {
+        public TexturePaintChannel channel;
+        public Texture2D texture;
+    }
+
+    // Each physical member already has a persistent surface identity. Keep its overrides
+    // separate from shared sources, so group edits cannot overwrite tile assignments.
+    [Serializable]
+    public sealed class TexturePaintFillTileSources
+    {
+        public TexturePaintFillTileMode mode;
+        public OverlayDataAsset overlay;
+        public List<TexturePaintFillTileTexture> textures = new List<TexturePaintFillTileTexture>();
+        public bool bakeOverlayCoverage;
+
+        public TexturePaintFillTileSources Clone()
+        {
+            var copy = new TexturePaintFillTileSources
+                { mode = mode, overlay = overlay, bakeOverlayCoverage = bakeOverlayCoverage };
+            if (textures != null)
+                foreach (TexturePaintFillTileTexture entry in textures)
+                    if (entry != null) copy.textures.Add(new TexturePaintFillTileTexture
+                        { channel = entry.channel, texture = entry.texture });
+            return copy;
+        }
+
+        public Texture2D GetTexture(TexturePaintChannel channel)
+        {
+            if (textures != null)
+                foreach (TexturePaintFillTileTexture entry in textures)
+                    if (entry != null && entry.channel == channel) return entry.texture;
+            return null;
+        }
+
+        public void SetTexture(TexturePaintChannel channel, Texture2D texture)
+        {
+            textures ??= new List<TexturePaintFillTileTexture>();
+            textures.RemoveAll(entry => entry == null || entry.channel == channel);
+            if (texture != null) textures.Add(new TexturePaintFillTileTexture { channel = channel, texture = texture });
+        }
+    }
+
     [Serializable]
     public sealed class TexturePaintFillSettings
     {
+        [Range(0, 16)] public int blur;
+        public Color multiplier = Color.white;
+        public Color additive = Color.clear;
         [HideInInspector] public int generatorRevision;
         public TexturePaintBrushSource source = TexturePaintBrushSource.Color;
         public Texture2D sourceTexture;
@@ -116,6 +168,7 @@ namespace UMA.TexturePaint
         [Range(0f, 1f)] public float strength = 1f;
         public bool limitStrokeCoverage;
         public bool mirrorX;
+        public TexturePaintSymmetry symmetry;
         public float stabilization;
         public float directionSmoothing = 0.35f;
         public float projectionDepth = 0.5f;
@@ -126,13 +179,16 @@ namespace UMA.TexturePaint
 
         public TexturePaintLayerSettings Clone()
         {
-            return (TexturePaintLayerSettings)MemberwiseClone();
+            var copy=(TexturePaintLayerSettings)MemberwiseClone();copy.symmetry=symmetry?.Clone();return copy;
         }
     }
 
     [Serializable]
     public sealed class TexturePaintChannelSourceSettings
     {
+        [Range(0, 16)] public int blur;
+        public Color multiplier = Color.white;
+        public Color additive = Color.clear;
         public TexturePaintBrushSource source = TexturePaintBrushSource.Texture;
         public Texture2D sourceTexture;
         public Sprite sourceSprite;
@@ -167,7 +223,9 @@ namespace UMA.TexturePaint
         // Height strength belongs to each authored Normal Control channel. The explicit flag lets
         // documents saved before this setting existed retain their texture-set conversion value.
         public bool hasNormalControlStrength;
-        [Range(0f, 16f)] public float normalControlStrength = 2f;
+        [Range(0f, 64f)] public float normalControlStrength = 2f;
+        public bool normalControlInvert;
+        [Range(1, 16)] public int normalControlRadius = 1;
         public TexturePaintChannelSourceSettings sourceSettings;
 
         public TexturePaintLayerChannelSettings Clone()
@@ -182,6 +240,8 @@ namespace UMA.TexturePaint
                 blendMode = blendMode,
                 hasNormalControlStrength = hasNormalControlStrength,
                 normalControlStrength = normalControlStrength,
+                normalControlInvert = normalControlInvert,
+                normalControlRadius = normalControlRadius,
                 sourceSettings = sourceSettings?.Clone()
             };
         }
@@ -286,10 +346,11 @@ namespace UMA.TexturePaint
         public Vector2 offset;
         public TexturePaintBlendMode blendMode = TexturePaintBlendMode.Normal;
         [Range(0f, 1f)] public float level = 1f;
-        [Range(0f, 1f)] public float edgeFadeStart = 0.75f;
+        [Range(-1f, 1f)] public float edgeFadeStart = 0.75f;
         [Range(0f, 1f)] public float edgeFadeSize = 1f;
         public TexturePaintRibbonSide ribbonSide = TexturePaintRibbonSide.Both;
         public Color secondaryColor = Color.black;
+        public float bevelLightAngle = 135f;
         public TexturePaintRibbonBevelTone ribbonLeftTone = TexturePaintRibbonBevelTone.Light;
         public TexturePaintRibbonBevelTone ribbonRightTone = TexturePaintRibbonBevelTone.Dark;
         [Range(-256f, 256f)] public float ribbonLeftOffset;
@@ -298,6 +359,9 @@ namespace UMA.TexturePaint
         [Range(0.001f, 0.25f)] public float stitchThreadSize = 0.012f;
         [Range(0.01f, 1f)] public float stitchLength = 0.08f;
         [Range(0f, 0.45f)] public float stitchInset = 0.06f;
+        public float contourThreadWidth = 1.5f;
+        public float contourStitchLength = 5f;
+        public float contourStitchInset = 2f;
         public Texture2D texture1;
         public Texture2D texture2;
         public Vector2 textureTiling1 = Vector2.one;
@@ -333,6 +397,7 @@ namespace UMA.TexturePaint
                 edgeFadeSize = edgeFadeSize,
                 ribbonSide = ribbonSide,
                 secondaryColor = secondaryColor,
+                bevelLightAngle = bevelLightAngle,
                 ribbonLeftTone = ribbonLeftTone,
                 ribbonRightTone = ribbonRightTone,
                 ribbonLeftOffset = ribbonLeftOffset,
@@ -341,6 +406,9 @@ namespace UMA.TexturePaint
                 stitchThreadSize = stitchThreadSize,
                 stitchLength = stitchLength,
                 stitchInset = stitchInset,
+                contourThreadWidth = contourThreadWidth,
+                contourStitchLength = contourStitchLength,
+                contourStitchInset = contourStitchInset,
                 texture1 = texture1,
                 texture2 = texture2,
                 textureTiling1 = textureTiling1,
@@ -368,13 +436,17 @@ namespace UMA.TexturePaint
             level = Mathf.Clamp01(level);
             offset.x = Mathf.Clamp(offset.x, -256f, 256f);
             offset.y = Mathf.Clamp(offset.y, -256f, 256f);
-            edgeFadeStart = Mathf.Clamp01(edgeFadeStart);
+            edgeFadeStart = Mathf.Clamp(edgeFadeStart, -1f, 1f);
             edgeFadeSize = Mathf.Clamp01(edgeFadeSize);
             ribbonLeftOffset = Mathf.Clamp(ribbonLeftOffset, -256f, 256f);
             ribbonRightOffset = Mathf.Clamp(ribbonRightOffset, -256f, 256f);
             stitchThreadSize = Mathf.Clamp(stitchThreadSize, 0.001f, 0.25f);
             stitchLength = Mathf.Clamp(stitchLength, 0.01f, 1f);
             stitchInset = Mathf.Clamp(stitchInset, 0f, 0.45f);
+            contourThreadWidth = float.IsFinite(contourThreadWidth) ? Mathf.Clamp(contourThreadWidth,.5f,32f) : 1.5f;
+            bevelLightAngle = float.IsFinite(bevelLightAngle) ? Mathf.Repeat(bevelLightAngle,360f) : 135f;
+            contourStitchLength = float.IsFinite(contourStitchLength) ? Mathf.Clamp(contourStitchLength,1f,128f) : 5f;
+            contourStitchInset = float.IsFinite(contourStitchInset) ? Mathf.Clamp(contourStitchInset,0f,128f) : 2f;
             NormalizeTiling(ref textureTiling1);
             NormalizeTiling(ref textureTiling2);
             textureOpacity1 = Mathf.Clamp01(textureOpacity1);
@@ -529,7 +601,10 @@ namespace UMA.TexturePaint
                 kind == TexturePaintLayerEffectKind.InnerShadow ||
                 kind == TexturePaintLayerEffectKind.OuterShadow ||
                 kind == TexturePaintLayerEffectKind.InnerGlow ||
-                kind == TexturePaintLayerEffectKind.OuterGlow;
+                kind == TexturePaintLayerEffectKind.OuterGlow ||
+                kind == TexturePaintLayerEffectKind.ProceduralStitch ||
+                kind == TexturePaintLayerEffectKind.BevelEdge ||
+                kind == TexturePaintLayerEffectKind.EdgeFade;
         }
 
         public static bool IsCompositeOnlyEffect(TexturePaintLayerEffectKind kind)
@@ -747,15 +822,24 @@ namespace UMA.TexturePaint
         public TexturePaintLayerMaskTextureOverlaySettings textureOverlay =
             new TexturePaintLayerMaskTextureOverlaySettings();
 
-        public bool HasEnabled => noise?.enabled == true || textureOverlay?.enabled == true;
+        public List<TexturePaintMaskEffect> stack = new List<TexturePaintMaskEffect>();
+        public bool startFromPaint = true;
+        [Range(0, 1)] public float initialValue = 1;
+        public bool HasEnabled => noise?.enabled == true || textureOverlay?.enabled == true ||
+            !startFromPaint || stack?.Exists(effect => effect != null && effect.enabled) == true;
+        public bool HasReferences => stack?.Exists(effect => effect?.enabled == true &&
+            effect.kind == TexturePaintMaskEffectKind.LayerReference && effect.reference?.IsSet == true) == true;
 
         public TexturePaintLayerMaskEffects Clone()
         {
-            return new TexturePaintLayerMaskEffects
+            var copy = new TexturePaintLayerMaskEffects
             {
                 noise = noise?.Clone() ?? new TexturePaintLayerMaskNoiseSettings(),
-                textureOverlay = textureOverlay?.Clone() ?? new TexturePaintLayerMaskTextureOverlaySettings()
+                textureOverlay = textureOverlay?.Clone() ?? new TexturePaintLayerMaskTextureOverlaySettings(),
+                startFromPaint = startFromPaint, initialValue = initialValue
             };
+            if (stack != null) foreach (var effect in stack) if (effect != null) copy.stack.Add(effect.Clone());
+            return copy;
         }
 
         public void Normalize()
@@ -764,6 +848,11 @@ namespace UMA.TexturePaint
             textureOverlay ??= new TexturePaintLayerMaskTextureOverlaySettings();
             noise.Normalize();
             textureOverlay.Normalize();
+            initialValue = float.IsFinite(initialValue) ? Mathf.Clamp01(initialValue) : 1;
+            stack ??= new List<TexturePaintMaskEffect>(); stack.RemoveAll(effect => effect == null);
+            var ids = new HashSet<string>();
+            foreach (var effect in stack)
+            { effect.Normalize(); if (!ids.Add(effect.id)) { effect.id = Guid.NewGuid().ToString("N"); ids.Add(effect.id); } }
         }
     }
 
@@ -818,6 +907,7 @@ namespace UMA.TexturePaint
         [Range(0f, 1f)] public float strength = 1f;
         public bool limitStrokeCoverage;
         public bool mirrorX;
+        public TexturePaintSymmetry symmetry;
         public float stabilization;
         public float directionSmoothing = 0.35f;
         public float projectionDepth = 0.5f;
@@ -825,16 +915,48 @@ namespace UMA.TexturePaint
         public bool paintBackfaces;
         public bool pressureAffectsFlow = true;
         public bool pressureAffectsSize;
+        public TexturePaintPathFlipMode textureFlipX;
+        public TexturePaintPathFlipMode textureFlipY;
+        public int textureFlipSeed;
+        public TexturePaintPathGeneratorSettings pathGenerator;
+        public TexturePaintHemSeamSettings hemSeam;
+        public TexturePaintGarmentSettings garment;
+        // An enabled local frame supersedes legacy mirror/radial flags when shared symmetry is off.
+        // Null or disabled preserves old documents, including brushMirrorStroke.
+        public TexturePaintSymmetry localSymmetry;
+        // Retain the construction selector when both generators are disabled.
+        // Enabled generators take precedence when loading older documents.
+        public bool hemSeamSelected;
+        public bool ribbonCrossfadeJoins;
+        [Range(0f, 1f)] public float ribbonJoinOverlap = .2f;
+
         public TexturePaintPathMode pathMode = TexturePaintPathMode.Ribbon;
         public TexturePaintPathOrientation orientation = TexturePaintPathOrientation.FollowPath;
         public TexturePaintPathCap startCap = TexturePaintPathCap.Round;
         public TexturePaintPathCap endCap = TexturePaintPathCap.Round;
+        // Fractions of the complete open path length; zero preserves existing hard endpoints.
+        [Range(0f, 2f)] public float startFade;
+        [Range(0f, 2f)] public float endFade;
+        // Extra reach beyond saved brush softness; zero preserves older paths exactly.
+        [Range(0f, 1f)] public float sideFadeExtra;
+        public AnimationCurve sideFadeCurve;
+        public AnimationCurve startFadeCurve;
+        public AnimationCurve endFadeCurve;
         public int radialSymmetry = 1;
         public Vector3 symmetryAxis = Vector3.up;
 
         public TexturePaintSplineSettings Clone()
         {
-            return (TexturePaintSplineSettings)MemberwiseClone();
+            var copy = (TexturePaintSplineSettings)MemberwiseClone();
+            copy.pathGenerator = pathGenerator?.Clone();
+            copy.hemSeam = hemSeam?.Clone();
+            copy.garment = garment?.Clone();
+            copy.symmetry = symmetry?.Clone();
+            copy.localSymmetry = localSymmetry?.Clone();
+            copy.sideFadeCurve = TexturePaintFadeUtility.CloneCurve(sideFadeCurve);
+            copy.startFadeCurve = TexturePaintFadeUtility.CloneCurve(startFadeCurve);
+            copy.endFadeCurve = TexturePaintFadeUtility.CloneCurve(endFadeCurve);
+            return copy;
         }
 
         public bool AutoUpdateEnabled => editorSettingsVersion <= 0 || autoUpdate;
@@ -900,6 +1022,9 @@ namespace UMA.TexturePaint
         public Sprite sourceSprite;
         public OverlayDataAsset sourceOverlay;
         public Color sourceColor = Color.white;
+        public Color sourceMultiplier = Color.white;
+        public Color sourceAdditive = Color.clear;
+        public int sourceBlur;
         public TexturePaintNormalConvention sourceNormalConvention = TexturePaintNormalConvention.OpenGL;
         public bool sourceInvert;
         public Vector2 sourceTiling = Vector2.one;
@@ -921,6 +1046,9 @@ namespace UMA.TexturePaint
             sourceSprite = value.sourceSprite;
             sourceOverlay = value.sourceOverlay;
             sourceColor = value.color;
+            sourceMultiplier = value.multiplier;
+            sourceAdditive = value.additive;
+            sourceBlur = value.blur;
             sourceNormalConvention = value.normalConvention;
             sourceInvert = value.invert;
             sourceTiling = value.tiling;
@@ -947,6 +1075,9 @@ namespace UMA.TexturePaint
                 sourceSprite = sourceSprite,
                 sourceOverlay = sourceOverlay,
                 color = sourceColor,
+                multiplier = sourceMultiplier,
+                additive = sourceAdditive,
+                blur = sourceBlur,
                 normalConvention = sourceNormalConvention,
                 invert = sourceInvert,
                 tiling = sourceTiling,
@@ -997,7 +1128,14 @@ namespace UMA.TexturePaint
         public TexturePaintChannel fillChannel = TexturePaintChannel.Albedo;
         public Color fillColor = Color.white;
         public TexturePaintFillSettings fillSettings;
+        public TexturePaintFillTileSources fillTileSources;
+        public TexturePaintProjectionSettings projectionSettings;
+        public TexturePaintLayerLinks links;
+        public TexturePaintRegion cachedLinkedMask;
         public TexturePaintLayerSettings paintSettings;
+        public TexturePaintSymmetry layerSymmetry;
+        // Missing in older documents so the editor can migrate the previous effective frame.
+        public int layerSymmetryVersion;
         public TexturePaintSpline spline;
         public TexturePaintSplineSettings splineSettings;
         public string pluginId;
@@ -1013,6 +1151,7 @@ namespace UMA.TexturePaint
         public bool hasMask;
         [Range(0f, 1f)] public float maskBaseValue = 1f;
         public TexturePaintLayerMaskEffects maskEffects = new TexturePaintLayerMaskEffects();
+        public List<TexturePaintMaskReferenceCache> maskReferenceCaches = new List<TexturePaintMaskReferenceCache>();
         public TexturePaintChannelSourceSettings maskSourceSettings =
             TexturePaintLayerMask.DefaultSourceSettings();
         public TexturePaintChannel maskSourceChannel = TexturePaintChannel.Albedo;
@@ -1042,6 +1181,8 @@ namespace UMA.TexturePaint
         public List<string> slotNames = new List<string>();
         public int fallbackRendererIndex;
         public int fallbackSubmeshIndex;
+        public TexturePaintRegion activeRegion;
+        public List<TexturePaintRegion> savedRegions = new List<TexturePaintRegion>();
         public int activeLayer = -1;
         [Range(0f, 16f)] public float normalControlStrength = 2f;
         [Range(1, 16)] public int normalControlRadius = 1;
@@ -1054,7 +1195,7 @@ namespace UMA.TexturePaint
     [CreateAssetMenu(menuName = "UMA/Overlay Painter/Document", fileName = "Overlay Painter Document")]
     public sealed class TexturePaintDocument : ScriptableObject
     {
-        public const int CurrentSchemaVersion = 26;
+        public const int CurrentSchemaVersion = 28;
 
         public int schemaVersion = CurrentSchemaVersion;
         public string documentId = Guid.NewGuid().ToString("N");
@@ -1154,6 +1295,11 @@ namespace UMA.TexturePaint
                         };
                         layer.fillSettings.Normalize();
                         layer.fillColor = layer.fillSettings.color;
+                    }
+                    if (layer.kind == TexturePaintLayerKind.Projection)
+                    {
+                        layer.projectionSettings ??= new TexturePaintProjectionSettings();
+                        layer.projectionSettings.Normalize();
                     }
                     if (loadedSchemaVersion < 3)
                     {

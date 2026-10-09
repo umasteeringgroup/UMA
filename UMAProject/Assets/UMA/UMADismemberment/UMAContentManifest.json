@@ -1,0 +1,331 @@
+{
+  "formatVersion": 2,
+  "requiredPluginApiVersion": 1,
+  "contentId": "dismemberment",
+  "contentVersion": "3.1.2",
+  "umaVersion": "3.1f2",
+  "requiredCoreVersion": "3.1.2",
+  "minimumCoreVersion": "3.1.2",
+  "maximumCoreVersionExclusive": "3.2.0",
+  "installRoot": "Assets/UMA/UMADismemberment",
+  "dependencies": [
+    "core"
+  ],
+  "requiredPaths": [
+    "Assets/UMA/UMADismemberment/Runtime/UMA.Dismemberment.Runtime.asmdef",
+    "Assets/UMA/UMADismemberment/Editor/UMA.Dismemberment.Editor.asmdef",
+    "Assets/UMA/UMADismemberment/Editor/DismembermentPluginActions.cs",
+    "Assets/UMA/UMADismemberment/UMAPluginDocumentation.json"
+  ],
+  "ownedPaths": [
+    "Assets/UMA/UMADismemberment/Documentation",
+    "Assets/UMA/UMADismemberment/Documentation/ArtistGuide.md",
+    "Assets/UMA/UMADismemberment/Documentation/Dismemberment.md",
+    "Assets/UMA/UMADismemberment/Editor",
+    "Assets/UMA/UMADismemberment/Editor/DismembermentPluginActions.cs",
+    "Assets/UMA/UMADismemberment/Editor/UMA.Dismemberment.Editor.asmdef",
+    "Assets/UMA/UMADismemberment/Editor/UmaDismembermentEditor.cs",
+    "Assets/UMA/UMADismemberment/README.md",
+    "Assets/UMA/UMADismemberment/Runtime",
+    "Assets/UMA/UMADismemberment/Runtime/DismemberedPiece.cs",
+    "Assets/UMA/UMADismemberment/Runtime/DismemberedPieceMaterialOwner.cs",
+    "Assets/UMA/UMADismemberment/Runtime/DismemberedRagdollBuilder.cs",
+    "Assets/UMA/UMADismemberment/Runtime/DismembermentAssemblyInfo.cs",
+    "Assets/UMA/UMADismemberment/Runtime/DismembermentCutSurface.cs",
+    "Assets/UMA/UMADismemberment/Runtime/DismembermentMeshBuilder.cs",
+    "Assets/UMA/UMADismemberment/Runtime/Resources",
+    "Assets/UMA/UMADismemberment/Runtime/Resources/UMA",
+    "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment",
+    "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/DismembermentCap.shader",
+    "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/FallbackTrail.shader",
+    "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/RuntimeDecalComposite.shader",
+    "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SourceMask.shader",
+    "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SurfaceCutComposite.shader",
+    "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SurfaceCutPreview.shader",
+    "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SurfaceField.shader",
+    "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SurfaceFluid.compute",
+    "Assets/UMA/UMADismemberment/Runtime/UMA.Dismemberment.Runtime.asmdef",
+    "Assets/UMA/UMADismemberment/Runtime/UMARuntimeSurfaceDecalController.cs",
+    "Assets/UMA/UMADismemberment/Runtime/UMASurfaceCutProfile.cs",
+    "Assets/UMA/UMADismemberment/Runtime/UMASurfaceCutSystem.cs",
+    "Assets/UMA/UMADismemberment/Runtime/UMASurfaceFluidFallbackTrail.cs",
+    "Assets/UMA/UMADismemberment/Runtime/UMASurfaceFluidProfile.cs",
+    "Assets/UMA/UMADismemberment/Runtime/UmaDismemberment.cs",
+    "Assets/UMA/UMADismemberment/UMAContentManifest.json",
+    "Assets/UMA/UMADismemberment/UMAPluginDocumentation.json"
+  ],
+  "assets": [
+    {
+      "path": "Assets/UMA/UMADismemberment/Documentation",
+      "guid": "06ac48e4f4581aa47ad1cdab4cdda24f",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 172,
+      "metaSha256": "a624b5d951c7fa5a7b66cf652bc4c505be52189691647b4515503b0a0093ed4d"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Documentation/ArtistGuide.md",
+      "guid": "791859e4c0893a040a2b3a2eb15cb2a2",
+      "bytes": 65994,
+      "sha256": "0885e97decb6e1dbfd861775019559bf1074af7716018b92837702baed769208",
+      "metaBytes": 158,
+      "metaSha256": "fd9f5002015b23867d1ad2c1aca631cbb6092e16510725b6cb9463cc644efa68"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Documentation/Dismemberment.md",
+      "guid": "f2cffb1657609284c9e1542694bf95bf",
+      "bytes": 1526,
+      "sha256": "e201cfd471cde7a20482781721c9ef1b1614704d0ad825cd85c2782c5ea25fbc",
+      "metaBytes": 158,
+      "metaSha256": "b758278e8935b30c46cf066a7ec2b17aee6547f92e4ce2b653d48ef65b0f18c5"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Editor",
+      "guid": "ead398147304c47459ef7186852d68d7",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 192,
+      "metaSha256": "647ec0093451976be5facebc4dd6646432d524d66b9e6cfe67a999f4b6eeca9c"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Editor/DismembermentPluginActions.cs",
+      "guid": "dda8c8da9e5c9834cbbaa0e153ffe5ab",
+      "bytes": 995,
+      "sha256": "5e9ca8a65eb226175c1b79f9800a2135603c3a3407abf6a7390ffa2ec123fc69",
+      "metaBytes": 59,
+      "metaSha256": "d4d274ea855fa4cee7e20ca4fbb0bba941c7ac8ef05cac25cabca324fe2aee54"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Editor/UMA.Dismemberment.Editor.asmdef",
+      "guid": "68d409678fe24eac9e418b9aec1178b8",
+      "bytes": 487,
+      "sha256": "f580ffa6fa1ecfc5b5431d0535ac8c4fb2722acc544b107446cfd29bdd76bd24",
+      "metaBytes": 163,
+      "metaSha256": "af133fe9e50ea0fa7f3157babe04f173f3fe0cf7ad47704f76c73b2766901232"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Editor/UmaDismembermentEditor.cs",
+      "guid": "78476e1a835b94749ad29d382a208161",
+      "bytes": 15113,
+      "sha256": "3b03ce112f2dc8e160e80ad12980eeef394a7164fb41e81d691176f6ccbd3d71",
+      "metaBytes": 263,
+      "metaSha256": "285df78de9868739fd71a1c5239bfc6329f58a77f65560191f0547838086ef0f"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/README.md",
+      "guid": "e1538fb57dbd439783d04a6788d8dcc1",
+      "bytes": 11301,
+      "sha256": "78c109d714d1cf497af4dccd0ffc24a3d44c48bbef8f7cfedd34725559347c5f",
+      "metaBytes": 152,
+      "metaSha256": "958c3a1d4dcfa74b7b5df6800497bd3b832403f2f0cb67ef72d2ba3b8f46b72a"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime",
+      "guid": "6199876b87e885747858025e81801134",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 192,
+      "metaSha256": "1bfee342dc992a2ed76afac25569814f8782cf7ef459f45372a65546d45f51e5"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/DismemberedPiece.cs",
+      "guid": "453a5fc29f4a4dafaa82f8412abf682e",
+      "bytes": 1207,
+      "sha256": "07ef4c180a58ba9bae710b5b79a1fd59a8ae16c85887e6c427ee4a0bbdd69825",
+      "metaBytes": 240,
+      "metaSha256": "2bf5b6f5c80b47b31def3a826b8ca7139627a7816483d099ff3960b6e2b68e11"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/DismemberedPieceMaterialOwner.cs",
+      "guid": "a7e66c861e3c43b087472a214cb794fc",
+      "bytes": 964,
+      "sha256": "10224d9eff618b6d72717c7d91a74993b2a256e1eb1bd64a11bfedf5e62e791e",
+      "metaBytes": 60,
+      "metaSha256": "1c90cdca91aaffdf90fdbfe44cf93fb95bee30dac08fd8e33e483f519cb96af1"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/DismemberedRagdollBuilder.cs",
+      "guid": "c3ffbb3e903b0224fbbfcf74729ade77",
+      "bytes": 18678,
+      "sha256": "33cbc8f9493ba45f9da73def34df31f52c92e70478f82507825d85551a2aab6c",
+      "metaBytes": 59,
+      "metaSha256": "60bf59bd4a2fa977616768fb50a425afbdf9bc54f4b4e12902a94be8aedca14c"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/DismembermentAssemblyInfo.cs",
+      "guid": "eb212ae50a124373b144dd4895540c1a",
+      "bytes": 162,
+      "sha256": "6b61f92d3f01428a54ed3562b03dbbae9db85f65097a22efff4da147bb27016a",
+      "metaBytes": 240,
+      "metaSha256": "bb02faa65b3e4fc229238df145d08f000d8261dbe550a9abad3f666253f0a92e"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/DismembermentCutSurface.cs",
+      "guid": "607f1f3e2fc24db788b7afdcc0f5978e",
+      "bytes": 1682,
+      "sha256": "96fbe208ae48cb0c40187bc5116f7f5a4d315ed31a44e4cec24a05b5e7c14000",
+      "metaBytes": 60,
+      "metaSha256": "10c57731781431afae9764cb5ad24b233a50b074aba10512d1e145b7dbeb0aaf"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/DismembermentMeshBuilder.cs",
+      "guid": "3a71e3dad46c418f9d0c8b39a4c4b011",
+      "bytes": 83681,
+      "sha256": "73244aad8c36e5ccf52dda515d40e979989814b88fe23b098d3ac342456b6f3b",
+      "metaBytes": 240,
+      "metaSha256": "55250eda6528dbccec7c8a61b24cf836baa3e6f6a41cd08046308f817fd1d3fa"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources",
+      "guid": "5915e1f921b24a38971f1c8e1d4eb9de",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 169,
+      "metaSha256": "feedb8036a66af692570d05832a37e9919432437668b9d28712b665348466694"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources/UMA",
+      "guid": "a066bb5ec3d4452b86e76ec4b06a6db0",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 169,
+      "metaSha256": "9b780bd5e1770d7ea2beb69fae23033fd0d72aff378a732c48cd013695a82b3c"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment",
+      "guid": "8e9964f0e2e04f30b006132911cd1d88",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 169,
+      "metaSha256": "f5ebc73d4ac7a048338f0ae163c5f22d70f15db8b605691ee0717a36ba1441c5"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/DismembermentCap.shader",
+      "guid": "5b9d2ea03a874b3397dbe940ffcb0b1b",
+      "bytes": 2097,
+      "sha256": "6c6f72af282b87511dbb323aab179d4bbc1a04011073a60a1933b9e05663286b",
+      "metaBytes": 279,
+      "metaSha256": "c8653c5b06da62f7e93caa9c689f184c2f3cf78ed27fd7f128f18fcdb5846a28"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/FallbackTrail.shader",
+      "guid": "a95f7bc4933646c69de8d179b55e13e1",
+      "bytes": 1129,
+      "sha256": "38522932fdaf764066ff8a819fd850671d2a4019ced3512a5af4744226373f39",
+      "metaBytes": 201,
+      "metaSha256": "85295fa7448039b911e0f634ea179823e2c36c75dd96b908e85e084d6c53bce8"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/RuntimeDecalComposite.shader",
+      "guid": "dba2bb26eb4147a584af9a31d61d4851",
+      "bytes": 4780,
+      "sha256": "3d581d727e84f31b4e08fdfa33f8aec66f0fe390112879f385d1896cc638dd6f",
+      "metaBytes": 201,
+      "metaSha256": "813c703712fbede787821318bf42057385f51a6c2d194a03401eca55eed4a65c"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SourceMask.shader",
+      "guid": "5357eedff7ee425cb76fa3d0c99bbde7",
+      "bytes": 2070,
+      "sha256": "41e3f6eb47bd42ce5f8d5eb1a7c70723c66a9b80b2f8a8b928549d618182f5e7",
+      "metaBytes": 201,
+      "metaSha256": "3f3e0e1117e1caae7922b6547b07844efbe0807b8cea6b056e71ba2b918c0898"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SurfaceCutComposite.shader",
+      "guid": "5dc1190288244a5d9273bb6abed14cc8",
+      "bytes": 2896,
+      "sha256": "c52a129578b23919ea3ccbd11d5326f8bbc590911ed27a686e49bf07484dd813",
+      "metaBytes": 201,
+      "metaSha256": "169c67c6a1fd7dc8182a8f1cd4861c4b5cbcfa0bbc75d016133ead725b7192a3"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SurfaceCutPreview.shader",
+      "guid": "9d9ad73b9c8b4831a4edfdac10ba89d1",
+      "bytes": 2487,
+      "sha256": "ce5966f95193764dc8aaf1110961c2724a7110007907fe9af9ec382a21778253",
+      "metaBytes": 201,
+      "metaSha256": "5ff145fa2748ee0179adff0961f9cde9344ef93e717237884d9471a205b66658"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SurfaceField.shader",
+      "guid": "c305d83b931c4459992a2f572a0c6714",
+      "bytes": 2419,
+      "sha256": "67b435ace2cceefad230f86cf13fd98c062cf6a20fbd13a06455cf6831fff4ca",
+      "metaBytes": 201,
+      "metaSha256": "4d02ae6c99159150e9eb8403dbda38865237f8c94e45b31653310c5e4d6703f8"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/Resources/UMA/Dismemberment/SurfaceFluid.compute",
+      "guid": "3fa3f8f0ea2147ab838cce2b2803d9ec",
+      "bytes": 8384,
+      "sha256": "b944968a9caeb5abadaa3443895860f8bf06bb6322c4bf5853bdae36927f32f7",
+      "metaBytes": 184,
+      "metaSha256": "9f68198a292c83b008ad9b1ce5686bb1faf2b09b82d4f91826f3908a776518a9"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/UMA.Dismemberment.Runtime.asmdef",
+      "guid": "c620c32ddb80447cbe275f883a9d9328",
+      "bytes": 429,
+      "sha256": "36bfd8640cd55a9787861fbec8911587673d49cf64a13f5d3095af686c4d2b96",
+      "metaBytes": 163,
+      "metaSha256": "b6928ebb604e3d423867cca58d9d945f7928de8b115268cbb472c99fd51fbf13"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/UMARuntimeSurfaceDecalController.cs",
+      "guid": "9598db2b5340493b96fcb554ef6fb741",
+      "bytes": 139687,
+      "sha256": "2f13bf3fdcdb98dc65d7fa2614a1852b87102944b0fd2be803312668a5cdf783",
+      "metaBytes": 60,
+      "metaSha256": "a5a4631a5f56e96ebdef17a69bbacc8d71ebe6b3a94edf6791d51d4b2b6768a9"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/UMASurfaceCutProfile.cs",
+      "guid": "d54d2f2c6bdc4af587e1e985b447c901",
+      "bytes": 6026,
+      "sha256": "bf67691c74a5b64585a5b8a85b236da6153e65f44e1ce6032e3df7da311cf1d5",
+      "metaBytes": 60,
+      "metaSha256": "f0d0317b78a6f3d720a78d65e207781e42c07a70854a9c75feb7f9306ab8acd4"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/UMASurfaceCutSystem.cs",
+      "guid": "2b31bdcd9ce84636a1d25995ca06f677",
+      "bytes": 65303,
+      "sha256": "e7ca8f6e1733639aa0800d8c2c95f0e413d2713a02fd25853a1a87bfb535e5cd",
+      "metaBytes": 60,
+      "metaSha256": "9cea2f6e906c14f09c31ace122a0e578e54574f81c99468e919ba08dcfb3afce"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/UMASurfaceFluidFallbackTrail.cs",
+      "guid": "9c1c4e7a99c6477ba377449fb3fe7938",
+      "bytes": 6329,
+      "sha256": "813f05219b3eda004d24341c5db97854a65885a2c992dcfe75fbc82280c1d40c",
+      "metaBytes": 60,
+      "metaSha256": "ac610b1a1f9793e6bdf2f86c30c918198beea201e18dd9b6a3126eb16f5a9ee2"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/UMASurfaceFluidProfile.cs",
+      "guid": "3bd2ea52bbf64bed972149905ff40a42",
+      "bytes": 9951,
+      "sha256": "944e48740a7d49cccded782a56bf9e183645375674febbcacbac06c0d357a84d",
+      "metaBytes": 60,
+      "metaSha256": "18ec86445393bf30c061c60066acae804b4b56bbf01ef03355d6f74cec2461a9"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Runtime/UmaDismemberment.cs",
+      "guid": "72c61065c290a1d4cac4cc1c26739a17",
+      "bytes": 99348,
+      "sha256": "b13b788e1db00b79c6d413f588a90d1d0ecf8c4988a223c795e6161bf10cddd3",
+      "metaBytes": 263,
+      "metaSha256": "3afcb58c6dde87514c3e376b39f7fe1b390be031215c54954b58b3c07aff462a"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/UMAPluginDocumentation.json",
+      "guid": "4de4a16ffd3fdb14f947daa53b96dbb6",
+      "bytes": 110,
+      "sha256": "a3d577a2a5ad4e79646db4eac79831c974083bca341e65d51183bf832eb11720",
+      "metaBytes": 158,
+      "metaSha256": "33f41c5c74aedb2749f25e5d798f0c210b80a5431b56a729e223a696280da0fe"
+    }
+  ]
+}

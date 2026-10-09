@@ -1,10 +1,78 @@
 # What's New in UMA 3
 
-## UMA 3.1f0 — Changes Since v3.05
+## UMA 3.1f2 - Changes since the last main merge
 
-UMA 3.1f0 includes the features, fixes, and slot-preparation improvements made after the `v3.05` release tag. The supported baseline is Unity 6.3 or newer.
+Changes since the September 27, 2026 merge into master (PR #579, merge c99e59475; develop baseline 10494b238), including updates through October 9, 2026. Supports **Unity 6.3 and newer**. UMA **3.1f2** uses package version **3.1.2**. Earlier cumulative changes since v3.05 remain below.
 
-Includes 61 documentation files for a total of 316 pages of documentation - including quick starts, artist-friendly guides, and deep dives!
+### Plugins, installation, and package builds
+
+- Added the **UMA plugin API** for optional editor integrations, with plugin discovery, inspector actions, and documentation registration. Overlay Painter, Hair Card Editor, and Dismemberment are separate plugins; normal UMA character generation works without them installed.
+- **Welcome > Plugins** manages the official plugins in compact rows with descriptions, installation status, and install/reinstall/remove actions. Each plugin's separate **Examples** and **Tests** companion packages appear directly underneath it, indented.
+- Added **Install All** and **Remove All** workflows. Removing a parent removes its installed companions first. Installation and removal respect package dependencies and can resume after an interrupted Editor session.
+- Improved detection and verification of installed content, including source checkouts. Cached status refreshes after changes instead of repeatedly validating packages during Editor repaint, fixing stalls that also affected Overlay Painter window movement and selection.
+- **UMA > Build > Build Plugin Packages** builds installed plugins and companions using the version in UMASettings. UMA **3.1f2** produces package version **3.1.2**. Each archive gets a fresh manifest with current asset and importer hashes; the project's installed manifest remains the comparison baseline.
+- Package builds continue after individual failures and finish with a **Built/Failed result for every package**. Cancelled batches list packages that were not built. File replacement retries brief locks, keeps the previous archive until the replacement succeeds, and preserves a completed new archive if publishing fails. Error dialogs include destination filenames and recovery paths.
+- Installation searches local packages first, then the matching GitHub release at `V3.1f2`. Downloads show progress and support cancellation; failures offer retry, local file selection, and the release page.
+- Install and reinstall show progress for archive validation, file comparison, backup preparation, and final verification. The selected archive is reused instead of unpacked twice during preparation.
+- **Replace everything** offers either overwriting packaged files while preserving extras, or a clean replacement that removes extra files in the selected package folder. Both modes retain recovery backups and separately installed companions.
+- Reinstall no longer reports conflicts for local files already identical to the rebuilt package, or for unowned empty folders. Other local changes remain visible in the change report.
+- Removal offers **Continue** to preserve modified package-owned files, or **Continue - Remove All** to delete them too. Empty folders are removed from the deepest child upward, including parents that become empty. Unowned files and user projects, settings, recovery, and exports remain protected.
+- **UMA2Compatibility** packages legacy UMA2 content without renaming **Human Male** or **Human Female** or changing their asset GUIDs. Wearables and utility-slot examples belong to its Examples companion; the parent includes the resources required to build base characters without Examples installed.
+- Plugin documentation appears in separate **Documentation Browser** selections, with **UMA** selected by default. Installation registers plugin guides and removal unregisters them. Updated documentation links and clipped navigation labels to their buttons.
+
+### Overlay Painter: materials and surface generators
+
+- Added **Wetness & Sweat**, **Leather & Coated Fabric**, and **Print Aging**, with reusable clothing-finish material presets. Added PBR texture-set import and editable automatic seam paths from mesh/UV boundaries.
+- Reworked quilt puffs into rounded cushions with fuller tops and rounded edges. **Atlas Scatter** assigns one selected atlas tile per quilt panel. Quilt inputs accept a texture or an **OverlayPainterSpriteSet**, with a tile-selection popup and coordinated material channels; sprite-set normals combine with puff relief.
+- Improved cloth base/cross-thread color handling, fabric detail, and pattern-sprite controls. Added whole-fabric rotation, individual stripe angles with horizontal/vertical defaults, and triplanar mapping controls.
+- Skin veins use branching curves instead of a grid. Fixed clipped bruises and improved pore and surface relief in Normal Control. Improved mesh-map coverage and seam handling, including mirrored-UV boundaries.
+- **Stubble Maker** supports coverage across the unmasked area, world-directed growth, raised hairs, slightly recessed follicles, optional root redness, and raised pimples with lighter centers.
+- Rust/corrosion, Edge Wear, Dirtify, Agify, and related weathering use underlying normal detail where appropriate for cavity and edge placement. Generator height detail combines with authored normals.
+- **Edge Wear** now targets physical rims and convex creases with world-space width. The previous broad treatment remains available as **Overall Wear**. Fixed missed thin bevels and gaps along shallow sections of continuous convex edges without treating UV splits or flat triangulation as worn edges.
+- Edge Wear has configurable fade amount, falloff curve, and breakup curve, with a **linear fade away from the edge** by default. Breakup respects that fade rather than cutting hard gaps into the worn rim.
+
+### Overlay Painter: paths, projection, masks, and channels
+
+- **+Path > Generators**, after Garments, contains Scar and Wound, Tattoo, Text and Lettering, stitching, seams and trim, zippers, and frayed tears. Scar authoring now follows an editable path; stitching and seam generators offer multiple construction styles.
+- Tattoo designs have adjustable arms and shape controls, plus optional end taper/curl behavior. Text accepts a font and supports **Flip X / Flip Y**. Generated material channels, including metallic and roughness, follow the visible design and its transparency.
+- Added a whole-path **Path Width** control while preserving each point's local width. Ribbon tiling accounts for texture/sprite aspect ratio and fits complete repeats, including Beginning/End tiles, with modest stretching instead of clipping the final tile.
+- Ordinary paths hide garment-only controls. **Convert to Garment** preserves the existing path and sources. Improved path symmetry handling and the distinction between explicit symmetry copies and overlapping/mirrored UVs.
+- Added editable projection workflows, stencils, reusable selections/regions, live layer references, and linked instances. References and linked masks update dependent layers while preserving editable sources and document recovery.
+- Added **shared anatomical and garment-region masks** for knees, elbows, armpits, cuffs, collar, lips, shoulders, waist, and seat. Reusable bone-relative profiles provide side, size, offset, feather, and bone-override controls with Scene outlines. Knees and elbows default to an outward 120-degree sector away from the bend. Region placement applies across material channels and supports standalone slot alignment and mirrored UV ownership.
+- Mask mode offers **Solo Mask**, an optional grayscale mask visualization on the 3D model while painting. Voronoi mask effects now have **Black Expansion** and **Contrast**, so cell darkness can change independently of cell size.
+- Replaced the single Painted Mask creation option with **White Painted Mask** and **Black Painted Mask**. Both initialize the shared mask raster and replace old Painted Mask entries with one enabled **Multiply** effect at **opacity 1**, with Undo/Redo. Other mask effects are retained; zero-opacity effects are labeled clearly.
+- Added per-layer, per-channel **Multiplier** and **Additive** colors for Texture/Sprite sources. Both affect **RGBA**, including alpha, across Paint, Fill, Path, and Projection workflows.
+- Added **Blur (px)** for Texture/Sprite sources, defaulting to zero. It softens color and alpha edges, respects sprite atlas boundaries and normal vectors, and applies independently to the current layer/channel, including path end tiles.
+- **Normal Control Height Strength** now reaches 64. Strength, inversion, and **Sample Radius** belong to the selected layer/channel. Changing them no longer alters underlying layers; source edits also no longer act on stale projection-layer references.
+- Projection Normal Control textures/sprites retain their own alpha coverage, including inverted height. Transparent pixels preserve the underlying surface instead of raising a rectangular background. Metallic and roughness remain independent of Normal Control, and newly added channels start with useful opacity defaults.
+- Fixed layer effects such as Stroke, Inner Glow, Procedural Stitch, and Bevel Edge on generated content and text. Improved channel coverage, normal combination, and consistency across layer composition, previews, and export.
+
+### Overlay Painter: workspace and reliability
+
+- **Overlay Painter Properties** is independently dockable and defaults beneath Layers. Save and restore one preferred workspace layout. The compact workspace uses its own Scene tab, with painter overlays confined to that tab.
+- Properties now hide controls that do not apply to the selected layer type. **Layer Channels & Settings** is collapsible, with the new-channel label, selector, and Add Channel button together at the top. Newly added channels expand automatically.
+- Layer Preview includes generation progress and **Regenerate all stale layers**. Path-generator previews show a sample while the Scene view shows placement and curvature.
+- Improved Alt-mouse orbit after session recovery, toolbar visibility on startup/shutdown/recompile, target framing/isolation, and the **Shutdown Overlay Painter** workflow.
+- Opening a saved document no longer silently substitutes an older recovery snapshot. Improved document rebinding when regenerated UMA material names change, preserving saved layers and masks.
+- Added configurable periodic recovery timing. Fixed stale object-picker events and reduced queued command memory for owned-tile, multi-channel UDIM generators.
+
+### Character generation and authoring
+
+- Fixed legacy DNA accumulating bone scale on successive wardrobe rebuilds. The pre-DNA skeleton baseline is preserved; repeatedly toggling clothing or car parts no longer keeps increasing scales such as wheel size.
+- MeshAPI/jobified rebuilds replace unreadable or shared output meshes with writable destinations, preserving other avatars' shared outputs and retiring the old mesh only after the replacement is bound. Newly created UMAData defaults to keeping generated meshes readable.
+- Added **UMADnaOverrideSlot** for DNA values, weighted baked blendshapes, and bone poses. The **Recipe Prepared** slot event runs after recipe DNA restoration and before DNA-driven MeshModifier configuration. An editor and configured example provide character-derived choices, reorderable/collapsible lists, and a reference character retained during editing.
+- Completed NPC builds fall back to ordinary generation when slots require the new Recipe Prepared callback, ensuring overrides are applied. Addressables slot-event processing also recognizes the event.
+- Added **Assets > UMA > Remove invalid races from selected recipes**, immediately after Add Race(s). It checks installed RaceData, including unindexed assets, removes missing race entries and their thumbnails from selected wardrobe recipes, and supports Undo.
+- Avatar preset saves update an existing preset and its icon rather than creating unwanted numbered duplicates. The shared-color editor stays open when focus moves to the Hierarchy or Project, allowing drag-and-drop assignments.
+- Plugin actions in recipe/character inspectors synchronize pending edits before launching and refresh afterward, with conflict handling for externally changed recipes.
+- Fixed repeated automatic reopening of the Welcome window and refreshed the Documentation Browser for plugin-specific guides.
+- Added **Optimizing Blendshapes** guidance for artists and developers: selective blendshape loading, Additional Blendshape Slots, baking, MeshModifiers, and race creation. Expanded plugin, region-mask, path-generator, material-import, and DNA-override documentation.
+
+See [UMA Plugins](UMAPlugins.md), [Anatomical Region Masks](../OverlayPainter/Documentation/AnatomicalRegionMasks.md), [Path Generators](../OverlayPainter/Documentation/PathGenerators.md), [Clothing Finishes and PBR Import](../OverlayPainter/Documentation/ClothingFinishesAndMaterialImport.md), [DNA Override Utility Slot](UMADnaOverrideSlot.md), and [Optimizing Blendshapes](OptimizingBlendshapes.MD). Plugin guides are available when the corresponding plugin is installed.
+
+## Earlier cumulative changes since v3.05
+
+Earlier editor improvements include positioned-Prefab conversion, **Assets > Find Usage in Material**, Icon Creator capture-depth fixes, and HDRP cut-preview visibility.
 
 ### NPC Build Mode, and texture and mesh pooling
 - Texture Atlas and Mesh reuse / pooling. Added "Reuse Identical Meshes" and "Reuse Identical Atlases" to the DynamicCharacterAvatar. With these enabled, duplicate meshes or duplicate atlas textures will be reused and reference counted. In this mode it's automatic and happens during the Generation process. This is not quite as fast as BuildNPC, but is a general case solution where it reuses everything it can.
@@ -77,7 +145,7 @@ See the [Model to UMA guide](ModelToRace.md) for setup, supported inputs, and fo
 - Added scalp-following Gather helpers for ponytails, pigtails, and buns, with surface offsets, outward-facing cards, gather spacing, and independent root/arrival bend curves. Bun helpers create wrapped volume and center tucks. Braids can follow separate editable splines, with freeform positioning, surface snapping, and endpoint attachments to scalp or helper surfaces.
 - Added form/cage editing, atlas-region editing and weighted strip selection, root-to-tip vertex colors, scalp vertex-color shading, and final-card scalp-clearance controls. Existing grooms can be rebound to a race or generated character for skin-weight copying.
 - Added LOD and triangle-budget controls, validation, and baking to meshes, slots, overlays, wardrobe recipes, and preview prefabs.
-- Added PointySwept, Curly, ShortHairPart, and BraidedBun examples and variations. ShortHairPart replaces the RegularHaircut example name and includes natural and front-flip variants, with a 20,000-triangle top-LOD goal. BraidedBun examples use gathered scalp hair, a fuller bun, a surrounding braid spline, and fine flyaways.
+- Added PointySwept, Curly, ShortHairPart, and BraidedBun examples and variations, distributed in the separate Hair Card Examples companion package. ShortHairPart replaces the RegularHaircut example name and includes natural and front-flip variants, with a 20,000-triangle top-LOD goal. BraidedBun examples use gathered scalp hair, a fuller bun, a surrounding braid spline, and fine flyaways.
 - Added lit URP hair shaders with Cutout, Alpha Blended, and Hybrid opaque-core/soft-fringe rendering. Root/tip colors, opacity, shine, roughness, and Matte/Natural/Glossy finish controls make shading adjustable without replacing the atlas.
 
 Hair workflow fixes and usability improvements:
@@ -88,7 +156,7 @@ Hair workflow fixes and usability improvements:
 - Fixed texture-map previews disappearing after painting when temporary GPU references were lost, without discarding the saved painting or consuming an Undo step.
 - Added an Exit Stage button and improved floating-toolbar layout around docked panels and narrow views. Improved sample importing, validation UI, saving, and recovery behavior.
 
-See the [Hair Cards guide](../HairCards/README.md), [ShortHairPart guide](../HairCards/ShortHairPartGuide.md), and [BraidedBun guide](../HairCards/BraidedBunGuide.md).
+See the [Hair Cards guide](../HairCards/Documentation/README.md), [ShortHairPart guide](../HairCards/Documentation/ShortHairPartGuide.md), and [BraidedBun guide](../HairCards/Documentation/BraidedBunGuide.md).
 
 ### Generated Resource Reuse and Crowd Profiling
 
@@ -138,9 +206,9 @@ See [Realistic URP Skin](../SRP/Shaders/Skin/README.md) and [UMA 3 Visemes](UMA3
 
 - Added and expanded tests for generated-resource equality and lifetimes, pending-build cancellation, automatic slot conversion/save/reload, sparse blendshapes, source invalidation, editor lifecycle/performance, legacy DNA serialization, walker behavior, and hair generation/painting/shading workflows. Slot packing benchmarks remain available for future platform-specific decisions.
 
-### What's new since the UMA 3.04 Release
-##
-##Overlay Painter 
+## Earlier additions since UMA 3.04
+
+### Overlay Painter
 - UI overhaul, new Compact Mode
 - New toolbars
 - Stubble Maker generator
@@ -151,7 +219,7 @@ See [Realistic URP Skin](../SRP/Shaders/Skin/README.md) and [UMA 3 Visemes](UMA3
 - Massive paint speedup
 - Split brushes and brush settings into separate dockable windows
 - New - Material Preset system - save layer stacks, with masks, blending, generators, effects. 
-## Gore System
+### Gore System
 - New fluid system for bleeding
 - Surface cuts, with adjustable fluid bleeding
 - Amputations (bone level) - cut off arms/legs, hands, etc.

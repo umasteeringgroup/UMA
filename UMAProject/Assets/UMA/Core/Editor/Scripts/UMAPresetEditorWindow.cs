@@ -373,10 +373,13 @@ namespace UMA.Editors
             if (capturedIcon == null && (editing == null || editing.Icon == null)) { BeginCapture(); return; }
             string path = editing != null ? AssetDatabase.GetAssetPath(editing) : EditorUtility.SaveFilePanelInProject("Save UMA preset", source.name + " Preset", "asset", "Choose a location for the preset and face icon.", UMAPresetAssetUtility.LastSaveFolder);
             if (string.IsNullOrEmpty(path)) return;
-            if (editing == null) path = AssetDatabase.GenerateUniqueAssetPath(path);
             if (!path.StartsWith("Assets/", StringComparison.Ordinal)) { status.text = "Save presets under Assets."; return; }
             try
             {
+                var existingAsset = AssetDatabase.LoadMainAssetAtPath(path);
+                if (existingAsset != null && !(existingAsset is UMAPreset))
+                    throw new InvalidOperationException("The selected path belongs to another asset type. Choose a UMA preset or a new filename.");
+                var existingPreset = editing != null ? editing : existingAsset as UMAPreset;
                 var definition = new AvatarDefinition
                 {
                     RaceName = snapshot.RaceName,
@@ -386,10 +389,10 @@ namespace UMA.Editors
                 };
                 var references = definition.Wardrobe.Select(name => recipeReferences.TryGetValue(name, out var recipe) ? recipe : null).ToArray();
                 if (references.Any(recipe => recipe == null)) throw new InvalidOperationException("A selected wardrobe recipe is no longer available. Reopen the popup.");
-                Texture2D icon = editing != null ? editing.Icon : null;
+                Texture2D icon = existingPreset != null ? existingPreset.Icon : null;
                 if (capturedIcon != null)
                 {
-                    string iconPath = AssetDatabase.GenerateUniqueAssetPath(Path.ChangeExtension(path, null) + "_Icon.png");
+                    string iconPath = Path.ChangeExtension(path, null) + "_Icon.png";
                     File.WriteAllBytes(iconPath, capturedIcon.EncodeToPNG());
                     AssetDatabase.ImportAsset(iconPath, ImportAssetOptions.ForceSynchronousImport);
                     var importer = (TextureImporter)AssetImporter.GetAtPath(iconPath);
@@ -399,12 +402,12 @@ namespace UMA.Editors
                     importer.SaveAndReimport();
                     icon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
                 }
-                var preset = editing != null ? editing : CreateInstance<UMAPreset>();
-                if (editing != null) Undo.RecordObject(preset, "Edit UMA preset");
+                var preset = existingPreset != null ? existingPreset : CreateInstance<UMAPreset>();
+                if (existingPreset != null) Undo.RecordObject(preset, "Edit UMA preset");
                 preset.Definition = definition;
                 preset.WardrobeRecipes = references;
                 preset.Icon = icon;
-                if (editing == null) AssetDatabase.CreateAsset(preset, path);
+                if (existingPreset == null) AssetDatabase.CreateAsset(preset, path);
                 EditorUtility.SetDirty(preset); AssetDatabase.SaveAssetIfDirty(preset);
                 UMAPresetAssetUtility.RememberSaveFolder(path);
                 EditorGUIUtility.PingObject(preset);

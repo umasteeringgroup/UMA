@@ -170,6 +170,7 @@ namespace UMA.TexturePaint
         public string sourceOverlayGuid;
         public Color sourceColor = Color.white;
         public bool mirrorX;
+        public TexturePaintSymmetry symmetry;
         public bool limitStrokeCoverage;
         public TexturePaintNormalConvention normalConvention = TexturePaintNormalConvention.OpenGL;
         public float strokeStabilization;
@@ -183,7 +184,7 @@ namespace UMA.TexturePaint
         public int coverageBudgetMB = 128;
         public string brushAssetGuid;
         public string brushLibraryGuid;
-        public string exportFolder = UMAPathUtility.OverlayPainterGeneratedRoot;
+        public string exportFolder = TexturePaintPaths.GeneratedRoot;
         public string exportTemplateGuid;
         public System.Collections.Generic.List<TexturePaintMaterialState> materials = new System.Collections.Generic.List<TexturePaintMaterialState>();
         public System.Collections.Generic.List<string> exportedTexturePaths = new System.Collections.Generic.List<string>();

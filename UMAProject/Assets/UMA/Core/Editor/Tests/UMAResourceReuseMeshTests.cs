@@ -239,6 +239,87 @@ namespace UMA.Tests
             }
         }
 
+        [TestCase(false, false)]
+        [TestCase(false, true)]
+        [TestCase(true, false)]
+        [TestCase(true, true)]
+        public void JobifiedRebuildReplacesUnreadableOutput(bool startWithDefault, bool parallelBatches)
+        {
+            bool previousParallel = SkinnedMeshCombinerMeshAPI.UseParallelRendererBatches;
+            var settings = UMASettings.GetSettingsFromResources();
+            bool previousMeshAPI = settings.useMeshAPICombiner;
+            try
+            {
+                SkinnedMeshCombinerMeshAPI.UseParallelRendererBatches = parallelBatches;
+                settings.useMeshAPICombiner = false;
+                using (var f = new Fixture())
+                {
+                    var data = f.Avatar(false);
+                    data.markNotReadable = true;
+                    if (startWithDefault)
+                        data.gameObject.AddComponent<UMADefaultMeshCombiner>().UpdateUMAMesh(true, data, 256);
+                    else
+                        f.BuildJobified(data);
+                    var oldMesh = data.GetRenderer(0).sharedMesh;
+                    Assert.IsFalse(oldMesh.isReadable);
+
+                    data.markNotReadable = false;
+                    f.BuildJobified(data);
+                    var rebuilt = data.GetRenderer(0).sharedMesh;
+                    Assert.IsTrue(rebuilt.isReadable);
+                    Assert.AreNotSame(oldMesh, rebuilt);
+                    Assert.IsTrue(oldMesh == null, "The replaced private mesh must be released.");
+                    CollectionAssert.AreEqual(f.Slot.meshData.vertices, rebuilt.vertices);
+                    CollectionAssert.AreEqual(new[] { 0, 1, 2 }, rebuilt.GetTriangles(0));
+                    Assert.AreEqual(1, rebuilt.blendShapeCount);
+                    Assert.AreEqual("Smile", rebuilt.GetBlendShapeName(0));
+                    Assert.AreEqual(1, rebuilt.bindposes.Length);
+
+                    // Readable destinations still rebuild in place; subsequent unreadable
+                    // outputs must also be replaceable without changing the user's policy.
+                    data.markNotReadable = true;
+                    f.BuildJobified(data);
+                    Assert.AreSame(rebuilt, data.GetRenderer(0).sharedMesh);
+                    Assert.IsFalse(rebuilt.isReadable);
+                    f.BuildJobified(data);
+                    Assert.IsFalse(data.GetRenderer(0).sharedMesh.isReadable);
+                    Assert.IsTrue(rebuilt == null);
+                    Assert.IsTrue(data.markNotReadable);
+                }
+            }
+            finally
+            {
+                SkinnedMeshCombinerMeshAPI.UseParallelRendererBatches = previousParallel;
+                settings.useMeshAPICombiner = previousMeshAPI;
+            }
+        }
+
+        [Test]
+        public void JobifiedUnreadableSharedMeshRebuildPreservesOtherOwner()
+        {
+            int entries = UMAGeneratedResourceCache.Shared.EntryCount;
+            using (var f = new Fixture())
+            {
+                var a = f.Avatar(); var b = f.Avatar();
+                a.markNotReadable = b.markNotReadable = true;
+                f.BuildJobified(a); f.BuildJobified(b);
+                var original = b.GetRenderer(0).sharedMesh;
+                Assert.AreSame(original, a.GetRenderer(0).sharedMesh);
+                Assert.IsFalse(original.isReadable);
+
+                a.currentLODLevel = 1; // Force a different cache key while b retains the old output.
+                f.BuildJobified(a);
+                Assert.AreNotSame(original, a.GetRenderer(0).sharedMesh);
+                Assert.IsFalse(a.GetRenderer(0).sharedMesh.isReadable);
+                Assert.IsTrue(original != null);
+                Assert.AreSame(original, b.GetRenderer(0).sharedMesh);
+                Assert.AreEqual(3, original.vertexCount);
+                UnityEngine.Object.DestroyImmediate(a.gameObject);
+                Assert.IsTrue(original != null);
+                Assert.AreSame(original, b.GetRenderer(0).sharedMesh);
+            }
+            Assert.AreEqual(entries, UMAGeneratedResourceCache.Shared.EntryCount);
+        }
         internal sealed class Fixture : IDisposable
         {
             internal readonly List<UnityEngine.Object> Objects = new List<UnityEngine.Object>();

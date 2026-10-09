@@ -314,6 +314,9 @@ namespace UMA.TexturePaint.Editor
 
         private void Execute()
         {
+            var authoringStage=TexturePaintStageWindow.ActiveStage;
+            if(authoringStage!=null && ReferenceEquals(authoringStage.Controller,controller) &&
+                authoringStage.WaitForLinkedOutput(()=>{if(this!=null)Execute();}))return;
             bool overwriteConfirmed = false;
             if (template.overwriteSourceOverlay)
             {

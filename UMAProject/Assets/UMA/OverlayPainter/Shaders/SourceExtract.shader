@@ -15,6 +15,26 @@ Shader "Hidden/UMA/TexturePaint/SourceExtract"
     {
         Cull Off ZWrite Off ZTest Always
 
+        CGINCLUDE
+        // Both passes use source-pixel offsets. Associated color avoids dark fringes from
+        // arbitrary RGB in transparent texels; alpha itself receives the same Gaussian.
+        float4 BlurSource(sampler2D source, float2 uv, float2 step, int radius, bool associate)
+        {
+            float sigma = max(0.5, radius * 0.5);
+            float4 sum = 0;
+            float total = 0;
+            for (int tap = -radius; tap <= radius; tap++)
+            {
+                float weight = exp(-0.5 * tap * tap / (sigma * sigma));
+                float4 value = tex2D(source, uv + step * tap);
+                if (associate) value.rgb *= value.a;
+                sum += value * weight;
+                total += weight;
+            }
+            return sum / total;
+        }
+        ENDCG
+
         // Ordinary sprite extraction.
         Pass
         {
@@ -115,6 +135,48 @@ Shader "Hidden/UMA/TexturePaint/SourceExtract"
                 float3 encodedNormal = normal * 0.5 + 0.5;
                 if (_InvertChannels != 0) encodedNormal = 1.0 - encodedNormal;
                 return float4(encodedNormal, alpha);
+            }
+            ENDCG
+        }
+        // Horizontal: straight source to associated linear RGBA.
+        Pass
+        {
+            CGPROGRAM
+            #pragma target 4.5
+            #pragma vertex vert_img
+            #pragma fragment frag
+            #include "UnityCG.cginc"
+            sampler2D _MainTex;
+            float4 _MainTex_TexelSize;
+            int _BlurRadius;
+            float4 frag(v2f_img input) : SV_Target
+            {
+                return BlurSource(_MainTex, input.uv, float2(_MainTex_TexelSize.x, 0), _BlurRadius, true);
+            }
+            ENDCG
+        }
+        // Vertical: recover straight RGB and normalize averaged normal vectors.
+        Pass
+        {
+            CGPROGRAM
+            #pragma target 4.5
+            #pragma vertex vert_img
+            #pragma fragment frag
+            #include "UnityCG.cginc"
+            sampler2D _MainTex;
+            float4 _MainTex_TexelSize;
+            int _BlurRadius, _BlurNormal;
+            float4 frag(v2f_img input) : SV_Target
+            {
+                float4 value = BlurSource(_MainTex, input.uv, float2(0, _MainTex_TexelSize.y), _BlurRadius, false);
+                value.rgb = value.a > 1e-6 ? value.rgb / value.a : 0;
+                if (_BlurNormal != 0)
+                {
+                    float3 n = value.rgb * 2 - 1;
+                    n = value.a > 1e-6 && dot(n, n) > 1e-8 ? normalize(n) : float3(0, 0, 1);
+                    value.rgb = n * 0.5 + 0.5;
+                }
+                return value;
             }
             ENDCG
         }

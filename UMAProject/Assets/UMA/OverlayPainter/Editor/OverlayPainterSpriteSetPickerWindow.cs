@@ -24,16 +24,7 @@ namespace UMA.TexturePaint.Editor
         }
 
         public static List<Sprite> GetOrderedSprites(Texture2D spriteSheet)
-        {
-            var result = new List<Sprite>();
-            if (spriteSheet == null) return result;
-            string path = AssetDatabase.GetAssetPath(spriteSheet);
-            UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetRepresentationsAtPath(path);
-            for (int i = 0; i < assets.Length; i++)
-                if (assets[i] is Sprite sprite) result.Add(sprite);
-            result.Sort(CompareSprites);
-            return result;
-        }
+            => TexturePaintSpriteSetSource.GetOrderedSprites(spriteSheet);
 
         public static int GetCommonSpriteCount(OverlayPainterSpriteSet spriteSet)
         {

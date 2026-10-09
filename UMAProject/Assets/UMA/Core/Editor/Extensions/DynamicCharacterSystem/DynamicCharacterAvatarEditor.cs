@@ -57,7 +57,6 @@ namespace UMA.CharacterSystem.Editors
 
         private MeshModifier MeshModifier = null;
         private MeshModifier _manualMeshModifierToAdd = null;
-        private const string HairCardStageMenuPath = "UMA/Hair Cards/Open Hair Card Stage";
 
         protected DynamicCharacterAvatar thisDCA;
         protected RaceSetterPropertyDrawer _racePropDrawer = new RaceSetterPropertyDrawer();
@@ -135,6 +134,8 @@ namespace UMA.CharacterSystem.Editors
 
         public void OnEnable()
         {
+            pluginPlacement?.Dispose();
+            pluginPlacement = UMA.Editors.UMAPluginGUI.RegisterExplicitHost(this);
             if (IsEditorBusy() || target == null)
             {
                 // Defer enable until editor is ready
@@ -156,6 +157,8 @@ namespace UMA.CharacterSystem.Editors
                 EditorApplication.delayCall += delayedEnableHandler;
                 return;
             }
+
+            standardWardrobeFilter = Mathf.Clamp(EditorPrefs.GetInt(StandardWardrobeFilterKey, 0), 0, StandardWardrobeFilters.Length - 1);
 
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
 
@@ -182,6 +185,8 @@ namespace UMA.CharacterSystem.Editors
 
         public void OnDisable()
         {
+            pluginPlacement?.Dispose();
+            pluginPlacement = null;
             StopRandomizationPreviewCallbacks();
             CancelPendingAvatarLoad();
             _hasInspectorLayout = false;
@@ -283,6 +288,7 @@ namespace UMA.CharacterSystem.Editors
 
         public override void OnInspectorGUI()
         {
+            UMA.Editors.UMAPluginGUI.Draw(this);
             using var drawMarker = InspectorDrawMarker.Auto();
             if (!PrepareInspectorFrame()) return;
             int indent = EditorGUI.indentLevel;
@@ -1815,44 +1821,6 @@ namespace UMA.CharacterSystem.Editors
         private void DoUtilitiesGUI()
         {
             GUIHelper.BeginVerticalPadded(10, new Color(0.75f,0.875f,1f));
-
-            GUILayout.Label("Overlay Painter", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Reconstruct this generated character by material and paint its source textures or non-destructive overlay layers in 3D. Includes masks, mirrored strokes, splines, normal-map touchup, plugins, and texture export.", MessageType.None);
-            if (GUILayout.Button("Open Overlay Painter"))
-            {
-                if (CanOpenMeshEditor())
-                {
-                    thisDCA.GenerateNow();
-                    UMA.TexturePaint.Editor.TexturePaintStageWindow.ShowStage(thisDCA);
-                }
-            }
-
-            EditorGUILayout.Space(8f);
-
-            GUILayout.Label("Hair Cards", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Create and groom game-ready hair cards directly on this generated character. Paint growth regions, place and comb guides, generate child cards, author LODs, and bake the result as Unity and UMA assets.", MessageType.None);
-            if (GUILayout.Button("Open Hair Card System"))
-            {
-                if (CanOpenMeshEditor())
-                {
-                    DynamicCharacterAvatar avatarToOpen = thisDCA;
-                    EditorApplication.delayCall += () =>
-                    {
-                        if (avatarToOpen == null) return;
-                        avatarToOpen.GenerateNow();
-                        Selection.activeObject = avatarToOpen;
-                        if (!EditorApplication.ExecuteMenuItem(HairCardStageMenuPath))
-                        {
-                            EditorUtility.DisplayDialog(
-                                "Hair Card System Unavailable",
-                                "The UMA Hair Cards editor module could not be found. Confirm that the HairCards assets are installed and compile without errors.",
-                                "OK");
-                        }
-                    };
-                }
-            }
-
-            EditorGUILayout.Space(8f);
 
             GUILayout.Label("Skinning Weights", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Touch up a SlotDataAsset's bone weights directly on this character in its current pose. Use a resizable circle brush to select vertices, inspect Blender-style weight colors, and save the corrected weights back to the slot.", MessageType.None);

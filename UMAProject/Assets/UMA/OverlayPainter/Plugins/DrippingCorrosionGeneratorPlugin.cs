@@ -32,7 +32,7 @@ namespace UMA.TexturePaint.Examples
             description = "Realistic corrosion seeded by exposed edges, concave valleys, and " +
                           "occlusion, with gravity-driven drips, pits, crust, and fractal breakup. " +
                           "Physical sizes use Unity's 1 unit = 1 meter convention.",
-            pluginVersion = "1.0.0",
+            pluginVersion = "1.1.0",
             capabilities = TexturePaintPluginCapability.Generator |
                            TexturePaintPluginCapability.ReadsMeshMaps |
                            TexturePaintPluginCapability.LongRunning |
@@ -42,8 +42,8 @@ namespace UMA.TexturePaint.Examples
                                TexturePaintChannelMask.Metallic |
                                TexturePaintChannelMask.AmbientOcclusion |
                                TexturePaintChannelMask.NormalControl,
-            readChannels = TexturePaintChannelMask.AmbientOcclusion,
-            channelSnapshotMaximumResolution = 1024,
+            readChannels = TexturePaintChannelMask.Normal | TexturePaintChannelMask.AmbientOcclusion,
+            channelSnapshotMaximumResolution = 2048,
             requiredMeshMaps = TexturePaintMeshMapMask.WorldPosition |
                                TexturePaintMeshMapMask.WorldNormal |
                                TexturePaintMeshMapMask.SignedCurvature |
@@ -59,6 +59,10 @@ namespace UMA.TexturePaint.Examples
                     "Corrosion seeded on convex exposed edges."),
                 Float("valleyAmount", "Valley Amount", 0f, 2f, 1.1f,
                     "Corrosion accumulated in concave valleys and occluded recesses."),
+                Float("normalCurvature", "Normal Detail Influence", 0f, 32f, 8f,
+                    "Seeds corrosion from the underlying combined Normal map, including Normal Control relief."),
+                Float("normalDetailRadius", "Normal Detail Radius", 1f, 32f, 4f,
+                    "Normal curvature sampling radius in pixels at 2048 resolution."),
                 Float("detectionLevel", "Feature Threshold", 0f, 0.95f, 0.08f,
                     "Restricts corrosion to progressively stronger edges and valleys."),
                 Float("corrosionSpreadMeters", "Corrosion Spread (m)", 0f, 0.25f, 0.012f,
@@ -188,7 +192,7 @@ namespace UMA.TexturePaint.Examples
             int width, int height)
         {
             Vector3 position = input.Position(u, v);
-            float curvature = input.Curvature(u, v);
+            float curvature = input.Curvature(u, v, s);
             float cavity = input.Cavity(u, v);
             float edge = Mathf.Max(0f, curvature) * s.edgeAmount;
             float valley = Mathf.Max(Mathf.Max(0f, -curvature), cavity) * s.valleyAmount;
@@ -205,10 +209,10 @@ namespace UMA.TexturePaint.Examples
             {
                 float spreadU = s.corrosionSpreadMeters / metersPerU;
                 float spreadV = s.corrosionSpreadMeters / metersPerV;
-                source = Mathf.Max(source, input.Source(u - spreadU, v, s) * 0.72f);
-                source = Mathf.Max(source, input.Source(u + spreadU, v, s) * 0.72f);
-                source = Mathf.Max(source, input.Source(u, v - spreadV, s) * 0.72f);
-                source = Mathf.Max(source, input.Source(u, v + spreadV, s) * 0.72f);
+                source = Mathf.Max(source, input.NeighborSource(u, v, u - spreadU, v, s) * 0.72f);
+                source = Mathf.Max(source, input.NeighborSource(u, v, u + spreadU, v, s) * 0.72f);
+                source = Mathf.Max(source, input.NeighborSource(u, v, u, v - spreadV, s) * 0.72f);
+                source = Mathf.Max(source, input.NeighborSource(u, v, u, v + spreadV, s) * 0.72f);
             }
 
             float broad = WeatheringFractal.Sample(position, u, v, true,
@@ -288,7 +292,7 @@ namespace UMA.TexturePaint.Examples
         private sealed class Inputs
         {
             private readonly TexturePaintReadOnlyMeshMap position, curvature, ao, id;
-            private readonly TexturePaintReadOnlyImage sourceAo;
+            private readonly TexturePaintReadOnlyImage sourceAo, sourceNormal;
 
             public Inputs(TexturePaintCommandContextV2 context, string surfaceId)
             {
@@ -296,6 +300,7 @@ namespace UMA.TexturePaint.Examples
                 curvature = context.GetMeshMap(surfaceId, TexturePaintMeshMap.SignedCurvature);
                 ao = context.GetMeshMap(surfaceId, TexturePaintMeshMap.AmbientOcclusion);
                 id = context.GetMeshMap(surfaceId, TexturePaintMeshMap.SurfaceId);
+                sourceNormal = context.source.Get(surfaceId, TexturePaintChannel.Normal);
                 sourceAo = context.source.Get(surfaceId, TexturePaintChannel.AmbientOcclusion);
             }
 
@@ -307,8 +312,9 @@ namespace UMA.TexturePaint.Examples
                           new Color(Repeat(u), Repeat(v), 0f, 1f);
                 return new Vector3(c.r, c.g, c.b);
             }
-            public float Curvature(float u, float v) => curvature == null ? 0f :
-                curvature.GetPixelBilinear(Repeat(u), Repeat(v)).r * 2f - 1f;
+            public float Curvature(float u, float v, Settings s) => Mathf.Clamp(
+                (curvature == null ? 0f : curvature.GetPixelBilinear(u, v).r * 2f - 1f) +
+                SurfaceNormalDetail.Curvature(sourceNormal, id, u, v, s.normalDetailRadius) * s.normalCurvature, -1f, 1f);
             public float Cavity(float u, float v)
             {
                 float mesh = ao == null ? 0f : 1f - ao.GetPixelBilinear(Repeat(u), Repeat(v)).r;
@@ -318,11 +324,14 @@ namespace UMA.TexturePaint.Examples
             }
             public float Source(float u, float v, Settings s)
             {
-                float c = Curvature(u, v);
+                float c = Curvature(u, v, s);
                 return SmoothStep(s.detectionLevel, 1f, Mathf.Max(
                     Mathf.Max(0f, c) * s.edgeAmount,
                     Mathf.Max(Mathf.Max(0f, -c), Cavity(u, v)) * s.valleyAmount));
             }
+            public float NeighborSource(float centerU, float centerV, float u, float v, Settings s) =>
+                u < 0f || u > 1f || v < 0f || v > 1f || !SameIsland(Id(centerU, centerV), Id(u, v))
+                    ? 0f : Source(u, v, s);
             public bool SameIsland(Color a, Color b) => a.a >= 0.5f && b.a >= 0.5f &&
                 Mathf.Abs(a.g - b.g) <= 0.1f && Mathf.Abs(a.b - b.b) <= 0.1f;
         }
@@ -365,7 +374,7 @@ namespace UMA.TexturePaint.Examples
 
         private readonly struct Settings
         {
-            public readonly float amount, edgeAmount, valleyAmount, detectionLevel;
+            public readonly float amount, edgeAmount, valleyAmount, detectionLevel, normalCurvature, normalDetailRadius;
             public readonly float corrosionSpreadMeters, dripAmount, dripLengthMeters;
             public readonly float dripWidthMeters, dripDensity, breakupSizeMeters;
             public readonly int seed, fractalLevels;
@@ -378,6 +387,8 @@ namespace UMA.TexturePaint.Examples
                 p ??= new TexturePaintPluginParameterSet();
                 amount = Pos(p, "amount", 0.85f); edgeAmount = Pos(p, "edgeAmount", 0.75f);
                 valleyAmount = Pos(p, "valleyAmount", 1.1f);
+                normalCurvature = Mathf.Clamp(p.Float("normalCurvature", 8f), 0f, 32f);
+                normalDetailRadius = Mathf.Clamp(p.Float("normalDetailRadius", 4f), 1f, 32f);
                 detectionLevel = Mathf.Clamp(p.Float("detectionLevel", 0.08f), 0f, 0.95f);
                 corrosionSpreadMeters = Pos(p, "corrosionSpreadMeters", 0.012f);
                 dripAmount = Pos(p, "dripAmount", 0.9f);
@@ -394,9 +405,9 @@ namespace UMA.TexturePaint.Examples
                 breakup = Mathf.Clamp01(p.Float("breakup", 0.72f));
                 pitSizeMeters = Mathf.Max(0.0005f, p.Float("pitSizeMeters", 0.004f));
                 pitDepth = Pos(p, "pitDepth", 0.09f); crustHeight = Pos(p, "crustHeight", 0.055f);
-                freshColor = p.Color("freshColor", new Color(0.34f, 0.075f, 0.018f, 1f));
-                dryColor = p.Color("dryColor", new Color(0.72f, 0.23f, 0.045f, 1f));
-                streakColor = p.Color("streakColor", new Color(0.24f, 0.055f, 0.018f, 1f));
+                freshColor = p.LinearColor("freshColor", new Color(0.34f, 0.075f, 0.018f, 1f));
+                dryColor = p.LinearColor("dryColor", new Color(0.72f, 0.23f, 0.045f, 1f));
+                streakColor = p.LinearColor("streakColor", new Color(0.24f, 0.055f, 0.018f, 1f));
                 roughness = Mathf.Clamp01(p.Float("roughness", 0.88f));
                 metallic = Mathf.Clamp01(p.Float("metallic", 0.04f));
                 ambientOcclusion = Mathf.Clamp01(p.Float("ambientOcclusion", 0.32f));

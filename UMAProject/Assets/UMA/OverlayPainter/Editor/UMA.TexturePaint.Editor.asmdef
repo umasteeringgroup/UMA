@@ -3,6 +3,7 @@
     "rootNamespace": "UMA.TexturePaint.Editor",
     "references": [
         "UMA_Core",
+        "UMA_Editor",
         "UMA.TexturePaint.Runtime",
         "GUID:270a2b1433f4413fbe3998444ae4eedb"
     ],

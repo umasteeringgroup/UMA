@@ -9,15 +9,15 @@ UMA can be used for player characters, crowds, character creators, modular NPCs,
 New and returning users should begin with these two guides:
 
 1. [What's New in UMA 3](!WhatsNewInUMA3.md) — new features, workflow changes, compatibility notes, and improvements since the initial UMA 3 release.
-2. [Getting Started with UMA 3](GettingStarted.md) — configure UMA, verify the Global Library and generator, and create your first character.
+2. [Getting Started with UMA 3](!GettingStarted.md) — configure UMA, verify the Global Library and generator, and create your first character.
 
 Artists creating new content should continue with:
 
 - [Content Creation](ContentCreation.md) — practical Blender and Maya workflows for preparing meshes, textures, slots, overlays, and wardrobe.
 - [UMA Tools for Blender](UMAToolsForBlender.md) — Blender validation, rigging, weight, UDIM, import, and dependable UMA FBX export workflows.
 - [Creating a New Race](CreatingANewRace.md) — the complete race-authoring process from source model through runtime validation.
-- [Overlay Painter](OverlayPainter.md) — non-destructive 3D/2D texture painting, layers, material channels, paths, effects, and recipe-ready export.
-- [Overlay Painter Generators and Filters](OverlayPainterGeneratorsAndFilters.md) — artist workflows, material recipes, detailed controls, and troubleshooting for every included procedural plugin.
+- [Overlay Painter](../OverlayPainter/Documentation/OverlayPainter.md) — non-destructive 3D/2D painting, per-channel projections and surface warping, UDIM fills, path fade curves, composable masks, stencils, linked layers, selections, symmetry, and recipe-ready export.
+- [Overlay Painter Generators and Filters](../OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md) — artist workflows, material recipes, detailed controls, and troubleshooting for every included procedural plugin.
 
 You can open these guides inside Unity from `UMA > View Documentation`.
 
@@ -36,7 +36,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 ### Setup and core workflow
 
 - [What's New in UMA 3](!WhatsNewInUMA3.md)
-- [Getting Started](GettingStarted.md)
+- [Getting Started](!GettingStarted.md)
 - [Dynamic Character Avatar](DynamicCharacterAvatar.md)
 - [UMA Generator Setup](UMAGeneratorSetup.md)
 - [UMA Asset Indexer and Global Library](UMAAssetIndexer.md)
@@ -53,8 +53,8 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [OverlayDataAsset](OverlayDataAsset.md)
 - [Examine Overlays](ExamineOverlays.md)
 - [Examine Slots](ExamineSlots.md)
-- [Overlay Painter](OverlayPainter.md)
-- [Overlay Painter Generators and Filters](OverlayPainterGeneratorsAndFilters.md)
+- [Overlay Painter](../OverlayPainter/Documentation/OverlayPainter.md)
+- [Overlay Painter Generators and Filters](../OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md)
 - [Texture Utilities](TextureUtilities.md)
 - [Weight Touchup](WeightTouchup.md)
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md)
@@ -65,6 +65,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 
 ### Shape, fitting, and visibility
 
+- [Optimizing Blendshapes](OptimizingBlendshapes.MD) — selective shape loading, MeshModifiers, baking, race generation, and performance.
 - [DNA Creation Guide](DNACreationGuide.md)
 - [New DNA System](NewDNASystem.md)
 - [Mesh Modifiers](MeshModifiers.md)
@@ -75,6 +76,8 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 
 ### Generation, animation, and performance
 
+- [Atlas and Mesh Reuse](AtlasAndMeshReuse.md) - setup, practical sharing examples, and troubleshooting.
+- [Generated Resource Reuse](GeneratedResourceReuse.md) - implementation details and profiling.
 - [Mesh Combiners](MeshCombiners.md)
 - [Incremental Mesh Combiner](IncrementalMeshCombiner.md)
 - [UMA Simple LOD](UMASimpleLOD.md)
@@ -101,17 +104,17 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 
 ### Engineering and implementation notes
 
-- [Incremental Mesh Combiner Baseline](Plans/IncrementalMeshCombinerBaseline.md)
-- [Dynamic Character Build Optimization Plan](Plans/DynamicCharacterBuildOptimizationPlan.md)
-- [Mesh Modifier Cloth Brush Plan](Plans/MeshModifierClothBrushPlan.md)
-- [Wardrobe Recipe Graph Production Readiness](Plans/UMAWardrobeRecipeGraphProductionReadiness.md)
+- [Incremental Mesh Combiner Baseline](../Plans/IncrementalMeshCombinerBaseline.md)
+- [Dynamic Character Build Optimization Plan](../Plans/DynamicCharacterBuildOptimizationPlan.md)
+- [Mesh Modifier Cloth Brush Plan](../Plans/MeshModifierClothBrushPlan.md)
+- [Wardrobe Recipe Graph Production Readiness](../Plans/UMAWardrobeRecipeGraphProductionReadiness.md)
 
 ## Project Layout
 
 - `Assets/UMA/Core` contains the shared runtime, editor tools, default generator, and default avatar prefab.
 - `Assets/UMA/SRP` initially contains the URP and HDRP bootstrap installers. After the required Welcome-window selection, it contains the selected pipeline's shaders, materials, environment assets, textures, content manifest, and (for source-tree installs) both bootstrap installers.
 - `Assets/UMA/UMA3` contains editable UMA 3 races, wearables, demonstrations, and sample content installed by `UMA3Content.unitypackage`.
-- `Assets/UMA/UMA2` contains optional editable legacy races and compatible content installed by `UMA2Content.unitypackage`.
+- `Assets/UMA2` contains legacy races and compatible content supplied by the optional **UMA2Compatibility** plugin. Install it from Welcome's Plugins page; see [official plugins](UMAPlugins.md).
 - `Assets/UMA/Docs` contains the current documentation.
 
 Projects that do not need the supplied UMA 3 sample races or content can remove `Assets/UMA/UMA3`. Shared Core and SRP dependencies are kept outside that folder.

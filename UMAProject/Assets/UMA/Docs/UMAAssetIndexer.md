@@ -249,7 +249,7 @@ Avoid full rebuilds for routine edits. Add only changed content, close large exp
 
 ## Related Guides
 
-- [GettingStarted.md](GettingStarted.md)
+- [GettingStarted.md](!GettingStarted.md)
 - [Addressables.md](Addressables.md)
 - [ContentCreation.md](ContentCreation.md)
 - [DynamicCharacterAvatar.md](DynamicCharacterAvatar.md)

@@ -1,5 +1,61 @@
 # Changelog
 
+## 3.1f2 (package version 3.1.2)
+
+- Plugin package builds now finish with a per-package Built/Failed results dialog and continue building other packages after a failure. Cancellation lists unbuilt packages separately; failure details retain filenames and recovery paths.
+
+- Hardened plugin package rebuilding against file-replacement failures: retries brief locks, retains the previous archive until publishing succeeds, restores it on failure, and preserves completed new archives for recovery. Error dialogs identify the full destination and recovery paths; cleanup failures report their filenames without hiding the original error.
+
+- Replaced the mask-effect creation choice **Painted Mask** with **White Painted Mask** and **Black Painted Mask**. Both initialize the shared paint raster and replace prior Painted Mask entries with one enabled Multiply effect at opacity 1, with full Undo/Redo. Zero-opacity effects are explicitly labeled in their headers.
+
+- Added per-layer, per-channel **Blur (px)** to Texture/Sprite sources, defaulting to zero. Softens RGBA edges across Fill, Projection, Paint, and Path sources, including ribbon end tiles, while preserving sprite atlas isolation, normal vectors, saved settings, and Undo/Redo.
+
+- Fixed Projection Normal Control textures/sprites losing their own alpha to Albedo coverage. Transparent height pixels now preserve underlying surface detail, including inverted height, and Albedo opacity no longer weakens the independent height source.
+
+- Fixed stale Projection layer references after adding/editing channels. Normal Control's **Height Strength** (0–64), **Invert Height**, and **Sample Radius** are now specific to the selected layer channel, with saved values and Undo/Redo. Sampling includes that layer's masks/effects and preserves neighboring layers; legacy target-wide conversion settings remain internal for compatibility.
+
+- Added per-channel **Multiplier** and **Additive** colors beneath Texture/Sprite sources in Overlay Painter. Both affect RGBA, with neutral defaults, shared silhouette support, saved settings, and Undo/Redo across Paint, Fill, Path, and Projection sources.
+
+- Reviewed Properties across all layer types: hide painting-only and inherited instance controls, solid-fill mapping fields, and unused projection garment settings. **Layer Channels & Settings** is now a persistent foldout, with New Channel, its selector, and Add Channel together at the top; newly added channels expand automatically.
+- Made path Properties contextual: hides painting selection tools, fixed destination controls, and inapplicable ribbon/generator/UV controls. Retains an active-selection notice with Clear, and releases hidden selection tools so they cannot intercept path editing. Mask painting retains selection tools.
+- Ordinary paths now hide Garment Generator settings. Added explicit **Convert to Garment** actions in Path Properties and the path toolbar, preserving path shape, width, and sources with Undo/Redo.
+- Fixed ribbon path tiling to account for texture and cropped-sprite aspect ratios. Fits whole repeats with complete Beginning/End images using a shared stretch scale; material channels stay aligned and local Point Width shaping is preserved.
+- Added a general **Path Width** control at the top of Path Properties for ordinary paths, ribbons, and generators. Local Point Width percentages are preserved; changes support Undo/Redo and Auto Update.
+- Added **Black Expansion** and **Contrast** to Voronoi mask effects, allowing darker, more defined cells without changing their scale or placement. Defaults preserve existing masks.
+- Fixed Edge Wear missing thin bevels because small triangle normals were zeroed during normalization. Also bridges shallow sections of continuous convex rims only between detected edges; concave folds and flat triangulation remain excluded.
+- Added **Assets > UMA > Remove invalid races from selected recipes**, immediately after Add Race(s). Checks installed RaceData assets (including unindexed races), removes missing race references and their thumbnails from selected wardrobe recipes, and supports Undo.
+- Added configurable Edge Wear fade level, falloff curve, and distance-based breakup curve. Exposed-edge wear defaults to a linear fade; breakup no longer clips fading rims into gaps or creates offset wear bands.
+- Edge Wear now defaults to physical rims and convex creases, with world-space width and restrained normal-detail wear. UV/shading splits do not create false edges; existing layers retain the original broad treatment as **Overall Wear**.
+- Fixed editor-wide stalls while Welcome's Plugins page was open: package status now refreshes after changes instead of validating every second. Navigation caches render-pipeline status and no longer validates UMA3 for an unused button on every GUI event.
+- Added **Replace everything** to installation conflicts, with an optional clean replacement that removes extra files inside the selected package folder. Backups and installed companions are preserved in both modes.
+- Added **Continue - Remove All** to plugin removal confirmations, allowing modified package-owned files to be removed across the selected parent and companions. The choice persists through interrupted-session recovery; unowned files remain protected. Empty folders are removed from children to parents, including folders omitted from manifests and the package root when empty.
+- Added local-first plugin installation with a matching GitHub release download fallback, download cancellation, release-page links, and local-file recovery options.
+- Added immediate install/reinstall progress for archive validation, installed-file comparison, backup preparation, and final verification; reused the selected archive validation result.
+- Fixed false reinstall conflicts from unowned empty folders and files already identical to the incoming archive. Empty folders and metadata are preserved; divergent local edits remain protected. Builds generate new archive manifests while retaining the installed comparison baseline.
+- Added a Plugins page with separate Examples/Tests rows for every official plugin, moved package builds to **UMA > Build > Build Plugin Packages**, and derived release/package versions from installed UMASettings.
+- Separated Overlay Painter, Hair Card Editor, and Dismemberment from Core, and registered plugin documentation in separate Documentation Browser selections.
+- Added Overlay Painter path generators for scars, tattoo designs, text, stitching, seams, trim, zippers, and distress; added text flips, generator material-channel handling, and related layer-effect fixes.
+- Added Wetness & Sweat, Leather & Coated Fabric, Print Aging, clothing-finish presets, automatic seam paths, and PBR texture-set import. Expanded cloth/quilt mapping, rotation, sprite-set selection, and normal combination.
+- Added dockable Overlay Painter Properties, saved-layout restoration, and Layer Preview progress and stale-layer regeneration controls.
+- Added the Recipe Prepared slot event, UMADnaOverrideSlot and its editor/example, and blendshape optimization documentation.
+
+- Moved legacy UMA2 wearable samples and utility slots into the separate UMA2Compatibility Examples package, preserving GUIDs and script identities. Required base-character resources stay in the parent; base races build without Examples.
+- Added shared anatomical and garment-region masks to Overlay Painter's **Region Placement**
+  properties: knees, elbows, armpits, wrist/ankle cuffs, collar, lips, shoulders, waist and seat.
+  Bone-relative envelopes share reusable profiles and affect every material channel. Knee and
+  elbow masks cover an outward 120-degree sector, with pose-aware bend direction and rounded
+  envelopes. Scene outlines, custom bone names, standalone slot alignment and mirrored UV
+  ownership are supported; region examples and regressions remain in companion packages.
+
+- Parent plugin rows now offer **Remove All**, removing installed Examples and Tests before
+  their parent with one confirmation. Modified and unowned files are preserved, and the
+  complete removal sequence resumes after an interrupted Editor session.
+- Packaged the complete legacy `Assets/UMA2` content tree as the official **UMA2Compatibility**
+  plugin, preserving asset GUIDs and its assembly name. Welcome's Plugins page now provides
+  installation, reinstallation and removal, with separate Examples and Tests companions.
+  Plugin builds use the installed UMASettings version, and the Documentation Browser has a
+  separate UMA2Compatibility selection. Earlier nested `Assets/UMA/UMA2` trees retain a
+  GUID-preserving migration path.
 - Added a positioned-Prefab conversion utility under **Assets > UMA** and **UMA > Asset
   Management**. It retains the original path and GUID on a new identity-root wrapper, keeps the old
   hierarchy as an unpacked `_positioned` child at its authored transform, creates a separate

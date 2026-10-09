@@ -17,6 +17,7 @@ UMAProject/Build
 UMAProject\tmp\*
 UMAProject/tmp/*
 UMAProject/ProjectSettings/ClusterInputManager.asset
+UMAProject/TextureExports/*
 
 UMAProject/ProjectSettings/GraphicsSettings.asset
 

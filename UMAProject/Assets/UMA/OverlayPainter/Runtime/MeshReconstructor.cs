@@ -28,6 +28,20 @@ namespace UMA.TexturePaint
         public string[] triangleSlotNames;
         public GameObject gameObject;
         public Mesh mesh;
+        public TexturePaintAnatomy anatomy;
+        private float[] anatomicalUvDistances;
+        private int anatomicalUvWidth, anatomicalUvHeight;
+        internal float[] GetAnatomicalUvDistances(int width, int height, Vector2[] uv, int[] triangles)
+        {
+            if (anatomicalUvDistances != null && anatomicalUvWidth == width && anatomicalUvHeight == height)
+                return anatomicalUvDistances;
+            var distances = new float[width * height]; Array.Fill(distances, float.PositiveInfinity);
+            for (int t = 0; t + 2 < triangles.Length; t += 3)
+                ProceduralMeshMapBuilder.RasterizeTriangle(uv[triangles[t]], uv[triangles[t + 1]], uv[triangles[t + 2]],
+                    width, height, distances, (x, y, bary) => { }, true);
+            anatomicalUvWidth = width; anatomicalUvHeight = height; anatomicalUvDistances = distances;
+            return distances;
+        }
         public MeshCollider collider;
         public Material sourceMaterial;
         public Material previewMaterial;
@@ -1452,6 +1466,7 @@ namespace UMA.TexturePaint
                     Material[] materials = sourceRenderer.sharedMaterials;
                     int submeshCount = Mathf.Min(baked.subMeshCount, materials.Length);
                     Matrix4x4 toAvatar = avatar.transform.worldToLocalMatrix * sourceRenderer.transform.localToWorldMatrix;
+                    TexturePaintAnatomy anatomy = TexturePaintAnatomy.Capture(avatar.transform, sourceRenderer);
                     for (int submesh = 0; submesh < submeshCount; submesh++)
                     {
                         Material sourceMaterial = materials[submesh];
@@ -1538,6 +1553,7 @@ namespace UMA.TexturePaint
                                 sourceSubmeshIndex = submesh,
                                 gameObject = child,
                                 mesh = extracted,
+                                anatomy = anatomy,
                                 collider = collider,
                                 sourceMaterial = sourceMaterial,
                                 previewMaterial = preview,
@@ -1625,6 +1641,8 @@ namespace UMA.TexturePaint
                     collider.sharedMesh = mesh;
 
                     SlotData slot = new SlotData(asset);
+                    Matrix4x4 regionPreviewFromRoot = context.fixupRotations
+                        ? Matrix4x4.Rotate(Quaternion.Euler(context.slotRotationEuler)) : Matrix4x4.identity;
                     result.surfaces.Add(new ReconstructedSurface
                     {
                         index = result.surfaces.Count,
@@ -1632,6 +1650,7 @@ namespace UMA.TexturePaint
                         sourceSubmeshIndex = asset.subMeshIndex,
                         gameObject = child,
                         mesh = mesh,
+                        anatomy = TexturePaintAnatomy.CaptureSlot(asset.meshData, regionPreviewFromRoot),
                         collider = collider,
                         sourceMaterial = source,
                         previewMaterial = preview,

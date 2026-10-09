@@ -109,7 +109,7 @@ namespace UMA.TexturePaint.Editor
         private sealed class AuthoredOverlayBakeContext : IDisposable
         {
             private static string ShaderPath =>
-                UMAPathUtility.ResolveInstallAssetPath("OverlayPainter/Shaders/ExportOverlayPack.shader");
+                TexturePaintAssets.ResolveInstallAssetPath("OverlayPainter/Shaders/ExportOverlayPack.shader");
             private readonly TextureSet set;
             private readonly Material material;
             private readonly Dictionary<TexturePaintChannel, RenderTexture> logical =
@@ -393,6 +393,7 @@ namespace UMA.TexturePaint.Editor
             string identifier, TexturePaintLogicalTargetCatalog targets, bool overwriteConfirmed,
             TexturePaintOperationContext operation = default, Action<string, float> detailedProgress = null)
         {
+            store?.RefreshLayerLinks();
             _ = state; // Export history intentionally does not live in the paint document/editor state.
             string contextName = avatar != null ? avatar.name : current?.surface?.slotName ?? "TexturePaint";
             TexturePaintExportPlan plan = BuildPlan(store, current, contextName, template, identifier, targets);
@@ -864,7 +865,7 @@ namespace UMA.TexturePaint.Editor
                         bool invertNormalGreen = IsNormalChannel(entry.materialChannel) &&
                             entry.materialChannel.output.normalConvention ==
                             UMAMaterial.TextureChannelNormalConvention.DirectX;
-                        bool linear = entry.materialChannel.output.colorSpace !=
+                        bool linear = bitDepth == TexturePaintExportBitDepth.HalfFloat || entry.materialChannel.output.colorSpace !=
                             UMAMaterial.TextureChannelColorSpace.SRGB;
                         ApplyDeclaredOutputTransform(texture, entry.materialChannel, invertNormalGreen, linear,
                             operation, template.content == TexturePaintExportContent.AuthoredOverlay);
@@ -1229,7 +1230,8 @@ namespace UMA.TexturePaint.Editor
             UMAMaterial.TextureChannelOutputSettings output = entry.materialChannel.output;
             importer.textureType = output.importerType == UMAMaterial.TextureChannelImporterType.NormalMap
                 ? TextureImporterType.NormalMap : TextureImporterType.Default;
-            importer.sRGBTexture = output.colorSpace == UMAMaterial.TextureChannelColorSpace.SRGB;
+            importer.sRGBTexture = output.encoding != UMAMaterial.TextureChannelOutputEncoding.ExrHalf &&
+                output.colorSpace == UMAMaterial.TextureChannelColorSpace.SRGB;
             importer.mipmapEnabled = output.generateMipMaps;
             importer.textureCompression = ToImporterCompression(output.compression);
             importer.alphaSource = output.alphaSource == UMAMaterial.TextureChannelAlphaSource.FromInput
@@ -1519,7 +1521,7 @@ namespace UMA.TexturePaint.Editor
 
         private static Shader LoadExportShader()
         {
-            Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(UMAPathUtility.ResolveInstallAssetPath(
+            Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(TexturePaintAssets.ResolveInstallAssetPath(
                 "OverlayPainter/Shaders/ExportDilate.shader"));
             if (shader == null || !shader.isSupported)
                 throw new InvalidOperationException(
@@ -1554,7 +1556,7 @@ namespace UMA.TexturePaint.Editor
         {
             folder = (folder ?? string.Empty).Replace('\\', '/').TrimEnd('/');
             return folder.StartsWith("Assets/", StringComparison.Ordinal)
-                ? folder : UMAPathUtility.OverlayPainterGeneratedRoot;
+                ? folder : TexturePaintPaths.GeneratedRoot;
         }
 
         private static void EnsureFolder(string folder)

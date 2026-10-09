@@ -104,7 +104,8 @@ namespace UMA.Editors
 
 			plugins = new List<IUMARecipePlugin>();
 			foreach(Type t in PluginTypes) {
-				plugins.Add((IUMARecipePlugin)Activator.CreateInstance(t));
+				try { plugins.Add((IUMARecipePlugin)Activator.CreateInstance(t)); }
+				catch (Exception exception) { UMAPluginDiagnostics.Report("legacy registration", t, exception); }
 			}
 		}
 
@@ -131,7 +132,8 @@ namespace UMA.Editors
 			foreach (IUMARecipePlugin plugin in plugins)
 			{
 				if (plugin == null) continue;
-				plugin.OnDestroy();
+				try { plugin.OnDestroy(); }
+				catch (Exception exception) { UMAPluginDiagnostics.Report("legacy cleanup", plugin.GetType(), exception); }
 			}
 
 			plugins = null;
@@ -140,6 +142,8 @@ namespace UMA.Editors
 
         public override void OnEnable()
         {
+			pluginPlacement?.Dispose();
+			pluginPlacement = UMAPluginGUI.RegisterExplicitHost(this);
 			isDisposed = false;
 			Initialized = false;
 			QueueInitializeEditor();
@@ -147,6 +151,14 @@ namespace UMA.Editors
 
 		public override void OnDisable()
 		{
+			try { PreserveConflictingPluginEdits(); }
+			catch (Exception exception)
+			{
+				_needsUpdate = _forceUpdate = false;
+				Debug.LogException(exception);
+			}
+			pluginPlacement?.Dispose();
+			pluginPlacement = null;
 			isDisposed = true;
 			UnqueueInitializeEditor();
 			DestroyPlugins();
@@ -188,7 +200,8 @@ namespace UMA.Editors
 			{
 				foreach (IUMARecipePlugin plugin in plugins)
 				{
-					plugin.OnEnable();
+					try { plugin.OnEnable(); }
+					catch (Exception exception) { UMAPluginDiagnostics.Report("legacy initialization", plugin.GetType(), exception); }
 				}
 				pluginsInitialized = true;
 			}
@@ -196,6 +209,7 @@ namespace UMA.Editors
             if (!NeedsReenable())
 			{
 				Initialized = true;
+                RecordPluginRecipeRevision();
                 return;
 			}
 
@@ -222,6 +236,7 @@ namespace UMA.Editors
 
             _rebuildOnLayout = true;
             Initialized = true;
+            RecordPluginRecipeRevision();
         }
 
 
@@ -229,6 +244,8 @@ namespace UMA.Editors
 
         public void OnDestroy()
 		{
+			pluginPlacement?.Dispose();
+			pluginPlacement = null;
 			isDisposed = true;
 			UnqueueInitializeEditor();
 			if (warningStyle != null)
@@ -241,6 +258,8 @@ namespace UMA.Editors
 
         public override void OnInspectorGUI()
         {
+            using var pluginScope = BeginPluginInspector();
+            if (pluginRecipeConflict) return;
 			if (EditorApplication.isCompiling || EditorApplication.isUpdating)
 			{
 				EditorGUILayout.LabelField("Unity is compiling/updating. Please wait...");
@@ -260,21 +279,6 @@ namespace UMA.Editors
 			}
 			if (_recipe == null) return;
 
-			if (plugins != null)
-			{
-				foreach (IUMARecipePlugin plugin in plugins)
-				{
-					string label = plugin.GetSectionLabel();
-					plugin.foldOut = GUIHelper.FoldoutBar(plugin.foldOut, label);
-					if (plugin.foldOut)
-					{
-						GUIHelper.BeginVerticalPadded(10, new Color(0.65f, 0.675f, 1f));
-						plugin.OnInspectorGUI(serializedObject);
-						GUIHelper.EndVerticalPadded(10);
-					}
-				}
-			}
-
             base.OnInspectorGUI();
 		}
 
@@ -283,6 +287,7 @@ namespace UMA.Editors
             _needsUpdate = false;
             var recipeBase = (UMARecipeBase)target;
             recipeBase.Save(_recipe);
+            RecordPluginRecipeRevision();
             EditorUtility.SetDirty(recipeBase);
             AssetDatabase.SaveAssetIfDirty(recipeBase);
 			_rebuildOnLayout = true;

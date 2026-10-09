@@ -55,5 +55,5 @@ paint and hairstyle are preserved. See the full guide below for alignment and ex
 The saved scene's GeneratedCards mesh is a presentation snapshot. Rebuilding the
 groom updates the Hair Card Stage; it does not silently overwrite that scene snapshot.
 
-See [the full hairstyle guide](../../../../UMA/HairCards/SweptClumpsGuide.md)
+See [the full hairstyle guide](../../../../UMA/HairCards/Documentation/SweptClumpsGuide.md)
 for the native Unity workflow, including drawing Spline Flow paths instead of importing guides.

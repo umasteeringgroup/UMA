@@ -753,6 +753,13 @@ namespace UMA
 
 		public void ClearExternalSkeletonRoot(SkinnedMeshRenderer owner = null)
 		{
+			// Standard DCA builds also call FBX cleanup. Keep their pre-DNA baseline
+			// when there is no external skeleton to release.
+			if (ReferenceEquals(externalSkeletonRoot, null) && ReferenceEquals(externalBaseRenderer, null))
+			{
+				return;
+			}
+
 			if (owner != null && externalBaseRenderer != null && owner != externalBaseRenderer)
 			{
 				return;
@@ -983,7 +990,7 @@ namespace UMA
         /// Can the mesh be read after creation?
         /// </summary>
         [Tooltip("When this is true, the meshcombiner will upload the data and the mesh will no longer be readable. Set this to false if you use a 3rd party asset that needs to read the mesh data.")]
-        public bool markNotReadable = true;
+        public bool markNotReadable = false;
         /// <summary>
         /// Should the mesh use dynamic buffers?
         /// </summary>
@@ -3899,8 +3906,19 @@ namespace UMA
 
 
         /// <summary>
-        /// Calls character begun events on slots.
+        /// Calls active slots after recipe DNA restoration and before DNA-driven modifier configuration.
         /// </summary>
+        public void FireRecipePreparedEvents()
+        {
+            // Use the assembled slot list for this dispatch; callbacks may replace the recipe's array.
+            var slots = umaRecipe?.slotDataList;
+            if (slots == null) return;
+            foreach (var slot in slots)
+                if (slot != null && !slot.Suppressed && slot.asset != null)
+                    slot.asset.RecipePrepared?.Invoke(this);
+        }
+
+        /// <summary>Calls character begun events on slots.</summary>
         public void FireCharacterBegunEvents()
 		{
             if (CharacterBegun != null)

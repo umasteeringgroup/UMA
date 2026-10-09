@@ -37,9 +37,10 @@ namespace UMA.Editors
             public bool weightRecalculatedNormalsByTriangleSize;
         }
 
-        static string[] RegularSlotFields = new string[] { "slotName", "slotGroup", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
-        static string[] WildcardSlotFields = new string[] { "slotName", "slotGroup", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
+        static string[] RegularSlotFields = new string[] { "slotName", "slotGroup", "RecipePrepared", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
+        static string[] WildcardSlotFields = new string[] { "slotName", "slotGroup", "RecipePrepared", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
         private static readonly string[] TriplanarUvChannelLabels = new string[] { "0 (uv)", "1 (uv2)", "2 (uv3)", "3 (uv4)" };
+        SerializedProperty RecipePrepared;
         SerializedProperty CharacterBegun;
         SerializedProperty SlotAtlassed;
         SerializedProperty SlotProcessed;
@@ -161,6 +162,7 @@ namespace UMA.Editors
             if (serializedObject == null || serializedObject.targetObject == null)
                 return;
 
+            RecipePrepared = serializedObject.FindProperty("RecipePrepared");
             CharacterBegun = serializedObject.FindProperty("CharacterBegun");
             SlotAtlassed = serializedObject.FindProperty("SlotAtlassed");
             DNAApplied = serializedObject.FindProperty("DNAApplied");
@@ -358,19 +360,6 @@ namespace UMA.Editors
                 }
             }
             GUILayout.EndHorizontal();
-
-            using (new EditorGUI.DisabledScope(targets.Length != 1 || slot == null ||
-                UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)))
-            {
-                if (GUILayout.Button(new GUIContent("Open in Overlay Painter",
-                    "Open this slot, or its complete UDIM group, without generating an avatar."),
-                    GUILayout.Height(28f)))
-                {
-                    UMA.TexturePaint.Editor.TexturePaintStandaloneSetupWindow.ShowForSlot(slot);
-                }
-            }
-            if (targets.Length != 1)
-                EditorGUILayout.HelpBox("Select one SlotDataAsset to open Overlay Painter.", MessageType.Info);
 
             if (targetAsset != null && !string.IsNullOrEmpty(targetAsset.Errors))
             {
@@ -731,6 +720,7 @@ namespace UMA.Editors
             GUILayout.EndHorizontal();
             if ((target as SlotDataAsset).eventsFoldout)
             {
+                if (RecipePrepared != null) EditorGUILayout.PropertyField(RecipePrepared);
                 if (CharacterBegun != null) EditorGUILayout.PropertyField(CharacterBegun);
                 if (!slot.isWildCardSlot)
                 {

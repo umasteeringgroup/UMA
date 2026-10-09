@@ -4,7 +4,8 @@
     "references": [
         "UMA.HairCards.Core",
         "UMA.HairCards.Runtime",
-        "UMA_Core"
+        "UMA_Core",
+        "UMA_Editor"
     ],
     "includePlatforms": [
         "Editor"

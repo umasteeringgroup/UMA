@@ -15,6 +15,8 @@ namespace UMA.TexturePaint.Editor
         [NonSerialized] private bool applyingLightweightHistory;
         [NonSerialized] private bool suppressLogicalLayerRepair;
         [NonSerialized] private List<LayerLocation> strokeCreatedLayers = new List<LayerLocation>();
+        private static readonly Dictionary<TexturePaintLayer, int> MergeSnapshotReferences =
+            new Dictionary<TexturePaintLayer, int>();
 
         private sealed class LightweightEditCommand : IDisposable
         {
@@ -57,6 +59,7 @@ namespace UMA.TexturePaint.Editor
         {
             public TexturePaintSpline spline;
             public TexturePaintSplineSettings settings;
+            public TexturePaintSymmetry symmetry;
             public int selectedPoint;
         }
 
@@ -88,9 +91,11 @@ namespace UMA.TexturePaint.Editor
         private sealed class MergedLayerState
         {
             public TextureSet set;
-            public TexturePaintLayer lower;
-            public TexturePaintLayer upper;
+            public List<TexturePaintLayer> roots;
+            public List<LayerLocation> sources;
             public TexturePaintLayer merged;
+            public TexturePaintLayer activeBefore;
+            public int activeIndexBefore;
             public int index;
         }
 
@@ -131,6 +136,7 @@ namespace UMA.TexturePaint.Editor
             public Color32[] pixels;
             public float baseValue;
             public TexturePaintLayerMaskEffects effects;
+            public List<TexturePaintMaskReferenceCache> referenceCaches;
             public TexturePaintChannelSourceSettings sourceSettings;
             public TexturePaintChannel sourceChannel;
             public string pluginId;
@@ -165,6 +171,7 @@ namespace UMA.TexturePaint.Editor
             Action disposeAction = null, string coalesceKey = null)
         {
             if (applyingLightweightHistory) return;
+            FinishProjectionEdit();
             lightweightUndo ??= new List<LightweightEditCommand>();
             lightweightRedo ??= new List<LightweightEditCommand>();
             controller?.Painting?.History?.ClearRedo();
@@ -240,6 +247,9 @@ namespace UMA.TexturePaint.Editor
 
         private void ClearLightweightHistory()
         {
+            if (pendingProjectionEdit != null) DisposeProjectionEdit(pendingProjectionEdit);
+            pendingProjectionEdit = null;
+            ReleaseProjectionHandle();
             pendingLayerCreationLabel = null;
             pendingPathEdit = null;
             strokeCreatedLayers?.Clear();
@@ -285,6 +295,13 @@ namespace UMA.TexturePaint.Editor
             peers = new List<TexturePaintLogicalLayerMember>();
             error = null;
             if (set == null || layer == null) { error = "No texture layer is selected."; return false; }
+            // Projection edits replace the layer with a history snapshot. Resolve the live
+            // member by identity so controls holding the previous snapshot cannot edit it.
+            if (!set.layers.Contains(layer))
+            {
+                layer = set.layers.Find(candidate => candidate.id == layer.id);
+                if (layer == null) { error = "The selected texture layer is no longer present."; return false; }
+            }
             if (string.IsNullOrEmpty(layer.logicalLayerId) || string.IsNullOrEmpty(layer.paintTargetId) ||
                 controller?.LogicalLayers == null)
             {
@@ -793,7 +810,9 @@ namespace UMA.TexturePaint.Editor
             bool rerenderRibbon = layer.IsSplineLayer &&
                 layer.splineSettings?.pathMode == TexturePaintPathMode.Ribbon &&
                 previous.TryGetValue(layer, out TexturePaintLayerEffects priorEffects) &&
-                RibbonProjectionEffectsChanged(priorEffects, next);
+                (layer.splineSettings.pathGenerator?.enabled == true
+                    ? RibbonEffectSignature(priorEffects,true) != RibbonEffectSignature(next,true)
+                    : RibbonProjectionEffectsChanged(priorEffects, next));
             if (rerenderRibbon) ReapplyLayerEffectsPath(set, layer);
             PushLightweightCommand("Edit Layer Effects",
                 () =>
@@ -993,6 +1012,7 @@ namespace UMA.TexturePaint.Editor
                     pixels = snapshot.GetPixels32(),
                     baseValue = mask.baseValue,
                     effects = mask.effects?.Clone() ?? new TexturePaintLayerMaskEffects(),
+                    referenceCaches = mask.CaptureReferenceOutputs(),
                     sourceSettings = mask.sourceSettings?.Clone() ??
                         TexturePaintLayerMask.DefaultSourceSettings(),
                     sourceChannel = mask.sourceChannel,
@@ -1030,7 +1050,7 @@ namespace UMA.TexturePaint.Editor
             {
                 snapshot.SetPixels32(entry.pixels);
                 snapshot.Apply(false, false);
-                return new TexturePaintLayerMask
+                var restored = new TexturePaintLayerMask
                 {
                     baseValue = Mathf.Clamp01(entry.baseValue),
                     effects = entry.effects?.Clone() ?? new TexturePaintLayerMaskEffects(),
@@ -1047,6 +1067,8 @@ namespace UMA.TexturePaint.Editor
                     target = new EditableTextureTarget(layer.name + " Layer Mask", width, height,
                         RenderTextureFormat.ARGB32, snapshot, TextureSet.MaskColor(entry.baseValue))
                 };
+                restored.RestoreReferenceOutputs(entry.referenceCaches);
+                return restored;
             }
             finally
             {
@@ -1073,6 +1095,77 @@ namespace UMA.TexturePaint.Editor
             if (peer?.targetMember == null) return null;
             return "member:" + (peer.targetMember.slotName ?? string.Empty) + ":" +
                 peer.targetMember.udimTileNumber;
+        }
+
+        private bool AddPaintedMaskEffectWithHistory(TextureSet set, TexturePaintLayer layer,
+            TexturePaintLayerMaskEffects effects, bool white)
+        {
+            if (effects == null || !TryResolveLogicalPeers(set, layer,
+                out List<TexturePaintLogicalLayerMember> peers, out _)) return false;
+            foreach (var peer in peers)
+                if (peer.layer.layerMask?.target?.Front == null) return false;
+
+            var before = new Dictionary<TexturePaintLayer, TexturePaintLayerMask>();
+            var after = new Dictionary<TexturePaintLayer, TexturePaintLayerMask>();
+            float baseValue = white ? 1f : 0f;
+            string name = white ? "White Painted Mask" : "Black Painted Mask";
+            var nextEffects = effects.Clone();
+            nextEffects.Normalize();
+            // There is one editable paint surface per layer. Replacing its stack entries avoids
+            // an old disabled/zero-opacity entry, or applying the same painted coverage twice.
+            nextEffects.stack.RemoveAll(effect => effect.kind == TexturePaintMaskEffectKind.PaintedMask);
+            var painted = TexturePaintMaskEffect.Create(TexturePaintMaskEffectKind.PaintedMask);
+            painted.name = name;
+            painted.enabled = true;
+            painted.opacity = 1f;
+            painted.blend = TexturePaintMaskBlend.Multiply;
+            nextEffects.stack.Add(painted);
+            nextEffects.startFromPaint = false;
+            nextEffects.initialValue = 1f;
+            try
+            {
+                foreach (var peer in peers)
+                {
+                    var previous = peer.layer.layerMask;
+                    var next = new TexturePaintLayerMask
+                    {
+                        baseValue = baseValue,
+                        effects = nextEffects.Clone(),
+                        pluginId = previous.pluginId,
+                        pluginVersion = previous.pluginVersion,
+                        pluginParametersJson = previous.pluginParametersJson,
+                        pluginParameters = previous.pluginParameters?.Clone() ?? new TexturePaintPluginParameterSet(),
+                        pluginStale = previous.pluginStale,
+                        pluginLastError = previous.pluginLastError
+                    };
+                    before[peer.layer] = previous;
+                    after[peer.layer] = next;
+                    next.target = new EditableTextureTarget(peer.layer.name + " Layer Mask",
+                        previous.target.Width, previous.target.Height, previous.target.Front.format,
+                        null, TextureSet.MaskColor(baseValue));
+                    next.SetPaintValue(1f - baseValue);
+                    next.CopyReferenceOutputs(previous);
+                }
+            }
+            catch
+            {
+                foreach (var mask in after.Values) mask.Dispose();
+                throw;
+            }
+            Action restore = () => ApplyLayerMaskClipboardState(peers, before);
+            Action apply = () => ApplyLayerMaskClipboardState(peers, after);
+            apply();
+            PushLightweightCommand("Add " + name, restore, apply, () =>
+            {
+                foreach (var peer in peers)
+                {
+                    if (!ReferenceEquals(peer.layer.layerMask, before[peer.layer])) before[peer.layer].Dispose();
+                    if (!ReferenceEquals(peer.layer.layerMask, after[peer.layer])) after[peer.layer].Dispose();
+                }
+            });
+            layerMaskPaintValue = 1f - baseValue;
+            MarkDocumentDirty(peers);
+            return true;
         }
 
         private void ChangeLayerMaskEffects(TextureSet set, TexturePaintLayer layer,
@@ -1171,13 +1264,14 @@ namespace UMA.TexturePaint.Editor
             return RibbonEffectSignature(before) != RibbonEffectSignature(after);
         }
 
-        private static string RibbonEffectSignature(TexturePaintLayerEffects effects)
+        private static string RibbonEffectSignature(TexturePaintLayerEffects effects, bool generatedPath = false)
         {
             var signature = new System.Text.StringBuilder();
             for (int i = 0; i < effects.Stack.Count; i++)
             {
                 TexturePaintLayerEffectSettings effect = effects.Stack[i];
                 if (effect == null || TexturePaintLayerEffects.IsCompositeOnlyEffect(effect.kind)) continue;
+                if (generatedPath && TexturePaintLayerEffects.IsDistanceEffect(effect.kind)) continue;
                 signature.Append(JsonUtility.ToJson(effect));
             }
             return signature.ToString();
@@ -1249,6 +1343,19 @@ namespace UMA.TexturePaint.Editor
         private void ChangeLayerNormalControlStrength(TextureSet set, TexturePaintLayer layer,
             float strength)
         {
+            ChangeLayerNormalControlSettings(set, layer, strength, null);
+        }
+
+        private void ChangeLayerNormalControlSettings(TextureSet set, TexturePaintLayer layer,
+            float strength, bool? invert)
+        {
+            ChangeLayerNormalControlOptions(set, layer, strength, invert, null);
+        }
+
+        private void ChangeLayerNormalControlOptions(TextureSet set, TexturePaintLayer layer,
+            float strength, bool? invert, int? radius)
+        {
+            if (layer?.kind == TexturePaintLayerKind.Projection) layer = CurrentProjection(set, layer.id);
             if (set == null || layer == null ||
                 !layer.channels.ContainsKey(TexturePaintChannel.NormalControl)) return;
             if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
@@ -1257,7 +1364,7 @@ namespace UMA.TexturePaint.Editor
                 ShowWorkspaceStatus(error);
                 return;
             }
-            strength = Mathf.Clamp(strength, 0f, 16f);
+            strength = Mathf.Clamp(strength, 0f, 64f);
             var before = new Dictionary<TexturePaintLayer, TexturePaintLayerChannelSettings>();
             var after = new Dictionary<TexturePaintLayer, TexturePaintLayerChannelSettings>();
             for (int i = 0; i < peers.Count; i++)
@@ -1274,6 +1381,8 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintLayerChannelSettings updated = settings.Clone();
                 updated.hasNormalControlStrength = true;
                 updated.normalControlStrength = strength;
+                if (invert.HasValue) updated.normalControlInvert = invert.Value;
+                if (radius.HasValue) updated.normalControlRadius = Mathf.Clamp(radius.Value, 1, 16);
                 after[peer.layer] = updated;
             }
 
@@ -1289,7 +1398,7 @@ namespace UMA.TexturePaint.Editor
             }
 
             Apply(after);
-            PushLightweightCommand("Change Normal Control Height Strength",
+            PushLightweightCommand("Change Layer Normal Control",
                 () => Apply(before), () => Apply(after), null,
                 "normal-control-layer-strength:" + layer.id);
             MarkDocumentDirty(peers);
@@ -1397,6 +1506,14 @@ namespace UMA.TexturePaint.Editor
                 }
             }
 
+            if (layer.kind == TexturePaintLayerKind.Projection)
+            {
+                if (layer.links?.instance?.IsSet == true) return false;
+                var definition = EditableProjectionChannels(layer);
+                definition.GetChannelSource(channel, true).color = DefaultChannelSourceColor(channel);
+                return ChangeProjectionWithHistory(set, layer, definition);
+            }
+
             var added = new List<LayerChannelLocation>(peers.Count);
             try
             {
@@ -1464,6 +1581,8 @@ namespace UMA.TexturePaint.Editor
             TexturePaintChannel channel)
         {
             if (set == null || layer == null || layer.kind == TexturePaintLayerKind.Group) return false;
+            if (layer.kind == TexturePaintLayerKind.Projection)
+                return RemoveProjectionChannelWithHistory(set, layer, channel);
             if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
                     out string error))
             { ShowWorkspaceStatus(error); return false; }
@@ -1563,6 +1682,8 @@ namespace UMA.TexturePaint.Editor
             IReadOnlyDictionary<TexturePaintChannel, TexturePaintChannelSourceSettings> sources)
         {
             if (set == null || layer == null || sources == null || sources.Count == 0) return false;
+            if (layer.kind == TexturePaintLayerKind.Projection)
+                return ChangeProjectionChannelSources(set, layer, sources);
             if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
                     out string error))
             {
@@ -1641,6 +1762,82 @@ namespace UMA.TexturePaint.Editor
                 fillSet.RegenerateFillLayer(fillLayer);
             }
             foreach (TextureSet changedSet in changedSets) changedSet.BindPreviewTextures();
+        }
+
+        private bool ChangeFillTileSources(TextureSet set, TexturePaintLayer layer,
+            TexturePaintLogicalTargetMember member, TexturePaintFillTileSources sources)
+        {
+            if (layer?.kind != TexturePaintLayerKind.Fill || sources == null) return false;
+            if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
+                    out string error))
+            { ShowWorkspaceStatus(error); return false; }
+            peers.RemoveAll(peer => member != null ? !ReferenceEquals(peer.targetMember, member) :
+                !ReferenceEquals(peer.textureSet, set));
+            if (peers.Count == 0) return false;
+            var before = new List<LayerLocation>();
+            var after = new List<LayerLocation>();
+            foreach (TexturePaintLogicalLayerMember peer in peers)
+            {
+                if (sources.mode == TexturePaintFillTileMode.Override && sources.overlay != null)
+                {
+                    bool compatible = false;
+                    foreach (TexturePaintChannel channel in Enum.GetValues(typeof(TexturePaintChannel)))
+                        if (!TexturePaintChannelUtility.IsAuxiliary(channel) &&
+                            peer.textureSet.TryResolveOverlaySource(sources.overlay, channel,
+                                peer.layer.fillSettings.normalConvention, false, out _, out _))
+                        { compatible = true; break; }
+                    if (!compatible)
+                    {
+                        foreach (LayerLocation pending in after) pending.layer.Dispose();
+                        ShowWorkspaceStatus("The tile overlay has no compatible material channels.");
+                        return false;
+                    }
+                }
+                TexturePaintLayer working = peer.textureSet.CloneLayer(peer.layer, peer.layer.name, true);
+                if (working == null)
+                {
+                    foreach (LayerLocation pending in after) pending.layer.Dispose();
+                    return false;
+                }
+                working.fillTileSources = sources.Clone();
+                working.fillTileSources.bakeOverlayCoverage = true;
+                // Move the automatically-created overlay coverage into generated channel alpha.
+                // This lets each tile/channel use its own source alpha without multiplying by
+                // the old overlay's mask. Authored mask pixels and other effects remain intact.
+                TexturePaintLayerMaskTextureOverlaySettings mask = working.layerMask?.effects?.textureOverlay;
+                Texture2D sharedCoverage = TextureSet.GetOverlayFillCoverage(working.fillSettings?.sourceOverlay);
+                if (working.fillSettings?.source == TexturePaintBrushSource.Overlay &&
+                    mask != null && mask.enabled && sharedCoverage != null && mask.texture == sharedCoverage &&
+                    mask.sourceChannel == TexturePaintLayerMaskTextureChannel.Alpha &&
+                    mask.combine == TexturePaintBlendMode.Multiply && mask.opacity == 1f &&
+                    !mask.invert && mask.tiling == Vector2.one && mask.offset == Vector2.zero && mask.rotation == 0f)
+                    mask.enabled = false;
+                if (!peer.textureSet.RegenerateFillLayer(working))
+                {
+                    working.Dispose();
+                    foreach (LayerLocation pending in after) pending.layer.Dispose();
+                    ShowWorkspaceStatus("The tile Fill source could not be generated. No tiles were changed.");
+                    return false;
+                }
+                int index = peer.textureSet.layers.IndexOf(peer.layer);
+                before.Add(new LayerLocation { set = peer.textureSet, layer = peer.layer, index = index });
+                after.Add(new LayerLocation { set = peer.textureSet, layer = working, index = index });
+            }
+            for (int i = 0; i < before.Count; i++)
+                SwapLayerSnapshot(before[i].set, before[i].layer, after[i].layer, before[i].index);
+            PushLightweightCommand("Edit UDIM Fill Sources",
+                () => { for (int i = 0; i < before.Count; i++)
+                    SwapLayerSnapshot(before[i].set, after[i].layer, before[i].layer, before[i].index); },
+                () => { for (int i = 0; i < before.Count; i++)
+                    SwapLayerSnapshot(before[i].set, before[i].layer, after[i].layer, after[i].index); },
+                () => { for (int i = 0; i < before.Count; i++)
+                {
+                    DisposeLayerIfDetached(before[i].set, before[i].layer);
+                    DisposeLayerIfDetached(after[i].set, after[i].layer);
+                } });
+            MarkDocumentDirty(peers);
+            UnityEditor.SceneView.RepaintAll();
+            return true;
         }
 
         private void ChangeFillLayer(TextureSet set, TexturePaintLayer layer, TexturePaintChannel channel,
@@ -1736,7 +1933,8 @@ namespace UMA.TexturePaint.Editor
 
         private bool RasterizeFillLayerWithHistory(TextureSet set, TexturePaintLayer layer)
         {
-            if (set == null || layer?.kind != TexturePaintLayerKind.Fill) return false;
+            if (set == null || layer == null ||
+                (layer.kind != TexturePaintLayerKind.Fill && layer.kind != TexturePaintLayerKind.Projection)) return false;
             if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
                     out string error))
             {
@@ -1761,7 +1959,9 @@ namespace UMA.TexturePaint.Editor
                 }
 
                 rasterized.kind = TexturePaintLayerKind.Paint;
+                rasterized.projectionSettings = null;
                 rasterized.fillSettings = null;
+                rasterized.fillTileSources = null;
                 rasterized.fillColor = Color.white;
                 TexturePaintChannel paintChannel = rasterized.TryGetFirstAuthoredChannel(
                     out TexturePaintChannel firstChannel) ? firstChannel : TexturePaintChannel.Albedo;
@@ -1795,7 +1995,7 @@ namespace UMA.TexturePaint.Editor
 
             for (int i = 0; i < before.Count; i++)
                 SwapLayerSnapshot(before[i].set, before[i].layer, after[i].layer, before[i].index);
-            PushLightweightCommand("Rasterize Fill Layer",
+            PushLightweightCommand("Rasterize " + layer.kind + " Layer",
                 () =>
                 {
                     for (int i = 0; i < before.Count; i++)
@@ -1888,52 +2088,311 @@ namespace UMA.TexturePaint.Editor
         private bool MergeLayerWithHistory(TextureSet set, int upperIndex)
         {
             if (set == null || upperIndex <= 0 || upperIndex >= set.layers.Count) return false;
-            TexturePaintLayer lower = set.layers[upperIndex - 1];
-            TexturePaintLayer upper = set.layers[upperIndex];
-            if (!TryResolveLogicalPeers(set, upper, out List<TexturePaintLogicalLayerMember> upperPeers, out string error) ||
-                !TryResolveLogicalPeers(set, lower, out List<TexturePaintLogicalLayerMember> lowerPeers, out error))
-            { ShowWorkspaceStatus(error); return false; }
-            var lowerBySet = new Dictionary<TextureSet, TexturePaintLayer>();
-            for (int i = 0; i < lowerPeers.Count; i++) lowerBySet[lowerPeers[i].textureSet] = lowerPeers[i].layer;
-            var states = new List<MergedLayerState>();
-            for (int i = 0; i < upperPeers.Count; i++)
+            if (!set.CanMergeLayerDown(upperIndex, out string reason))
+            { ShowWorkspaceStatus(reason); return false; }
+            return MergeLayersWithHistory(set, new[] { set.layers[upperIndex - 1], set.layers[upperIndex] });
+        }
+
+        private bool MergeLayersWithHistory(TextureSet set, IReadOnlyList<TexturePaintLayer> selected)
+        {
+            if (set == null) return false;
+            // A running generator can still commit into its captured source layer. Leave that
+            // transaction alone and merge only once its output is available.
+            if (pluginLayerCancellation != null || IsPersistenceActive)
             {
-                TexturePaintLogicalLayerMember upperPeer = upperPeers[i];
-                if (!lowerBySet.TryGetValue(upperPeer.textureSet, out TexturePaintLayer lowerPeer))
-                { ShowWorkspaceStatus("Merge requires matching logical layers on every target member."); return false; }
-                int peerUpperIndex = upperPeer.textureSet.layers.IndexOf(upperPeer.layer);
-                int peerLowerIndex = upperPeer.textureSet.layers.IndexOf(lowerPeer);
-                if (peerUpperIndex != peerLowerIndex + 1)
-                { ShowWorkspaceStatus("Merge requires adjacent logical layers on every target member."); return false; }
-                if (!upperPeer.textureSet.CanMergeLayerDown(peerUpperIndex, out string mergeReason))
-                { ShowWorkspaceStatus(mergeReason); return false; }
-                TexturePaintLayer merged = upperPeer.textureSet.CreateMergedLayer(peerUpperIndex);
-                if (merged == null)
-                {
-                    for (int dispose = 0; dispose < states.Count; dispose++) states[dispose].merged.Dispose();
-                    return false;
-                }
-                merged.logicalLayerId = lowerPeer.logicalLayerId;
-                merged.paintTargetId = lowerPeer.paintTargetId;
-                states.Add(new MergedLayerState { set = upperPeer.textureSet, lower = lowerPeer,
-                    upper = upperPeer.layer, merged = merged, index = peerLowerIndex });
+                ShowWorkspaceStatus("Wait for the current generation or save to finish before merging layers.");
+                return false;
             }
-            for (int i = 0; i < states.Count; i++)
-                ReplaceSourcesWithMerged(states[i].set, states[i].lower, states[i].upper, states[i].merged, states[i].index);
-            PushLightweightCommand("Merge Texture Layers",
-                () => { for (int i = 0; i < states.Count; i++) ReplaceMergedWithSources(states[i].set, states[i].merged, states[i].lower, states[i].upper, states[i].index); },
-                () => { for (int i = 0; i < states.Count; i++) ReplaceSourcesWithMerged(states[i].set, states[i].lower, states[i].upper, states[i].merged, states[i].index); },
-                () =>
+            if (!set.TryGetMergeSelection(selected, out List<TexturePaintLayer> roots,
+                out List<TexturePaintLayer> sources, out _, out string error))
+            { ShowWorkspaceStatus(error); return false; }
+
+            if (uvStrokeActive) EndUVStroke(true);
+            else if (strokeActive) EndPaint();
+            FinishProjectionEdit();
+            CommitPendingPathEdit();
+            FlushPendingSplineBeforeMerge();
+
+            var states = new List<MergedLayerState>();
+            bool applied = false;
+            bool retained = false;
+            bool recorded = false;
+            try
+            {
+                var rootsBySet = new Dictionary<TextureSet, List<TexturePaintLayer>>();
+                for (int rootIndex = 0; rootIndex < roots.Count; rootIndex++)
                 {
-                    for (int i = 0; i < states.Count; i++)
+                    if (!TryResolveLogicalPeers(set, roots[rootIndex],
+                        out List<TexturePaintLogicalLayerMember> peers, out error))
+                    { ShowWorkspaceStatus(error); return false; }
+                    var peerSets = new HashSet<TextureSet>();
+                    foreach (TexturePaintLogicalLayerMember peer in peers)
                     {
-                        DisposeLayerIfDetached(states[i].set, states[i].lower);
-                        DisposeLayerIfDetached(states[i].set, states[i].upper);
-                        DisposeLayerIfDetached(states[i].set, states[i].merged);
+                        if (peer?.textureSet == null || peer.layer == null || !peerSets.Add(peer.textureSet))
+                        { ShowWorkspaceStatus("Merge requires one matching logical layer on every target member."); return false; }
+                        if (rootIndex == 0) rootsBySet.Add(peer.textureSet, new List<TexturePaintLayer>());
+                        if (!rootsBySet.TryGetValue(peer.textureSet, out List<TexturePaintLayer> peerRoots))
+                        { ShowWorkspaceStatus("Merge requires matching logical layers on every target member."); return false; }
+                        peerRoots.Add(peer.layer);
                     }
-                });
-            MarkDocumentDirtyAfterStructuralChange();
+                    if (peerSets.Count != rootsBySet.Count || !peerSets.Contains(set))
+                    { ShowWorkspaceStatus("Merge requires matching logical layers on every target member."); return false; }
+                }
+
+                // Validate every member before allocating textures or changing a live stack.
+                foreach (KeyValuePair<TextureSet, List<TexturePaintLayer>> entry in rootsBySet)
+                {
+                    TextureSet peerSet = entry.Key;
+                    if (!peerSet.TryGetMergeSelection(entry.Value, out List<TexturePaintLayer> peerRoots,
+                        out List<TexturePaintLayer> peerSources, out int insertionIndex, out error))
+                    { ShowWorkspaceStatus(error); return false; }
+                    if (!MergeSubtreesMatch(sources, peerSources))
+                    { ShowWorkspaceStatus("The selected group subtree or layer order differs across logical target members."); return false; }
+                    var locations = new List<LayerLocation>();
+                    foreach (TexturePaintLayer source in peerSources)
+                        locations.Add(new LayerLocation { set = peerSet, layer = source,
+                            index = peerSet.layers.IndexOf(source) });
+                    states.Add(new MergedLayerState
+                    {
+                        set = peerSet, roots = peerRoots, sources = locations, index = insertionIndex,
+                        activeIndexBefore = peerSet.activeLayerIndex,
+                        activeBefore = (uint)peerSet.activeLayerIndex < (uint)peerSet.layers.Count
+                            ? peerSet.layers[peerSet.activeLayerIndex] : null
+                    });
+                }
+                if (!MergeReferencesArePreserved(states, out error))
+                { ShowWorkspaceStatus(error); return false; }
+                controller?.Textures?.RefreshLayerLinks();
+                foreach (MergedLayerState state in states)
+                {
+                    state.merged = state.set.CreateMergedLayers(state.roots, out error);
+                    if (state.merged == null)
+                    { ShowWorkspaceStatus(error ?? "The selected layers could not be rasterized. No layers were replaced."); return false; }
+                }
+
+                RetainMergeStates(states);
+                retained = true;
+                ApplyMergeStates(states, true);
+                applied = true;
+                string label = roots.Count == 1 ? "Merge Group to Paint Layer" : "Merge Texture Layers";
+                PushLightweightCommand(label,
+                    () => ApplyMergeStates(states, false),
+                    () => ApplyMergeStates(states, true),
+                    () => ReleaseMergeStates(states));
+                recorded = true;
+                MarkDocumentDirtyAfterStructuralChange();
+                return true;
+            }
+            catch (Exception exception)
+            {
+                if (applied && !recorded)
+                {
+                    foreach (MergedLayerState state in states) SetMergeStateLayers(state, false);
+                    foreach (MergedLayerState state in states)
+                        try { state.set.BindPreviewTextures(); }
+                        catch (Exception previewException) { Debug.LogException(previewException); }
+                }
+                ShowWorkspaceStatus((recorded ? "The layers merged, but their preview could not refresh: " :
+                    "The layers could not be merged: ") + exception.Message);
+                Debug.LogException(exception);
+                return recorded;
+            }
+            finally
+            {
+                if (!recorded)
+                {
+                    if (retained) ReleaseMergeStates(states);
+                    else foreach (MergedLayerState state in states) state.merged?.Dispose();
+                }
+            }
+        }
+
+        private void FlushPendingSplineBeforeMerge()
+        {
+            if (!splineReapplyPending) return;
+            int previousSurface = selectedSurface;
+            var activeIndexes = new Dictionary<TextureSet, int>();
+            if (controller?.Textures != null)
+                foreach (TextureSet member in controller.Textures.Sets)
+                    activeIndexes[member] = member.activeLayerIndex;
+            try { ReapplyPendingSpline(); }
+            finally
+            {
+                selectedSurface = previousSurface;
+                foreach (KeyValuePair<TextureSet, int> entry in activeIndexes)
+                    entry.Key.activeLayerIndex = entry.Value;
+                if (controller?.Textures != null && (uint)selectedSurface < (uint)controller.Textures.Sets.Count)
+                {
+                    suppressLogicalLayerRepair = true;
+                    try { SyncActiveLayerSelection(controller.Textures.Sets[selectedSurface]); }
+                    finally { suppressLogicalLayerRepair = false; }
+                }
+            }
+        }
+
+        private static bool MergeSubtreesMatch(List<TexturePaintLayer> primary, List<TexturePaintLayer> peer)
+        {
+            if (primary.Count != peer.Count) return false;
+            var primaryParents = new Dictionary<string, int>(StringComparer.Ordinal);
+            var peerParents = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int i = 0; i < primary.Count; i++)
+            {
+                primaryParents[primary[i].id] = i;
+                peerParents[peer[i].id] = i;
+            }
+            for (int i = 0; i < primary.Count; i++)
+            {
+                if (primary[i].kind != peer[i].kind ||
+                    !string.Equals(primary[i].logicalLayerId, peer[i].logicalLayerId, StringComparison.Ordinal) ||
+                    !string.Equals(primary[i].paintTargetId, peer[i].paintTargetId, StringComparison.Ordinal)) return false;
+                int primaryParent = !string.IsNullOrEmpty(primary[i].parentId) &&
+                    primaryParents.TryGetValue(primary[i].parentId, out int first) ? first : -1;
+                int peerParent = !string.IsNullOrEmpty(peer[i].parentId) &&
+                    peerParents.TryGetValue(peer[i].parentId, out int second) ? second : -1;
+                if (primaryParent != peerParent) return false;
+            }
             return true;
+        }
+
+        private bool MergeReferencesArePreserved(List<MergedLayerState> states, out string reason)
+        {
+            reason = null;
+            var removed = new HashSet<TexturePaintLayer>();
+            var retainedGroups = new Dictionary<TexturePaintLayer, HashSet<TexturePaintChannel>>();
+            foreach (MergedLayerState state in states)
+            {
+                foreach (LayerLocation source in state.sources) removed.Add(source.layer);
+                if (state.roots.Count == 1 && state.roots[0].kind == TexturePaintLayerKind.Group)
+                {
+                    var channels = new HashSet<TexturePaintChannel>();
+                    foreach (LayerLocation source in state.sources)
+                        if (source.layer.kind != TexturePaintLayerKind.Group)
+                            channels.UnionWith(source.layer.channels.Keys);
+                    retainedGroups.Add(state.roots[0], channels);
+                }
+            }
+            var sets = new List<TextureSet>();
+            if (controller?.Textures != null) sets.AddRange(controller.Textures.Sets);
+            foreach (MergedLayerState state in states)
+                if (!sets.Contains(state.set)) sets.Add(state.set);
+            foreach (TextureSet owner in sets)
+                foreach (TexturePaintLayer layer in owner.layers)
+                {
+                    if (removed.Contains(layer)) continue;
+                    foreach (TexturePaintLayerReference reference in GetMergeLayerReferences(layer))
+                    {
+                        TexturePaintLayer source = TexturePaintLinkEvaluator.Resolve(sets, owner, reference, out _);
+                        if (source == null || !removed.Contains(source)) continue;
+                        // Collapsing one group retains its identity, effective mask and isolated
+                        // output. References to a child or a multi-root combination cannot do so.
+                        bool instance = ReferenceEquals(layer.links?.instance, reference);
+                        bool unchangedGroup = retainedGroups.TryGetValue(source, out HashSet<TexturePaintChannel> channels) &&
+                            ((!instance && reference.component == TexturePaintReferenceComponent.Mask) ||
+                             (MergeReferenceUsesNormalBlend(source, reference, instance) &&
+                              (instance ? channels.IsSupersetOf(owner.channels.Keys) : channels.Contains(reference.channel))));
+                        if (unchangedGroup) continue;
+                        reason = $"'{layer.name}' references '{source.name}'. Include the dependent layer in the merge " +
+                            "or make its reference independent before merging.";
+                        return false;
+                    }
+                }
+            return true;
+        }
+
+        private static bool MergeReferenceUsesNormalBlend(TexturePaintLayer source,
+            TexturePaintLayerReference reference, bool instance)
+        {
+            if (source.blendMode != TexturePaintBlendMode.Normal) return false;
+            if (instance)
+            {
+                foreach (TexturePaintLayerChannelSettings settings in source.channelSettings.Values)
+                    if (settings.blendMode != TexturePaintBlendMode.Normal) return false;
+                return true;
+            }
+            return !source.channelSettings.TryGetValue(reference.channel, out TexturePaintLayerChannelSettings channel) ||
+                channel.blendMode == TexturePaintBlendMode.Normal;
+        }
+
+        private static IEnumerable<TexturePaintLayerReference> GetMergeLayerReferences(TexturePaintLayer layer)
+        {
+            yield return layer.links?.content;
+            yield return layer.links?.mask;
+            yield return layer.links?.instance;
+            yield return layer.projectionSettings?.garment?.foldInput;
+            yield return layer.projectionSettings?.garment?.protectionInput;
+            if (layer.layerMask?.effects?.stack != null)
+                foreach (TexturePaintMaskEffect effect in layer.layerMask.effects.stack)
+                    if (effect?.kind == TexturePaintMaskEffectKind.LayerReference) yield return effect.reference;
+        }
+
+        private static void ApplyMergeStates(List<MergedLayerState> states, bool useMerged)
+        {
+            try
+            {
+                foreach (MergedLayerState state in states) SetMergeStateLayers(state, useMerged);
+                foreach (MergedLayerState state in states) state.set.BindPreviewTextures();
+            }
+            catch
+            {
+                // Restore every stack first; preview failure in one member must not leave the
+                // logical target half merged. A later repaint can rebuild a failed preview.
+                foreach (MergedLayerState state in states) SetMergeStateLayers(state, !useMerged);
+                foreach (MergedLayerState state in states)
+                    try { state.set.BindPreviewTextures(); }
+                    catch (Exception exception) { Debug.LogException(exception); }
+                throw;
+            }
+        }
+
+        private static void SetMergeStateLayers(MergedLayerState state, bool useMerged)
+        {
+            state.set.layers.Remove(state.merged);
+            foreach (LayerLocation source in state.sources) state.set.layers.Remove(source.layer);
+            if (useMerged)
+            {
+                state.set.layers.Insert(Mathf.Clamp(state.index, 0, state.set.layers.Count), state.merged);
+                state.set.activeLayerIndex = state.set.layers.IndexOf(state.merged);
+            }
+            else
+            {
+                foreach (LayerLocation source in state.sources)
+                    state.set.layers.Insert(Mathf.Clamp(source.index, 0, state.set.layers.Count), source.layer);
+                int activeIndex = state.activeBefore != null ? state.set.layers.IndexOf(state.activeBefore) : -1;
+                state.set.activeLayerIndex = activeIndex >= 0 ? activeIndex :
+                    Mathf.Clamp(state.activeIndexBefore, -1, state.set.layers.Count - 1);
+            }
+        }
+
+        private static void RetainMergeStates(List<MergedLayerState> states)
+        {
+            foreach (MergedLayerState state in states)
+            {
+                foreach (LayerLocation source in state.sources) RetainMergeLayer(source.layer);
+                RetainMergeLayer(state.merged);
+            }
+        }
+
+        private static void RetainMergeLayer(TexturePaintLayer layer)
+        {
+            MergeSnapshotReferences.TryGetValue(layer, out int count);
+            MergeSnapshotReferences[layer] = count + 1;
+        }
+
+        private static void ReleaseMergeStates(List<MergedLayerState> states)
+        {
+            foreach (MergedLayerState state in states)
+            {
+                foreach (LayerLocation source in state.sources) ReleaseMergeLayer(state.set, source.layer);
+                ReleaseMergeLayer(state.set, state.merged);
+            }
+        }
+
+        private static void ReleaseMergeLayer(TextureSet set, TexturePaintLayer layer)
+        {
+            if (MergeSnapshotReferences.TryGetValue(layer, out int count) && count > 1)
+                MergeSnapshotReferences[layer] = count - 1;
+            else MergeSnapshotReferences.Remove(layer);
+            DisposeLayerIfDetached(set, layer);
         }
 
         private void DeleteLayerWithHistory(TextureSet primarySet, int index)
@@ -2110,7 +2569,9 @@ namespace UMA.TexturePaint.Editor
 
         private static void DisposeLayerIfDetached(TextureSet set, TexturePaintLayer layer)
         {
-            if (layer != null && (set == null || !set.layers.Contains(layer))) layer.Dispose();
+            if (layer != null && !ProjectionSnapshotReferences.ContainsKey(layer) &&
+                !MergeSnapshotReferences.ContainsKey(layer) &&
+                (set == null || !set.layers.Contains(layer))) layer.Dispose();
         }
 
         private static void DetachLayer(TextureSet set, TexturePaintLayer layer, bool refresh = true)
@@ -2150,27 +2611,6 @@ namespace UMA.TexturePaint.Editor
             set.layers.RemoveAt(index);
             if (!set.layers.Contains(replacement)) set.layers.Insert(Mathf.Clamp(index, 0, set.layers.Count), replacement);
             set.activeLayerIndex = set.layers.IndexOf(replacement);
-            set.BindPreviewTextures();
-        }
-
-        private static void ReplaceMergedWithSources(TextureSet set, TexturePaintLayer merged,
-            TexturePaintLayer lower, TexturePaintLayer upper, int index)
-        {
-            set.layers.Remove(merged);
-            int insert = Mathf.Clamp(index, 0, set.layers.Count);
-            if (!set.layers.Contains(lower)) set.layers.Insert(insert, lower);
-            if (!set.layers.Contains(upper)) set.layers.Insert(Mathf.Min(insert + 1, set.layers.Count), upper);
-            set.activeLayerIndex = set.layers.IndexOf(upper);
-            set.BindPreviewTextures();
-        }
-
-        private static void ReplaceSourcesWithMerged(TextureSet set, TexturePaintLayer lower,
-            TexturePaintLayer upper, TexturePaintLayer merged, int index)
-        {
-            set.layers.Remove(upper);
-            set.layers.Remove(lower);
-            if (!set.layers.Contains(merged)) set.layers.Insert(Mathf.Clamp(index, 0, set.layers.Count), merged);
-            set.activeLayerIndex = set.layers.IndexOf(merged);
             set.BindPreviewTextures();
         }
 
@@ -2237,6 +2677,7 @@ namespace UMA.TexturePaint.Editor
             {
                 spline = CloneSpline(layer?.spline),
                 settings = (settingsOverride ?? layer?.splineSettings ?? CreateSplineSettings())?.Clone(),
+                symmetry = ResolveLayerSymmetry(layer).Clone(),
                 selectedPoint = selectedSplinePoint
             };
         }
@@ -2254,6 +2695,8 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintSpline previous = peer.spline;
                 peer.spline = CloneSpline(state.spline);
                 peer.splineSettings = state.settings?.Clone() ?? new TexturePaintSplineSettings();
+                peer.layerSymmetry=state.symmetry?.Clone() ?? new TexturePaintSymmetry();
+                peer.layerSymmetryVersion=1;
                 if (previous != null) splineDisplayCache?.Remove(previous);
                 peers[i].textureSet.activeLayerIndex = peers[i].textureSet.layers.IndexOf(peer);
             }

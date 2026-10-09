@@ -879,6 +879,9 @@ namespace UMA
         /// Callback event when character update begins.
         /// </summary>
         public UMADataEvent CharacterBegun;
+        /// <summary>Recipe DNA is finalized, before DNA-driven MeshModifiers are configured.</summary>
+        [Tooltip("Runs after recipe DNA restoration and before DNA-driven MeshModifiers are configured. Use for recipe DNA and baked blendshape overrides.")]
+        public UMADataEvent RecipePrepared = new UMADataEvent();
         /// <summary>
         /// Callback event when slot overlays are atlased.
         /// </summary>

@@ -6,6 +6,7 @@ namespace UMA.TexturePaint
     {
         public static Texture2D Bake(TextureSet set, TexturePaintChannel channel)
         {
+            set?.ownerStore?.RefreshLayerLinks();
             RenderTexture source = set?.GetVisibleTexture(channel);
             return Read(source, set != null ? set.Name + "_" + channel : channel.ToString(), 0,
                 TexturePaintExportBitDepth.Eight, IsLinearChannel(channel), true);
@@ -20,6 +21,7 @@ namespace UMA.TexturePaint
         public static Texture2D Bake(TextureSet set, TexturePaintChannel channel, int resolution,
             TexturePaintExportBitDepth bitDepth)
         {
+            set?.ownerStore?.RefreshLayerLinks();
             return Read(set?.GetVisibleTexture(channel), set != null ? set.Name + "_" + channel : channel.ToString(),
                 resolution, bitDepth, IsLinearChannel(channel));
         }
@@ -41,6 +43,7 @@ namespace UMA.TexturePaint
             int resolution, TexturePaintExportBitDepth bitDepth)
         {
             if (set == null || channel == null || !channel.isTexture) return null;
+            set.ownerStore?.RefreshLayerLinks();
             bool linear = channel.output.colorSpace != UMAMaterial.TextureChannelColorSpace.SRGB;
             if (!string.IsNullOrEmpty(channel.materialProperty) &&
                 set.physicalChannelGroups.TryGetValue(channel.materialProperty,
@@ -68,16 +71,17 @@ namespace UMA.TexturePaint
             TexturePaintExportBitDepth bitDepth, bool linear, bool mipChain = false)
         {
             if (source == null) return null;
+            // EXR stores linear floating-point color. Its GPU formats have no sRGB
+            // variant, even when an importer requests sRGB sampling.
+            linear |= bitDepth == TexturePaintExportBitDepth.HalfFloat;
             int width = resolution > 0 ? resolution : source.width;
             int height = resolution > 0 ? resolution : source.height;
             RenderTexture scaled = source;
-            bool outputSRGB = !linear;
-            // Working targets are deliberately linear. Route color exports through an sRGB
-            // render target so the GPU applies the transfer function before ReadPixels/PNG.
-            // This also keeps the method correct if a caller supplies an older sRGB target.
-            if (width != source.width || height != source.height || source.sRGB != outputSRGB)
+            // Read linear values before encoding. Floating-point and 16-bit render formats
+            // have no hardware sRGB variant, so an sRGB RT request cannot reliably encode RGB.
+            if (width != source.width || height != source.height || source.sRGB)
             {
-                scaled = RenderTexture.GetTemporary(width, height, 0, source.format, linear ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.sRGB);
+                scaled = RenderTexture.GetTemporary(width, height, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
                 Graphics.Blit(source, scaled);
             }
             TextureFormat format = bitDepth switch
@@ -87,18 +91,29 @@ namespace UMA.TexturePaint
                 _ => TextureFormat.RGBA32
             };
             RenderTexture previous = RenderTexture.active;
+            Texture2D readback = null;
             try
             {
                 RenderTexture.active = scaled;
                 Texture2D result = new Texture2D(width, height, format, mipChain, linear)
                 { name = name, wrapMode = TextureWrapMode.Clamp };
-                result.ReadPixels(new Rect(0, 0, width, height), 0, 0, false);
+                if (linear) result.ReadPixels(new Rect(0, 0, width, height), 0, 0, false);
+                else
+                {
+                    readback = new Texture2D(width, height, TextureFormat.RGBAFloat, false, true);
+                    readback.ReadPixels(new Rect(0, 0, width, height), 0, 0, false);
+                    readback.Apply(false, false);
+                    Color[] pixels = readback.GetPixels();
+                    for (int i = 0; i < pixels.Length; i++) pixels[i] = pixels[i].gamma;
+                    result.SetPixels(pixels);
+                }
                 result.Apply(mipChain, false);
                 return result;
             }
             finally
             {
                 RenderTexture.active = previous;
+                if (readback != null) Object.DestroyImmediate(readback);
                 if (scaled != source) RenderTexture.ReleaseTemporary(scaled);
             }
         }

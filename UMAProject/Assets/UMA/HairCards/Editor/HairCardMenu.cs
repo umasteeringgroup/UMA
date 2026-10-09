@@ -101,7 +101,7 @@ namespace UMA.HairCards.Editor
             return atlas;
         }
 
-        private static void OpenAvatar(DynamicCharacterAvatar avatar)
+        internal static void OpenAvatar(DynamicCharacterAvatar avatar)
         {
             if (PrefabStageUtility.GetPrefabStage(avatar.gameObject) != null)
             {

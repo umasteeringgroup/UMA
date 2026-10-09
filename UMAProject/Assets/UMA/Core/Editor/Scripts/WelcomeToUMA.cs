@@ -15,7 +15,7 @@ using UnityEngine.Rendering;
 namespace UMA
 {
     [InitializeOnLoad]
-    public class WelcomeToUMA : EditorWindow
+    public partial class WelcomeToUMA : EditorWindow
     {
         private const string WhatsNewDocumentPath = "Docs/!WhatsNewInUMA3.md";
         private const string UrpPackageName = "com.unity.render-pipelines.universal";
@@ -374,10 +374,13 @@ namespace UMA
             Instance = this;
             pageInitialized = false;
             RefreshSkinningQualityLevels();
+            EditorApplication.projectChanged += InvalidatePluginStatus;
+            InvalidatePluginStatus();
         }
 
         public void OnDisable()
         {
+            EditorApplication.projectChanged -= InvalidatePluginStatus;
             Instance = null;
             if (Application.isBatchMode || isAssemblyReloadingOrQuitting)
                 return;
@@ -555,6 +558,7 @@ namespace UMA
 
             initialSettings = current;
             displayedSettingsVersion = version;
+            InvalidatePluginStatus();
             switch (currentButton)
             {
                 case 0:
@@ -595,6 +599,8 @@ namespace UMA
         public void DrawNavigation()
         {
             GUIHelper.BeginInsetArea(PanelColor, NavigationRect, 4, 10);
+            navigationScroll = GUILayout.BeginScrollView(navigationScroll, false, false,
+                GUIStyle.none, GUI.skin.verticalScrollbar);
             GUILayout.BeginVertical();
             if (GUILayout.Button("Welcome", GUILayout.Height(40)))
             {
@@ -602,29 +608,20 @@ namespace UMA
                 DoWelcome();
                 currentButton = 0;
             }
-            SrpSupport installedSrp = GetInstalledSrpSupport();
+            if (GUILayout.Button("Plugins", GUILayout.Height(40)))
+            {
+                ShowPluginsPage();
+            }
+            SrpSupport installedSrp = navigationInstalledSrp;
             string srpButton = RequiresSrpSelection(installedSrp)
                 ? "Install SRP Package"
-                : IsInstalledSrpUpdateAvailable()
+                : navigationSrpUpdateAvailable
                     ? "Update Render Pipeline Support"
                     : "Render Pipeline Support";
             if (GUILayout.Button(srpButton, GUILayout.Height(40)))
             {
                 DoSrpSupportPage();
             }
-            UMAContentInstallationState uma3InstallationState =
-                UMAContentPackageInstaller.GetState(UMAContentKind.Uma3);
-            bool uma3Ready = uma3InstallationState ==
-                             UMAContentInstallationState.Installed ||
-                             (!UMAPathUtility.IsPackageInstallation &&
-                              UMAPathUtility.IsUma3ContentInstalled);
-            string contentButton = uma3Ready
-                ? "Install / Update UMA Packages"
-                : "Install UMA Packages (Required)";
-            /*if (GUILayout.Button(contentButton, GUILayout.Height(40)))
-            {
-                DoContentPackagesPage();
-            }*/
             if (GUILayout.Button("Getting Started", GUILayout.Height(40)))
             {
                 DoGettingStarted();
@@ -641,9 +638,6 @@ namespace UMA
                 UMADocumentationWindow.ShowWindow();
             }
 
-          //  using (new EditorGUI.DisabledScope(
-            //           RequiresSrpSelection(installedSrp) || !uma3Ready))
-           //{
                 if (GUILayout.Button("Create UMA Character", GUILayout.Height(40)))
                 {
                     CreateUMACharacter();
@@ -686,7 +680,7 @@ namespace UMA
                 currentButton = 5;
             }
             if (initialSettings != null && initialSettings.showWelcomeToUMA &&
-                !RequiresSrpSelection(GetInstalledSrpSupport()))
+                !RequiresSrpSelection(navigationInstalledSrp))
             {
                 if (GUILayout.Button("Don't Show at Startup", GUILayout.Height(30)))
                 {
@@ -713,6 +707,7 @@ namespace UMA
                 }
             }
             GUILayout.EndVertical();
+            GUILayout.EndScrollView();
             GUIHelper.EndInsetArea();
         }
 
@@ -1230,6 +1225,10 @@ namespace UMA
             GUIHelper.BeginInsetArea(PanelColor, ContentRect, 4, 10);
             switch (currentButton)
             {
+                case PluginsPage:
+                    DrawPluginsPage();
+                    showLog = false;
+                    break;
                 case 5:
                     DoLinksPage();
                     showLog = false;
@@ -3328,21 +3327,10 @@ namespace UMA
                 UMAContentPackageInstaller.InstallFromFile(UMAContentKind.Uma3);
 
             AddSeperator();
-            AddText("<b>3. Optional UMA 2 Legacy Content</b>");
-            UMAContentInstallationState uma2State =
-                UMAContentPackageInstaller.GetState(UMAContentKind.Uma2);
-            string uma2Version = UMAContentPackageInstaller.GetInstalledVersion(
-                UMAContentKind.Uma2);
-            AddText(ContentStatusText(UMAContentKind.Uma2, uma2State, uma2Version),
-                uma2State == UMAContentInstallationState.Installed
-                    ? LogType.Info
-                    : LogType.Warning);
-            LogLine uma2Install = AddText(
-                uma2State == UMAContentInstallationState.Missing
-                    ? "Install Optional UMA 2 Legacy Content..."
-                    : "Update, or Reinstall UMA 2 Legacy Content...");
-            uma2Install.ButtonAction = line =>
-                UMAContentPackageInstaller.InstallFromFile(UMAContentKind.Uma2);
+            AddText("<b>3. Optional plugins</b>");
+            AddText("Legacy UMA 2 characters and wearables are available as the UMA2Compatibility plugin.");
+            LogLine plugins = AddText("Manage Plugins...");
+            plugins.ButtonAction = line => ShowPluginsPage();
             AddText("Content updates compare the installed manifest with project files. " +
                 "Locally edited files are never replaced without an explicit backup-and-replace decision.");
 #else             

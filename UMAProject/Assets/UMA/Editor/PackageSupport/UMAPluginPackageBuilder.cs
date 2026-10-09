@@ -1,0 +1,342 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using UnityEditor;
+using UnityEngine;
+
+namespace UMA.Editors.PackageSupport
+{
+    /// <summary>Builds manifest-validated plugins without importing temporary assets or bundling dependencies.</summary>
+    public static class UMAPluginPackageBuilder
+    {
+        private static readonly byte[] Padding = new byte[512];
+
+        [MenuItem("UMA/Build/Build Plugin Packages", priority = 100)]
+        private static void BuildMenu()
+        {
+            try
+            {
+                var results = BuildAllWithResults(UMAPluginPackageFiles.DefaultDirectory);
+                string report = FormatBuildReport(results);
+                Debug.Log("[UMA Plugins]\n" + report);
+                foreach (var failure in results.Where(r => r.Error != null)) Debug.LogException(failure.Error);
+                if (EditorUtility.DisplayDialog("Plugin build results", report, "OK", "Open Package Folder")) return;
+                if (Directory.Exists(UMAPluginPackageFiles.DefaultDirectory))
+                    EditorUtility.RevealInFinder(UMAPluginPackageFiles.DefaultDirectory);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorUtility.DisplayDialog("Plugin build failed", exception.Message, "OK");
+            }
+        }
+
+        [MenuItem("UMA/Build/Build Plugin Packages", true)]
+        private static bool CanBuild() => !EditorApplication.isCompiling && !EditorApplication.isUpdating &&
+            !File.Exists("Library/UMA/ContentInstaller/pending.json") &&
+            !File.Exists("Library/UMA/PluginRemoval/pending.json");
+
+        public static string[] BuildAll(string destination)
+        {
+            var results = BuildAllWithResults(destination);
+            // Preserve failure signaling for automated callers while still attempting the other packages.
+            if (results.Any(r => r.Cancelled)) throw new OperationCanceledException(FormatBuildReport(results));
+            if (results.Any(r => r.Error != null))
+                throw new AggregateException(FormatBuildReport(results), results.Where(r => r.Error != null).Select(r => r.Error));
+            return results.Select(r => r.Package).ToArray();
+        }
+
+        public sealed class PackageBuildResult
+        {
+            public UMAContentKind Kind { get; internal set; }
+            public string Package { get; internal set; }
+            public Exception Error { get; internal set; }
+            public bool Cancelled { get; internal set; }
+        }
+
+        public static PackageBuildResult[] BuildAllWithResults(string destination)
+        {
+            if (!CanBuild()) throw new InvalidOperationException("Wait for the current import or package operation to finish.");
+            var kinds = UMAContentCatalog.PluginDisplayOrder.Where(k => UMAContentCatalog.PluginRequiredPaths(k).Any(File.Exists)).ToArray();
+            try
+            {
+                return BuildBatch(kinds, kind =>
+                {
+                    string package = Build(kind, destination);
+                    UMAPluginPackageFiles.Remember(kind, package);
+                    return package;
+                }, i => EditorUtility.DisplayCancelableProgressBar("Build UMA plugins",
+                    UMAContentCatalog.DisplayName(kinds[i]), (float)i / kinds.Length));
+            }
+            finally { EditorUtility.ClearProgressBar(); }
+        }
+
+        private static PackageBuildResult[] BuildBatch(UMAContentKind[] kinds, Func<UMAContentKind, string> build,
+            Func<int, bool> cancel)
+        {
+            var results = new List<PackageBuildResult>();
+            bool cancelled = false;
+            for (int i = 0; i < kinds.Length; i++)
+            {
+                cancelled = cancelled || cancel(i);
+                var result = new PackageBuildResult { Kind = kinds[i], Cancelled = cancelled };
+                if (!cancelled)
+                {
+                    try { result.Package = build(kinds[i]); }
+                    catch (OperationCanceledException) { result.Cancelled = cancelled = true; }
+                    catch (Exception exception) { result.Error = exception; }
+                }
+                results.Add(result);
+            }
+            return results.ToArray();
+        }
+
+        private static string FormatBuildReport(PackageBuildResult[] results)
+        {
+            if (results.Length == 0) return "No installed plugin sources were found.";
+            int failed = results.Count(r => r.Error != null);
+            int cancelled = results.Count(r => r.Cancelled);
+            var report = new StringBuilder($"Built: {results.Length - failed - cancelled}   Failed: {failed}");
+            if (cancelled > 0) report.Append($"   Cancelled / not built: {cancelled}");
+            report.AppendLine().AppendLine();
+            foreach (var result in results)
+            {
+                string status = result.Cancelled ? "Not built (cancelled)" : result.Error != null ? "Failed" : "Built";
+                report.AppendLine(status + " — " + UMAContentCatalog.DisplayName(result.Kind));
+            }
+            foreach (var result in results.Where(r => r.Error != null))
+                report.AppendLine().AppendLine(UMAContentCatalog.DisplayName(result.Kind) + ":").AppendLine(result.Error.Message);
+            report.AppendLine().Append("Completed packages have been kept.");
+            return report.ToString();
+        }
+
+        public static string Build(UMAContentKind kind, string destination)
+        {
+            if (!UMAContentCatalog.IsPlugin(kind)) throw new ArgumentException("Only plugins can be built here.");
+            string output = Path.GetFullPath(destination);
+            string assets = Path.GetFullPath(Application.dataPath).TrimEnd(Path.DirectorySeparatorChar);
+            if (output.Equals(assets, StringComparison.OrdinalIgnoreCase) ||
+                output.StartsWith(assets + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Build plugin archives outside Assets to avoid importing nested packages.");
+            string root = UMAContentCatalog.Root(kind);
+            string manifestPath = UMAContentCatalog.ManifestPath(kind);
+            string version = UMAPackageVersionUtility.SyncFromInstalledSettings(out string umaVersion);
+            if (!Version.TryParse(version.Split('-', '+')[0], out var numeric)) throw new InvalidDataException("Invalid UMA package version.");
+            string[] files = EnumerateFiles(root).Where(p => UMAContentCatalog.OwnsPluginPath(kind, p) && !p.EndsWith(".meta", StringComparison.OrdinalIgnoreCase) &&
+                p != manifestPath && !p.EndsWith(".unitypackage", StringComparison.OrdinalIgnoreCase) &&
+                !p.EndsWith("~", StringComparison.Ordinal) && !Path.GetFileName(p).StartsWith(".", StringComparison.Ordinal)).OrderBy(p => p, StringComparer.Ordinal).ToArray();
+            var paths = new HashSet<string>(files, StringComparer.Ordinal);
+            foreach (string file in files)
+            {
+                string parent = Path.GetDirectoryName(file).Replace('\\', '/');
+                while (parent != root)
+                {
+                    paths.Add(parent);
+                    parent = Path.GetDirectoryName(parent).Replace('\\', '/');
+                }
+            }
+            var records = paths.OrderBy(p => p, StringComparer.Ordinal).Select(CreateRecord).ToArray();
+            if (records.Select(r => r.guid).Distinct(StringComparer.OrdinalIgnoreCase).Count() != records.Length ||
+                records.Any(r => r.guid == UMAContentCatalog.ManifestGuid(kind)))
+                throw new InvalidDataException("Duplicate GUID in plugin source.");
+            foreach (string required in UMAContentCatalog.PluginRequiredPaths(kind))
+                if (!files.Contains(required)) throw new FileNotFoundException("Required plugin source is missing: " + required);
+            var manifest = new UMAContentManifest
+            {
+                formatVersion = UMAContentCatalog.CurrentManifestFormatVersion,
+                requiredPluginApiVersion = UMAPluginApi.Version,
+                contentId = UMAContentCatalog.Id(kind), contentVersion = version, umaVersion = umaVersion,
+                requiredCoreVersion = version, minimumCoreVersion = version,
+                maximumCoreVersionExclusive = numeric.Major + "." + (numeric.Minor + 1) + ".0",
+                installRoot = root, dependencies = UMAContentCatalog.Dependencies(kind),
+                requiredPaths = UMAContentCatalog.PluginRequiredPaths(kind),
+                ownedPaths = paths.Append(manifestPath).OrderBy(p => p, StringComparer.Ordinal).ToArray(), assets = records
+            };
+            if (!UMAContentPackageArchiveValidator.TryValidateManifestStructure(manifest, kind, out string error))
+                throw new InvalidDataException(error);
+            Directory.CreateDirectory(output);
+            string target = Path.Combine(output, UMAContentCatalog.PackageStem(kind) + "-" + version + ".unitypackage");
+            string temporary = target + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            bool validated = false;
+            try
+            {
+                using (var file = File.Create(temporary))
+                using (var gzip = new GZipStream(file, System.IO.Compression.CompressionLevel.Optimal))
+                {
+                    foreach (var record in records)
+                    {
+                        if (File.Exists(record.path)) WriteFile(gzip, record.guid + "/asset", record.path);
+                        WriteFile(gzip, record.guid + "/asset.meta", record.path + ".meta");
+                        WriteText(gzip, record.guid + "/pathname", record.path);
+                    }
+                    string guid = UMAContentCatalog.ManifestGuid(kind);
+                    WriteText(gzip, guid + "/asset", JsonUtility.ToJson(manifest, true) + "\n");
+                    WriteText(gzip, guid + "/asset.meta", "fileFormatVersion: 2\nguid: " + guid + "\nDefaultImporter:\n  externalObjects: {}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n");
+                    WriteText(gzip, guid + "/pathname", manifestPath);
+                    gzip.Write(Padding, 0, 512); gzip.Write(Padding, 0, 512);
+                }
+                if (!UMAContentPackageArchiveValidator.TryValidate(temporary, kind, out _, out error))
+                    throw new InvalidDataException(error);
+                validated = true;
+                PublishValidatedArchive(temporary, target);
+                return target;
+            }
+            catch (Exception exception)
+            {
+                throw new IOException("Could not build plugin package:\n" + target + "\n\n" + exception.Message, exception);
+            }
+            finally
+            {
+                // A completed archive is useful for recovery if publishing failed. Do not discard it
+                // or let cleanup of an incomplete archive hide the original build error.
+                if (!validated) TryDeleteBuildFile(temporary);
+            }
+        }
+
+        private static void PublishValidatedArchive(string temporary, string target)
+        {
+            string previous = target + "." + Guid.NewGuid().ToString("N") + ".previous";
+            bool movedPrevious = false;
+            try
+            {
+                // Mono's File.Replace can fail with "Unable to remove the file to be replaced"
+                // without identifying the file. Rename within this directory instead, keeping the
+                // previous archive until the validated replacement is in place.
+                if (File.Exists(target))
+                {
+                    RetryFileOperation(() => File.Move(target, previous));
+                    movedPrevious = true;
+                }
+                RetryFileOperation(() => File.Move(temporary, target));
+            }
+            catch (Exception exception)
+            {
+                string recovery = "";
+                if (movedPrevious)
+                {
+                    try
+                    {
+                        RetryFileOperation(() => File.Move(previous, target));
+                        recovery = "\nThe previous package was restored.";
+                    }
+                    catch (Exception restoreException)
+                    {
+                        recovery = "\nThe previous package is preserved at:\n" + previous +
+                            "\nIt could not be restored: " + restoreException.Message;
+                    }
+                }
+                throw new IOException("Could not install the built archive at:\n" + target +
+                    "\n\nThe validated new archive is preserved at:\n" + temporary + recovery +
+                    "\n\nClose any application using the destination file and check the folder's write permissions." +
+                    "\n" + exception.Message, exception);
+            }
+            if (movedPrevious) TryDeleteBuildFile(previous);
+        }
+
+        private static void RetryFileOperation(Action operation)
+        {
+            for (int attempt = 0; ; attempt++)
+            {
+                try { operation(); return; }
+                catch (IOException) when (attempt < 3) { }
+                catch (UnauthorizedAccessException) when (attempt < 3) { }
+                System.Threading.Thread.Sleep(100 * (attempt + 1));
+            }
+        }
+
+        private static void TryDeleteBuildFile(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) return;
+                RetryFileOperation(() =>
+                {
+                    // These are generated build files, which can inherit read-only from the old archive.
+                    var attributes = File.GetAttributes(path);
+                    if ((attributes & FileAttributes.ReadOnly) != 0)
+                        File.SetAttributes(path, attributes & ~FileAttributes.ReadOnly);
+                    File.Delete(path);
+                });
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning("[UMA Plugins] Could not clean up build file:\n" + path + "\n" + exception.Message);
+            }
+        }
+
+        private static IEnumerable<string> EnumerateFiles(string root)
+        {
+            if ((File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0)
+                throw new IOException("Plugin builds do not follow symbolic links: " + root);
+            foreach (string path in Directory.EnumerateFileSystemEntries(root).OrderBy(p => p, StringComparer.Ordinal))
+            {
+                var attributes = File.GetAttributes(path);
+                if ((attributes & FileAttributes.ReparsePoint) != 0) throw new IOException("Plugin builds do not follow symbolic links: " + path);
+                if ((attributes & FileAttributes.Directory) != 0)
+                {
+                    if (Path.GetFileName(path).EndsWith("~", StringComparison.Ordinal) || Path.GetFileName(path).StartsWith(".", StringComparison.Ordinal)) continue;
+                    foreach (string child in EnumerateFiles(path)) yield return child;
+                }
+                else yield return path.Replace('\\', '/');
+            }
+        }
+
+        private static UMAContentManifestAsset CreateRecord(string path)
+        {
+            string meta = path + ".meta";
+            if (!File.Exists(meta)) throw new FileNotFoundException("Import plugin source in Unity before building: " + meta);
+            var match = Regex.Match(File.ReadAllText(meta), @"(?m)^guid:\s*([a-fA-F0-9]{32})\s*$");
+            if (!match.Success) throw new InvalidDataException("Missing asset GUID: " + meta);
+            bool file = File.Exists(path);
+            return new UMAContentManifestAsset
+            {
+                path = path, guid = match.Groups[1].Value,
+                bytes = file ? new FileInfo(path).Length : 0, sha256 = file ? Hash(path) : "",
+                metaBytes = new FileInfo(meta).Length, metaSha256 = Hash(meta)
+            };
+        }
+
+        private static string Hash(string path)
+        {
+            using var sha = SHA256.Create(); using var file = File.OpenRead(path);
+            return BitConverter.ToString(sha.ComputeHash(file)).Replace("-", "").ToLowerInvariant();
+        }
+
+        private static void WriteText(Stream target, string name, string value)
+        {
+            using var source = new MemoryStream(Encoding.UTF8.GetBytes(value));
+            WriteEntry(target, name, source);
+        }
+
+        private static void WriteFile(Stream target, string name, string path)
+        {
+            using var source = File.OpenRead(path);
+            WriteEntry(target, name, source);
+        }
+
+        // Unity packages use short GUID/record names, so basic USTAR needs no extended path records.
+        private static void WriteEntry(Stream target, string name, Stream source)
+        {
+            byte[] header = new byte[512];
+            Put(header, 0, name); Put(header, 100, "0000644\0"); Put(header, 108, "0000000\0");
+            Put(header, 116, "0000000\0"); Put(header, 124, Convert.ToString(source.Length, 8).PadLeft(11, '0') + "\0");
+            Put(header, 136, "07033241600\0"); Put(header, 148, "        "); header[156] = (byte)'0';
+            Put(header, 257, "ustar\0"); Put(header, 263, "00");
+            Put(header, 148, Convert.ToString(header.Sum(b => (int)b), 8).PadLeft(6, '0') + "\0 ");
+            target.Write(header, 0, header.Length); source.CopyTo(target);
+            int padding = (int)((512 - source.Length % 512) % 512);
+            if (padding > 0) target.Write(Padding, 0, padding);
+        }
+
+        private static void Put(byte[] target, int offset, string value)
+        {
+            byte[] bytes = Encoding.ASCII.GetBytes(value);
+            Array.Copy(bytes, 0, target, offset, bytes.Length);
+        }
+    }
+}

@@ -1728,6 +1728,9 @@
     "m_SubDatas": [],
     "m_ActiveTargets": [
         {
+            "m_Id": "49545053836b49c5b35bf4665041e242"
+        },
+        {
             "m_Id": "c981f32e0921444184c914896550211c"
         }
     ]
@@ -3668,8 +3671,8 @@
     "m_ObjectId": "30bcac6274924e10ab7b51e010041a0d",
     "m_Title": "AO",
     "m_Position": {
-        "x": -2063.3330078125,
-        "y": 552.666748046875
+        "x": -2063.333251953125,
+        "y": 552.6666259765625
     }
 }
 
@@ -3904,7 +3907,7 @@
     "m_Title": "Flow Map: R=50%,G=100%,B=50%",
     "m_Position": {
         "x": -3566.66650390625,
-        "y": -859.3335571289063
+        "y": -859.3333740234375
     }
 }
 
@@ -4845,8 +4848,8 @@
     "m_ObjectId": "44c923919a0344b19d09cc13723bcd7e",
     "m_Title": "ID Map: R=Root, G=Tip, B=AO",
     "m_Position": {
-        "x": -3655.3330078125,
-        "y": -356.00030517578127
+        "x": -3655.333251953125,
+        "y": -356.0
     }
 }
 
@@ -5233,6 +5236,24 @@
         "e32": 0.0,
         "e33": 1.0
     }
+}
+
+{
+    "m_SGVersion": 2,
+    "m_Type": "UnityEditor.Rendering.BuiltIn.ShaderGraph.BuiltInTarget",
+    "m_ObjectId": "49545053836b49c5b35bf4665041e242",
+    "m_Datas": [],
+    "m_ActiveSubTarget": {
+        "m_Id": "c8c3ac79712b4b588540f6b44d0fb47c"
+    },
+    "m_AllowMaterialOverride": false,
+    "m_SurfaceType": 0,
+    "m_ZWriteControl": 0,
+    "m_ZTestMode": 4,
+    "m_AlphaMode": 0,
+    "m_RenderFace": 2,
+    "m_AlphaClip": false,
+    "m_CustomEditorGUI": ""
 }
 
 {
@@ -5773,8 +5794,8 @@
     "m_ObjectId": "5dc7f31c24434fd9a3f07c8426edae69",
     "m_Title": "Flip normal on back faces to avoid shadow issues for hair",
     "m_Position": {
-        "x": -1200.6658935546875,
-        "y": 654.666748046875
+        "x": -1200.666748046875,
+        "y": 654.6666259765625
     }
 }
 
@@ -6483,8 +6504,8 @@
     "m_ObjectId": "72585dd91b3d4da7b55123bae128c48b",
     "m_Title": "Diffuse and Alpha",
     "m_Position": {
-        "x": -3655.3330078125,
-        "y": 69.99970245361328
+        "x": -3655.333251953125,
+        "y": 70.0
     }
 }
 
@@ -6928,8 +6949,8 @@
     "m_ObjectId": "7fdc6d11af3447cbb87e0b92d2e67e38",
     "m_Title": "Separate Alpha Clipping for shadows",
     "m_Position": {
-        "x": -1083.3330078125,
-        "y": 1396.0006103515625
+        "x": -1083.333251953125,
+        "y": 1395.9998779296875
     }
 }
 
@@ -7950,8 +7971,8 @@
     "m_ObjectId": "98161a2dc55f4a6aa6b53675663e4b02",
     "m_Title": "Specular Combine",
     "m_Position": {
-        "x": -1359.3323974609375,
-        "y": -324.00030517578127
+        "x": -1359.333251953125,
+        "y": -324.0
     }
 }
 
@@ -8140,8 +8161,8 @@
     "m_ObjectId": "a343f2659f8d48e7a495e75e547ec6b8",
     "m_Title": "Fake Anisotropy Specualr",
     "m_Position": {
-        "x": -2936.666748046875,
-        "y": -860.000244140625
+        "x": -2936.66650390625,
+        "y": -860.0
     }
 }
 
@@ -9514,8 +9535,8 @@
     "m_ObjectId": "c5e3d78b844a4b428d393e1aedbd0dc6",
     "m_Title": "Displacement",
     "m_Position": {
-        "x": -854.666015625,
-        "y": -911.3335571289063
+        "x": -854.66650390625,
+        "y": -911.3333740234375
     }
 }
 
@@ -9567,6 +9588,14 @@
         "w": 0.0
     },
     "m_LiteralMode": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.Rendering.BuiltIn.ShaderGraph.BuiltInLitSubTarget",
+    "m_ObjectId": "c8c3ac79712b4b588540f6b44d0fb47c",
+    "m_WorkflowMode": 1,
+    "m_NormalDropOffSpace": 0
 }
 
 {
@@ -11589,7 +11618,7 @@
     "m_ObjectId": "f4bf8844bc8e4ccb8b9cd58ae74b5221",
     "m_Title": "3-way color.",
     "m_Position": {
-        "x": -3099.3330078125,
+        "x": -3099.333251953125,
         "y": -380.00006103515627
     }
 }

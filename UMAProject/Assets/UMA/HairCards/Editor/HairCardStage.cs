@@ -612,7 +612,21 @@ namespace UMA.HairCards.Editor
             QueueRebuild(true);
             nextAutosave = EditorApplication.timeSinceStartup + AutosaveDelay;
             HairGroomWorkspace.OpenForActiveStage();
+            EditorApplication.delayCall += ShowFirstSceneView;
             return true;
+        }
+
+        private void ShowFirstSceneView()
+        {
+            EditorApplication.delayCall -= ShowFirstSceneView;
+            if (this == null || ActiveStage != this) return;
+            SceneView sceneView = SceneView.sceneViews.Count > 0
+                ? SceneView.sceneViews[0] as SceneView
+                : EditorWindow.GetWindow<SceneView>();
+            if (sceneView == null) return;
+            sceneView.Show();
+            sceneView.Focus();
+            sceneView.Repaint();
         }
 
         private void ActivateWorkflowStep(HairWorkflowStep step)
@@ -733,6 +747,7 @@ namespace UMA.HairCards.Editor
 
         protected override void OnCloseStage()
         {
+            EditorApplication.delayCall -= ShowFirstSceneView;
             closing = true;
             EndGravitySimulation();
             ReleaseSceneInputCapture(true);

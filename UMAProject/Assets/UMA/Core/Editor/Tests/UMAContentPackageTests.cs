@@ -20,7 +20,7 @@ namespace UMA.Editors.Tests
             Assert.That(UMAContentCatalog.Root(UMAContentKind.Uma3),
                 Is.EqualTo("Assets/UMA/UMA3"));
             Assert.That(UMAContentCatalog.Root(UMAContentKind.Uma2),
-                Is.EqualTo("Assets/UMA/UMA2"));
+                Is.EqualTo("Assets/UMA2"));
 
             bool hasUma3 = Directory.Exists(Absolute(UMAPathUtility.Uma3ContentRoot));
             bool hasUma2 = Directory.Exists(Absolute(UMAPathUtility.Uma2ContentRoot));
@@ -181,7 +181,7 @@ namespace UMA.Editors.Tests
                 Assert.Ignore("Run Build/Build-UMAContentPackages.ps1 to create release artifacts.");
 
             string uma3Archive = FindSingleArchive(releaseDirectory, "UMA3Content-*.unitypackage");
-            string uma2Archive = FindSingleArchive(releaseDirectory, "UMA2Content-*.unitypackage");
+            string uma2Archive = FindSingleArchive(releaseDirectory, "UMA2Compatibility-*.unitypackage");
 
             Assert.That(UMAContentPackageArchiveValidator.TryValidate(uma3Archive,
                 UMAContentKind.Uma3, out UMAContentPackageArchiveInfo uma3,

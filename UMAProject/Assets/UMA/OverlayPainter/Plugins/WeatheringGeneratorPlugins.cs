@@ -115,8 +115,8 @@ namespace UMA.TexturePaint.Examples
                 displayName = dirt ? "Dirtify — Gap Dirt" : "Edge Wear",
                 description = dirt
                     ? "Accumulates controllable, fractally broken dirt in concave gaps and occluded cavities, with explicit gap size and outward spread."
-                    : "Creates controllable, fractally broken wear on convex edges, with explicit edge size and outward spread.",
-                pluginVersion = "1.0.0",
+                    : "Wear along physical rims and convex creases, or broad surface weathering with Overall Wear.",
+                pluginVersion = dirt ? "1.1.0" : "1.3.1",
                 capabilities = TexturePaintPluginCapability.Generator |
                                TexturePaintPluginCapability.ReadsMeshMaps |
                                TexturePaintPluginCapability.LongRunning |
@@ -134,8 +134,10 @@ namespace UMA.TexturePaint.Examples
                                    TexturePaintMeshMapMask.WorldNormal |
                                    TexturePaintMeshMapMask.SignedCurvature |
                                    TexturePaintMeshMapMask.AmbientOcclusion |
-                                   TexturePaintMeshMapMask.SurfaceId,
-                parameters = BuildParameters(mode)
+                                   TexturePaintMeshMapMask.SurfaceId |
+                                   (dirt ? TexturePaintMeshMapMask.None : TexturePaintMeshMapMask.ExposedEdgeDistance),
+                parameters = BuildParameters(mode),
+                migrateParameters = dirt ? null : MigrateEdgeWearParameters
             };
         }
 
@@ -158,7 +160,7 @@ namespace UMA.TexturePaint.Examples
             {
                 context.cancellationToken.ThrowIfCancellationRequested();
                 string surfaceId = context.source.surfaceIds[surfaceIndex];
-                var inputs = new SurfaceInputs(context, surfaceId);
+                var inputs = new SurfaceInputs(context, surfaceId, mode == WeatheringMode.EdgeWear);
                 List<OutputTarget> targets = OutputTarget.Find(context.source, surfaceId, mode);
                 if (targets.Count == 0) continue;
 
@@ -234,9 +236,20 @@ namespace UMA.TexturePaint.Examples
                     float fractal = WeatheringFractal.Sample(position, u, v,
                         settings.triplanar, settings.breakupScale, settings.seed,
                         settings.fractalLevels, settings.fractalPersistence);
-                    selection = WeatheringFractal.DistortEdge(
-                        selection, fractal, settings.fractalEdge);
-                    selection *= WeatheringFractal.Breakup(fractal, settings.breakup);
+                    if (settings.mode == WeatheringMode.EdgeWear && !settings.overallWear)
+                    {
+                        float distance = inputs.EdgeDistance(u, v) / settings.edgeWidth;
+                        float breakupWeight = Mathf.Clamp01(TexturePaintPluginCurveLookup.Evaluate(settings.breakupCurve, distance));
+                        // Vary breakup contrast, not the distance envelope. Additive distortion
+                        // and thresholding of the faded coverage used to erase whole rim sections.
+                        fractal = Mathf.Clamp01(fractal + (fractal - .5f) * settings.fractalEdge);
+                        selection *= Mathf.Lerp(1f, WeatheringFractal.Breakup(fractal, settings.breakup), breakupWeight);
+                    }
+                    else
+                    {
+                        selection = WeatheringFractal.DistortEdge(selection, fractal, settings.fractalEdge);
+                        selection *= WeatheringFractal.Breakup(fractal, settings.breakup);
+                    }
 
                     Color texel = SampleProjected(texture, position, worldNormal, u, v, settings);
                     float userMask = SampleMask(mask, position, worldNormal, u, v, settings);
@@ -260,12 +273,24 @@ namespace UMA.TexturePaint.Examples
         }
 
         private static float Select(SurfaceInputs inputs, Settings settings,
-            float u, float v, bool includeNormalDetail)
+            float u, float v, bool includeNormalDetail, bool includeRim = true)
         {
+            if (settings.mode == WeatheringMode.EdgeWear && !settings.overallWear)
+            {
+                float distance = inputs.EdgeDistance(u, v) / settings.edgeWidth;
+                float rim = includeRim && distance < 1f ? Mathf.Lerp(1f,
+                    Mathf.Clamp01(TexturePaintPluginCurveLookup.Evaluate(settings.falloffCurve, distance)), settings.fadeLevel) : 0f;
+                float detail = includeNormalDetail ? Mathf.Max(0f,
+                    inputs.NormalCurvature(u, v, settings.normalDetailRadius) * settings.normalCurvature) : 0f;
+                float edgeFeature = Mathf.Max(rim, SmoothStep(settings.detectionLevel, 1f,
+                    Mathf.Clamp01(detail) * settings.detailWear));
+                float edgeCavity = Mathf.Max(inputs.SourceCavity(u, v), inputs.MeshCavity(u, v));
+                return edgeFeature * (1f - Mathf.Clamp01(edgeCavity * settings.cavityInfluence));
+            }
             float signed = inputs.SignedCurvature(u, v);
             if (includeNormalDetail)
                 signed = Mathf.Clamp(signed +
-                    inputs.NormalCurvature(u, v) *
+                    inputs.NormalCurvature(u, v, settings.normalDetailRadius) *
                     settings.normalCurvature, -1f, 1f);
             float sourceCavity = inputs.SourceCavity(u, v);
             float meshCavity = inputs.MeshCavity(u, v);
@@ -280,10 +305,11 @@ namespace UMA.TexturePaint.Examples
         private static float SelectNeighbor(SurfaceInputs inputs, Settings settings,
             Color centerId, float u, float v)
         {
-            u = Repeat01(u);
-            v = Repeat01(v);
+            if (u < 0f || u > 1f || v < 0f || v > 1f) return 0f;
             if (!inputs.SameIsland(centerId, inputs.MeshId(u, v))) return 0f;
-            return Select(inputs, settings, u, v, false);
+            // Physical rims already have a world-space width. UV neighbor dilation makes
+            // duplicate offset bands and defeats a distance falloff; spread only normal detail.
+            return Select(inputs, settings, u, v, true, false);
         }
 
         private static void Write(TexturePaintCommandContextV2 context, string surfaceId,
@@ -348,8 +374,10 @@ namespace UMA.TexturePaint.Examples
                     "Optional-texture repetitions per UV tile, or per meter in World Triplanar mode (Unity 1 unit = 1 meter)."),
                 Integer("seed", "Seed", 0, 100000, dirt ? 317 : 719,
                     "Changes the deterministic fractal pattern."),
-                Float("normalCurvature", "Normal Detail Influence", 0f, 4f, 1f,
+                Float("normalCurvature", "Normal Detail Influence", 0f, 32f, 8f,
                     "Adds small curvature features read from the composed Normal channel."),
+                Float("normalDetailRadius", "Normal Detail Radius", 1f, 32f, 4f,
+                    "Normal curvature sampling radius in pixels at 2048 resolution. Includes underlying Normal Control relief."),
                 Float("featureSize", feature + " Size (px)", 0f, 64f, dirt ? 8f : 5f,
                     "Sampling radius used to find nearby " + feature.ToLowerInvariant() +
                     " features at the current output resolution."),
@@ -396,12 +424,35 @@ namespace UMA.TexturePaint.Examples
             }
             else
             {
+                parameters.InsertRange(0, new[]
+                {
+                    Enum("wearMode", "Wear Placement", new[] { "Exposed Edges", "Overall Wear" }, 0,
+                        "Exposed Edges follows physical open rims and convex creases of at least 30 degrees. Overall Wear retains the original broad curvature and normal-detail treatment."),
+                    Float("edgeWidth", "Edge Width (% of Mesh)", 0.02f, 3f, 0.35f,
+                        "Width of exposed-edge wear as a percentage of the mesh bounds diagonal; independent of texture resolution. Used in Exposed Edges mode."),
+                    Float("fadeLevel", "Edge Fade Level", 0f, 1f, 1f,
+                        "Exposed Edges: zero gives a solid band; one fully applies the Falloff Curve across Edge Width."),
+                    Curve("falloffCurve", "Edge Falloff Curve", AnimationCurve.Linear(0f, 1f, 1f, 0f),
+                        "Exposed Edges: X is distance (0 = edge, 1 = outer width); Y is wear coverage. Defaults to a linear fade from full coverage to zero."),
+                    Curve("breakupCurve", "Edge Breakup Curve", AnimationCurve.Linear(0f, 0f, 1f, 1f),
+                        "Exposed Edges: X is distance across Edge Width; Y is the influence of Fractal Breakup. Defaults to no breakup at the edge, increasing outwards."),
+                    Float("detailWear", "Normal Detail Wear", 0f, 1f, 0.15f,
+                        "Additional wear on underlying normal-map and Normal Control relief in Exposed Edges mode. Zero restricts wear to geometry rims and creases; one fully includes surface texture details.")
+                });
                 parameters.Add(Float("metallic", "Exposed Metallic", 0f, 1f, 0f,
                     "Metallic value beneath worn regions."));
                 parameters.Add(Float("normalAmount", "Wear Depth", 0f, 0.5f, 0.065f,
                     "Recesses wear through Normal Control."));
             }
             return parameters;
+        }
+
+        private static bool MigrateEdgeWearParameters(TexturePaintPluginParameterSet values)
+        {
+            if (values.Get("wearMode") != null) return false;
+            // New layers use ResetToDefaults; restored layers retain their original appearance.
+            values.Get("wearMode", true).number = 1;
+            return true;
         }
 
         private static TexturePaintPluginParameterDefinition Float(string id, string name,
@@ -433,6 +484,13 @@ namespace UMA.TexturePaint.Examples
             {
                 id = id, displayName = name, type = TexturePaintPluginParameterType.Color,
                 defaultColor = value, description = description
+            };
+
+        private static TexturePaintPluginParameterDefinition Curve(string id, string name,
+            AnimationCurve value, string description) => new()
+            {
+                id = id, displayName = name, type = TexturePaintPluginParameterType.Curve,
+                defaultCurve = value, description = description
             };
 
         private static TexturePaintPluginParameterDefinition Texture(string id, string name,
@@ -474,8 +532,9 @@ namespace UMA.TexturePaint.Examples
             private readonly TexturePaintReadOnlyMeshMap signedCurvature;
             private readonly TexturePaintReadOnlyMeshMap meshAmbientOcclusion;
             private readonly TexturePaintReadOnlyMeshMap meshId;
+            private readonly TexturePaintReadOnlyMeshMap edgeDistance;
 
-            public SurfaceInputs(TexturePaintCommandContextV2 context, string surfaceId)
+            public SurfaceInputs(TexturePaintCommandContextV2 context, string surfaceId, bool edgeWear)
             {
                 normal = context.source.Get(surfaceId, TexturePaintChannel.Normal);
                 ambientOcclusion = context.source.Get(surfaceId,
@@ -487,6 +546,8 @@ namespace UMA.TexturePaint.Examples
                 meshAmbientOcclusion = context.GetMeshMap(surfaceId,
                     TexturePaintMeshMap.AmbientOcclusion);
                 meshId = context.GetMeshMap(surfaceId, TexturePaintMeshMap.SurfaceId);
+                if (edgeWear)
+                    edgeDistance = context.GetMeshMap(surfaceId, TexturePaintMeshMap.ExposedEdgeDistance);
             }
 
             public bool IsCovered(float u, float v) => meshId == null || MeshId(u, v).a >= 0.5f;
@@ -504,32 +565,14 @@ namespace UMA.TexturePaint.Examples
                 ? DecodeNormal(worldNormal.GetPixelBilinear(u, v)) : Vector3.forward;
             public float SignedCurvature(float u, float v) => signedCurvature != null
                 ? signedCurvature.GetPixelBilinear(u, v).r * 2f - 1f : 0f;
-            public float NormalCurvature(float u, float v)
-            {
-                if (normal == null || normal.width < 2 || normal.height < 2) return 0f;
-                float du = 1f / normal.width;
-                float dv = 1f / normal.height;
-                Color centerId = MeshId(u, v);
-                Vector3 center = DecodeNormal(normal.GetPixelBilinear(u, v));
-                Vector3 left = SampleNormal(centerId, center, u - du, v);
-                Vector3 right = SampleNormal(centerId, center, u + du, v);
-                Vector3 down = SampleNormal(centerId, center, u, v - dv);
-                Vector3 up = SampleNormal(centerId, center, u, v + dv);
-                return Mathf.Clamp(((right.x - left.x) + (up.y - down.y)) * 0.5f,
-                    -1f, 1f);
-            }
+            public float EdgeDistance(float u, float v) => edgeDistance?.GetPixelBilinear(u, v).r ?? 1f;
+            public float NormalCurvature(float u, float v, float radius) =>
+                SurfaceNormalDetail.Curvature(normal, meshId, u, v, radius);
             public float SourceCavity(float u, float v) => ambientOcclusion == null ? 0f
                 : 1f - Luminance(ambientOcclusion.GetPixelBilinear(u, v));
             public float MeshCavity(float u, float v) => meshAmbientOcclusion == null ? 0f
                 : 1f - meshAmbientOcclusion.GetPixelBilinear(u, v).r;
 
-            private Vector3 SampleNormal(Color centerId, Vector3 fallback, float u, float v)
-            {
-                u = Repeat01(u);
-                v = Repeat01(v);
-                if (!SameIsland(centerId, MeshId(u, v))) return fallback;
-                return DecodeNormal(normal.GetPixelBilinear(u, v));
-            }
         }
 
         private readonly struct OutputTarget
@@ -589,10 +632,14 @@ namespace UMA.TexturePaint.Examples
         private readonly struct Settings
         {
             public readonly WeatheringMode mode;
+            public readonly bool overallWear;
+            public readonly float edgeWidth, detailWear;
+            public readonly float fadeLevel;
+            public readonly float[] falloffCurve, breakupCurve;
             public readonly bool triplanar;
             public readonly float textureScale;
             public readonly int seed;
-            public readonly float normalCurvature;
+            public readonly float normalCurvature, normalDetailRadius;
             public readonly float featureSize;
             public readonly float detectionLevel;
             public readonly float spread;
@@ -613,10 +660,17 @@ namespace UMA.TexturePaint.Examples
             {
                 values ??= new TexturePaintPluginParameterSet();
                 this.mode = mode;
+                overallWear = values.Integer("wearMode", 1) == 1;
+                edgeWidth = Mathf.Clamp(values.Float("edgeWidth", .35f), .02f, 3f) * .01f;
+                detailWear = Mathf.Clamp01(values.Float("detailWear", .15f));
+                fadeLevel = Mathf.Clamp01(values.Float("fadeLevel", 1f));
+                falloffCurve = TexturePaintPluginCurveLookup.Bake(values.Curve("falloffCurve", AnimationCurve.Linear(0, 1, 1, 0)));
+                breakupCurve = TexturePaintPluginCurveLookup.Bake(values.Curve("breakupCurve", AnimationCurve.Linear(0, 0, 1, 1)));
                 triplanar = values.Integer("projection", 1) == 1;
                 textureScale = Mathf.Max(0.05f, values.Float("textureScale", 4f));
                 seed = values.Integer("seed", mode == WeatheringMode.Dirt ? 317 : 719);
-                normalCurvature = Mathf.Max(0f, values.Float("normalCurvature", 1f));
+                normalCurvature = Mathf.Max(0f, values.Float("normalCurvature", 8f));
+                normalDetailRadius = Mathf.Clamp(values.Float("normalDetailRadius", 4f), 1f, 32f);
                 featureSize = Mathf.Clamp(values.Float("featureSize",
                     mode == WeatheringMode.Dirt ? 8f : 5f), 0f, 64f);
                 detectionLevel = Mathf.Clamp(values.Float("detectionLevel",
@@ -635,7 +689,7 @@ namespace UMA.TexturePaint.Examples
                 fractalPersistence = Mathf.Clamp(values.Float("fractalPersistence", 0.5f),
                     0.1f, 0.9f);
                 fractalEdge = Mathf.Clamp01(values.Float("fractalEdge", 0.65f));
-                color = values.Color("surfaceColor", mode == WeatheringMode.Dirt
+                color = values.LinearColor("surfaceColor", mode == WeatheringMode.Dirt
                     ? new Color(0.16f, 0.105f, 0.055f, 1f)
                     : new Color(0.58f, 0.54f, 0.46f, 1f));
                 roughness = Mathf.Clamp01(values.Float("roughness",

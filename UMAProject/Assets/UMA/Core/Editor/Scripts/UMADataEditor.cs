@@ -10,8 +10,42 @@ using UnityEngine;
 namespace UMA.Editors
 {
     [CustomEditor(typeof(UMA.UMAData), true)]
-    public class UMADataEditor : CharacterBaseEditor
+    public class UMADataEditor : CharacterBaseEditor, IUMAPluginHost
     {
+        private IDisposable pluginPlacement;
+        public override void OnEnable()
+        {
+            pluginPlacement?.Dispose();
+            pluginPlacement = UMAPluginGUI.RegisterExplicitHost(this);
+            base.OnEnable();
+        }
+
+        public override void OnDisable()
+        {
+            pluginPlacement?.Dispose();
+            pluginPlacement = null;
+            base.OnDisable();
+        }
+
+        public bool CanRunPluginActions => _umaData != null && targets.Length == 1 &&
+            _umaData.umaRecipe != null && !EditorApplication.isCompiling && !EditorApplication.isUpdating;
+
+        public bool TryPreparePluginAction()
+        {
+            if (!CanRunPluginActions) return false;
+            serializedObject.ApplyModifiedProperties();
+            if (!ReferenceEquals(_recipe, _umaData.umaRecipe)) InitializeUMADataEditor();
+            if (_needsUpdate || _forceUpdate) DoUpdate();
+            _forceUpdate = false;
+            return true;
+        }
+
+        public void RefreshAfterPluginAction()
+        {
+            serializedObject.Update();
+            InitializeUMADataEditor();
+            Repaint();
+        }
         protected UMAData _umaData;
         public bool initialized = false;
 		public bool showEditInfo = false;
@@ -98,6 +132,7 @@ namespace UMA.Editors
 
 		public override void OnInspectorGUI()
         {
+            UMAPluginGUI.Draw(this);
             if (dnaEditor == null)
             {
                 InitializeUMADataEditor();

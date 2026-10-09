@@ -1,0 +1,192 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d6b01ca862641f1ab1dccd0b963b24e, type: 3}
+  m_Name: Shoulders Mask
+  m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintMaskPreset
+  version: 1
+  description: Shared Shoulders envelope. Append Painted Mask for hand corrections;
+    use Multiply with material generators.
+  effects:
+    noise:
+      enabled: 0
+      seed: 0
+      tiling: {x: 4, y: 4}
+      offset: {x: 0, y: 0}
+      octaves: 4
+      balance: 0.5
+      contrast: 1
+      invert: 0
+      opacity: 1
+      combine: 1
+    textureOverlay:
+      enabled: 0
+      texture: {fileID: 0}
+      sourceChannel: 0
+      tiling: {x: 1, y: 1}
+      offset: {x: 0, y: 0}
+      rotation: 0
+      invert: 0
+      opacity: 1
+      combine: 1
+    stack:
+    - id: ed59eadd5ae947699242d6dc654c48d4
+      name: 
+      kind: 44
+      enabled: 1
+      expanded: 1
+      invert: 0
+      repeat: 0
+      opacity: 1
+      blend: 0
+      texture: {fileID: 0}
+      channel: 0
+      reference:
+        surfaceId: 
+        layerId: 
+        logicalLayerId: 
+        paintTargetId: 
+        channel: 0
+        component: 1
+        invert: 0
+      regionProfile: {fileID: 11400000, guid: 7ddad635a740ed84082a9d253ee8ab69, type: 2}
+      regionSettings:
+        region: 7
+        side: 0
+        size: {x: 1, y: 1, z: 1}
+        offset: {x: 0, y: 0, z: 0}
+        rotation: 0
+        feather: 0.25
+        jointArc: 120
+        leftAnchor: 
+        leftParent: 
+        leftChild: 
+        rightAnchor: 
+        rightParent: 
+        rightChild: 
+      tiling: {x: 1, y: 1}
+      offset: {x: 0, y: 0}
+      rotation: 0
+      seed: 0
+      octaves: 4
+      steps: 4
+      value: 1
+      amount: 1
+      radius: 4
+      threshold: 0.5
+      softness: 0.1
+      inputMin: 0
+      inputMax: 1
+      outputMin: 0
+      outputMax: 1
+      gamma: 1
+      direction: {x: 0, y: 1, z: 0}
+      curve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 0
+          outSlope: 1
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 1
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+    - id: eb6a8e189bda470baa2b139f4618406f
+      name: 
+      kind: 2
+      enabled: 1
+      expanded: 1
+      invert: 0
+      repeat: 1
+      opacity: 1
+      blend: 1
+      texture: {fileID: 0}
+      channel: 0
+      reference:
+        surfaceId: 
+        layerId: 
+        logicalLayerId: 
+        paintTargetId: 
+        channel: 0
+        component: 1
+        invert: 0
+      regionProfile: {fileID: 0}
+      regionSettings:
+        region: 0
+        side: 0
+        size: {x: 1, y: 1, z: 1}
+        offset: {x: 0, y: 0, z: 0}
+        rotation: 0
+        feather: 0.25
+        jointArc: 120
+        leftAnchor: 
+        leftParent: 
+        leftChild: 
+        rightAnchor: 
+        rightParent: 
+        rightChild: 
+      tiling: {x: 1, y: 1}
+      offset: {x: 0, y: 0}
+      rotation: 0
+      seed: 0
+      octaves: 4
+      steps: 4
+      value: 1
+      amount: 1
+      radius: 4
+      threshold: 0.5
+      softness: 0.1
+      inputMin: 0
+      inputMax: 1
+      outputMin: 0
+      outputMax: 1
+      gamma: 1
+      direction: {x: 0, y: 1, z: 0}
+      curve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 0
+          inSlope: 0
+          outSlope: 1
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 1
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+    startFromPaint: 0
+    initialValue: 0

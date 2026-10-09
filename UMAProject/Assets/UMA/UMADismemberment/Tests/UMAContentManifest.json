@@ -1,0 +1,60 @@
+{
+  "formatVersion": 2,
+  "requiredPluginApiVersion": 1,
+  "contentId": "dismemberment-tests",
+  "contentVersion": "3.1.2",
+  "umaVersion": "3.1f2",
+  "requiredCoreVersion": "3.1.2",
+  "minimumCoreVersion": "3.1.2",
+  "maximumCoreVersionExclusive": "3.2.0",
+  "installRoot": "Assets/UMA/UMADismemberment/Tests",
+  "dependencies": [
+    "core",
+    "dismemberment",
+    "test-framework"
+  ],
+  "requiredPaths": [
+    "Assets/UMA/UMADismemberment/Tests/Editor/UMA.Dismemberment.Editor.Tests.asmdef"
+  ],
+  "ownedPaths": [
+    "Assets/UMA/UMADismemberment/Tests/Editor",
+    "Assets/UMA/UMADismemberment/Tests/Editor/DismembermentMeshBuilderTests.cs",
+    "Assets/UMA/UMADismemberment/Tests/Editor/SurfaceCutTests.cs",
+    "Assets/UMA/UMADismemberment/Tests/Editor/UMA.Dismemberment.Editor.Tests.asmdef",
+    "Assets/UMA/UMADismemberment/Tests/UMAContentManifest.json"
+  ],
+  "assets": [
+    {
+      "path": "Assets/UMA/UMADismemberment/Tests/Editor",
+      "guid": "243a5a2fddf94d6bb323e8a55f7681ad",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 169,
+      "metaSha256": "07318cfd812a1ccbb7e524a2145343d896b593c093fb2dca753cdd1d659a44fc"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Tests/Editor/DismembermentMeshBuilderTests.cs",
+      "guid": "0d371f30f37c45358085157a1ce18c90",
+      "bytes": 90594,
+      "sha256": "7fb9e2559abc8c20917c4fc5e517f64f8b8e21c39ec94ca43e4e855570ef9bbd",
+      "metaBytes": 240,
+      "metaSha256": "825c095df8cdc7fe7dbfcbfd268d83a08d2c84d60b7fd633a30ec06e59185aa6"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Tests/Editor/SurfaceCutTests.cs",
+      "guid": "8f50d92c09c849bf8728ba9d272ca2a1",
+      "bytes": 19593,
+      "sha256": "90ba25b95fe65efd0da8a3467cf049bdd05905f1892da830cc6d94abd05a052f",
+      "metaBytes": 60,
+      "metaSha256": "dbf8e74862c06ec3caa7a4ea653a2ae10e137357f44e40ddb5546a09cce64a9d"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Tests/Editor/UMA.Dismemberment.Editor.Tests.asmdef",
+      "guid": "d3fedf9d232a49f9958be21e4779b97d",
+      "bytes": 818,
+      "sha256": "bbf3bf40c54113763854524eb9738dbcf3ee9db4235d428cf9e51fe13c7988ba",
+      "metaBytes": 163,
+      "metaSha256": "b2c1034f17a300a3f1946697de1cd5b8750ce27158b7eabea5e1087fa966d195"
+    }
+  ]
+}

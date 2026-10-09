@@ -1,0 +1,224 @@
+{
+  "formatVersion": 2,
+  "requiredPluginApiVersion": 1,
+  "contentId": "dismemberment-examples",
+  "contentVersion": "3.1.2",
+  "umaVersion": "3.1f2",
+  "requiredCoreVersion": "3.1.2",
+  "minimumCoreVersion": "3.1.2",
+  "maximumCoreVersionExclusive": "3.2.0",
+  "installRoot": "Assets/UMA/UMADismemberment/Samples",
+  "dependencies": [
+    "core",
+    "dismemberment",
+    "uma3",
+    "srp"
+  ],
+  "requiredPaths": [
+    "Assets/UMA/UMADismemberment/Samples/Scripts/UMA.Dismemberment.Samples.asmdef",
+    "Assets/UMA/UMADismemberment/Samples/Materials/SliceFill.mat"
+  ],
+  "ownedPaths": [
+    "Assets/UMA/UMADismemberment/Samples/Materials",
+    "Assets/UMA/UMADismemberment/Samples/Materials/README.md",
+    "Assets/UMA/UMADismemberment/Samples/Materials/SliceFill.mat",
+    "Assets/UMA/UMADismemberment/Samples/Materials/Steak.png",
+    "Assets/UMA/UMADismemberment/Samples/Materials/SteakNormal.png",
+    "Assets/UMA/UMADismemberment/Samples/Materials/SteakSmooth.png",
+    "Assets/UMA/UMADismemberment/Samples/Materials/Steakbone.mat",
+    "Assets/UMA/UMADismemberment/Samples/Materials/checker.png",
+    "Assets/UMA/UMADismemberment/Samples/Profiles",
+    "Assets/UMA/UMADismemberment/Samples/Profiles/Realistic Blood Surface Fluid.asset",
+    "Assets/UMA/UMADismemberment/Samples/Profiles/Realistic Surface Cut.asset",
+    "Assets/UMA/UMADismemberment/Samples/README.md",
+    "Assets/UMA/UMADismemberment/Samples/Scene",
+    "Assets/UMA/UMADismemberment/Samples/Scene/U3-GoreExample",
+    "Assets/UMA/UMADismemberment/Samples/Scene/U3-GoreExample.unity",
+    "Assets/UMA/UMADismemberment/Samples/Scene/U3-GoreExample/LightingData.asset",
+    "Assets/UMA/UMADismemberment/Samples/Scene/U3-GoreExample/ReflectionProbe-0.exr",
+    "Assets/UMA/UMADismemberment/Samples/Scripts",
+    "Assets/UMA/UMADismemberment/Samples/Scripts/ExampleDismemberCallback.cs",
+    "Assets/UMA/UMADismemberment/Samples/Scripts/GUIDismemberment.cs",
+    "Assets/UMA/UMADismemberment/Samples/Scripts/UMA.Dismemberment.Samples.asmdef",
+    "Assets/UMA/UMADismemberment/Samples/Scripts/UndoDismemberments.cs",
+    "Assets/UMA/UMADismemberment/Samples/UMAContentManifest.json"
+  ],
+  "assets": [
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Materials",
+      "guid": "38a88c33c65f43c4ba32dba0fb8f9efd",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 192,
+      "metaSha256": "cb830663de0ffc1014a4aa9fba2a42455eb15a74f8c119bed9cac7acf19e5626"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Materials/README.md",
+      "guid": "cfb13169f5f943bd9b928748e7479a72",
+      "bytes": 922,
+      "sha256": "f5bdca50ab93f1918d6a3668720196ff759f01e6255f3c5b48c917afbd176f16",
+      "metaBytes": 152,
+      "metaSha256": "897590199127ea83217b43b812b08096eb281c2f283d3aa8e83572af728dfeab"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Materials/SliceFill.mat",
+      "guid": "0cbd20782733f6540925991b3825db2e",
+      "bytes": 2263,
+      "sha256": "6b815ce6603443798a0ba6dfc0dbedaa2d53984adf0db3f7b5795d09f3d828a7",
+      "metaBytes": 208,
+      "metaSha256": "54c0e9bc8993250fe08d7da095d96d22b9f68db59eb3d36842b3d427337e43fa"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Materials/Steak.png",
+      "guid": "e4c760b6131cfca42ab19cf780d80df3",
+      "bytes": 3428203,
+      "sha256": "9a8e61b974f0c42f20e5326cd4e9b4e2219b2df0702bc2522719d7a4e1763051",
+      "metaBytes": 3364,
+      "metaSha256": "78c03528924b0b27c18aa04f67ba8317685890649f3c758cb89c425cc04dffdf"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Materials/SteakNormal.png",
+      "guid": "b6b733d218217b0459821b6ae455d0e0",
+      "bytes": 2509135,
+      "sha256": "a56c9729caca8a83f1e82a50a70e99f108b8295a97d229d2885e09decdad5e00",
+      "metaBytes": 3364,
+      "metaSha256": "13a7597e6477fb55a93699a89117190a15db4ca8238fbd0bcfa33c3d53f1ab54"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Materials/SteakSmooth.png",
+      "guid": "1f9dd73d7032c0446a6301fcf6ffb7e2",
+      "bytes": 2572441,
+      "sha256": "fbafd1d79483ec080ad3436ea305937de2560b2eb200a71b21f116277aab4442",
+      "metaBytes": 3364,
+      "metaSha256": "ed4d058c382decb2da6ea113bdf63a194f0b48c6bea4efbfc624e3a66b3a4e2d"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Materials/Steakbone.mat",
+      "guid": "88ae7085bbeaa704b83e964f6084da4e",
+      "bytes": 6750,
+      "sha256": "d33aa4b789b0a56ffb8552757383d4dc88d68e19f17da81c547df6d7a44611e4",
+      "metaBytes": 188,
+      "metaSha256": "f3f9a4363bc84b4d3c1dc189f91d94aec8e979af28cde0b7cfac03099df04052"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Materials/checker.png",
+      "guid": "8a5e8f8ffdef8414b91ba72ff8d82fa0",
+      "bytes": 31841,
+      "sha256": "898f4a4472d16f6ffe4dd265abf722f6226d9e62253ea48c23f98b5e79e3c2da",
+      "metaBytes": 3364,
+      "metaSha256": "9b0e066895dbb099d5bd477264939a3d7668fab918af8181099411a8581ea799"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Profiles",
+      "guid": "6f5e1a5283b94134aebd401c6fcbbe6b",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 169,
+      "metaSha256": "463818abf36269e6665d6ae2a9142d41e4f1532ca003cb7efa2f8a8f8ba65561"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Profiles/Realistic Blood Surface Fluid.asset",
+      "guid": "af87b51bff704c3188bc9000640b1476",
+      "bytes": 1595,
+      "sha256": "b4d6c29f77563b1ad8dfbf182ab80a43701cafaf4c83d6ca75119f40b77e31f4",
+      "metaBytes": 186,
+      "metaSha256": "842c2792e8c35f792425b42cb6fbd8ba054f037e0c42677cacf5a1994546ef76"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Profiles/Realistic Surface Cut.asset",
+      "guid": "7f4ba5c029814d5c92bf6c1b1bd040c3",
+      "bytes": 936,
+      "sha256": "6ca4ea36e024c85cb60ead1cac1dec2d0c383bbfc646cba4ef6f65edc2e07b89",
+      "metaBytes": 186,
+      "metaSha256": "1ad759af6749a9b497e03aa984b67db04df79d878ac8eb1e5965aba776fc9c62"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/README.md",
+      "guid": "af9534f74b63441b8729310b3021bf6d",
+      "bytes": 14395,
+      "sha256": "dcc367ee11794ecd00f396b0bdfcab6e7242c3071ce3db6b3c58ec1032086044",
+      "metaBytes": 152,
+      "metaSha256": "76ba3121d789801310fd111a28e012c7ff9022f0f2d40c220f5b9ca50efd0a6a"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Scene",
+      "guid": "5fe5d3bd733504f42b359acd5f69400d",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 192,
+      "metaSha256": "9dec1043ab8a9aeef295018911cca233168d5095fb5041bc800313fad3beecb3"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Scene/U3-GoreExample",
+      "guid": "0083da7585fb45f46af3e77c2c4ddd54",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 172,
+      "metaSha256": "f9f8c0d6f285b231d6568edf18727dd17292cac4f2fc73b121cfc81388755a1f"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Scene/U3-GoreExample.unity",
+      "guid": "fb7b7bdfb5bc6c143970c8b80074dce9",
+      "bytes": 3000000,
+      "sha256": "ad34eed2d432f978cf10c8cb14456f3ec1c387e67a89271d06f13cf5119c8eb7",
+      "metaBytes": 175,
+      "metaSha256": "f2ef40a7ef9674a7f3f523a59327eb811e5bc6611fcaaaf77b6ac9d62f7ad060"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Scene/U3-GoreExample/LightingData.asset",
+      "guid": "9ad235daf860d4f42b2973aaec7031bc",
+      "bytes": 17729,
+      "sha256": "520fb6e66bb714a78e700daef7f5953941bb5084411f6595cbbe74cb13e7b837",
+      "metaBytes": 190,
+      "metaSha256": "84d2854459eabdd1db47df160770615799a19d27de93cbe63e149aa7126a7635"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Scene/U3-GoreExample/ReflectionProbe-0.exr",
+      "guid": "e2926f130e0c02344b314221cf44ab70",
+      "bytes": 163864,
+      "sha256": "844922b87d22ecd9aca91245610bf6ed0cbb819e7b30d14e9c74ee05347f06ec",
+      "metaBytes": 3365,
+      "metaSha256": "e280754d16badaf5eefa198c378e8e4979127553205618d0773b3d14b50fe07c"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Scripts",
+      "guid": "45da07b6c1344f1ea0aad42397f671c5",
+      "bytes": 0,
+      "sha256": "",
+      "metaBytes": 169,
+      "metaSha256": "3a0fb2b0415532b0d63dd498e81534d95bf04a98a9b92ea9b2b52aa1fad30e85"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Scripts/ExampleDismemberCallback.cs",
+      "guid": "257eeca2ff92b0b458c65827d03a0435",
+      "bytes": 26945,
+      "sha256": "355f29c5845e52d6caaa8cf06fa98062f99ba3b618aa1b5ce013225ff850218d",
+      "metaBytes": 263,
+      "metaSha256": "6b626a017ee8c1deac92f4f043e0a2827ce69cf5c6c107bd1d44772112b2ab30"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Scripts/GUIDismemberment.cs",
+      "guid": "5b41fce4cfd7aa34ba6d12fe366bf2b7",
+      "bytes": 1329,
+      "sha256": "4cd19c4d4ce5f0fafd953af5cc2abc63d5764f85d842774f6e950505bc68d34f",
+      "metaBytes": 263,
+      "metaSha256": "c47bcc38b1e4371e0d9dea98dace6d72769477dc4372b4490d5f426ec7ce2dbf"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Scripts/UMA.Dismemberment.Samples.asmdef",
+      "guid": "118258fe980445fa98960c2bb1bdd02d",
+      "bytes": 475,
+      "sha256": "17eef26a4ecb5622127a04f0ad751eda305d1523257997bc8707c50a63a05ec4",
+      "metaBytes": 163,
+      "metaSha256": "1ccdd1b169d93ad17c254f519f858a339c9011dd651f0ea008f6589d9eca2932"
+    },
+    {
+      "path": "Assets/UMA/UMADismemberment/Samples/Scripts/UndoDismemberments.cs",
+      "guid": "511850abb60a32d4f8dfe54828d69421",
+      "bytes": 2290,
+      "sha256": "29999213ed06f31d5a7359adf47a0f6124ed1be99cb80cb073a4b69d4791f2b8",
+      "metaBytes": 59,
+      "metaSha256": "581d578c412f243c72dd3dcdd4cb03aa8711f514a0b96c5c68bf065df1b27901"
+    }
+  ]
+}

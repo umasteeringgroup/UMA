@@ -60,6 +60,7 @@ namespace UMA
 
 			umaRecipe.Load(umaData.umaRecipe);
 			umaData.AddAdditionalRecipes(umaAdditionalRecipes);
+            umaData.FireRecipePreparedEvents();
 
 			if (umaRace != umaData.umaRecipe.raceData)
 			{

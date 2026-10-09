@@ -12,13 +12,13 @@ namespace UMA.TexturePaint.Editor
 {
     internal static class TexturePaintRecoveryStore
     {
-        private const string DefaultFolder = UMAPathUtility.OverlayPainterRecoveryRoot;
+        private const string DefaultFolder = TexturePaintPaths.RecoveryRoot;
         private const string AssetName = "painter_recovery.asset";
         private const string DataFolderName = "painter_recovery Data";
 
         internal static string RecoveryFolderOverride { get; set; }
         internal static string RecoveryFolder => NormalizeFolder(string.IsNullOrEmpty(RecoveryFolderOverride)
-            ? UMASettings.TexturePaintRecoveryFolder
+            ? TexturePaintProjectSettings.TexturePaintRecoveryFolder
             : RecoveryFolderOverride);
         internal static string RecoveryAssetPath => RecoveryFolder + "/" + AssetName;
         internal static string RecoveryDataFolder => RecoveryFolder + "/" + DataFolderName;

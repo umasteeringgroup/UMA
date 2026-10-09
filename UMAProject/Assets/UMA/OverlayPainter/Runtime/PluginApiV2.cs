@@ -51,7 +51,9 @@ namespace UMA.TexturePaint
         /// <summary>Unity font asset used by text-producing plugins.</summary>
         Font,
         /// <summary>Multi-line string rendered as an expanding text area by the shared editor.</summary>
-        MultilineString
+        MultilineString,
+        /// <summary>Channel-coordinated sprite set with a per-parameter tile selection.</summary>
+        SpriteSet
     }
     public enum TexturePaintPluginColorSpace { Linear, SRGB, Data }
     public enum TexturePaintPluginBlend { Replace, Normal, Add, Multiply }
@@ -62,6 +64,21 @@ namespace UMA.TexturePaint
     {
         public bool enabled = true;
         public TexturePaintStripeDirection direction;
+        [SerializeField] private float rotation;
+        [SerializeField] private bool hasRotation;
+        // Old payloads contain only direction. Resolve them without changing their appearance
+        // or dirtying the document simply because an inspector draws the angle control.
+        public float Rotation
+        {
+            get => hasRotation ? rotation : direction == TexturePaintStripeDirection.Vertical ? 90f : 0f;
+            set { rotation = value; hasRotation = true; }
+        }
+
+        public void SetDirection(TexturePaintStripeDirection value)
+        {
+            direction = value;
+            Rotation = value == TexturePaintStripeDirection.Vertical ? 90f : 0f;
+        }
         [Range(0f, 1f)] public float position = 0.5f;
         [Range(0.001f, 1f)] public float width = 0.1f;
         [Range(0f, 0.5f)] public float softness = 0.01f;
@@ -88,7 +105,10 @@ namespace UMA.TexturePaint
         SignedCurvature,
         AmbientOcclusion,
         Thickness,
-        SurfaceId
+        SurfaceId,
+        /// <summary>Distance to open rims / convex creases, divided by the world bounds diagonal.
+        /// UV seams, flat diagonals and concave creases are excluded. One means no nearby edge.</summary>
+        ExposedEdgeDistance
     }
 
     [Flags]
@@ -101,7 +121,8 @@ namespace UMA.TexturePaint
         AmbientOcclusion = 1 << 3,
         Thickness = 1 << 4,
         SurfaceId = 1 << 5,
-        All = WorldPosition | WorldNormal | SignedCurvature | AmbientOcclusion | Thickness | SurfaceId
+        ExposedEdgeDistance = 1 << 6,
+        All = WorldPosition | WorldNormal | SignedCurvature | AmbientOcclusion | Thickness | SurfaceId | ExposedEdgeDistance
     }
 
     [Serializable]
@@ -123,6 +144,28 @@ namespace UMA.TexturePaint
         public string[] enumOptions = Array.Empty<string>();
     }
 
+    /// <summary>Normalized curve lookup shared by CPU generators and compute parameter bindings.</summary>
+    public static class TexturePaintPluginCurveLookup
+    {
+        public const int SampleCount = 128;
+        public static float[] Bake(AnimationCurve curve)
+        {
+            var samples = new float[SampleCount];
+            for (int i = 0; i < samples.Length; i++)
+            {
+                float t = i / (float)(SampleCount - 1);
+                samples[i] = curve?.Evaluate(t) ?? t;
+            }
+            return samples;
+        }
+        public static float Evaluate(float[] samples, float t)
+        {
+            float position = Mathf.Clamp01(t) * (SampleCount - 1);
+            int first = Mathf.FloorToInt(position);
+            return Mathf.LerpUnclamped(samples[first], samples[Mathf.Min(first + 1, SampleCount - 1)], position - first);
+        }
+    }
+
     [Serializable]
     public sealed class TexturePaintPluginParameterValue
     {
@@ -134,6 +177,9 @@ namespace UMA.TexturePaint
         public Texture2D texture;
         public Sprite sprite;
         public Font font;
+        public OverlayPainterSpriteSet spriteSet;
+        public bool spriteSetSelectionExplicit;
+        public List<int> enabledSpriteIndices = new List<int>();
         public AnimationCurve curve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
         public List<TexturePaintStripeDefinition> stripes =
             new List<TexturePaintStripeDefinition>();
@@ -161,16 +207,34 @@ namespace UMA.TexturePaint
             values.Clear();
             valueLookup = null;
             valueLookupCount = -1;
-            if (definitions == null) return;
+            EnsureDefaults(definitions);
+        }
+
+        /// <summary>Adds parameters introduced by a newer schema without replacing authored
+        /// values. In particular, zero, false, transparent colors and empty lists are values,
+        /// not evidence that a parameter is missing.</summary>
+        public bool EnsureDefaults(TexturePaintPluginDescriptor descriptor)
+        {
+            bool migrated = descriptor?.migrateParameters?.Invoke(this) ?? false;
+            return EnsureDefaults(descriptor?.parameters) || migrated;
+        }
+
+        public bool EnsureDefaults(IReadOnlyList<TexturePaintPluginParameterDefinition> definitions)
+        {
+            if (definitions == null) return false;
+            values ??= new List<TexturePaintPluginParameterValue>();
+            EnsureValueLookup();
+            bool added = false;
 
             for (int i = 0; i < definitions.Count; i++)
             {
                 TexturePaintPluginParameterDefinition definition = definitions[i];
                 if (definition == null || string.IsNullOrWhiteSpace(definition.id) ||
-                    definition.type == TexturePaintPluginParameterType.Header)
+                    definition.type == TexturePaintPluginParameterType.Header ||
+                    valueLookup.ContainsKey(definition.id))
                     continue;
 
-                values.Add(new TexturePaintPluginParameterValue
+                var value = new TexturePaintPluginParameterValue
                 {
                     id = definition.id,
                     number = definition.defaultNumber,
@@ -182,8 +246,13 @@ namespace UMA.TexturePaint
                     font = null,
                     curve = CloneCurve(definition.defaultCurve),
                     stripes = CloneStripes(definition.defaultStripes)
-                });
+                };
+                values.Add(value);
+                valueLookup.Add(definition.id, value);
+                added = true;
             }
+            valueLookupCount = values.Count;
+            return added;
         }
 
         public TexturePaintPluginParameterValue Get(string id, bool create = false)
@@ -221,6 +290,9 @@ namespace UMA.TexturePaint
         public int Integer(string id, int fallback = 0) => Mathf.RoundToInt(Get(id)?.number ?? fallback);
         public bool Boolean(string id, bool fallback = false) => Get(id)?.boolean ?? fallback;
         public Color Color(string id, Color fallback) => Get(id)?.color ?? fallback;
+        /// <summary>Decode an authored sRGB picker color for linear RGB rendering. Alpha is unchanged.
+        /// Use Color instead for numeric data channels; sampled color textures are already linear.</summary>
+        public Color LinearColor(string id, Color fallback) => Color(id, fallback).linear;
         public string String(string id, string fallback = "") => Get(id)?.text ?? fallback;
         public Texture2D Texture(string id) => Get(id)?.texture;
         public Sprite Sprite(string id) => Get(id)?.sprite;
@@ -247,6 +319,8 @@ namespace UMA.TexturePaint
                     id = source.id, number = source.number, boolean = source.boolean,
                     color = source.color, text = source.text, texture = source.texture,
                     sprite = source.sprite, font = source.font, curve = CloneCurve(source.curve),
+                    spriteSet = source.spriteSet, spriteSetSelectionExplicit = source.spriteSetSelectionExplicit,
+                    enabledSpriteIndices = source.enabledSpriteIndices != null ? new List<int>(source.enabledSpriteIndices) : new List<int>(),
                     stripes = CloneStripes(source.stripes)
                 });
             }
@@ -285,6 +359,9 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintPluginDescriptor
     {
+        /// <summary>Optional migration of restored parameters before missing defaults are filled.
+        /// ResetToDefaults deliberately bypasses this callback. Return true when changed.</summary>
+        [NonSerialized] public Func<TexturePaintPluginParameterSet, bool> migrateParameters;
         public string id;
         public string displayName;
         public string description;
@@ -475,13 +552,15 @@ namespace UMA.TexturePaint
         private readonly Dictionary<string, TexturePaintReadOnlyMeshMap> meshMaps;
         private readonly Dictionary<string, TexturePaintReadOnlyParameterTexture> parameterTextures;
         private readonly Dictionary<string, TexturePaintReadOnlyMask> masks;
+        private readonly Dictionary<string, TexturePaintReadOnlySpriteSet> spriteSets;
         public IReadOnlyList<string> surfaceIds { get; }
 
         internal TexturePaintReadContextV2(Dictionary<string, TexturePaintReadOnlyImage> images,
             Dictionary<string, TexturePaintReadOnlyChannelInfo> channelInfo,
             Dictionary<string, TexturePaintReadOnlyMeshMap> meshMaps,
             Dictionary<string, TexturePaintReadOnlyParameterTexture> parameterTextures,
-            List<string> surfaceIds, Dictionary<string, TexturePaintReadOnlyMask> masks = null)
+            List<string> surfaceIds, Dictionary<string, TexturePaintReadOnlyMask> masks = null,
+            Dictionary<string, TexturePaintReadOnlySpriteSet> spriteSets = null)
         {
             this.images = images ?? new Dictionary<string, TexturePaintReadOnlyImage>(StringComparer.Ordinal);
             this.channelInfo = channelInfo ??
@@ -490,6 +569,7 @@ namespace UMA.TexturePaint
             this.parameterTextures = parameterTextures ??
                 new Dictionary<string, TexturePaintReadOnlyParameterTexture>(StringComparer.Ordinal);
             this.masks = masks ?? new Dictionary<string, TexturePaintReadOnlyMask>(StringComparer.Ordinal);
+            this.spriteSets = spriteSets ?? new Dictionary<string, TexturePaintReadOnlySpriteSet>(StringComparer.Ordinal);
             this.surfaceIds = surfaceIds != null
                 ? (IReadOnlyList<string>)surfaceIds
                 : Array.Empty<string>();
@@ -517,6 +597,12 @@ namespace UMA.TexturePaint
             parameterTextures.TryGetValue(parameterId ?? string.Empty,
                 out TexturePaintReadOnlyParameterTexture image);
             return image;
+        }
+
+        public TexturePaintReadOnlySpriteSet GetParameterSpriteSet(string parameterId)
+        {
+            spriteSets.TryGetValue(parameterId ?? string.Empty, out var source);
+            return source;
         }
 
         public TexturePaintReadOnlyMask GetMask(string surfaceId)
@@ -806,6 +892,16 @@ namespace UMA.TexturePaint
     public interface ITexturePaintDynamicChannelUsageV2
     {
         TexturePaintChannelMask ResolveReadChannels(TexturePaintPluginParameterSet parameters);
+    }
+
+    /// <summary>
+    /// Lets parameterized commands narrow mesh-map inputs for one execution. The returned
+    /// mask must be a subset of the descriptor's resolved mesh-map contract. Returning None
+    /// avoids mesh-map generation and snapshots when a mode only needs UV coordinates.
+    /// </summary>
+    public interface ITexturePaintDynamicMeshMapUsageV2
+    {
+        TexturePaintMeshMapMask ResolveMeshMaps(TexturePaintPluginParameterSet parameters);
     }
 
     public sealed class TexturePaintPluginArtifact

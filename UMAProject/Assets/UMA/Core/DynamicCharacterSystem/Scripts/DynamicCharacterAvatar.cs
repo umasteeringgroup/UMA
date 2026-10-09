@@ -4802,6 +4802,7 @@ namespace UMA.CharacterSystem
                 //New event that allows for tweaking the resulting recipe before the character is actually generated
                 RecipeUpdated.Invoke(umaData);
 
+                umaData.FireRecipePreparedEvents();
                 if (umaRace != umaData.umaRecipe.raceData)
                 {
                     UpdateNewRace();
@@ -5944,6 +5945,7 @@ namespace UMA.CharacterSystem
                 // DumpDNA("chinPosition", "after restore DNA");
             }
             
+            umaData.FireRecipePreparedEvents();
             AddMeshModifiers(baseRaceRecipe as UMATextRecipe);
             for(int i=0;i<wardrobeRecipes.Count;i++)
             {

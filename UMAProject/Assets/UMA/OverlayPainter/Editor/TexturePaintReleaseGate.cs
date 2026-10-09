@@ -33,7 +33,7 @@ namespace UMA.TexturePaint.Editor
 
     public sealed class TexturePaintReleaseGate : EditorWindow
     {
-        private static string Root => UMAPathUtility.ResolveInstallAssetPath("OverlayPainter") + "/";
+        private static string Root => TexturePaintAssets.ResolveInstallAssetPath("OverlayPainter") + "/";
         private TexturePaintReleaseGateReport report;
         private Vector2 scroll;
 
@@ -172,9 +172,8 @@ namespace UMA.TexturePaint.Editor
                 "CSApplyPluginTile");
             string[] documents =
             {
-                "RELEASE_READINESS_PLAN.md", "PLUGIN_API_V2.md", "MILESTONE_8_WORKSPACE.md",
-                "MILESTONE_9_RELEASE_GATE.md", "QA/RELEASE_GATE.md", "QA/Run-TexturePaintReleaseGate.ps1",
-                "QA/Run-TexturePaintReleaseGate.cmd"
+                "README.md", "Documentation/OverlayPainter.md", "Documentation/OverlayPainter_PLUGIN_API_V2.md",
+                "QA/RELEASE_GATE.md", "QA/Run-TexturePaintReleaseGate.ps1", "QA/Run-TexturePaintReleaseGate.cmd"
             };
             for (int i = 0; i < documents.Length; i++)
                 Add(report, "Release assets", documents[i], File.Exists(Path.GetFullPath(Root + documents[i])),

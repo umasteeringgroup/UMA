@@ -2,6 +2,10 @@
     flex-grow: 1;
     -unity-text-align: middle-left;
     min-height: 22px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     margin-bottom: 2px;
     font-size: 13px;
 }

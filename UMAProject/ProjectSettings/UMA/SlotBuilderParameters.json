@@ -1,8 +1,8 @@
 {
     "slotName": "UMA30_Body",
     "RootBone": "Global",
-    "createOverlay": false,
-    "createRecipe": false,
+    "createOverlay": true,
+    "createRecipe": true,
     "isBaseRaceRecipe": false,
     "addToGlobalLibrary": false,
     "binarySerialization": true,
@@ -46,7 +46,7 @@
     "filterIgnoreMeshesContaining": "UMA30",
     "filterOnlyIncludeMeshesEnabled": false,
     "filterOnlyIncludeMeshesContaining": "robe",
-    "lastDroppedFbxPath": "Assets/temp/TestArmor.fbx",
+    "lastDroppedFbxPath": "Assets/temp/UMA_3_Clothing_Hair_selected.fbx",
     "pendingSmrsCompactView": true,
     "pendingSmrsFilterEnabled": false
 }

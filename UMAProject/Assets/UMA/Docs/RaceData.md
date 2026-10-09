@@ -322,7 +322,7 @@ Configure and test manual renderer bounds.
 
 - [ContentCreation.md](ContentCreation.md)
 - [CreatingANewRace.md](CreatingANewRace.md)
-- [GettingStarted.md](GettingStarted.md)
+- [GettingStarted.md](!GettingStarted.md)
 - [DynamicCharacterAvatar.md](DynamicCharacterAvatar.md)
 - [DNACreationGuide.md](DNACreationGuide.md)
 - [WardrobeRecipeEditor.md](WardrobeRecipeEditor.md)
