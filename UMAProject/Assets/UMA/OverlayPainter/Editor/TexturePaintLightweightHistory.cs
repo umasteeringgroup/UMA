@@ -295,6 +295,13 @@ namespace UMA.TexturePaint.Editor
             peers = new List<TexturePaintLogicalLayerMember>();
             error = null;
             if (set == null || layer == null) { error = "No texture layer is selected."; return false; }
+            // Projection edits replace the layer with a history snapshot. Resolve the live
+            // member by identity so controls holding the previous snapshot cannot edit it.
+            if (!set.layers.Contains(layer))
+            {
+                layer = set.layers.Find(candidate => candidate.id == layer.id);
+                if (layer == null) { error = "The selected texture layer is no longer present."; return false; }
+            }
             if (string.IsNullOrEmpty(layer.logicalLayerId) || string.IsNullOrEmpty(layer.paintTargetId) ||
                 controller?.LogicalLayers == null)
             {
@@ -1090,6 +1097,77 @@ namespace UMA.TexturePaint.Editor
                 peer.targetMember.udimTileNumber;
         }
 
+        private bool AddPaintedMaskEffectWithHistory(TextureSet set, TexturePaintLayer layer,
+            TexturePaintLayerMaskEffects effects, bool white)
+        {
+            if (effects == null || !TryResolveLogicalPeers(set, layer,
+                out List<TexturePaintLogicalLayerMember> peers, out _)) return false;
+            foreach (var peer in peers)
+                if (peer.layer.layerMask?.target?.Front == null) return false;
+
+            var before = new Dictionary<TexturePaintLayer, TexturePaintLayerMask>();
+            var after = new Dictionary<TexturePaintLayer, TexturePaintLayerMask>();
+            float baseValue = white ? 1f : 0f;
+            string name = white ? "White Painted Mask" : "Black Painted Mask";
+            var nextEffects = effects.Clone();
+            nextEffects.Normalize();
+            // There is one editable paint surface per layer. Replacing its stack entries avoids
+            // an old disabled/zero-opacity entry, or applying the same painted coverage twice.
+            nextEffects.stack.RemoveAll(effect => effect.kind == TexturePaintMaskEffectKind.PaintedMask);
+            var painted = TexturePaintMaskEffect.Create(TexturePaintMaskEffectKind.PaintedMask);
+            painted.name = name;
+            painted.enabled = true;
+            painted.opacity = 1f;
+            painted.blend = TexturePaintMaskBlend.Multiply;
+            nextEffects.stack.Add(painted);
+            nextEffects.startFromPaint = false;
+            nextEffects.initialValue = 1f;
+            try
+            {
+                foreach (var peer in peers)
+                {
+                    var previous = peer.layer.layerMask;
+                    var next = new TexturePaintLayerMask
+                    {
+                        baseValue = baseValue,
+                        effects = nextEffects.Clone(),
+                        pluginId = previous.pluginId,
+                        pluginVersion = previous.pluginVersion,
+                        pluginParametersJson = previous.pluginParametersJson,
+                        pluginParameters = previous.pluginParameters?.Clone() ?? new TexturePaintPluginParameterSet(),
+                        pluginStale = previous.pluginStale,
+                        pluginLastError = previous.pluginLastError
+                    };
+                    before[peer.layer] = previous;
+                    after[peer.layer] = next;
+                    next.target = new EditableTextureTarget(peer.layer.name + " Layer Mask",
+                        previous.target.Width, previous.target.Height, previous.target.Front.format,
+                        null, TextureSet.MaskColor(baseValue));
+                    next.SetPaintValue(1f - baseValue);
+                    next.CopyReferenceOutputs(previous);
+                }
+            }
+            catch
+            {
+                foreach (var mask in after.Values) mask.Dispose();
+                throw;
+            }
+            Action restore = () => ApplyLayerMaskClipboardState(peers, before);
+            Action apply = () => ApplyLayerMaskClipboardState(peers, after);
+            apply();
+            PushLightweightCommand("Add " + name, restore, apply, () =>
+            {
+                foreach (var peer in peers)
+                {
+                    if (!ReferenceEquals(peer.layer.layerMask, before[peer.layer])) before[peer.layer].Dispose();
+                    if (!ReferenceEquals(peer.layer.layerMask, after[peer.layer])) after[peer.layer].Dispose();
+                }
+            });
+            layerMaskPaintValue = 1f - baseValue;
+            MarkDocumentDirty(peers);
+            return true;
+        }
+
         private void ChangeLayerMaskEffects(TextureSet set, TexturePaintLayer layer,
             TexturePaintLayerMaskEffects effects)
         {
@@ -1265,6 +1343,19 @@ namespace UMA.TexturePaint.Editor
         private void ChangeLayerNormalControlStrength(TextureSet set, TexturePaintLayer layer,
             float strength)
         {
+            ChangeLayerNormalControlSettings(set, layer, strength, null);
+        }
+
+        private void ChangeLayerNormalControlSettings(TextureSet set, TexturePaintLayer layer,
+            float strength, bool? invert)
+        {
+            ChangeLayerNormalControlOptions(set, layer, strength, invert, null);
+        }
+
+        private void ChangeLayerNormalControlOptions(TextureSet set, TexturePaintLayer layer,
+            float strength, bool? invert, int? radius)
+        {
+            if (layer?.kind == TexturePaintLayerKind.Projection) layer = CurrentProjection(set, layer.id);
             if (set == null || layer == null ||
                 !layer.channels.ContainsKey(TexturePaintChannel.NormalControl)) return;
             if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
@@ -1273,7 +1364,7 @@ namespace UMA.TexturePaint.Editor
                 ShowWorkspaceStatus(error);
                 return;
             }
-            strength = Mathf.Clamp(strength, 0f, 16f);
+            strength = Mathf.Clamp(strength, 0f, 64f);
             var before = new Dictionary<TexturePaintLayer, TexturePaintLayerChannelSettings>();
             var after = new Dictionary<TexturePaintLayer, TexturePaintLayerChannelSettings>();
             for (int i = 0; i < peers.Count; i++)
@@ -1290,6 +1381,8 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintLayerChannelSettings updated = settings.Clone();
                 updated.hasNormalControlStrength = true;
                 updated.normalControlStrength = strength;
+                if (invert.HasValue) updated.normalControlInvert = invert.Value;
+                if (radius.HasValue) updated.normalControlRadius = Mathf.Clamp(radius.Value, 1, 16);
                 after[peer.layer] = updated;
             }
 
@@ -1305,7 +1398,7 @@ namespace UMA.TexturePaint.Editor
             }
 
             Apply(after);
-            PushLightweightCommand("Change Normal Control Height Strength",
+            PushLightweightCommand("Change Layer Normal Control",
                 () => Apply(before), () => Apply(after), null,
                 "normal-control-layer-strength:" + layer.id);
             MarkDocumentDirty(peers);

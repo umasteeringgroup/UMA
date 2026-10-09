@@ -62,6 +62,52 @@ namespace UMA.TexturePaint.Editor.Tests
             }
         }
 
+        [TestCase(false)] [TestCase(true)]
+        public void PathEditingReleasesSelectionToolButPreservesSelectionAndMaskEditing(bool worldSpace)
+        {
+            using var p=new Path(worldSpace);
+            var toolType=typeof(TexturePaintStageWindow).GetNestedType("RegionTool",BindingFlags.NonPublic);
+            object lasso=Enum.Parse(toolType,"Lasso");
+            Set(p.stage,"regionTool",lasso);Set(p.stage,"regionDragging",true);
+            var region=TexturePaintRegion.Encode(2,2,new byte[]{0,255,255,255});
+            p.set.activeRegion=region;
+            var click=new Event{type=EventType.MouseDown,button=0};
+            Assert.That(worldSpace ? Invoke(p.stage,"HandleRegionScene",null,click)
+                : Invoke(p.stage,"HandleRegionUV",default(Rect),default(Rect),p.set),Is.False);
+            Assert.That(Get<object>(p.stage,"regionTool").ToString(),Is.EqualTo("Paint"));
+            Assert.That(Get<bool>(p.stage,"regionDragging"),Is.False);
+            Assert.That(p.set.activeRegion,Is.SameAs(region),"Do not silently discard an output restriction.");
+            Assert.That(click.type,Is.EqualTo(EventType.MouseDown),"Path editing must still receive the click.");
+            p.layer.layerMask=new TexturePaintLayerMask{target=new EditableTextureTarget(
+                "Path selection mask",2,2,RenderTextureFormat.ARGB32,null,Color.white)};
+            Set(p.stage,"layerMaskMode",true);Set(p.stage,"regionTool",lasso);
+            Assert.That(Invoke(p.stage,"SuspendRegionToolForNonPaintLayer",p.set),Is.False);
+            Assert.That(Get<object>(p.stage,"regionTool"),Is.EqualTo(lasso),"Mask painting still supports region tools.");
+        }
+
+        [TestCase(TexturePaintLayerKind.Paint, false)]
+        [TestCase(TexturePaintLayerKind.Fill, true)]
+        [TestCase(TexturePaintLayerKind.Group, true)]
+        [TestCase(TexturePaintLayerKind.Plugin, true)]
+        [TestCase(TexturePaintLayerKind.Projection, true)]
+        [TestCase(TexturePaintLayerKind.Reference, true)]
+        public void SelectionToolsFollowLayerContentAndRemainAvailableForMasks(TexturePaintLayerKind kind,bool suspended)
+        {
+            using var p=new Path(false);
+            p.layer.kind=kind;
+            object lasso=Enum.Parse(typeof(TexturePaintStageWindow).GetNestedType("RegionTool",BindingFlags.NonPublic),"Lasso");
+            Set(p.stage,"regionTool",lasso);
+            var region=TexturePaintRegion.Encode(2,2,new byte[]{0,255,255,255});p.set.activeRegion=region;
+            Assert.That(Invoke(p.stage,"SuspendRegionToolForNonPaintLayer",p.set),Is.EqualTo(suspended));
+            Assert.That(Get<object>(p.stage,"regionTool").ToString(),Is.EqualTo(suspended?"Paint":"Lasso"));
+            Assert.That(p.set.activeRegion,Is.SameAs(region));
+            p.layer.layerMask=new TexturePaintLayerMask{target=new EditableTextureTarget(
+                "Layer selection mask",2,2,RenderTextureFormat.ARGB32,null,Color.white)};
+            Set(p.stage,"layerMaskMode",true);Set(p.stage,"regionTool",lasso);
+            Assert.That(Invoke(p.stage,"SuspendRegionToolForNonPaintLayer",p.set),Is.False);
+            Assert.That(Get<object>(p.stage,"regionTool"),Is.EqualTo(lasso));
+        }
+
         [TestCase(false,false)] [TestCase(false,true)]
         [TestCase(true,false)] [TestCase(true,true)]
         public void ToolbarTurnsOffLegacyBrushMirrorWithUndoPersistenceAndAutoUpdate(bool worldSpace,bool autoUpdate)

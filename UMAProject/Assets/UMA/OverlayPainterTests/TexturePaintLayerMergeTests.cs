@@ -509,6 +509,33 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(Invoke(stage, "UndoLightweight"), Is.False);
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void GroupMergeBakesLayerHeightSamplingOnce(bool invert)
+        {
+            var channel = TexturePaintChannel.NormalControl;
+            var set = Set(channel);
+            set.GetChannel(channel).editable.Reset(null, new Color(.5f, .5f, .5f, 1));
+            var stage = Stage();
+            var group = Group(set, "Sampled height group");
+            group.opacity = .7f;
+            var layer = Paint(set, "Masked height", Color.clear, group);
+            layer.channels[channel].Reset(Image((x, y) =>
+                x >= 20 && x < 40 && y >= 12 && y < 48 ? new Color(.8f, .8f, .8f, .6f) : Color.clear), Color.clear);
+            var mask = set.AddLayerMask(layer, 1);
+            mask.target.Reset(Image((x, y) => y < 32 ? Color.white : Color.black), Color.black);
+            var settings = layer.GetChannelSettings(channel);
+            settings.hasNormalControlStrength = true;
+            settings.normalControlStrength = 8;
+            settings.normalControlInvert = invert;
+            settings.normalControlRadius = 5;
+            var before = Composite(set, channel);
+            Assert.That(Invoke(stage, "MergeGroupToPaintLayer", set, group), Is.True);
+            Assert.That(set.layers.Single().GetChannelSettings(channel).normalControlRadius, Is.EqualTo(1),
+                "Merged pixels already contain the sampling footprint.");
+            TexturePaintGpuTestFixture.AssertImage("Merged sampled height", before, Composite(set, channel));
+        }
+
         [Test]
         public void MergingZeroStrengthHeightLayersCannotEnableNormalExport()
         {

@@ -18,6 +18,9 @@ namespace UMA.TexturePaint
         public TexturePaintBrushSource source = TexturePaintBrushSource.Texture;
         public OverlayDataAsset overlay;
         public Color color = Color.white;
+        public Color multiplier = Color.white;
+        public Color additive = Color.clear;
+        [Range(0, 16)] public int blur;
         public bool invert;
         public bool HasSource => source == TexturePaintBrushSource.Color ||
             (source == TexturePaintBrushSource.Overlay ? overlay != null : texture != null || sprite != null);
@@ -28,17 +31,19 @@ namespace UMA.TexturePaint
             if (source == TexturePaintBrushSource.Overlay)
                 return set != null && set.TryResolveOverlaySource(overlay, channel, normalConvention, invert,
                     out Texture resolved, out _) ? resolved : null;
-            return TexturePaintSpriteSource.Resolve(texture, sprite, channel, normalConvention, invert);
+            return TexturePaintSpriteSource.Resolve(texture, sprite, channel, normalConvention, invert, blur);
         }
         public TexturePaintChannelSourceSettings ToChannelSettings() => new TexturePaintChannelSourceSettings
         {
             source = source, sourceTexture = texture, sourceSprite = sprite, sourceOverlay = overlay,
-            color = color, invert = invert, normalConvention = normalConvention
+            color = color, multiplier = multiplier, additive = additive, blur = blur, invert = invert, normalConvention = normalConvention
         };
         public void ApplyChannelSettings(TexturePaintChannelSourceSettings settings)
         {
             source = settings.source; texture = settings.sourceTexture; sprite = settings.sourceSprite;
             overlay = settings.sourceOverlay; color = settings.color; invert = settings.invert;
+            multiplier = settings.multiplier; additive = settings.additive;
+            blur = settings.blur;
             normalConvention = settings.normalConvention;
         }
     }
@@ -100,11 +105,17 @@ namespace UMA.TexturePaint
             return first;
         }
 
-        // Every map shares the albedo silhouette. Without albedo, the first assigned map owns it.
-        public Texture ResolveCoverage()
+        // Material maps share this silhouette. Textured Normal Control uses its own alpha.
+        // Without albedo, the first assigned map owns the shared silhouette.
+        public Texture ResolveCoverage() => ResolveCoverage(0);
+
+        public Texture ResolveCoverage(int blur)
         {
             if (source == TexturePaintBrushSource.Overlay) return TextureSet.GetOverlayFillCoverage(overlay);
             var preferred = PreferredSource();
+            if (preferred?.source == TexturePaintBrushSource.Texture)
+                return TexturePaintSpriteSource.Resolve(preferred.texture, preferred.sprite, preferred.channel,
+                    preferred.normalConvention, preferred.invert, blur);
             return preferred?.source == TexturePaintBrushSource.Overlay
                 ? TextureSet.GetOverlayFillCoverage(preferred.overlay) : preferred?.Resolve();
         }

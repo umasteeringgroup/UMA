@@ -20,6 +20,9 @@ Shader "Hidden/UMA/TexturePaint/Projection"
             float _HalfDepth, _DepthMin, _DepthMax, _DepthFade, _EdgeWidth, _AngleStart, _AngleEnd, _VisibilityTolerance;
             float2 _Flip;
             sampler2D _Source, _Coverage, _Visibility, _Outline, _Curve;
+            float4 _SourceMultiplier, _SourceAdditive;
+            float2 _CoverageAlpha;
+            int _UseSourceCoverage;
             struct Attributes { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; };
             struct Varyings { float4 position : SV_POSITION; float3 world : TEXCOORD0; float3 normal : TEXCOORD1; float2 uv : TEXCOORD2; };
             Varyings Vert(Attributes input)
@@ -90,6 +93,7 @@ Shader "Hidden/UMA/TexturePaint/Projection"
                 if (_Fade == 3) distance = tex2Dlod(_Outline, float4(uv, 0, 0)).r;
                 if (_Fade != 0) alpha *= _EdgeWidth > 0 ? Curve(distance / _EdgeWidth) : step(0, distance);
                 float4 source = tex2Dlod(_Source, float4(uv, 0, 0));
+                source = source * _SourceMultiplier + _SourceAdditive;
                 if (_GarmentEnabled != 0)
                     source=ShadeGarment(uv,input.uv,max(length(float2(ddx(uv.x),ddy(uv.x))),.0001),
                         false,input.world,input.normal,float4(0,0,0,1));
@@ -108,7 +112,8 @@ Shader "Hidden/UMA/TexturePaint/Projection"
                     bitangent = cross(normal, tangent) * signV;
                     source.rgb = float3(dot(worldNormal, tangent), dot(worldNormal, bitangent), dot(worldNormal, normal)) * 0.5 + 0.5;
                 }
-                source.a = (_GarmentEnabled != 0 ? source.a : tex2Dlod(_Coverage, float4(uv, 0, 0)).a) * alpha;
+                source.a = (_GarmentEnabled != 0 || _UseSourceCoverage != 0 ? saturate(source.a) :
+                    saturate(tex2Dlod(_Coverage, float4(uv, 0, 0)).a * _CoverageAlpha.x + _CoverageAlpha.y)) * alpha;
                 if (source.a <= 0) discard;
                 return source;
             }

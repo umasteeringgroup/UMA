@@ -152,10 +152,12 @@ namespace UMA.TexturePaint
             private readonly bool sourceSrgb;
             private readonly bool invert;
             private readonly int component;
+            private readonly int blur;
+            private readonly uint revision;
 
             public CacheKey(Texture texture, Sprite sprite, TexturePaintChannel channel,
                 TexturePaintNormalConvention convention, bool unityNormalMap, bool invert,
-                int component)
+                int component, int blur = 0)
             {
                 textureId = texture != null ? texture.GetEntityId() : EntityId.None;
                 spriteId = sprite != null ? sprite.GetEntityId() : EntityId.None;
@@ -167,13 +169,15 @@ namespace UMA.TexturePaint
                 sourceSrgb = texture != null && texture.isDataSRGB;
                 this.invert = invert;
                 this.component = component;
+                this.blur = blur;
+                revision = texture != null ? texture.updateCount : 0;
             }
 
             public bool Equals(CacheKey other)
                 => textureId == other.textureId && spriteId == other.spriteId && channel == other.channel &&
                    convention == other.convention && unityNormalMap == other.unityNormalMap &&
                    sourceSrgb == other.sourceSrgb && invert == other.invert &&
-                   component == other.component;
+                   component == other.component && blur == other.blur && revision == other.revision;
 
             public override bool Equals(object obj) => obj is CacheKey other && Equals(other);
 
@@ -188,7 +192,9 @@ namespace UMA.TexturePaint
                     hash = hash * 397 ^ (unityNormalMap ? 1 : 0);
                     hash = hash * 397 ^ (sourceSrgb ? 1 : 0);
                     hash = hash * 397 ^ (invert ? 1 : 0);
-                    return hash * 397 ^ component;
+                    hash = hash * 397 ^ component;
+                    hash = hash * 397 ^ blur;
+                    return hash * 397 ^ revision.GetHashCode();
                 }
             }
         }
@@ -211,6 +217,10 @@ namespace UMA.TexturePaint
 
         public static Texture2D Resolve(Texture2D texture, Sprite sprite,
             TexturePaintChannel channel, TexturePaintNormalConvention convention, bool invert)
+            => Resolve(texture, sprite, channel, convention, invert, 0);
+
+        public static Texture2D Resolve(Texture2D texture, Sprite sprite,
+            TexturePaintChannel channel, TexturePaintNormalConvention convention, bool invert, int blur)
         {
             Texture2D source = sprite != null ? sprite.texture : texture;
             if (source == null) return null;
@@ -218,8 +228,8 @@ namespace UMA.TexturePaint
             // because both Unity Normal Map assets and raw RGB normal data must be converted to
             // one predictable representation before vector blending.
             if (sprite == null && channel != TexturePaintChannel.Normal &&
-                !TexturePaintChannelUtility.IsGrayscale(channel) && !invert) return texture;
-            return Extract(source, sprite, channel, convention, invert);
+                !TexturePaintChannelUtility.IsGrayscale(channel) && !invert && blur <= 0) return texture;
+            return Extract(source, sprite, channel, convention, invert, blur: Mathf.Clamp(blur, 0, 16));
         }
 
         public static Texture ResolveTexture(Texture texture, TexturePaintChannel channel,
@@ -272,13 +282,13 @@ namespace UMA.TexturePaint
 
         private static Texture2D Extract(Texture source, Sprite sprite,
             TexturePaintChannel channel, TexturePaintNormalConvention convention, bool invert,
-            bool forceUnityPackedNormal = false, int component = -1)
+            bool forceUnityPackedNormal = false, int component = -1, int blur = 0)
         {
             bool normal = channel == TexturePaintChannel.Normal;
             bool grayscale = TexturePaintChannelUtility.IsGrayscale(channel);
             bool unityNormalMap = normal && (forceUnityPackedNormal || IsUnityNormalMap(source));
             CacheKey key = new CacheKey(source, sprite, channel, convention, unityNormalMap, invert,
-                component);
+                component, blur);
             if (Cache.TryGetValue(key, out Texture2D cached) && cached != null) return cached;
 
             Rect sourceRect = new Rect(0f, 0f, source.width, source.height);
@@ -327,7 +337,7 @@ namespace UMA.TexturePaint
 
             bool linear = normal || grayscale || component >= 0 || !source.isDataSRGB;
             RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0,
-                RenderTextureFormat.ARGB32, linear
+                blur > 0 ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGB32, linear
                     ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.Default);
             RenderTexture previous = RenderTexture.active;
             Texture2D result = null;
@@ -348,8 +358,25 @@ namespace UMA.TexturePaint
                 material.SetInt("_Grayscale", grayscale ? 1 : 0);
                 material.SetInt("_SourceComponent", component);
                 Graphics.Blit(source, temporary, material, component >= 0 ? 1 : normal ? 2 : 0);
+                if (blur > 0)
+                {
+                    // Extract the sprite first, so filtering never pulls in neighboring atlas tiles.
+                    // Work with associated alpha in linear space, then recover straight RGB.
+                    var horizontal = RenderTexture.GetTemporary(width, height, 0,
+                        RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Linear);
+                    try
+                    {
+                        temporary.wrapMode = sprite != null ? TextureWrapMode.Clamp : source.wrapMode;
+                        horizontal.wrapMode = temporary.wrapMode;
+                        material.SetInt("_BlurRadius", blur);
+                        material.SetInt("_BlurNormal", normal ? 1 : 0);
+                        Graphics.Blit(temporary, horizontal, material, 3);
+                        Graphics.Blit(horizontal, temporary, material, 4);
+                    }
+                    finally { RenderTexture.ReleaseTemporary(horizontal); }
+                }
                 RenderTexture.active = temporary;
-                result = new Texture2D(width, height, TextureFormat.RGBA32, false, linear)
+                result = new Texture2D(width, height, blur > 0 ? TextureFormat.RGBAHalf : TextureFormat.RGBA32, false, linear)
                 {
                     name = (sprite != null ? sprite.name : source.name) +
                            (component >= 0 ? $" (Overlay Painter {channel} Component {component})" :
@@ -357,8 +384,8 @@ namespace UMA.TexturePaint
                             grayscale ? " (Overlay Painter Grayscale Source)" :
                                invert ? " (Overlay Painter Inverted Source)" : " (Overlay Painter Sprite)"),
                     hideFlags = HideFlags.HideAndDontSave,
-                    filterMode = source.filterMode,
-                    wrapMode = TextureWrapMode.Clamp
+                    filterMode = blur > 0 ? FilterMode.Bilinear : source.filterMode,
+                    wrapMode = blur > 0 && sprite == null ? source.wrapMode : TextureWrapMode.Clamp
                 };
                 result.ReadPixels(new Rect(0f, 0f, width, height), 0, 0, false);
                 // Keep the cache readable so the existing CPU fallback samples the same Sprite
@@ -598,6 +625,9 @@ namespace UMA.TexturePaint
         public TexturePaintPathFlipMode textureFlipY;
         public int textureFlipSeed;
         public bool ribbonCrossfadeJoins;
+        // Intrinsic ribbon coordinates are measured in base path widths, without tile fitting.
+        // Image sampling then uses the resolved source's actual aspect ratio.
+        public bool ribbonPreserveTextureAspect;
         [Range(0f, 1f)] public float ribbonJoinOverlap = .2f;
 
         public float ribbonStartFade;

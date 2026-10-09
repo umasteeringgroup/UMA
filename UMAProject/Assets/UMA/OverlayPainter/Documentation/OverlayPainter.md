@@ -310,11 +310,30 @@ Properties are contextual. The available sections can include:
 - Destination.
 - Channels, including the **Paint / Preview Channel**, Solo, and Before controls.
 - Active Layer, including Fill or Path settings when applicable.
-- Layer Channels. Every authored channel has its own source, Enabled state, paint lock, paint strength, opacity, and blend mode.
+- Layer Channels & Settings. Collapse the whole section to hide its contents; the foldout state is remembered. Inside, **New Channel**, the channel dropdown, and **Add Channel** share one row above the existing channels. Adding a channel opens its settings. Generated and referenced outputs hide manual channel-add controls when their source owns the channel list.
 - Path.
 - Plugins.
 - Document.
 - Performance and Memory.
+
+The panel follows the selected layer type:
+
+| Layer | Relevant controls |
+|---|---|
+| Paint | Selection tools, symmetry, editable channel sources, paint locks and strength |
+| Fill | Fill sources and channel blending; mapping and transforms appear for image sources |
+| Path | Path shape and generator controls; channels use Path Strength and Lock Path Updates where applicable |
+| Projection | Placement and projection settings, symmetry, and projected channel sources |
+| Plugin | Generator parameters, output settings, and channel blending |
+| Group | Group opacity/blending, masks, region placement, and references; no authored-channel section |
+| Reference | Content source, UV placement, tint, masks, and channel preview/blending |
+
+Instances hide inherited content settings while retaining editable local placement and masks.
+Paint a layer mask to expose selection and mask tools for any layer type. Existing selections
+retain a notice and Clear action when their editing controls are hidden. Fixed destination controls,
+redundant type labels, and inapplicable controls are omitted; temporarily unavailable controls such
+as a running generator's parameters remain visible. Image projections offer **Convert to Garment…**
+instead of displaying unused garment settings.
 
 Brush and Stroke/Projection properties are in **Overlay Painter Brush**, above the Asset Shelf.
 
@@ -389,11 +408,12 @@ shader property, an `UMAMaterial.MaterialChannel`, or a separate exported runtim
 - Height gradients bend the normal. A constant dark or light area has no slope in its interior, so
   only its transitions produce visible normal detail.
 - **Height Strength** is stored on each authored layer's Normal Control channel and scales only that
-  layer's generated slope. Changing it on one Paint, Fill, or Path layer does not rescale any other
-  Normal Control layer.
-- **Sample Radius** controls the neighboring texel distance used for the gradient, and **Invert
-  Height** reverses raised and recessed interpretation. These two conversion settings remain shared
-  by the texture target so every Normal Control layer uses the same sampling convention.
+  layer's generated slope, with a range of 0–64. Changing it on one Paint, Fill, Path, or Projection
+  layer does not rescale any other Normal Control layer.
+- **Invert Height** reverses raised and recessed height for this layer only.
+- **Sample Radius** (1–16 pixels) controls this layer's height sampling footprint. Larger values
+  soften its height transitions, including masks and effects, without resampling other layers.
+  The default of 1 preserves the original detail. The authored source pixels remain unchanged.
 
 Normal Control is a full layer channel. It can be authored with Paint, Fill, Path, Polygon Fill, UV
 Island Fill, groups, layer masks, and layer effects. Color and texture input is constrained to
@@ -404,7 +424,8 @@ the effective normal after Normal Control has been combined with the ordinary no
 material preview always receives that effective normal.
 
 The document saves the Normal Control base, every layer-channel texture and source, each channel's
-Height Strength, and the target's Sample Radius/Invert Height settings. Older documents that do not
+Height Strength, Invert Height, and Sample Radius. Legacy target-wide conversion settings remain
+saved for compatibility but are not exposed in the layer/channel controls. Older documents that do not
 contain a per-channel Height Strength initially inherit their saved target strength; the value
 becomes independent as soon as that layer channel is edited. **Flattened Composite** export bakes
 the result into the physical normal output. **Runtime Overlay (Transparent)** converts authored
@@ -860,7 +881,7 @@ Each authored channel can expose:
 - **Channel Opacity**: scales this channel during composition.
 - **Channel Blend**: chooses the blend behavior for this channel.
 - **Height Strength** on Normal Control: scales only this layer channel's contribution to the
-  effective normal. Sample Radius and Invert Height remain target-level conversion settings.
+  effective normal. **Invert Height** and **Sample Radius** also affect only this layer channel.
 - Source and source-specific settings.
 
 Use **New Channel** and **Add Channel** to add another channel supported by the active material. Channels already authored by the layer are omitted from the dropdown. Expanding a channel foldout selects it as the Paint / Preview Channel. The current channel is marked **Active Preview Channel**; each foldout exposes its own source and composition settings.
@@ -868,6 +889,19 @@ Use **New Channel** and **Add Channel** to add another channel supported by the 
 Use **Remove Channel** inside a channel foldout to delete that channel's texture and settings. Overlay Painter asks for confirmation and keeps the operation undoable. Effects targeting the removed channel are retargeted to the layer's first remaining channel, or disabled when no channel remains, so the effect stack never contains an enabled invisible target.
 
 Use channel controls for a coordinated material layer whose Albedo should remain strong while its Normal or Roughness contribution is reduced.
+
+Texture and Sprite sources expose **Multiplier** and **Additive** colors directly beneath the source fields. The result is `source RGBA × Multiplier RGBA + Additive RGBA`, including alpha. Opaque white and transparent black are the defaults, leaving the source unchanged. Reduce Multiplier alpha to reduce opacity; increase Additive alpha to make transparent areas more opaque. RGB colors use the channel's working color space, while alpha stays numeric. Grayscale channels use the colors' luminance.
+
+**Blur (px)** softens a Texture/Sprite source before its color adjustments. It defaults to **0**
+(unchanged) and supports **0–16 source pixels**. Start with **1–2** to soften stair-stepped icon edges;
+larger values produce broader transitions. Color and alpha are filtered together without dark
+transparent fringes, sprite atlas neighbors stay excluded, and normal-map vectors are normalized.
+The setting belongs to the current layer and channel, including channels that share a silhouette.
+It supports saving and Undo/Redo across Fill, Projection, Paint, and Path sources, including ribbon
+beginning/end tiles. Paint uses the setting for new strokes; regenerate paths to update existing
+path output when Auto Update is off. Original textures and sprites are never modified.
+
+These controls apply to Fill, Path, Projection, and Paint sources. Paint changes affect subsequent strokes; they do not recolor existing strokes. Where material channels share an Albedo silhouette, Albedo's alpha adjustments update that shared coverage, and each other texture channel can further adjust its own alpha.
 
 **Lock Painting** is per channel, not a complete layer lock. Check every authored channel before assuming a layer is protected.
 
@@ -1153,7 +1187,7 @@ A Projection layer holds **one projection**, fixed in world space while it remai
 5. Click the desired location on the model. The projection moves there and aligns to the new surface normal.
 6. Use the axis handles to size it, trace the ring to rotate it, and adjust depth to include the intended surface.
 
-Each channel has its own Texture/Sprite, Overlay, or Color source, enabled state, inversion, opacity, and blend settings. The same placement, wrapping, and fade apply to all channels. Albedo alpha supplies their common silhouette; without Albedo, the first assigned map supplies it. Normal maps are reoriented into the receiving surface's tangent space.
+Each channel has its own Texture/Sprite, Overlay, or Color source, enabled state, inversion, opacity, and blend settings. The same placement, wrapping, and fade apply to all channels. Albedo alpha supplies the common material silhouette; without Albedo, the first assigned map supplies it. **Normal Control textures and sprites use their own alpha**, including their Multiplier/Additive alpha adjustments: transparent height pixels leave the underlying height and normal detail unchanged. Fading Albedo does not weaken this independent height source. A constant Color height source continues to follow the common silhouette. Normal maps are reoriented into the receiving surface's tangent space.
 
 Old single-source and overlay-wide projections retain their maps when opened and can be edited through these per-channel controls. Selecting the Paint / Preview Channel changes what you inspect; it does not replace the other assigned maps.
 
@@ -1653,7 +1687,7 @@ The stack provides 44 effect kinds:
 | Family | Effects and purpose |
 |---|---|
 | Basic inputs | **Fill** supplies a constant; **Texture** reads luminance/R/G/B/alpha; **Painted Mask** reads the original editable raster; **Layer Reference** reads another layer, channel component, or mask |
-| Noise and cells | **Noise**, **Turbulence**, **Voronoi**, **Cells** generate seeded variation and cell patterns |
+| Noise and cells | **Noise**, **Turbulence**, **Voronoi**, **Cells** generate seeded variation and cell patterns. Voronoi's **Black Expansion** enlarges black centers without changing cell scale; **Contrast** sharpens their transition to white. |
 | Geometric patterns | **Gradient**, **Radial Gradient**, **Stripes**, **Checker**, **Dots** generate controllable UV patterns |
 | Tonal adjustments | **Invert**, **Levels**, **Curves**, **Brightness Contrast**, **Gamma** remap the accumulated grayscale values |
 | Range and segmentation | **Threshold** with softness, **Posterize**, **Clamp**, **Remap**, **Smoothstep** control bands, limits, and transitions |
@@ -1677,8 +1711,15 @@ To generate dirt that you can erase locally without repainting its procedural so
 1. Add a **white** layer mask.
 2. Disable **Start From Painted Mask**.
 3. Add a generator such as **Cavity Dirt** with Replace, then add Levels or Curves to tune it.
-4. Add **Painted Mask** last with **Multiply**.
+4. Add **White Painted Mask** to begin fully revealed, or **Black Painted Mask** to begin hidden.
 5. Paint black on the layer's mask thumbnail to exclude dirt, or white to restore the generator's coverage.
+
+These choices initialize the layer's shared painted raster to white or black, select the opposite
+brush color, and replace existing Painted Mask entries with one enabled **Multiply** entry at
+**Opacity 1**, at the end of the stack. Procedural generation starts from white so painted coverage
+is applied only once. Other effect entries are preserved. Initialization replaces existing paint;
+Undo restores both the pixels and the previous stack. Effects with zero opacity are labeled
+**Opacity 0 — no effect** even when collapsed.
 
 Painting always edits the original raster input. The stack does not flatten back into those pixels. If a later Replace source seems to ignore your painting, move a Painted Mask entry after it and use Multiply. For several independent painted inputs, create separate Paint layers and read them through Layer Reference entries; one mask does not contain multiple independent paint rasters.
 
@@ -1856,13 +1897,24 @@ deleting the final point clears the selection safely.
 
 ### Clothing detail generators
 
+Path Properties show controls for the current path mode. Painting selection tools and the fixed
+layer destination are hidden while editing a path; they return when painting its layer mask.
+An existing painting selection still limits output, so a notice provides **Clear Painting Selections**.
+Switching to path editing releases any active lasso or rectangle tool without deleting the selection.
+Ribbon paths hide stamp orientation, stamp caps, and stamp spacing. Generated paths also hide image
+endpoint tiles, texture mirroring, and image crossfades; use the generator's own controls instead.
+Endpoint fades are hidden for closed paths, and 3D-only controls are hidden for UV paths.
+
 Open the arrow beside **+ Projection** or **+ Path**, then choose **Garments > family > preset**.
 For path stitching, seams, trim, zippers, and linear tears, choose **+ Path > Generators**; see [Path generators](PathGenerators.md).
 Projection is useful for a pocket, knee folds, a patch, or an individual fastener. Path is useful for
-a zipper, waistband, row of fasteners, or a curved strip of wear. Existing Path and Projection layers
-can enable **Garment Generator > Generate Garment Detail** in Properties, then choose a grouped
-**Construction Preset**. Paths offer 48 presets: the 32 constructions below plus the 16
-**Hems & Seams** constructions. Projections offer the 32 constructions below. Only the selected
+a zipper, waistband, row of fasteners, or a curved strip of wear. To convert an existing image path,
+use **Convert to Garment…** in Path Properties, or **Actions > Convert to Garment > family > preset**
+in the path toolbar. Conversion preserves its points, width, and image assignments and supports Undo.
+Ordinary paths hide the garment controls; converted paths retain them even when generation is disabled.
+Existing Projection layers can enable **Garment Generator > Generate Garment Detail** in Properties,
+then choose a grouped **Construction Preset**. Legacy garment paths retain their complete construction
+catalog; new linear constructions use Path Generators. Projections offer the 32 constructions below. Only the selected
 construction's controls are shown. These are native procedural sources on those layers; they do
 not require a Plugin layer or an input image.
 
@@ -1884,8 +1936,12 @@ Selecting a construction activates that generator and disables the other path ge
 hem/seam documents open with their construction selected. Switching preserves path placement,
 width, fades, and assigned image sources, and supports Undo/Redo.
 
-**Ribbon Width** defines a path's working strip, with a slider and an exact numeric field for every
-construction, including hems and seams; projection Width/Height define the generated rectangle.
+**Path Width**, at the top of Path Properties, controls the full width of every path, including
+ordinary stamped paths, image ribbons, and generators. Its slider and exact numeric field use world
+units for 3D paths and normalized UV units for 2D paths. **Point Width (%)** multiplies that width
+locally: 100% uses Path Width, while 50% uses half. Changing Path Width preserves these local variations.
+The control supports Undo/Redo and respects Auto Update; when Auto Update is off, press Update to rebuild.
+Projection Width/Height define the generated rectangle.
 Feature Spacing, Relief Height, Thread Width, and Stitch Spacing use world units on a 3D surface and
 UV units on a 2D path. On a meter-scale model, 0.0035 is 3.5 mm. Stitch inset, opening, fade, tension
 origin, and logo size are relative to the generated area. Adjust the placement to fit the garment
@@ -1976,15 +2032,15 @@ enough texture pixels to resolve it.
 ### Hem / Seam generator
 
 Use **+ Path > Generators > Seams and Trim** and choose a construction preset. For an existing Path layer,
-open **Path Properties > Garment Generator**, select a **Hems & Seams** entry in
-**Construction Preset**, and turn on **Generate Garment Detail**.
+choose a seam in **Path Properties > Path Generator > Generator**. Legacy garment paths also retain
+their **Hems & Seams** construction choices under **Garment Generator**.
 Place and edit the path using the usual 3D surface or 2D texture path controls. The generator
 uses Ribbon mode and follows variable point widths, curves, surface projection, geometry
 selection, symmetry, and UV/UDIM destinations. It requires no source image.
 
 New preset paths start at a full width of 0.025 world units (2.5 cm on a meter-scale garment), with full opacity and no inherited endpoint fades. Existing paths retain their dimensions and fades when generation is enabled.
 
-**Ribbon Width**, available as a slider and an exact numeric field, is the complete ribbon width,
+**Path Width**, available at the top of Path Properties as a slider and an exact numeric field, is the complete ribbon width,
 including its shading margin: world units for
 a 3D path, normalized UV units for a 2D path. Fold widths, stitch positions, thread thickness,
 and stitch spacing are percentages of this width. Point Width remains a multiplier on the
@@ -2105,7 +2161,9 @@ If the layer has an enabled **Edge Fade** effect, Path properties edit that effe
 
 For a zipper ribbon, raise Side Fade to 100 to feather the fabric backing toward the center. Increase it toward 200 or lower Side Curve if backing is still too visible. Tune Start and End independently to keep the zipper teeth while blending the endpoints. Source alpha and these fade controls are retained after moving points, manual Update, Undo/Redo, and save/reopen.
 
-Ribbon mode builds a continuous strip and repeats complete source images without internal stamp edges. Brush Size sets the nominal tile width and length; point width and curve shape deform the strip. Optional Beginning and End sources replace the first and last complete tiles with the same source orientation. Use endpoint fades when those complete tiles also need a soft transition.
+Ribbon mode builds a continuous strip and repeats complete source images without internal stamp edges. **Path Width** sets the strip width. The source image's aspect ratio, including its orientation and a sprite's cropped rectangle, determines the ideal repeat length. The closest whole repeat count is fitted to the path, stretching or compressing the images together slightly instead of clipping the final tile. Optional **Beginning** and **End** images use their own aspect ratios and share that fitting scale, so both remain complete even on short paths. Closed paths omit these endpoint images.
+
+All material channels share the albedo's layout when available, keeping maps aligned even when their resolutions differ. Point Width still deliberately stretches or tapers the strip locally; bends can also deform the image. Use endpoint fades when complete start and end tiles need a soft transition. Procedural path generators retain their own spacing and proportion controls.
 
 ### Alternating and seeded texture mirroring
 
@@ -2130,7 +2188,7 @@ For Ribbon paths, open **Path Properties > Ribbon Tile Joins** and enable **Cros
 
 The outgoing image fades out while the incoming image fades in with the inverse smooth fade. Their weights add up to one: opaque images stay opaque through the join. Transparent source pixels blend without leaking their hidden colors, and normal vectors are blended and normalized. The same transition applies to every channel, including alternating or seeded flips; each image keeps its own flip orientation through the overlap.
 
-Images extend into their neighbors to create the overlap. Tile count, repeat spacing, ribbon geometry, and the ends of the path stay in place. Beginning and End images crossfade with their neighbors on open paths; a single open tile has no join. Closed ribbons also blend the last tile into the first, including a one-tile loop. Side Fade and the whole-path Start/End Fade controls still apply separately.
+Image edge texels extend into their neighbors to create the overlap without stretching the fitted images again. Overlap is limited around shorter endpoint tiles so transitions cannot consume them. Tile count, repeat spacing, ribbon geometry, and the ends of the path stay in place. Beginning and End images crossfade with their neighbors on open paths; a single open tile has no join. Closed ribbons also blend the last tile into the first, including a one-tile loop. Side Fade and the whole-path Start/End Fade controls still apply separately.
 
 Crossfade Joins defaults off to preserve existing artwork. The toggle and overlap amount save with the Path layer, support Undo/Redo, and follow Auto Update. This option is available in Ribbon mode in both 2D and 3D; ordinary stamp overlap still uses brush spacing and softness.
 
@@ -2727,7 +2785,7 @@ The exported overlay is indexed and recipe-ready, but it is not automatically in
 ### Painting does not change a procedural mask
 
 - Painting edits the original mask raster. A later Replace source may replace that input in the effective result.
-- Add **Painted Mask** with Multiply after the procedural entries, and use a white original mask for hand-painted black exclusions.
+- Add **White Painted Mask** after the procedural entries for hand-painted black exclusions; use **Black Painted Mask** to paint white reveals instead. Both initialize the shared paint raster and start at opacity 1.
 - Use **Solo Mask** and disable effects one at a time to find the entry controlling coverage.
 - Check Live Mask Source and Layer Reference diagnostics if the mask depends on another layer.
 

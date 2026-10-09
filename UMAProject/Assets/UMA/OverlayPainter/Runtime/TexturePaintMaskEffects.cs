@@ -86,6 +86,9 @@ namespace UMA.TexturePaint
             value = Finite(value, 1); amount = Mathf.Clamp(Finite(amount, 1), -100, 100);
             threshold = Mathf.Clamp01(Finite(threshold, .5f)); softness = Mathf.Clamp(Finite(softness, .1f), 0, 1);
             inputMin = Finite(inputMin, 0); inputMax = Mathf.Max(inputMin + .00001f, Finite(inputMax, 1));
+            // Voronoi uses the existing union fields for black expansion and contrast.
+            if (kind == TexturePaintMaskEffectKind.Voronoi)
+            { inputMin = Mathf.Clamp01(inputMin); amount = Mathf.Clamp(amount, 1, 8); }
             outputMin = Finite(outputMin, 0); outputMax = Finite(outputMax, 1);
             gamma = Mathf.Clamp(Finite(gamma, 1), .01f, 10);
             octaves = Mathf.Clamp(octaves, 1, 8); steps = Mathf.Clamp(steps, 2, 256);
@@ -102,7 +105,8 @@ namespace UMA.TexturePaint
         }
         public static TexturePaintMaskEffect Create(TexturePaintMaskEffectKind kind)
         {
-            var effect = new TexturePaintMaskEffect { kind = kind, repeat = kind < TexturePaintMaskEffectKind.Invert };
+            var effect = new TexturePaintMaskEffect { kind = kind, enabled = true, opacity = 1f,
+                repeat = kind < TexturePaintMaskEffectKind.Invert };
             if (kind == TexturePaintMaskEffectKind.MeshID) effect.channel = TexturePaintLayerMaskTextureChannel.Red;
             if (kind == TexturePaintMaskEffectKind.PaintedMask || kind == TexturePaintMaskEffectKind.AnatomicalRegion)
                 effect.blend = TexturePaintMaskBlend.Multiply;

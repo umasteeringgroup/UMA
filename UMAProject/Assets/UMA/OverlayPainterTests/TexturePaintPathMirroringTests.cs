@@ -257,6 +257,68 @@ namespace UMA.TexturePaint.Editor.Tests
             finally { engine.EndStroke(false); Object.DestroyImmediate(brush); Object.DestroyImmediate(source); }
         }
 
+        [TestCase(0)] [TestCase(1)] [TestCase(2)]
+        public void TextureSourceColorsApplyRGBAForCpuSingleAndBatch(int backend)
+        {
+            using var fixture = new TexturePaintGpuTestFixture(Color.clear,TexturePaintChannel.Albedo);
+            using var engine = backend==0 ? new PaintingEngine(null,null,null) : TexturePaintGpuTestFixture.CreateEngine();
+            var brush=fixture.CreateBrush(1,1,shape:BrushPreset.Shape.Square);
+            var image=Source(false); var layer=fixture.set.AddLayer("RGBA source");
+            try
+            {
+                var context=fixture.CreateContext(brush,TexturePaintTool.Paint,Color.white,TexturePaintChannel.Albedo,1);
+                context.directUV=true;
+                var source=new TexturePaintChannelSourceSettings { source=TexturePaintBrushSource.Texture,sourceTexture=image,
+                    multiplier=new Color(.5f,1,.25f,.5f),additive=new Color(.1f,.2f,.3f,.1f) };
+                context.channelSources[TexturePaintChannel.Albedo]=source;
+                context.limitStrokeCoverage=true;
+                Assert.That(engine.BeginStroke(context,TexturePaintSourceMode.SourceOverlay),Is.True);
+                var sample=TexturePaintGpuTestFixture.CenterSample();
+                if(backend==2) Assert.That(engine.ApplySamples(new[]{new StrokeDispatchSample(sample,.4f,default),new StrokeDispatchSample(sample,.4f,default)}),Is.True);
+                else Assert.That(engine.ApplySample(sample,.4f),Is.True);
+                var pixel=TexturePaintGpuTestFixture.ReadPixels(layer.channels[TexturePaintChannel.Albedo].Front)[20*64+20];
+                EqualPixel(pixel,new Color(.2f,.3f,.4f,.4f)*source.multiplier.linear+source.additive.linear,"RGBA backend "+backend);
+            }
+            finally { engine.EndStroke(false); Object.DestroyImmediate(brush);Object.DestroyImmediate(image); }
+        }
+
+        [TestCase(0)] [TestCase(1)] [TestCase(2)]
+        public void TextureSourceBlurSoftensPaintForCpuSingleAndBatch(int backend)
+        {
+            using var fixture = new TexturePaintGpuTestFixture(Color.clear, TexturePaintChannel.Albedo);
+            using var engine = backend == 0 ? new PaintingEngine(null,null,null) : TexturePaintGpuTestFixture.CreateEngine();
+            var brush = fixture.CreateBrush(1,1,shape:BrushPreset.Shape.Square);
+            var image = new Texture2D(16,16,TextureFormat.RGBAFloat,false,true) { filterMode=FilterMode.Point, wrapMode=TextureWrapMode.Clamp };
+            for(int y=0;y<16;y++)for(int x=0;x<16;x++)image.SetPixel(x,y,x<8?Color.clear:Color.white);
+            image.Apply();var layer=fixture.set.AddLayer("Blur source");
+            try
+            {
+                var context=fixture.CreateContext(brush,TexturePaintTool.Paint,Color.white,TexturePaintChannel.Albedo,1);
+                context.directUV=true;context.limitStrokeCoverage=true;
+                var source=new TexturePaintChannelSourceSettings {source=TexturePaintBrushSource.Texture,sourceTexture=image};
+                context.channelSources[TexturePaintChannel.Albedo]=source;
+                Color[] baseline=null;
+                for(int pass=0;pass<2;pass++)
+                {
+                    source.blur=pass==0?0:4;
+                    Assert.That(engine.BeginStroke(context,TexturePaintSourceMode.SourceOverlay),Is.True);
+                    var sample=TexturePaintGpuTestFixture.CenterSample();
+                    if(backend==2)Assert.That(engine.ApplySamples(new[]{new StrokeDispatchSample(sample,.4f,default),new StrokeDispatchSample(sample,.4f,default)}),Is.True);
+                    else Assert.That(engine.ApplySample(sample,.4f),Is.True);
+                    var pixels=TexturePaintGpuTestFixture.ReadPixels(layer.channels[TexturePaintChannel.Albedo].Front);
+                    if(pass==0)baseline=pixels;
+                    else
+                    {
+                        int softened=0;
+                        for(int i=0;i<pixels.Length;i++)if(baseline[i].a<.001f&&pixels[i].a>.05f&&pixels[i].a<.95f)softened++;
+                        Assert.That(softened,Is.GreaterThan(5),"Blur must soften the stamped silhouette, backend "+backend);
+                    }
+                    Assert.That(engine.RewindActiveStroke(),Is.True);engine.EndStroke(false);
+                }
+            }
+            finally {engine.EndStroke(false);Object.DestroyImmediate(brush);Object.DestroyImmediate(image);TexturePaintSpriteSource.ClearCache();}
+        }
+
         [Test] public void SeededFlipsAreIndependentRepeatableAndDoNotChangeGlobalRandom()
         {
             var before = UnityEngine.Random.state;

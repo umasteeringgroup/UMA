@@ -47,6 +47,88 @@ namespace UMA.TexturePaint.Editor.Tests
             effects.stack.Add(fill.Clone());effects.Normalize();Assert.That(effects.stack[1].id,Is.Not.EqualTo(effects.stack[2].id));
             Assert.That(Pixels(layer)[100].r,Is.EqualTo(.6f).Within(.006));
         }
+        [Test] public void VoronoiExpansionAndContrastChangeCoverageWithoutMovingCells()
+        {
+            var layer=Mask();var effect=TexturePaintMaskEffect.Create(TexturePaintMaskEffectKind.Voronoi);
+            effect.seed=73;layer.layerMask.effects.stack.Add(effect);
+            Color[] original=Pixels(layer);
+            Assert.That(effect.inputMin,Is.Zero);Assert.That(effect.amount,Is.EqualTo(1));
+            effect.inputMin=.3f;
+            Color[] expanded=Pixels(layer);
+            Assert.That(expanded.Count(p=>p.r<.01f),Is.GreaterThan(original.Count(p=>p.r<.01f)+100));
+            Assert.That(expanded.Average(p=>p.r),Is.LessThan(original.Average(p=>p.r)));
+            for(int i=0;i<original.Length;i++)
+                Assert.That(expanded[i].r,Is.EqualTo(Mathf.Clamp01((original[i].r-.3f)/.7f)).Within(.002f),"Coverage must remap the same cell at pixel "+i);
+            effect.amount=4;
+            Color[] contrasted=Pixels(layer);
+            for(int i=0;i<original.Length;i++)
+                Assert.That(contrasted[i].r,Is.EqualTo(Mathf.Clamp01((expanded[i].r-.5f)*4+.5f)).Within(.004f));
+            Assert.That(contrasted.Count(p=>p.r>.1f&&p.r<.9f),Is.LessThan(expanded.Count(p=>p.r>.1f&&p.r<.9f)));
+            // Presets, duplication and document serialization retain the authored controls.
+            layer.layerMask.effects.stack[0]=JsonUtility.FromJson<TexturePaintMaskEffect>(JsonUtility.ToJson(effect.Clone()));
+            Assert.That(Pixels(layer),Is.EqualTo(contrasted));
+            layer.layerMask.effects.stack[0].inputMin=1;
+            Assert.That(Pixels(layer).All(p=>p.r<.001f),Is.True);
+            layer.layerMask.effects.stack[0].inputMin=0;layer.layerMask.effects.stack[0].amount=1;
+            Assert.That(Pixels(layer),Is.EqualTo(original));
+        }
+
+        [TestCase(true)] [TestCase(false)]
+        public void WhiteAndBlackPaintedMasksReplaceDormantEntriesAndUndoEverything(bool white)
+        {
+            var layer=Mask(.3f);layer.kind=TexturePaintLayerKind.Plugin;layer.name="Edge Wear";
+            var original=layer.layerMask;
+            original.target.Reset(Image((x,y)=>x<32?Color.black:Color.white),Color.white);
+            original.effects.startFromPaint=false;
+            var voronoi=TexturePaintMaskEffect.Create(TexturePaintMaskEffectKind.Voronoi);
+            voronoi.opacity=.83f;original.effects.stack.Add(voronoi);
+            var dormant=TexturePaintMaskEffect.Create(TexturePaintMaskEffectKind.PaintedMask);
+            dormant.opacity=0;dormant.enabled=false;original.effects.stack.Add(dormant);
+            var duplicate=dormant.Clone();duplicate.id=Guid.NewGuid().ToString("N");original.effects.stack.Add(duplicate);
+            var procedural=Pixels(layer);
+            var oldPixels=TexturePaintGpuTestFixture.ReadPixels(original.target.Front);
+            var stage=ScriptableObject.CreateInstance<TexturePaintStageWindow>();
+            const BindingFlags flags=BindingFlags.Instance|BindingFlags.NonPublic;
+            object Invoke(string method,params object[] args)=>typeof(TexturePaintStageWindow).GetMethod(method,flags).Invoke(stage,args);
+            try
+            {
+                Assert.That(Invoke("AddPaintedMaskEffectWithHistory",fixture.set,layer,original.effects,white),Is.True);
+                var created=layer.layerMask;
+                Assert.That(created.baseValue,Is.EqualTo(white?1:0));
+                Assert.That(created.PaintValue,Is.EqualTo(white?0:1));
+                Assert.That(created.effects.startFromPaint,Is.False);
+                Assert.That(created.effects.stack.Count,Is.EqualTo(2));
+                var painted=created.effects.stack.Last();
+                Assert.That(painted.name,Is.EqualTo(white?"White Painted Mask":"Black Painted Mask"));
+                Assert.That(painted.kind,Is.EqualTo(TexturePaintMaskEffectKind.PaintedMask));
+                Assert.That(painted.opacity,Is.EqualTo(1));Assert.That(painted.enabled,Is.True);
+                Assert.That(painted.blend,Is.EqualTo(TexturePaintMaskBlend.Multiply));
+                Assert.That(painted.id,Is.Not.EqualTo(dormant.id));
+                var initialized=Pixels(layer);
+                for(int i=0;i<initialized.Length;i++)Assert.That(initialized[i].r,Is.EqualTo(white?procedural[i].r:0).Within(.003f));
+                // A half-strength painted correction must be applied once, not squared.
+                created.target.Reset(null,new Color(.5f,.5f,.5f,1));
+                var corrected=Pixels(layer);
+                for(int i=0;i<corrected.Length;i++)Assert.That(corrected[i].r,Is.EqualTo(procedural[i].r*.5f).Within(.004f));
+                Assert.That(Invoke("UndoLightweight"),Is.True);
+                Assert.That(layer.layerMask,Is.SameAs(original));
+                TexturePaintGpuTestFixture.AssertImage("Undo paint initialization",oldPixels,TexturePaintGpuTestFixture.ReadPixels(original.target.Front));
+                Assert.That(original.effects.stack[1].opacity,Is.Zero);
+                Assert.That(Invoke("RedoLightweight"),Is.True);Assert.That(layer.layerMask,Is.SameAs(created));
+                TexturePaintGpuTestFixture.AssertImage("Redo painted correction",corrected,Pixels(layer));
+            }
+            finally {Invoke("ClearLightweightHistory");Object.DestroyImmediate(stage);}
+        }
+
+        [Test] public void PaintedMaskCreationChoicesAndFactoryStartEnabledAtFullOpacity()
+        {
+            var labels=(string[])typeof(TexturePaintStageWindow).GetField("maskEffectChoiceLabels",BindingFlags.Static|BindingFlags.NonPublic).GetValue(null);
+            Assert.That(labels,Does.Contain("White Painted Mask"));Assert.That(labels,Does.Contain("Black Painted Mask"));
+            Assert.That(labels,Does.Not.Contain("Painted Mask"));
+            var effect=TexturePaintMaskEffect.Create(TexturePaintMaskEffectKind.PaintedMask);
+            Assert.That(effect.opacity,Is.EqualTo(1));Assert.That(effect.enabled,Is.True);
+        }
+
         [Test] public void ProceduralChangesKeepPaintedCorrectionsIndependent()
         {
             var layer=Mask();var painted=Image((x,y)=>x<32?Color.black:Color.white);layer.layerMask.target.Reset(painted,Color.white);

@@ -147,12 +147,70 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(Mathf.Abs(pathSlopeAfter - 0.5f),
                     Is.LessThan(Mathf.Abs(pathSlopeBefore - 0.5f) - 0.01f),
                     "The selected path's generated slope should respond to its own Height Strength.");
+                pathSettings.normalControlInvert = true;
+                set.BindPreviewTextures();
+                normal = set.GetVisibleTexture(TexturePaintChannel.Normal);
+                Assert.That(Read(normal,3,Size/2).r,Is.EqualTo(paintSlopeBefore).Within(.003f),
+                    "Inverting the selected layer must not invert the lower layer.");
+                Assert.That(Read(normal,11,Size/2).r,Is.EqualTo(1f-pathSlopeAfter).Within(.003f));
+                pathSettings.normalControlStrength = 64f;
+                set.BindPreviewTextures();
+                Assert.That(Mathf.Abs(Read(set.GetVisibleTexture(TexturePaintChannel.Normal),11,Size/2).r-.5f),
+                    Is.GreaterThan(Mathf.Abs(pathSlopeAfter-.5f)),"Extended strength must increase the rendered slope.");
+                pathSettings.normalControlStrength = 3f;
+                float narrowOutside = Read(set.GetVisibleTexture(TexturePaintChannel.Normal),9,Size/2).r;
+                pathSettings.normalControlRadius = 3;
+                set.BindPreviewTextures();
+                normal = set.GetVisibleTexture(TexturePaintChannel.Normal);
+                Assert.That(Read(normal,3,Size/2).r,Is.EqualTo(paintSlopeBefore).Within(.003f),
+                    "Changing one layer's radius must not resample the lower layer.");
+                Assert.That(Mathf.Abs(Read(normal,9,Size/2).r-.5f),Is.GreaterThan(Mathf.Abs(narrowOutside-.5f)+.01f),
+                    "The selected layer's sampling footprint should grow.");
+                Assert.That(set.normalControlRadius,Is.EqualTo(1),"Layer radius must not mutate the target's legacy conversion.");
             }
             finally
             {
                 compositor.Dispose();
                 set.compositor = null;
             }
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void LayerRadiusPreservesTransparentExportAndDirtyUpdates(bool invert)
+        {
+            using var compositor=new TextureLayerCompositor(TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor=compositor;
+            var layer=set.AddLayer("Sampled height");
+            var target=new EditableTextureTarget("Layer height",Size,Size,RenderTextureFormat.ARGBHalf,null,Color.clear);
+            layer.channels[TexturePaintChannel.NormalControl]=target;
+            var options=layer.GetChannelSettings(TexturePaintChannel.NormalControl);
+            options.normalControlRadius=3;options.hasNormalControlStrength=true;options.normalControlStrength=8;options.normalControlInvert=invert;
+            var pixels=Solid(Color.clear);pixels[8*Size+8]=new Color(.8f,.8f,.8f,.5f);Write(target.Front,pixels);
+            set.BindPreviewTextures();
+            var height=EditableTextureTarget.Create("Export height",Size,Size,RenderTextureFormat.ARGBHalf);
+            var flat=EditableTextureTarget.Create("Export normal base",Size,Size,RenderTextureFormat.ARGBHalf);
+            var normal=EditableTextureTarget.Create("Export normal",Size,Size,RenderTextureFormat.ARGBHalf);
+            try
+            {
+                Fill(flat,new Color(.5f,.5f,1,0));
+                Assert.That(typeof(TextureLayerCompositor).GetMethod("ComposeAuthoredLayers",BindingFlags.Instance|BindingFlags.NonPublic)
+                    .Invoke(compositor,new object[]{set,TexturePaintChannel.NormalControl,height}),Is.True);
+                Assert.That(typeof(TextureSet).GetMethod("ApplyNormalControl",BindingFlags.Instance|BindingFlags.NonPublic)
+                    .Invoke(set,new object[]{flat,height,normal,true,default(RectInt)}),Is.True);
+                for(int y=4;y<13;y++)for(int x=4;x<13;x++)
+                {
+                    Color exported=Read(normal,x,y),preview=Read(set.GetVisibleTexture(TexturePaintChannel.Normal),x,y);
+                    Assert.That(exported.r,Is.EqualTo(preview.r).Within(.004f));Assert.That(exported.g,Is.EqualTo(preview.g).Within(.004f));
+                }
+                Color before=Read(set.GetVisibleTexture(TexturePaintChannel.Normal),5,8);
+                pixels[8*Size+8]=Color.clear;Write(target.Front,pixels);
+                set.CompositeChannel(TexturePaintChannel.NormalControl,new RectInt(8,8,1,1));
+                set.BindPreviewTextures(false,new RectInt(8,8,1,1));
+                Color cleared=Read(set.GetVisibleTexture(TexturePaintChannel.Normal),5,8);
+                Assert.That(Mathf.Abs(before.r-.5f),Is.GreaterThan(.005f));
+                Assert.That(cleared.r,Is.EqualTo(.5f).Within(.003f),"Dirty updates must clear the expanded sampling halo.");
+            }
+            finally{Object.DestroyImmediate(height);Object.DestroyImmediate(flat);Object.DestroyImmediate(normal);set.compositor=null;}
         }
 
         [Test]

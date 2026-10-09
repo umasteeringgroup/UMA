@@ -11,11 +11,16 @@
 #pragma kernel CSEvaluateLayerMask
 #pragma kernel CSApplyGroupMask
 #pragma kernel CSApplyIsolatedLayer
+#pragma kernel CSFilterHeightDelta
+#pragma kernel CSApplyFilteredHeightDelta
 #pragma kernel CSUnassociateAlpha
 #pragma kernel CSApplyChannelAdjustments
 #pragma kernel CSClear
 
 Texture2D<float4> _Base;
+Texture2D<float4> _HeightDelta;
+RWTexture2D<float4> _FilteredHeightDelta;
+int _LayerSampleRadius;
 Texture2D<float4> _Layer;
 Texture2D<float4> _LayerMask;
 RWTexture2D<float4> _Composite;
@@ -240,6 +245,39 @@ void CSApplyIsolatedLayer(uint3 dispatchID : SV_DispatchThreadID)
     }
     else result.rgb = original.rgb + (result.rgb - original.rgb) * _LayerValueScale;
     _Composite[pixel] = lerp(original, result, saturate(_LayerOpacity));
+}
+
+// Work in height relative to neutral gray, with associated coverage. Filtering the
+// net layer contribution keeps lower layers untouched and supports transparent export.
+[numthreads(16, 16, 1)]
+void CSFilterHeightDelta(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(id.xy) + _TileOffset;
+    int reach = clamp(_LayerSampleRadius, 1, 16) - 1;
+    float4 sum = 0;
+    for (int x = -reach; x <= reach; x++)
+    {
+        int2 p = clamp(pixel + int2(x, 0), int2(0, 0), _TextureSize - 1);
+        float4 delta = _GroupResult.Load(int3(p, 0)) - _GroupOriginal.Load(int3(p, 0));
+        delta.rgb -= 0.5 * delta.a;
+        sum += delta;
+    }
+    _FilteredHeightDelta[pixel] = sum / (2 * reach + 1);
+}
+
+[numthreads(16, 16, 1)]
+void CSApplyFilteredHeightDelta(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(id.xy) + _TileOffset;
+    int reach = clamp(_LayerSampleRadius, 1, 16) - 1;
+    float4 delta = 0;
+    for (int y = -reach; y <= reach; y++)
+        delta += _HeightDelta.Load(int3(clamp(pixel + int2(0, y), int2(0, 0), _TextureSize - 1), 0));
+    delta /= 2 * reach + 1;
+    delta.rgb = delta.rgb * _LayerValueScale + 0.5 * delta.a;
+    _Composite[pixel] = _GroupOriginal.Load(int3(pixel, 0)) + delta * saturate(_LayerOpacity);
 }
 
 [numthreads(16, 16, 1)]

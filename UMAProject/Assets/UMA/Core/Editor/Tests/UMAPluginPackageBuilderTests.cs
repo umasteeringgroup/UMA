@@ -129,6 +129,153 @@ namespace UMA.Editors.Tests
             Assert.That(Directory.GetFiles(directory, "*.tmp"), Is.Empty);
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void PublishingReplacesExistingArchiveIncludingReadOnlyBuildOutput(bool readOnly)
+        {
+            string target = Path.Combine(directory, Guid.NewGuid().ToString("N") + ".unitypackage");
+            string staged = target + ".tmp";
+            File.WriteAllText(target, "old package");
+            File.Copy(archive, staged);
+            if (readOnly) File.SetAttributes(target, File.GetAttributes(target) | FileAttributes.ReadOnly);
+            Publish(staged, target);
+            Assert.That(File.ReadAllBytes(target), Is.EqualTo(File.ReadAllBytes(archive)));
+            Assert.That(File.Exists(staged), Is.False);
+            Assert.That(Directory.GetFiles(directory, Path.GetFileName(target) + "*.previous"), Is.Empty);
+        }
+
+        [Test]
+        public void LockedDestinationKeepsBothPackagesAndReportsTheirFullPaths()
+        {
+            if (UnityEngine.Application.platform != UnityEngine.RuntimePlatform.WindowsEditor)
+                Assert.Ignore("Windows sharing-lock behavior.");
+            string output = Path.Combine(directory, "locked");
+            Directory.CreateDirectory(output);
+            string target = Path.Combine(output, Path.GetFileName(archive));
+            File.Copy(archive, target);
+            byte[] original = File.ReadAllBytes(target);
+            IOException failure;
+            using (var locked = new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.Read))
+                failure = Assert.Throws<IOException>(() => UMAPluginPackageBuilder.Build(UMAContentKind.HairCards, output));
+            Assert.That(failure.Message, Does.Contain(target));
+            string staged = Directory.GetFiles(output, "*.tmp").Single();
+            Assert.That(failure.Message, Does.Contain(staged));
+            Assert.That(File.ReadAllBytes(target), Is.EqualTo(original));
+            Assert.That(UMAContentPackageArchiveValidator.TryValidate(staged, UMAContentKind.HairCards, out _, out string error), Is.True, error);
+            Publish(staged, target);
+            Assert.That(File.Exists(staged), Is.False, "The preserved archive can be published after releasing the lock.");
+        }
+
+        [Test]
+        public void PublishingRetriesBriefDestinationLocks()
+        {
+            if (UnityEngine.Application.platform != UnityEngine.RuntimePlatform.WindowsEditor)
+                Assert.Ignore("Windows sharing-lock behavior.");
+            string target = Path.Combine(directory, "brief-lock.unitypackage");
+            string staged = target + ".tmp";
+            File.WriteAllText(target, "old package");
+            File.Copy(archive, staged);
+            using (var locked = new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var release = new System.Threading.Timer(_ => locked.Dispose(), null, 150, System.Threading.Timeout.Infinite))
+                Publish(staged, target);
+            Assert.That(File.ReadAllBytes(target), Is.EqualTo(File.ReadAllBytes(archive)));
+        }
+
+        [Test]
+        public void FailureMovingNewArchiveRestoresPreviousArchive()
+        {
+            if (UnityEngine.Application.platform != UnityEngine.RuntimePlatform.WindowsEditor)
+                Assert.Ignore("Windows sharing-lock behavior.");
+            string target = Path.Combine(directory, "rollback.unitypackage");
+            string staged = target + ".tmp";
+            File.WriteAllText(target, "previous package");
+            File.Copy(archive, staged);
+            using (var locked = new FileStream(staged, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var failure = Assert.Throws<IOException>(() => Publish(staged, target));
+                Assert.That(failure.Message, Does.Contain("previous package was restored"));
+            }
+            Assert.That(File.ReadAllText(target), Is.EqualTo("previous package"));
+            Assert.That(File.ReadAllBytes(staged), Is.EqualTo(File.ReadAllBytes(archive)));
+            Assert.That(Directory.GetFiles(directory, "rollback*.previous"), Is.Empty);
+            File.Delete(staged);
+        }
+
+        private static void Publish(string staged, string target)
+        {
+            var method = typeof(UMAPluginPackageBuilder).GetMethod("PublishValidatedArchive",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            try { method.Invoke(null, new object[] { staged, target }); }
+            catch (System.Reflection.TargetInvocationException exception)
+            {
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
+                throw;
+            }
+        }
+
+        [Test]
+        public void BatchBuildContinuesAfterFailureAndReportsEveryPackage()
+        {
+            var kinds = new[] { UMAContentKind.HairCards, UMAContentKind.HairCardsExamples, UMAContentKind.HairCardsTests };
+            var attempted = new System.Collections.Generic.List<UMAContentKind>();
+            string failedPath = Path.Combine(directory, "HairCardsExamples.unitypackage");
+            var results = RunBatch(kinds, kind =>
+            {
+                attempted.Add(kind);
+                if (kind == UMAContentKind.HairCardsExamples) throw new IOException("Could not replace: " + failedPath);
+                return Path.Combine(directory, kind + ".unitypackage");
+            }, _ => false);
+            CollectionAssert.AreEqual(kinds, attempted);
+            Assert.That(results[0].Package, Is.Not.Null);
+            Assert.That(results[1].Error, Is.TypeOf<IOException>());
+            Assert.That(results[2].Package, Is.Not.Null);
+            string report = FormatReport(results);
+            Assert.That(report, Does.Contain("Built: 2   Failed: 1"));
+            Assert.That(report, Does.Contain("Built — Hair Card Editor"));
+            Assert.That(report, Does.Contain("Failed — Hair Card Examples"));
+            Assert.That(report, Does.Contain("Built — Hair Card Tests"));
+            Assert.That(report, Does.Contain(failedPath));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void BatchCancellationKeepsCompletedResultsAndListsRemainingPackages(bool cancelDuringBuild)
+        {
+            var kinds = new[] { UMAContentKind.HairCards, UMAContentKind.HairCardsExamples, UMAContentKind.HairCardsTests };
+            int attempts = 0;
+            var results = RunBatch(kinds, kind =>
+            {
+                attempts++;
+                if (cancelDuringBuild && kind == kinds[1]) throw new OperationCanceledException();
+                return Path.Combine(directory, kind + ".unitypackage");
+            }, i => !cancelDuringBuild && i == 1);
+            Assert.That(attempts, Is.EqualTo(cancelDuringBuild ? 2 : 1));
+            Assert.That(results[0].Package, Is.Not.Null);
+            Assert.That(results.Skip(1).All(r => r.Cancelled && r.Error == null), Is.True);
+            Assert.That(FormatReport(results), Does.Contain("Built: 1   Failed: 0   Cancelled / not built: 2"));
+            Assert.That(FormatReport(results), Does.Contain("Not built (cancelled) — Hair Card Tests"));
+        }
+
+        [Test]
+        public void EmptyBatchReportsNoInstalledSources()
+        {
+            var results = RunBatch(Array.Empty<UMAContentKind>(), _ => throw new Exception("Must not build"),
+                _ => throw new Exception("Must not show progress"));
+            Assert.That(results, Is.Empty);
+            Assert.That(FormatReport(results), Is.EqualTo("No installed plugin sources were found."));
+        }
+
+        private static UMAPluginPackageBuilder.PackageBuildResult[] RunBatch(UMAContentKind[] kinds,
+            Func<UMAContentKind, string> build, Func<int, bool> cancel) =>
+            (UMAPluginPackageBuilder.PackageBuildResult[])typeof(UMAPluginPackageBuilder)
+                .GetMethod("BuildBatch", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(null, new object[] { kinds, build, cancel });
+
+        private static string FormatReport(UMAPluginPackageBuilder.PackageBuildResult[] results) =>
+            (string)typeof(UMAPluginPackageBuilder)
+                .GetMethod("FormatBuildReport", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(null, new object[] { results });
+
         [Test]
         public void BuildingInsideAssetsIsRejectedBeforeWriting()
         {

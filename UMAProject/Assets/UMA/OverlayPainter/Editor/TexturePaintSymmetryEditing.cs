@@ -82,7 +82,7 @@ namespace UMA.TexturePaint.Editor
                 GUI.SetNextControlName("SymmetryMirrorX");
                 frame.mirrorX=EditorGUILayout.Toggle("Mirror X",frame.mirrorX);
                 frame.mirrorY=EditorGUILayout.Toggle("Mirror Y",frame.mirrorY);
-                using(new EditorGUI.DisabledScope(uv))
+                if(!uv)
                     frame.mirrorZ=EditorGUILayout.Toggle("Mirror Z (3D)",frame.mirrorZ);
                 if(uv)
                 {
@@ -96,7 +96,7 @@ namespace UMA.TexturePaint.Editor
                     frame.euler=EditorGUILayout.Vector3Field("Plane Rotation",frame.euler);
                 }
                 frame.radialCopies=EditorGUILayout.IntSlider("Radial Copies",frame.radialCopies,1,16);
-                using(new EditorGUI.DisabledScope(uv))
+                if(!uv)
                 {
                     frame.radialAxis=EditorGUILayout.Vector3Field("Radial Axis (3D)",frame.radialAxis);
                     symmetryHandles=EditorGUILayout.Toggle("Edit Origin in Scene",symmetryHandles);

@@ -176,6 +176,7 @@ Available maps are:
 | `WorldPosition` | Linear RGB world coordinates; alpha is geometry coverage. |
 | `WorldNormal` | RGB normal encoded from -1..1 to 0..1; alpha is coverage. |
 | `SignedCurvature` | Grayscale: 0.5 flat, below 0.5 concave, above 0.5 convex. |
+| `ExposedEdgeDistance` | Distance to open rims or convex creases of at least 30 degrees, divided by the world-space mesh bounds diagonal. UV/shading splits and concave creases are excluded; 1 means no nearby edge. |
 | `AmbientOcclusion` | Grayscale concavity-accessibility estimate; 1 is exposed. |
 | `Thickness` | Linear grayscale geometry thickness estimate. |
 | `SurfaceId` | Float components contain triangle, reconstructed-surface, and UV-island IDs; alpha is coverage. |
@@ -281,11 +282,16 @@ renders directly into the Plugin layer. If compute shaders or the kernel are una
 `ExecuteAsync` implementation remains the CPU fallback.
 
 Standard compute bindings include `_MeshWorldPosition`, `_MeshWorldNormal`,
-`_MeshSignedCurvature`, `_MeshAmbientOcclusion`, `_MeshThickness`, `_MeshSurfaceId`,
+`_MeshSignedCurvature`, `_MeshAmbientOcclusion`, `_MeshThickness`, `_MeshSurfaceId`, `_MeshExposedEdgeDistance`,
 `_SourceNormal`, and `_SourceAO`. Schema parameters are bound as `_P_<parameterId>`; texture
 parameters also receive `_HasP_<parameterId>`. The kernel writes `_Output`, uses `_OutputSize`, and
 branches on `_OutputChannel`. Every GPU execution remains an atomic, undoable Plugin-layer
 transaction and is subject to the same declared-channel and target-channel restrictions.
+
+Curve parameters bind 128 samples over X = 0..1, packed as `float4 _P_<parameterId>[32]`.
+Read sample `i` as `lookup[i / 4][i % 4]` and interpolate adjacent samples at
+`saturate(x) * 127`; CPU implementations can use
+`TexturePaintPluginCurveLookup.Bake` and `Evaluate` for the identical curve approximation.
 
 ## Production material generators
 

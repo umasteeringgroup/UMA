@@ -32,16 +32,16 @@ namespace UMA.TexturePaint.Editor.Tests
                 context = fixture.CreateContext(brush, TexturePaintTool.Paint, Color.white, strength: 1);
                 context.projectionDepth = 1; context.ribbonCrossfadeJoins = true; context.ribbonJoinOverlap = .5f;
             }
-            public Texture2D Image(Func<int,int,Color> pixel)
+            public Texture2D Image(Func<int,int,Color> pixel, int width = 16, int height = 16)
             {
-                var image = new Texture2D(16, 16, TextureFormat.RGBAFloat, false, true) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+                var image = new Texture2D(width, height, TextureFormat.RGBAFloat, false, true) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
                 owned.Add(image);
-                for (int y = 0; y < 16; y++) for (int x = 0; x < 16; x++) image.SetPixel(x,y,pixel(x,y));
+                for (int y = 0; y < height; y++) for (int x = 0; x < width; x++) image.SetPixel(x,y,pixel(x,y));
                 image.Apply(); return image;
             }
             public void Source(Texture2D image)
             { context.paintSource = TexturePaintBrushSource.Texture; context.sourceTexture = image; }
-            public Dictionary<TexturePaintChannel,Color[]> Render(bool directUV = false, bool alongY = false, bool reversed = false, bool closed = false, int tiles = 4, float spanOffset = 0)
+            public Dictionary<TexturePaintChannel,Color[]> Render(bool directUV = false, bool alongY = false, bool reversed = false, bool closed = false, float tiles = 4, float spanOffset = 0)
             {
                 var samples = new List<StrokeSample> {
                     new StrokeSample(new Vector3(.5f,0,0), Vector3.forward, new Vector2(.5f,0),0,0),
@@ -64,7 +64,148 @@ namespace UMA.TexturePaint.Editor.Tests
             public void Dispose()
             { engine.EndStroke(false); engine.Dispose(); fixture.Dispose(); foreach (var item in owned) Object.DestroyImmediate(item); }
         }
+        [TestCase(false,false)] [TestCase(true,false)] [TestCase(false,true)] [TestCase(true,true)]
+        public void RibbonSourceColorsApplyRGBAIncludingSharedAlpha(bool aspect, bool crossfade)
+        {
+            using var ribbon=new Ribbon(true);
+            ribbon.context.ribbonPreserveTextureAspect=aspect;
+            ribbon.context.ribbonCrossfadeJoins=crossfade;
+            var paint=new Color(.4f,.2f,.6f,.4f);
+            var source=new TexturePaintChannelSourceSettings { source=TexturePaintBrushSource.Texture,
+                sourceTexture=ribbon.Image((x,y)=>paint),multiplier=new Color(.5f,1,.25f,.5f),
+                additive=new Color(.1f,.2f,.3f,.1f) };
+            ribbon.context.channelSources[TexturePaintChannel.Albedo]=source;
+            ribbon.context.channelSources[TexturePaintChannel.Roughness]=new TexturePaintChannelSourceSettings {
+                source=TexturePaintBrushSource.Texture,sourceTexture=ribbon.Image((x,y)=>new Color(.6f,.6f,.6f,1)),
+                multiplier=new Color(.5f,.5f,.5f,.5f),additive=new Color(.1f,.1f,.1f,.1f) };
+            var pixels=ribbon.Render(directUV:true);
+            Equal(pixels[TexturePaintChannel.Albedo][20*64+32],paint*source.multiplier.linear+source.additive.linear,"RGBA ribbon");
+            Equal(pixels[TexturePaintChannel.Roughness][20*64+32],new Color(.4f,.4f,.4f,.25f),"Shared adjusted alpha");
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void RibbonSourceBlurIsSpecificToTheChannel(bool caps)
+        {
+            using var ribbon=new Ribbon(true);
+            var image=ribbon.Image((x,y)=>x<8?Color.clear:Color.white);
+            var source=new TexturePaintChannelSourceSettings {source=TexturePaintBrushSource.Texture,sourceTexture=image};
+            ribbon.context.channelSources[TexturePaintChannel.Albedo]=source;
+            ribbon.context.channelSources[TexturePaintChannel.Roughness]=source.Clone();
+            if(caps){ribbon.context.ribbonBeginningTexture=image;ribbon.context.ribbonEndTexture=image;}
+            var baseline=ribbon.Render(directUV:true);
+            source.blur=4;
+            var blurred=ribbon.Render(directUV:true);
+            TexturePaintGpuTestFixture.AssertImage("Other ribbon channel stays sharp",baseline[TexturePaintChannel.Roughness],blurred[TexturePaintChannel.Roughness]);
+            int softened=0;
+            for(int i=0;i<baseline[TexturePaintChannel.Albedo].Length;i++)
+                if(baseline[TexturePaintChannel.Albedo][i].a<.001f && blurred[TexturePaintChannel.Albedo][i].a>.05f)softened++;
+            Assert.That(softened,Is.GreaterThan(5));
+            TexturePaintSpriteSource.ClearCache();
+        }
+
         private static Color Normal(float x, float y) => new Color(x*.5f+.5f,y*.5f+.5f,Mathf.Sqrt(1-x*x-y*y)*.5f+.5f,1);
+
+        [TestCase(false,false,false)] [TestCase(true,false,true)]
+        [TestCase(false,true,false)] [TestCase(true,true,true)]
+        public void ImageAspectChoosesNearestWholeRepeatCount(bool directUV,bool alongY,bool reversed)
+        {
+            using var ribbon=new Ribbon();
+            ribbon.context.ribbonPreserveTextureAspect=true;ribbon.context.ribbonCrossfadeJoins=false;
+            ribbon.Source(ribbon.Image((x,y)=>new Color(x/31f,y/15f,0,1),32,16));
+            var pixels=ribbon.Render(directUV,alongY,reversed,tiles:1.25f)[TexturePaintChannel.Albedo];
+            float aspect=alongY?.5f:2f;
+            for(int y=1;y<63;y++)
+            {
+                float phase=Mathf.Repeat((y+.5f)/64f*Mathf.Max(1,Mathf.RoundToInt(1.25f/aspect)),1);
+                if(reversed)phase=1-phase;
+                int resolution=alongY?16:32;
+                float expected=Mathf.Min(resolution-1,Mathf.FloorToInt(phase*resolution))/(float)(resolution-1);
+                Assert.That(alongY?pixels[y*64+32].g:pixels[y*64+32].r,Is.EqualTo(expected).Within(.02f),"Aspect-aware whole repeat at row "+y);
+            }
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void AspectAwareEndpointsUseTheirOwnLengthAndCrossfadesKeepCoverage(bool closed)
+        {
+            using var ribbon=new Ribbon();ribbon.context.ribbonPreserveTextureAspect=true;
+            ribbon.Source(ribbon.Image((x,y)=>Color.green,32,16));
+            ribbon.context.ribbonBeginningTexture=ribbon.Image((x,y)=>Color.red,8,16);
+            ribbon.context.ribbonEndTexture=ribbon.Image((x,y)=>Color.blue,16,16);
+            var pixels=ribbon.Render(directUV:true,closed:closed,tiles:3.3f)[TexturePaintChannel.Albedo];
+            for(int y=0;y<64;y++)Assert.That(pixels[y*64+32].a,Is.EqualTo(1).Within(.003f),"No gap at a partial or closing join");
+            if(!closed)
+            {
+                Equal(pixels[2*64+32],Color.red,"Beginning's half-width length");
+                Equal(pixels[25*64+32],Color.green,"Main rectangular tile");
+                Equal(pixels[60*64+32],Color.blue,"End's full-width length");
+            }
+            else for(int y=0;y<64;y++)Equal(pixels[y*64+32],Color.green,"Closed paths omit endpoints");
+        }
+
+        [Test]
+        public void ImageRibbonCoordinatesRetainPhysicalLengthAndPointWidthsForAspectFitting()
+        {
+            var samples=new List<StrokeSample>{
+                new StrokeSample(Vector3.zero,Vector3.forward,Vector2.zero,0,0),
+                new StrokeSample(Vector3.up,Vector3.forward,Vector2.up,0,1)};
+            samples[0]=new StrokeSample(Vector3.zero,Vector3.forward,Vector2.zero,0,0){sizeMultiplier=.5f};
+            samples[1]=new StrokeSample(Vector3.up,Vector3.forward,Vector2.up,0,1){sizeMultiplier=1.5f};
+            var segments=TexturePaintStageWindow.BuildRibbonSegments(samples,.15f,.3f,fitCompleteTiles:false);
+            Assert.That(segments[0].leftEndAlong.w,Is.EqualTo(1f/.3f).Within(.0001f));
+            Assert.That(Vector3.Distance(segments[0].leftStartAlong,segments[0].rightStartFlow),Is.EqualTo(.15f).Within(.0001f));
+            Assert.That(Vector3.Distance(segments[0].leftEndAlong,segments[0].rightEndFlow),Is.EqualTo(.45f).Within(.0001f));
+        }
+
+        [TestCase(.75f, 0)] [TestCase(3.3f, 1)] [TestCase(5.6f, 2)]
+        public void AspectFittingKeepsCompleteBeginningAndEndImages(float span, int repeats)
+        {
+            using var ribbon = new Ribbon();
+            ribbon.context.ribbonPreserveTextureAspect = true;
+            ribbon.context.ribbonCrossfadeJoins = false;
+            ribbon.Source(ribbon.Image((x,y) => new Color(x / 31f, 0, 0, 1), 32, 16));
+            ribbon.context.ribbonBeginningTexture = ribbon.Image((x,y) => new Color(x / 7f, 1, 0, 1), 8, 16);
+            ribbon.context.ribbonEndTexture = ribbon.Image((x,y) => new Color(x / 15f, 0, 1, 1));
+            var pixels = ribbon.Render(directUV:true, tiles:span)[TexturePaintChannel.Albedo];
+            float naturalSpan = .5f + repeats * 2f + 1f;
+            for (int y=0; y<64; y++)
+            {
+                float along = (y+.5f) / 64f * naturalSpan;
+                bool beginning = along < .5f, end = along >= naturalSpan - 1f;
+                int resolution = beginning ? 8 : end ? 16 : 32;
+                float phase = beginning ? along / .5f : end ? along - (naturalSpan - 1f)
+                    : Mathf.Repeat((along - .5f) / 2f, 1f);
+                float red = Mathf.Min(resolution-1, Mathf.FloorToInt(phase * resolution)) / (float)(resolution-1);
+                Equal(pixels[y*64+32], new Color(red, beginning?1:0, end?1:0, 1), "Complete fitted image row " + y);
+            }
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void CroppedSpriteAspectControlsAllChannels(bool directUV)
+        {
+            using var ribbon = new Ribbon(true);
+            ribbon.context.ribbonPreserveTextureAspect = true;
+            ribbon.context.ribbonCrossfadeJoins = false;
+            foreach (var channel in ribbon.fixture.set.channels.Keys)
+            {
+                bool albedo = channel == TexturePaintChannel.Albedo;
+                var image = ribbon.Image((x,y) => albedo ? new Color((x-8)/15f,0,0,x<16?1:0)
+                    : channel == TexturePaintChannel.Normal ? new Color(.5f,.5f,1,0) : new Color(.65f,.65f,.65f,0), 32, 32);
+                var sprite = Sprite.Create(image, new Rect(8,8,albedo?16:8,8), Vector2.one*.5f);
+                ribbon.owned.Add(sprite);
+                ribbon.context.channelSources[channel] = TexturePaintStageWindow.CreateSpriteSetPathSourceSettings(
+                    sprite, false, TexturePaintNormalConvention.OpenGL);
+            }
+            var pixels = ribbon.Render(directUV:directUV, tiles:4.2f);
+            AssertAlbedoCoverage(pixels);
+            // Cropped albedo is 2:1, so 4.2 widths fit two whole repeats, even though
+            // the source sheet and other material channels are square.
+            for (int y=0; y<64; y++)
+            {
+                float phase = Mathf.Repeat((y+.5f)/64f*2f,1);
+                Assert.That(pixels[TexturePaintChannel.Albedo][y*64+32].a,
+                    Is.EqualTo(phase<.5f?1:0).Within(.003f), "Shared cropped aspect at row " + y);
+            }
+        }
         private static Color BlendNormal(Color a, Color b, float weight)
         {
             var v = new Vector3(Mathf.Lerp(a.r,b.r,weight)*2-1,Mathf.Lerp(a.g,b.g,weight)*2-1,Mathf.Lerp(a.b,b.b,weight)*2-1).normalized;
@@ -87,14 +228,19 @@ namespace UMA.TexturePaint.Editor.Tests
                         pair.Key + " must share albedo coverage at pixel " + i);
         }
 
-        [TestCase(false, false, false, 0f, false)]
-        [TestCase(true, true, false, .5f, false)]
-        [TestCase(false, false, true, .5f, true)]
-        [TestCase(true, true, true, 0f, true)]
+        [TestCase(false, false, false, 0f, false, false)]
+        [TestCase(true, true, false, .5f, false, false)]
+        [TestCase(false, false, true, .5f, true, false)]
+        [TestCase(true, true, true, 0f, true, false)]
+        [TestCase(false, false, false, 0f, false, true)]
+        [TestCase(true, true, false, .5f, false, true)]
+        [TestCase(false, false, true, .5f, true, true)]
+        [TestCase(true, true, true, 0f, true, true)]
         public void SpriteSetChannelsShareCroppedAlbedoCoverageThroughJoinsAndFlips(
-            bool directUV, bool alongY, bool reversed, float overlap, bool endpoints)
+            bool directUV, bool alongY, bool reversed, float overlap, bool endpoints, bool preserveAspect)
         {
             using var ribbon = new Ribbon(true);
+            ribbon.context.ribbonPreserveTextureAspect = preserveAspect;
             ribbon.context.ribbonJoinOverlap = overlap;
             ribbon.context.textureFlipX = TexturePaintPathFlipMode.Alternate;
             ribbon.context.textureFlipY = TexturePaintPathFlipMode.Random;

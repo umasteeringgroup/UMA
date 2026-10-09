@@ -21,14 +21,13 @@ namespace UMA.Editors.PackageSupport
         {
             try
             {
-                string[] packages = BuildAll(UMAPluginPackageFiles.DefaultDirectory);
-                if (packages.Length == 0)
-                    EditorUtility.DisplayDialog("Build Plugin Packages", "No installed plugin sources were found.", "OK");
-                else
-                {
-                    Debug.Log("[UMA Plugins] Built and validated:\n" + string.Join("\n", packages));
+                var results = BuildAllWithResults(UMAPluginPackageFiles.DefaultDirectory);
+                string report = FormatBuildReport(results);
+                Debug.Log("[UMA Plugins]\n" + report);
+                foreach (var failure in results.Where(r => r.Error != null)) Debug.LogException(failure.Error);
+                if (EditorUtility.DisplayDialog("Plugin build results", report, "OK", "Open Package Folder")) return;
+                if (Directory.Exists(UMAPluginPackageFiles.DefaultDirectory))
                     EditorUtility.RevealInFinder(UMAPluginPackageFiles.DefaultDirectory);
-                }
             }
             catch (Exception exception)
             {
@@ -44,22 +43,76 @@ namespace UMA.Editors.PackageSupport
 
         public static string[] BuildAll(string destination)
         {
+            var results = BuildAllWithResults(destination);
+            // Preserve failure signaling for automated callers while still attempting the other packages.
+            if (results.Any(r => r.Cancelled)) throw new OperationCanceledException(FormatBuildReport(results));
+            if (results.Any(r => r.Error != null))
+                throw new AggregateException(FormatBuildReport(results), results.Where(r => r.Error != null).Select(r => r.Error));
+            return results.Select(r => r.Package).ToArray();
+        }
+
+        public sealed class PackageBuildResult
+        {
+            public UMAContentKind Kind { get; internal set; }
+            public string Package { get; internal set; }
+            public Exception Error { get; internal set; }
+            public bool Cancelled { get; internal set; }
+        }
+
+        public static PackageBuildResult[] BuildAllWithResults(string destination)
+        {
             if (!CanBuild()) throw new InvalidOperationException("Wait for the current import or package operation to finish.");
             var kinds = UMAContentCatalog.PluginDisplayOrder.Where(k => UMAContentCatalog.PluginRequiredPaths(k).Any(File.Exists)).ToArray();
-            var results = new List<string>();
             try
             {
-                for (int i = 0; i < kinds.Length; i++)
+                return BuildBatch(kinds, kind =>
                 {
-                    if (EditorUtility.DisplayCancelableProgressBar("Build UMA plugins", UMAContentCatalog.DisplayName(kinds[i]), (float)i / kinds.Length))
-                        throw new OperationCanceledException("Plugin build cancelled. Completed packages have been kept.");
-                    string package = Build(kinds[i], destination);
-                    results.Add(package);
-                    UMAPluginPackageFiles.Remember(kinds[i], package);
-                }
+                    string package = Build(kind, destination);
+                    UMAPluginPackageFiles.Remember(kind, package);
+                    return package;
+                }, i => EditorUtility.DisplayCancelableProgressBar("Build UMA plugins",
+                    UMAContentCatalog.DisplayName(kinds[i]), (float)i / kinds.Length));
             }
             finally { EditorUtility.ClearProgressBar(); }
+        }
+
+        private static PackageBuildResult[] BuildBatch(UMAContentKind[] kinds, Func<UMAContentKind, string> build,
+            Func<int, bool> cancel)
+        {
+            var results = new List<PackageBuildResult>();
+            bool cancelled = false;
+            for (int i = 0; i < kinds.Length; i++)
+            {
+                cancelled = cancelled || cancel(i);
+                var result = new PackageBuildResult { Kind = kinds[i], Cancelled = cancelled };
+                if (!cancelled)
+                {
+                    try { result.Package = build(kinds[i]); }
+                    catch (OperationCanceledException) { result.Cancelled = cancelled = true; }
+                    catch (Exception exception) { result.Error = exception; }
+                }
+                results.Add(result);
+            }
             return results.ToArray();
+        }
+
+        private static string FormatBuildReport(PackageBuildResult[] results)
+        {
+            if (results.Length == 0) return "No installed plugin sources were found.";
+            int failed = results.Count(r => r.Error != null);
+            int cancelled = results.Count(r => r.Cancelled);
+            var report = new StringBuilder($"Built: {results.Length - failed - cancelled}   Failed: {failed}");
+            if (cancelled > 0) report.Append($"   Cancelled / not built: {cancelled}");
+            report.AppendLine().AppendLine();
+            foreach (var result in results)
+            {
+                string status = result.Cancelled ? "Not built (cancelled)" : result.Error != null ? "Failed" : "Built";
+                report.AppendLine(status + " — " + UMAContentCatalog.DisplayName(result.Kind));
+            }
+            foreach (var result in results.Where(r => r.Error != null))
+                report.AppendLine().AppendLine(UMAContentCatalog.DisplayName(result.Kind) + ":").AppendLine(result.Error.Message);
+            report.AppendLine().Append("Completed packages have been kept.");
+            return report.ToString();
         }
 
         public static string Build(UMAContentKind kind, string destination)
@@ -109,6 +162,7 @@ namespace UMA.Editors.PackageSupport
             Directory.CreateDirectory(output);
             string target = Path.Combine(output, UMAContentCatalog.PackageStem(kind) + "-" + version + ".unitypackage");
             string temporary = target + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            bool validated = false;
             try
             {
                 using (var file = File.Create(temporary))
@@ -128,11 +182,91 @@ namespace UMA.Editors.PackageSupport
                 }
                 if (!UMAContentPackageArchiveValidator.TryValidate(temporary, kind, out _, out error))
                     throw new InvalidDataException(error);
-                if (File.Exists(target)) File.Replace(temporary, target, null);
-                else File.Move(temporary, target);
+                validated = true;
+                PublishValidatedArchive(temporary, target);
                 return target;
             }
-            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+            catch (Exception exception)
+            {
+                throw new IOException("Could not build plugin package:\n" + target + "\n\n" + exception.Message, exception);
+            }
+            finally
+            {
+                // A completed archive is useful for recovery if publishing failed. Do not discard it
+                // or let cleanup of an incomplete archive hide the original build error.
+                if (!validated) TryDeleteBuildFile(temporary);
+            }
+        }
+
+        private static void PublishValidatedArchive(string temporary, string target)
+        {
+            string previous = target + "." + Guid.NewGuid().ToString("N") + ".previous";
+            bool movedPrevious = false;
+            try
+            {
+                // Mono's File.Replace can fail with "Unable to remove the file to be replaced"
+                // without identifying the file. Rename within this directory instead, keeping the
+                // previous archive until the validated replacement is in place.
+                if (File.Exists(target))
+                {
+                    RetryFileOperation(() => File.Move(target, previous));
+                    movedPrevious = true;
+                }
+                RetryFileOperation(() => File.Move(temporary, target));
+            }
+            catch (Exception exception)
+            {
+                string recovery = "";
+                if (movedPrevious)
+                {
+                    try
+                    {
+                        RetryFileOperation(() => File.Move(previous, target));
+                        recovery = "\nThe previous package was restored.";
+                    }
+                    catch (Exception restoreException)
+                    {
+                        recovery = "\nThe previous package is preserved at:\n" + previous +
+                            "\nIt could not be restored: " + restoreException.Message;
+                    }
+                }
+                throw new IOException("Could not install the built archive at:\n" + target +
+                    "\n\nThe validated new archive is preserved at:\n" + temporary + recovery +
+                    "\n\nClose any application using the destination file and check the folder's write permissions." +
+                    "\n" + exception.Message, exception);
+            }
+            if (movedPrevious) TryDeleteBuildFile(previous);
+        }
+
+        private static void RetryFileOperation(Action operation)
+        {
+            for (int attempt = 0; ; attempt++)
+            {
+                try { operation(); return; }
+                catch (IOException) when (attempt < 3) { }
+                catch (UnauthorizedAccessException) when (attempt < 3) { }
+                System.Threading.Thread.Sleep(100 * (attempt + 1));
+            }
+        }
+
+        private static void TryDeleteBuildFile(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) return;
+                RetryFileOperation(() =>
+                {
+                    // These are generated build files, which can inherit read-only from the old archive.
+                    var attributes = File.GetAttributes(path);
+                    if ((attributes & FileAttributes.ReadOnly) != 0)
+                        File.SetAttributes(path, attributes & ~FileAttributes.ReadOnly);
+                    File.Delete(path);
+                });
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning("[UMA Plugins] Could not clean up build file:\n" + path + "\n" + exception.Message);
+            }
         }
 
         private static IEnumerable<string> EnumerateFiles(string root)

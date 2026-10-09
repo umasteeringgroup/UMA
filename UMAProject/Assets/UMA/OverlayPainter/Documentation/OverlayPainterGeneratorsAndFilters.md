@@ -1270,18 +1270,47 @@ Gotchas:
 
 ## Edge Wear
 
+**Wear Placement** defaults to **Exposed Edges** for new layers. This follows physical open rims
+and convex creases of at least 30 degrees, including sharp shoulder tips. Shallower convex sections
+are included when they continue the crease and reconnect to a detected edge at both ends, avoiding
+gaps along bevels whose angle varies. Split shading normals,
+UV seams, flat triangulation diagonals, and concave folds do not create artificial wear edges.
+**Edge Width (% of Mesh)** sets a band in world space relative to the mesh bounds diagonal, so
+its physical width stays consistent between draft previews and full textures.
+
+**Edge Fade Level** blends between a solid band (0) and the full **Edge Falloff Curve** (1,
+the default). The falloff curve's X axis runs from the physical edge (0) to the outer width (1);
+Y is coverage. Its default is a straight line from (0, 1) to (1, 0), giving a linear fade.
+Coverage is always zero beyond Edge Width, even if a custom curve ends above zero.
+
+**Edge Breakup Curve** uses the same distance axis; Y controls the influence of **Fractal
+Breakup**. The default rises from zero at the rim to one at the outer boundary, keeping the
+rim intact while increasing breakup farther away. A flat zero curve disables breakup; a flat
+one applies it throughout the band. **Fractal Edge** varies breakup contrast in this mode.
+Breakup reduces the faded coverage instead of distorting or thresholding it into gaps.
+
+Choose **Overall Wear** for the original broad, textured surface treatment. Existing layers and
+saved parameter profiles retain this mode on upgrade; select Exposed Edges explicitly to change
+them. Reset to Defaults selects Exposed Edges.
+
 Normal-map edges and Normal Control relief from lower layers participate in edge detection and
 spread. **Normal Detail Influence** controls sensitivity and **Normal Detail Radius** controls the
 curvature sampling scale in pixels at 2048 resolution. GPU generation uses the same lower-layer
 boundary as CPU generation and previews; it excludes its own previous output and all higher layers.
+In Exposed Edges mode, **Normal Detail Wear** limits this additional texture-based coverage
+(default 0.15); set it to zero for geometry-only edge wear, or increase it to emphasize raised
+lettering and other normal-map details. Overall Wear keeps the original unrestricted response.
 
 **Best for:** chipped paint, polished convex edges, rubbed corners, exposed metal, and abrasion on
 armor or props.
 
 **Outputs:** Albedo, Roughness, Metallic, and Normal Control.
 
-**Edge Detection Level** restricts the result to stronger convex curvature. **Edge Size (px)** searches
-around the detected feature, **Wear Spread** controls reach, and **Wear Level** controls coverage.
+**Edge Detection Level** restricts normal-detail selection in Exposed Edges mode and convex
+curvature in Overall Wear. **Edge Size (px)** and **Wear Spread** expand normal detail in
+Exposed Edges mode, or the whole selection in Overall Wear. Physical rim width and fade are
+controlled exclusively by Edge Width and the fade controls, avoiding duplicate offset bands.
+**Wear Level** controls overall coverage.
 **Cavity Exclusion** prevents wear from spreading into protected concave regions.
 
 Normal Detail Influence can recognize small edge detail from the composed Normal channel. Fractal

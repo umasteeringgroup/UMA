@@ -154,11 +154,19 @@ namespace UMA.TexturePaint.Editor
             TexturePaintProjectionSettings settings = layer.projectionSettings.Clone();
             DrawProjectionGizmoSize();
             EditorGUILayout.HelpBox("Click the model or drag the center Move handle to position and align this projection to the surface normal. Drag X/Y to resize along the surface, Z for depth on either side of the surface, and the ring to rotate around the normal. Fit to Surface wraps the patch explicitly; placement stays fixed in world space.", MessageType.None);
-            if (settings.garment?.enabled != true) EditorGUILayout.LabelField("Assign textures, sprites, overlays, or colors in Layer Channels & Settings below. Albedo alpha supplies the shared silhouette; without albedo, the first assigned map supplies it.", EditorStyles.wordWrappedMiniLabel);
+            bool instance = layer.links?.instance?.IsSet == true;
+            if (!instance && settings.garment?.enabled != true) EditorGUILayout.LabelField("Assign textures, sprites, overlays, or colors in Layer Channels & Settings below. Albedo alpha supplies the shared material silhouette; without albedo, the first assigned map supplies it. Normal Control textures and sprites use their own alpha.", EditorStyles.wordWrappedMiniLabel);
             EditorGUI.BeginChangeCheck();
             settings.garment ??= new TexturePaintGarmentSettings();
-            using (new EditorGUI.DisabledScope(layer.links?.instance?.IsSet == true))
-                DrawGarmentSettings(set, layer, settings.garment, false);
+            if (!instance)
+            {
+                if (settings.garment.enabled) DrawGarmentSettings(set, layer, settings.garment, false);
+                else if (GUILayout.Button("Convert to Garment…"))
+                {
+                    settings.garment.enabled = true;
+                    GUI.changed = true;
+                }
+            }
             EditorGUILayout.LabelField("Texture Mirroring (All Channels)", EditorStyles.boldLabel);
             settings.flipX = EditorGUILayout.Toggle(new GUIContent("Flip X (Left/Right)",
                 "Mirror the projected images left to right along the projection's local X axis. All channel images, shared source alpha, and normal-map directions flip together."), settings.flipX);
@@ -183,7 +191,7 @@ namespace UMA.TexturePaint.Editor
             }
             settings.width = width; settings.height = height;
             settings.depth = EditorGUILayout.FloatField(new GUIContent("Depth (Z)", "Maximum projection distance in front of and behind the placement surface. Nearby raised polygons are included; geometry outside the volume is clipped."), settings.depth);
-            using(new EditorGUI.DisabledScope(layer.links?.instance?.IsSet == true))
+            if (!instance)
             {
             settings.fade = (TexturePaintProjectionFade)EditorGUILayout.EnumPopup("Edge Fade", settings.fade);
             if (settings.fade != TexturePaintProjectionFade.None)
@@ -242,7 +250,7 @@ namespace UMA.TexturePaint.Editor
                     }
                 }
             }
-            using (new EditorGUI.DisabledScope(!ResolveLayerSymmetry(layer).enabled || !settings.placed))
+            if (!instance && ResolveLayerSymmetry(layer).enabled && settings.placed)
                 if (GUILayout.Button("Create Symmetry Instances")) CreateProjectionSymmetry(set,layer);
             if (GUILayout.Button("Regenerate Projection"))
                 ChangeProjectionWithHistory(set, CurrentProjection(set, layer.id), settings, false);
@@ -270,6 +278,8 @@ namespace UMA.TexturePaint.Editor
         private bool ChangeProjectionChannelSources(TextureSet set, TexturePaintLayer layer,
             IReadOnlyDictionary<TexturePaintChannel, TexturePaintChannelSourceSettings> sources)
         {
+            layer = CurrentProjection(set, layer?.id);
+            if (layer == null) return false;
             if (layer.links?.instance?.IsSet == true) return false;
             if (!TryResolveLogicalPeers(set, layer, out var peers, out string error))
             { ShowWorkspaceStatus(error); return false; }
@@ -308,6 +318,7 @@ namespace UMA.TexturePaint.Editor
         private bool ChangeProjectionWithHistory(TextureSet set, TexturePaintLayer layer,
             TexturePaintProjectionSettings settings, bool gesture = false)
         {
+            if (layer != null) layer = CurrentProjection(set, layer.id);
             if (layer?.kind != TexturePaintLayerKind.Projection) return false;
             if (pendingProjectionEdit != null && (!gesture || pendingProjectionEdit.id != layer.id)) FinishProjectionEdit();
             if (pendingProjectionEdit != null)

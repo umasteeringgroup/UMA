@@ -8,6 +8,7 @@ Texture2D<float4> _MeshSignedCurvature;
 Texture2D<float4> _MeshAmbientOcclusion;
 Texture2D<float4> _MeshThickness;
 Texture2D<float4> _MeshSurfaceId;
+Texture2D<float4> _MeshExposedEdgeDistance;
 Texture2D<float4> _SourceNormal;
 Texture2D<float4> _SourceAO;
 Texture2D<float4> _P_surfaceTexture;
@@ -24,6 +25,13 @@ int _HasP_surfaceTexture;
 int _HasP_surfaceMask;
 
 int _P_projection;
+int _P_wearMode;
+float _P_edgeWidth;
+float _P_detailWear;
+float _P_fadeLevel;
+// Same 128 samples and interpolation as TexturePaintPluginCurveLookup.
+float4 _P_falloffCurve[32];
+float4 _P_breakupCurve[32];
 float _P_textureScale;
 int _P_seed;
 float _P_normalCurvature;
@@ -228,8 +236,26 @@ float4 SampleMaskProjected(float3 position, float3 normal, float2 uv, float scal
     return projected;
 }
 
-float WeatheringFeature(float2 uv, bool dirt, bool includeNormal)
+float EdgeCurve(float t, bool breakup)
 {
+    float position = saturate(t) * 127.0;
+    int first = (int)floor(position);
+    int next = min(first + 1, 127);
+    return breakup ? lerp(_P_breakupCurve[first / 4][first % 4], _P_breakupCurve[next / 4][next % 4], position - first) :
+        lerp(_P_falloffCurve[first / 4][first % 4], _P_falloffCurve[next / 4][next % 4], position - first);
+}
+
+float WeatheringFeature(float2 uv, bool dirt, bool includeNormal, bool includeRim)
+{
+    if (!dirt && _P_wearMode == 0)
+    {
+        float distance = _MeshExposedEdgeDistance.SampleLevel(sampler_linear_clamp, saturate(uv), 0).r;
+        float t = distance / (clamp(_P_edgeWidth, 0.02, 3.0) * 0.01);
+        float rim = includeRim && t < 1.0 ? lerp(1.0, saturate(EdgeCurve(t, false)), saturate(_P_fadeLevel)) : 0.0;
+        float detail = includeNormal ? max(0.0, NormalCurvature(uv) * _P_normalCurvature) : 0.0;
+        float feature = max(rim, SmoothSelection(_P_detectionLevel, 1.0, saturate(detail) * saturate(_P_detailWear)));
+        return feature * (1.0 - saturate(Cavity(uv) * _P_cavityInfluence));
+    }
     float curvature = SignedCurvature(uv);
     if (includeNormal)
         curvature = clamp(curvature + NormalCurvature(uv) * _P_normalCurvature, -1.0, 1.0);
@@ -241,7 +267,7 @@ float WeatheringFeature(float2 uv, bool dirt, bool includeNormal)
 
 float WeatheringCoverage(float2 uv, bool dirt, float3 position)
 {
-    float selection = WeatheringFeature(uv, dirt, true);
+    float selection = WeatheringFeature(uv, dirt, true, true);
     float2 radius = _P_featureSize / max(float2(_OutputSize), 1.0);
     float4 centerId = MeshId(uv);
     float nearby = 0.0;
@@ -252,12 +278,21 @@ float WeatheringCoverage(float2 uv, bool dirt, float3 position)
     {
         float2 sampleUv = uv + offsets[i];
         if (all(sampleUv >= 0.0) && all(sampleUv <= 1.0) && SameIsland(centerId, MeshId(sampleUv)))
-            nearby = max(nearby, WeatheringFeature(sampleUv, dirt, true));
+            nearby = max(nearby, WeatheringFeature(sampleUv, dirt, true, false));
     }
     selection = max(selection, nearby * _P_spread);
     float3 noisePosition = _P_projection == 0 ? float3(uv, 0) : position;
     float fractal = Fbm(noisePosition * max(0.01, _P_breakupScale), _P_seed,
         _P_fractalLevels, _P_fractalPersistence);
+    if (!dirt && _P_wearMode == 0)
+    {
+        float distance = _MeshExposedEdgeDistance.SampleLevel(sampler_linear_clamp, saturate(uv), 0).r;
+        float t = distance / (clamp(_P_edgeWidth, 0.02, 3.0) * 0.01);
+        float breakupWeight = saturate(EdgeCurve(t, true));
+        fractal = saturate(fractal + (fractal - 0.5) * _P_fractalEdge);
+        float breakupMask = lerp(1.0, SmoothSelection(0.2, 0.8, fractal), _P_breakup);
+        return saturate(selection * lerp(1.0, breakupMask, breakupWeight) * _P_amount);
+    }
     float edgeWeight = 4.0 * selection * (1.0 - selection);
     selection = saturate(selection + (fractal - 0.5) * _P_fractalEdge * edgeWeight);
     float breakupMask = lerp(1.0, SmoothSelection(0.2, 0.8, fractal), _P_breakup);

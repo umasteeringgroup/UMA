@@ -14,6 +14,11 @@ namespace UMA
         private readonly List<PluginCard> pluginCards = new();
         private Vector2 pluginsScroll;
         private double nextPluginStatusRefresh;
+        private bool pluginStatusDirty = true;
+        private bool pluginStatusWasBusy;
+        private bool navigationPackageStatusDirty = true;
+        private SrpSupport navigationInstalledSrp;
+        private bool navigationSrpUpdateAvailable;
         private GUIStyle pluginTitleStyle;
         private GUIStyle pluginRowStyle;
         private bool pluginActionQueued;
@@ -34,15 +39,50 @@ namespace UMA
             ClearLog();
             currentButton = PluginsPage;
             pluginsScroll = Vector2.zero;
-            RefreshPluginStatus();
+            InvalidatePluginStatus();
         }
 
         private void OnInspectorUpdate()
         {
-            if (currentButton != PluginsPage || EditorApplication.timeSinceStartup < nextPluginStatusRefresh)
+            if (EditorApplication.timeSinceStartup < nextPluginStatusRefresh)
                 return;
-            RefreshPluginStatus();
-            Repaint();
+            nextPluginStatusRefresh = EditorApplication.timeSinceStartup + .25;
+            bool busy = IsPluginOperationBusy();
+            if (!busy && navigationPackageStatusDirty)
+            {
+                navigationInstalledSrp = GetInstalledSrpSupport();
+                navigationSrpUpdateAvailable = IsInstalledSrpUpdateAvailable();
+                navigationPackageStatusDirty = false;
+                Repaint();
+            }
+            if (currentButton != PluginsPage) return;
+            if (busy != pluginStatusWasBusy)
+            {
+                pluginStatusWasBusy = busy;
+                pluginStatusDirty = true;
+                Repaint();
+            }
+            // Manifest validation and recursive ownership checks are disk work, not
+            // an idle UI poll. Refresh only after changes, once imports have settled.
+            if (!busy && pluginStatusDirty)
+            {
+                RefreshPluginStatus();
+                Repaint();
+            }
+            else if (UMAPluginPackageDownload.IsActive) Repaint();
+        }
+
+        private bool IsPluginOperationBusy() => pluginActionQueued ||
+            UMAContentPackageInstaller.IsInstallingAllPlugins || UMAPluginPackageDownload.IsActive ||
+            EditorApplication.isCompiling || EditorApplication.isUpdating ||
+            File.Exists("Library/UMA/ContentInstaller/pending.json") ||
+            File.Exists("Library/UMA/PluginRemoval/pending.json");
+
+        private void InvalidatePluginStatus()
+        {
+            pluginStatusDirty = true;
+            navigationPackageStatusDirty = true;
+            nextPluginStatusRefresh = EditorApplication.timeSinceStartup + .25;
         }
 
         private void RefreshPluginStatus()
@@ -64,12 +104,11 @@ namespace UMA
                 });
             }
             canRemoveAllPlugins = UMAPluginPackageRemoval.CanRemoveAll(out removeAllPluginsReason);
-            nextPluginStatusRefresh = EditorApplication.timeSinceStartup + 1;
+            pluginStatusDirty = false;
         }
 
         private void DrawPluginsPage()
         {
-            if (pluginCards.Count == 0) RefreshPluginStatus();
             pluginTitleStyle ??= new GUIStyle(EditorStyles.boldLabel)
             {
                 wordWrap = false,
@@ -77,10 +116,7 @@ namespace UMA
             };
             pluginRowStyle ??= new GUIStyle(EditorStyles.label) { wordWrap = false, clipping = TextClipping.Clip };
 
-            bool busy = pluginActionQueued || UMAContentPackageInstaller.IsInstallingAllPlugins || UMAPluginPackageDownload.IsActive ||
-                EditorApplication.isCompiling || EditorApplication.isUpdating ||
-                File.Exists("Library/UMA/ContentInstaller/pending.json") ||
-                File.Exists("Library/UMA/PluginRemoval/pending.json");
+            bool busy = IsPluginOperationBusy() || pluginCards.Count == 0;
             using (new EditorGUILayout.HorizontalScope())
             {
                 GUILayout.Label("Plugins", EditorStyles.largeLabel, GUILayout.ExpandWidth(false));
@@ -220,7 +256,7 @@ namespace UMA
                     if (this != null)
                     {
                         pluginActionQueued = false;
-                        RefreshPluginStatus();
+                        InvalidatePluginStatus();
                         Repaint();
                     }
                 }

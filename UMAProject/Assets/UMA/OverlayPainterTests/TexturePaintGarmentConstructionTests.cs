@@ -64,6 +64,66 @@ namespace UMA.TexturePaint.Editor.Tests
 
         private static int HemIndex(TexturePaintSeamPreset preset)
             =>Enum.GetValues(typeof(TexturePaintGarmentPreset)).Length+(int)preset;
+
+        [TestCase(false)] [TestCase(true)]
+        public void ExplicitGarmentConversionPreservesPathAndSourcesAndSupportsUndo(bool worldSpace)
+        {
+            using var p=new Path(false,worldSpace);
+            Set(p.stage,"pathGarment",null);Set(p.stage,"pathHemSeam",null);
+            Set(p.stage,"pathMode",TexturePaintPathMode.Stamps);
+            p.layer.spline.AddPoint(Vector3.zero,Vector2.zero,0,0,Vector3.forward);
+            p.layer.spline.AddPoint(Vector3.up,Vector2.up,0,1,Vector3.forward);
+            p.layer.spline.widths[0]=.5f;p.layer.spline.widths[1]=1.5f;
+            Invoke(p.stage,"CaptureSplineSettings",p.layer);
+            string original=JsonUtility.ToJson(p.layer.splineSettings);
+            string shape=JsonUtility.ToJson(p.layer.spline);
+            string source=JsonUtility.ToJson(p.layer.GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings);
+            float radius=p.brush.size;
+            var preset=Enum.GetValues(typeof(TexturePaintGarmentPreset)).Cast<TexturePaintGarmentPreset>()
+                .First(value=>!TexturePaintPathGenerators.IsLinearGarment(value));
+            Assert.That(Invoke(p.stage,"ConvertPathToGarment",p.set,preset),Is.True);
+            Assert.That(p.layer.splineSettings.garment.enabled,Is.True);
+            Assert.That(p.layer.splineSettings.garment.preset,Is.EqualTo(preset));
+            Assert.That(p.layer.splineSettings.pathMode,Is.EqualTo(TexturePaintPathMode.Ribbon));
+            Assert.That(p.brush.size,Is.EqualTo(radius));
+            Assert.That(JsonUtility.ToJson(p.layer.spline),Is.EqualTo(shape));
+            Assert.That(JsonUtility.ToJson(p.layer.GetChannelSettings(TexturePaintChannel.Albedo).sourceSettings),Is.EqualTo(source));
+            Assert.That(Invoke(p.stage,"UndoLightweight"),Is.True);
+            Assert.That(JsonUtility.ToJson(p.layer.splineSettings),Is.EqualTo(original));
+            Assert.That(Invoke(p.stage,"RedoLightweight"),Is.True);
+            Assert.That(p.layer.splineSettings.garment.enabled,Is.True);
+            Assert.That(JsonUtility.ToJson(p.layer.spline),Is.EqualTo(shape));
+        }
+
+        [TestCase(false,false)] [TestCase(true,false)] [TestCase(false,true)] [TestCase(true,true)]
+        public void GeneralPathWidthPreservesPointShapingAndSupportsUndo(bool worldSpace,bool generated)
+        {
+            using var p=new Path(true,worldSpace);
+            if(!generated)
+            {
+                Set(p.stage,"pathHemSeam",null);Set(p.stage,"pathGarment",null);
+                Set(p.stage,"pathMode",TexturePaintPathMode.Stamps);
+            }
+            p.layer.spline.AddPoint(Vector3.zero,Vector2.zero,0,0,Vector3.forward);
+            p.layer.spline.AddPoint(Vector3.up,Vector2.up,0,1,Vector3.forward);
+            p.layer.spline.widths[0]=.5f;p.layer.spline.widths[1]=1.5f;
+            Invoke(p.stage,"CaptureSplineSettings",p.layer);
+            float original=p.brush.size;
+            string shape=JsonUtility.ToJson(p.layer.spline);
+            Assert.That(Invoke(p.stage,"ApplyPathWidth",p.set,.2f),Is.True);
+            Assert.That(p.brush.size,Is.EqualTo(.1f));
+            Assert.That(p.layer.splineSettings.brushSize,Is.EqualTo(.1f));
+            Assert.That(JsonUtility.ToJson(p.layer.spline),Is.EqualTo(shape),"Changing the base width must retain point widths and placement.");
+            var restored=JsonUtility.FromJson<TexturePaintSplineSettings>(JsonUtility.ToJson(p.layer.splineSettings));
+            Assert.That(restored.brushSize,Is.EqualTo(.1f));
+            Assert.That(Invoke(p.stage,"ApplyPathWidth",p.set,.2f),Is.False);
+            Assert.That(Invoke(p.stage,"ApplyPathWidth",p.set,float.NaN),Is.False);
+            Assert.That(Invoke(p.stage,"UndoLightweight"),Is.True);
+            Assert.That(p.layer.splineSettings.brushSize,Is.EqualTo(original));
+            Assert.That(JsonUtility.ToJson(p.layer.spline),Is.EqualTo(shape));
+            Assert.That(Invoke(p.stage,"RedoLightweight"),Is.True);
+            Assert.That(p.layer.splineSettings.brushSize,Is.EqualTo(.1f));
+        }
         private static string UnrelatedSettings(TexturePaintSplineSettings settings)
         {
             var copy=settings.Clone();copy.garment=null;copy.hemSeam=null;copy.hemSeamSelected=false;
@@ -71,7 +131,7 @@ namespace UMA.TexturePaint.Editor.Tests
         }
 
         [Test]
-        public void ConstructionCatalogIncludesEveryHemOnlyForPathsAndUsesOneGarmentMenu()
+        public void ConstructionCatalogRetainsLegacyPresetsAndMenuOmitsMigratedGenerators()
         {
             var paths=(string[])Call("BuildGarmentConstructionNames",true);
             var projections=(string[])Call("BuildGarmentConstructionNames",false);
@@ -81,7 +141,9 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(projections.Any(n=>n.StartsWith("Hems & Seams/",StringComparison.Ordinal)),Is.False);
             using var p=new Path(false);
             var menu=new GenericMenu();Invoke(p.stage,"AddGarmentMenu",menu,p.set,true);
-            Assert.That(menu.GetItemCount(),Is.EqualTo(48),"All path constructions must live under the shared Garment menu");
+            int garmentEntries=Enum.GetValues(typeof(TexturePaintGarmentPreset)).Cast<TexturePaintGarmentPreset>()
+                .Count(preset=>!TexturePaintPathGenerators.IsLinearGarment(preset));
+            Assert.That(menu.GetItemCount(),Is.EqualTo(garmentEntries),"Linear garments and hems now belong under Generators, while the construction catalog preserves older documents.");
             var projectionMenu=new GenericMenu();Invoke(p.stage,"AddGarmentMenu",projectionMenu,p.set,false);
             Assert.That(projectionMenu.GetItemCount(),Is.EqualTo(32),"Do not offer unsupported hem projections");
         }

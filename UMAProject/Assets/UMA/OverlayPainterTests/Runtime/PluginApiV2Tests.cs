@@ -531,6 +531,8 @@ namespace UMA.TexturePaint.Tests
                 set.proceduralMeshMaps = null;
                 TexturePaintPluginParameterSet wearParameters = host.GetParameters(wear);
                 ConfigureDeterministicWeathering(wearParameters);
+                // Broad signed-curvature selection is retained as the legacy Overall Wear mode.
+                wearParameters.Get("wearMode").number = 1;
                 await host.ExecuteCommandAsync(wear, store, wearParameters, null,
                     CancellationToken.None);
                 Assert.That(set.layers, Has.Count.EqualTo(1));

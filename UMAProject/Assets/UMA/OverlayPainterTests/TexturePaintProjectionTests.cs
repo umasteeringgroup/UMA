@@ -940,6 +940,264 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(Pixel(layer).a, Is.EqualTo(.5f).Within(.015f));
         }
 
+        [TestCase(false)] [TestCase(true)]
+        public void ProjectionSourceColorsApplyRGBAAndSharedCoverage(bool sprite)
+        {
+            var set = Set(); AddChannel(set, TexturePaintChannel.Roughness, 1);
+            var layer = set.AddProjectionLayer();
+            var settings = Definition(Image(new Color(.4f,.2f,.6f,.4f)));
+            var albedo = settings.GetChannelSource(TexturePaintChannel.Albedo, true);
+            if (sprite) { albedo.sprite = Own(Sprite.Create(settings.texture, new Rect(0,0,16,16), Vector2.one*.5f)); albedo.texture = null; }
+            albedo.multiplier = new Color(.5f,1,.25f,.5f);
+            albedo.additive = new Color(.1f,.2f,.3f,.1f);
+            var roughness = settings.GetChannelSource(TexturePaintChannel.Roughness, true);
+            roughness.texture = Image(new Color(.6f,.6f,.6f,1));
+            roughness.multiplier = new Color(.5f,.5f,.5f,.5f);
+            roughness.additive = new Color(.1f,.1f,.1f,.1f);
+            Generate(settings, new[]{set}, new[]{set}, layer);
+            Color expected = settings.texture.GetPixel(0,0) * albedo.multiplier.linear + albedo.additive.linear;
+            AssertColor(Pixel(layer), expected);
+            AssertColor(Pixel(layer, channel:TexturePaintChannel.Roughness), new Color(.4f,.4f,.4f,.25f));
+        }
+
+        private static void AssertColor(Color actual, Color expected)
+        {
+            for (int component=0; component<4; component++)
+                Assert.That(actual[component], Is.EqualTo(expected[component]).Within(.015f), "RGBA component " + component);
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void FillSourceColorsApplyRGBA(bool sprite)
+        {
+            var set = Set(); var image = Image(new Color(.4f,.2f,.6f,.4f));
+            using var generator = new TexturePaintFillGenerator(Shader.Find("Hidden/UMA/TexturePaint/FillGenerator"));
+            typeof(TextureSet).GetField("fillGenerator", Private).SetValue(set, generator);
+            var settings = new TexturePaintFillSettings { source=TexturePaintBrushSource.Texture,
+                sourceTexture=image, multiplier=new Color(.5f,1,.25f,.5f), additive=new Color(.1f,.2f,.3f,.1f) };
+            if (sprite) { settings.sourceSprite=Own(Sprite.Create(image,new Rect(0,0,16,16),Vector2.one*.5f)); settings.sourceTexture=null; }
+            var layer=set.AddFillLayer("RGBA fill",TexturePaintChannel.Albedo,settings);
+            Assert.That(layer, Is.Not.Null);
+            AssertColor(Pixel(layer),image.GetPixel(0,0)*settings.multiplier.linear+settings.additive.linear);
+        }
+
+        [TestCase(false, false)] [TestCase(true, false)] [TestCase(false, true)] [TestCase(true, true)]
+        public void ProjectionHeightUsesOwnAlphaIndependentOfAlbedo(bool sprite, bool wrapped)
+        {
+            var set=Set(); AddChannel(set,TexturePaintChannel.NormalControl,1);
+            var layer=set.AddProjectionLayer();var settings=Definition(Image(Color.white));
+            settings.mode=wrapped?TexturePaintProjectionMode.Wrapped:TexturePaintProjectionMode.Planar;
+            // A faint Albedo tint must not weaken the independently authored height sprite.
+            settings.GetChannelSource(TexturePaintChannel.Albedo,true).multiplier=new Color(0,0,0,.04f);
+            var image=Image(Color.clear);
+            for(int y=0;y<16;y++)for(int x=0;x<16;x++)
+                image.SetPixel(x,y,new Color(x<8?0:1,x<8?0:1,x<8?0:1,x>=4&&x<12?(x<8?.5f:1f):0));
+            image.filterMode=FilterMode.Point;image.Apply();
+            var height=settings.GetChannelSource(TexturePaintChannel.NormalControl,true);
+            if(sprite)height.sprite=Own(Sprite.Create(image,new Rect(0,0,16,16),Vector2.one*.5f));else height.texture=image;
+            Generate(settings,new[]{set},new[]{set},layer);
+            Assert.That(Pixel(layer,8,32,TexturePaintChannel.NormalControl).a,Is.Zero.Within(.001),"Transparent black must not recess the surface.");
+            Assert.That(Pixel(layer,56,32,TexturePaintChannel.NormalControl).a,Is.Zero.Within(.001),"Transparent white must not raise the surface.");
+            Assert.That(Pixel(layer,24,32,TexturePaintChannel.NormalControl).a,Is.EqualTo(.5f).Within(.01),"Fractional source alpha must not be squared or replaced by Albedo.");
+            Assert.That(Pixel(layer,40,32,TexturePaintChannel.NormalControl).a,Is.EqualTo(1).Within(.01));
+            height.multiplier.a=.5f;height.additive.a=.1f;
+            Generate(settings,new[]{set},new[]{set},layer);
+            Assert.That(Pixel(layer,24,32,TexturePaintChannel.NormalControl).a,Is.EqualTo(.35f).Within(.01));
+            Assert.That(Pixel(layer,56,32,TexturePaintChannel.NormalControl).a,Is.EqualTo(.1f).Within(.01),"Explicit additive alpha remains supported.");
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void TransparentProjectionHeightPreservesUnderlyingHeightAndNormals(bool invert)
+        {
+            var set=Set();AddChannel(set,TexturePaintChannel.NormalControl,1);AddChannel(set,TexturePaintChannel.Normal,2);
+            foreach(var channel in new[]{TexturePaintChannel.NormalControl,TexturePaintChannel.Normal})
+            {
+                var target=set.GetChannel(channel);
+                target.composite=EditableTextureTarget.Create("Height alpha regression",64,64,RenderTextureFormat.ARGBHalf);
+                target.editable.Reset(null,channel==TexturePaintChannel.Normal?new Color(.5f,.5f,1,1):new Color(.5f,.5f,.5f,1));
+            }
+            using var compositor=new TextureLayerCompositor(TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            typeof(TextureSet).GetField("compositor",Private).SetValue(set,compositor);
+            typeof(TextureSet).GetField("channelPackShader",Private).SetValue(set,TexturePaintGpuTestFixture.LoadShader("ChannelPack.compute"));
+            set.AddFillLayer("Underlying height",TexturePaintChannel.NormalControl,new Color(.3f,.3f,.3f,1));
+            set.BindPreviewTextures();
+            var beforeHeight=Pixels(set.GetChannel(TexturePaintChannel.NormalControl).composite);
+            var beforeNormal=Pixels(set.GetVisibleTexture(TexturePaintChannel.Normal));
+            var layer=set.AddProjectionLayer();var definition=Definition(Image(Color.white));var image=Image(Color.clear);
+            for(int y=4;y<12;y++)for(int x=4;x<12;x++)image.SetPixel(x,y,Color.white);
+            image.filterMode=FilterMode.Point;image.Apply();
+            definition.GetChannelSource(TexturePaintChannel.NormalControl,true).sprite=Own(Sprite.Create(image,new Rect(0,0,16,16),Vector2.one*.5f));
+            Generate(definition,new[]{set},new[]{set},layer);
+            var options=layer.GetChannelSettings(TexturePaintChannel.NormalControl);options.hasNormalControlStrength=true;
+            options.normalControlStrength=64;options.normalControlInvert=invert;set.BindPreviewTextures();
+            var afterHeight=Pixels(set.GetChannel(TexturePaintChannel.NormalControl).composite);
+            var afterNormal=Pixels(set.GetVisibleTexture(TexturePaintChannel.Normal));
+            foreach(int x in new[]{8,56}) {AssertColor(afterHeight[32*64+x],beforeHeight[32*64+x]);AssertColor(afterNormal[32*64+x],beforeNormal[32*64+x]);}
+            Assert.That(afterHeight[32*64+32].r,invert?Is.LessThan(beforeHeight[32*64+32].r):Is.GreaterThan(beforeHeight[32*64+32].r));
+            Assert.That(Array.Exists(afterNormal,p=>Mathf.Abs(p.r-.5f)>.1f||Mathf.Abs(p.g-.5f)>.1f),Is.True,"The opaque height sprite still produces strong normal detail.");
+        }
+
+        [Test] public void AddedProjectionHeightEditsResolveLiveLayerWithoutReselecting()
+        {
+            var set=Set(); AddChannel(set,TexturePaintChannel.NormalControl,1);
+            var lower=set.AddFillLayer("Lower height",TexturePaintChannel.NormalControl,new Color(.2f,.2f,.2f,1));
+            var layer=set.AddProjectionLayer(); Generate(Definition(),new[]{set},new[]{set},layer);
+            WithStage(Store(set),stage=>
+            {
+                Assert.That(Invoke(stage,"AddLayerChannelWithHistory",set,layer,TexturePaintChannel.NormalControl),Is.True);
+                var source=new TexturePaintChannelSourceSettings {source=TexturePaintBrushSource.Color,color=new Color(.8f,.8f,.8f,1)};
+                // Deliberately retain the UI's pre-replacement layer reference.
+                Assert.That(Invoke(stage,"ChangeLayerChannelSources",set,layer,
+                    new Dictionary<TexturePaintChannel,TexturePaintChannelSourceSettings>{[TexturePaintChannel.NormalControl]=source}),Is.True);
+                var current=set.layers[set.activeLayerIndex];
+                Assert.That(current.id,Is.EqualTo(layer.id));
+                Assert.That(Pixel(current,channel:TexturePaintChannel.NormalControl).r,Is.EqualTo(.8f).Within(.005));
+                Invoke(stage,"ChangeLayerNormalControlOptions",set,layer,48f,(bool?)true,(int?)5);
+                var settings=current.GetChannelSettings(TexturePaintChannel.NormalControl);
+                Assert.That(settings.normalControlInvert,Is.True);Assert.That(set.ResolveNormalControlStrength(settings),Is.EqualTo(48f));
+                Assert.That(settings.normalControlRadius,Is.EqualTo(5));Assert.That(lower.GetChannelSettings(TexturePaintChannel.NormalControl).normalControlRadius,Is.EqualTo(1));
+                Assert.That(lower.GetChannelSettings(TexturePaintChannel.NormalControl).normalControlInvert,Is.False);
+                Assert.That(set.normalControlInvert,Is.False);
+                Assert.That(Invoke(stage,"UndoLightweight"),Is.True);
+                Assert.That(current.GetChannelSettings(TexturePaintChannel.NormalControl).normalControlInvert,Is.False);
+                Assert.That(current.GetChannelSettings(TexturePaintChannel.NormalControl).normalControlRadius,Is.EqualTo(1));
+                Assert.That(Invoke(stage,"RedoLightweight"),Is.True);
+                Assert.That(current.GetChannelSettings(TexturePaintChannel.NormalControl).normalControlStrength,Is.EqualTo(48f));
+                var saved=JsonUtility.FromJson<TexturePaintLayerChannelSettings>(JsonUtility.ToJson(current.GetChannelSettings(TexturePaintChannel.NormalControl)));
+                Assert.That(saved.Clone().normalControlInvert,Is.True);Assert.That(saved.normalControlStrength,Is.EqualTo(48f));
+                Assert.That(saved.Clone().normalControlRadius,Is.EqualTo(5));
+            });
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void SourceBlurFiltersRGBAWithoutFringesOrAtlasBleed(bool sprite)
+        {
+            var image = Image(Color.green);
+            for (int y = 0; y < 16; y++) for (int x = 0; x < 8; x++)
+                image.SetPixel(x, y, x < 4 ? new Color(1,0,0,0) : Color.white);
+            image.filterMode = FilterMode.Point; image.Apply();
+            var region = sprite ? Own(Sprite.Create(image, new Rect(0,0,8,16), Vector2.one*.5f)) : null;
+            foreach (TexturePaintChannel channel in Enum.GetValues(typeof(TexturePaintChannel)))
+            {
+                var sharp = TexturePaintSpriteSource.Resolve(image, region, channel, TexturePaintNormalConvention.OpenGL, false);
+                var blurred = TexturePaintSpriteSource.Resolve(image, region, channel, TexturePaintNormalConvention.OpenGL, false, 2);
+                Assert.That(blurred.GetPixel(3,8).a, Is.InRange(.1f,.45f), channel.ToString());
+                Assert.That(sharp.GetPixel(3,8).a, Is.Zero.Within(.002f));
+                Assert.That(blurred.filterMode, Is.EqualTo(FilterMode.Bilinear));
+                if (channel != TexturePaintChannel.Normal)
+                    Assert.That(blurred.GetPixel(3,8).r, Is.EqualTo(1).Within(.01f), "Transparent RGB must not darken visible edges.");
+                else
+                {
+                    Color c = blurred.GetPixel(3,8);
+                    Assert.That(new Vector3(c.r*2-1,c.g*2-1,c.b*2-1).magnitude, Is.EqualTo(1).Within(.005f));
+                }
+                if (sprite && channel != TexturePaintChannel.Normal)
+                    Assert.That(blurred.GetPixel(7,8).b, Is.EqualTo(1).Within(.01f), "Adjacent green atlas tile must not bleed in.");
+                Assert.That(TexturePaintSpriteSource.Resolve(image,region,channel,TexturePaintNormalConvention.OpenGL,false,2), Is.SameAs(blurred));
+            }
+            AssertColor(image.GetPixel(3,8), new Color(1,0,0,0));
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void SourceBlurIsIndependentAcrossProjectionChannelsAndLayers(bool fill)
+        {
+            var image = Image(Color.clear);
+            for (int y=0;y<16;y++) for(int x=8;x<16;x++) image.SetPixel(x,y,Color.white);
+            image.filterMode=FilterMode.Point;image.Apply();
+            var sprite=Own(Sprite.Create(image,new Rect(0,0,16,16),Vector2.one*.5f));
+            var set=Set();AddChannel(set,TexturePaintChannel.Roughness,1);
+            using var generator = new TexturePaintFillGenerator(Shader.Find("Hidden/UMA/TexturePaint/FillGenerator"));
+            typeof(TextureSet).GetField("fillGenerator", Private).SetValue(set, generator);
+            TexturePaintLayer layer;
+            TexturePaintLayer untouched;
+            if(fill)
+            {
+                untouched=set.AddFillLayer("Untouched",TexturePaintChannel.Albedo,new TexturePaintFillSettings { source=TexturePaintBrushSource.Texture,sourceSprite=sprite });
+                layer=set.AddFillLayer("Blurred",TexturePaintChannel.Albedo,new TexturePaintFillSettings { source=TexturePaintBrushSource.Texture,sourceSprite=sprite,blur=3 });
+                Assert.That(set.UpdateFillLayer(layer,TexturePaintChannel.Roughness,new TexturePaintFillSettings { source=TexturePaintBrushSource.Texture,sourceSprite=sprite }),Is.True);
+            }
+            else
+            {
+                untouched=set.AddProjectionLayer();Generate(Definition(image),new[]{set},new[]{set},untouched);
+                layer=set.AddProjectionLayer();var settings=Definition(image);
+                settings.GetChannelSource(TexturePaintChannel.Albedo,true).blur=3;
+                settings.GetChannelSource(TexturePaintChannel.Roughness,true).sprite=sprite;
+                Generate(settings,new[]{set},new[]{set},layer);
+            }
+            Assert.That(Pixel(layer,28,32).a,Is.InRange(.08f,.45f));
+            Assert.That(Pixel(layer,28,32,TexturePaintChannel.Roughness).a,Is.Zero.Within(.005f),"Albedo blur must not blur Roughness coverage.");
+            Assert.That(Pixel(untouched,28,32).a,Is.Zero.Within(.005f),"The same source on another layer must remain sharp.");
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void SourceBlurPreservesUniformColorSpace(bool srgb)
+        {
+            var image=Own(new Texture2D(16,16,TextureFormat.RGBA32,false,!srgb));
+            var pixels=new Color[256];for(int i=0;i<pixels.Length;i++)pixels[i]=new Color(.4f,.2f,.6f,.5f);
+            image.SetPixels(pixels);image.Apply();
+            var set=Set();using var generator=new TexturePaintFillGenerator(Shader.Find("Hidden/UMA/TexturePaint/FillGenerator"));
+            typeof(TextureSet).GetField("fillGenerator",Private).SetValue(set,generator);
+            var settings=new TexturePaintFillSettings {source=TexturePaintBrushSource.Texture,sourceTexture=image};
+            var layer=set.AddFillLayer("Color blur",TexturePaintChannel.Albedo,settings);var before=Pixel(layer);
+            settings.blur=4;Assert.That(set.UpdateFillLayer(layer,TexturePaintChannel.Albedo,settings),Is.True);
+            AssertColor(Pixel(layer),before);
+        }
+
+        [Test] public void SourceBlurUndoRedoAndDocumentRoundTrip()
+        {
+            var image=Image(Color.clear);for(int y=0;y<16;y++)for(int x=8;x<16;x++)image.SetPixel(x,y,Color.white);
+            image.filterMode=FilterMode.Point;image.Apply();
+            var set=Set();var layer=set.AddProjectionLayer();Generate(Definition(image),new[]{set},new[]{set},layer);
+            WithStage(Store(set),stage=>
+            {
+                var source=layer.projectionSettings.GetChannelSourceSettings(TexturePaintChannel.Albedo);source.blur=4;
+                Assert.That(Invoke(stage,"ChangeLayerChannelSources",set,layer,new Dictionary<TexturePaintChannel,TexturePaintChannelSourceSettings>{[TexturePaintChannel.Albedo]=source}),Is.True);
+                Assert.That(Pixel(set.layers[0],28,32).a,Is.GreaterThan(.1f));
+                Assert.That(Invoke(stage,"UndoLightweight"),Is.True);Assert.That(Pixel(set.layers[0],28,32).a,Is.Zero.Within(.005f));
+                Assert.That(Invoke(stage,"RedoLightweight"),Is.True);Assert.That(Pixel(set.layers[0],28,32).a,Is.GreaterThan(.1f));
+                var record=new TexturePaintDocumentLayerChannel();record.SetSourceSettings(source);
+                var saved=JsonUtility.FromJson<TexturePaintDocumentLayerChannel>(JsonUtility.ToJson(record)).GetSourceSettings();
+                Assert.That(saved.Clone().blur,Is.EqualTo(4));
+                Assert.That(JsonUtility.FromJson<TexturePaintChannelSourceSettings>("{}").blur,Is.Zero);
+            });
+        }
+
+        [Test] public void SourceColorsUndoRedoRestoresBothSettingsAndPixels()
+        {
+            var set=Set(); var layer=set.AddProjectionLayer();
+            var definition=Definition(Image(new Color(.4f,.2f,.6f,.4f)));
+            Generate(definition,new[]{set},new[]{set},layer);
+            Color before=Pixel(layer);
+            WithStage(Store(set),stage=>
+            {
+                var source=layer.projectionSettings.GetChannelSourceSettings(TexturePaintChannel.Albedo);
+                source.multiplier=new Color(.5f,1,.25f,.5f);source.additive=new Color(.1f,.2f,.3f,.1f);
+                Assert.That(Invoke(stage,"ChangeLayerChannelSources",set,layer,
+                    new Dictionary<TexturePaintChannel,TexturePaintChannelSourceSettings>{[TexturePaintChannel.Albedo]=source}),Is.True);
+                Color after=before*source.multiplier.linear+source.additive.linear;
+                AssertColor(Pixel(set.layers[0]),after);
+                Assert.That(Invoke(stage,"UndoLightweight"),Is.True);
+                AssertColor(Pixel(set.layers[0]),before);
+                AssertColor(set.layers[0].projectionSettings.GetChannelSourceSettings(TexturePaintChannel.Albedo).multiplier,Color.white);
+                Assert.That(Invoke(stage,"RedoLightweight"),Is.True);
+                AssertColor(Pixel(set.layers[0]),after);
+                AssertColor(set.layers[0].projectionSettings.GetChannelSourceSettings(TexturePaintChannel.Albedo).additive,source.additive);
+            });
+        }
+
+        [Test] public void SourceColorsPersistWithRGBAAndLegacyDefaultsAreNeutral()
+        {
+            var defaults=JsonUtility.FromJson<TexturePaintChannelSourceSettings>("{}");
+            AssertColor(defaults.multiplier,Color.white); AssertColor(defaults.additive,Color.clear);
+            var source=new TexturePaintChannelSourceSettings { multiplier=new Color(.1f,.2f,.3f,.4f),additive=new Color(.5f,.6f,.7f,.8f) };
+            var record=new TexturePaintDocumentLayerChannel(); record.SetSourceSettings(source);
+            var restored=JsonUtility.FromJson<TexturePaintDocumentLayerChannel>(JsonUtility.ToJson(record)).GetSourceSettings();
+            AssertColor(restored.multiplier,source.multiplier); AssertColor(restored.additive,source.additive);
+            var projection=new TexturePaintProjectionChannelSource(); projection.ApplyChannelSettings(source);
+            AssertColor(projection.Clone().ToChannelSettings().additive,source.additive);
+            var legacy=JsonUtility.FromJson<TexturePaintDocumentLayerChannel>("{\"hasSourceSettings\":true}").GetSourceSettings();
+            AssertColor(legacy.multiplier,Color.white);AssertColor(legacy.additive,Color.clear);
+        }
+
         [Test] public void ChannelSourceEditsUndoWithoutReplacingOtherMapsOrPlacement()
         {
             var set = Set(); AddChannel(set, TexturePaintChannel.Normal, 1); var layer = set.AddProjectionLayer();
@@ -1257,13 +1515,14 @@ namespace UMA.TexturePaint.Editor.Tests
                 float alphaError = 0, rgbError = 0;
                 for (int i = 0; i < actual.Length; i++)
                 {
-                    alphaError = Mathf.Max(alphaError, Mathf.Abs(actual[i].a - coverage[i].a));
-                    if (coverage[i].a <= .05f) continue;
+                    float expectedAlpha = expected.Key == TexturePaintChannel.NormalControl ? expected.Value.a : coverage[i].a;
+                    alphaError = Mathf.Max(alphaError, Mathf.Abs(actual[i].a - expectedAlpha));
+                    if (expectedAlpha <= .05f) continue;
                     rgbError = Mathf.Max(rgbError, Mathf.Abs(actual[i].r - expected.Value.r));
                     rgbError = Mathf.Max(rgbError, Mathf.Abs(actual[i].g - expected.Value.g));
                     rgbError = Mathf.Max(rgbError, Mathf.Abs(actual[i].b - expected.Value.b));
                 }
-                Assert.That(alphaError, Is.LessThan(.002f), expected.Key + " must use the complete albedo silhouette");
+                Assert.That(alphaError, Is.LessThan(.002f), expected.Key + " must use its intended silhouette (independent source alpha for height)");
                 Assert.That(rgbError, Is.LessThan(.025f), expected.Key + " must retain its RGB values in visible pixels");
             }
         }

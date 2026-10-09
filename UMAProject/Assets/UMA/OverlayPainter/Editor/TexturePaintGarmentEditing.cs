@@ -122,7 +122,18 @@ namespace UMA.TexturePaint.Editor
         }
         private void DrawPathGarmentProperties(TextureSet set)
         {
-            if(!TryGetActivePathLayer(set,out var layer))return;
+            if(!TryGetActivePathLayer(set,out var layer) || pathGenerator?.enabled==true)return;
+            // A disabled construction still belongs to its path and must remain editable.
+            // Ordinary image paths have no garment settings until explicitly converted.
+            if(pathGarment==null && pathHemSeam==null)
+            {
+                using(new EditorGUI.DisabledScope(layer.links?.instance?.IsSet==true))
+                    if(GUILayout.Button("Convert to Garment…"))
+                    {
+                        var menu=new GenericMenu();AddPathGarmentConversionMenu(menu,set);menu.ShowAsContext();
+                    }
+                return;
+            }
             var settings=pathGarment?.Clone();var hem=pathHemSeam?.Clone();
             int selected=CurrentPathConstruction(layer);
             bool enabled=settings?.enabled==true || hem?.enabled==true;
@@ -138,12 +149,41 @@ namespace UMA.TexturePaint.Editor
                 SelectPathConstruction(selected,enabled,ref settings,ref hem);
                 if(enabled)
                 {
-                    width=DrawGarmentRibbonWidth(width,spline.worldSpace);
                     if(selected<garmentConstructions.Length)DrawGarmentSettings(set,layer,settings,true,false);
                     else DrawHemSeamSettings(set,hem);
                 }
             }
             if(EditorGUI.EndChangeCheck())ApplyPathConstructionEdit(set,settings,hem,width,selected);
+        }
+
+        internal void AddPathGarmentConversionActions(GenericMenu menu)
+            => AddPathGarmentConversionMenu(menu,ActiveTextureSet);
+
+        private void AddPathGarmentConversionMenu(GenericMenu menu,TextureSet set)
+        {
+            if(!TryGetActivePathLayer(set,out var layer))return;
+            foreach(var preset in garmentConstructions)
+            {
+                if(TexturePaintPathGenerators.IsLinearGarment(preset))continue;
+                var selected=preset;
+                var label=new GUIContent("Convert to Garment/"+
+                    TexturePaintGarmentSettings.FamilyName(TexturePaintGarmentSettings.Kind(preset))+"/"+
+                    ObjectNames.NicifyVariableName(preset.ToString()));
+                if(layer.links?.instance?.IsSet==true)menu.AddDisabledItem(label);
+                else menu.AddItem(label,false,()=>
+                {
+                    if(TryGetActivePathLayer(set,out var current) && ReferenceEquals(current,layer))
+                        ConvertPathToGarment(set,selected);
+                });
+            }
+        }
+
+        private bool ConvertPathToGarment(TextureSet set,TexturePaintGarmentPreset preset)
+        {
+            if(!Enum.IsDefined(typeof(TexturePaintGarmentPreset),preset) ||
+                TexturePaintPathGenerators.IsLinearGarment(preset))return false;
+            return ApplyPathConstructionEdit(set,TexturePaintGarmentSettings.Create(preset),null,
+                ActiveBrush.size*2,Array.IndexOf(garmentConstructions,preset));
         }
 
         private bool ApplyPathConstructionEdit(TextureSet set,TexturePaintGarmentSettings garment,TexturePaintHemSeamSettings hem,float width,int selected)
@@ -166,11 +206,11 @@ namespace UMA.TexturePaint.Editor
             ActiveBrush.size=width*.5f;pathHemSeamSelected=selected>=garmentConstructions.Length;
             CompleteLightweightPathEdit(set,false);return true;
         }
-        private static float DrawGarmentRibbonWidth(float width,bool worldSpace)
+        private static float DrawPathWidthField(float width,bool worldSpace)
         {
-            var label=new GUIContent("Ribbon Width",worldSpace
-                ? "Full path width in world units. Drag the slider or enter an exact value. Point Width scales individual points; construction dimensions are measured inside the ribbon."
-                : "Full path width in UV units. Drag the slider or enter an exact value. Point Width scales individual points; construction dimensions are measured inside the ribbon.");
+            var label=new GUIContent("Path Width",worldSpace
+                ? "Full width of the entire path in world units. Drag the slider or enter an exact value. Point Width (%) multiplies this width locally; 100% uses the full path width."
+                : "Full width of the entire path in normalized UV units. Drag the slider or enter an exact value. Point Width (%) multiplies this width locally; 100% uses the full path width.");
             Rect control=EditorGUI.PrefixLabel(EditorGUILayout.GetControlRect(),label);
             float numericWidth=Mathf.Min(72,control.width*.45f);
             Rect sliderRect=new Rect(control.x,control.y,Mathf.Max(0,control.width-numericWidth-5),control.height);
@@ -179,7 +219,7 @@ namespace UMA.TexturePaint.Editor
             EditorGUI.BeginChangeCheck();
             float dragged=GUI.HorizontalSlider(sliderRect,width,.0002f,Mathf.Max(worldSpace?1f:2f,width));
             if(EditorGUI.EndChangeCheck())width=dragged;
-            GUI.SetNextControlName("GarmentRibbonWidth");
+            GUI.SetNextControlName("PathWidth");
             return EditorGUI.FloatField(numberRect,width);
         }
         private void DrawGarmentSettings(TextureSet set,TexturePaintLayer layer,TexturePaintGarmentSettings s,bool path,bool drawSelector=true)

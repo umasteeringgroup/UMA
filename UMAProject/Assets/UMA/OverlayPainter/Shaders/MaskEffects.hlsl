@@ -64,7 +64,14 @@ void CSMaskStack(uint3 dispatchID : SV_DispatchThreadID)
     else if(kind==2) value=_StackPaint.SampleLevel(sampler_linear_clamp,uv,0).r;
     else if(kind==4) value=saturate((MaskFbm(tuv)-_StackRange.x)/max(.00001,_StackRange.y-_StackRange.x));
     else if(kind==5) value=abs(MaskFbm(tuv)*2-1);
-    else if(kind==6) value=StackCell(tuv).x;
+    else if(kind==6)
+    {
+        // Remap distance inside the existing cells; do not alter their seeds or UV scale.
+        // inputMin=0 and amount=1 retain the legacy Voronoi output.
+        float blackExpansion=saturate(_StackRange.x);
+        value=saturate((StackCell(tuv).x-blackExpansion)/max(.00001,1-blackExpansion));
+        value=saturate((value-.5)*clamp(amount,1,8)+.5);
+    }
     else if(kind==7) value=StackCell(tuv).y;
     else if(kind==8) value=tuv.y;
     else if(kind==9) value=1-length(tuv-.5)*2;

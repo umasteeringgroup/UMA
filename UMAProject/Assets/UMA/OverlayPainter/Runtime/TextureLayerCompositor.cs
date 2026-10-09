@@ -15,6 +15,8 @@ namespace UMA.TexturePaint
         private readonly int evaluateLayerMaskKernel = -1;
         private readonly int applyGroupMaskKernel = -1;
         private readonly int applyIsolatedLayerKernel = -1;
+        private readonly int filterHeightDeltaKernel = -1;
+        private readonly int applyFilteredHeightDeltaKernel = -1;
         private readonly int unassociateAlphaKernel = -1;
         private readonly int applyChannelAdjustmentsKernel = -1;
         private readonly int clearKernel = -1;
@@ -59,6 +61,7 @@ namespace UMA.TexturePaint
         {
             public RenderTexture original;
             public RenderTexture result;
+            public RenderTexture heightDelta;
         }
 
         public TextureLayerCompositor(ComputeShader shader)
@@ -81,6 +84,8 @@ namespace UMA.TexturePaint
                 applyGroupMaskKernel = shader.FindKernel("CSApplyGroupMask");
             if (shader.HasKernel("CSApplyIsolatedLayer"))
                 applyIsolatedLayerKernel = shader.FindKernel("CSApplyIsolatedLayer");
+            if (shader.HasKernel("CSFilterHeightDelta")) filterHeightDeltaKernel = shader.FindKernel("CSFilterHeightDelta");
+            if (shader.HasKernel("CSApplyFilteredHeightDelta")) applyFilteredHeightDeltaKernel = shader.FindKernel("CSApplyFilteredHeightDelta");
             if (shader.HasKernel("CSUnassociateAlpha"))
                 unassociateAlphaKernel = shader.FindKernel("CSUnassociateAlpha");
             if (shader.HasKernel("CSApplyChannelAdjustments"))
@@ -92,7 +97,8 @@ namespace UMA.TexturePaint
         {
             TextureChannelTarget baseChannel = set?.GetChannel(channel);
             if (baseChannel?.editable?.Front == null || baseChannel.composite == null) return;
-            RectInt rect = ClampRect(HasSpatialMasks(set) ? default : requestedRect, baseChannel.composite.width, baseChannel.composite.height);
+            RectInt rect = ClampRect(HasSpatialMasks(set) || channel == TexturePaintChannel.NormalControl && set.HasLayerHeightSampling()
+                ? default : requestedRect, baseChannel.composite.width, baseChannel.composite.height);
             int effectReach = EffectsAvailable ? MaximumEffectReach(set, channel) : 0;
             if (effectReach > 0)
                 rect = ExpandRect(rect, effectReach, baseChannel.composite.width, baseChannel.composite.height);
@@ -454,6 +460,8 @@ namespace UMA.TexturePaint
                 return scratch;
             Destroy(scratch.original);
             Destroy(scratch.result);
+            Destroy(scratch.heightDelta);
+            scratch.heightDelta = null;
             scratch.original = CreateEffectTexture("Overlay Painter Composite Original " + depth,
                 template.width, template.height, template.format, FilterMode.Bilinear);
             scratch.result = CreateEffectTexture("Overlay Painter Composite Result " + depth,
@@ -508,6 +516,9 @@ namespace UMA.TexturePaint
         {
             if (!IsAvailable || destination == null || set == null || layer == null ||
                 layerTarget?.Front == null) return false;
+            int heightRadius = channel == TexturePaintChannel.NormalControl
+                ? Mathf.Clamp(layer.GetChannelSettings(channel, false)?.normalControlRadius ?? 1, 1, 16) : 1;
+            if (heightRadius > 1) requestedRect = default;
             RectInt rect = ClampRect(requestedRect, destination.width, destination.height);
             Texture layerMask = GetEffectiveLayerMask(layer, destination.width, destination.height, set);
             TexturePaintLayerEffects effects = layer.effects ??= new TexturePaintLayerEffects();
@@ -549,6 +560,23 @@ namespace UMA.TexturePaint
             shader.SetFloat("_LayerOpacity", Mathf.Clamp01(opacity));
             shader.SetFloat("_LayerValueScale", channel == TexturePaintChannel.NormalControl
                 ? set.ResolveNormalControlLayerScale(layer.GetChannelSettings(channel, false)) : 1f);
+            if (heightRadius > 1 && filterHeightDeltaKernel >= 0 && applyFilteredHeightDeltaKernel >= 0)
+            {
+                // Filter only this layer's signed contribution, including masks and effects.
+                // The backdrop never enters the filter and therefore retains its own detail.
+                scratch.heightDelta ??= CreateEffectTexture("Overlay Painter Height Sampling " + depth,
+                    destination.width, destination.height, RenderTextureFormat.ARGBHalf, FilterMode.Point);
+                shader.SetInt("_LayerSampleRadius", heightRadius);
+                shader.SetTexture(filterHeightDeltaKernel, "_GroupOriginal", scratch.original);
+                shader.SetTexture(filterHeightDeltaKernel, "_GroupResult", scratch.result);
+                shader.SetTexture(filterHeightDeltaKernel, "_FilteredHeightDelta", scratch.heightDelta);
+                Dispatch(filterHeightDeltaKernel, rect);
+                shader.SetTexture(applyFilteredHeightDeltaKernel, "_HeightDelta", scratch.heightDelta);
+                shader.SetTexture(applyFilteredHeightDeltaKernel, "_GroupOriginal", scratch.original);
+                shader.SetTexture(applyFilteredHeightDeltaKernel, "_Composite", destination);
+                Dispatch(applyFilteredHeightDeltaKernel, rect);
+                return true;
+            }
             shader.SetTexture(applyIsolatedLayerKernel, "_GroupOriginal", scratch.original);
             shader.SetTexture(applyIsolatedLayerKernel, "_GroupResult", scratch.result);
             shader.SetTexture(applyIsolatedLayerKernel, "_Composite", destination);
@@ -1001,6 +1029,7 @@ namespace UMA.TexturePaint
             {
                 Destroy(compositeScratch[i].original);
                 Destroy(compositeScratch[i].result);
+                Destroy(compositeScratch[i].heightDelta);
             }
             compositeScratch.Clear();
             effectSeedA = null;

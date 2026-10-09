@@ -399,6 +399,7 @@ namespace UMA.TexturePaint
                 TexturePaintMeshMap.AmbientOcclusion => maps.ambientOcclusion,
                 TexturePaintMeshMap.Thickness => maps.thickness,
                 TexturePaintMeshMap.SurfaceId => maps.id,
+                TexturePaintMeshMap.ExposedEdgeDistance => maps.exposedEdgeDistance,
                 _ => null
             };
         }
@@ -686,6 +687,7 @@ namespace UMA.TexturePaint
             Bind("_MeshAmbientOcclusion", TexturePaintMeshMap.AmbientOcclusion, maps?.ambientOcclusion, Texture2D.whiteTexture);
             Bind("_MeshThickness", TexturePaintMeshMap.Thickness, maps?.thickness, Texture2D.blackTexture);
             Bind("_MeshSurfaceId", TexturePaintMeshMap.SurfaceId, maps?.id, Texture2D.blackTexture);
+            Bind("_MeshExposedEdgeDistance", TexturePaintMeshMap.ExposedEdgeDistance, maps?.exposedEdgeDistance, Texture2D.whiteTexture);
             shader.SetInt("_HasSourceNormal", sourceNormal != null ? 1 : 0);
             shader.SetInt("_HasSourceAO", sourceAo != null ? 1 : 0);
             shader.SetTexture(kernel, "_SourceNormal", sourceNormal != null
@@ -723,6 +725,17 @@ namespace UMA.TexturePaint
                         // SetVector bypasses Unity's automatic SetColor conversion.
                         shader.SetVector(property, (value?.color ?? definition.defaultColor).linear);
                         break;
+                    case TexturePaintPluginParameterType.Curve:
+                    {
+                        // HLSL scalar arrays use a 16-byte stride; explicitly pack four
+                        // samples per vector rather than relying on backend-specific padding.
+                        float[] samples = TexturePaintPluginCurveLookup.Bake(value?.curve ?? definition.defaultCurve);
+                        var packed = new Vector4[TexturePaintPluginCurveLookup.SampleCount / 4];
+                        for (int sample = 0; sample < packed.Length; sample++)
+                            packed[sample] = new Vector4(samples[sample * 4], samples[sample * 4 + 1], samples[sample * 4 + 2], samples[sample * 4 + 3]);
+                        shader.SetVectorArray(property, packed);
+                        break;
+                    }
                     case TexturePaintPluginParameterType.Texture:
                     {
                         Texture2D texture = value?.texture;

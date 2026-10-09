@@ -2,6 +2,31 @@
 
 ## 3.1f2 (package version 3.1.2)
 
+- Plugin package builds now finish with a per-package Built/Failed results dialog and continue building other packages after a failure. Cancellation lists unbuilt packages separately; failure details retain filenames and recovery paths.
+
+- Hardened plugin package rebuilding against file-replacement failures: retries brief locks, retains the previous archive until publishing succeeds, restores it on failure, and preserves completed new archives for recovery. Error dialogs identify the full destination and recovery paths; cleanup failures report their filenames without hiding the original error.
+
+- Replaced the mask-effect creation choice **Painted Mask** with **White Painted Mask** and **Black Painted Mask**. Both initialize the shared paint raster and replace prior Painted Mask entries with one enabled Multiply effect at opacity 1, with full Undo/Redo. Zero-opacity effects are explicitly labeled in their headers.
+
+- Added per-layer, per-channel **Blur (px)** to Texture/Sprite sources, defaulting to zero. Softens RGBA edges across Fill, Projection, Paint, and Path sources, including ribbon end tiles, while preserving sprite atlas isolation, normal vectors, saved settings, and Undo/Redo.
+
+- Fixed Projection Normal Control textures/sprites losing their own alpha to Albedo coverage. Transparent height pixels now preserve underlying surface detail, including inverted height, and Albedo opacity no longer weakens the independent height source.
+
+- Fixed stale Projection layer references after adding/editing channels. Normal Control's **Height Strength** (0–64), **Invert Height**, and **Sample Radius** are now specific to the selected layer channel, with saved values and Undo/Redo. Sampling includes that layer's masks/effects and preserves neighboring layers; legacy target-wide conversion settings remain internal for compatibility.
+
+- Added per-channel **Multiplier** and **Additive** colors beneath Texture/Sprite sources in Overlay Painter. Both affect RGBA, with neutral defaults, shared silhouette support, saved settings, and Undo/Redo across Paint, Fill, Path, and Projection sources.
+
+- Reviewed Properties across all layer types: hide painting-only and inherited instance controls, solid-fill mapping fields, and unused projection garment settings. **Layer Channels & Settings** is now a persistent foldout, with New Channel, its selector, and Add Channel together at the top; newly added channels expand automatically.
+- Made path Properties contextual: hides painting selection tools, fixed destination controls, and inapplicable ribbon/generator/UV controls. Retains an active-selection notice with Clear, and releases hidden selection tools so they cannot intercept path editing. Mask painting retains selection tools.
+- Ordinary paths now hide Garment Generator settings. Added explicit **Convert to Garment** actions in Path Properties and the path toolbar, preserving path shape, width, and sources with Undo/Redo.
+- Fixed ribbon path tiling to account for texture and cropped-sprite aspect ratios. Fits whole repeats with complete Beginning/End images using a shared stretch scale; material channels stay aligned and local Point Width shaping is preserved.
+- Added a general **Path Width** control at the top of Path Properties for ordinary paths, ribbons, and generators. Local Point Width percentages are preserved; changes support Undo/Redo and Auto Update.
+- Added **Black Expansion** and **Contrast** to Voronoi mask effects, allowing darker, more defined cells without changing their scale or placement. Defaults preserve existing masks.
+- Fixed Edge Wear missing thin bevels because small triangle normals were zeroed during normalization. Also bridges shallow sections of continuous convex rims only between detected edges; concave folds and flat triangulation remain excluded.
+- Added **Assets > UMA > Remove invalid races from selected recipes**, immediately after Add Race(s). Checks installed RaceData assets (including unindexed races), removes missing race references and their thumbnails from selected wardrobe recipes, and supports Undo.
+- Added configurable Edge Wear fade level, falloff curve, and distance-based breakup curve. Exposed-edge wear defaults to a linear fade; breakup no longer clips fading rims into gaps or creates offset wear bands.
+- Edge Wear now defaults to physical rims and convex creases, with world-space width and restrained normal-detail wear. UV/shading splits do not create false edges; existing layers retain the original broad treatment as **Overall Wear**.
+- Fixed editor-wide stalls while Welcome's Plugins page was open: package status now refreshes after changes instead of validating every second. Navigation caches render-pipeline status and no longer validates UMA3 for an unused button on every GUI event.
 - Added **Replace everything** to installation conflicts, with an optional clean replacement that removes extra files inside the selected package folder. Backups and installed companions are preserved in both modes.
 - Added **Continue - Remove All** to plugin removal confirmations, allowing modified package-owned files to be removed across the selected parent and companions. The choice persists through interrupted-session recovery; unowned files remain protected. Empty folders are removed from children to parents, including folders omitted from manifests and the package root when empty.
 - Added local-first plugin installation with a matching GitHub release download fallback, download cancellation, release-page links, and local-file recovery options.

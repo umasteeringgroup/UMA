@@ -459,6 +459,15 @@ namespace UMA.TexturePaint
             properties.SetInt("_UseFillCoverage", coverage != null ? 1 : 0);
             TexturePaintFillSettings coverageTransform = coverageSettings ?? settings;
             coverageTransform.Normalize();
+            float coverageMultiplier = coverageTransform.source == TexturePaintBrushSource.Texture ? coverageTransform.multiplier.a : 1f;
+            float coverageAdditive = coverageTransform.source == TexturePaintBrushSource.Texture ? coverageTransform.additive.a : 0f;
+            if ((channel ?? layer.fillChannel) != TexturePaintChannel.Albedo && settings.source == TexturePaintBrushSource.Texture &&
+                coverageSettings != null)
+            {
+                coverageMultiplier *= settings.multiplier.a;
+                coverageAdditive = coverageAdditive * settings.multiplier.a + settings.additive.a;
+            }
+            properties.SetVector("_CoverageAlpha", new Vector4(coverageMultiplier, coverageAdditive, 0f, 0f));
             properties.SetInt("_CoverageProjection", (int)coverageTransform.projection);
             properties.SetVector("_CoverageTiling", coverageTransform.tiling);
             properties.SetVector("_CoverageOffset", coverageTransform.offset);
@@ -467,6 +476,10 @@ namespace UMA.TexturePaint
             properties.SetFloat("_CoverageBlendOffset", coverageTransform.blendOffset);
             properties.SetFloat("_CoverageBlendSharpness", coverageTransform.blendSharpness);
             properties.SetVector("_FillColor", TexturePaintChannelUtility.WorkingColor(channel ?? layer.fillChannel, settings.color));
+            properties.SetVector("_SourceMultiplier", TexturePaintChannelUtility.WorkingColor(channel ?? layer.fillChannel,
+                settings.source == TexturePaintBrushSource.Texture ? settings.multiplier : Color.white));
+            properties.SetVector("_SourceAdditive", TexturePaintChannelUtility.WorkingColor(channel ?? layer.fillChannel,
+                settings.source == TexturePaintBrushSource.Texture ? settings.additive : Color.clear));
             properties.SetInt("_SourceKind", settings.source == TexturePaintBrushSource.Color ? 1 : 0);
             properties.SetInt("_Projection", (int)settings.projection);
             properties.SetVector("_Tiling", new Vector4(settings.tiling.x, settings.tiling.y, 0f, 0f));
@@ -635,13 +648,17 @@ namespace UMA.TexturePaint
         public float ResolveNormalControlStrength(TexturePaintLayerChannelSettings settings)
         {
             return Mathf.Clamp(settings?.hasNormalControlStrength == true
-                ? settings.normalControlStrength : normalControlStrength, 0f, 16f);
+                ? settings.normalControlStrength : normalControlStrength, 0f, 64f);
         }
 
         internal float ResolveNormalControlLayerScale(TexturePaintLayerChannelSettings settings)
         {
-            return ResolveNormalControlStrength(settings) / NormalControlReferenceStrength;
+            return ResolveNormalControlStrength(settings) / NormalControlReferenceStrength *
+                (settings?.normalControlInvert == true ? -1f : 1f);
         }
+
+        internal bool HasLayerHeightSampling() => layers.Exists(layer => layer != null && layer.visible &&
+            layer.GetChannelSettings(TexturePaintChannel.NormalControl, false)?.normalControlRadius > 1);
 
         internal bool HasEnabledNormalControlStrength()
         {
@@ -899,6 +916,11 @@ namespace UMA.TexturePaint
                 if (settings == null) continue;
                 TexturePaintFillTileSources tile = layer.fillTileSources;
                 Texture2D coverage = spriteCoverage;
+                // Shared silhouettes are filtered with the consuming channel's radius, never
+                // the Albedo channel's radius, so material channels retain independent blur.
+                if (coverage != null && settings.source == TexturePaintBrushSource.Texture && settings.blur > 0)
+                    coverage = TexturePaintSpriteSource.Resolve(albedoSettings.sourceTexture, albedoSettings.sourceSprite,
+                        TexturePaintChannel.Albedo, albedoSettings.normalConvention, albedoSettings.invert, settings.blur);
                 TexturePaintFillSettings coverageSettings = spriteCoverage != null ? albedoSettings : null;
                 if (tile?.mode == TexturePaintFillTileMode.NoContribution)
                 {
@@ -1068,6 +1090,9 @@ namespace UMA.TexturePaint
                 sourceSprite = settings.sourceSprite,
                 sourceOverlay = settings.sourceOverlay,
                 color = settings.color,
+                multiplier = settings.multiplier,
+                additive = settings.additive,
+                blur = settings.blur,
                 normalConvention = settings.normalConvention,
                 invert = settings.invert,
                 tiling = settings.tiling,
@@ -1091,6 +1116,9 @@ namespace UMA.TexturePaint
                 sourceSprite = source.sourceSprite,
                 sourceOverlay = source.sourceOverlay,
                 color = source.color,
+                multiplier = source.multiplier,
+                additive = source.additive,
+                blur = source.blur,
                 normalConvention = source.normalConvention,
                 invert = source.invert,
                 tiling = source.tiling,
@@ -1109,7 +1137,7 @@ namespace UMA.TexturePaint
             if (settings == null) return null;
             if (settings.source == TexturePaintBrushSource.Texture)
                 return TexturePaintSpriteSource.Resolve(settings.sourceTexture, settings.sourceSprite,
-                    channel, settings.normalConvention, settings.invert);
+                    channel, settings.normalConvention, settings.invert, settings.blur);
             if (settings.source != TexturePaintBrushSource.Overlay || settings.sourceOverlay == null) return null;
             for (int i = 0; i < sources.Count; i++)
             {
@@ -1909,7 +1937,7 @@ namespace UMA.TexturePaint
         public void BindPreviewTextures(bool recompose = true, RectInt dirtyRect = default)
         {
             // Mask transforms and chained spatial filters can affect pixels beyond a brush tile.
-            if (TextureLayerCompositor.HasSpatialMasks(this)) dirtyRect = default;
+            if (TextureLayerCompositor.HasSpatialMasks(this) || HasLayerHeightSampling()) dirtyRect = default;
             ownerStore?.RefreshLayerLinks();
             NormalizeLayerHierarchy();
             RefreshOutdatedFillLayers();
@@ -2589,6 +2617,9 @@ namespace UMA.TexturePaint
                                 sourceSprite = sourceSettings.sourceSprite,
                                 sourceOverlay = sourceSettings.sourceOverlay,
                                 color = sourceSettings.color,
+                                multiplier = sourceSettings.multiplier,
+                                additive = sourceSettings.additive,
+                                blur = sourceSettings.blur,
                                 normalConvention = sourceSettings.normalConvention,
                                 invert = sourceSettings.invert,
                                 tiling = sourceSettings.tiling,

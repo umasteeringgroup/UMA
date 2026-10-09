@@ -92,7 +92,7 @@ namespace UMA.TexturePaint.Editor
             { labels.Add(choices[i].MenuPath);if(choices[i].Id==pathGenerator?.generatorId)selected=i+1; }
             bool missing=pathGenerator!=null&&TexturePaintPathGenerators.Find(pathGenerator.generatorId)==null;
             if(missing){labels.Add("Missing: "+pathGenerator.generatorId);selected=labels.Count-1;}
-            var next=pathGenerator?.Clone();float width=ActiveBrush.size*2;
+            var next=pathGenerator?.Clone();
             using(new EditorGUI.DisabledScope(layer.links?.instance?.IsSet==true))
             {
                 EditorGUILayout.Space(4);EditorGUILayout.LabelField("Path Generator",EditorStyles.boldLabel);
@@ -103,7 +103,6 @@ namespace UMA.TexturePaint.Editor
                 if(next!=null)
                 {
                     next.enabled=EditorGUILayout.Toggle("Enabled",next.enabled);
-                    width=DrawGarmentRibbonWidth(width,spline.worldSpace);
                     if(missing&&!changedGenerator)EditorGUILayout.HelpBox("Install this generator to edit it. The saved settings and output are preserved.",MessageType.Warning);
                     else if(next.seam!=null)DrawHemSeamSettings(set,next.seam);
                     else if(next.garment!=null)DrawGarmentSettings(set,layer,next.garment,true,false);
@@ -122,7 +121,6 @@ namespace UMA.TexturePaint.Editor
                     {
                         pathHemSeam=null;pathGarment=null;pathMode=TexturePaintPathMode.Ribbon;tool=TexturePaintTool.Paint;
                     }
-                    ActiveBrush.size=Mathf.Max(.0001f,width*.5f);
                     CompleteLightweightPathEdit(set,false);
                 }
             }

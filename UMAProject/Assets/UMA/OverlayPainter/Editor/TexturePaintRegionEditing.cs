@@ -17,6 +17,15 @@ namespace UMA.TexturePaint.Editor
         private int regionGrow,regionFeather;
         private string regionName="Region";
         private readonly List<Vector2> regionPoints=new List<Vector2>();
+        private bool SuspendRegionToolForNonPaintLayer(TextureSet set)
+        {
+            if(set==null || (uint)set.activeLayerIndex>=(uint)set.layers.Count ||
+                ShowsPaintingProperties(set.layers[set.activeLayerIndex],IsLayerMaskMode(set)))return false;
+            // A hidden selection tool must not steal clicks from layer editing. Keep the
+            // selection itself: it still clips output and can be cleared from Properties.
+            if(regionTool!=RegionTool.Paint || regionDragging)ExitRegionTool();
+            return true;
+        }
         private void DrawRegionProperties(TextureSet set)
         {
             if(set==null)return;
@@ -29,12 +38,16 @@ namespace UMA.TexturePaint.Editor
             EditorGUILayout.HelpBox(set.activeRegion?.IsValid==true
                 ? "Painting is limited by this selection. Cyan coverage is visible in the UV view."
                 : selectedSets>0 ? "This tile is unrestricted. Other tiles still have selections." : "No selection: painting is unrestricted.",MessageType.None);
-            using(new EditorGUI.DisabledScope(selectedSets==0))
+            if(selectedSets>0)
                 if(GUILayout.Button("Clear All Selections")) ClearAllRegions();
-            regionCombine=(TexturePaintRegionCombine)EditorGUILayout.EnumPopup("Combine",regionCombine);
-            regionThrough=EditorGUILayout.Toggle("Select Through (3D)",regionThrough);
-            EditorGUILayout.HelpBox("Rectangle and lasso work in UV and Scene views. Material and UV Island select geometry under the cursor. Selection limits painting; it can also become a layer mask.",MessageType.None);
-            using(new EditorGUI.DisabledScope(set.activeRegion?.IsValid!=true || !string.IsNullOrEmpty(set.RegionError)))
+            if(regionTool!=RegionTool.Paint)
+            {
+                regionCombine=(TexturePaintRegionCombine)EditorGUILayout.EnumPopup("Combine",regionCombine);
+                if(regionTool==RegionTool.Rectangle || regionTool==RegionTool.Lasso)
+                    regionThrough=EditorGUILayout.Toggle("Select Through (3D)",regionThrough);
+                EditorGUILayout.HelpBox("Rectangle and lasso work in UV and Scene views. Material and UV Island select geometry under the cursor. Selection limits painting; it can also become a layer mask.",MessageType.None);
+            }
+            if(set.activeRegion?.IsValid==true && string.IsNullOrEmpty(set.RegionError))
             {
                 regionGrow=EditorGUILayout.IntSlider("Grow / Shrink (px)",regionGrow,-64,64);
                 regionFeather=EditorGUILayout.IntSlider("Feather (px)",regionFeather,0,64);
@@ -148,6 +161,7 @@ namespace UMA.TexturePaint.Editor
         }
         private bool HandleRegionUV(Rect canvas,Rect textureRect,TextureSet set)
         {
+            if(SuspendRegionToolForNonPaintLayer(set))return false;
             Event e=Event.current;
             if(regionTool==RegionTool.Paint)return false;
             int control=GUIUtility.GetControlID("OverlayPainterUVRegion".GetHashCode(),FocusType.Passive);
@@ -188,6 +202,7 @@ namespace UMA.TexturePaint.Editor
         }
         private bool HandleRegionScene(SceneView view,Event e)
         {
+            if(SuspendRegionToolForNonPaintLayer(ActiveTextureSet))return false;
             if(regionTool==RegionTool.Paint)return false;
             int control=GUIUtility.GetControlID("OverlayPainterRegion".GetHashCode(),FocusType.Passive);
             if(regionDragging && (!regionScene || regionGestureView!=view))return true;

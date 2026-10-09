@@ -48,12 +48,21 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
             sampler2D _PaintSource;
             sampler2D _RibbonCoverage;
             float _RibbonCoverageAlpha;
+            float _RibbonCoverageAdditive;
             int _UseRibbonCoverage;
             sampler2D _BeginningSource;
             sampler2D _EndSource;
             sampler2D _GeometryMask;
             sampler2D _RegionMask;
             float4 _PaintColor;
+            float4 _SourceMultiplier;
+            float4 _SourceAdditive;
+
+            float4 ApplySourceColors(float4 value)
+            {
+                value = value * _SourceMultiplier + _SourceAdditive;
+                return value;
+            }
             float _Strength;
             float _BrushFlow;
             float _ProjectionDepth;
@@ -68,6 +77,8 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
             int _SourceAlongY;
             int _ReverseSourceAxis;
             int _RibbonClosed;
+            int _RibbonPreserveAspect;
+            float4 _RibbonImageAspects;
             int _EdgeFadeEnabled;
             int _RibbonPaintEnabled;
             float _EdgeFadeStart;
@@ -427,14 +438,14 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                 bool beginning = _HasBeginningSource != 0 && index == 0;
                 bool ending = _HasEndSource != 0 && index + 1 == tileCount;
                 float4 value;
-                if (ending) value = tex2Dgrad(_EndSource, uv, sourceDx, sourceDy);
-                else if (beginning) value = tex2Dgrad(_BeginningSource, uv, sourceDx, sourceDy);
+                if (ending) value = ApplySourceColors(tex2Dgrad(_EndSource, uv, sourceDx, sourceDy));
+                else if (beginning) value = ApplySourceColors(tex2Dgrad(_BeginningSource, uv, sourceDx, sourceDy));
                 else if (_PaintSourceKind == 2) value = color;
-                else value = tex2Dgrad(_PaintSource, uv, sourceDx, sourceDy);
+                else value = ApplySourceColors(tex2Dgrad(_PaintSource, uv, sourceDx, sourceDy));
                 // Replace channel alpha before premultiplied tile blending so transparent
                 // albedo pixels cannot contribute hidden RGB from normal or control maps.
                 if (_UseRibbonCoverage != 0 && !beginning && !ending)
-                    value.a = tex2Dgrad(_RibbonCoverage, uv, sourceDx, sourceDy).a * _RibbonCoverageAlpha;
+                    value.a = tex2Dgrad(_RibbonCoverage, uv, sourceDx, sourceDy).a * _RibbonCoverageAlpha + _RibbonCoverageAdditive;
                 if (_VectorNormal != 0 && (_PaintSourceKind != 2 || beginning || ending))
                     value.xy = (value.xy * 2.0 - 1.0) * flipSign * 0.5 + 0.5;
                 return value;
@@ -476,6 +487,90 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                     rgb = normal * 0.5 + 0.5;
                 }
                 return float4(rgb, alpha);
+            }
+
+            // Tile metadata: start in path-width units, fitted length, stable flip index,
+            // source kind (0 repeat, 1 beginning, 2 end). Endpoints get their own aspect.
+            float4 AspectRibbonTile(float along, float span, out float end)
+            {
+                float cycle = _RibbonClosed != 0 ? floor(along / span) : 0;
+                float p = clamp(along - cycle * span, 0, max(0, span - 0.000001));
+                float repeatLength = max(0.00001, _RibbonImageAspects.x);
+                float endStart = _HasEndSource != 0 ? max(0, span - _RibbonImageAspects.z) : span;
+                float middleStart = _HasBeginningSource != 0 ? min(_RibbonImageAspects.y, endStart) : 0;
+                int first = _HasBeginningSource != 0 ? 1 : 0;
+                float4 tile;
+                if (_HasEndSource != 0 && p >= endStart)
+                {
+                    tile = float4(endStart, max(0.00001, _RibbonImageAspects.z),
+                        first + _RibbonImageAspects.w, 2);
+                    end = span;
+                }
+                else if (_HasBeginningSource != 0 && p < middleStart)
+                { tile = float4(0, max(0.00001, _RibbonImageAspects.y), 0, 1); end = middleStart; }
+                else
+                {
+                    float index = min(max(0, _RibbonImageAspects.w - 1), floor(max(0, p - middleStart) / repeatLength));
+                    tile = float4(middleStart + index * repeatLength, repeatLength, first + index, 0);
+                    end = min(tile.x + tile.y, endStart);
+                }
+                tile.x += cycle * span; end += cycle * span;
+                return tile;
+            }
+
+            float4 SampleAspectRibbonTile(float along, float4 tile, float across, float4 color,
+                float2 sourceDx, float2 sourceDy)
+            {
+                // Each fitted tile contains the complete image. Clamp extends only the edge
+                // texel into a crossfade, without adding another stretch for the overlap.
+                float longitudinal = saturate((along - tile.x) / tile.y);
+                if (_ReverseSourceAxis != 0) longitudinal = 1 - longitudinal;
+                float2 uv = _SourceAlongY != 0 ? float2(across, longitudinal) : float2(longitudinal, across);
+                float2 scale = _SourceAlongY != 0 ? float2(1, rcp(tile.y)) : float2(rcp(tile.y), 1);
+                float2 flip = float2(PathTextureFlip(_TextureFlipX, (uint)tile.z, 0x02e5be93u),
+                    PathTextureFlip(_TextureFlipY, (uint)tile.z, 0x68bc21ebu));
+                float2 sign = 1 - 2 * flip;
+                uv = uv * sign + flip; sourceDx *= scale * sign; sourceDy *= scale * sign;
+                float4 value;
+                if (tile.w == 2) value = ApplySourceColors(tex2Dgrad(_EndSource, uv, sourceDx, sourceDy));
+                else if (tile.w == 1) value = ApplySourceColors(tex2Dgrad(_BeginningSource, uv, sourceDx, sourceDy));
+                else if (_PaintSourceKind == 2) value = color;
+                else value = ApplySourceColors(tex2Dgrad(_PaintSource, uv, sourceDx, sourceDy));
+                if (_UseRibbonCoverage != 0 && tile.w == 0)
+                    value.a = tex2Dgrad(_RibbonCoverage, uv, sourceDx, sourceDy).a * _RibbonCoverageAlpha + _RibbonCoverageAdditive;
+                if (_VectorNormal != 0 && (_PaintSourceKind != 2 || tile.w != 0))
+                    value.xy = (value.xy * 2 - 1) * sign * .5 + .5;
+                return value;
+            }
+
+            float4 AspectRibbonTiles(float along, float span, float across, float4 color,
+                float2 sourceDx, float2 sourceDy)
+            {
+                float end;
+                float4 tile = AspectRibbonTile(along, span, end);
+                float4 value = SampleAspectRibbonTile(along, tile, across, color, sourceDx, sourceDy);
+                if (_JoinOverlap <= 0.00001) return value;
+                float join = along - tile.x < end - along ? tile.x : end;
+                if (_RibbonClosed == 0 && (join <= 0 || join >= span)) return value;
+                float epsilon = min(0.000001, span * .0001);
+                float leftEnd, rightEnd;
+                float4 left = AspectRibbonTile(join - epsilon, span, leftEnd);
+                float4 right = AspectRibbonTile(join + epsilon, span, rightEnd);
+                float halfOverlap = min(_RibbonImageAspects.x * _JoinOverlap * .5,
+                    min(leftEnd - left.x, rightEnd - right.x) * .45);
+                if (halfOverlap <= 0.000001 || abs(along - join) >= halfOverlap) return value;
+                float4 a = SampleAspectRibbonTile(along, left, across, color, sourceDx, sourceDy);
+                float4 b = SampleAspectRibbonTile(along, right, across, color, sourceDx, sourceDy);
+                float incoming = smoothstep(join - halfOverlap, join + halfOverlap, along);
+                float aw = saturate(a.a) * (1 - incoming), bw = saturate(b.a) * incoming;
+                float alpha = aw + bw;
+                float3 rgb = alpha > .000001 ? (a.rgb * aw + b.rgb * bw) / alpha : float3(0,0,0);
+                if (_VectorNormal != 0 && alpha > .000001)
+                {
+                    float3 normal = rgb * 2 - 1;
+                    rgb = (dot(normal,normal) > .000001 ? normalize(normal) : float3(0,0,1)) * .5 + .5;
+                }
+                return float4(rgb,alpha);
             }
 
             float4 Frag(Varyings input) : SV_Target
@@ -598,6 +693,9 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                     desired=ShadeHem(bestAcross,localAlong,alongSpan,_RibbonClosed!=0,perPixel,
                         input.worldPosition,input.worldNormal,input.worldTangent,input.uv,width);
                 }
+                else if (_RibbonPreserveAspect != 0)
+                    desired = AspectRibbonTiles(localAlong, alongSpan, sourceAcross, bestColor,
+                        ddx(unwrappedSourceUV), ddy(unwrappedSourceUV));
                 else if (_JoinOverlap > 0.00001)
                     desired = CrossfadeRibbonTiles(localAlong, alongSpan, sourceAcross, bestColor,
                         ddx(unwrappedSourceUV), ddy(unwrappedSourceUV));
@@ -615,16 +713,16 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                     bool useBeginning = _HasBeginningSource != 0 && localAlong < 1.0 - 0.0001;
                     bool useEnd = _HasEndSource != 0 && localAlong >= alongSpan - 1.0 - 0.0001;
                     if (useEnd)
-                        desired = tex2Dgrad(_EndSource, sourceUV,
-                            sourceDx, sourceDy);
+                        desired = ApplySourceColors(tex2Dgrad(_EndSource, sourceUV,
+                            sourceDx, sourceDy));
                     else if (useBeginning)
-                        desired = tex2Dgrad(_BeginningSource, sourceUV,
-                            sourceDx, sourceDy);
+                        desired = ApplySourceColors(tex2Dgrad(_BeginningSource, sourceUV,
+                            sourceDx, sourceDy));
                     else if (_PaintSourceKind == 2) desired = bestColor;
-                    else desired = tex2Dgrad(_PaintSource, sourceUV,
-                        sourceDx, sourceDy);
+                    else desired = ApplySourceColors(tex2Dgrad(_PaintSource, sourceUV,
+                        sourceDx, sourceDy));
                     if (_UseRibbonCoverage != 0 && !useBeginning && !useEnd)
-                        desired.a = tex2Dgrad(_RibbonCoverage, sourceUV, sourceDx, sourceDy).a * _RibbonCoverageAlpha;
+                        desired.a = tex2Dgrad(_RibbonCoverage, sourceUV, sourceDx, sourceDy).a * _RibbonCoverageAlpha + _RibbonCoverageAdditive;
 
                     if (_VectorNormal != 0 && (_PaintSourceKind != 2 || useBeginning || useEnd))
                         desired.xy = (desired.xy * 2.0 - 1.0) * flipSign * 0.5 + 0.5;

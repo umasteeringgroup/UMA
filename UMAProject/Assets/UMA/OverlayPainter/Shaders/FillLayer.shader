@@ -33,6 +33,8 @@ Shader "Hidden/UMA/TexturePaint/FillGenerator"
             float _CoverageBlendOffset;
             float _CoverageBlendSharpness;
             float4 _FillColor;
+            float4 _SourceMultiplier, _SourceAdditive;
+            float2 _CoverageAlpha;
             float2 _Tiling;
             float2 _Offset;
             float _Rotation;
@@ -79,6 +81,7 @@ Shader "Hidden/UMA/TexturePaint/FillGenerator"
             {
                 float4 sample = tex2D(_FillSource, frac(uv));
                 if (_UseSourceAlpha == 0) sample.a = 1.0;
+                sample = sample * _SourceMultiplier + _SourceAdditive;
                 return sample;
             }
 
@@ -163,7 +166,7 @@ Shader "Hidden/UMA/TexturePaint/FillGenerator"
                 float4 sample = Fill(input);
                 // Coverage belongs to the authored albedo projection. Channels may have their
                 // own RGB transforms or a constant color without changing that silhouette.
-                if (_UseFillCoverage != 0) sample.a = Coverage(input);
+                if (_UseFillCoverage != 0) sample.a = saturate(Coverage(input) * _CoverageAlpha.x + _CoverageAlpha.y);
                 return sample;
             }
             ENDCG

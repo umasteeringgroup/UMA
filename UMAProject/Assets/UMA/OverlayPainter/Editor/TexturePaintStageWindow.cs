@@ -986,25 +986,7 @@ namespace UMA.TexturePaint.Editor
                     EditorGUILayout.HelpBox("Neutral gray leaves normals unchanged; dark recesses and light raises the generated normal.", MessageType.None);
                     TexturePaintLayer activeLayer = (uint)set.activeLayerIndex < (uint)set.layers.Count
                         ? set.layers[set.activeLayerIndex] : null;
-                    TexturePaintLayerChannelSettings activeSettings = activeLayer?.GetChannelSettings(
-                        TexturePaintChannel.NormalControl, false);
-                    if (activeSettings != null && activeLayer.channels.ContainsKey(TexturePaintChannel.NormalControl))
-                    {
-                        EditorGUI.BeginChangeCheck();
-                        float layerStrength = EditorGUILayout.Slider(new GUIContent("Height Strength",
-                            "Slope intensity generated only by this layer's grayscale height field."),
-                            set.ResolveNormalControlStrength(activeSettings), 0f, 16f);
-                        if (EditorGUI.EndChangeCheck())
-                            ChangeLayerNormalControlStrength(set, activeLayer, layerStrength);
-                    }
-                    else EditorGUILayout.HelpBox(
-                        "Select a layer with a Normal Control channel to edit its Height Strength.",
-                        MessageType.Info);
-                    EditorGUI.BeginChangeCheck();
-                    int controlRadius = EditorGUILayout.IntSlider("Sample Radius (px)", set.normalControlRadius, 1, 16);
-                    bool controlInvert = EditorGUILayout.Toggle("Invert Height", set.normalControlInvert);
-                    if (EditorGUI.EndChangeCheck())
-                        ChangeNormalControlSettings(set, set.normalControlStrength, controlRadius, controlInvert);
+                    DrawLayerNormalControlSettings(set, activeLayer);
                 }
             }
             else
@@ -3766,6 +3748,7 @@ namespace UMA.TexturePaint.Editor
             bool generatorEnabled = ribbonMode && pathGenerator?.enabled == true;
             bool garmentEnabled = !generatorEnabled && ribbonMode && pathGarment?.enabled == true;
             bool hemEnabled = !generatorEnabled && ribbonMode && pathHemSeam?.enabled == true && !garmentEnabled;
+            context.ribbonPreserveTextureAspect = ribbonMode && !generatorEnabled && !garmentEnabled && !hemEnabled;
             if (generatorEnabled)
             {
                 if (TexturePaintPathGenerators.Find(pathGenerator.generatorId) == null)
@@ -3944,7 +3927,8 @@ namespace UMA.TexturePaint.Editor
             if (ribbonMode)
             {
                 List<TexturePaintRibbonSegment> ribbonSegments = BuildRibbonSegments(samples,
-                    splineBrush.size, splineBrush.size * 2f, spline.closed);
+                    splineBrush.size, splineBrush.size * 2f, spline.closed,
+                    fitCompleteTiles: !context.ribbonPreserveTextureAspect);
                 ribbonSegments = ExpandPathRibbon(ribbonSegments,!spline.worldSpace,splineBrush,
                     controller.Reconstruction?.root!=null ? controller.Reconstruction.root.transform.position : Vector3.zero);
                 applied = controller.Painting.ApplyRibbon(ribbonSegments, samples,
@@ -4002,7 +3986,7 @@ namespace UMA.TexturePaint.Editor
 
         internal static List<TexturePaintRibbonSegment> BuildRibbonSegments(
             IReadOnlyList<StrokeSample> sourceSamples, float baseHalfWidth, float nominalTileLength,
-            bool closed = false)
+            bool closed = false, bool fitCompleteTiles = true)
         {
             List<StrokeSample> samples = new List<StrokeSample>();
             if (sourceSamples == null) return new List<TexturePaintRibbonSegment>();
@@ -4027,7 +4011,7 @@ namespace UMA.TexturePaint.Editor
             if (totalLength <= 0.000001f) return new List<TexturePaintRibbonSegment>();
             float requestedTileLength = Mathf.Max(0.0001f, nominalTileLength);
             int tileCount = Mathf.Max(1, Mathf.RoundToInt(totalLength / requestedTileLength));
-            float fittedTileLength = totalLength / tileCount;
+            float fittedTileLength = fitCompleteTiles ? totalLength / tileCount : requestedTileLength;
 
             int pathSegmentCount = closed ? samples.Count : samples.Count - 1;
             Vector3[] pathDirections = new Vector3[pathSegmentCount];
@@ -4856,34 +4840,17 @@ namespace UMA.TexturePaint.Editor
 
         private void DrawPathStampSpacingControl()
         {
+            if (pathMode != TexturePaintPathMode.Stamps) return;
             BrushPreset active = ActiveBrush;
-            if (pathMode == TexturePaintPathMode.Ribbon)
-            {
-                EditorGUILayout.LabelField(new GUIContent("Ribbon Tile Length",
-                    "Nominal path length occupied by one complete source image. The final integer tile count is fitted slightly so both path ends meet complete tile edges."),
-                    new GUIContent((active.size * 2f).ToString("0.#####") + " world units"));
-                EditorGUILayout.HelpBox("Ribbon constructs one continuous world-space strip and projects it through the character mesh into every affected UV/UDIM texture. The complete source image repeats without internal stamp edges, and bend deformation is distributed across the three nearest tiles. Brush Size controls the nominal tile width and length.",
-                    MessageType.None);
-                return;
-            }
-            bool enabled = pathMode == TexturePaintPathMode.Stamps;
-            using (new EditorGUI.DisabledScope(!enabled))
-            {
-                EditorGUI.BeginChangeCheck();
-                float nextSpacing = EditorGUILayout.Slider(new GUIContent("Stamp Spacing",
-                    "Center-to-center distance measured in brush diameters. 1.0 places adjacent stamps edge-to-edge; values above 1.0 leave gaps."),
-                    active.spacing, 0.05f, 10f);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    active.spacing = nextSpacing;
-                }
-                EditorGUILayout.LabelField(new GUIContent("Center Distance",
-                    "The resulting center-to-center distance in model world units."),
-                    new GUIContent(active.StampSpacing.ToString("0.#####") + " world units"));
-            }
-            if (!enabled)
-                EditorGUILayout.HelpBox("Choose Stamps to place separated texture stamps, or Ribbon to repeat complete source tiles edge-to-edge.",
-                    MessageType.None);
+            EditorGUI.BeginChangeCheck();
+            float nextSpacing = EditorGUILayout.Slider(new GUIContent("Stamp Spacing",
+                "Center-to-center distance measured in brush diameters. 1.0 places adjacent stamps edge-to-edge; values above 1.0 leave gaps."),
+                active.spacing, 0.05f, 10f);
+            if (EditorGUI.EndChangeCheck()) active.spacing = nextSpacing;
+            EditorGUILayout.LabelField(new GUIContent("Center Distance",
+                "The resulting center-to-center distance in the path's coordinate space."),
+                new GUIContent(active.StampSpacing.ToString("0.#####") +
+                    (spline?.worldSpace == false ? " UV units" : " world units")));
         }
 
         private bool TryCapturePathRenderState(out TextureSet set, out TexturePaintLayer layer,

@@ -105,7 +105,10 @@ namespace UMA.TexturePaint
         SignedCurvature,
         AmbientOcclusion,
         Thickness,
-        SurfaceId
+        SurfaceId,
+        /// <summary>Distance to open rims / convex creases, divided by the world bounds diagonal.
+        /// UV seams, flat diagonals and concave creases are excluded. One means no nearby edge.</summary>
+        ExposedEdgeDistance
     }
 
     [Flags]
@@ -118,7 +121,8 @@ namespace UMA.TexturePaint
         AmbientOcclusion = 1 << 3,
         Thickness = 1 << 4,
         SurfaceId = 1 << 5,
-        All = WorldPosition | WorldNormal | SignedCurvature | AmbientOcclusion | Thickness | SurfaceId
+        ExposedEdgeDistance = 1 << 6,
+        All = WorldPosition | WorldNormal | SignedCurvature | AmbientOcclusion | Thickness | SurfaceId | ExposedEdgeDistance
     }
 
     [Serializable]
@@ -138,6 +142,28 @@ namespace UMA.TexturePaint
         public List<TexturePaintStripeDefinition> defaultStripes =
             new List<TexturePaintStripeDefinition>();
         public string[] enumOptions = Array.Empty<string>();
+    }
+
+    /// <summary>Normalized curve lookup shared by CPU generators and compute parameter bindings.</summary>
+    public static class TexturePaintPluginCurveLookup
+    {
+        public const int SampleCount = 128;
+        public static float[] Bake(AnimationCurve curve)
+        {
+            var samples = new float[SampleCount];
+            for (int i = 0; i < samples.Length; i++)
+            {
+                float t = i / (float)(SampleCount - 1);
+                samples[i] = curve?.Evaluate(t) ?? t;
+            }
+            return samples;
+        }
+        public static float Evaluate(float[] samples, float t)
+        {
+            float position = Mathf.Clamp01(t) * (SampleCount - 1);
+            int first = Mathf.FloorToInt(position);
+            return Mathf.LerpUnclamped(samples[first], samples[Mathf.Min(first + 1, SampleCount - 1)], position - first);
+        }
     }
 
     [Serializable]
@@ -187,8 +213,11 @@ namespace UMA.TexturePaint
         /// <summary>Adds parameters introduced by a newer schema without replacing authored
         /// values. In particular, zero, false, transparent colors and empty lists are values,
         /// not evidence that a parameter is missing.</summary>
-        public bool EnsureDefaults(TexturePaintPluginDescriptor descriptor) =>
-            EnsureDefaults(descriptor?.parameters);
+        public bool EnsureDefaults(TexturePaintPluginDescriptor descriptor)
+        {
+            bool migrated = descriptor?.migrateParameters?.Invoke(this) ?? false;
+            return EnsureDefaults(descriptor?.parameters) || migrated;
+        }
 
         public bool EnsureDefaults(IReadOnlyList<TexturePaintPluginParameterDefinition> definitions)
         {
@@ -330,6 +359,9 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintPluginDescriptor
     {
+        /// <summary>Optional migration of restored parameters before missing defaults are filled.
+        /// ResetToDefaults deliberately bypasses this callback. Return true when changed.</summary>
+        [NonSerialized] public Func<TexturePaintPluginParameterSet, bool> migrateParameters;
         public string id;
         public string displayName;
         public string description;

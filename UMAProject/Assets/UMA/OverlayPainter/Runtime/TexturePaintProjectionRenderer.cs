@@ -152,7 +152,27 @@ namespace UMA.TexturePaint
                         properties.SetBuffer("_Patch", patchBuffer); properties.SetInt("_PatchCount", patch.Length);
                         properties.SetVector("_BoundsMin", bounds.min); properties.SetVector("_BoundsMax", bounds.max);
                         properties.SetTexture("_Source", source.Value);
-                        properties.SetTexture("_Coverage", coverage != null ? coverage : Texture2D.whiteTexture);
+                        var channelSource = settings.GetChannelSourceSettings(source.Key);
+                        bool tintSource = !garment && channelSource.source == TexturePaintBrushSource.Texture;
+                        // Height sprites author their own affected area. Albedo may be a different
+                        // image or nearly transparent tint and must not reveal transparent height texels.
+                        properties.SetInt("_UseSourceCoverage", tintSource &&
+                            source.Key == TexturePaintChannel.NormalControl ? 1 : 0);
+                        properties.SetVector("_SourceMultiplier", TexturePaintChannelUtility.WorkingColor(source.Key,
+                            tintSource ? channelSource.multiplier : Color.white));
+                        properties.SetVector("_SourceAdditive", TexturePaintChannelUtility.WorkingColor(source.Key,
+                            tintSource ? channelSource.additive : Color.clear));
+                        Texture channelCoverage = tintSource ? settings.ResolveCoverage(channelSource.blur) : coverage;
+                        properties.SetTexture("_Coverage", channelCoverage != null ? channelCoverage : Texture2D.whiteTexture);
+                        var coverageSource = settings.source == TexturePaintBrushSource.Overlay ? null : settings.PreferredSource();
+                        float coverageMultiplier = coverageSource?.source == TexturePaintBrushSource.Texture ? coverageSource.multiplier.a : 1f;
+                        float coverageAdditive = coverageSource?.source == TexturePaintBrushSource.Texture ? coverageSource.additive.a : 0f;
+                        if (tintSource && coverageSource?.channel != source.Key)
+                        {
+                            coverageMultiplier *= channelSource.multiplier.a;
+                            coverageAdditive = coverageAdditive * channelSource.multiplier.a + channelSource.additive.a;
+                        }
+                        properties.SetVector("_CoverageAlpha", new Vector4(coverageMultiplier, coverageAdditive, 0f, 0f));
                         properties.SetTexture("_Visibility", visibility != null ? visibility : Texture2D.whiteTexture);
                         properties.SetTexture("_Outline", outline != null ? outline : Texture2D.whiteTexture);
                         properties.SetTexture("_Curve", curve);

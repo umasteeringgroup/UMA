@@ -14,11 +14,13 @@ namespace UMA.TexturePaint
         public Texture2D ambientOcclusion;
         public Texture2D thickness;
         public Texture2D id;
+        public Texture2D exposedEdgeDistance;
 
         public void Dispose()
         {
             Destroy(position); Destroy(worldNormal); Destroy(curvature);
             Destroy(ambientOcclusion); Destroy(thickness); Destroy(id);
+            Destroy(exposedEdgeDistance); exposedEdgeDistance = null;
             position = worldNormal = curvature = ambientOcclusion = thickness = id = null;
         }
 
@@ -56,12 +58,14 @@ namespace UMA.TexturePaint
             Matrix4x4 normalToWorld = localToWorld.inverse.transpose;
             float[] vertexCurvature = BuildVertexSignedCurvature(vertices, normals, triangles);
             var geometry = new TexturePaintGeometryQueries(vertices, triangles, localToWorld);
+            var exposedEdges = new TexturePaintExposedEdges(vertices, triangles, localToWorld);
             Color[] positions = new Color[width * height];
             Color[] worldNormals = Fill(width * height, new Color(0.5f, 0.5f, 1f, 0f));
             Color[] curvatures = new Color[width * height];
             Color[] ao = new Color[width * height];
             Color[] thickness = new Color[width * height];
             Color[] ids = new Color[width * height];
+            Color[] edgeDistances = Fill(width * height, Color.white);
             float[] distances = new float[width * height];
             Array.Fill(distances, float.PositiveInfinity);
 
@@ -115,6 +119,8 @@ namespace UMA.TexturePaint
                         float thick = geometry.Thickness(position, normal, extent, bias);
                         ao[i] = new Color(accessibility, accessibility, accessibility, 1);
                         thickness[i] = new Color(thick, thick, thick, 1);
+                        float edgeDistance = Mathf.Min(1f, exposedEdges.Distance(position, Mathf.RoundToInt(ids[i].r)) / extent);
+                        edgeDistances[i] = new Color(edgeDistance, edgeDistance, edgeDistance, 1);
                     }
                 });
                 operation.Report(.2f + .8f * end / height);
@@ -127,7 +133,8 @@ namespace UMA.TexturePaint
                 curvature = Create("Curvature Map", width, height, curvatures, TextureFormat.RHalf),
                 ambientOcclusion = Create("Ambient Occlusion Map", width, height, ao, TextureFormat.RHalf),
                 thickness = Create("Thickness Map", width, height, thickness, TextureFormat.RHalf),
-                id = Create("Mesh ID Map", width, height, ids, TextureFormat.RGBAFloat)
+                id = Create("Mesh ID Map", width, height, ids, TextureFormat.RGBAFloat),
+                exposedEdgeDistance = Create("Exposed Edge Distance Map", width, height, edgeDistances, TextureFormat.RHalf)
             };
         }
 

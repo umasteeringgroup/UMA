@@ -7,7 +7,9 @@ namespace UMA.TexturePaint.Editor
 {
     public sealed partial class TexturePaintStageWindow
     {
-        private TexturePaintMaskEffectKind newMaskEffect = TexturePaintMaskEffectKind.Noise;
+        private static readonly (TexturePaintMaskEffectKind kind, bool white, string label)[] maskEffectChoices = BuildMaskEffectChoices();
+        private static readonly string[] maskEffectChoiceLabels = Array.ConvertAll(maskEffectChoices, item => item.label);
+        private int newMaskEffectIndex = Array.FindIndex(maskEffectChoices, item => item.kind == TexturePaintMaskEffectKind.Noise);
         private TexturePaintSmartMask smartMaskExample;
         private TexturePaintMaskPreset smartMaskPreset;
         private bool maskStackExpanded = true;
@@ -20,14 +22,31 @@ namespace UMA.TexturePaint.Editor
             if (!maskStackExpanded) return;
             var effects = layer.layerMask.effects.Clone();
             EditorGUI.BeginChangeCheck();
-            DrawComposableMaskEffects(set, layer, effects);
-            if (EditorGUI.EndChangeCheck() && JsonUtility.ToJson(effects) != JsonUtility.ToJson(layer.layerMask.effects))
+            DrawComposableMaskEffects(set, layer, effects, out bool? initializeWhite);
+            bool changed = EditorGUI.EndChangeCheck();
+            if (initializeWhite.HasValue)
+                AddPaintedMaskEffectWithHistory(set, layer, effects, initializeWhite.Value);
+            else if (changed && JsonUtility.ToJson(effects) != JsonUtility.ToJson(layer.layerMask.effects))
                 ChangeLayerMaskEffects(set, layer, effects);
         }
-        private void DrawComposableMaskEffects(TextureSet set, TexturePaintLayer layer, TexturePaintLayerMaskEffects effects)
+        private static (TexturePaintMaskEffectKind kind, bool white, string label)[] BuildMaskEffectChoices()
         {
+            var choices = new List<(TexturePaintMaskEffectKind, bool, string)>();
+            foreach (TexturePaintMaskEffectKind kind in Enum.GetValues(typeof(TexturePaintMaskEffectKind)))
+                if (kind == TexturePaintMaskEffectKind.PaintedMask)
+                {
+                    choices.Add((kind, true, "White Painted Mask"));
+                    choices.Add((kind, false, "Black Painted Mask"));
+                }
+                else choices.Add((kind, false, ObjectNames.NicifyVariableName(kind.ToString())));
+            return choices.ToArray();
+        }
+
+        private void DrawComposableMaskEffects(TextureSet set, TexturePaintLayer layer, TexturePaintLayerMaskEffects effects, out bool? initializeWhite)
+        {
+            initializeWhite = null;
             effects.Normalize();
-            EditorGUILayout.LabelField("Effects run from top to bottom. White reveals; black hides. Painting edits the original mask; add Painted Mask at the end to retain hand-painted exclusions.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Effects run from top to bottom. White reveals; black hides. Add White Painted Mask to paint exclusions, or Black Painted Mask to paint reveals.", EditorStyles.wordWrappedMiniLabel);
             effects.startFromPaint = EditorGUILayout.Toggle("Start From Painted Mask", effects.startFromPaint);
             if (!effects.startFromPaint) effects.initialValue = EditorGUILayout.Slider("Starting Value", effects.initialValue, 0, 1);
             if (effects.noise.enabled || effects.textureOverlay.enabled)
@@ -65,8 +84,9 @@ namespace UMA.TexturePaint.Editor
                     using(new EditorGUILayout.HorizontalScope())
                     {
                         effect.enabled=EditorGUILayout.Toggle(effect.enabled,GUILayout.Width(18));
-                        expanded=EditorGUILayout.Foldout(expanded,
-                            string.IsNullOrWhiteSpace(effect.name) ? ObjectNames.NicifyVariableName(effect.kind.ToString()) : effect.name,true);
+                        string label = string.IsNullOrWhiteSpace(effect.name) ? ObjectNames.NicifyVariableName(effect.kind.ToString()) : effect.name;
+                        if (effect.opacity <= 0f) label += " (Opacity 0 — no effect)";
+                        expanded=EditorGUILayout.Foldout(expanded, label, true);
                         using(new EditorGUI.DisabledScope(i==0)) if(GUILayout.Button(new GUIContent("Up","Evaluate this effect earlier"),GUILayout.Width(30))) {move=i;to=i-1;}
                         using(new EditorGUI.DisabledScope(i==effects.stack.Count-1)) if(GUILayout.Button(new GUIContent("Down","Evaluate this effect later"),GUILayout.Width(45))) {move=i;to=i+1;}
                         if(GUILayout.Button(new GUIContent("+","Duplicate effect"),GUILayout.Width(24))) duplicate=i;
@@ -85,9 +105,17 @@ namespace UMA.TexturePaint.Editor
             else if(duplicate>=0) {var copy=effects.stack[duplicate].Clone();copy.id=Guid.NewGuid().ToString("N");effects.stack.Insert(duplicate+1,copy);GUI.changed=true;}
             using(new EditorGUILayout.HorizontalScope())
             {
-                newMaskEffect=(TexturePaintMaskEffectKind)EditorGUILayout.EnumPopup("New Effect",newMaskEffect);
-                if(GUILayout.Button("Add",GUILayout.Width(55))) {effects.stack.Add(TexturePaintMaskEffect.Create(newMaskEffect));GUI.changed=true;}
+                newMaskEffectIndex=EditorGUILayout.Popup("New Effect",newMaskEffectIndex,maskEffectChoiceLabels);
+                if(GUILayout.Button("Add",GUILayout.Width(55)))
+                {
+                    var choice=maskEffectChoices[newMaskEffectIndex];
+                    if(choice.kind==TexturePaintMaskEffectKind.PaintedMask) initializeWhite=choice.white;
+                    else effects.stack.Add(TexturePaintMaskEffect.Create(choice.kind));
+                    GUI.changed=true;
+                }
             }
+            if(maskEffectChoices[newMaskEffectIndex].kind==TexturePaintMaskEffectKind.PaintedMask)
+                EditorGUILayout.HelpBox("Initializes the layer's painted mask to the selected color and replaces existing Painted Mask entries with one enabled Multiply effect at opacity 1, at the end of the stack. Other effects are kept. Undo restores the previous paint and settings.", MessageType.Info);
             EditorGUILayout.Space(); EditorGUILayout.LabelField("Smart Masks",EditorStyles.boldLabel);
             smartMaskExample=(TexturePaintSmartMask)EditorGUILayout.EnumPopup("Example",smartMaskExample);
             if(GUILayout.Button("Use Example Recipe")) {CopyMaskRecipe(TexturePaintMaskPreset.CreateRecipe(smartMaskExample),effects,false);GUI.changed=true;}
@@ -161,6 +189,11 @@ namespace UMA.TexturePaint.Editor
             if(k==TexturePaintMaskEffectKind.Texture || k==TexturePaintMaskEffectKind.MeshID)
                 e.channel=(TexturePaintLayerMaskTextureChannel)EditorGUILayout.EnumPopup("Read Channel",e.channel);
             if(k==TexturePaintMaskEffectKind.PaintedMask) EditorGUILayout.LabelField("Uses the original editable mask, independent of generators. Paint on the layer's mask thumbnail to change it.",EditorStyles.wordWrappedMiniLabel);
+            if(k==TexturePaintMaskEffectKind.Voronoi)
+            {
+                e.inputMin=EditorGUILayout.Slider(new GUIContent("Black Expansion", "Expand the black centers within existing cells without moving or resizing the cell layout. Zero preserves the original gradient; one makes the result black."),e.inputMin,0,1);
+                e.amount=EditorGUILayout.Slider(new GUIContent("Contrast", "Sharpen the transition between black cell centers and white regions. One preserves the original softness."),e.amount,1,8);
+            }
             if(k==TexturePaintMaskEffectKind.Fill) e.value=EditorGUILayout.Slider("Value",e.value,0,1);
             if(pattern || k==TexturePaintMaskEffectKind.Warp || grunge)
             {e.seed=EditorGUILayout.IntField("Seed",e.seed);e.octaves=EditorGUILayout.IntSlider("Noise Detail",e.octaves,1,8);}

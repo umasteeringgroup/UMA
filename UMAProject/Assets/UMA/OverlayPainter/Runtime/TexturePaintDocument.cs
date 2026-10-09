@@ -90,6 +90,9 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintFillSettings
     {
+        [Range(0, 16)] public int blur;
+        public Color multiplier = Color.white;
+        public Color additive = Color.clear;
         [HideInInspector] public int generatorRevision;
         public TexturePaintBrushSource source = TexturePaintBrushSource.Color;
         public Texture2D sourceTexture;
@@ -183,6 +186,9 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintChannelSourceSettings
     {
+        [Range(0, 16)] public int blur;
+        public Color multiplier = Color.white;
+        public Color additive = Color.clear;
         public TexturePaintBrushSource source = TexturePaintBrushSource.Texture;
         public Texture2D sourceTexture;
         public Sprite sourceSprite;
@@ -217,7 +223,9 @@ namespace UMA.TexturePaint
         // Height strength belongs to each authored Normal Control channel. The explicit flag lets
         // documents saved before this setting existed retain their texture-set conversion value.
         public bool hasNormalControlStrength;
-        [Range(0f, 16f)] public float normalControlStrength = 2f;
+        [Range(0f, 64f)] public float normalControlStrength = 2f;
+        public bool normalControlInvert;
+        [Range(1, 16)] public int normalControlRadius = 1;
         public TexturePaintChannelSourceSettings sourceSettings;
 
         public TexturePaintLayerChannelSettings Clone()
@@ -232,6 +240,8 @@ namespace UMA.TexturePaint
                 blendMode = blendMode,
                 hasNormalControlStrength = hasNormalControlStrength,
                 normalControlStrength = normalControlStrength,
+                normalControlInvert = normalControlInvert,
+                normalControlRadius = normalControlRadius,
                 sourceSettings = sourceSettings?.Clone()
             };
         }
@@ -1012,6 +1022,9 @@ namespace UMA.TexturePaint
         public Sprite sourceSprite;
         public OverlayDataAsset sourceOverlay;
         public Color sourceColor = Color.white;
+        public Color sourceMultiplier = Color.white;
+        public Color sourceAdditive = Color.clear;
+        public int sourceBlur;
         public TexturePaintNormalConvention sourceNormalConvention = TexturePaintNormalConvention.OpenGL;
         public bool sourceInvert;
         public Vector2 sourceTiling = Vector2.one;
@@ -1033,6 +1046,9 @@ namespace UMA.TexturePaint
             sourceSprite = value.sourceSprite;
             sourceOverlay = value.sourceOverlay;
             sourceColor = value.color;
+            sourceMultiplier = value.multiplier;
+            sourceAdditive = value.additive;
+            sourceBlur = value.blur;
             sourceNormalConvention = value.normalConvention;
             sourceInvert = value.invert;
             sourceTiling = value.tiling;
@@ -1059,6 +1075,9 @@ namespace UMA.TexturePaint
                 sourceSprite = sourceSprite,
                 sourceOverlay = sourceOverlay,
                 color = sourceColor,
+                multiplier = sourceMultiplier,
+                additive = sourceAdditive,
+                blur = sourceBlur,
                 normalConvention = sourceNormalConvention,
                 invert = sourceInvert,
                 tiling = sourceTiling,

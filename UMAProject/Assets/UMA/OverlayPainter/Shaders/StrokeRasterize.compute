@@ -44,6 +44,14 @@ float2 _TriangleUV0;
 float2 _TriangleUV1;
 float2 _TriangleUV2;
 float4 _PaintColor;
+float4 _SourceMultiplier;
+float4 _SourceAdditive;
+
+float4 ApplySourceColors(float4 value)
+{
+    value = value * _SourceMultiplier + _SourceAdditive;
+    return value;
+}
 
 struct BatchStamp
 {
@@ -181,12 +189,12 @@ void CSMain(uint3 dispatchID : SV_DispatchThreadID)
     float4 desired = _PaintColor;
     if (_Operation == 0 && _PaintSourceKind == 0)
     {
-        desired = _PaintSource.SampleLevel(sampler_linear_clamp, BrushLocalUV(uv), 0);
+        desired = ApplySourceColors(_PaintSource.SampleLevel(sampler_linear_clamp, BrushLocalUV(uv), 0));
         if (_VectorNormal != 0)
             desired.xy = (desired.xy * 2.0 - 1.0) * sign(_SourceUVScale) * 0.5 + 0.5;
     }
     else if (_Operation == 0 && _PaintSourceKind == 1)
-        desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
+        desired = ApplySourceColors(_PaintSource.SampleLevel(sampler_linear_clamp, uv, 0));
     if (_Operation == 1) desired = _MaskMode != 0
         ? float4(_MaskEraseValue, _MaskEraseValue, _MaskEraseValue, 1.0)
         : float4(1, 1, 1, current.a);
@@ -254,12 +262,12 @@ void CSStamp(uint3 dispatchID : SV_DispatchThreadID)
     float4 desired = _PaintColor;
     if (_Operation == 0 && _PaintSourceKind == 0)
     {
-        desired = _PaintSource.SampleLevel(sampler_linear_clamp, BrushLocalUV(uv), 0);
+        desired = ApplySourceColors(_PaintSource.SampleLevel(sampler_linear_clamp, BrushLocalUV(uv), 0));
         if (_VectorNormal != 0)
             desired.xy = (desired.xy * 2.0 - 1.0) * sign(_SourceUVScale) * 0.5 + 0.5;
     }
     else if (_Operation == 0 && _PaintSourceKind == 1)
-        desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
+        desired = ApplySourceColors(_PaintSource.SampleLevel(sampler_linear_clamp, uv, 0));
     if (_Operation == 1) desired = _MaskMode != 0
         ? float4(_MaskEraseValue, _MaskEraseValue, _MaskEraseValue, 1.0)
         : float4(1, 1, 1, current.a);
@@ -362,12 +370,12 @@ void CSBatch(uint3 dispatchID : SV_DispatchThreadID)
             delta = float2(delta.x * c - delta.y * s, delta.x * s + delta.y * c);
             delta /= (max(abs(stamp.footprintScale), 1e-5) * sign(stamp.footprintScale));
             float2 sourceUV = (delta * 0.5 + 0.5) * stamp.sourceUVScale + stamp.sourceUVOffset;
-            desired = _PaintSource.SampleLevel(sampler_linear_clamp, sourceUV, 0);
+            desired = ApplySourceColors(_PaintSource.SampleLevel(sampler_linear_clamp, sourceUV, 0));
             if (_VectorNormal != 0)
                 desired.xy = (desired.xy * 2.0 - 1.0) * sign(stamp.sourceUVScale) * 0.5 + 0.5;
         }
         else if (_Operation == 0 && _PaintSourceKind == 1)
-            desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
+            desired = ApplySourceColors(_PaintSource.SampleLevel(sampler_linear_clamp, uv, 0));
         if (_Operation == 1) desired = _MaskMode != 0
             ? float4(_MaskEraseValue, _MaskEraseValue, _MaskEraseValue, 1.0)
             : float4(1, 1, 1, current.a);
@@ -420,7 +428,7 @@ void CSFillMasked(uint3 dispatchID : SV_DispatchThreadID)
     float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
     float4 desired = _PaintColor;
     if (_PaintSourceKind != 2)
-        desired = _PaintSource.SampleLevel(sampler_linear_clamp, uv, 0);
+        desired = ApplySourceColors(_PaintSource.SampleLevel(sampler_linear_clamp, uv, 0));
     desired = NormalizeMaskValue(desired);
     float3 blended = BlendRGB(current.rgb, desired.rgb, _BlendMode);
     float4 result = _MaskMode != 0
