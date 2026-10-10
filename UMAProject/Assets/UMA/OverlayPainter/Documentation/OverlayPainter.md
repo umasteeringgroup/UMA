@@ -180,6 +180,26 @@ native-resolution texture inputs.
 
 ## The Workspace
 
+### Preview material controls
+
+Open **Window > UMA > Overlay Painter Material**, choose **View > Preview Material**, or click
+**Edit Preview Material** in the Layer Preview panel. This dockable window follows the active
+paint target and shows its actual shader with the composited layer textures in an interactive
+material preview. Drag the preview to inspect it and use **Show on Character** to return the
+Scene view to the complete material.
+
+Edit shader parameters such as **Smoothness**, color, and normal strength here. For shaders that
+multiply texture smoothness by a material slider, set **Smoothness** to **1** to let a Roughness
+channel cover the full range from mirror-smooth to rough. These parameters apply to the entire
+preview material; layer-channel settings still control each layer's contribution.
+
+Changes support Undo and save with the painter project and recovery. **Reset to Source** restores
+the source material's parameters. Shared material assets remain unchanged, and the read-only
+**Layer Textures** section shows maps controlled by the layer stack. Texture export continues to
+use the original UMA material, so configure that material separately when the exported character
+should use the same shader parameters. The existing Layer Preview **Lit Surface** thumbnail is a
+fixed-light approximation; use the Material window or the character for the actual shader result.
+
 By default, Overlay Painter opens its custom stage in a dedicated floating compact workspace. The
 left side has **Overlay Painter Layers** and **Overlay Painter Brush** in the upper tab group,
 with **Overlay Painter Properties** docked directly underneath. The right side is a tab group
@@ -732,7 +752,7 @@ Fill sources can be:
 - An Overlay source.
 - Multiple coordinated channels assigned from a Sprite Set.
 
-Every Fill channel has independent X/Y tiling, X/Y offset, and rotation. Enable **Use Transform For All Channels** on the first authored channel to make it the transform master; the other channels update to match and their transform controls remain locked until sharing is disabled.
+Every Fill channel can have independent X/Y tiling, X/Y offset, rotation, and Flat/Triplanar mapping. Enable **Use Transform For All Channels** on the first authored channel to share its complete mapping, including Fill Type and triplanar blend settings. Sprite Set fills enable this by default so Albedo, Normal, Roughness, and other maps stay aligned. **Fill Type (All Channels)** edits the shared mapping even when a secondary channel is selected. Other channels' transform controls remain locked until sharing is disabled; their textures, colors, blur, opacity, and normal conventions remain independent.
 
 #### Replacing individual UDIM tiles
 
@@ -1287,7 +1307,7 @@ Projection layers support layer/channel opacity and blend, effects, painted mask
 
 **Rasterize to Paint Layer** in the layer row menu bakes the generated channels and effective mask into editable pixels and removes the editable projector. Export also uses the generated texture result, but does not require rasterizing the authoring layer. Exported textures follow the model normally through its UVs.
 
-Use [Create Symmetry Instances](#layer-symmetry) for mirrored or radial copies while keeping one editable projection per layer.
+Enable [Layer Symmetry](#layer-symmetry) for live mirrored or radial copies within the same projection layer. Moving, resizing, or changing the source updates every copy.
 
 --------------------------------------------------------------------------------
 
@@ -1820,7 +1840,7 @@ The Scene view X mirror button directly controls the selected layer's **Mirror X
 
 UV symmetry uses the texture center plus the frame's XY offset, its Z rotation, and radial rotation around the UV plane normal. Reflections preserve image orientation. On paint layers, symmetry affects new strokes; changing it does not rewrite existing painted pixels.
 
-For a placed Projection layer, **Create Symmetry Instances** creates separate linked layers at the symmetric placements in one Undo step. The operation leaves the stack unchanged if any placement cannot be generated. Each copy remains one editable world-space projection, including its wrapped control points and pins.
+For a Projection layer, enabling symmetry immediately renders the selected mirrors and radial copies across all projected channels, including Normal and Normal Control. Frame Origin and Plane Rotation set the symmetry frame. Copies follow the original placement, size, wrapped control points, and pins; disabling symmetry removes their generated pixels. Overlapping copies retain the strongest coverage without stacking opacity or height. Linked projection instances keep their own single placement.
 
 Later edits to the symmetry frame affect new placements. Existing projection instances retain their own transforms. Change the source projection to update shared imagery and material settings, or use **Make Independent** to break that link.
 

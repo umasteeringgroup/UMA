@@ -3878,7 +3878,7 @@ namespace UMA.TexturePaint.Editor
                 EditorGUI.BeginChangeCheck();
                 bool nextShareFillTransform = EditorGUILayout.Toggle(
                     new GUIContent("Use Transform For All Channels",
-                        "Use this first channel's tiling, offset, and rotation for every channel in the Fill layer."),
+                        "Use this first channel's tiling, offset, rotation, Fill Type, and triplanar blending for every channel in the Fill layer."),
                     shareFillTransform);
                 if (EditorGUI.EndChangeCheck())
                 {
@@ -3961,7 +3961,7 @@ namespace UMA.TexturePaint.Editor
                     source.rotation = EditorGUILayout.FloatField("Rotation", source.rotation);
                 }
                 if (transformDrivenByFirst)
-                    EditorGUILayout.HelpBox($"Transform is driven by the {firstChannel} channel.",
+                    EditorGUILayout.HelpBox($"Mapping is driven by the {firstChannel} channel, including Fill Type and triplanar blending.",
                         MessageType.None);
             }
             if (!EditorGUI.EndChangeCheck()) return;
@@ -4208,10 +4208,17 @@ namespace UMA.TexturePaint.Editor
                 SelectLayerChannelForEditing(layer, channel);
                 return;
             }
+            // The Fill Type above the channel properties edits the shared mapping when
+            // linked, even if a secondary channel is currently selected for preview.
+            TexturePaintChannel mappingChannel = ResolveFillMappingChannel(layer, editingChannel);
+            source = layer.GetChannelSettings(mappingChannel, false)?.sourceSettings;
+            current = source != null ? FillSettingsFromChannelSource(source) : layer.fillSettings;
             if (source?.source == TexturePaintBrushSource.Color) return;
+            bool sharedMapping = layer.fillSettings?.useFirstChannelTransform == true;
             EditorGUI.BeginChangeCheck();
             TexturePaintFillProjection projection = (TexturePaintFillProjection)EditorGUILayout.EnumPopup(
-                new GUIContent("Fill Type", "Flat follows UV space; Triplanar projects continuously in world space"),
+                new GUIContent(sharedMapping ? "Fill Type (All Channels)" : "Fill Type",
+                    "Flat follows UV space; Triplanar projects continuously in world space. Linked channels share this mapping."),
                 current.projection);
             TexturePaintTriplanarBlend triplanarBlend = current.triplanarBlend;
             float blendOffset = current.blendOffset;
@@ -4232,14 +4239,22 @@ namespace UMA.TexturePaint.Editor
             if (!EditorGUI.EndChangeCheck()) return;
 
             TexturePaintFillSettings updated = current.Clone();
-            updated.normalConvention = normalConvention;
             updated.useFirstChannelTransform = layer.fillSettings?.useFirstChannelTransform == true;
             updated.projection = projection;
             updated.triplanarBlend = triplanarBlend;
             updated.blendOffset = blendOffset;
             updated.blendSharpness = blendSharpness;
-            ChangeFillLayer(set, layer, editingChannel, updated);
+            ChangeFillLayer(set, layer, mappingChannel, updated);
             SetSelectedChannelAndRefreshSource(editingChannel);
+        }
+
+        internal static TexturePaintChannel ResolveFillMappingChannel(TexturePaintLayer layer,
+            TexturePaintChannel editingChannel)
+        {
+            return layer?.kind == TexturePaintLayerKind.Fill &&
+                layer.fillSettings?.useFirstChannelTransform == true &&
+                layer.TryGetFirstAuthoredChannel(out TexturePaintChannel firstChannel)
+                ? firstChannel : editingChannel;
         }
 
         private void DrawStrokeProperties()
@@ -6532,6 +6547,8 @@ namespace UMA.TexturePaint.Editor
         private void ShowViewMenu(Rect anchor)
         {
             GenericMenu menu = new GenericMenu();
+            menu.AddItem(new GUIContent("Preview Material…"), false, TexturePaintMaterialWindow.ShowWindow);
+            menu.AddSeparator(string.Empty);
             menu.AddItem(new GUIContent("Solo Selected Channel"), channelSolo, () =>
             {
                 SetScenePreviewMode(channelSolo

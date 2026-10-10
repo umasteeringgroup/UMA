@@ -36,6 +36,8 @@ namespace UMA.TexturePaint.Editor
             {
                 DrawLayerPreviewContent();
                 DrawRegenerateStaleLayersButton();
+                if (GUILayout.Button("Edit Preview Material", EditorStyles.miniButton))
+                    TexturePaintMaterialWindow.ShowWindow();
             }
             finally { GUI.changed = changed; }
         }

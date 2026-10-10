@@ -424,7 +424,7 @@ namespace UMA.TexturePaint
     /// </summary>
     public sealed class TexturePaintFillGenerator : IDisposable
     {
-        public const int CurrentRevision = 8;
+        public const int CurrentRevision = 9;
         private const int EdgePaddingPixels = 2;
 
         private readonly Material material;
@@ -1070,6 +1070,12 @@ namespace UMA.TexturePaint
                 settings.sourceSettings.tiling = master.tiling;
                 settings.sourceSettings.offset = master.offset;
                 settings.sourceSettings.rotation = master.rotation;
+                // Equal tiling is only meaningful when every map uses the same coordinate
+                // system and triplanar weights. Keep source/color/normal options independent.
+                settings.sourceSettings.projection = master.projection;
+                settings.sourceSettings.triplanarBlend = master.triplanarBlend;
+                settings.sourceSettings.blendOffset = master.blendOffset;
+                settings.sourceSettings.blendSharpness = master.blendSharpness;
             }
 
             int revision = layer.fillSettings.generatorRevision;

@@ -95,6 +95,107 @@ namespace UMA.TexturePaint.Editor.Tests
             }
         }
 
+        [TestCase(TexturePaintChannel.Albedo, TexturePaintProjectionMode.Planar)]
+        [TestCase(TexturePaintChannel.NormalControl, TexturePaintProjectionMode.Planar)]
+        [TestCase(TexturePaintChannel.NormalControl, TexturePaintProjectionMode.Wrapped)]
+        public void ProjectionMirrorsPixelsAndRetainsEditablePlacement(TexturePaintChannel channel, TexturePaintProjectionMode mode)
+        {
+            var set = Set(); if (channel != TexturePaintChannel.Albedo) AddChannel(set, channel);
+            var layer = set.AddProjectionLayer();
+            layer.layerSymmetry = new TexturePaintSymmetry { enabled = true, mirrorX = true };
+            layer.layerSymmetryVersion = 1;
+            var image = Image(Color.clear);
+            // Asymmetrical stamp: only its left half is opaque.
+            for (int y = 0; y < 16; y++) for (int x = 0; x < 8; x++) image.SetPixel(x, y, Color.white);
+            image.Apply();
+            var settings = Definition(image); settings.channel = channel; settings.mode = mode;
+            settings.position = new Vector3(-.25f, 0, 0); settings.width = .3f; settings.height = .4f;
+            settings.regionSurfaceId = set.persistentId; settings.regionTriangle = 0;
+            Generate(settings, new[] { set }, new[] { set }, layer);
+            Assert.That(Pixel(layer, 12, 32, channel).a, Is.GreaterThan(.95));
+            Assert.That(Pixel(layer, 51, 32, channel).a, Is.GreaterThan(.95), "Reflected stamp missing");
+            Assert.That(Pixel(layer, 21, 32, channel).a, Is.LessThan(.01));
+            Assert.That(Pixel(layer, 42, 32, channel).a, Is.LessThan(.01), "Image handedness must reflect too");
+            Assert.That(layer.projectionSettings.position, Is.EqualTo(settings.position));
+            Assert.That(layer.projectionSettings.flipX, Is.EqualTo(settings.flipX));
+            Assert.That(set.layers.Count, Is.EqualTo(1));
+            layer.layerSymmetry.enabled = false;
+            Generate(layer.projectionSettings, new[] { set }, new[] { set }, layer);
+            Assert.That(Pixel(layer, 51, 32, channel).a, Is.LessThan(.01), "Disabling symmetry must clear old pixels");
+        }
+
+        [Test] public void ProjectionSymmetryToggleUndoAndMoveRegeneratePixels()
+        {
+            var set = Set(); var layer = set.AddProjectionLayer();
+            var settings = Definition(); settings.position = new Vector3(-.25f, 0, 0);
+            settings.width = settings.height = .2f;
+            Generate(settings, new[] { set }, new[] { set }, layer);
+            WithStage(Store(set), stage =>
+            {
+                Invoke(stage, "ApplyLayerSymmetryEdit", set, new TexturePaintSymmetry { enabled = true, mirrorX = true });
+                Assert.That(Pixel(set.layers[0], 48, 32).a, Is.GreaterThan(.95));
+                Assert.That(Invoke(stage, "UndoLightweight"), Is.True);
+                Assert.That(Pixel(set.layers[0], 48, 32).a, Is.LessThan(.01));
+                Assert.That(Invoke(stage, "RedoLightweight"), Is.True);
+                settings.position.y = .25f;
+                Invoke(stage, "ChangeProjectionWithHistory", set, set.layers[0], settings, false);
+                Assert.That(Pixel(set.layers[0], 48, 48).a, Is.GreaterThan(.95));
+                Assert.That(Pixel(set.layers[0], 48, 32).a, Is.LessThan(.01));
+                Invoke(stage, "ApplyLayerSymmetryEdit", set, new TexturePaintSymmetry { enabled = false });
+                Assert.That(Pixel(set.layers[0], 48, 48).a, Is.LessThan(.01));
+                Assert.That(Invoke(stage, "UndoLightweight"), Is.True);
+                Assert.That(Pixel(set.layers[0], 48, 48).a, Is.GreaterThan(.95));
+            });
+        }
+
+        [Test] public void ProjectionSymmetryOverlapKeepsOpacityAndInstancesStaySingle()
+        {
+            var set = Set(); var layer = set.AddProjectionLayer();
+            layer.layerSymmetry = new TexturePaintSymmetry { enabled = true, mirrorX = true, mirrorY = true };
+            var settings = Definition(Image(new Color(1, 1, 1, .5f)));
+            settings.width = settings.height = .3f;
+            Generate(settings, new[] { set }, new[] { set }, layer);
+            Assert.That(Pixel(layer).a, Is.EqualTo(.5f).Within(.005f));
+            layer.links = new TexturePaintLayerLinks { instance = new TexturePaintLayerReference { layerId = "source" } };
+            settings.position.x = -.25f;
+            Generate(settings, new[] { set }, new[] { set }, layer);
+            Assert.That(Pixel(layer, 16, 32).a, Is.GreaterThan(.49));
+            Assert.That(Pixel(layer, 48, 32).a, Is.LessThan(.01));
+        }
+
+        [Test] public void ProjectionSymmetryResolvesSeparateSurfaceRegionsAndReflectsNormals()
+        {
+            var left = Set(Quad(-.5f, 0)); var right = Set(Quad(0, .5f));
+            AddChannel(left, TexturePaintChannel.Normal); AddChannel(right, TexturePaintChannel.Normal);
+            var a = left.AddProjectionLayer(); var b = right.AddProjectionLayer();
+            a.layerSymmetry = b.layerSymmetry = new TexturePaintSymmetry { enabled = true, mirrorX = true };
+            var settings = Definition(Image(new Color(.8f, .5f, .9f, 1)));
+            settings.channel = TexturePaintChannel.Normal;
+            settings.position = new Vector3(-.25f, 0, 0); settings.width = settings.height = .2f;
+            settings.regionSurfaceId = left.persistentId; settings.regionTriangle = 0;
+            settings.connectedSurfaceOnly = true;
+            Generate(settings, new[] { left, right }, new[] { left, right }, a, b);
+            var original = Pixel(a, 32, 32, TexturePaintChannel.Normal);
+            var reflected = Pixel(b, 32, 32, TexturePaintChannel.Normal);
+            Assert.That(original.a, Is.GreaterThan(.95)); Assert.That(reflected.a, Is.GreaterThan(.95));
+            Assert.That(original.r, Is.GreaterThan(.7)); Assert.That(reflected.r, Is.LessThan(.3));
+            Assert.That(original.g, Is.EqualTo(reflected.g).Within(.005));
+            Assert.That(b.projectionSettings.regionSurfaceId, Is.EqualTo(left.persistentId));
+        }
+
+        [Test] public void ProjectionSymmetryRadialCopiesUseConfiguredFrame()
+        {
+            var set = Set(); var layer = set.AddProjectionLayer();
+            layer.layerSymmetry = new TexturePaintSymmetry
+                { enabled = true, mirrorX = false, radialCopies = 4, radialAxis = Vector3.forward, origin = new Vector3(.05f, 0, 0) };
+            var settings = Definition(); settings.position = new Vector3(-.2f, 0, 0);
+            settings.width = settings.height = .12f;
+            Generate(settings, new[] { set }, new[] { set }, layer);
+            foreach (var point in new[] { new Vector2Int(19,32), new Vector2Int(35,16), new Vector2Int(51,32), new Vector2Int(35,48) })
+                Assert.That(Pixel(layer, point.x, point.y).a, Is.GreaterThan(.95), point.ToString());
+            Assert.That(Pixel(layer, 35, 32).a, Is.LessThan(.01));
+        }
+
         [Test] public void WarpSubdivisionPreservesShapeAndPinsAndRefitSkipsPinnedPoints()
         {
             var settings=Definition();settings.mode=TexturePaintProjectionMode.Wrapped;
@@ -891,7 +992,10 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(actual.r, Is.EqualTo(expected.r).Within(.035f), label + " R");
                 Assert.That(actual.g, Is.EqualTo(expected.g).Within(.035f), label + " G");
                 Assert.That(actual.b, Is.EqualTo(expected.b).Within(.035f), label + " B");
-                Assert.That(actual.a, Is.EqualTo(before[TexturePaintChannel.Albedo][mirrored].a).Within(.015f), label + " silhouette");
+                // Height uses its own alpha; other material maps share Albedo coverage.
+                float expectedAlpha = pair.Key == TexturePaintChannel.NormalControl
+                    ? expected.a : before[TexturePaintChannel.Albedo][mirrored].a;
+                Assert.That(actual.a, Is.EqualTo(expectedAlpha).Within(.015f), label + " silhouette");
                 Assert.That(actual.a, Is.GreaterThan(.25f), label + " must contain projected pixels");
             }
             foreach (var pair in originalImages) CollectionAssert.AreEqual(pair.Value, pair.Key.GetPixels(), "Mirroring must not edit source images.");
@@ -1780,6 +1884,8 @@ namespace UMA.TexturePaint.Editor.Tests
                 var map = settings.GetChannelSource(TexturePaintChannel.Normal, true);
                 map.sprite = normalSprite; map.normalConvention = TexturePaintNormalConvention.DirectX;
             }
+            layer.layerSymmetry = new TexturePaintSymmetry { enabled = true, mirrorX = true, origin = new Vector3(.1f, 0, 0) };
+            layer.layerSymmetryVersion = 1;
             settings.mode=TexturePaintProjectionMode.Wrapped;settings.points[4].z=0.01f;settings.depthFromSurface=true;
             settings.flipX = true; settings.flipY = true;
             Generate(settings,new[]{set},new[]{set},layer);
@@ -1797,6 +1903,8 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(recovery.surfaces[0].layers[0].projectionSettings.depthFromSurface,Is.True);
                 Assert.That(recovery.surfaces[0].layers[0].projectionSettings.flipX, Is.True);
                 Assert.That(recovery.surfaces[0].layers[0].projectionSettings.flipY, Is.True);
+                Assert.That(recovery.surfaces[0].layers[0].layerSymmetry.enabled, Is.True);
+                Assert.That(recovery.surfaces[0].layers[0].layerSymmetry.origin.x, Is.EqualTo(.1f));
                 if (multipleChannels)
                 {
                     var recovered = recovery.surfaces[0].layers[0].projectionSettings;
@@ -1811,6 +1919,12 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(restored.layers[0].projectionSettings.depthFromSurface,Is.True);
             Assert.That(restored.layers[0].projectionSettings.flipX, Is.True);
             Assert.That(restored.layers[0].projectionSettings.flipY, Is.True);
+            Assert.That(restored.layers[0].layerSymmetry.enabled, Is.True);
+            var moved = restored.layers[0].projectionSettings.Clone();
+            moved.position.x = -.2f; moved.width = moved.height = .16f;
+            Generate(moved, new[] { restored }, new[] { restored }, restored.layers[0]);
+            Assert.That(Pixel(restored.layers[0], 57, 32).a, Is.GreaterThan(.9f), "Restored frame must generate the mirror at x=0.4");
+            Generate(settings, new[] { restored }, new[] { restored }, restored.layers[0]);
             Assert.That(AssetDatabase.GetAssetPath(restored.layers[0].projectionSettings.texture),Is.EqualTo(Folder+"/Source.asset"));
             Assert.That(restored.layers[0].projectionSettings.points[4].z,Is.EqualTo(0.01f));Assert.That(Pixel(restored.layers[0]).a,Is.GreaterThan(0.9f));
             if (multipleChannels)

@@ -95,7 +95,8 @@ namespace UMA.TexturePaint.Editor
         }
 
         private static bool PainterPane(EditorWindow pane) => pane is TexturePaintDockWindow ||
-            pane is TexturePaintBrushWindow || pane is TexturePaintPropertiesWindow || pane is TexturePaintUVWindow;
+            pane is TexturePaintBrushWindow || pane is TexturePaintPropertiesWindow || pane is TexturePaintUVWindow ||
+            pane is TexturePaintMaterialWindow;
 
         internal static SavedLayout CaptureLayout(IEnumerable<EditorWindow> windows = null)
         {
@@ -176,7 +177,7 @@ namespace UMA.TexturePaint.Editor
                 if (!string.IsNullOrEmpty(node.className))
                 {
                     if (!new[] { nameof(TexturePaintDockWindow), nameof(TexturePaintBrushWindow), nameof(TexturePaintPropertiesWindow),
-                        nameof(TexturePaintUVWindow), nameof(SceneView) }.Contains(node.className) || !classes.Add(node.className))
+                        nameof(TexturePaintUVWindow), nameof(TexturePaintMaterialWindow), nameof(SceneView) }.Contains(node.className) || !classes.Add(node.className))
                         throw new InvalidDataException("The saved layout contains an unsupported or duplicate window.");
                     return;
                 }
@@ -287,6 +288,7 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintUVWindow.CloseOpenWindowsForLayoutChange();
                 TexturePaintBrushWindow.CloseOpenWindowsForLayoutChange();
                 TexturePaintPropertiesWindow.CloseOpenWindowsForLayoutChange();
+                TexturePaintMaterialWindow.CloseOpenWindowsForLayoutChange();
                 for (int i = 0; i < saved.windows.Count; i++)
                 {
                     string id = CompactWindowId + ".Saved." + i;
