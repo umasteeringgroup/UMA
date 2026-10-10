@@ -23,6 +23,8 @@ Shader "Hidden/UMA/TexturePaint/Projection"
             float4 _SourceMultiplier, _SourceAdditive;
             float2 _CoverageAlpha;
             int _UseSourceCoverage;
+            int _Accumulate;
+            sampler2D _PreviousProjection;
             struct Attributes { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; };
             struct Varyings { float4 position : SV_POSITION; float3 world : TEXCOORD0; float3 normal : TEXCOORD1; float2 uv : TEXCOORD2; };
             Varyings Vert(Attributes input)
@@ -115,6 +117,9 @@ Shader "Hidden/UMA/TexturePaint/Projection"
                 source.a = (_GarmentEnabled != 0 || _UseSourceCoverage != 0 ? saturate(source.a) :
                     saturate(tex2Dlod(_Coverage, float4(uv, 0, 0)).a * _CoverageAlpha.x + _CoverageAlpha.y)) * alpha;
                 if (source.a <= 0) discard;
+                // Symmetry is a union of placements. Overlaps retain the strongest coverage,
+                // including on shared/mirrored UVs, without doubling height or opacity.
+                if (_Accumulate != 0 && tex2Dlod(_PreviousProjection, float4(input.uv, 0, 0)).a >= source.a) discard;
                 return source;
             }
             ENDCG

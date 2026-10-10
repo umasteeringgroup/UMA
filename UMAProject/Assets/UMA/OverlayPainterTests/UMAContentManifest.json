@@ -1,744 +1,762 @@
 {
-  "formatVersion": 2,
-  "requiredPluginApiVersion": 1,
-  "contentId": "overlay-painter-tests",
-  "contentVersion": "3.1.2",
-  "umaVersion": "3.1f2",
-  "requiredCoreVersion": "3.1.2",
-  "minimumCoreVersion": "3.1.2",
-  "maximumCoreVersionExclusive": "3.2.0",
-  "installRoot": "Assets/UMA/OverlayPainterTests",
-  "dependencies": [
-    "core",
-    "overlay-painter",
-    "test-framework"
-  ],
-  "requiredPaths": [
-    "Assets/UMA/OverlayPainterTests/UMA.TexturePaint.Editor.Tests.asmdef"
-  ],
-  "ownedPaths": [
-    "Assets/UMA/OverlayPainterTests/ClothingFinishAndGeometryTests.cs",
-    "Assets/UMA/OverlayPainterTests/OverlayPainterSpriteSetTests.cs",
-    "Assets/UMA/OverlayPainterTests/QuiltSpriteSetPickerTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime",
-    "Assets/UMA/OverlayPainterTests/Runtime/CoordinateMappingTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/DocumentModelTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/ExportModelTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/FabricFuzzGeneratorTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/LayerOrderingTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/MaskAndMeshMapTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/MaterialPresetModelTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/MirroringTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/NormalTouchupTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/PerformancePrecisionTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/PluginApiV2Tests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/PluginClothColorTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/PluginGarmentMaterialTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/PluginMeshMapContractTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/PluginParameterMigrationTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/PluginProjectionTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/PluginQuiltPuffTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/PluginQuiltSpriteSetTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/PluginSpriteReferenceTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/ReleaseQualityMatrixTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/SlotTargetTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/SplineTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/StrokeHistoryTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/StrokeSamplingTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/StubbleWorldDirectionTests.cs",
-    "Assets/UMA/OverlayPainterTests/Runtime/UMA.TexturePaint.Tests.asmdef",
-    "Assets/UMA/OverlayPainterTests/SpriteGridOptionsTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintAuthoringTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintClothingPresetTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintColorCorrectnessTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintCustomGuideTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintDocumentPersistenceTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintExporterTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintGarmentConstructionTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintGarmentDepthTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintGarmentRealismTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintGarmentTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintGarmentWidthTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintGpuGoldenTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintGpuTestFixture.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintHemDepthTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintHemSeamTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintLayerMergeTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintLayerMergeUITests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintLayerPreviewTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintLayerSymmetryTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintMaskStackTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintMaterialCapabilityTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintMaterialPresetTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintMigrationTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintNormalControlTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPackedDirtyRectTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPathFadeTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPathGeneratorEditorTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPathGeneratorTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPathMirroringTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPathSymmetryTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPbrImportTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPluginInvalidationTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPluginParameterUITests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPluginPreviewTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPreviewRenderingTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintProjectionTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintPropertiesWindowTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintReleaseIntegrationTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintRibbonJoinTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintSavedLayoutTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintSceneNavigationTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintSkinFieldTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintStaleLayerRegenerationTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintStandalonePhase3Tests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintStencilTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintStubbleReliefTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintVeinTests.cs",
-    "Assets/UMA/OverlayPainterTests/TexturePaintWeatheringNormalTests.cs",
-    "Assets/UMA/OverlayPainterTests/UMA.TexturePaint.Editor.Tests.asmdef",
-    "Assets/UMA/OverlayPainterTests/UMAContentManifest.json"
-  ],
-  "assets": [
-    {
-      "path": "Assets/UMA/OverlayPainterTests/ClothingFinishAndGeometryTests.cs",
-      "guid": "c1723c9d67d4cdb4a97c590e34eacc38",
-      "bytes": 11976,
-      "sha256": "cc6e0f1e5cccbf025836769451190f1bda9a1d174de8ccf352db11eeff4ed666",
-      "metaBytes": 59,
-      "metaSha256": "cfb76e8c1db4b5e70e17194c931f482c5f077a8d4b6033784a79aaf900ab4031"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/OverlayPainterSpriteSetTests.cs",
-      "guid": "911f3a81ee78422fb8e339b88fc8bfaf",
-      "bytes": 10792,
-      "sha256": "addb26a079113a17e49b95fc61bf74f5c6a16633247761cc0d9aef17b983d2cd",
-      "metaBytes": 60,
-      "metaSha256": "d4f3c8fd7bc52754aec2e3190005ef3fa73a0a96dcd05d7cec25167704f67d2e"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/QuiltSpriteSetPickerTests.cs",
-      "guid": "e71d89752d1eb8444b9ddf8619266005",
-      "bytes": 2571,
-      "sha256": "4e5d367aeaf01bb7bde03622213a201c15b49aa9a8e51a82ed3a175bb971b885",
-      "metaBytes": 59,
-      "metaSha256": "efe87bbbdadfae357c1bfe0fd3911b737bccbc43521ad929d334318d8a4625d2"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime",
-      "guid": "07d610b9f1557f5468ba606769d1a308",
-      "bytes": 0,
-      "sha256": "",
-      "metaBytes": 172,
-      "metaSha256": "a7beba663f123880d38e70cb62a00b0048ae083ef78e45c736721cf414a72567"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/CoordinateMappingTests.cs",
-      "guid": "a6ad5fca4e9e41944a3259c745d06940",
-      "bytes": 34715,
-      "sha256": "74d83dd2c50a179fe46691b1b896fa22619b66a086eb56df2978ba8a0f31757d",
-      "metaBytes": 59,
-      "metaSha256": "781c523f76ad908646a074769de08cf655ad9bea5382c64a42d11db3f72772b5"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/DocumentModelTests.cs",
-      "guid": "8fa3d4fc6f2b44de9eb8d33365519dc5",
-      "bytes": 25800,
-      "sha256": "abe00d08a9491672cf68356a288241a7508fffd3823a7bfd21806e9eae20e33d",
-      "metaBytes": 240,
-      "metaSha256": "334bc9c4665b534e78dff3c08a146960ece6d26a634ea98ace71d31543428c4f"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/ExportModelTests.cs",
-      "guid": "8cda0e7664284bd7bc6bd5ed06aecad7",
-      "bytes": 8627,
-      "sha256": "c1b0905f176a4598d258eeaa9c79e684980170189cbcc6cfa7fec1752edffe1a",
-      "metaBytes": 60,
-      "metaSha256": "4a9c43bfdc2998c72f69160d26b458b5575ae53c2057d41cb1dca6d7f5792e12"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/FabricFuzzGeneratorTests.cs",
-      "guid": "a257199ba439b82439dece551405f03a",
-      "bytes": 10990,
-      "sha256": "927c10c6161ab0656e777a37a6039fba0685a33c80274613d561e5857779742d",
-      "metaBytes": 59,
-      "metaSha256": "d5c99fb206078f095c1ecb800cf8cd19409e5268a8367e51e49b8f68ade48cf9"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/LayerOrderingTests.cs",
-      "guid": "640b58875833432ead6b5cb26721db9c",
-      "bytes": 5003,
-      "sha256": "7bdac6416bdd8ba7c599f009ae2de4cc24d3224b608c8bed491afbd86600733c",
-      "metaBytes": 60,
-      "metaSha256": "f15b213fad6d64c29e85e15ea8d92ddaacff9275225a564dc5b8ffad861981f7"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/MaskAndMeshMapTests.cs",
-      "guid": "c8d1bb0d94f94729be675cfc5dbc92d8",
-      "bytes": 10533,
-      "sha256": "bf0dc54187f3e5a5809e84d756ed606bbb60dd5a2af19d3c80d6531c84fc230b",
-      "metaBytes": 240,
-      "metaSha256": "dc51adbeaf2af7ef870969df5fc3950b6eb2b6657dba3deba6f98629145aab6b"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/MaterialPresetModelTests.cs",
-      "guid": "f27ca9d167aa4f37ba9460bb2bc4f30d",
-      "bytes": 2920,
-      "sha256": "491c8a2a6da41478269f87ee7a8ce0f7f6864189fd38ba353e7938f894238536",
-      "metaBytes": 243,
-      "metaSha256": "905144c0af59e761ebd22402833c2154eb2f12ae90e024b9fced7b49b0462c06"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/MirroringTests.cs",
-      "guid": "2b3728abc6ff4944c9721ee5aa4a4214",
-      "bytes": 607,
-      "sha256": "5551623f145c8ef0a404e8c92c8f76c164d108d4af7d8f6c0cba59d1171192cb",
-      "metaBytes": 59,
-      "metaSha256": "aec980bb33cb289b6a6fbe4aabec98579421e9239188253e6d36a2a077b3656f"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/NormalTouchupTests.cs",
-      "guid": "884d6094654376a4db74a81b30472417",
-      "bytes": 1092,
-      "sha256": "e990b468327f2d54c1ae78357ca70a0567980917c72b72a29e109bd263173348",
-      "metaBytes": 59,
-      "metaSha256": "69f6d724ef2e1de216eb6706eebafe984560b2fd63001fb257d557901e87ccf4"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/PerformancePrecisionTests.cs",
-      "guid": "db464a8d7a114bc9933f01f14f5bef55",
-      "bytes": 8515,
-      "sha256": "2f3d68355c0ca8f7ced2aa9009bb4dc960a57105f839b328476cf5fb967c999c",
-      "metaBytes": 240,
-      "metaSha256": "004872d7bc27dd8216ec6dcb1ba80f2f5907bd131dc0699138f40ad396785e50"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginApiV2Tests.cs",
-      "guid": "38cb5c34b51448aab83c0b4db5aa34aa",
-      "bytes": 89184,
-      "sha256": "5054689bda6f1becf87c770fb3862d7520db4b6d5490d92d19842c546fa10337",
-      "metaBytes": 60,
-      "metaSha256": "feb3e06ac52ddd87f49b094090d2a5d287e019a62f87f5b0e6871f1f82c1a1e5"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginClothColorTests.cs",
-      "guid": "bf4fb3909945ed64088f3b082cd64d20",
-      "bytes": 3394,
-      "sha256": "36f773e468c4b57f2f43520bef0c9fa70b029694782fd87e8518ba8eb625b837",
-      "metaBytes": 59,
-      "metaSha256": "73b961b195c14411983ef137eedbd3505e3c1074468b75297a5fc2e211b4b8c8"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginGarmentMaterialTests.cs",
-      "guid": "5727efaa500aabb4b8f064b43be1ee20",
-      "bytes": 9299,
-      "sha256": "73699570be531800a42380b926b9447a925e609367429bfa1d0d9517076c03d2",
-      "metaBytes": 59,
-      "metaSha256": "9e6a3bd6d46ab8b18117a6d780f806775bd8de2f647746453596fa61a48cacca"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginMeshMapContractTests.cs",
-      "guid": "e963235cca42edb4e8ec9af120cc056e",
-      "bytes": 3718,
-      "sha256": "54b03265ba0454228f55cd24b9a1377b2fa11ca63b3604d030c8264f62ce602b",
-      "metaBytes": 59,
-      "metaSha256": "edbd77e72bfe9131759eb496827e8cdf27e32356fb00bc62b125cdf0381f09d0"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginParameterMigrationTests.cs",
-      "guid": "8fd3b095eee553d479b7a2c8dda29f8b",
-      "bytes": 9001,
-      "sha256": "69ed11917a875edd59116db3537870310fe4fd9a904614d859c35f39bcf93310",
-      "metaBytes": 59,
-      "metaSha256": "afe52595b67d8d1c462a55ef7527f03ae4bafe73e3e9a0301004026fb26b9696"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginProjectionTests.cs",
-      "guid": "f2405b4480dfb384a875c21a2f369947",
-      "bytes": 24366,
-      "sha256": "dfd09c50c0c57cdaffb33a878a2c0fac13c6ff087e3855bcb480aee76b27be14",
-      "metaBytes": 59,
-      "metaSha256": "f79d77b96d7a87af3f38e9551fd874ba7eeb9a96b8412e8d3f5a1aec7542c0b1"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginQuiltPuffTests.cs",
-      "guid": "6f027f94ee9f4439a7a43045d97c47e2",
-      "bytes": 16307,
-      "sha256": "95af4a00773adc747577129b2e8a9d5208d99fa25a59d69ece772cfb30b62b37",
-      "metaBytes": 60,
-      "metaSha256": "a2f67a30a4165f66908085f1027312075e0331192cd34591f61742830ffe9a1a"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginQuiltSpriteSetTests.cs",
-      "guid": "3734d53af4acfb549b16891c53013546",
-      "bytes": 11196,
-      "sha256": "c442d72d69c4bcb0ea3f72db09f5b30e36921689dd1260a4eb0383b1f3ba3bd5",
-      "metaBytes": 59,
-      "metaSha256": "bfcaea39c31228b8084337ea3e3547eddb80b9dcb6c8d0b140563f8f3948101a"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginSpriteReferenceTests.cs",
-      "guid": "11f935c93a70b3148ab14c95f23151f2",
-      "bytes": 3823,
-      "sha256": "4190d500ced926bb7d1ff26788a78a30dfffcf97c235d08884a3ecba4241a661",
-      "metaBytes": 59,
-      "metaSha256": "715e26b6b62b3ebb420ca580a7a28857b328718bfe5372ab5acedbac2fb8f465"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/ReleaseQualityMatrixTests.cs",
-      "guid": "e886f3c93a5c4de1947bb54b7a1736b8",
-      "bytes": 10039,
-      "sha256": "a423a255a8b45a92c7717e8784da729699ad42e1a6940ee065064afe3e1e4580",
-      "metaBytes": 60,
-      "metaSha256": "4fb4fdf9a2e91715b9522960d1c72c20c6203ac46dba4e9664cc29ef82bd4a24"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/SlotTargetTests.cs",
-      "guid": "ebc4d6bb6c594ce4a65330b7b940b331",
-      "bytes": 22280,
-      "sha256": "a7f492be2dfa33ddf75f064f82a6b99c140849dc7705356379be88749ba99770",
-      "metaBytes": 60,
-      "metaSha256": "6e9ddf7441be706491d0a6fa144f0f9b028109867a54a5e53e33dbf35731767a"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/SplineTests.cs",
-      "guid": "cb559c505f4c5c44c84d867a08b2d556",
-      "bytes": 18071,
-      "sha256": "d2ccb203e596afcb160a2c79df7d5e22e30c50b9ca98ba1545403cde9f1d68ec",
-      "metaBytes": 59,
-      "metaSha256": "afc00752fb4db90d05386612317fd635f8c27c96dcb4c45709d5a8b6aa3fbdd6"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/StrokeHistoryTests.cs",
-      "guid": "db0ca84d76ad03343afd514261205433",
-      "bytes": 3390,
-      "sha256": "d1948f19e335b8938732c882f2795d4af43f04918659b1ad16c4be7b36c5c7fe",
-      "metaBytes": 59,
-      "metaSha256": "c93ecc5e266fd1717ed2e858c8d34da40498e3221c64407c68b40d6f8c4072a2"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/StrokeSamplingTests.cs",
-      "guid": "5f71a85f8fe34a64a32b611f5da0ea12",
-      "bytes": 3562,
-      "sha256": "c9cdeadbacd7e85c9bb987d7814495530ff296d41a93f0744b35912a3fafaad8",
-      "metaBytes": 240,
-      "metaSha256": "315f69153b066c3d014973041a55b307935fb2bc24eca5dab3ba38ad125c1a92"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/StubbleWorldDirectionTests.cs",
-      "guid": "908bbac2239022b478338b5a61047d39",
-      "bytes": 9468,
-      "sha256": "fcf27a1fb41df4eff564e2b909e25dfc5d15d02cbdb8ad49c80c9bdba9192c40",
-      "metaBytes": 59,
-      "metaSha256": "a2f1129026b585ea2264dedd64237ccc82cea1162c2b2466e73943a6471df8dc"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/Runtime/UMA.TexturePaint.Tests.asmdef",
-      "guid": "2f520cab84fffec47bb3e93fe4eca14f",
-      "bytes": 760,
-      "sha256": "0b2f67ca19f00f77827611a37751e33670e402d8a93189f7ec51ee91b03c3a8b",
-      "metaBytes": 166,
-      "metaSha256": "4bed1dea856a3ef1bb3acfe7a6616df36a2d26d68e8e6ccbec3201403dbf4c0d"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/SpriteGridOptionsTests.cs",
-      "guid": "3c24687cad6644f68d184ea990fe73cf",
-      "bytes": 28515,
-      "sha256": "a61edd9c7ddd4cdcab06b5d51327118f8b27678a0c7b6af3c900d22e6f56996e",
-      "metaBytes": 60,
-      "metaSha256": "53bd7014ee8744402f0d0eaebd3bf30cab7d6f1ba05d7268e15b9b8cb5ee7d41"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintAuthoringTests.cs",
-      "guid": "464afbad182a4d11adf18c5d5136c622",
-      "bytes": 54570,
-      "sha256": "ee6d4c01c89876610af32e5e466fa299131fd094a1ca9aaaa1ca2109559cb9cb",
-      "metaBytes": 62,
-      "metaSha256": "ae2300ca9948fe9c332e1405392427c22fcadd6e9834b8179db95ec918c83233"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintClothingPresetTests.cs",
-      "guid": "49f1bcd11a4fab441beae99db94d6405",
-      "bytes": 3709,
-      "sha256": "f1ebf99cf4a6ea783ceb1e6f6e8cb694fba90d74c90f731aff406b0030e900b6",
-      "metaBytes": 59,
-      "metaSha256": "9419443e4452c8bcb2cb78da278dffd0b9c3220ce4f904ffc6cb221127dbd74a"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintColorCorrectnessTests.cs",
-      "guid": "f7f0cdad1184e3f45b5e4d0e6101532c",
-      "bytes": 15865,
-      "sha256": "f4bbf87b900ef1a4b697a1f2ec5a2e147c9d0a393472dabeee623f884368e7a0",
-      "metaBytes": 59,
-      "metaSha256": "d518bd1540785da8975f2a724447abb0245c40c9c35340da8ea1c7bae5bb0e24"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintCustomGuideTests.cs",
-      "guid": "466de3026abd4daf82c2f499df942dce",
-      "bytes": 6338,
-      "sha256": "592bb75897c972573415ac1a7da54407c04bb9638fdb1d8b8477b57852f5783a",
-      "metaBytes": 60,
-      "metaSha256": "0141a7efed0b29d64ab1594db6b539c49a7ad2691887ba6b450f93cd9f5a9681"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintDocumentPersistenceTests.cs",
-      "guid": "9545e5e4e3d74aed9be7896d0f3cf6db",
-      "bytes": 48399,
-      "sha256": "e58a195a9188047b8acee81907e1d4992c034918293e325ce9b4dc5c5bbf9a33",
-      "metaBytes": 60,
-      "metaSha256": "2b02ca8deae257c66da46ff5e1f739343d0b76d047d19b127cc68867272c8e13"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintExporterTests.cs",
-      "guid": "8b495e7882894a14bade67508141eec5",
-      "bytes": 30125,
-      "sha256": "1d2746ef96a49ab6c7c8f1f74dff100d665fd6a30542179df166bd58e707a284",
-      "metaBytes": 60,
-      "metaSha256": "a396d3e69755687e7e7a59613e482293202a308c502f39cc6b3d6802cdacad81"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentConstructionTests.cs",
-      "guid": "a89a5cb8a8e6e8c4a93eb9ba08a77bb2",
-      "bytes": 17261,
-      "sha256": "1f77dc18a6602dd1f8a5de0987744aa470524e29baa27c01702b20c5602b3214",
-      "metaBytes": 59,
-      "metaSha256": "ca912ff38a5861554d43bf215594535890db0997d47c8dcc1f68e6e627947e84"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentDepthTests.cs",
-      "guid": "fae9fd6d8abc92f468065c269469c3cc",
-      "bytes": 14065,
-      "sha256": "8599f5a2b254c1889e57460516fcc6c10c7cc5358160e1689ebcdd186b5d501c",
-      "metaBytes": 59,
-      "metaSha256": "b78aaab3554667086f1b0c23e487943260620f4917d189b8fdfcc5dcd0535e3a"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentRealismTests.cs",
-      "guid": "8596469c1eeabbb419532036c0c508ea",
-      "bytes": 11711,
-      "sha256": "0345d64f2202f02dd6030996f0f46f076f95a70c12cbd7bc1e0704d9170874e6",
-      "metaBytes": 59,
-      "metaSha256": "6b05be14a72e1851dbeb3e468ff17455f95b51f5f5d78b11bd7bec9cecc1cc25"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentTests.cs",
-      "guid": "42c092fe30be8cb4ebae4f3748adb8a7",
-      "bytes": 66204,
-      "sha256": "89a166afe7b35e3fc617117c65ae49136aaa5897bf2c520dcda21db40ed0093b",
-      "metaBytes": 59,
-      "metaSha256": "d8044de757202350fd2187c5edea506a4dfb41837236373aef6c9438af86730f"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentWidthTests.cs",
-      "guid": "51337a9fdbcea6942b3622885e20f329",
-      "bytes": 2834,
-      "sha256": "2250a1ebc3713e97e9703affbdc9f5ebdc8bca20b254831cd82520cd2aa244e5",
-      "metaBytes": 59,
-      "metaSha256": "36472ab2a9734ad73a30dec03a4e8941bd2d337afdb059d0032af269ad8cd896"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintGpuGoldenTests.cs",
-      "guid": "8bd4cce9c6a047f6a75940a0a28f61fd",
-      "bytes": 44244,
-      "sha256": "f4b9978378f46ecccf401abdb7ca0d4c868cc0bb59e11260843b0e14e645b4fb",
-      "metaBytes": 60,
-      "metaSha256": "a14c45807de15f436b7e05fa3242168b71c12eeb1034c6e00121df26e52e1aac"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintGpuTestFixture.cs",
-      "guid": "e115c9e04e164d3bbd572256444b232a",
-      "bytes": 8942,
-      "sha256": "9f6a1417691158b79d4ccfd2d591898e025358c59f612f95d535649f037ea7ac",
-      "metaBytes": 60,
-      "metaSha256": "cea9d255f141d4c4f9d3dc26b6f188eab67a0c0425863f2e3e4d6c740acf8692"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintHemDepthTests.cs",
-      "guid": "c53db0292320aee41ab3ef71cf80a994",
-      "bytes": 4273,
-      "sha256": "96b818667dd7fb4ebc4e27ae5f6178d50074ef943018451ad6aaf8b07fcf4a8c",
-      "metaBytes": 59,
-      "metaSha256": "a1a35a83b0236fea9ca8aac43330cd9602a8cae1b6fd7711b3d238c04cc7b11e"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintHemSeamTests.cs",
-      "guid": "723a901b1423a604486c0a9edf49b27d",
-      "bytes": 31746,
-      "sha256": "deeefa4a6878dec408ed3835fb610c76047d6a8328c4a27c660ac069e0a65f28",
-      "metaBytes": 59,
-      "metaSha256": "da92156035da56173bae0a91d0b63046c5d1fba6de7b1e2a6ab1bbf1ef89b529"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintLayerMergeTests.cs",
-      "guid": "1c6b562590e19cc4795d020fce22be16",
-      "bytes": 46828,
-      "sha256": "d4a93369f8993ec1bd596ba94d43c5d2b143a7e52cd4bc717a7d802cc1426655",
-      "metaBytes": 59,
-      "metaSha256": "06defb79e289f59a8067e65ccec6cd5c9757908a457b0b67327d7bba69b79b04"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintLayerMergeUITests.cs",
-      "guid": "9027e9b11b06282458379d292c8b4f16",
-      "bytes": 4178,
-      "sha256": "472eb8815f0c65fba4ffeb5043592115863ba29098b011320533b293e575ff6a",
-      "metaBytes": 59,
-      "metaSha256": "2f32cead901b083b1510a109381cdbb8eddae9195442dd83d238c1bb40f9f744"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintLayerPreviewTests.cs",
-      "guid": "9ff22090ae6ee5046aac9892f677ea9b",
-      "bytes": 9157,
-      "sha256": "264fc3be7bafaa5ae130d2fee7971ed53697a43479a6171dfc1ec451a7b2c910",
-      "metaBytes": 59,
-      "metaSha256": "c4f69db6df2a215e5548e1f49492aa87483175006a0de3653b0d300101c7348d"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintLayerSymmetryTests.cs",
-      "guid": "3743c36475b4b6b4a9b818a55b2b55db",
-      "bytes": 14689,
-      "sha256": "b53eca74838175c1a91d2391d72ac8b08b1f16a88457bf5884e4536fc29c5d23",
-      "metaBytes": 59,
-      "metaSha256": "98ac156fa534b7fe767a47088dc319f4f1b0241ef35e66183ecb159245a04746"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintMaskStackTests.cs",
-      "guid": "bce0afb5fa4880d40bcd68546634532e",
-      "bytes": 14945,
-      "sha256": "b4483bf3556bb0bf3cf3bd976de0e208872ff51118c10abcf36322c1e2226033",
-      "metaBytes": 59,
-      "metaSha256": "06495af0be5e3fc3cde82a34bbce8b3afec81b095aa6e3118381fd0e1b3daab2"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintMaterialCapabilityTests.cs",
-      "guid": "af9c75662f9d48a9963e38dac3344a55",
-      "bytes": 18470,
-      "sha256": "91a8c4e3f61774dcb4e1614495c113b7d321d597a7393a5fc2207b5ec583ade8",
-      "metaBytes": 243,
-      "metaSha256": "dd5b61a6cc47fca450b787674119d7577662efd81396c1addd95461418b64b4a"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintMaterialPresetTests.cs",
-      "guid": "49216e84b0d543cdba66e71eaaae72f4",
-      "bytes": 16294,
-      "sha256": "ff242b3ded7e984175a944590f718dbe038d05c79af46eb7cf5a5eb272845832",
-      "metaBytes": 243,
-      "metaSha256": "f8c27125309e109a598299080133847a12835b17027f339958a7ed34ff8e4f21"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintMigrationTests.cs",
-      "guid": "d30e82b6e11ade74ca69c56a2d5feedd",
-      "bytes": 3856,
-      "sha256": "ee8358bcb3c8bfcbf3837aa60da825e1763752b5b8ff37cc5c09b9019c45d6ed",
-      "metaBytes": 59,
-      "metaSha256": "5f93071941d101ac929aa5707e6976c3f35531bb32a277986d24ab50433cb1fb"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintNormalControlTests.cs",
-      "guid": "72d2376f02c74c3c8d85176acb730d97",
-      "bytes": 15812,
-      "sha256": "9a5edec842a3bdcfb49c6b95e603079921be1ae664342c252a987f83e10a18af",
-      "metaBytes": 240,
-      "metaSha256": "5daca7143144a6aeaa9af00ed4f842ddbbdb5fdf600c4f9edda50207bfa9d371"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPackedDirtyRectTests.cs",
-      "guid": "4ed20c7869354a989bf853bcdf0d57a9",
-      "bytes": 4078,
-      "sha256": "40e417b141179c2559b86ddfb4671e2d8ade12c60fced013f6db1a3de62f6cf6",
-      "metaBytes": 60,
-      "metaSha256": "a9170172f9d422ea44ec956181814cdb7ab725f11e46331572bf13ce69b1e366"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPathFadeTests.cs",
-      "guid": "3c801af211d1b34428382da2f268a0f2",
-      "bytes": 28903,
-      "sha256": "b2f917821f3f115b51b4439339220a17694b43c0a08bdb25c98d5ede399e41b7",
-      "metaBytes": 59,
-      "metaSha256": "cd72c7115106bd2850be03bd6525b934e5d207a5c3251e7a364a65330a45dc6f"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPathGeneratorEditorTests.cs",
-      "guid": "db770a2dcfb74a29b94d190e9cea9d6e",
-      "bytes": 7493,
-      "sha256": "6631dda89a108aecb1b1db24c20b6ae0cb1b6f44d3bd20e463d82206d30fabaf",
-      "metaBytes": 62,
-      "metaSha256": "5ebb958e2122a9d18c74bd5db28351c7c6492080ca2cae19886a7946486bde52"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPathGeneratorTests.cs",
-      "guid": "373d9529bef3d6b4bbfb1f4e5218782e",
-      "bytes": 42976,
-      "sha256": "14309adf68f4e69b0979893ec70f209a8b6e817aa871a1be153d4786b8a79c09",
-      "metaBytes": 59,
-      "metaSha256": "0105c4b09f52f0002b1efb25bda23c6500cd1162100ff48eaea6731fdae08cc7"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPathMirroringTests.cs",
-      "guid": "ee6ef31575052c94486f3e562c175f61",
-      "bytes": 19594,
-      "sha256": "049911fe45d4e6fcf96093774cf7cd4a7e2116e5fb8c071d0cb28ca645a0264c",
-      "metaBytes": 59,
-      "metaSha256": "bcf7534c5e3fb0604b60ed2b8dbb481d19583d523dc7b3cf9ab77272158ca555"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPathSymmetryTests.cs",
-      "guid": "f42b19933c8ef7547a4197d1597f46de",
-      "bytes": 15184,
-      "sha256": "f012257518d63c9f17b1258034ca17329cd92f0cf26f73a7fc42ef7d133abb7c",
-      "metaBytes": 59,
-      "metaSha256": "477e34ef60ce2b364fd12a58828881719d3416bf9d34784a3bbdfad83667a36c"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPbrImportTests.cs",
-      "guid": "bcde842b1f150cf46a6045ef3da062f1",
-      "bytes": 5213,
-      "sha256": "5f31dd3143564e57bec6f45a28f852dd1f95b2c95a80567cacdb7310baab9106",
-      "metaBytes": 59,
-      "metaSha256": "e84198d53561679cab05447a41211866ce583cdca926f107339a35c8197b0ec7"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPluginInvalidationTests.cs",
-      "guid": "ff58417f409b0ab4a9a44c457a20aae5",
-      "bytes": 3290,
-      "sha256": "f663f56fde27e5f03a16d8f514735a844afb99594f46369237e595a48840e80d",
-      "metaBytes": 59,
-      "metaSha256": "a3f9b26d6b1dacbbfb26554cc10cd4ad9c5cc35758f95cdb11ae272f36d5ebb2"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPluginParameterUITests.cs",
-      "guid": "40439faebb9b07b4da082265ecba6620",
-      "bytes": 12369,
-      "sha256": "b33e4adb36af8eb63f04d41f362b5df96b07c1a7221be12be4211f59ccc68b89",
-      "metaBytes": 59,
-      "metaSha256": "53fd5530f9235abbbb4bfbef0fe48a4575481f639771a62d166cb0a6c914d49e"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPluginPreviewTests.cs",
-      "guid": "853eda7d0a44e454f93a1c2b5ffed702",
-      "bytes": 37789,
-      "sha256": "bc62721d200bc6645b0d058fbf281daa518405c51c2d324af139e0affd78d6b1",
-      "metaBytes": 59,
-      "metaSha256": "fe83e65b110d7d327198fad86cf66e887439320a6454bc478ea71061fd3417c3"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPreviewRenderingTests.cs",
-      "guid": "27205caa8cdc3c64cb326b717bf41819",
-      "bytes": 9381,
-      "sha256": "fec3bfe0e17c0ce26d2cdff310e0db923afb2090f23e1002f8d5184a7b065b6c",
-      "metaBytes": 59,
-      "metaSha256": "29ad234e576546fe6ee90f8b347400a0a29a1157882129e7a7e0fa9827b75a16"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintProjectionTests.cs",
-      "guid": "218812b8cdbc467bbdf4ca32fd08a3a0",
-      "bytes": 116734,
-      "sha256": "11d56b962195d22adb1a3d20b28bbc411129414b176162d008345046a8ae4478",
-      "metaBytes": 60,
-      "metaSha256": "3a51386b0cd68732bf47f2933749e9930141d121eda7b6d1beea8502da231599"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintPropertiesWindowTests.cs",
-      "guid": "667eb070133a48ef83ebba49d8e0c524",
-      "bytes": 4459,
-      "sha256": "b0296e5d171bbfc9e9c7dd12cd6d2ae07900f9e97bf31b8079dd6c0495b509ec",
-      "metaBytes": 60,
-      "metaSha256": "5d03d902ec346826f3cb04c343a3dcc2f68c8351517cb336fc68a542afa586ea"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintReleaseIntegrationTests.cs",
-      "guid": "c98a3f57a9a04ecda3b076d15a11b50d",
-      "bytes": 331900,
-      "sha256": "6afdda5b455bebc2c84b990e00b36d36669b361cfdd7af60d82d58a0bdd3f8a2",
-      "metaBytes": 60,
-      "metaSha256": "bf3601cbb935fc2839c23d7ab81584444b2d43ae3b260a1dbf00ae7e5b5ce289"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintRibbonJoinTests.cs",
-      "guid": "04c4e20617ff34645b7ef4fc2942f8cc",
-      "bytes": 27504,
-      "sha256": "c833b298ccb265107b77799d12bab228475d5feb25d304d09b40bf04811b7763",
-      "metaBytes": 59,
-      "metaSha256": "5a5e1cc89a09cf006d2c9c5508ed3908f15beb57ded98028bfcce4cfd1bce45e"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintSavedLayoutTests.cs",
-      "guid": "e1ae6345453ed9544bce9e4e72f806cd",
-      "bytes": 7130,
-      "sha256": "dc6d682815f7d5dc2e63fa7748134c97a500e0e886b4b41958ef10fd88c8cb77",
-      "metaBytes": 59,
-      "metaSha256": "72e2b74538d1c65c70348cffcfc1e4b59e441d0efa025cc3661f647326bbb2f3"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintSceneNavigationTests.cs",
-      "guid": "b4087b1af6b869e48a6891592fe7bbf8",
-      "bytes": 6885,
-      "sha256": "33db89ace1b534e6092a50461c0986ae6e203ca8bfc45182e4864d267efd23bf",
-      "metaBytes": 59,
-      "metaSha256": "39b637ebdec861c6b2e1296d763c05609157957732052c779d14829208509853"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintSkinFieldTests.cs",
-      "guid": "fc48c86688a78c04ea2690a0cc22967f",
-      "bytes": 2564,
-      "sha256": "ee241fda80ae727715796a68ba4d2c661cc60a934f510ae4395da3d4bf55cd7a",
-      "metaBytes": 59,
-      "metaSha256": "4871bc0d8e26abda399e3180feb5b506e14640fdaf65386b25c506ce7b91b21c"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintStaleLayerRegenerationTests.cs",
-      "guid": "efd41c118d5dee748937aa27161f41a0",
-      "bytes": 3832,
-      "sha256": "6dbf318714e79f9bba0567817c0e09d09d46ddc04a7af1b5a92f9a3df5439781",
-      "metaBytes": 59,
-      "metaSha256": "9cc3b70376c037c30fc0aa3f25d239bef04ed631a273f16f44af6253e39b3c87"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintStandalonePhase3Tests.cs",
-      "guid": "4ab2d4bdfabd24d48be795b17a94873c",
-      "bytes": 15234,
-      "sha256": "612a8de4baccc2f8f97613a968f9e2ba8cf2518426325bf6d87f5ddd2a10c63a",
-      "metaBytes": 59,
-      "metaSha256": "3608c3aafaf48ee33d7d42d2c775b221fec99a3f92f48a1ae6ef032d6757c247"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintStencilTests.cs",
-      "guid": "e29f513f02aaa9d438bb689ee6602883",
-      "bytes": 4879,
-      "sha256": "c7a522774d8ed9aa7732bf0d5aab82fe5d822dfc02a712dc57029e118bdac888",
-      "metaBytes": 59,
-      "metaSha256": "a8fdb641bd7638b80344e7c2317200ab20b2779b01e2067fbd6c3aba94460c7e"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintStubbleReliefTests.cs",
-      "guid": "ce7acdf9407b54f4ab7e2ff535fafe95",
-      "bytes": 8137,
-      "sha256": "1d8536457113b5f6f91a0a0e0e86c3b6fd3e5cee691652b4823b4d49ce28aea8",
-      "metaBytes": 59,
-      "metaSha256": "8e860fd69e4d4d205c6d6258d40f68277b9a096715dcf3858a1188fc254ae5d1"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintVeinTests.cs",
-      "guid": "a2baf1d0a3e32d148b905ece488fb5c0",
-      "bytes": 4468,
-      "sha256": "c55e931d3f5d8365c22e0d15f476706a4dcda52877cedbb74e95138fce47b6da",
-      "metaBytes": 59,
-      "metaSha256": "62e4a9c52fce2b7b03817582a8ebf639465ecdacd0152d90775d942464bd17da"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/TexturePaintWeatheringNormalTests.cs",
-      "guid": "0fee9ff19a0556b4b8eaaa2a49d1f06a",
-      "bytes": 9812,
-      "sha256": "a621ab958ce280587c6dad92594097f32a2e76c2251428d5ef8672c4942cb03a",
-      "metaBytes": 59,
-      "metaSha256": "e675886f2529a6770fecc97d3963af80ce637c58e3e0e68d349c18aa5bfc7094"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterTests/UMA.TexturePaint.Editor.Tests.asmdef",
-      "guid": "79e04028d56a44eaa2714e82d23148ae",
-      "bytes": 775,
-      "sha256": "5cda35f14cfb2674d351f65ca0f44495fda8b657645778ac6236134df315cbd1",
-      "metaBytes": 166,
-      "metaSha256": "d9eda8c31bbc50243f295328dcb8587f8b10cfdbc1430463779587acba37dc56"
-    }
-  ]
+    "formatVersion": 2,
+    "requiredPluginApiVersion": 1,
+    "contentId": "overlay-painter-tests",
+    "contentVersion": "3.1.3",
+    "umaVersion": "3.1f3",
+    "requiredCoreVersion": "3.1.3",
+    "minimumCoreVersion": "3.1.3",
+    "maximumCoreVersionExclusive": "3.2.0",
+    "installRoot": "Assets/UMA/OverlayPainterTests",
+    "dependencies": [
+        "core",
+        "overlay-painter",
+        "test-framework"
+    ],
+    "requiredPaths": [
+        "Assets/UMA/OverlayPainterTests/UMA.TexturePaint.Editor.Tests.asmdef"
+    ],
+    "ownedPaths": [
+        "Assets/UMA/OverlayPainterTests/AnatomicalRegionTests.cs",
+        "Assets/UMA/OverlayPainterTests/ClothingFinishAndGeometryTests.cs",
+        "Assets/UMA/OverlayPainterTests/OverlayPainterSpriteSetTests.cs",
+        "Assets/UMA/OverlayPainterTests/QuiltSpriteSetPickerTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime",
+        "Assets/UMA/OverlayPainterTests/Runtime/CoordinateMappingTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/DocumentModelTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/ExportModelTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/FabricFuzzGeneratorTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/LayerOrderingTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/MaskAndMeshMapTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/MaterialPresetModelTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/MirroringTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/NormalTouchupTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/PerformancePrecisionTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/PluginApiV2Tests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/PluginClothColorTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/PluginGarmentMaterialTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/PluginMeshMapContractTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/PluginParameterMigrationTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/PluginProjectionTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/PluginQuiltPuffTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/PluginQuiltSpriteSetTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/PluginSpriteReferenceTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/ReleaseQualityMatrixTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/SlotTargetTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/SplineTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/StrokeHistoryTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/StrokeSamplingTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/StubbleWorldDirectionTests.cs",
+        "Assets/UMA/OverlayPainterTests/Runtime/UMA.TexturePaint.Tests.asmdef",
+        "Assets/UMA/OverlayPainterTests/SpriteGridOptionsTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintAuthoringTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintClothingPresetTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintColorCorrectnessTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintCustomGuideTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintDocumentPersistenceTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintExporterTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintExposedEdgeTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintGarmentConstructionTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintGarmentDepthTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintGarmentRealismTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintGarmentTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintGarmentWidthTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintGpuGoldenTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintGpuTestFixture.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintHemDepthTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintHemSeamTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintLayerMergeTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintLayerMergeUITests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintLayerPreviewTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintLayerSymmetryTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintMaskStackTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintMaterialCapabilityTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintMaterialPresetTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintMigrationTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintNormalControlTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPackedDirtyRectTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPathFadeTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPathGeneratorEditorTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPathGeneratorTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPathMirroringTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPathSymmetryTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPbrImportTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPluginInvalidationTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPluginParameterUITests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPluginPreviewTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPreviewRenderingTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintProjectionTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintPropertiesWindowTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintReleaseIntegrationTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintRibbonJoinTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintSavedLayoutTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintSceneNavigationTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintSkinFieldTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintStaleLayerRegenerationTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintStandalonePhase3Tests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintStencilTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintStubbleReliefTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintVeinTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintWeatheringNormalTests.cs",
+        "Assets/UMA/OverlayPainterTests/UMA.TexturePaint.Editor.Tests.asmdef",
+        "Assets/UMA/OverlayPainterTests/UMAContentManifest.json"
+    ],
+    "assets": [
+        {
+            "path": "Assets/UMA/OverlayPainterTests/AnatomicalRegionTests.cs",
+            "guid": "51112f870b3aee346a6270f8e6698b90",
+            "bytes": 27859,
+            "sha256": "e4e86538ccc45c5d7cfbf1653fb23743f12b85fdce81316d0af9572fcc3bc288",
+            "metaBytes": 59,
+            "metaSha256": "d32ced3d314160f595a96e267617ca4ab091fd52f023dc4d29bf202fc1920ab9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/ClothingFinishAndGeometryTests.cs",
+            "guid": "c1723c9d67d4cdb4a97c590e34eacc38",
+            "bytes": 11976,
+            "sha256": "cc6e0f1e5cccbf025836769451190f1bda9a1d174de8ccf352db11eeff4ed666",
+            "metaBytes": 59,
+            "metaSha256": "cfb76e8c1db4b5e70e17194c931f482c5f077a8d4b6033784a79aaf900ab4031"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/OverlayPainterSpriteSetTests.cs",
+            "guid": "911f3a81ee78422fb8e339b88fc8bfaf",
+            "bytes": 10792,
+            "sha256": "addb26a079113a17e49b95fc61bf74f5c6a16633247761cc0d9aef17b983d2cd",
+            "metaBytes": 60,
+            "metaSha256": "d4f3c8fd7bc52754aec2e3190005ef3fa73a0a96dcd05d7cec25167704f67d2e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/QuiltSpriteSetPickerTests.cs",
+            "guid": "e71d89752d1eb8444b9ddf8619266005",
+            "bytes": 2571,
+            "sha256": "4e5d367aeaf01bb7bde03622213a201c15b49aa9a8e51a82ed3a175bb971b885",
+            "metaBytes": 59,
+            "metaSha256": "efe87bbbdadfae357c1bfe0fd3911b737bccbc43521ad929d334318d8a4625d2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime",
+            "guid": "07d610b9f1557f5468ba606769d1a308",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "a7beba663f123880d38e70cb62a00b0048ae083ef78e45c736721cf414a72567"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/CoordinateMappingTests.cs",
+            "guid": "a6ad5fca4e9e41944a3259c745d06940",
+            "bytes": 34715,
+            "sha256": "74d83dd2c50a179fe46691b1b896fa22619b66a086eb56df2978ba8a0f31757d",
+            "metaBytes": 59,
+            "metaSha256": "781c523f76ad908646a074769de08cf655ad9bea5382c64a42d11db3f72772b5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/DocumentModelTests.cs",
+            "guid": "8fa3d4fc6f2b44de9eb8d33365519dc5",
+            "bytes": 25800,
+            "sha256": "abe00d08a9491672cf68356a288241a7508fffd3823a7bfd21806e9eae20e33d",
+            "metaBytes": 240,
+            "metaSha256": "334bc9c4665b534e78dff3c08a146960ece6d26a634ea98ace71d31543428c4f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/ExportModelTests.cs",
+            "guid": "8cda0e7664284bd7bc6bd5ed06aecad7",
+            "bytes": 8627,
+            "sha256": "c1b0905f176a4598d258eeaa9c79e684980170189cbcc6cfa7fec1752edffe1a",
+            "metaBytes": 60,
+            "metaSha256": "4a9c43bfdc2998c72f69160d26b458b5575ae53c2057d41cb1dca6d7f5792e12"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/FabricFuzzGeneratorTests.cs",
+            "guid": "a257199ba439b82439dece551405f03a",
+            "bytes": 10990,
+            "sha256": "927c10c6161ab0656e777a37a6039fba0685a33c80274613d561e5857779742d",
+            "metaBytes": 59,
+            "metaSha256": "d5c99fb206078f095c1ecb800cf8cd19409e5268a8367e51e49b8f68ade48cf9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/LayerOrderingTests.cs",
+            "guid": "640b58875833432ead6b5cb26721db9c",
+            "bytes": 5003,
+            "sha256": "7bdac6416bdd8ba7c599f009ae2de4cc24d3224b608c8bed491afbd86600733c",
+            "metaBytes": 60,
+            "metaSha256": "f15b213fad6d64c29e85e15ea8d92ddaacff9275225a564dc5b8ffad861981f7"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/MaskAndMeshMapTests.cs",
+            "guid": "c8d1bb0d94f94729be675cfc5dbc92d8",
+            "bytes": 10533,
+            "sha256": "bf0dc54187f3e5a5809e84d756ed606bbb60dd5a2af19d3c80d6531c84fc230b",
+            "metaBytes": 240,
+            "metaSha256": "dc51adbeaf2af7ef870969df5fc3950b6eb2b6657dba3deba6f98629145aab6b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/MaterialPresetModelTests.cs",
+            "guid": "f27ca9d167aa4f37ba9460bb2bc4f30d",
+            "bytes": 2920,
+            "sha256": "491c8a2a6da41478269f87ee7a8ce0f7f6864189fd38ba353e7938f894238536",
+            "metaBytes": 243,
+            "metaSha256": "905144c0af59e761ebd22402833c2154eb2f12ae90e024b9fced7b49b0462c06"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/MirroringTests.cs",
+            "guid": "2b3728abc6ff4944c9721ee5aa4a4214",
+            "bytes": 607,
+            "sha256": "5551623f145c8ef0a404e8c92c8f76c164d108d4af7d8f6c0cba59d1171192cb",
+            "metaBytes": 59,
+            "metaSha256": "aec980bb33cb289b6a6fbe4aabec98579421e9239188253e6d36a2a077b3656f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/NormalTouchupTests.cs",
+            "guid": "884d6094654376a4db74a81b30472417",
+            "bytes": 1092,
+            "sha256": "e990b468327f2d54c1ae78357ca70a0567980917c72b72a29e109bd263173348",
+            "metaBytes": 59,
+            "metaSha256": "69f6d724ef2e1de216eb6706eebafe984560b2fd63001fb257d557901e87ccf4"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/PerformancePrecisionTests.cs",
+            "guid": "db464a8d7a114bc9933f01f14f5bef55",
+            "bytes": 8515,
+            "sha256": "2f3d68355c0ca8f7ced2aa9009bb4dc960a57105f839b328476cf5fb967c999c",
+            "metaBytes": 240,
+            "metaSha256": "004872d7bc27dd8216ec6dcb1ba80f2f5907bd131dc0699138f40ad396785e50"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginApiV2Tests.cs",
+            "guid": "38cb5c34b51448aab83c0b4db5aa34aa",
+            "bytes": 89340,
+            "sha256": "b7b806eee2d18a42d75b94dcb9ebb64f2488c58d8918292b9518981cc2dea4d5",
+            "metaBytes": 60,
+            "metaSha256": "feb3e06ac52ddd87f49b094090d2a5d287e019a62f87f5b0e6871f1f82c1a1e5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginClothColorTests.cs",
+            "guid": "bf4fb3909945ed64088f3b082cd64d20",
+            "bytes": 3394,
+            "sha256": "36f773e468c4b57f2f43520bef0c9fa70b029694782fd87e8518ba8eb625b837",
+            "metaBytes": 59,
+            "metaSha256": "73b961b195c14411983ef137eedbd3505e3c1074468b75297a5fc2e211b4b8c8"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginGarmentMaterialTests.cs",
+            "guid": "5727efaa500aabb4b8f064b43be1ee20",
+            "bytes": 9299,
+            "sha256": "73699570be531800a42380b926b9447a925e609367429bfa1d0d9517076c03d2",
+            "metaBytes": 59,
+            "metaSha256": "9e6a3bd6d46ab8b18117a6d780f806775bd8de2f647746453596fa61a48cacca"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginMeshMapContractTests.cs",
+            "guid": "e963235cca42edb4e8ec9af120cc056e",
+            "bytes": 3718,
+            "sha256": "54b03265ba0454228f55cd24b9a1377b2fa11ca63b3604d030c8264f62ce602b",
+            "metaBytes": 59,
+            "metaSha256": "edbd77e72bfe9131759eb496827e8cdf27e32356fb00bc62b125cdf0381f09d0"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginParameterMigrationTests.cs",
+            "guid": "8fd3b095eee553d479b7a2c8dda29f8b",
+            "bytes": 9001,
+            "sha256": "69ed11917a875edd59116db3537870310fe4fd9a904614d859c35f39bcf93310",
+            "metaBytes": 59,
+            "metaSha256": "afe52595b67d8d1c462a55ef7527f03ae4bafe73e3e9a0301004026fb26b9696"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginProjectionTests.cs",
+            "guid": "f2405b4480dfb384a875c21a2f369947",
+            "bytes": 24366,
+            "sha256": "dfd09c50c0c57cdaffb33a878a2c0fac13c6ff087e3855bcb480aee76b27be14",
+            "metaBytes": 59,
+            "metaSha256": "f79d77b96d7a87af3f38e9551fd874ba7eeb9a96b8412e8d3f5a1aec7542c0b1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginQuiltPuffTests.cs",
+            "guid": "6f027f94ee9f4439a7a43045d97c47e2",
+            "bytes": 16307,
+            "sha256": "95af4a00773adc747577129b2e8a9d5208d99fa25a59d69ece772cfb30b62b37",
+            "metaBytes": 60,
+            "metaSha256": "a2f67a30a4165f66908085f1027312075e0331192cd34591f61742830ffe9a1a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginQuiltSpriteSetTests.cs",
+            "guid": "3734d53af4acfb549b16891c53013546",
+            "bytes": 11196,
+            "sha256": "c442d72d69c4bcb0ea3f72db09f5b30e36921689dd1260a4eb0383b1f3ba3bd5",
+            "metaBytes": 59,
+            "metaSha256": "bfcaea39c31228b8084337ea3e3547eddb80b9dcb6c8d0b140563f8f3948101a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginSpriteReferenceTests.cs",
+            "guid": "11f935c93a70b3148ab14c95f23151f2",
+            "bytes": 3823,
+            "sha256": "4190d500ced926bb7d1ff26788a78a30dfffcf97c235d08884a3ecba4241a661",
+            "metaBytes": 59,
+            "metaSha256": "715e26b6b62b3ebb420ca580a7a28857b328718bfe5372ab5acedbac2fb8f465"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/ReleaseQualityMatrixTests.cs",
+            "guid": "e886f3c93a5c4de1947bb54b7a1736b8",
+            "bytes": 10039,
+            "sha256": "a423a255a8b45a92c7717e8784da729699ad42e1a6940ee065064afe3e1e4580",
+            "metaBytes": 60,
+            "metaSha256": "4fb4fdf9a2e91715b9522960d1c72c20c6203ac46dba4e9664cc29ef82bd4a24"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/SlotTargetTests.cs",
+            "guid": "ebc4d6bb6c594ce4a65330b7b940b331",
+            "bytes": 22280,
+            "sha256": "a7f492be2dfa33ddf75f064f82a6b99c140849dc7705356379be88749ba99770",
+            "metaBytes": 60,
+            "metaSha256": "6e9ddf7441be706491d0a6fa144f0f9b028109867a54a5e53e33dbf35731767a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/SplineTests.cs",
+            "guid": "cb559c505f4c5c44c84d867a08b2d556",
+            "bytes": 18071,
+            "sha256": "d2ccb203e596afcb160a2c79df7d5e22e30c50b9ca98ba1545403cde9f1d68ec",
+            "metaBytes": 59,
+            "metaSha256": "afc00752fb4db90d05386612317fd635f8c27c96dcb4c45709d5a8b6aa3fbdd6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/StrokeHistoryTests.cs",
+            "guid": "db0ca84d76ad03343afd514261205433",
+            "bytes": 3390,
+            "sha256": "d1948f19e335b8938732c882f2795d4af43f04918659b1ad16c4be7b36c5c7fe",
+            "metaBytes": 59,
+            "metaSha256": "c93ecc5e266fd1717ed2e858c8d34da40498e3221c64407c68b40d6f8c4072a2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/StrokeSamplingTests.cs",
+            "guid": "5f71a85f8fe34a64a32b611f5da0ea12",
+            "bytes": 3562,
+            "sha256": "c9cdeadbacd7e85c9bb987d7814495530ff296d41a93f0744b35912a3fafaad8",
+            "metaBytes": 240,
+            "metaSha256": "315f69153b066c3d014973041a55b307935fb2bc24eca5dab3ba38ad125c1a92"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/StubbleWorldDirectionTests.cs",
+            "guid": "908bbac2239022b478338b5a61047d39",
+            "bytes": 9468,
+            "sha256": "fcf27a1fb41df4eff564e2b909e25dfc5d15d02cbdb8ad49c80c9bdba9192c40",
+            "metaBytes": 59,
+            "metaSha256": "a2f1129026b585ea2264dedd64237ccc82cea1162c2b2466e73943a6471df8dc"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/Runtime/UMA.TexturePaint.Tests.asmdef",
+            "guid": "2f520cab84fffec47bb3e93fe4eca14f",
+            "bytes": 760,
+            "sha256": "0b2f67ca19f00f77827611a37751e33670e402d8a93189f7ec51ee91b03c3a8b",
+            "metaBytes": 166,
+            "metaSha256": "4bed1dea856a3ef1bb3acfe7a6616df36a2d26d68e8e6ccbec3201403dbf4c0d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/SpriteGridOptionsTests.cs",
+            "guid": "3c24687cad6644f68d184ea990fe73cf",
+            "bytes": 28515,
+            "sha256": "a61edd9c7ddd4cdcab06b5d51327118f8b27678a0c7b6af3c900d22e6f56996e",
+            "metaBytes": 60,
+            "metaSha256": "53bd7014ee8744402f0d0eaebd3bf30cab7d6f1ba05d7268e15b9b8cb5ee7d41"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintAuthoringTests.cs",
+            "guid": "464afbad182a4d11adf18c5d5136c622",
+            "bytes": 54570,
+            "sha256": "ee6d4c01c89876610af32e5e466fa299131fd094a1ca9aaaa1ca2109559cb9cb",
+            "metaBytes": 62,
+            "metaSha256": "ae2300ca9948fe9c332e1405392427c22fcadd6e9834b8179db95ec918c83233"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintClothingPresetTests.cs",
+            "guid": "49f1bcd11a4fab441beae99db94d6405",
+            "bytes": 3709,
+            "sha256": "f1ebf99cf4a6ea783ceb1e6f6e8cb694fba90d74c90f731aff406b0030e900b6",
+            "metaBytes": 59,
+            "metaSha256": "9419443e4452c8bcb2cb78da278dffd0b9c3220ce4f904ffc6cb221127dbd74a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintColorCorrectnessTests.cs",
+            "guid": "f7f0cdad1184e3f45b5e4d0e6101532c",
+            "bytes": 15865,
+            "sha256": "f4bbf87b900ef1a4b697a1f2ec5a2e147c9d0a393472dabeee623f884368e7a0",
+            "metaBytes": 59,
+            "metaSha256": "d518bd1540785da8975f2a724447abb0245c40c9c35340da8ea1c7bae5bb0e24"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintCustomGuideTests.cs",
+            "guid": "466de3026abd4daf82c2f499df942dce",
+            "bytes": 6338,
+            "sha256": "592bb75897c972573415ac1a7da54407c04bb9638fdb1d8b8477b57852f5783a",
+            "metaBytes": 60,
+            "metaSha256": "0141a7efed0b29d64ab1594db6b539c49a7ad2691887ba6b450f93cd9f5a9681"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintDocumentPersistenceTests.cs",
+            "guid": "9545e5e4e3d74aed9be7896d0f3cf6db",
+            "bytes": 48399,
+            "sha256": "e58a195a9188047b8acee81907e1d4992c034918293e325ce9b4dc5c5bbf9a33",
+            "metaBytes": 60,
+            "metaSha256": "2b02ca8deae257c66da46ff5e1f739343d0b76d047d19b127cc68867272c8e13"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintExporterTests.cs",
+            "guid": "8b495e7882894a14bade67508141eec5",
+            "bytes": 30125,
+            "sha256": "1d2746ef96a49ab6c7c8f1f74dff100d665fd6a30542179df166bd58e707a284",
+            "metaBytes": 60,
+            "metaSha256": "a396d3e69755687e7e7a59613e482293202a308c502f39cc6b3d6802cdacad81"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintExposedEdgeTests.cs",
+            "guid": "ca300aee7abe77b4788cb642270a7d4a",
+            "bytes": 14380,
+            "sha256": "972c0be728c8f111b56f2b16702ce1ff4a727162ea235eab0e395515ef256f59",
+            "metaBytes": 59,
+            "metaSha256": "694f532cd9cdfc4cc7f8f307ce329deebeba7ccc827a947daff709ad99adfff3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentConstructionTests.cs",
+            "guid": "a89a5cb8a8e6e8c4a93eb9ba08a77bb2",
+            "bytes": 21593,
+            "sha256": "8c6b78cad229125b157ca5d63002c347592bea5272693e2ea2093ef0443df745",
+            "metaBytes": 59,
+            "metaSha256": "ca912ff38a5861554d43bf215594535890db0997d47c8dcc1f68e6e627947e84"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentDepthTests.cs",
+            "guid": "fae9fd6d8abc92f468065c269469c3cc",
+            "bytes": 14065,
+            "sha256": "8599f5a2b254c1889e57460516fcc6c10c7cc5358160e1689ebcdd186b5d501c",
+            "metaBytes": 59,
+            "metaSha256": "b78aaab3554667086f1b0c23e487943260620f4917d189b8fdfcc5dcd0535e3a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentRealismTests.cs",
+            "guid": "8596469c1eeabbb419532036c0c508ea",
+            "bytes": 11711,
+            "sha256": "0345d64f2202f02dd6030996f0f46f076f95a70c12cbd7bc1e0704d9170874e6",
+            "metaBytes": 59,
+            "metaSha256": "6b05be14a72e1851dbeb3e468ff17455f95b51f5f5d78b11bd7bec9cecc1cc25"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentTests.cs",
+            "guid": "42c092fe30be8cb4ebae4f3748adb8a7",
+            "bytes": 66204,
+            "sha256": "89a166afe7b35e3fc617117c65ae49136aaa5897bf2c520dcda21db40ed0093b",
+            "metaBytes": 59,
+            "metaSha256": "d8044de757202350fd2187c5edea506a4dfb41837236373aef6c9438af86730f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentWidthTests.cs",
+            "guid": "51337a9fdbcea6942b3622885e20f329",
+            "bytes": 2834,
+            "sha256": "2250a1ebc3713e97e9703affbdc9f5ebdc8bca20b254831cd82520cd2aa244e5",
+            "metaBytes": 59,
+            "metaSha256": "36472ab2a9734ad73a30dec03a4e8941bd2d337afdb059d0032af269ad8cd896"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintGpuGoldenTests.cs",
+            "guid": "8bd4cce9c6a047f6a75940a0a28f61fd",
+            "bytes": 44244,
+            "sha256": "f4b9978378f46ecccf401abdb7ca0d4c868cc0bb59e11260843b0e14e645b4fb",
+            "metaBytes": 60,
+            "metaSha256": "a14c45807de15f436b7e05fa3242168b71c12eeb1034c6e00121df26e52e1aac"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintGpuTestFixture.cs",
+            "guid": "e115c9e04e164d3bbd572256444b232a",
+            "bytes": 8942,
+            "sha256": "9f6a1417691158b79d4ccfd2d591898e025358c59f612f95d535649f037ea7ac",
+            "metaBytes": 60,
+            "metaSha256": "cea9d255f141d4c4f9d3dc26b6f188eab67a0c0425863f2e3e4d6c740acf8692"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintHemDepthTests.cs",
+            "guid": "c53db0292320aee41ab3ef71cf80a994",
+            "bytes": 4273,
+            "sha256": "96b818667dd7fb4ebc4e27ae5f6178d50074ef943018451ad6aaf8b07fcf4a8c",
+            "metaBytes": 59,
+            "metaSha256": "a1a35a83b0236fea9ca8aac43330cd9602a8cae1b6fd7711b3d238c04cc7b11e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintHemSeamTests.cs",
+            "guid": "723a901b1423a604486c0a9edf49b27d",
+            "bytes": 31746,
+            "sha256": "deeefa4a6878dec408ed3835fb610c76047d6a8328c4a27c660ac069e0a65f28",
+            "metaBytes": 59,
+            "metaSha256": "da92156035da56173bae0a91d0b63046c5d1fba6de7b1e2a6ab1bbf1ef89b529"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintLayerMergeTests.cs",
+            "guid": "1c6b562590e19cc4795d020fce22be16",
+            "bytes": 48368,
+            "sha256": "318e0194533c9fc877b297c1a8a6117f39b49253d745bdbf6fbdd0b9f29cde4f",
+            "metaBytes": 59,
+            "metaSha256": "06defb79e289f59a8067e65ccec6cd5c9757908a457b0b67327d7bba69b79b04"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintLayerMergeUITests.cs",
+            "guid": "9027e9b11b06282458379d292c8b4f16",
+            "bytes": 4178,
+            "sha256": "472eb8815f0c65fba4ffeb5043592115863ba29098b011320533b293e575ff6a",
+            "metaBytes": 59,
+            "metaSha256": "2f32cead901b083b1510a109381cdbb8eddae9195442dd83d238c1bb40f9f744"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintLayerPreviewTests.cs",
+            "guid": "9ff22090ae6ee5046aac9892f677ea9b",
+            "bytes": 9157,
+            "sha256": "264fc3be7bafaa5ae130d2fee7971ed53697a43479a6171dfc1ec451a7b2c910",
+            "metaBytes": 59,
+            "metaSha256": "c4f69db6df2a215e5548e1f49492aa87483175006a0de3653b0d300101c7348d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintLayerSymmetryTests.cs",
+            "guid": "3743c36475b4b6b4a9b818a55b2b55db",
+            "bytes": 14689,
+            "sha256": "b53eca74838175c1a91d2391d72ac8b08b1f16a88457bf5884e4536fc29c5d23",
+            "metaBytes": 59,
+            "metaSha256": "98ac156fa534b7fe767a47088dc319f4f1b0241ef35e66183ecb159245a04746"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintMaskStackTests.cs",
+            "guid": "bce0afb5fa4880d40bcd68546634532e",
+            "bytes": 20915,
+            "sha256": "dcf1db33ac7504fb9560e8ebcc71eda475736dbaeb3ce639ec0918e73910d81a",
+            "metaBytes": 59,
+            "metaSha256": "06495af0be5e3fc3cde82a34bbce8b3afec81b095aa6e3118381fd0e1b3daab2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintMaterialCapabilityTests.cs",
+            "guid": "af9c75662f9d48a9963e38dac3344a55",
+            "bytes": 18470,
+            "sha256": "91a8c4e3f61774dcb4e1614495c113b7d321d597a7393a5fc2207b5ec583ade8",
+            "metaBytes": 243,
+            "metaSha256": "dd5b61a6cc47fca450b787674119d7577662efd81396c1addd95461418b64b4a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintMaterialPresetTests.cs",
+            "guid": "49216e84b0d543cdba66e71eaaae72f4",
+            "bytes": 16294,
+            "sha256": "ff242b3ded7e984175a944590f718dbe038d05c79af46eb7cf5a5eb272845832",
+            "metaBytes": 243,
+            "metaSha256": "f8c27125309e109a598299080133847a12835b17027f339958a7ed34ff8e4f21"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintMigrationTests.cs",
+            "guid": "d30e82b6e11ade74ca69c56a2d5feedd",
+            "bytes": 3856,
+            "sha256": "ee8358bcb3c8bfcbf3837aa60da825e1763752b5b8ff37cc5c09b9019c45d6ed",
+            "metaBytes": 59,
+            "metaSha256": "5f93071941d101ac929aa5707e6976c3f35531bb32a277986d24ab50433cb1fb"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintNormalControlTests.cs",
+            "guid": "72d2376f02c74c3c8d85176acb730d97",
+            "bytes": 20402,
+            "sha256": "9a132ddbd2073eaa53bb13fbb11e95d304631a8d512b3c643e7c66d66756416f",
+            "metaBytes": 240,
+            "metaSha256": "5daca7143144a6aeaa9af00ed4f842ddbbdb5fdf600c4f9edda50207bfa9d371"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPackedDirtyRectTests.cs",
+            "guid": "4ed20c7869354a989bf853bcdf0d57a9",
+            "bytes": 4078,
+            "sha256": "40e417b141179c2559b86ddfb4671e2d8ade12c60fced013f6db1a3de62f6cf6",
+            "metaBytes": 60,
+            "metaSha256": "a9170172f9d422ea44ec956181814cdb7ab725f11e46331572bf13ce69b1e366"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPathFadeTests.cs",
+            "guid": "3c801af211d1b34428382da2f268a0f2",
+            "bytes": 28903,
+            "sha256": "b2f917821f3f115b51b4439339220a17694b43c0a08bdb25c98d5ede399e41b7",
+            "metaBytes": 59,
+            "metaSha256": "cd72c7115106bd2850be03bd6525b934e5d207a5c3251e7a364a65330a45dc6f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPathGeneratorEditorTests.cs",
+            "guid": "db770a2dcfb74a29b94d190e9cea9d6e",
+            "bytes": 7493,
+            "sha256": "6631dda89a108aecb1b1db24c20b6ae0cb1b6f44d3bd20e463d82206d30fabaf",
+            "metaBytes": 62,
+            "metaSha256": "5ebb958e2122a9d18c74bd5db28351c7c6492080ca2cae19886a7946486bde52"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPathGeneratorTests.cs",
+            "guid": "373d9529bef3d6b4bbfb1f4e5218782e",
+            "bytes": 42976,
+            "sha256": "14309adf68f4e69b0979893ec70f209a8b6e817aa871a1be153d4786b8a79c09",
+            "metaBytes": 59,
+            "metaSha256": "0105c4b09f52f0002b1efb25bda23c6500cd1162100ff48eaea6731fdae08cc7"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPathMirroringTests.cs",
+            "guid": "ee6ef31575052c94486f3e562c175f61",
+            "bytes": 24076,
+            "sha256": "fea525266ee7f92d7ae3615a6e7de29f7dbaf50931d1694babcaf89feb748b1b",
+            "metaBytes": 59,
+            "metaSha256": "bcf7534c5e3fb0604b60ed2b8dbb481d19583d523dc7b3cf9ab77272158ca555"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPathSymmetryTests.cs",
+            "guid": "f42b19933c8ef7547a4197d1597f46de",
+            "bytes": 18411,
+            "sha256": "75815e2b53e183d89773ceed426c8c02c7c132c9aafebdf88f2a31851459b631",
+            "metaBytes": 59,
+            "metaSha256": "477e34ef60ce2b364fd12a58828881719d3416bf9d34784a3bbdfad83667a36c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPbrImportTests.cs",
+            "guid": "bcde842b1f150cf46a6045ef3da062f1",
+            "bytes": 5213,
+            "sha256": "5f31dd3143564e57bec6f45a28f852dd1f95b2c95a80567cacdb7310baab9106",
+            "metaBytes": 59,
+            "metaSha256": "e84198d53561679cab05447a41211866ce583cdca926f107339a35c8197b0ec7"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPluginInvalidationTests.cs",
+            "guid": "ff58417f409b0ab4a9a44c457a20aae5",
+            "bytes": 3290,
+            "sha256": "f663f56fde27e5f03a16d8f514735a844afb99594f46369237e595a48840e80d",
+            "metaBytes": 59,
+            "metaSha256": "a3f9b26d6b1dacbbfb26554cc10cd4ad9c5cc35758f95cdb11ae272f36d5ebb2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPluginParameterUITests.cs",
+            "guid": "40439faebb9b07b4da082265ecba6620",
+            "bytes": 12369,
+            "sha256": "b33e4adb36af8eb63f04d41f362b5df96b07c1a7221be12be4211f59ccc68b89",
+            "metaBytes": 59,
+            "metaSha256": "53fd5530f9235abbbb4bfbef0fe48a4575481f639771a62d166cb0a6c914d49e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPluginPreviewTests.cs",
+            "guid": "853eda7d0a44e454f93a1c2b5ffed702",
+            "bytes": 37789,
+            "sha256": "bc62721d200bc6645b0d058fbf281daa518405c51c2d324af139e0affd78d6b1",
+            "metaBytes": 59,
+            "metaSha256": "fe83e65b110d7d327198fad86cf66e887439320a6454bc478ea71061fd3417c3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPreviewRenderingTests.cs",
+            "guid": "27205caa8cdc3c64cb326b717bf41819",
+            "bytes": 9381,
+            "sha256": "fec3bfe0e17c0ce26d2cdff310e0db923afb2090f23e1002f8d5184a7b065b6c",
+            "metaBytes": 59,
+            "metaSha256": "29ad234e576546fe6ee90f8b347400a0a29a1157882129e7a7e0fa9827b75a16"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintProjectionTests.cs",
+            "guid": "218812b8cdbc467bbdf4ca32fd08a3a0",
+            "bytes": 136729,
+            "sha256": "d751083374c3e4861ade4f81cd4fb66deedd101d456426be34e3d9bb3ede3d84",
+            "metaBytes": 60,
+            "metaSha256": "3a51386b0cd68732bf47f2933749e9930141d121eda7b6d1beea8502da231599"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintPropertiesWindowTests.cs",
+            "guid": "667eb070133a48ef83ebba49d8e0c524",
+            "bytes": 4459,
+            "sha256": "b0296e5d171bbfc9e9c7dd12cd6d2ae07900f9e97bf31b8079dd6c0495b509ec",
+            "metaBytes": 60,
+            "metaSha256": "5d03d902ec346826f3cb04c343a3dcc2f68c8351517cb336fc68a542afa586ea"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintReleaseIntegrationTests.cs",
+            "guid": "c98a3f57a9a04ecda3b076d15a11b50d",
+            "bytes": 331900,
+            "sha256": "6afdda5b455bebc2c84b990e00b36d36669b361cfdd7af60d82d58a0bdd3f8a2",
+            "metaBytes": 60,
+            "metaSha256": "bf3601cbb935fc2839c23d7ab81584444b2d43ae3b260a1dbf00ae7e5b5ce289"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintRibbonJoinTests.cs",
+            "guid": "04c4e20617ff34645b7ef4fc2942f8cc",
+            "bytes": 36872,
+            "sha256": "5b901b7a97dd7075a3e7877ed5d6ced5f69f547285608202ece7e006cf706bbd",
+            "metaBytes": 59,
+            "metaSha256": "5a5e1cc89a09cf006d2c9c5508ed3908f15beb57ded98028bfcce4cfd1bce45e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintSavedLayoutTests.cs",
+            "guid": "e1ae6345453ed9544bce9e4e72f806cd",
+            "bytes": 7130,
+            "sha256": "dc6d682815f7d5dc2e63fa7748134c97a500e0e886b4b41958ef10fd88c8cb77",
+            "metaBytes": 59,
+            "metaSha256": "72e2b74538d1c65c70348cffcfc1e4b59e441d0efa025cc3661f647326bbb2f3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintSceneNavigationTests.cs",
+            "guid": "b4087b1af6b869e48a6891592fe7bbf8",
+            "bytes": 6885,
+            "sha256": "33db89ace1b534e6092a50461c0986ae6e203ca8bfc45182e4864d267efd23bf",
+            "metaBytes": 59,
+            "metaSha256": "39b637ebdec861c6b2e1296d763c05609157957732052c779d14829208509853"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintSkinFieldTests.cs",
+            "guid": "fc48c86688a78c04ea2690a0cc22967f",
+            "bytes": 2564,
+            "sha256": "ee241fda80ae727715796a68ba4d2c661cc60a934f510ae4395da3d4bf55cd7a",
+            "metaBytes": 59,
+            "metaSha256": "4871bc0d8e26abda399e3180feb5b506e14640fdaf65386b25c506ce7b91b21c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintStaleLayerRegenerationTests.cs",
+            "guid": "efd41c118d5dee748937aa27161f41a0",
+            "bytes": 3832,
+            "sha256": "6dbf318714e79f9bba0567817c0e09d09d46ddc04a7af1b5a92f9a3df5439781",
+            "metaBytes": 59,
+            "metaSha256": "9cc3b70376c037c30fc0aa3f25d239bef04ed631a273f16f44af6253e39b3c87"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintStandalonePhase3Tests.cs",
+            "guid": "4ab2d4bdfabd24d48be795b17a94873c",
+            "bytes": 15234,
+            "sha256": "612a8de4baccc2f8f97613a968f9e2ba8cf2518426325bf6d87f5ddd2a10c63a",
+            "metaBytes": 59,
+            "metaSha256": "3608c3aafaf48ee33d7d42d2c775b221fec99a3f92f48a1ae6ef032d6757c247"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintStencilTests.cs",
+            "guid": "e29f513f02aaa9d438bb689ee6602883",
+            "bytes": 4879,
+            "sha256": "c7a522774d8ed9aa7732bf0d5aab82fe5d822dfc02a712dc57029e118bdac888",
+            "metaBytes": 59,
+            "metaSha256": "a8fdb641bd7638b80344e7c2317200ab20b2779b01e2067fbd6c3aba94460c7e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintStubbleReliefTests.cs",
+            "guid": "ce7acdf9407b54f4ab7e2ff535fafe95",
+            "bytes": 8137,
+            "sha256": "1d8536457113b5f6f91a0a0e0e86c3b6fd3e5cee691652b4823b4d49ce28aea8",
+            "metaBytes": 59,
+            "metaSha256": "8e860fd69e4d4d205c6d6258d40f68277b9a096715dcf3858a1188fc254ae5d1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintVeinTests.cs",
+            "guid": "a2baf1d0a3e32d148b905ece488fb5c0",
+            "bytes": 4468,
+            "sha256": "c55e931d3f5d8365c22e0d15f476706a4dcda52877cedbb74e95138fce47b6da",
+            "metaBytes": 59,
+            "metaSha256": "62e4a9c52fce2b7b03817582a8ebf639465ecdacd0152d90775d942464bd17da"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintWeatheringNormalTests.cs",
+            "guid": "0fee9ff19a0556b4b8eaaa2a49d1f06a",
+            "bytes": 9812,
+            "sha256": "a621ab958ce280587c6dad92594097f32a2e76c2251428d5ef8672c4942cb03a",
+            "metaBytes": 59,
+            "metaSha256": "e675886f2529a6770fecc97d3963af80ce637c58e3e0e68d349c18aa5bfc7094"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/UMA.TexturePaint.Editor.Tests.asmdef",
+            "guid": "79e04028d56a44eaa2714e82d23148ae",
+            "bytes": 775,
+            "sha256": "5cda35f14cfb2674d351f65ca0f44495fda8b657645778ac6236134df315cbd1",
+            "metaBytes": 166,
+            "metaSha256": "d9eda8c31bbc50243f295328dcb8587f8b10cfdbc1430463779587acba37dc56"
+        }
+    ]
 }

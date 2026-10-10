@@ -2,6 +2,12 @@
 
 ## 3.1f3 (package version 3.1.3)
 
+- Fixed projection symmetry switches not rendering mirrors. Projection layers now update mirrored and radial copies automatically across all channels, including Normal Control, with live placement edits and Undo/Redo.
+
+- Added a dockable **Overlay Painter Material** window with interactive shader preview, editable shader parameters, live character updates, Undo, and Reset to Source. Preview overrides save with painter documents/recovery without modifying shared material assets or generated texture maps. Open it from the Layer Preview button, View menu, or Window > UMA; saved workspace layouts include the new dock.
+
+- Fixed Sprite Set Fill channels drifting apart when switching Flat/Triplanar mapping. Linked channels now share projection and triplanar blending as well as tiling, offset, and rotation; Fill Type edits the shared mapping from any selected channel. Existing saved fills regenerate with corrected mapping while retaining independent material-channel settings.
+
 - Fixed Install All failing before its first package when Unity restored an empty status array. Batch status arrays now initialize before saving and repair safely after reload; error reporting detaches the update callback before processing malformed state, preventing repeated exceptions.
 
 - Install All Plugins now uses one confirmation for the complete batch, including adoption and backed-up replacement while preserving extra files. Approval survives script reloads and downloads; completion or failure shows a per-package results dialog and saves an installation report.

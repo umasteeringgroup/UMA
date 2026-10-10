@@ -2,10 +2,10 @@
     "formatVersion": 2,
     "requiredPluginApiVersion": 1,
     "contentId": "uma2",
-    "contentVersion": "3.1.2",
-    "umaVersion": "3.1f2",
-    "requiredCoreVersion": "3.1.2",
-    "minimumCoreVersion": "3.1.2",
+    "contentVersion": "3.1.3",
+    "umaVersion": "3.1f3",
+    "requiredCoreVersion": "3.1.3",
+    "minimumCoreVersion": "3.1.3",
     "maximumCoreVersionExclusive": "3.2.0",
     "installRoot": "Assets/UMA2",
     "dependencies": [
@@ -6001,8 +6001,8 @@
         {
             "path": "Assets/UMA2/Races/HumanShared/Materials/Other/HairMat Aniso SRP.mat",
             "guid": "836ba1c96b1a93a4c8e7ff58ffb68a11",
-            "bytes": 6626,
-            "sha256": "8e5844a98148eecbb59936df2356e626646c919e609d39900819f40dcf3d6be8",
+            "bytes": 9348,
+            "sha256": "26fcb5f065e00f7d6d7395852b67143f86c219f9a950b31ef02ebd7ba70b6ef8",
             "metaBytes": 190,
             "metaSha256": "169dddcad6ff11a08654bdedcb1f4fc2a8b256d0c4d2aae5e18e106c8f40f7a4"
         },
@@ -6017,8 +6017,8 @@
         {
             "path": "Assets/UMA2/Races/HumanShared/Materials/Other/HairMat_Solid.mat",
             "guid": "9ae673dab7af9db43afeb2f193929cd2",
-            "bytes": 6465,
-            "sha256": "17dfd0ed412f708e4e9664b5fe2dbd0f79c26c7c6e53a5eb11c1af023c071d9a",
+            "bytes": 9112,
+            "sha256": "6763b73350919673a92bc14aeee75e5a9dee4ce430d98353bc7067a5794f1c3c",
             "metaBytes": 187,
             "metaSha256": "90138d19c0ff2cee8a0f40c7354b3253c2d13c8783d66a9e87677c3023ab45e0"
         },
@@ -6049,8 +6049,8 @@
         {
             "path": "Assets/UMA2/Races/HumanShared/Materials/Other/UMA_Mat_Fade_Diffuse.mat",
             "guid": "15a5f99afe13df8468a9d786b532a08f",
-            "bytes": 4013,
-            "sha256": "b474f63e013d388c42635b065b91889d96f47b063c0a22188e36a30c6a5a67bb",
+            "bytes": 6622,
+            "sha256": "84fd285299d46476addd4d9c1af7795ceb243c0f8d591e5432e6db8892303f8c",
             "metaBytes": 189,
             "metaSha256": "5d15d3c0c29ab4a12b72e4c7e2cdf24683a28b6aeef0ed15d2265405765cea31"
         },
@@ -6137,32 +6137,32 @@
         {
             "path": "Assets/UMA2/Races/HumanShared/Materials/Standard(Specular)/UMA_Mat_Cutout_Diffuse_Normal_Specular.mat",
             "guid": "1cb41221da2bd204888180929437dd2e",
-            "bytes": 4331,
-            "sha256": "4a967f61ffbdf78a968c7324a76e793052d156b9c22101d621922433c8392f64",
+            "bytes": 7053,
+            "sha256": "901c44e24841d5106de3bbac21f06de00f595437ae3e0ba9c6a3669e258b6d77",
             "metaBytes": 188,
             "metaSha256": "1535956dcfadbeb58b667def29b353aae513b5d3394c4192fc7cc0d316356f9b"
         },
         {
             "path": "Assets/UMA2/Races/HumanShared/Materials/Standard(Specular)/UMA_Mat_Cutout_Diffuse_Normal_Specular_Occlusion.mat",
             "guid": "470f9cc3b76eb664fbb8947cc9f42769",
-            "bytes": 5450,
-            "sha256": "2cb0913d5187a4612f8345fa47fe7a9c57141a9da2f865a3d4b549e9e8a313a7",
+            "bytes": 7097,
+            "sha256": "7c37d08295bc3e35b950b0abdf287772a9f558fa10c788deabe7f1efc2ca9e04",
             "metaBytes": 188,
             "metaSha256": "eb26d023dacc29ee7f32661f1b66bdfa78d2c8fac97f9e778d2255dda169e901"
         },
         {
             "path": "Assets/UMA2/Races/HumanShared/Materials/Standard(Specular)/UMA_Mat_Diffuse_Normal_Specular.mat",
             "guid": "cd1ed1024fad50b4f82637b57f787dd1",
-            "bytes": 5427,
-            "sha256": "ab9166436e12c674d056e113bbc91aa3d28835820b882fbf4317afafe66b7eab",
+            "bytes": 7075,
+            "sha256": "857fc74ce86ae673639a47e81d3430624e3f45b783bf50c58cb2210df29f26ba",
             "metaBytes": 188,
             "metaSha256": "0ff8a06a107a63fb9386be731dd94fecfe5ab268f97b2f14a2490af13887f023"
         },
         {
             "path": "Assets/UMA2/Races/HumanShared/Materials/Standard(Specular)/UMA_Mat_Diffuse_Normal_Specular_Occlusion.mat",
             "guid": "b0aee38a443313348936284665aef607",
-            "bytes": 5423,
-            "sha256": "7d64a684d5e699185a97d428a0c424e089ef0dd34795a1624b7ddc172dcd343f",
+            "bytes": 7072,
+            "sha256": "7a9d01a53321d41d75a7e2a34c5b117ef409457bbd0d09ac04d34d845fb30754",
             "metaBytes": 188,
             "metaSha256": "269618b0444dc04ee4bf7e42ab27d0c4d40c27cf9c3cc0e840cddd90040f709f"
         },

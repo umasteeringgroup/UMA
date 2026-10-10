@@ -1,205 +1,322 @@
 {
-  "formatVersion": 2,
-  "requiredPluginApiVersion": 1,
-  "contentId": "overlay-painter-examples",
-  "contentVersion": "3.1.2",
-  "umaVersion": "3.1f2",
-  "requiredCoreVersion": "3.1.2",
-  "minimumCoreVersion": "3.1.2",
-  "maximumCoreVersionExclusive": "3.2.0",
-  "installRoot": "Assets/UMA/OverlayPainterExamples",
-  "dependencies": [
-    "core",
-    "overlay-painter",
-    "uma3",
-    "srp"
-  ],
-  "requiredPaths": [
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset"
-  ],
-  "ownedPaths": [
-    "Assets/UMA/OverlayPainterExamples/Samples",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/08fd003c9d375f0fb6cd38f984a7691b_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/0debdb5d5f75aeaf958232272a3a0f65_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/18f4a8173649734e055d00d0e267431f_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/280717e63bd01ad63294e460504e8977_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/3ca5ee28703ac0ff2b596a8647351ebf_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/43e4ccb2e43f5fc58c875fefdf1a612e_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/535b09c03eeb57af410ac9285ee90081_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/755f3dd98a4170f83011ad36bd1c438a_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/79f177ee456f2360d6cf61fbe7d917c5_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/8fd2d4dba73f98707d93b8d3f538d09b_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/9d13204372641eb4e95f4dd4694d4090_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/b2feb211f85d62c8790785044ce7b4ec_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/b9641a0c4bbfe1e7ca38f84fbd7c3ec4_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/d0b008d52c10af0b497ac1cffb5e2687_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/db0e866bc69c479630a7a9769c74c8bc_c1d6f8b8.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/dddfe1853b2ad0a41f477ea9f1b5ac06_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/fa6e03d4db5d38d20aeefe3ae4f9a418_80597c2b.bytes",
-    "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset",
-    "Assets/UMA/OverlayPainterExamples/UMAContentManifest.json"
-  ],
-  "assets": [
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples",
-      "guid": "d9e7f80123454a6b8c9d0e1f2a3b4c5d",
-      "bytes": 0,
-      "sha256": "",
-      "metaBytes": 172,
-      "metaSha256": "2b95c664463b26c0250bc79e5846895c75d9a8963a07a29f5ef1cf5d0ed62b37"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data",
-      "guid": "cf1bc73528a47dd4a95ddd5ceac26a2a",
-      "bytes": 0,
-      "sha256": "",
-      "metaBytes": 172,
-      "metaSha256": "a0034cd25adc4cb380c2f5f4c6ea4a6a33b1b9c558a38509cb334fd91a93af1c"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/08fd003c9d375f0fb6cd38f984a7691b_80597c2b.bytes",
-      "guid": "70b2b06a02acf8c4abd23a3681882404",
-      "bytes": 806462,
-      "sha256": "e3adde414bc144399ecda02476281dfcdcb4ae42c2d26412f145bf30b9446bbb",
-      "metaBytes": 158,
-      "metaSha256": "b2b2af744d9bd03e3f6f0d72809c3d52708bb8814f244f349d6c2791e8c4f099"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/0debdb5d5f75aeaf958232272a3a0f65_80597c2b.bytes",
-      "guid": "980c9de6e09ff2d439d772220e841b8e",
-      "bytes": 30565,
-      "sha256": "d5f62e6529cf522b349c24509f85010c54225cef9cb3fa2e0ad582072ae3c11d",
-      "metaBytes": 158,
-      "metaSha256": "0707fb5bc6c23be29cc16d7e074e46dac5ad3f8a830d9f5e09f2609abbfed967"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/18f4a8173649734e055d00d0e267431f_80597c2b.bytes",
-      "guid": "ad4ae3af5b1110844845409f970e6204",
-      "bytes": 24871,
-      "sha256": "c5c710dbb8fc030cce04196daa5f36f761da18bfa762b1f37f3b7077a1e053a0",
-      "metaBytes": 158,
-      "metaSha256": "9dc7bee120b7bf802f14c07a8b82d2eff3fffb486e319b2c427cd15a83306be7"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/280717e63bd01ad63294e460504e8977_80597c2b.bytes",
-      "guid": "6f63dc9c2c34b8244b7f36e2ce671f20",
-      "bytes": 1432038,
-      "sha256": "b3877b2a3702ee49cd575faa44946cc5208960d0b3fea5143782a87860ef5513",
-      "metaBytes": 158,
-      "metaSha256": "8d51a0581180a8a6749ece18042c84f746f81b1bee804bfd688b1ba6ef7004b1"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/3ca5ee28703ac0ff2b596a8647351ebf_80597c2b.bytes",
-      "guid": "049f58f2aab8f4144961c64bad3a2d9a",
-      "bytes": 34099,
-      "sha256": "d2ea5d8faf807a2e73040a204b2423ad6e187ef1ae3dc9ef889f1965e642ab65",
-      "metaBytes": 158,
-      "metaSha256": "b904361e993107ef5760c3e04715dbf2bd1ecb4d7b4e17e2988782abb1e714e5"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/43e4ccb2e43f5fc58c875fefdf1a612e_80597c2b.bytes",
-      "guid": "df513c43881e450489ecf9e175f58b05",
-      "bytes": 465094,
-      "sha256": "4339b2ab73b8f756d46f65fe53d5c828db017244eb2efe2b0df1581998e8b7c9",
-      "metaBytes": 158,
-      "metaSha256": "cfca50ac5f694836e073f9cfcd605181706cca5976591eed466cf4b7ed9e3de0"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/535b09c03eeb57af410ac9285ee90081_80597c2b.bytes",
-      "guid": "7cfaa3adac3d42147abd4699d64f98d0",
-      "bytes": 10295,
-      "sha256": "2de0c540c970ca74a795f49929ba3c97fba6d74622c59fa19d9450962b0411b8",
-      "metaBytes": 158,
-      "metaSha256": "c55af3b42e67f748634551e83a02e35399bf511aa63830c1ae300ba854aa077c"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/755f3dd98a4170f83011ad36bd1c438a_80597c2b.bytes",
-      "guid": "1f03debdbe7cd3548a90363eab008616",
-      "bytes": 57821,
-      "sha256": "e6c5cbbed604d8da0c616da621767bea32e0c75e3debec4e4627cb811946c313",
-      "metaBytes": 158,
-      "metaSha256": "3cad17ce88c842d0516cb2ae69b66522f1a0428382d1afb0ae2426053f3f836a"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/79f177ee456f2360d6cf61fbe7d917c5_80597c2b.bytes",
-      "guid": "1df5ff6ddfedb5e42a1238490af62224",
-      "bytes": 586557,
-      "sha256": "94b145c192dd89ccdc2ea44223badf480713a14048192f7a73f4a09725155d30",
-      "metaBytes": 158,
-      "metaSha256": "00b22625ff8e98b1581071c63a482f68aa8e82db56e804fddcb91ee643ea7def"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/8fd2d4dba73f98707d93b8d3f538d09b_80597c2b.bytes",
-      "guid": "200d8e358f23b474e8e58dbf1bce5db6",
-      "bytes": 8600,
-      "sha256": "38515f006e898249d76e46c5f7a3c6ffcf47da24949c523701f6f7a41446115e",
-      "metaBytes": 158,
-      "metaSha256": "86cacebc39997bc395cc587b3b58dd8c174916c49d33d3af678f4141e294ab4f"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/9d13204372641eb4e95f4dd4694d4090_80597c2b.bytes",
-      "guid": "debde369b6cbf484eaeff221d23cae2a",
-      "bytes": 4084,
-      "sha256": "3f0c183d0789e13924cd1489a7d17c42b046ee27bc26a88f124bc930de628b94",
-      "metaBytes": 158,
-      "metaSha256": "1595222384b2442b9de855fb2c33f488457371f352b152dd7ed81c1ecf431de6"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/b2feb211f85d62c8790785044ce7b4ec_80597c2b.bytes",
-      "guid": "5fbcde3521258464a921c24fc8544704",
-      "bytes": 23543,
-      "sha256": "8f7107df9107f6fbffe1f6e6939240366a0c961888cf728287d8aeb96d0dd9f4",
-      "metaBytes": 158,
-      "metaSha256": "aefcee697154777c18f427ffe9f32df0937c027e839ea988cfa447fc34e3a4d9"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/b9641a0c4bbfe1e7ca38f84fbd7c3ec4_80597c2b.bytes",
-      "guid": "a63703a6eea025545a6ec5e1fb4ca9ad",
-      "bytes": 37768,
-      "sha256": "6d872d35ae7e28ccbcd8c0047cf0c972c137afa4fc76e1e337fc00d66e74b5a2",
-      "metaBytes": 158,
-      "metaSha256": "45e342edce2e88f3049e856715e4364b85eca24919765d69eca47b463132bba1"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/d0b008d52c10af0b497ac1cffb5e2687_80597c2b.bytes",
-      "guid": "14024846be92b784e97a65c3616f7e27",
-      "bytes": 12229,
-      "sha256": "a36444af7b4efd88f04511da70c1b0699c58e3b341df019e8ae8fc44e791dfac",
-      "metaBytes": 158,
-      "metaSha256": "ee374c8d08567cabe14606b0e5876c248f6d42edefcc6da95913a1e4734e6441"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/db0e866bc69c479630a7a9769c74c8bc_c1d6f8b8.bytes",
-      "guid": "8379b1470f70a4046bd86ebf5250937d",
-      "bytes": 4083,
-      "sha256": "30c01ddd8e4d137c2ef379ada05a666cfbaf7d056d68d3aeb75a0e702fedeb6b",
-      "metaBytes": 158,
-      "metaSha256": "84613dca09a2be64af41c6227dbd94f58eabcf06babe35b3405f8d119c230007"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/dddfe1853b2ad0a41f477ea9f1b5ac06_80597c2b.bytes",
-      "guid": "7a9b38490694336468f02f9830f66495",
-      "bytes": 8620,
-      "sha256": "c7dc11d115b858a17ce1cc21d9a8badeca1f4b9920959f3c027e58dca82162f8",
-      "metaBytes": 158,
-      "metaSha256": "6435cc62ccb3bf6f03dfb033e9ed7deee7238187fa5bcf9b552f648f926b743b"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/fa6e03d4db5d38d20aeefe3ae4f9a418_80597c2b.bytes",
-      "guid": "c87dc1bb186bab84d8cc3f00fa64211d",
-      "bytes": 67177,
-      "sha256": "97b9d33990b3d9dea68d22374f5f8bd0d44086e67ca40d88278371b931184d93",
-      "metaBytes": 158,
-      "metaSha256": "dc80319f1c91b4a39fcacd61e3461c7f4ae094fcafd4ada451c92280830dd5d9"
-    },
-    {
-      "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset",
-      "guid": "5bf302295ab188042a4a09e0cffd071b",
-      "bytes": 2616938,
-      "sha256": "f971ba0666b32726cee92e3ff748da2e3cb42f3634f610cd8f78917737e07a25",
-      "metaBytes": 189,
-      "metaSha256": "b4d2a2ae79f4fcc484adb33ed557cd82bb52316b9eb9b91a6313cf0bea016567"
-    }
-  ]
+    "formatVersion": 2,
+    "requiredPluginApiVersion": 1,
+    "contentId": "overlay-painter-examples",
+    "contentVersion": "3.1.3",
+    "umaVersion": "3.1f3",
+    "requiredCoreVersion": "3.1.3",
+    "minimumCoreVersion": "3.1.3",
+    "maximumCoreVersionExclusive": "3.2.0",
+    "installRoot": "Assets/UMA/OverlayPainterExamples",
+    "dependencies": [
+        "core",
+        "overlay-painter",
+        "uma3",
+        "srp"
+    ],
+    "requiredPaths": [
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset"
+    ],
+    "ownedPaths": [
+        "Assets/UMA/OverlayPainterExamples/Region Masks",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/AnkleCuffs Mask.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/Armpits Mask.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/Collar Mask.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/Elbows Mask.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/Knees Mask.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/Lips Mask.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/Loose Garment Regions.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/Seat Mask.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/Shoulders Mask.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/Standard Anatomical Regions.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/Waist Mask.asset",
+        "Assets/UMA/OverlayPainterExamples/Region Masks/WristCuffs Mask.asset",
+        "Assets/UMA/OverlayPainterExamples/Samples",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/08fd003c9d375f0fb6cd38f984a7691b_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/0debdb5d5f75aeaf958232272a3a0f65_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/18f4a8173649734e055d00d0e267431f_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/280717e63bd01ad63294e460504e8977_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/3ca5ee28703ac0ff2b596a8647351ebf_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/43e4ccb2e43f5fc58c875fefdf1a612e_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/535b09c03eeb57af410ac9285ee90081_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/755f3dd98a4170f83011ad36bd1c438a_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/79f177ee456f2360d6cf61fbe7d917c5_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/8fd2d4dba73f98707d93b8d3f538d09b_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/9d13204372641eb4e95f4dd4694d4090_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/b2feb211f85d62c8790785044ce7b4ec_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/b9641a0c4bbfe1e7ca38f84fbd7c3ec4_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/d0b008d52c10af0b497ac1cffb5e2687_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/db0e866bc69c479630a7a9769c74c8bc_c1d6f8b8.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/dddfe1853b2ad0a41f477ea9f1b5ac06_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/fa6e03d4db5d38d20aeefe3ae4f9a418_80597c2b.bytes",
+        "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset",
+        "Assets/UMA/OverlayPainterExamples/UMAContentManifest.json"
+    ],
+    "assets": [
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks",
+            "guid": "e7e1a33ecd1f0c2479f204b290361795",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "def056a2d8e01c6d33a00f8597b833c0dfe0128346e8808b81e0aff21e88a949"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/AnkleCuffs Mask.asset",
+            "guid": "24edb420c04b6364c9edaf027b8de9a2",
+            "bytes": 4350,
+            "sha256": "b8501aa18df6ee1e28f638fb9833993eb63b339950a97e65688b79e85c87187c",
+            "metaBytes": 189,
+            "metaSha256": "a12ff883619af7184ea7e124a24ea0190671009b72e39194b3f534ab5200d3ed"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Armpits Mask.asset",
+            "guid": "9d9766a51b6a16c4f8b2bcd2d1445696",
+            "bytes": 4344,
+            "sha256": "3f46e0a98d5861194365d78911fdc394d2be0097fe2b339992817af0636ed6eb",
+            "metaBytes": 189,
+            "metaSha256": "4b338ad2a19858f0f8ed2f58cd5ab9dfaa30d1d9d1daf04a2da495497a3bb0ff"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Collar Mask.asset",
+            "guid": "b74675e30e1ef4a44a94511e14be5e02",
+            "bytes": 4342,
+            "sha256": "6843f4d917b881e4ea71df792e46921986299ab3b87333468ba2e48327899c49",
+            "metaBytes": 189,
+            "metaSha256": "ffe207db324bc9fb7ec415096e83199bd24dd5eebc6c7bca2f205e023fd52b0e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Elbows Mask.asset",
+            "guid": "414ac3b75bf61c64db55200f4e0db7af",
+            "bytes": 4342,
+            "sha256": "e646a58030d572a6f6dbddc588b70d372c24c6fe3305a9f8bfa588b9395e481d",
+            "metaBytes": 189,
+            "metaSha256": "1cf569712a3f042da960e6d6baa4c71cae2fae7e8088cf92c86beffe464766c6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Knees Mask.asset",
+            "guid": "8c9bef28a8ac4a14cb56a993c8614ca2",
+            "bytes": 4340,
+            "sha256": "c65a4197a6586b88b9d56d9b0bf771141f71ca092f24f5ce0a259c01d1d5a612",
+            "metaBytes": 189,
+            "metaSha256": "24109edb1b709a5bf297945c4b0b3442e1ea8e86fc21f7c8f3364d0d05bd6364"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Lips Mask.asset",
+            "guid": "bba021a1245f16c4fa4d67fbe0d2c470",
+            "bytes": 4338,
+            "sha256": "46237c7eb9bdb9bd46b0fda612ed48626dab41bb4d964b238b2341563b3fc60f",
+            "metaBytes": 189,
+            "metaSha256": "930909e55d4d07e5ea750386b3838f207d15c6cc483ba4486a1cc42bcbc069fe"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Loose Garment Regions.asset",
+            "guid": "69df0b1c7bc8bbf4ba248da9360f5061",
+            "bytes": 3090,
+            "sha256": "6c7ca1bfb8c90d1ea58f3056dd837a8a93b2afce517c1b0367f605d696a69c75",
+            "metaBytes": 189,
+            "metaSha256": "ff976f8c11b403b4f47fbe5d96c1c280ef1ebe5685385f77585ccc1366c5fd86"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Seat Mask.asset",
+            "guid": "cd2b162207c700b4aa76b2a5b8e601ca",
+            "bytes": 4338,
+            "sha256": "37b7ef3e15ae0a9d9f51c7e3152e08d6f10b025a8f531a46ed9aff563d27e2ad",
+            "metaBytes": 189,
+            "metaSha256": "4e9eccc94cc81a5d4e2e45de04a348d51b0ef0c9f1d880708e099ace3aa98f52"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Shoulders Mask.asset",
+            "guid": "e8f0551af4ebdb54eac1ae388888ac7d",
+            "bytes": 4348,
+            "sha256": "be4db7db7c0c019790aa7e8e56f90afa46a008b6f91971c9f6a86ffd4420dace",
+            "metaBytes": 189,
+            "metaSha256": "63e8f101a84120352533fbecafdd4cbe5d5becf62c9be2c8ce85b6109e4962ea"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Standard Anatomical Regions.asset",
+            "guid": "7ddad635a740ed84082a9d253ee8ab69",
+            "bytes": 3029,
+            "sha256": "13b0201827762124d7589dc30e3fa148fe17a7e57f10ce47cecba7652391163e",
+            "metaBytes": 189,
+            "metaSha256": "637f1abb6ecc7e01754059cce002dd392bfcfba385e2b70109f841788323628a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Waist Mask.asset",
+            "guid": "2fb57b0b48f4f9842a906e8e8186199f",
+            "bytes": 4340,
+            "sha256": "d7cf209157f1af9cbdc4ff1c4b5fee88c19355db5e4c967ef5cf321d6de4fd6a",
+            "metaBytes": 189,
+            "metaSha256": "3aac5a31e04c18c529ae09d6b275bbf4dd2ef1c6997bff887bfc2908987718c4"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Region Masks/WristCuffs Mask.asset",
+            "guid": "2ac8dc44b76209b42b93ed71dd132c38",
+            "bytes": 4350,
+            "sha256": "4ccbec4df116768849c36ea3bb22b769296c21200397fbb56617f261937bbc7e",
+            "metaBytes": 189,
+            "metaSha256": "13e70ca19da643e86c077c7332c20877eade6734a552b209ddc822e76d5589f6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples",
+            "guid": "d9e7f80123454a6b8c9d0e1f2a3b4c5d",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "2b95c664463b26c0250bc79e5846895c75d9a8963a07a29f5ef1cf5d0ed62b37"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data",
+            "guid": "cf1bc73528a47dd4a95ddd5ceac26a2a",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "a0034cd25adc4cb380c2f5f4c6ea4a6a33b1b9c558a38509cb334fd91a93af1c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/08fd003c9d375f0fb6cd38f984a7691b_80597c2b.bytes",
+            "guid": "70b2b06a02acf8c4abd23a3681882404",
+            "bytes": 806462,
+            "sha256": "e3adde414bc144399ecda02476281dfcdcb4ae42c2d26412f145bf30b9446bbb",
+            "metaBytes": 158,
+            "metaSha256": "b2b2af744d9bd03e3f6f0d72809c3d52708bb8814f244f349d6c2791e8c4f099"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/0debdb5d5f75aeaf958232272a3a0f65_80597c2b.bytes",
+            "guid": "980c9de6e09ff2d439d772220e841b8e",
+            "bytes": 30565,
+            "sha256": "d5f62e6529cf522b349c24509f85010c54225cef9cb3fa2e0ad582072ae3c11d",
+            "metaBytes": 158,
+            "metaSha256": "0707fb5bc6c23be29cc16d7e074e46dac5ad3f8a830d9f5e09f2609abbfed967"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/18f4a8173649734e055d00d0e267431f_80597c2b.bytes",
+            "guid": "ad4ae3af5b1110844845409f970e6204",
+            "bytes": 24871,
+            "sha256": "c5c710dbb8fc030cce04196daa5f36f761da18bfa762b1f37f3b7077a1e053a0",
+            "metaBytes": 158,
+            "metaSha256": "9dc7bee120b7bf802f14c07a8b82d2eff3fffb486e319b2c427cd15a83306be7"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/280717e63bd01ad63294e460504e8977_80597c2b.bytes",
+            "guid": "6f63dc9c2c34b8244b7f36e2ce671f20",
+            "bytes": 1432038,
+            "sha256": "b3877b2a3702ee49cd575faa44946cc5208960d0b3fea5143782a87860ef5513",
+            "metaBytes": 158,
+            "metaSha256": "8d51a0581180a8a6749ece18042c84f746f81b1bee804bfd688b1ba6ef7004b1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/3ca5ee28703ac0ff2b596a8647351ebf_80597c2b.bytes",
+            "guid": "049f58f2aab8f4144961c64bad3a2d9a",
+            "bytes": 34099,
+            "sha256": "d2ea5d8faf807a2e73040a204b2423ad6e187ef1ae3dc9ef889f1965e642ab65",
+            "metaBytes": 158,
+            "metaSha256": "b904361e993107ef5760c3e04715dbf2bd1ecb4d7b4e17e2988782abb1e714e5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/43e4ccb2e43f5fc58c875fefdf1a612e_80597c2b.bytes",
+            "guid": "df513c43881e450489ecf9e175f58b05",
+            "bytes": 465094,
+            "sha256": "4339b2ab73b8f756d46f65fe53d5c828db017244eb2efe2b0df1581998e8b7c9",
+            "metaBytes": 158,
+            "metaSha256": "cfca50ac5f694836e073f9cfcd605181706cca5976591eed466cf4b7ed9e3de0"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/535b09c03eeb57af410ac9285ee90081_80597c2b.bytes",
+            "guid": "7cfaa3adac3d42147abd4699d64f98d0",
+            "bytes": 10295,
+            "sha256": "2de0c540c970ca74a795f49929ba3c97fba6d74622c59fa19d9450962b0411b8",
+            "metaBytes": 158,
+            "metaSha256": "c55af3b42e67f748634551e83a02e35399bf511aa63830c1ae300ba854aa077c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/755f3dd98a4170f83011ad36bd1c438a_80597c2b.bytes",
+            "guid": "1f03debdbe7cd3548a90363eab008616",
+            "bytes": 57821,
+            "sha256": "e6c5cbbed604d8da0c616da621767bea32e0c75e3debec4e4627cb811946c313",
+            "metaBytes": 158,
+            "metaSha256": "3cad17ce88c842d0516cb2ae69b66522f1a0428382d1afb0ae2426053f3f836a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/79f177ee456f2360d6cf61fbe7d917c5_80597c2b.bytes",
+            "guid": "1df5ff6ddfedb5e42a1238490af62224",
+            "bytes": 586557,
+            "sha256": "94b145c192dd89ccdc2ea44223badf480713a14048192f7a73f4a09725155d30",
+            "metaBytes": 158,
+            "metaSha256": "00b22625ff8e98b1581071c63a482f68aa8e82db56e804fddcb91ee643ea7def"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/8fd2d4dba73f98707d93b8d3f538d09b_80597c2b.bytes",
+            "guid": "200d8e358f23b474e8e58dbf1bce5db6",
+            "bytes": 8600,
+            "sha256": "38515f006e898249d76e46c5f7a3c6ffcf47da24949c523701f6f7a41446115e",
+            "metaBytes": 158,
+            "metaSha256": "86cacebc39997bc395cc587b3b58dd8c174916c49d33d3af678f4141e294ab4f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/9d13204372641eb4e95f4dd4694d4090_80597c2b.bytes",
+            "guid": "debde369b6cbf484eaeff221d23cae2a",
+            "bytes": 4084,
+            "sha256": "3f0c183d0789e13924cd1489a7d17c42b046ee27bc26a88f124bc930de628b94",
+            "metaBytes": 158,
+            "metaSha256": "1595222384b2442b9de855fb2c33f488457371f352b152dd7ed81c1ecf431de6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/b2feb211f85d62c8790785044ce7b4ec_80597c2b.bytes",
+            "guid": "5fbcde3521258464a921c24fc8544704",
+            "bytes": 23543,
+            "sha256": "8f7107df9107f6fbffe1f6e6939240366a0c961888cf728287d8aeb96d0dd9f4",
+            "metaBytes": 158,
+            "metaSha256": "aefcee697154777c18f427ffe9f32df0937c027e839ea988cfa447fc34e3a4d9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/b9641a0c4bbfe1e7ca38f84fbd7c3ec4_80597c2b.bytes",
+            "guid": "a63703a6eea025545a6ec5e1fb4ca9ad",
+            "bytes": 37768,
+            "sha256": "6d872d35ae7e28ccbcd8c0047cf0c972c137afa4fc76e1e337fc00d66e74b5a2",
+            "metaBytes": 158,
+            "metaSha256": "45e342edce2e88f3049e856715e4364b85eca24919765d69eca47b463132bba1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/d0b008d52c10af0b497ac1cffb5e2687_80597c2b.bytes",
+            "guid": "14024846be92b784e97a65c3616f7e27",
+            "bytes": 12229,
+            "sha256": "a36444af7b4efd88f04511da70c1b0699c58e3b341df019e8ae8fc44e791dfac",
+            "metaBytes": 158,
+            "metaSha256": "ee374c8d08567cabe14606b0e5876c248f6d42edefcc6da95913a1e4734e6441"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/db0e866bc69c479630a7a9769c74c8bc_c1d6f8b8.bytes",
+            "guid": "8379b1470f70a4046bd86ebf5250937d",
+            "bytes": 4083,
+            "sha256": "30c01ddd8e4d137c2ef379ada05a666cfbaf7d056d68d3aeb75a0e702fedeb6b",
+            "metaBytes": 158,
+            "metaSha256": "84613dca09a2be64af41c6227dbd94f58eabcf06babe35b3405f8d119c230007"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/dddfe1853b2ad0a41f477ea9f1b5ac06_80597c2b.bytes",
+            "guid": "7a9b38490694336468f02f9830f66495",
+            "bytes": 8620,
+            "sha256": "c7dc11d115b858a17ce1cc21d9a8badeca1f4b9920959f3c027e58dca82162f8",
+            "metaBytes": 158,
+            "metaSha256": "6435cc62ccb3bf6f03dfb033e9ed7deee7238187fa5bcf9b552f648f926b743b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/fa6e03d4db5d38d20aeefe3ae4f9a418_80597c2b.bytes",
+            "guid": "c87dc1bb186bab84d8cc3f00fa64211d",
+            "bytes": 67177,
+            "sha256": "97b9d33990b3d9dea68d22374f5f8bd0d44086e67ca40d88278371b931184d93",
+            "metaBytes": 158,
+            "metaSha256": "dc80319f1c91b4a39fcacd61e3461c7f4ae094fcafd4ada451c92280830dd5d9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset",
+            "guid": "5bf302295ab188042a4a09e0cffd071b",
+            "bytes": 2616938,
+            "sha256": "f971ba0666b32726cee92e3ff748da2e3cb42f3634f610cd8f78917737e07a25",
+            "metaBytes": 189,
+            "metaSha256": "b4d2a2ae79f4fcc484adb33ed557cd82bb52316b9eb9b91a6313cf0bea016567"
+        }
+    ]
 }

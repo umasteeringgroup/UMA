@@ -6060,6 +6060,7 @@ namespace UMA.TexturePaint.Editor
         private TexturePaintStageState BuildState()
         {
             TexturePaintStageState state = controller.CaptureState();
+            state.previewMaterialSettingsJson = CapturePreviewMaterialState();
             TexturePaintStageState previous = controller.LoadRecipeState();
             if (previous != null)
             {
@@ -6135,6 +6136,7 @@ namespace UMA.TexturePaint.Editor
         private void RestoreState(TexturePaintStageState state, bool restoreLegacyLayers)
         {
             if (state == null) return;
+            RestorePreviewMaterialState(state.previewMaterialSettingsJson);
             selectedSurface = Mathf.Clamp(state.selectedSurface, 0, controller.Textures.Sets.Count - 1);
             selectedChannel = state.selectedChannel; sourceMode = state.sourceMode; paintSource = state.paintSource; tool = state.tool;
             paintColor = state.sourceColor; mirrorX = state.mirrorX; authoringSymmetry = state.symmetry?.Clone() ?? new TexturePaintSymmetry();
@@ -6239,6 +6241,7 @@ namespace UMA.TexturePaint.Editor
 
         private static void RepaintAll()
         {
+            TexturePaintMaterialWindow.RepaintOpenWindows();
             SceneView.RepaintAll();
             TexturePaintDockWindow.RepaintOpenWindows();
             TexturePaintUVWindow.RepaintOpenWindows();

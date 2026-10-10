@@ -159,6 +159,7 @@ namespace UMA.TexturePaint
         public const int CurrentVersion = 18;
         public int version = CurrentVersion;
         public string documentGuid;
+        public string previewMaterialSettingsJson;
         public int selectedSurface;
         public System.Collections.Generic.List<string> selectedSlots = new System.Collections.Generic.List<string>();
         public TexturePaintChannel selectedChannel = TexturePaintChannel.Albedo;

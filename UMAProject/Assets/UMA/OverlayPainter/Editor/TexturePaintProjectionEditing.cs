@@ -250,8 +250,6 @@ namespace UMA.TexturePaint.Editor
                     }
                 }
             }
-            if (!instance && ResolveLayerSymmetry(layer).enabled && settings.placed)
-                if (GUILayout.Button("Create Symmetry Instances")) CreateProjectionSymmetry(set,layer);
             if (GUILayout.Button("Regenerate Projection"))
                 ChangeProjectionWithHistory(set, CurrentProjection(set, layer.id), settings, false);
         }

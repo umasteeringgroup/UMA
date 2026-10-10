@@ -103,7 +103,7 @@ namespace UMA.TexturePaint.Editor
                 }
             }
             EditorGUILayout.HelpBox(layer.kind==TexturePaintLayerKind.Projection && !IsLayerMaskMode(set)
-                ? "These settings belong to this projection. Use Create Symmetry Instances to add linked copies."
+                ? "Mirrors and radial copies update automatically within this projection layer, across all its channels. Move or resize the original projection to update every copy."
                 : "Symmetry belongs to this layer. The scene X button toggles its X mirror and enables symmetry when turned on. UV symmetry uses the texture center plus the XY offset and Z rotation.",MessageType.None);
             if(EditorGUI.EndChangeCheck())ApplyLayerSymmetryEdit(set,frame);
         }
@@ -135,11 +135,22 @@ namespace UMA.TexturePaint.Editor
 
         private void StoreLayerSymmetry(TextureSet set,TexturePaintLayer layer,TexturePaintSymmetry frame)
         {
+            if (layer.kind == TexturePaintLayerKind.Projection)
+                layer = CurrentProjection(set, layer.id) ?? layer;
             if(!TryResolveLogicalPeers(set,layer,out List<TexturePaintLogicalLayerMember> peers,out _))
                 peers=new List<TexturePaintLogicalLayerMember>{new TexturePaintLogicalLayerMember{textureSet=set,layer=layer}};
             foreach(var peer in peers)
             {
                 peer.layer.layerSymmetry=frame.Clone();peer.layer.layerSymmetryVersion=1;
+            }
+            if (layer.kind == TexturePaintLayerKind.Projection && !IsLayerMaskMode(set))
+            {
+                var targets = new List<TextureSet>(); var layers = new List<TexturePaintLayer>();
+                foreach (var peer in peers) { targets.Add(peer.textureSet); layers.Add(peer.layer); }
+                using var renderer = new TexturePaintProjectionRenderer();
+                if (!renderer.Generate(controller?.Textures?.Sets ?? targets, targets, layers, layer.projectionSettings, out string error))
+                    ShowWorkspaceStatus(error);
+                RefreshLinkedContent();
             }
             if(TryGetSymmetryLayer(ActiveTextureSet,out var active) && ReferenceEquals(active,layer))
                 authoringSymmetry=frame.Clone();

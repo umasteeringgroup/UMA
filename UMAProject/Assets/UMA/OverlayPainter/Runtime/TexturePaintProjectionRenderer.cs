@@ -31,6 +31,52 @@ namespace UMA.TexturePaint
         public bool Generate(IReadOnlyList<TextureSet> geometrySets, IReadOnlyList<TextureSet> targets,
             IReadOnlyList<TexturePaintLayer> layers, TexturePaintProjectionSettings definition, out string error)
         {
+            if (definition == null || targets == null || layers == null || targets.Count != layers.Count)
+            { error = "Projection targets are incomplete."; return false; }
+            // Linked instances own a single placement. Their source layer's authoring frame
+            // must not multiply the instance a second time.
+            var frame = layers.Count > 0 && layers[0]?.links?.instance?.IsSet != true
+                ? layers[0]?.layerSymmetry : null;
+            var transforms = frame?.Transforms() ?? new List<Matrix4x4> { Matrix4x4.identity };
+            var original = definition.Clone(); original.Normalize();
+            var previous = new List<TexturePaintProjectionSettings>();
+            foreach (var layer in layers) previous.Add(layer?.projectionSettings);
+            bool succeeded = false;
+            var geometry = transforms.Count > 1
+                ? cachedGeometry ??= new TexturePaintProjectionGeometry(stableGeometry ?? geometrySets) : null;
+            try
+            {
+                for (int copy = 0; copy < transforms.Count; copy++)
+                {
+                    var placement = copy == 0 ? original : TexturePaintSymmetry.TransformProjection(original, transforms[copy]);
+                    if (copy > 0 && placement.placed && placement.connectedSurfaceOnly)
+                    {
+                        Vector3 forward = placement.rotation * Vector3.forward;
+                        var ray = new Ray(placement.position + forward * placement.FrontDepth, -forward);
+                        if (geometry.PickSurface(ray, out var hitSet, out int triangle, out var point, out _) &&
+                            Vector3.Dot(point - ray.origin, ray.direction) <= placement.FrontDepth - placement.BackDepth)
+                        { placement.regionSurfaceId = hitSet.persistentId; placement.regionTriangle = triangle; }
+                        // No surface at the reflected center: the footprint/depth/visibility
+                        // tests still determine coverage, rather than reusing the original island.
+                    }
+                    if (!GeneratePlacement(geometrySets, targets, layers, placement, copy > 0,
+                        copy == transforms.Count - 1, out error)) return false;
+                }
+                succeeded = true; error = null; return true;
+            }
+            finally
+            {
+                // Persist only the editable placement, never the last rendered mirror.
+                for (int i = 0; i < layers.Count; i++)
+                    if (layers[i] != null) layers[i].projectionSettings = succeeded ? original.Clone() : previous[i];
+                if (stableGeometry == null) cachedGeometry = null;
+            }
+        }
+
+        private bool GeneratePlacement(IReadOnlyList<TextureSet> geometrySets, IReadOnlyList<TextureSet> targets,
+            IReadOnlyList<TexturePaintLayer> layers, TexturePaintProjectionSettings definition,
+            bool append, bool pad, out string error)
+        {
             error = null;
             if (definition == null || targets == null || layers == null || targets.Count != layers.Count)
             { error = "Projection targets are incomplete."; return false; }
@@ -43,9 +89,7 @@ namespace UMA.TexturePaint
             var garmentInputs = new List<TexturePaintGarmentSettings.Inputs>();
             try
             {
-                var geometry = stableGeometry != null
-                    ? cachedGeometry ??= new TexturePaintProjectionGeometry(stableGeometry)
-                    : new TexturePaintProjectionGeometry(geometrySets);
+                var geometry = cachedGeometry ??= new TexturePaintProjectionGeometry(stableGeometry ?? geometrySets);
                 int component = geometry.ResolveComponent(settings);
                 if (settings.placed && component == -2)
                 { error = "The projection's surface region is missing. Place it on the model again."; return false; }
@@ -144,8 +188,10 @@ namespace UMA.TexturePaint
                         }
                         if (!garment) layer.GetChannelSettings(source.Key).sourceSettings = settings.GetChannelSourceSettings(source.Key);
                         else layer.GetChannelSettings(source.Key);
-                        if (!settings.placed || source.Value == null) { target.Reset(null, Color.clear); continue; }
+                        if (!settings.placed || source.Value == null) { if (!append) target.Reset(null, Color.clear); continue; }
                         var properties = new MaterialPropertyBlock();
+                        properties.SetInt("_Accumulate", append ? 1 : 0);
+                        properties.SetTexture("_PreviousProjection", target.Back);
                         properties.SetInt("_GarmentEnabled",0);
                         if (garment) settings.garment.Bind(properties,source.Key,new Vector2(settings.width,settings.height),
                             set,geometrySets,layer,garmentInputs[i]);
@@ -193,12 +239,13 @@ namespace UMA.TexturePaint
                         properties.SetVector("_Flip", new Vector4(settings.flipX ? 1 : 0, settings.flipY ? 1 : 0, 0, 0));
                         using (var command = new CommandBuffer { name = "Generate Projection Layer" })
                         {
-                            command.SetRenderTarget(target.Front); command.ClearRenderTarget(false, true, Color.clear);
+                            command.SetRenderTarget(target.Front);
+                            if (!append) command.ClearRenderTarget(false, true, Color.clear);
                             for (int sub = 0; sub < mesh.subMeshCount; sub++)
                                 command.DrawMesh(mesh, TexturePaintProjectionGeometry.LocalToWorld(set), material, sub, 0, properties);
                             Graphics.ExecuteCommandBuffer(command);
                         }
-                        for (int pass = 0; pass < 2; pass++)
+                        for (int pass = 0; pad && pass < 2; pass++)
                         { material.SetTexture("_MainTex", target.Front); Graphics.Blit(target.Front, target.Back, material, 1); target.Swap(); }
                         target.CopyFrontToBack();
                     }
