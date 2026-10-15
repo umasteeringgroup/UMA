@@ -76,7 +76,9 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(snapshot.children[0].vertical, Is.True);
                 Assert.That(snapshot.children[0].children[0].children.Select(n => n.className),
                     Is.EqualTo(new[] { nameof(TexturePaintDockWindow), nameof(TexturePaintBrushWindow) }));
-                Assert.That(snapshot.children[0].children[1].children.Single().className, Is.EqualTo(nameof(TexturePaintPropertiesWindow)));
+                Assert.That(snapshot.children[0].children[1].children.Select(n => n.className), Is.EqualTo(new[] { nameof(TexturePaintPropertiesWindow), nameof(TexturePaintMaterialWindow) }));
+                Assert.That(snapshot.children[1].children.Single().className, Is.EqualTo(nameof(TexturePaintSpriteMaterialsWindow)));
+                snapshot.children[0].children[1].selected = 1;
                 snapshot.children[0].children[0].selected = 1;
                 snapshot.children[0].children[0].size = .4f;
                 snapshot.children[0].children[1].size = .6f;
@@ -84,8 +86,9 @@ namespace UMA.TexturePaint.Editor.Tests
                 Layout.RestoreSelectedTabs(Root(second), snapshot);
                 var restored = Layout.CaptureView(Root(second), _ => true);
                 Assert.That(restored.children[0].children[0].selected, Is.EqualTo(1));
+                Assert.That(restored.children[0].children[1].selected, Is.EqualTo(1));
                 Assert.That(restored.children[0].children[0].size, Is.EqualTo(.4f).Within(.06f));
-                Assert.That(restored.children[0].children[1].children.Single().className, Is.EqualTo(nameof(TexturePaintPropertiesWindow)));
+                Assert.That(restored.children[0].children[1].children.Select(n => n.className), Is.EqualTo(new[] { nameof(TexturePaintPropertiesWindow), nameof(TexturePaintMaterialWindow) }));
                 var data = new Layout.SavedLayout(); data.windows.Add(new Layout.SavedWindow { position = new Rect(10, 20, 1400, 1000), view = restored });
                 Layout.ValidateLayout(data);
             }

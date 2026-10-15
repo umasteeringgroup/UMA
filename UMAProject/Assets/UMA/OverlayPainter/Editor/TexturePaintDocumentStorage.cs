@@ -231,8 +231,8 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintDocumentSurface previous = document.FindSurface(set.persistentId) ?? FindFallback(document, set);
                 if (previous != null)
                 {
-                    TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
-                    bool uvChanged = !string.IsNullOrEmpty(previous.uvSignature) && previous.uvSignature != current.uv;
+                    TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh,true);
+                    bool uvChanged = !string.IsNullOrEmpty(previous.uvSignature) && previous.uvSignature != current.uv && !SameUvLayout(previous,set,current);
                     if (!uvChanged) matchedPrevious.Add(previous);
                 }
             }
@@ -240,7 +240,7 @@ namespace UMA.TexturePaint.Editor
             for (int setIndex = 0; setIndex < store.Sets.Count; setIndex++)
             {
                 TextureSet set = store.Sets[setIndex];
-                TexturePaintSurfaceFingerprint fingerprint = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
+                TexturePaintSurfaceFingerprint fingerprint = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh,true);
                 TexturePaintDocumentSurface surface = new TexturePaintDocumentSurface
                 {
                     stableId = set.persistentId,
@@ -249,6 +249,7 @@ namespace UMA.TexturePaint.Editor
                     meshSignature = fingerprint.geometry,
                     topologySignature = fingerprint.topology,
                     uvSignature = fingerprint.uv,
+                    uvLayoutSignature = fingerprint.uvLayout,
                     materialSignature = MaterialSignature(set),
                     fallbackRendererIndex = set.surface?.rendererIndex ?? -1,
                     fallbackSubmeshIndex = set.surface?.sourceSubmeshIndex ?? -1,
@@ -258,6 +259,7 @@ namespace UMA.TexturePaint.Editor
                     normalControlStrength = set.normalControlStrength,
                     normalControlRadius = set.normalControlRadius,
                     normalControlInvert = set.normalControlInvert,
+                    hideOriginalOverlay = set.hideOriginalOverlay,
                     baseStrokes = CloneStrokes(set.baseStrokes),
                     slotNames = set.surface != null ? new List<string>(set.surface.slotNames) : new List<string>()
                 };
@@ -316,10 +318,12 @@ namespace UMA.TexturePaint.Editor
                 set.normalControlStrength = Mathf.Clamp(saved.normalControlStrength, 0f, 16f);
                 set.normalControlRadius = Mathf.Clamp(saved.normalControlRadius, 1, 16);
                 set.normalControlInvert = saved.normalControlInvert;
+                set.hideOriginalOverlay = saved.hideOriginalOverlay;
                 RestoreChannelAdjustments(saved, set);
-                TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
+                TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh,true);
                 bool uvChanged = !string.IsNullOrEmpty(saved.uvSignature) &&
-                    !string.Equals(saved.uvSignature, current.uv, StringComparison.Ordinal);
+                    !string.Equals(saved.uvSignature, current.uv, StringComparison.Ordinal) &&
+                    !SameUvLayout(saved,set,current);
                 set.activeRegion = uvChanged ? null : saved.activeRegion?.Clone();
                 set.savedRegions = uvChanged ? new List<TexturePaintRegion>() : saved.savedRegions?.FindAll(region => region?.IsValid == true).ConvertAll(region => region.Clone()) ?? new List<TexturePaintRegion>();
                 if (uvChanged)
@@ -419,8 +423,8 @@ namespace UMA.TexturePaint.Editor
                         });
                         continue;
                     }
-                    TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
-                    if (!string.IsNullOrEmpty(saved.uvSignature) && saved.uvSignature != current.uv)
+                    TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh,true);
+                    if (!string.IsNullOrEmpty(saved.uvSignature) && saved.uvSignature != current.uv && !SameUvLayout(saved,set,current))
                     {
                         status = TexturePaintBindingStatus.Reprojectable;
                         message = "The surface was rebound but its UVs changed. Surface-anchored strokes and paths were retained; layer-mask pixels reset to their base values and other raster pixels require rerasterization.";
@@ -518,9 +522,9 @@ namespace UMA.TexturePaint.Editor
             {
                 TextureSet set = store.Sets[setIndex];
                 TexturePaintDocumentSurface previous = source.FindSurface(set.persistentId) ?? FindFallback(source, set);
-                TexturePaintSurfaceFingerprint fingerprint = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
+                TexturePaintSurfaceFingerprint fingerprint = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh,true);
                 bool previousCompatible = previous != null && (string.IsNullOrEmpty(previous.uvSignature) ||
-                    string.Equals(previous.uvSignature, fingerprint.uv, StringComparison.Ordinal));
+                    string.Equals(previous.uvSignature, fingerprint.uv, StringComparison.Ordinal) || SameUvLayout(previous,set,fingerprint));
                 if (previousCompatible) matchedPrevious.Add(previous);
 
                 TexturePaintDocumentSurface surface = new TexturePaintDocumentSurface
@@ -531,6 +535,7 @@ namespace UMA.TexturePaint.Editor
                     meshSignature = fingerprint.geometry,
                     topologySignature = fingerprint.topology,
                     uvSignature = fingerprint.uv,
+                    uvLayoutSignature = fingerprint.uvLayout,
                     materialSignature = MaterialSignature(set),
                     fallbackRendererIndex = set.surface?.rendererIndex ?? -1,
                     fallbackSubmeshIndex = set.surface?.sourceSubmeshIndex ?? -1,
@@ -540,6 +545,7 @@ namespace UMA.TexturePaint.Editor
                     normalControlStrength = set.normalControlStrength,
                     normalControlRadius = set.normalControlRadius,
                     normalControlInvert = set.normalControlInvert,
+                    hideOriginalOverlay = set.hideOriginalOverlay,
                     baseStrokes = CloneStrokes(set.baseStrokes),
                     slotNames = set.surface != null ? new List<string>(set.surface.slotNames) : new List<string>()
                 };
@@ -711,6 +717,7 @@ namespace UMA.TexturePaint.Editor
                 meshSignature = source.meshSignature,
                 topologySignature = source.topologySignature,
                 uvSignature = source.uvSignature,
+                uvLayoutSignature = source.uvLayoutSignature,
                 materialSignature = source.materialSignature,
                 orphaned = source.orphaned,
                 orphanReason = source.orphanReason,
@@ -723,6 +730,7 @@ namespace UMA.TexturePaint.Editor
                 normalControlStrength = source.normalControlStrength,
                 normalControlRadius = source.normalControlRadius,
                 normalControlInvert = source.normalControlInvert,
+                hideOriginalOverlay = source.hideOriginalOverlay,
                 baseStrokes = CloneStrokes(source.baseStrokes)
             };
             if (source.baseChannels != null)
@@ -1019,10 +1027,15 @@ namespace UMA.TexturePaint.Editor
             }
         }
 
+        private static bool SameUvLayout(TexturePaintDocumentSurface saved,TextureSet set,TexturePaintSurfaceFingerprint current)
+            => !string.IsNullOrEmpty(saved.uvLayoutSignature) &&
+                string.Equals(saved.uvLayoutSignature,current.uvLayout,StringComparison.Ordinal) &&
+                SlotSetsEqual(saved.slotNames,set.surface?.slotNames);
+
         private static TexturePaintDocumentSurface FindFallback(TexturePaintDocument document, TextureSet set)
         {
             if (document?.surfaces == null || set == null) return null;
-            TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh);
+            TexturePaintSurfaceFingerprint current = TexturePaintSurfaceFingerprintUtility.Compute(set.surface?.mesh,true);
             string currentMaterialSignature = MaterialSignature(set);
             string currentUmaMaterialGuid = AssetDatabase.AssetPathToGUID(
                 AssetDatabase.GetAssetPath(set.umaMaterial));
@@ -1039,8 +1052,8 @@ namespace UMA.TexturePaint.Editor
 
                 bool topologyMatches = !string.IsNullOrEmpty(candidate.topologySignature) &&
                     string.Equals(candidate.topologySignature, current.topology, StringComparison.Ordinal);
-                bool uvMatches = !string.IsNullOrEmpty(candidate.uvSignature) &&
-                    string.Equals(candidate.uvSignature, current.uv, StringComparison.Ordinal);
+                bool uvMatches = (!string.IsNullOrEmpty(candidate.uvSignature) &&
+                    string.Equals(candidate.uvSignature, current.uv, StringComparison.Ordinal)) || SameUvLayout(candidate,set,current);
                 bool geometryMatches = !string.IsNullOrEmpty(candidate.meshSignature) &&
                     string.Equals(candidate.meshSignature, current.geometry, StringComparison.Ordinal);
                 bool materialMatches = !string.IsNullOrEmpty(candidate.materialSignature) &&

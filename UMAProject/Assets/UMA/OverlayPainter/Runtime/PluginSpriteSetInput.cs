@@ -31,6 +31,8 @@ namespace UMA.TexturePaint
 
     public static class TexturePaintSpriteSetSource
     {
+        public static List<Sprite> GetOrderedSprites(OverlayPainterSpriteSheet sheet)
+            => sheet?.sprites?.Count > 0 ? new List<Sprite>(sheet.sprites) : GetOrderedSprites(sheet?.spriteSheet);
         public static List<Sprite> GetOrderedSprites(Texture2D texture)
         {
             var result = new List<Sprite>();
@@ -70,9 +72,10 @@ namespace UMA.TexturePaint
             int count = -1;
             foreach (var sheet in source.spriteSheets)
             {
-                if (sheet?.spriteSheet == null) throw new InvalidOperationException("The Sprite Set contains a missing channel sheet.");
+                if (sheet == null || !sheet.HasSource) throw new InvalidOperationException("The Sprite Set contains a missing channel sheet.");
                 if (result.ContainsKey(sheet.channel)) throw new InvalidOperationException("The Sprite Set contains duplicate " + sheet.channel + " sheets.");
-                var sprites = GetOrderedSprites(sheet.spriteSheet);
+                var sprites = GetOrderedSprites(sheet);
+                if (sprites.Contains(null)) throw new InvalidOperationException("The Sprite Set contains a missing sprite.");
                 if (sprites.Count == 0) throw new InvalidOperationException(sheet.SheetName + " has no sliced sprites. Slice its tiles in the Sprite Editor.");
                 if (count >= 0 && sprites.Count != count) throw new InvalidOperationException("Sprite Set channel sheets must have matching tile counts.");
                 count = sprites.Count;

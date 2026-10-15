@@ -498,7 +498,8 @@ namespace UMA.TexturePaint.Editor
                 if (nextBefore != previewBefore)
                     SetScenePreviewMode(nextBefore ? TexturePaintScenePreviewMode.OriginalMaterial
                         : TexturePaintScenePreviewMode.Material);
-                isolateSelectedSlots = GUILayout.Toggle(isolateSelectedSlots, new GUIContent("Isolate", "Hide surfaces outside the selected slots"), EditorStyles.toolbarButton, GUILayout.Width(52f));
+                bool nextIsolate = GUILayout.Toggle(SceneToolbarIsolate, new GUIContent("Isolate", "Hide reference targets; turn off to show all targets for reference only"), EditorStyles.toolbarButton, GUILayout.Width(52f));
+                if (nextIsolate != SceneToolbarIsolate) SceneToolbarIsolate = nextIsolate;
             }
             GUILayout.FlexibleSpace();
             if (IsPersistenceActive)
@@ -624,6 +625,9 @@ namespace UMA.TexturePaint.Editor
             menu.AddSeparator(string.Empty);
             menu.AddItem(new GUIContent("Clear All Overlay Painting..."), false,
                 () => ClearAllTexturePaintData(true));
+            menu.AddSeparator(string.Empty);
+            menu.AddItem(new GUIContent("Configuration Options..."), false,
+                () => SettingsService.OpenProjectSettings("Project/UMA/Overlay Painter"));
             menu.DropDown(anchor);
         }
 
@@ -844,7 +848,7 @@ namespace UMA.TexturePaint.Editor
 
         private void DrawTargetRegion()
         {
-            DrawRegionHeader("PAINT TARGET", "Choose one logical target. UDIM members are expanded automatically.");
+            DrawRegionHeader("PAINT TARGET", "Choose one paint target. Show toggles display other targets for reference only; they cannot receive paint.");
             workspaceLeftTab = GUILayout.Toolbar(Mathf.Clamp(workspaceLeftTab, 0, 1), new[] { "Targets", "Texture Sets" });
             GUILayout.BeginHorizontal();
             workspaceTargetSearch = EditorGUILayout.TextField(workspaceTargetSearch ?? string.Empty,
@@ -883,7 +887,7 @@ namespace UMA.TexturePaint.Editor
                     GUILayout.ExpandWidth(true));
                 if (Event.current.type == EventType.Repaint)
                     (selected ? WorkspaceStyles.SelectedRow : WorkspaceStyles.Row).Draw(row, false, false, selected, false);
-                float warningReserve = hasTargetWarnings ? 27f : 0f;
+                float warningReserve = (hasTargetWarnings ? 27f : 0f) + 50f;
                 GUI.Label(new Rect(row.x + 7f, row.y + 4f, row.width - 14f - warningReserve, 18f),
                     target.displayName, EditorStyles.label);
                 GUI.Label(new Rect(row.x + 7f, row.y + 22f, row.width - 14f - warningReserve, 16f),
@@ -892,6 +896,7 @@ namespace UMA.TexturePaint.Editor
                     Mathf.Min(40f, row.height));
                 if (GUI.Button(selectionRect, GUIContent.none, GUIStyle.none) && !selected)
                     SelectLogicalTarget(target, sets, true);
+                DrawReferenceTargetToggle(new Rect(row.xMax - warningReserve + 3f, row.y + 9f, 44f, 20f), target, selected);
                 if (hasTargetWarnings)
                 {
                     Rect warningRect = new Rect(row.xMax - 23f, row.y + 8f, 18f, 18f);
@@ -2041,6 +2046,7 @@ namespace UMA.TexturePaint.Editor
                 Rect row = GUILayoutUtility.GetRect(10f, 46f, GUILayout.ExpandWidth(true));
                 DrawLayerRow(set, layer, i, row, ref deleteIndex);
             }
+            if (!pathsOnly) DrawOriginalOverlayRow(set);
             GUILayout.EndScrollView();
             if (deleteIndex >= 0) DeleteLayer(set, deleteIndex, true);
 
@@ -2939,19 +2945,6 @@ namespace UMA.TexturePaint.Editor
             {
                 if (GUILayout.Button("Plugins…")) PluginManagerWindow.Open(controller);
             });
-            DrawPropertySection("DOCUMENT", () =>
-            {
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Save")) SaveWorkspace();
-                if (GUILayout.Button("Export…")) OpenExportWindow();
-                GUILayout.EndHorizontal();
-                if (GUILayout.Button(new GUIContent("Clear All...",
-                    "Restore every slot to its source textures and remove all layers, paths, masks, and paint history.")))
-                    ClearAllTexturePaintData(true);
-                if (DrawPropertySubsectionFoldout("properties.document.performance-memory",
-                        "Performance & Memory"))
-                    DrawPerformanceProperties();
-            });
             GUILayout.EndScrollView();
         }
 
@@ -3019,11 +3012,7 @@ namespace UMA.TexturePaint.Editor
                 invert = EditorGUILayout.Toggle(new GUIContent("Invert",
                     "Use one minus each RGB source channel. Alpha coverage is preserved."),
                     invert);
-                tiling = EditorGUILayout.Vector2Field(new GUIContent("Tiling X / Y",
-                    "Independent horizontal and vertical repetition for the generated Fill texture"), tiling);
-                tiling.x = Mathf.Clamp(tiling.x, 0.01f, 1000f);
-                tiling.y = Mathf.Clamp(tiling.y, 0.01f, 1000f);
-                offset = EditorGUILayout.Vector2Field("Offset X / Y", offset);
+                DrawLayerTextureMapping(ref tiling, ref offset);
                 rotation = EditorGUILayout.FloatField("Rotation", rotation);
             }
             bool changed = EditorGUI.EndChangeCheck();
@@ -3951,17 +3940,13 @@ namespace UMA.TexturePaint.Editor
                 EditorGUILayout.HelpBox("Normal Control accepts texture, sprite, or grayscale value sources; it is not present in OverlayData materials.", MessageType.None);
             if (layer.kind == TexturePaintLayerKind.Fill && source.source != TexturePaintBrushSource.Color)
             {
-                bool transformDrivenByFirst = shareFillTransform && !isFirstChannel;
-                if (!transformDrivenByFirst)
+                if (!shareFillTransform)
                 {
-                    source.tiling = EditorGUILayout.Vector2Field("Tiling X / Y", source.tiling);
-                    source.tiling.x = Mathf.Clamp(source.tiling.x, 0.01f, 1000f);
-                    source.tiling.y = Mathf.Clamp(source.tiling.y, 0.01f, 1000f);
-                    source.offset = EditorGUILayout.Vector2Field("Offset X / Y", source.offset);
+                    DrawLayerTextureMapping(ref source.tiling, ref source.offset);
                     source.rotation = EditorGUILayout.FloatField("Rotation", source.rotation);
                 }
-                if (transformDrivenByFirst)
-                    EditorGUILayout.HelpBox($"Mapping is driven by the {firstChannel} channel, including Fill Type and triplanar blending.",
+                if (shareFillTransform)
+                    EditorGUILayout.HelpBox("Shared tiling, offset and rotation are below Fill Type (All Channels), above Layer Channels & Settings.",
                         MessageType.None);
             }
             if (!EditorGUI.EndChangeCheck()) return;
@@ -4107,6 +4092,8 @@ namespace UMA.TexturePaint.Editor
         private static readonly string[] FillTileModeNames =
             { "Use shared source", "Override", "No contribution" };
 
+        [SerializeField] private bool workspaceUdimSourcesExpanded;
+
         private bool DrawFillTileSources(TextureSet set, TexturePaintLayer layer)
         {
             TexturePaintLogicalTarget target = controller?.LogicalLayers?.FindTarget(set);
@@ -4114,7 +4101,11 @@ namespace UMA.TexturePaint.Editor
             TexturePaintLogicalLayerBinding binding = controller.LogicalLayers.Resolve(target, layer.logicalLayerId);
             if (!binding.complete) return false;
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("UDIM Sources", EditorStyles.boldLabel);
+            bool beforeFoldout = GUI.changed;
+            workspaceUdimSourcesExpanded = EditorGUILayout.Foldout(workspaceUdimSourcesExpanded,
+                "UDIM Sources", true, WorkspaceStyles.SubsectionFoldout);
+            GUI.changed = beforeFoldout;
+            if (!workspaceUdimSourcesExpanded) return false;
             var channels = new List<TexturePaintChannel>();
             var channelNames = new List<string>();
             foreach (TexturePaintChannel channel in Enum.GetValues(typeof(TexturePaintChannel)))
@@ -4188,38 +4179,50 @@ namespace UMA.TexturePaint.Editor
             TexturePaintFillSettings current = source != null
                 ? FillSettingsFromChannelSource(source)
                 : layer.fillSettings;
-            EditorGUI.BeginChangeCheck();
-            var authoredChannels = new List<TexturePaintChannel>();
-            foreach (TexturePaintChannel candidate in Enum.GetValues(typeof(TexturePaintChannel)))
-                if (layer.channels.ContainsKey(candidate)) authoredChannels.Add(candidate);
-            int fillChannelIndex = authoredChannels.IndexOf(editingChannel);
-            if (fillChannelIndex < 0) fillChannelIndex = 0;
-            string[] fillChannelNames = new string[authoredChannels.Count];
-            for (int i = 0; i < authoredChannels.Count; i++)
-                fillChannelNames[i] = TexturePaintChannelUtility.DisplayName(authoredChannels[i]);
-            int nextFillChannelIndex = authoredChannels.Count > 0
-                ? EditorGUILayout.Popup("Fill Channel", fillChannelIndex, fillChannelNames)
-                : 0;
-            TexturePaintChannel channel = authoredChannels.Count > 0
-                ? authoredChannels[Mathf.Clamp(nextFillChannelIndex, 0, authoredChannels.Count - 1)]
-                : editingChannel;
-            if (EditorGUI.EndChangeCheck() && channel != editingChannel)
+            bool sharedMapping = layer.fillSettings?.useFirstChannelTransform == true;
+            if (!sharedMapping)
             {
-                SelectLayerChannelForEditing(layer, channel);
-                return;
+                EditorGUI.BeginChangeCheck();
+                var authoredChannels = new List<TexturePaintChannel>();
+                foreach (TexturePaintChannel candidate in Enum.GetValues(typeof(TexturePaintChannel)))
+                    if (layer.channels.ContainsKey(candidate)) authoredChannels.Add(candidate);
+                int fillChannelIndex = authoredChannels.IndexOf(editingChannel);
+                if (fillChannelIndex < 0) fillChannelIndex = 0;
+                string[] fillChannelNames = new string[authoredChannels.Count];
+                for (int i = 0; i < authoredChannels.Count; i++)
+                    fillChannelNames[i] = TexturePaintChannelUtility.DisplayName(authoredChannels[i]);
+                int nextFillChannelIndex = authoredChannels.Count > 0
+                    ? EditorGUILayout.Popup("Fill Channel", fillChannelIndex, fillChannelNames)
+                    : 0;
+                TexturePaintChannel channel = authoredChannels.Count > 0
+                    ? authoredChannels[Mathf.Clamp(nextFillChannelIndex, 0, authoredChannels.Count - 1)]
+                    : editingChannel;
+                if (EditorGUI.EndChangeCheck() && channel != editingChannel)
+                {
+                    SelectLayerChannelForEditing(layer, channel);
+                    return;
+                }
             }
             // The Fill Type above the channel properties edits the shared mapping when
             // linked, even if a secondary channel is currently selected for preview.
             TexturePaintChannel mappingChannel = ResolveFillMappingChannel(layer, editingChannel);
             source = layer.GetChannelSettings(mappingChannel, false)?.sourceSettings;
             current = source != null ? FillSettingsFromChannelSource(source) : layer.fillSettings;
-            if (source?.source == TexturePaintBrushSource.Color) return;
-            bool sharedMapping = layer.fillSettings?.useFirstChannelTransform == true;
+            if (source?.source == TexturePaintBrushSource.Color && !sharedMapping) return;
             EditorGUI.BeginChangeCheck();
             TexturePaintFillProjection projection = (TexturePaintFillProjection)EditorGUILayout.EnumPopup(
                 new GUIContent(sharedMapping ? "Fill Type (All Channels)" : "Fill Type",
                     "Flat follows UV space; Triplanar projects continuously in world space. Linked channels share this mapping."),
                 current.projection);
+            Vector2 tiling = current.tiling;
+            Vector2 offset = current.offset;
+            float rotation = current.rotation;
+            if (sharedMapping)
+            {
+                DrawLayerTextureMapping(ref tiling, ref offset);
+                rotation = EditorGUILayout.FloatField(new GUIContent("Rotation",
+                    "Shared texture rotation for every channel in this Fill layer."), rotation);
+            }
             TexturePaintTriplanarBlend triplanarBlend = current.triplanarBlend;
             float blendOffset = current.blendOffset;
             float blendSharpness = current.blendSharpness;
@@ -4241,11 +4244,45 @@ namespace UMA.TexturePaint.Editor
             TexturePaintFillSettings updated = current.Clone();
             updated.useFirstChannelTransform = layer.fillSettings?.useFirstChannelTransform == true;
             updated.projection = projection;
+            updated.tiling = tiling;
+            updated.offset = offset;
+            updated.rotation = rotation;
             updated.triplanarBlend = triplanarBlend;
             updated.blendOffset = blendOffset;
             updated.blendSharpness = blendSharpness;
             ChangeFillLayer(set, layer, mappingChannel, updated);
             SetSelectedChannelAndRefreshSource(editingChannel);
+        }
+
+        private static void DrawLayerTextureMapping(ref Vector2 tiling, ref Vector2 offset)
+        {
+            const string tilingTip = "Texture repetition. Default: 1. Slider: 0.1–64; type a value to go beyond the slider range.";
+            const string offsetTip = "Texture offset. Default: 0. Slider: -1–1; type a value to go beyond the slider range.";
+            tiling.x = DrawMappingValue(new GUIContent("Tiling X", tilingTip), tiling.x, 0.1f, 64f, 1f);
+            tiling.y = DrawMappingValue(new GUIContent("Tiling Y", tilingTip), tiling.y, 0.1f, 64f, 1f);
+            offset.x = DrawMappingValue(new GUIContent("Offset X", offsetTip), offset.x, -1f, 1f, 0f);
+            offset.y = DrawMappingValue(new GUIContent("Offset Y", offsetTip), offset.y, -1f, 1f, 0f);
+        }
+
+        private static float DrawMappingValue(GUIContent label, float value, float minimum,
+            float maximum, float defaultValue)
+        {
+            Rect controls = EditorGUI.PrefixLabel(EditorGUILayout.GetControlRect(), label);
+            using (new EditorGUI.IndentLevelScope(0))
+            {
+                const float fieldWidth = 60f;
+                const float gap = 6f;
+                Rect field = new Rect(controls.x, controls.y, fieldWidth, controls.height);
+                Rect slider = new Rect(field.xMax + gap, controls.y,
+                    Mathf.Max(1f, controls.width - fieldWidth - gap), controls.height);
+                value = EditorGUI.FloatField(field, value);
+                if (!float.IsFinite(value)) value = defaultValue;
+                // Clamp the thumb only. Repainting must preserve values typed outside the range.
+                EditorGUI.BeginChangeCheck();
+                float dragged = GUI.HorizontalSlider(slider, Mathf.Clamp(value, minimum, maximum), minimum, maximum);
+                if (EditorGUI.EndChangeCheck()) value = dragged;
+            }
+            return value;
         }
 
         internal static TexturePaintChannel ResolveFillMappingChannel(TexturePaintLayer layer,
@@ -4577,18 +4614,54 @@ namespace UMA.TexturePaint.Editor
             EditorGUILayout.EndVertical();
         }
 
-        private void DrawPerformanceProperties()
+        private void ApplyPerformanceBudgets()
         {
-            historyBudgetMB = EditorGUILayout.IntSlider("Undo Budget MB", historyBudgetMB, 16, 1024);
-            coverageBudgetMB = EditorGUILayout.IntSlider("Stroke Budget MB", coverageBudgetMB, 16, 512);
+            if (controller?.Painting == null) return;
             controller.Painting.History.MemoryBudgetBytes = historyBudgetMB * 1024L * 1024L;
             controller.Painting.CoverageMemoryBudgetBytes = coverageBudgetMB * 1024L * 1024L;
+        }
+
+        internal void DrawPerformanceProperties()
+        {
+            if (controller?.Painting == null)
+            {
+                EditorGUILayout.HelpBox("Open OverlayPainter to adjust document memory budgets and inspect performance.", MessageType.Info);
+                return;
+            }
+            EditorGUILayout.HelpBox("Memory budgets apply to the current painter document and are saved with it.", MessageType.None);
+            EditorGUI.BeginChangeCheck();
+            historyBudgetMB = EditorGUILayout.IntSlider("Undo Budget (MB)", historyBudgetMB, 16, 1024);
+            coverageBudgetMB = EditorGUILayout.IntSlider("Stroke Budget (MB)", coverageBudgetMB, 16, 512);
+            if (EditorGUI.EndChangeCheck())
+            {
+                ApplyPerformanceBudgets();
+                MarkDocumentDirty();
+            }
             TexturePaintPerformanceMetrics metrics = controller.Painting.Performance;
             EditorGUILayout.LabelField("Preview p95", metrics.PreviewP95Milliseconds.ToString("0.00") + " ms");
-            EditorGUILayout.LabelField("Undo Memory", EditorUtility.FormatBytes(controller.Painting.History.EstimatedMemoryBytes));
-            EditorGUILayout.LabelField("Stroke Memory", EditorUtility.FormatBytes(controller.Painting.ActiveCoverageMemoryBytes));
-            EditorGUILayout.LabelField("Geometry Masks", metrics.geometryMaskBuilds.ToString());
+            EditorGUILayout.LabelField("Preview maximum", metrics.MaximumPreviewMilliseconds.ToString("0.00") + " ms");
+            EditorGUILayout.LabelField("Undo memory", EditorUtility.FormatBytes(controller.Painting.History.EstimatedMemoryBytes));
+            EditorGUILayout.LabelField("Active stroke memory", EditorUtility.FormatBytes(controller.Painting.ActiveCoverageMemoryBytes));
+            EditorGUILayout.LabelField("Compute / CPU", metrics.computeDispatches + " / " + metrics.cpuFallbacks);
+            EditorGUILayout.LabelField("Geometry masks built", metrics.geometryMaskBuilds.ToString());
+            if (GUILayout.Button("Reset Performance Counters")) metrics.Reset();
             DrawStrokeDiagnostics(metrics);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Capture Resource Baseline"))
+            {
+                resourceBaseline = TexturePaintResourceDiagnostics.Capture();
+                hasResourceBaseline = true;
+                resourceCheckResult = "Baseline captured";
+            }
+            using (new EditorGUI.DisabledScope(!hasResourceBaseline))
+            if (GUILayout.Button("Check Resource Delta"))
+            {
+                TexturePaintResourceSnapshot current = TexturePaintResourceDiagnostics.Capture();
+                resourceCheckResult = "RenderTexture delta " + current.RenderTextureDelta(resourceBaseline) +
+                    ", Texture2D delta " + current.TextureDelta(resourceBaseline);
+            }
+            GUILayout.EndHorizontal();
+            if (!string.IsNullOrEmpty(resourceCheckResult)) EditorGUILayout.HelpBox(resourceCheckResult, MessageType.None);
         }
 
         private void DrawAssetShelf()
@@ -4938,7 +5011,7 @@ namespace UMA.TexturePaint.Editor
             for (int i = 0; i < spriteSet.spriteSheets.Count; i++)
             {
                 OverlayPainterSpriteSheet sheet = spriteSet.spriteSheets[i];
-                if (sheet == null || sheet.spriteSheet == null)
+                if (sheet == null || !sheet.HasSource)
                 {
                     errors.Add($"sheet {i + 1} has no texture");
                     continue;
@@ -5037,7 +5110,7 @@ namespace UMA.TexturePaint.Editor
         }
 
         private void AddPathLayerFromSpriteSet(TextureSet set, OverlayPainterSpriteSet spriteSet,
-            int spriteIndex)
+            int spriteIndex, ReconstructedSurface dropSurface = null, RaycastHit dropHit = default)
         {
             if (set == null || spriteSet?.spriteSheets == null || spriteSet.spriteSheets.Count == 0)
             {
@@ -5052,7 +5125,7 @@ namespace UMA.TexturePaint.Editor
             for (int i = 0; i < spriteSet.spriteSheets.Count; i++)
             {
                 OverlayPainterSpriteSheet sheet = spriteSet.spriteSheets[i];
-                if (sheet == null || sheet.spriteSheet == null)
+                if (sheet == null || !sheet.HasSource)
                 {
                     errors.Add($"sheet {i + 1} has no texture");
                     continue;
@@ -5118,6 +5191,11 @@ namespace UMA.TexturePaint.Editor
             SelectLayerChannelForEditing(created, firstChannel);
             ResetPathEditingDefaults();
             created.splineSettings = CreateSplineSettings();
+            if (dropSurface != null)
+            {
+                AddSpriteMaterialFirstPoint(created, set, dropSurface, dropHit);
+                selectedSplinePoint = 0;
+            }
             set.BindPreviewTextures();
             CompleteLayerCreationUndo(created);
             if (!set.layers.Contains(created)) return;
@@ -5456,7 +5534,7 @@ namespace UMA.TexturePaint.Editor
             for (int i = 0; i < spriteSet.spriteSheets.Count; i++)
             {
                 OverlayPainterSpriteSheet sheet = spriteSet.spriteSheets[i];
-                if (sheet == null || sheet.spriteSheet == null)
+                if (sheet == null || !sheet.HasSource)
                 {
                     errors.Add($"sheet {i + 1} has no texture");
                     continue;
@@ -5746,16 +5824,27 @@ namespace UMA.TexturePaint.Editor
                     () => CopyLayerMaskToClipboard(set, layer));
             else menu.AddDisabledItem(new GUIContent("Mask/Copy Mask"));
             if (HasLayerMaskClipboard)
-                menu.AddItem(new GUIContent("Mask/Paste Mask"), false, () =>
+            {
+                AddPasteMaskItem("Mask/Paste Mask", false);
+                AddPasteMaskItem("Mask/Paste Mask (Inverted)", true);
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("Mask/Paste Mask"));
+                menu.AddDisabledItem(new GUIContent("Mask/Paste Mask (Inverted)"));
+            }
+            void AddPasteMaskItem(string label, bool invert)
+            {
+                menu.AddItem(new GUIContent(label), false, () =>
                 {
                     bool keepMaskMode = IsLayerMaskMode(set) && set.activeLayerIndex == index;
                     set.activeLayerIndex = index;
                     SyncActiveLayerSelection(set);
-                    if (!PasteLayerMaskFromClipboardWithHistory(set, layer)) return;
+                    if (!PasteLayerMaskFromClipboardWithHistory(set, layer, invert)) return;
                     if (keepMaskMode) EnterLayerMaskMode(set, layer);
                     else if (layerMaskMode) ExitLayerMaskMode();
                 });
-            else menu.AddDisabledItem(new GUIContent("Mask/Paste Mask"));
+            }
             menu.AddSeparator(string.Empty);
             AddLayerMergeMenuItems(menu, set, layer, index);
             menu.ShowAsContext();
@@ -5989,6 +6078,7 @@ namespace UMA.TexturePaint.Editor
 
         private void DisposeWorkspaceUI()
         {
+            DisposeReferenceTargetVisibility();
             pluginPreview?.Dispose(); pluginPreview = null;
             garmentPreview?.Dispose(); garmentPreview = null;
             brushPluginPreview?.Dispose(); brushPluginPreview = null;
@@ -6029,6 +6119,7 @@ namespace UMA.TexturePaint.Editor
                 maskDiagnostic || IsInternalScenePreview(previewMode);
             bool restorePaintedTextures = !previewBefore && workspacePreviewBeforeApplied;
             Shader shader = diagnostic ? Shader.Find("Unlit/Texture") : null;
+            HashSet<string> visibleSlots = VisiblePreviewSlots(selectedSlots, visibleReferenceSlots);
             for (int i = 0; i < controller.Textures.Sets.Count; i++)
             {
                 TextureSet set = controller.Textures.Sets[i];
@@ -6036,7 +6127,7 @@ namespace UMA.TexturePaint.Editor
                 else if (restorePaintedTextures) set.BindPreviewTextures(false);
                 ReconstructedSurface surface = set.surface;
                 if (surface?.gameObject == null) continue;
-                surface.gameObject.SetActive(!isolateSelectedSlots || IsSurfaceSelected(surface));
+                ApplyReferenceTargetVisibility(surface, visibleSlots);
                 MeshRenderer renderer = surface.gameObject.GetComponent<MeshRenderer>();
                 if (renderer == null) continue;
                 if (!diagnostic || shader == null)
@@ -6547,7 +6638,10 @@ namespace UMA.TexturePaint.Editor
         private void ShowViewMenu(Rect anchor)
         {
             GenericMenu menu = new GenericMenu();
+            menu.AddItem(new GUIContent("Show initial help dialog"), false, TexturePaintGettingStartedWindow.ShowWindow);
+            menu.AddSeparator(string.Empty);
             menu.AddItem(new GUIContent("Preview Material…"), false, TexturePaintMaterialWindow.ShowWindow);
+            menu.AddItem(new GUIContent("Sprite Materials…"), false, TexturePaintSpriteMaterialsWindow.ShowWindow);
             menu.AddSeparator(string.Empty);
             menu.AddItem(new GUIContent("Solo Selected Channel"), channelSolo, () =>
             {
@@ -6561,10 +6655,9 @@ namespace UMA.TexturePaint.Editor
                     ? TexturePaintScenePreviewMode.Material
                     : TexturePaintScenePreviewMode.OriginalMaterial);
             });
-            menu.AddItem(new GUIContent("Isolate Selected Slots"), isolateSelectedSlots, () =>
+            menu.AddItem(new GUIContent("Isolate Selected Slots"), SceneToolbarIsolate, () =>
             {
-                isolateSelectedSlots = !isolateSelectedSlots;
-                RefreshWorkspaceView();
+                SceneToolbarIsolate = !SceneToolbarIsolate;
             });
             menu.DropDown(anchor);
         }
@@ -6668,8 +6761,8 @@ namespace UMA.TexturePaint.Editor
         internal bool SceneToolbarPaintBackfaces { get => paintBackfaces; set { paintBackfaces = value; RepaintAll(); } }
         internal bool SceneToolbarIsolate
         {
-            get => isolateSelectedSlots;
-            set { isolateSelectedSlots = value; RefreshWorkspaceView(); }
+            get => visibleReferenceSlots.Count == 0;
+            set { SetAllReferenceTargetsVisible(!value); }
         }
         internal TexturePaintTool SceneToolbarTool => tool;
         internal int SceneToolbarGeometryFillMode => geometryFillMode;

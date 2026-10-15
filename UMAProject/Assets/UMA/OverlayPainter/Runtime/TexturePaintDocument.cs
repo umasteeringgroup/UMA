@@ -1175,6 +1175,7 @@ namespace UMA.TexturePaint
         public string meshSignature;
         public string topologySignature;
         public string uvSignature;
+        public string uvLayoutSignature;
         public string materialSignature;
         public bool orphaned;
         public string orphanReason;
@@ -1188,6 +1189,7 @@ namespace UMA.TexturePaint
         [Range(1, 16)] public int normalControlRadius = 1;
         public bool normalControlInvert;
         public List<TexturePaintDocumentChannel> baseChannels = new List<TexturePaintDocumentChannel>();
+        public bool hideOriginalOverlay;
         public List<TexturePaintStrokeRecord> baseStrokes = new List<TexturePaintStrokeRecord>();
         public List<TexturePaintDocumentLayer> layers = new List<TexturePaintDocumentLayer>();
     }

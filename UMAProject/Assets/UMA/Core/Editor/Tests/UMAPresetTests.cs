@@ -362,12 +362,24 @@ namespace UMA.Tests
                 view.LookAt(new Vector3(0, 1.6f, 0), Quaternion.Euler(5, 180, 0), 2f, orthographic, true);
                 for (int i = 0; i < 5; i++) { view.Repaint(); yield return null; }
                 Camera camera = view.camera;
+                // Rendering can jitter the Scene View projection (for example TAA).
+                // Framing describes the stable camera frustum, not one rendered sample.
+                camera.projectionMatrix = camera.nonJitteredProjectionMatrix;
                 float cropHeight = .25f;
                 var crop = new Rect(.54f, .52f, cropHeight / camera.aspect, cropHeight);
                 var framing = (DynamicCharacterAvatar.PresetScreenshotFraming)ScreenshotMethod(
                     "RememberFraming", avatar.transform, camera, view.size, crop);
-                Vector3 point = camera.ViewportToWorldPoint(new Vector3(crop.center.x, crop.center.y, 3f));
-                Vector3 upperPoint = camera.ViewportToWorldPoint(new Vector3(crop.center.x, crop.yMax, 3f));
+                // Scene View can use a near plane of 0.0002. Inverting that depth
+                // projection with ViewportToWorldPoint loses precision at z=3.
+                // Construct known points in camera space instead of using that inverse.
+                float halfHeight = orthographic ? camera.orthographicSize :
+                    3f * Mathf.Tan(camera.fieldOfView * .5f * Mathf.Deg2Rad);
+                Vector3 point = camera.transform.TransformPoint(new Vector3(
+                    (crop.center.x * 2f - 1f) * halfHeight * camera.aspect,
+                    (crop.center.y * 2f - 1f) * halfHeight, 3f));
+                Vector3 upperPoint = camera.transform.TransformPoint(new Vector3(
+                    (crop.center.x * 2f - 1f) * halfHeight * camera.aspect,
+                    (crop.yMax * 2f - 1f) * halfHeight, 3f));
                 view.position = new Rect(50, 50, 450, 850);
                 view.LookAt(Vector3.zero, Quaternion.Euler(30, 45, 0), 10f, !orthographic, true);
                 for (int i = 0; i < 5; i++) { view.Repaint(); yield return null; }
@@ -379,6 +391,7 @@ namespace UMA.Tests
                     Is.LessThan(.05f));
                 Assert.That(camera.orthographic, Is.EqualTo(orthographic));
                 Rect retake = (Rect)ScreenshotMethod("RetakeViewport", camera, avatar.transform, framing);
+                camera.projectionMatrix = camera.nonJitteredProjectionMatrix;
                 Vector3 center = camera.WorldToViewportPoint(point);
                 Vector3 upper = camera.WorldToViewportPoint(upperPoint);
                 Assert.That((center.x - retake.x) / retake.width, Is.EqualTo(.5f).Within(.002f));

@@ -101,6 +101,7 @@ namespace UMA.TexturePaint.Tests
             try
             {
                 var p = host.CreateParameters(plugin);
+                p.Get("renderModel", true).number = 0; // Explicit legacy geometry regression.
                 Assert.That(p.Integer("directionSpace", -1), Is.Zero);
                 Assert.That(plugin.ResolveMeshMaps(p), Is.EqualTo(TexturePaintMeshMapMask.WorldPosition |
                     TexturePaintMeshMapMask.WorldNormal | TexturePaintMeshMapMask.SurfaceId));

@@ -180,8 +180,8 @@ namespace UMA
             // generated-resource cache hits and mounted renderers with no SlotData.
             foreach (var renderer in data.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                // Retired output has its mesh cleared before deferred Destroy. It must
-                // not keep the previous wardrobe's bones alive for another rebuild.
+                // Retired output is detached before deferred Destroy. Also ignore empty
+                // generated renderers so they cannot retain obsolete wardrobe bones.
                 if (renderer.sharedMesh == null && renderer.TryGetComponent<UMAGeneratedRenderer>(out _)) continue;
                 foreach (var bone in renderer.bones)
                     AddTransformAncestors(bone, data.umaRoot.transform, required);

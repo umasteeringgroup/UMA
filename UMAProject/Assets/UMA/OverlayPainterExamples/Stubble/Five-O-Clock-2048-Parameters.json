@@ -1,0 +1,3880 @@
+{
+    "values": [
+        {
+            "id": "renderModel",
+            "number": 1.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "referenceResolution",
+            "number": 2048.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "rootSpacing",
+            "number": 4.5,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "patchiness",
+            "number": 0.30000001192092898,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "fineFraction",
+            "number": 0.18000000715255738,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "clippedFraction",
+            "number": 0.800000011920929,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "anatomicalFlow",
+            "number": 1.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "flowVariation",
+            "number": 18.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "flowScale",
+            "number": 64.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "grayFraction",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "grayColor",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 0.41999998688697817,
+                "g": 0.38999998569488528,
+                "b": 0.3400000035762787,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "opacityVariation",
+            "number": 0.15000000596046449,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "roughnessVariation",
+            "number": 0.05999999865889549,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "placementShape",
+            "number": 2.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "placementX",
+            "number": 0.5,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "placementY",
+            "number": 0.5,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "placementWidth",
+            "number": 0.550000011920929,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "placementHeight",
+            "number": 0.3499999940395355,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "placementRotation",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "edgeFeather",
+            "number": 24.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "seed",
+            "number": 941.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "overallAmount",
+            "number": 1.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "controlMask",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "directionSpace",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "profile",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "hairColor",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 0.054999999701976779,
+                "g": 0.03500000014901161,
+                "b": 0.02500000037252903,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "hairColorVariation",
+            "number": 0.11999999731779099,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "hairLength",
+            "number": 1.7000000476837159,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "hairWidth",
+            "number": 0.6499999761581421,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "density",
+            "number": 0.8199999928474426,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "hairOpacity",
+            "number": 0.7200000286102295,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "taper",
+            "number": 1.5,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "directionDegrees",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "directionVariation",
+            "number": 24.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "curvature",
+            "number": 0.11999999731779099,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "randomPositionX",
+            "number": 2.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "randomPositionY",
+            "number": 2.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "lengthVariation",
+            "number": 0.6000000238418579,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "widthVariation",
+            "number": 0.30000001192092898,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "hairRoughness",
+            "number": 0.46000000834465029,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "hairHeight",
+            "number": 0.012000000104308129,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "shadowAmount",
+            "number": 0.05999999865889549,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "shadowColor",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 0.054999999701976779,
+                "g": 0.07500000298023224,
+                "b": 0.0949999988079071,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "shadowSpread",
+            "number": 0.699999988079071,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "shadowOffset",
+            "number": 0.25,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "rednessAmount",
+            "number": 0.014999999664723874,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "rednessRadius",
+            "number": 1.100000023841858,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "rednessColor",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 0.6800000071525574,
+                "g": 0.10499999672174454,
+                "b": 0.08500000089406967,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "follicleDepth",
+            "number": 0.003000000026077032,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "follicleRadius",
+            "number": 0.75,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "rashAmount",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "rashScale",
+            "number": 72.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "rashOpacity",
+            "number": 0.3400000035762787,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "rashColor",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 0.7200000286102295,
+                "g": 0.11999999731779099,
+                "b": 0.10499999672174454,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "rashRoughness",
+            "number": 0.6800000071525574,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "pimpleAmount",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "pimpleSpacing",
+            "number": 46.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "pimpleSize",
+            "number": 4.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "pimpleHeight",
+            "number": 0.10999999940395355,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "pimpleColor",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 0.6800000071525574,
+                "g": 0.10999999940395355,
+                "b": 0.09000000357627869,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "pimpleCenterColor",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 0.949999988079071,
+                "g": 0.8199999928474426,
+                "b": 0.6499999761581421,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "spotAmount",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "spotSpacing",
+            "number": 28.0,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "spotSize",
+            "number": 2.5,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "spotHeight",
+            "number": 0.014999999664723874,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "spotColor",
+            "number": 0.0,
+            "boolean": false,
+            "color": {
+                "r": 0.23999999463558198,
+                "g": 0.07500000298023224,
+                "b": 0.03500000014901161,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "skinRoughness",
+            "number": 0.5799999833106995,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        },
+        {
+            "id": "skinMaskStrength",
+            "number": 0.6499999761581421,
+            "boolean": false,
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "text": "",
+            "texture": {
+                "instanceID": 0
+            },
+            "sprite": {
+                "instanceID": 0
+            },
+            "font": {
+                "instanceID": 0
+            },
+            "spriteSet": {
+                "instanceID": 0
+            },
+            "spriteSetSelectionExplicit": false,
+            "enabledSpriteIndices": [],
+            "curve": {
+                "serializedVersion": "2",
+                "m_Curve": [
+                    {
+                        "serializedVersion": "3",
+                        "time": 0.0,
+                        "value": 0.0,
+                        "inSlope": 0.0,
+                        "outSlope": 1.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    },
+                    {
+                        "serializedVersion": "3",
+                        "time": 1.0,
+                        "value": 1.0,
+                        "inSlope": 1.0,
+                        "outSlope": 0.0,
+                        "tangentMode": 0,
+                        "weightedMode": 0,
+                        "inWeight": 0.0,
+                        "outWeight": 0.0
+                    }
+                ],
+                "m_PreInfinity": 2,
+                "m_PostInfinity": 2,
+                "m_RotationOrder": 4
+            },
+            "stripes": []
+        }
+    ]
+}

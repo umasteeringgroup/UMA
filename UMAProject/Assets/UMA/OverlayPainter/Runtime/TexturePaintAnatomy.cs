@@ -50,6 +50,16 @@ namespace UMA.TexturePaint
     {
         public List<TexturePaintAnatomicalBone> bones = new List<TexturePaintAnatomicalBone>();
 
+        /// <summary>Independent value snapshot, optionally transported into mesh-map world space.</summary>
+        public TexturePaintAnatomy Copy(Matrix4x4 transform)
+        {
+            var copy=new TexturePaintAnatomy();
+            if(bones!=null)foreach(var b in bones)if(b!=null)copy.bones.Add(new TexturePaintAnatomicalBone
+            {name=b.name,humanoid=b.humanoid,position=transform.MultiplyPoint3x4(b.position),
+                forward=transform.MultiplyVector(b.forward).normalized,up=transform.MultiplyVector(b.up).normalized});
+            return copy;
+        }
+
         public static TexturePaintAnatomy Capture(Transform root, SkinnedMeshRenderer renderer)
         {
             var result = new TexturePaintAnatomy();

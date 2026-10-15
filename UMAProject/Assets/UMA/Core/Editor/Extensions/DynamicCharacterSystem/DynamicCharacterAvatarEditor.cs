@@ -1079,7 +1079,7 @@ namespace UMA.CharacterSystem.Editors
                     Undo.RecordObject(umaData, "Reset DNA Values to Default");
 
                     // Reset all expanded groups
-                    var groupedListReset = new List<KeyValuePair<DNAGroup, List<(int index, DNAInstance inst)>>>(grouped);
+                    var groupedListReset = new List<KeyValuePair<DNAGroup, List<(int index, DNAInstance inst, DNA dna)>>>(grouped);
                     groupedListReset.Sort((a, b) => string.Compare(a.Key?.DNAArea, b.Key?.DNAArea, StringComparison.OrdinalIgnoreCase));
                     for (int gi = 0; gi < groupedListReset.Count; gi++)
                     {
@@ -1176,8 +1176,9 @@ namespace UMA.CharacterSystem.Editors
                         var inst = entries[ei].inst;
                         if (inst == null) continue;
 
+                        var dna = entries[ei].dna;
                         using var dnaRow = new EditorGUILayout.HorizontalScope();
-                        bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
+                        bool newEnabled = EditorGUILayout.ToggleLeft(dna != null ? dna.GetDisplayName() : inst.Name, inst.enabled, GUILayout.Width(140));
                         float oldValue = inst.Value;
                         EditorGUI.BeginChangeCheck();
                         inst.Value = EditorGUILayout.Slider(inst.Value, 0f, 1f);
@@ -1314,8 +1315,9 @@ namespace UMA.CharacterSystem.Editors
                             var inst = unknown[ui].inst;
                             if (inst == null) continue;
 
+                            var dna = unknown[ui].dna;
                             using var dnaRow = new EditorGUILayout.HorizontalScope();
-                            bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
+                            bool newEnabled = EditorGUILayout.ToggleLeft(dna != null ? dna.GetDisplayName() : inst.Name, inst.enabled, GUILayout.Width(140));
                             float oldValue = inst.Value;
                             inst.Value = EditorGUILayout.Slider(inst.Value, 0f, 1f);
                             if (GUILayout.Button("Def", GUILayout.Width(40)))

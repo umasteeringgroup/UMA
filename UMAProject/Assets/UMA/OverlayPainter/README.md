@@ -1,8 +1,18 @@
 # UMA Overlay Painter
 
+See [Tileable Material Sprite Sets](Documentation/TileableMaterialSpriteSets.md) for 108 coordinated PBR materials in twelve sets, including 72 new rubber, plastic, knit, armor, technical weave, decorative fabric, wood and bone/horn materials. Available through **+Fill > Add from Sprite Set...**.
+
 Overlay Painter is a Unity 6.3+ preview stage for painting generated `DynamicCharacterAvatar` materials without the color multipliers used while UMA composes overlays. It reconstructs every generated renderer into one static preview mesh per material, preserving the baked geometry, source UVs, source material, and generated texture set.
 
+See [Makeup and Coating Damage](Documentation/MakeupAndCoatingDamage.md) for anatomical cosmetics, face paint, blistered/chipped/peeling finishes, and twelve editable finished material stacks.
+
+See [Makeup and Coating Damage](Documentation/MakeupAndCoatingDamage.md) for anatomical cosmetics, face paint, blistered/chipped/peeling finishes, and twelve editable finished material stacks.
+
 For the complete artist guide, see [Overlay Painter](Documentation/OverlayPainter.md).
+
+See [Eyes, Wraps and Advanced Embroidery](Documentation/EyesWrapsAndEmbroidery.md) for procedural eyes, path/projection wraps and dressings, and regional satin/tatami embroidery.
+
+See [Surface Details](Documentation/SurfaceDetails.md) for fingerprints and residue, welds and heat tint, splashes and runoff, and transparent lace trim.
 
 See [Clothing Finishes and Material Import](Documentation/ClothingFinishesAndMaterialImport.md) for wetness, sweat, leather, coated fabric, print aging, automatic seam paths, and PBR texture-set import.
 

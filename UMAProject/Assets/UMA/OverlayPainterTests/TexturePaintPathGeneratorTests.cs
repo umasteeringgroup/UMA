@@ -313,6 +313,161 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(Difference(fresh[TexturePaintChannel.NormalControl],healed[TexturePaintChannel.NormalControl]),Is.GreaterThan(.02f));
         }
 
+        [TestCase(false)] [TestCase(true)]
+        public void WoundNoiseIsDeterministicAndSeparatesColorFromRelief(bool directUV)
+        {
+            using var r=new Ribbon(TexturePaintPathGenerators.ScarId);
+            var s=r.context.pathGenerator;s.healing=0;s.taper=0;s.opening=.7f;
+            Dictionary<TexturePaintChannel,Color[]> Render() { r.context.pathGenerator=s.Clone();return r.Render(directUV); }
+            var original=Render();
+            s.woundColorNoise=1;var color=Render();
+            Assert.That(Difference(original[TexturePaintChannel.Albedo],color[TexturePaintChannel.Albedo]),Is.GreaterThan(.001f));
+            Assert.That(Difference(original[TexturePaintChannel.NormalControl],color[TexturePaintChannel.NormalControl]),Is.LessThan(.00001f));
+            s.woundHeightNoise=.15f;var relief=Render();
+            Assert.That(Difference(color[TexturePaintChannel.NormalControl],relief[TexturePaintChannel.NormalControl]),Is.GreaterThan(.005f));
+            Assert.That(Difference(color[TexturePaintChannel.Albedo],relief[TexturePaintChannel.Albedo]),Is.LessThan(.00001f));
+            foreach(var pair in relief)
+                Assert.That(pair.Value.Zip(relief[TexturePaintChannel.Albedo],(a,b)=>Mathf.Abs(a.a-b.a)).Max(),Is.LessThan(.001f),pair.Key.ToString());
+            Assert.That(Difference(relief[TexturePaintChannel.NormalControl],Render()[TexturePaintChannel.NormalControl]),Is.LessThan(.00001f));
+            s.seed++;
+            Assert.That(Difference(relief[TexturePaintChannel.NormalControl],Render()[TexturePaintChannel.NormalControl]),Is.GreaterThan(.005f));
+        }
+
+        [Test]
+        public void WoundAndRimRoughnessAreIndependentAndPreserveLegacyFinish()
+        {
+            using var r=new Ribbon(TexturePaintPathGenerators.ScarId);
+            var s=r.context.pathGenerator;s.healing=.4f;s.roughness=.2f;
+            Assert.That(s.WoundRoughness,Is.EqualTo(.42f).Within(.0001f));
+            Assert.That(s.RimRoughness,Is.EqualTo(.42f).Within(.0001f));
+            s.healing=0;s.taper=0;s.irregularity=0;s.inflammation=0;
+            s.woundRoughness=.1f;s.rimRoughness=.9f;
+            Dictionary<TexturePaintChannel,Color[]> Render() { r.context.pathGenerator=s.Clone();return r.Render(); }
+            var first=Render();
+            var visible=first[TexturePaintChannel.Roughness].Where(c=>c.a>.5f).ToArray();
+            Assert.That(visible.Min(c=>c.r),Is.LessThan(.15f));
+            Assert.That(visible.Max(c=>c.r),Is.GreaterThan(.7f));
+            s.woundRoughness=.9f;s.rimRoughness=.1f;
+            var second=Render();
+            Assert.That(Difference(first[TexturePaintChannel.Roughness],second[TexturePaintChannel.Roughness]),Is.GreaterThan(.1f));
+            Assert.That(Difference(first[TexturePaintChannel.NormalControl],second[TexturePaintChannel.NormalControl]),Is.LessThan(.00001f));
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void SutureOffsetsReserveBothEndsIncludingRemovedPunctures(bool removed)
+        {
+            using var r=new Ribbon(TexturePaintPathGenerators.ScarId);
+            var s=r.context.pathGenerator;s.stitches=true;s.removedStitches=removed;
+            s.stitchCount=5;s.stitchAngle=0;s.stitchThickness=.02f;s.sutureStartOffset=1;
+            Color[] Render() { r.context.pathGenerator=s.Clone();return r.Render()[TexturePaintChannel.NormalControl]; }
+            var empty=Render();
+            s.sutureStartOffset=.3f;s.sutureEndOffset=.2f;
+            var inset=Render();
+            float Rows(int start,int count)=>Difference(empty.Skip(start*Ribbon.Size).Take(count*Ribbon.Size).ToArray(),inset.Skip(start*Ribbon.Size).Take(count*Ribbon.Size).ToArray());
+            Assert.That(Rows(0,20),Is.LessThan(.0001f));
+            Assert.That(Rows(116,12),Is.LessThan(.0001f));
+            Assert.That(Rows(45,45),Is.GreaterThan(.001f));
+            s.sutureStartOffset=.8f;s.sutureEndOffset=.8f;
+            Assert.That(Difference(empty,Render()),Is.LessThan(.00001f));
+        }
+
+        [Test]
+        public void WoundDetailSettingsSurviveSerializationAndClone()
+        {
+            var s=TexturePaintPathGenerators.Find(TexturePaintPathGenerators.ScarId).CreateSettings();
+            s.woundColorNoise=.7f;s.woundHeightNoise=.1f;s.woundNoiseScale=27;
+            s.woundRoughness=.2f;s.rimRoughness=.85f;s.sutureStartOffset=.1f;s.sutureEndOffset=.3f;
+            s.stitchHeight=.16f;s.stitchEndTaper=.35f;s.stitchEndCurve=2;
+            s.stitchDistanceRandomness=.7f;s.stitchAngleRandomness=24;
+            s.punctureDepth=.12f;s.punctureShading=.4f;s.punctureSize=2.5f;s.puckerHeight=.2f;s.puckerRadius=.08f;
+            var copy=JsonUtility.FromJson<TexturePaintPathGeneratorSettings>(JsonUtility.ToJson(s)).Clone();copy.Normalize();
+            Assert.That(JsonUtility.ToJson(copy),Is.EqualTo(JsonUtility.ToJson(s)));
+            copy.sutureStartOffset=.5f;Assert.That(s.sutureStartOffset,Is.EqualTo(.1f));
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void SutureVariationIsDeterministicAndAlignedAcrossChannels(bool directUV)
+        {
+            using var r=new Ribbon(TexturePaintPathGenerators.ScarId);
+            var s=r.context.pathGenerator;s.stitches=true;s.stitchCount=5;s.stitchAngle=0;
+            s.irregularity=s.woundColorNoise=s.woundHeightNoise=0;
+            s.stitchThickness=.025f;s.stitchHeight=.15f;
+            Assert.That(s.stitchDistanceRandomness,Is.Zero);
+            Assert.That(s.stitchAngleRandomness,Is.Zero);
+            Dictionary<TexturePaintChannel,Color[]> Render() { r.context.pathGenerator=s.Clone();return r.Render(directUV); }
+            var even=Render();s.seed+=19;var otherSeed=Render();
+            Assert.That(Difference(even[TexturePaintChannel.NormalControl],otherSeed[TexturePaintChannel.NormalControl]),Is.LessThan(.00001f),"Zero variation must ignore seed when wound irregularity is disabled.");
+            s.stitchDistanceRandomness=1;var distance=Render();
+            Assert.That(Difference(even[TexturePaintChannel.NormalControl],distance[TexturePaintChannel.NormalControl]),Is.GreaterThan(.001f));
+            s.stitchDistanceRandomness=0;s.stitchAngleRandomness=40;var angle=Render();
+            Assert.That(Difference(even[TexturePaintChannel.NormalControl],angle[TexturePaintChannel.NormalControl]),Is.GreaterThan(.001f));
+            s.stitchDistanceRandomness=.8f;var combined=Render();var repeated=Render();
+            foreach(var pair in combined)
+            {
+                Assert.That(Difference(pair.Value,repeated[pair.Key]),Is.LessThan(.00001f),pair.Key+" deterministic");
+                Assert.That(pair.Value.Zip(combined[TexturePaintChannel.Albedo],(a,b)=>Mathf.Abs(a.a-b.a)).Max(),Is.LessThan(.001f),pair.Key+" shared alpha");
+            }
+            s.seed+=31;var changed=Render();
+            Assert.That(Difference(combined[TexturePaintChannel.NormalControl],changed[TexturePaintChannel.NormalControl]),Is.GreaterThan(.001f));
+            s.removedStitches=true;var removed=Render();
+            s.stitchDistanceRandomness=s.stitchAngleRandomness=0;var uniformHoles=Render();
+            Assert.That(Difference(removed[TexturePaintChannel.NormalControl],uniformHoles[TexturePaintChannel.NormalControl]),Is.GreaterThan(.001f),"Removed punctures retain stitch variation.");
+        }
+
+        [Test]
+        public void SutureVariationNormalizesInvalidValuesAndDefaultsOldDocumentsToZero()
+        {
+            var s=JsonUtility.FromJson<TexturePaintPathGeneratorSettings>("{\"stitchCount\":13}");
+            Assert.That(s.stitchDistanceRandomness,Is.Zero);Assert.That(s.stitchAngleRandomness,Is.Zero);
+            s.stitchDistanceRandomness=float.NaN;s.stitchAngleRandomness=float.PositiveInfinity;s.Normalize();
+            Assert.That(s.stitchDistanceRandomness,Is.Zero);Assert.That(s.stitchAngleRandomness,Is.Zero);
+            s.stitchDistanceRandomness=5;s.stitchAngleRandomness=180;s.Normalize();
+            Assert.That(s.stitchDistanceRandomness,Is.EqualTo(1));Assert.That(s.stitchAngleRandomness,Is.EqualTo(75));
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void SutureHeightRaisesThreadAndTaperSinksEndsIntoIndependentPunctures(bool directUV)
+        {
+            using var r=new Ribbon(TexturePaintPathGenerators.ScarId);
+            var s=r.context.pathGenerator;s.stitches=true;s.stitchCount=1;s.stitchAngle=0;
+            s.stitchThickness=.03f;s.depth=s.edgeLift=s.inflammation=s.puckering=0;s.taper=0;
+            s.stitchHeight=.15f;s.punctureDepth=.12f;s.stitchEndTaper=.35f;
+            Dictionary<TexturePaintChannel,Color[]> Render() { r.context.pathGenerator=s.Clone();return r.Render(directUV); }
+            int middle=64*Ribbon.Size+64,end=64*Ribbon.Size+97;
+            var sunk=Render();
+            Assert.That(sunk[TexturePaintChannel.NormalControl][middle].r,Is.GreaterThan(.62f));
+            Assert.That(sunk[TexturePaintChannel.NormalControl][end].r,Is.LessThan(.49f));
+            s.stitchEndTaper=0;var untapered=Render();
+            Assert.That(untapered[TexturePaintChannel.NormalControl][end].r,Is.GreaterThan(sunk[TexturePaintChannel.NormalControl][end].r+.08f));
+            Assert.That(untapered[TexturePaintChannel.NormalControl][middle].r,Is.EqualTo(sunk[TexturePaintChannel.NormalControl][middle].r).Within(.001f));
+            s.stitchEndTaper=.35f;s.stitchEndCurve=4;var curved=Render();
+            Assert.That(Difference(curved[TexturePaintChannel.NormalControl],sunk[TexturePaintChannel.NormalControl]),Is.GreaterThan(.0001f));
+            s.stitchHeight=0;var flat=Render();
+            Assert.That(flat[TexturePaintChannel.NormalControl][middle].r,Is.EqualTo(.5f).Within(.002f));
+            Assert.That(flat[TexturePaintChannel.NormalControl][end].r,Is.LessThan(.49f));
+            foreach(var pair in sunk)
+                Assert.That(pair.Value.Zip(sunk[TexturePaintChannel.Albedo],(a,b)=>Mathf.Abs(a.a-b.a)).Max(),Is.LessThan(.001f),pair.Key.ToString());
+        }
+
+        [Test]
+        public void PunctureShadingDoesNotChangeDepthAndPuckeringHasRaisedAndRecessedRelief()
+        {
+            using var r=new Ribbon(TexturePaintPathGenerators.ScarId);
+            var s=r.context.pathGenerator;s.stitches=s.removedStitches=true;s.stitchCount=3;s.stitchAngle=0;
+            s.depth=s.edgeLift=s.inflammation=s.puckering=0;s.taper=0;
+            s.punctureDepth=.1f;s.punctureShading=0;
+            Dictionary<TexturePaintChannel,Color[]> Render() { r.context.pathGenerator=s.Clone();return r.Render(); }
+            var unshaded=Render();s.punctureShading=1;var shaded=Render();
+            Assert.That(Difference(unshaded[TexturePaintChannel.Albedo],shaded[TexturePaintChannel.Albedo]),Is.GreaterThan(.0001f));
+            Assert.That(Difference(unshaded[TexturePaintChannel.NormalControl],shaded[TexturePaintChannel.NormalControl]),Is.LessThan(.00001f));
+            s.punctureDepth=0;s.punctureShading=0;s.puckerHeight=.16f;s.puckering=1;
+            var puckered=Render()[TexturePaintChannel.NormalControl];
+            Assert.That(puckered.Where(c=>c.a>.5f).Max(c=>c.r),Is.GreaterThan(.54f));
+            Assert.That(puckered.Where(c=>c.a>.5f).Min(c=>c.r),Is.LessThan(.47f));
+            s.puckering=0;var plain=Render()[TexturePaintChannel.NormalControl];
+            Assert.That(plain.Where(c=>c.a>.01f).All(c=>Mathf.Abs(c.r-.5f)<.001f),Is.True);
+        }
+
         [Test]
         public void SuturesAndRemovedPuncturesProduceDistinctRelief()
         {

@@ -355,7 +355,10 @@ namespace UMA.TexturePaint
                 {
                     context.pathGenerator = context.pathGenerator.Clone();
                     context.pathGenerator.Normalize();
-                    pathGeneratorResources = activePathGenerator.Prepare(context.pathGenerator);
+                    pathGeneratorResources = activePathGenerator is ITexturePaintContextualPathGenerator contextual
+                        ? contextual.Prepare(context.pathGenerator, context.pathGeneratorContext ?? new TexturePaintPathGeneratorContext
+                        { size = new Vector2(context.brush.size*2, context.brush.size*10), cancellation = context.cancellationToken })
+                        : activePathGenerator.Prepare(context.pathGenerator);
                 }
                 catch (Exception exception)
                 { return FailStrokeStart("Path generator: " + exception.Message); }
@@ -722,6 +725,12 @@ namespace UMA.TexturePaint
                 minimumAlong = Mathf.Min(minimumAlong, data[i].leftStartAlong.w, data[i].leftEndAlong.w);
                 maximumAlong = Mathf.Max(maximumAlong, data[i].leftStartAlong.w, data[i].leftEndAlong.w);
             }
+            if (pathGeneratorResources is ITexturePaintPaddedPathRaster padded)
+            {
+                data = TexturePaintPathRasterPadding.Expand(data, padded.Padding);
+                minimumAlong = data.Min(s => s.leftStartAlong.w);
+                maximumAlong = data.Max(s => s.leftEndAlong.w);
+            }
             var generatorSettings = activeContext.pathGenerator?.enabled == true ? activeContext.pathGenerator : null;
             var generator = activePathGenerator;
             // One layout for every material channel: prefer visible albedo coverage, even if
@@ -789,6 +798,7 @@ namespace UMA.TexturePaint
             bool changed = false;
             HashSet<TextureSet> changedSets = new HashSet<TextureSet>();
             using RibbonUVPadding ribbonPadding = directUV ? null : new RibbonUVPadding(ribbonMaterial);
+            var sourceData = (TexturePaintRibbonSegment[])data.Clone();
             for (int targetIndex = 0; targetIndex < activeTargets.Count; targetIndex++)
             {
                 ActiveTarget active = activeTargets[targetIndex];
@@ -796,8 +806,9 @@ namespace UMA.TexturePaint
                 if (mesh == null || active.target?.Front == null || active.target.Back == null) continue;
                 for (int i = 0; i < data.Length; i++)
                 {
-                    data[i].colorStart = TexturePaintChannelUtility.WorkingColor(active.channel, segments[i].colorStart);
-                    data[i].colorEnd = TexturePaintChannelUtility.WorkingColor(active.channel, segments[i].colorEnd);
+                    // Padded generators can append caps; use the expanded segment's colors.
+                    data[i].colorStart = TexturePaintChannelUtility.WorkingColor(active.channel, sourceData[i].colorStart);
+                    data[i].colorEnd = TexturePaintChannelUtility.WorkingColor(active.channel, sourceData[i].colorEnd);
                 }
                 segmentBuffer.SetData(data);
                 RectInt rect = new RectInt(0, 0, active.target.Width, active.target.Height);

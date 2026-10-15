@@ -180,7 +180,21 @@ namespace UMA.Editors
 			}
 
 
-            GUILayout.Label(_description);
+            if (target is UMATextRecipe textRecipe)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("View JSON string", GUILayout.ExpandWidth(false)))
+                    {
+                        UMAJsonViewer.ShowJson(textRecipe.recipeString, textRecipe.name + " - JSON");
+                    }
+                    GUILayout.Label("string length " + (textRecipe.recipeString?.Length ?? 0));
+                }
+            }
+            else
+            {
+                GUILayout.Label(_description);
+            }
             _AutomaticUpdates = GUILayout.Toggle(_AutomaticUpdates, "Automatic Updates");
             _forceUpdate = false;
 

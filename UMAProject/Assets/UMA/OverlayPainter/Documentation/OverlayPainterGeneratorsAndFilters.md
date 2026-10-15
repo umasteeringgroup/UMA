@@ -115,7 +115,8 @@ Mapping belongs to each generator; a Plugin layer does not use a Fill layer's pr
 | Agify, Dirtify, Edge Wear | UV or world projection |
 | Fabric Fuzz, Rust, Surface Micro Detail, Veins, Scar/Wound, Creature Skin, Combat Damage | UV or world procedural coordinates |
 | Dripping Corrosion | Fixed world/surface coordinates with gravity |
-| Noise, Textile Surface, Text, Stubble Maker, AO Variation | Fixed UV coordinates |
+| Noise, Textile Surface, Text, AO Variation | Fixed UV coordinates |
+| Stubble Maker | UV roots; world/anatomical growth or manual UV direction |
 | Image and channel filters | Source texture pixels; no spatial fill selector |
 
 Use **World Triplanar** projection for dirt, rust, pores, scratches, and organic breakup that should
@@ -905,49 +906,66 @@ follicle redness, razor irritation, pimples, and small pigment spots over an exi
 feature-alpha-only: Stubble Maker never writes an opaque base skin. This is important when the result
 will become an UMA overlay rather than a replacement skin.
 
-### Facial hair and shaved-head profiles
+### Natural stubble and finished presets
 
-Choose **Facial Hair** for the measurements exactly as authored. Choose **Shaved Head** to derive a
-shorter, slightly finer, denser, and straighter result from the same controls. **Custom / Neutral**
-retains the authored measurements without the scalp bias and is useful when the placement is neither
-a face nor scalp.
+New layers use **Strand Model: Natural**. Restored pre-2.0 profiles retain **Legacy**, including
+their authored values. Change Strand Model to Natural to upgrade one deliberately, or apply a
+finished **Skin / Stubble** material preset: **Five O Clock**, **Natural Short**, **Coarse Stubble**,
+or **Salt and Pepper**. Presets remain editable. The runtime preset helper preserves placement,
+mask references and seed.
 
-**Growth Direction** defaults to **World Down**. It uses World Position and World Normal mesh maps
-to project gravity along the skin, then converts that direction into the local UV orientation at
-each root. Rotated, mirrored, and stretched UV islands therefore retain downward growth on the
-model. At horizontal surfaces, where gravity has no tangent direction, world forward provides a
-consistent fallback. Strand lengths and widths remain destination-pixel measurements.
+Natural generates a stable, spatially balanced population of curved hairs with clipped and tapered
+tips, a finer secondary population, smooth regional variation and restrained follicle shading.
+**Density** removes hairs without relocating survivors. **Root Spacing** changes the potential
+population itself. **Regional Density Variation** creates soft sparse patches. The seed independently
+drives roots, density, length, width, direction, bend, color, opacity and gray hairs: changing
+appearance does not rearrange the groom.
 
-**Direction from Down** rotates the growth direction around the surface normal in World Down mode.
-**UV Direction** retains the original texture-space behavior: zero points down the texture and the
-angle rotates within that texture. Use it for manually directed patches or to reproduce older
-stubble layers. Existing layers without Growth Direction use World Down on regeneration.
-**Direction Variation** adds controlled angular differences; **Curvature** bends the middle of
-individual hairs. Keep both restrained for recently shaved areas. Longer facial stubble tolerates
-more variation. Roots remain fixed while direction changes, keeping follicle redness attached.
+### Scale and growth
 
-**Length (px)** and **Width (px)** are destination-pixel measurements, so review them at the intended
-export resolution. **Density** changes both population and spacing. **Tip Taper** controls the
-root-to-tip silhouette, while Hair Opacity and Hair Roughness separate dark coverage from material
-response. **Hair Height** gives each shaft a rounded, raised cross-section in Normal Control. The
-generated height is combined with the existing normal map by Overlay Painter. Normal Control uses
-float precision so fine relief and soft feature boundaries survive generation.
+Natural dimensions use **Reference Resolution**, default 2048 pixels on the longest texture axis.
+For example, Length 4 means four reference pixels at 2K and eight destination pixels at 4K. Changing
+output resolution improves sampling without changing the groom. Changing Reference Resolution or
+Root Spacing deliberately changes its scale/population. Non-square textures retain aspect ratio.
+Legacy dimensions remain destination pixels. Random Position X/Y apply only to Legacy; Natural
+uses full-cell jitter and minimum-distance rejection instead.
 
-### Randomness and placement
+**Growth Direction: World Down** converts world-space growth through the local surface metric,
+including rotated and mirrored UV islands. **Facial Growth Field** blends cheek, moustache, chin
+and neck directions using UMA Head and eye landmarks (and lip landmarks when present). It defaults
+to 1 for facial hair and falls back to gravity when landmarks are unavailable. This is a direction
+field, **not a beard-region mask**. A tilted head follows its anatomical axes. Shaved Head produces
+shorter, finer hairs and disables facial flow; density zero still means no hairs or follicles.
+Custom / Neutral uses gravity without facial specialization.
 
-**Random Position X/Y** offsets each root by a bounded pixel amount. Length Variation, Width
-Variation, Color Variation, Direction Variation, and Curvature use the saved Seed, so regeneration is
-stable. Start with low values; maxing every random control produces fuzz rather than clipped stubble.
+**Direction from Down** offsets the surface direction. **Direction Variation** affects individual
+hairs; **Groom Flow Variation** and **Groom Region Size** provide smooth regional disorder.
+**UV Direction** uses a manually rotated direction in texture coordinates and needs no mesh maps.
 
-**Coverage** defaults to **Entire Unmasked Area**. Use the optional Control Mask for a prepared
-beard/scalp map, or add an editable layer mask for cheeks, lips, nostrils, ears, eyebrows, and the
-final hairline. White allows generation and black excludes it; the skin between features remains
-transparent.
+**Fine Hair Fraction** mixes shorter, finer, less opaque hairs into the population. **Clipped Tip
+Fraction** mixes recently shaved ends with naturally tapering hairs; **Tip Taper** shapes the latter.
+Length, Width, Opacity and independent variation controls refine the result. Natural color variation
+changes relative exposure without clipping dark colors to black; Gray Hair Fraction and Gray Hair
+Color add salt-and-pepper growth. Dark color is encoded as sRGB for compact transport and converted
+by the host to its linear working space. Alpha is unchanged.
 
-**Rectangle** and **Ellipse** optionally restrict coverage further. Their normalized Center X/Y and
-Width/Height, pixel edge feather, and rotation affect only these shapes, not Entire Unmasked Area.
-Placement is UV-based to follow the skin layout. Existing saved rectangular or elliptical placements
-are preserved; choose Entire Unmasked Area and regenerate to remove their additional boundary.
+### Placement and material response
+
+**Coverage** defaults to **Entire Unmasked Area**. Use **Control Mask** or the editable layer mask to
+exclude lips, nostrils, eyes, ears and unwanted cheek/neck areas. White allows stubble; black excludes
+it. Rectangle or Ellipse adds a placement boundary with center, size, rotation and feather.
+Skin between features remains transparent. Shared/overlapping UVs necessarily share texture detail.
+
+All channels use the same groom and overlap ordering. Roughness is straight data with coverage
+applied once; contact shadows do not change the roughness of uncovered skin. **Hair Height** uses
+rounded relief in **Normal Control**, combined with the existing skin normal by Overlay Painter.
+Overlapping hairs use the maximum shaft relief, not an accumulating height. Keep Normal Control
+enabled and avoid adding a duplicate generated normal map. Fine hairs use coverage-preserving
+filtering, but no texture can retain arbitrarily small detail after aggressive downsampling.
+
+Natural generation is bounded to 750,000 potential follicles per surface. If that limit is reached,
+increase Root Spacing or reduce Reference Resolution; output resolution can remain high. The host
+retains the previous valid plugin output on failure. A single groom is reused across channel sizes.
 
 ### Shadows, redness, rash, pimples, and spots
 
@@ -957,11 +975,11 @@ value. Shadow Spread and Shadow Offset Down control softness and direction witho
 lighting into the base skin.
 
 **Shaving Redness** adds a small red spot at each follicle root in either direction mode. Set it to
-zero to disable it; try 0.05–0.15 for a subtle response. **Redness Radius (px)** controls its size and
+zero to disable it; the natural default is a restrained 0.015. **Redness Radius (px)** controls its size and
 **Redness Color** sets its tint. These controls can represent a fresh razor pass or inflamed follicles.
 
 **Follicle Depth** adds a shallow depression at each hair root, independently of the redness color.
-Its default 0.015 is deliberately smaller than the default Hair Height of 0.12. **Follicle Radius
+Its default 0.003 is deliberately smaller than the default Hair Height of 0.025. **Follicle Radius
 (px)** controls the pore width. Set Depth to zero to disable pore relief.
 
 **Pimple Amount** selects existing hair follicles rather than scattering unrelated spots.
@@ -991,8 +1009,8 @@ skin. Saving the paint document preserves editability, while exporting creates t
 
 Gotchas:
 
-- World Down follows the mesh's current world orientation. UV Direction remains useful for artistic
-  hair flow that differs from gravity; use separate layers and masks for independently directed areas.
+- Facial flow needs anatomical landmarks. Without them, World Down follows gravity; use UV
+  Direction or separately masked layers for manual grooming.
 - Mirrored islands that overlap in texture space still share the same texels. A single texture cannot
   store different stubble for both sides; separate their UVs when independent results are required.
 - A one-pixel hair at low resolution can alias or disappear after scaling. Author and judge at the
@@ -1909,3 +1927,7 @@ Before export or beta review:
 - Save/reopen the document and confirm cached output, masks, guide textures, Sprites, stripe lists, and
   parameters restore correctly.
 - Run a representative export and inspect the exported textures with their intended import settings.
+
+## Makeup and coating finishes
+
+See [Makeup and Coating Damage](MakeupAndCoatingDamage.md) for the anatomical face generator, additions to Print Aging and corrosion, finished material presets, and validation notes.

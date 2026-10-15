@@ -4,7 +4,26 @@ The UMA Generator is the point where an assembled character recipe becomes rende
 
 This guide explains how to set up the generator prefab and tune the current UMA Generator controls for mobile, PC, and console projects. The recommendations are starting points rather than universal limits. Always validate them on representative content and target hardware.
 
-## Overview of the UMA Generator
+## Quick setup: Welcome > UMA Defaults
+
+Open **UMA Defaults** in the UMA Welcome window. Review the skin UMAMaterials listed on the page, then choose **Setup UMA for maximum speed** or **Setup UMA for maximum flexibility**. The page uses the Generator Prefab assigned in UMA Settings and saves the selected material assets. It detects skin materials by material or shader name; use **Add Skin Material** for custom names and uncheck anything you want to preserve. Materials using existing textures/materials or other specialized types are skipped.
+
+| Setting | Maximum speed | Maximum flexibility |
+|---|---|---|
+| Skin UMAMaterial type | Atlas | No Atlas |
+| Supported source-UV cropping | Enabled | Disabled |
+| Unused, non-T-pose bone cleanup | Enabled | Disabled |
+| Mesh combiner | Jobified | Jobified |
+
+Atlas mode can reduce compatible material groups and draw calls; it can add texture-packing work during character creation. No Atlas retains separate textures/materials for customization, potentially increasing material count and memory. These are starting configurations, not hardware-specific performance guarantees. Cropping keeps its existing shader-safety checks; unknown custom shaders are not automatically opted in. Bone cleanup preserves required bones and UMAIgnore subtrees; use the appropriate UMAIgnore/UMAKeepChain tags for external attachments.
+
+Both modes disable Process All Pending, use Iteration Count 1, Inter Frame Delay 0, and a 2 ms **soft** incremental-work budget (an atomic step can exceed it). They keep generated RenderTextures, enable async/multithreaded conversion and mip regeneration for later conversion use, set conversion apply budget to 4, disable inline application and forced renderer recreation, enable atlas fitting, use automatic 16/32-bit index sizing, preserve ignored attachments, and disable bone-cleanup timing measurements. Garbage Collection Rate is set to 128 to avoid a forced collection after each mesh/rig build in players; zero is not an off switch in the current generator. Existing unused combiner components are retained; the generator's active combiner reference is changed to Jobified.
+
+The presets preserve atlas resolutions, runtime/editor scale factors, automatic memory scaling and thresholds, atlas overflow algorithm, material mip/filter/compression settings, shader/channel data, default renderer/overlay/texture merger references, keep tags, race blendshape behavior, and diagnostic visibility. These depend on content, platform, or application behavior rather than the Atlas/No Atlas choice. Blendshapes and MeshModifiers still need selective authoring; neither preset adds or removes them. Legacy fields such as Collect Garbage and Allow Read From Mesh are retained; the current work loop does not use them to control collection or mesh readability.
+
+The final dialog lists the configured prefab and materials. Rebuild existing avatars or re-enter Play mode afterward. Scene generator overrides, Generator Quality profiles, and per-character overrides are not rewritten and may take precedence. Applying the other mode switches the mode-specific settings; it does not restore every earlier custom generator value. Package reinstalls can replace bundled assets, so keep project-owned copies for lasting customization.
+
+## How the generator works
 
 An UMA character begins as data: a race, a recipe, slots, overlays, colors, DNA, renderer settings, and optional modifiers. The generator consumes that data and produces the objects Unity renders and animates.
 

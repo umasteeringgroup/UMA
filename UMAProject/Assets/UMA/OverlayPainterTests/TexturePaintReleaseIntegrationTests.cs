@@ -847,8 +847,9 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(mask.sourceChannel, Is.EqualTo(TexturePaintChannel.Albedo));
         }
 
-        [Test]
-        public void CopyAndPasteLayerMaskSnapshotsPixelsSettingsAndSupportsUndoRedo()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void CopyAndPasteLayerMaskSnapshotsPixelsSettingsAndSupportsUndoRedo(bool inverted)
         {
             TextureSet set = CreateSet(TexturePaintChannel.Albedo, Color.black);
             CreateStore(set);
@@ -881,7 +882,7 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That((bool)copy.Invoke(stage, new object[] { set, source }), Is.True);
             sourceMask.target.Reset(null, TextureSet.MaskColor(0.75f));
             sourceMask.effects.noise.seed = 99;
-            Assert.That((bool)paste.Invoke(stage, new object[] { set, destination }), Is.True);
+            Assert.That((bool)paste.Invoke(stage, new object[] { set, destination, inverted }), Is.True);
 
             TexturePaintLayerMask pasted = destination.layerMask;
             Assert.That(pasted, Is.Not.Null);
@@ -891,6 +892,9 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(pasted.baseValue, Is.EqualTo(0f));
             Assert.That(pasted.effects.noise.enabled, Is.True);
             Assert.That(pasted.effects.noise.seed, Is.EqualTo(17));
+            Assert.That(pasted.effects.stack.Count, Is.EqualTo(inverted ? 1 : 0));
+            if (inverted)
+                Assert.That(pasted.effects.stack[0].kind, Is.EqualTo(TexturePaintMaskEffectKind.Invert));
             Assert.That(pasted.sourceSettings.color.r, Is.EqualTo(0.35f).Within(0.001f));
             Assert.That(pasted.pluginId, Is.EqualTo("mask-generator"));
             Assert.That(pasted.pluginParameters.Float("amount"), Is.EqualTo(0.45f).Within(0.001f));
@@ -900,6 +904,11 @@ namespace UMA.TexturePaint.Editor.Tests
             AssertColor(ReadCenter(destination.layerMask.target.Front), TextureSet.MaskColor(0.9f), 0.01f);
             Assert.That((bool)redo.Invoke(stage, null), Is.True);
             Assert.That(destination.layerMask, Is.SameAs(pasted));
+            AssertColor(ReadCenter(destination.layerMask.target.Front), TextureSet.MaskColor(0.25f), 0.01f);
+            // An inverted paste must not modify the clipboard or its source mask.
+            Assert.That(sourceMask.effects.stack, Is.Empty);
+            Assert.That((bool)paste.Invoke(stage, new object[] { set, destination, false }), Is.True);
+            Assert.That(destination.layerMask.effects.stack, Is.Empty);
             AssertColor(ReadCenter(destination.layerMask.target.Front), TextureSet.MaskColor(0.25f), 0.01f);
             clear.Invoke(stage, null);
         }

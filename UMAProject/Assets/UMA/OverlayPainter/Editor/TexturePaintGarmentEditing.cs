@@ -259,7 +259,54 @@ namespace UMA.TexturePaint.Editor
                 }
             }
             s.amount=EditorGUILayout.Slider("Amount",s.amount,0,1);
+            if(s.kind==TexturePaintGarmentKind.Wraps)
+            {
+                EditorGUILayout.HelpBox("Texture relief follows the path or projection surface; it does not add mesh thickness. Feature Spacing is strip width in world units (UV units on a 2D path).",MessageType.None);
+                if(s.preset!=TexturePaintGarmentPreset.AdhesiveDressing)
+                {
+                    s.wrapOverlap=EditorGUILayout.Slider("Strip Overlap",s.wrapOverlap,0,.85f);
+                    s.wrapAngle=EditorGUILayout.Slider("Winding Angle",s.wrapAngle,-75,75);
+                }
+                s.wrapWrinkles=EditorGUILayout.Slider("Wrinkles",s.wrapWrinkles,0,1);
+                s.wrapLift=EditorGUILayout.Slider("Lifted Edges",s.wrapLift,0,2);
+                s.wrapFray=EditorGUILayout.Slider("Edge Fraying",s.wrapFray,0,1);
+                s.wrapStain=EditorGUILayout.Slider("Staining",s.wrapStain,0,1);
+                s.wrapResidue=EditorGUILayout.Slider("Adhesive Residue",s.wrapResidue,0,1);
+                s.wrapWeave=EditorGUILayout.FloatField("Weave / Grain Spacing",s.wrapWeave);
+                s.surfaceColor=EditorGUILayout.ColorField("Wrap / Adhesive Color",s.surfaceColor);
+                s.accentColor=EditorGUILayout.ColorField("Stain Color",s.accentColor);
+                s.roughness=EditorGUILayout.Slider("Material Roughness",s.roughness,0,1);
+            }
+            if(s.kind==TexturePaintGarmentKind.Welds)
+            {
+                s.weldWidth=EditorGUILayout.Slider(new GUIContent("Bead Width / Ribbon","The ribbon also reserves room for heat tint and spatter."),s.weldWidth,.025f,.65f);
+                s.weldRipple=EditorGUILayout.Slider("Bead Ripple",s.weldRipple,0,1);
+                s.weldHeat=EditorGUILayout.Slider("Heat Tint",s.weldHeat,0,1);
+                s.weldHeatWidth=EditorGUILayout.Slider("Heat Spread / Ribbon",s.weldHeatWidth,.01f,.45f);
+                s.weldSoot=EditorGUILayout.Slider("Soot",s.weldSoot,0,1);
+                s.weldSpatter=EditorGUILayout.Slider("Spatter",s.weldSpatter,0,1);
+                s.surfaceColor=EditorGUILayout.ColorField("Seam Metal Color",s.surfaceColor);
+                s.roughness=EditorGUILayout.Slider("Seam Roughness",s.roughness,0,1);
+            }
+            if(s.kind==TexturePaintGarmentKind.Lace)
+            {
+                s.laceThread=EditorGUILayout.Slider("Thread Width / Ribbon",s.laceThread,.002f,.06f);
+                s.laceScallop=EditorGUILayout.Slider("Border Scalloping",s.laceScallop,0,.25f);
+                s.laceNet=EditorGUILayout.Slider("Netting",s.laceNet,0,1);
+                s.laceTwist=EditorGUILayout.Slider("Yarn Twist",s.laceTwist,0,1);
+                s.surfaceColor=EditorGUILayout.ColorField("Thread Color",s.surfaceColor);
+                s.roughness=EditorGUILayout.Slider("Thread Roughness",s.roughness,0,1);
+            }
             bool zipper=s.kind==TexturePaintGarmentKind.Hardware && s.variant<=1;
+            if(zipper)
+            {
+                using(new EditorGUILayout.HorizontalScope())
+                {
+                    s.zipperStyle.preset=(TexturePaintZipperStylePreset)EditorGUILayout.EnumPopup("Zipper Style Preset",s.zipperStyle.preset);
+                    if(GUILayout.Button("Apply Style",GUILayout.Width(85))){s.ApplyZipperStyle(s.zipperStyle.preset);GUI.changed=true;}
+                }
+                EditorGUILayout.LabelField("Apply Style sets teeth, tape, stitches and hardware finish; placement and output channels stay as authored.",EditorStyles.wordWrappedMiniLabel);
+            }
             if(s.kind!=TexturePaintGarmentKind.Pockets && (s.kind!=TexturePaintGarmentKind.Hardware || s.variant<=1))
             s.detailSize=EditorGUILayout.FloatField(new GUIContent("Feature Spacing","Fold spacing, zipper tooth pitch, exposed yarn spacing or embroidery thread spacing."),s.detailSize);
             if(s.kind!=TexturePaintGarmentKind.Wear && s.preset!=TexturePaintGarmentPreset.PrintedLogo)
@@ -316,6 +363,16 @@ namespace UMA.TexturePaint.Editor
                     s.threadColor=EditorGUILayout.ColorField("Thread Color",s.threadColor);s.stitchRows=EditorGUILayout.IntSlider("Stitch Rows",s.stitchRows,0,3);
                     s.stitchSize=EditorGUILayout.FloatField("Thread Width",s.stitchSize);s.stitchSpacing=EditorGUILayout.FloatField("Stitch Spacing",s.stitchSpacing);
                     s.edgeWidth=EditorGUILayout.Slider("Stitch Inset / Width",s.edgeWidth,.005f,.2f);
+                    if(zipper)
+                    {
+                        var z=s.zipperStyle;
+                        z.stitchStyle=(TexturePaintZipperStitchStyle)EditorGUILayout.EnumPopup("Stitch Pattern",z.stitchStyle);
+                        z.stitchLength=EditorGUILayout.Slider(new GUIContent("Stitch Length (%)","Length along one repeat, relative to Stitch Spacing. Zigzag runs continuously between alternating entry points."),z.stitchLength*100,10,95)/100;
+                        if(z.stitchStyle!=TexturePaintZipperStitchStyle.Straight)
+                            z.stitchSpread=EditorGUILayout.Slider(new GUIContent("Stitch Spread / Width","Half-width of a zigzag or chain loop, relative to the full ribbon width."),z.stitchSpread,.002f,.1f);
+                        z.stitchHeight=EditorGUILayout.Slider("Thread Height Multiplier",z.stitchHeight,0,4);
+                        z.stitchRoughness=EditorGUILayout.Slider("Thread Roughness",z.stitchRoughness,0,1);
+                    }
                 }
             }
             if(s.kind==TexturePaintGarmentKind.Hardware&&s.variant<=1 || s.kind==TexturePaintGarmentKind.Pockets&&s.variant<=1)s.opening=EditorGUILayout.Slider("Opening / Separation",s.opening,0,.7f);
@@ -325,6 +382,17 @@ namespace UMA.TexturePaint.Editor
                     s.zipperWidth=EditorGUILayout.Slider(new GUIContent("Zipper Width (%)",
                         "Scales the teeth, slider, pull and stops independently of the backing ribbon. Keeps tooth spacing and thread width unchanged."),s.zipperWidth*100,10,200)/100;
                     s.slider=EditorGUILayout.Slider("Zipper Slider Position",s.slider,0,1);
+                    DrawZipperStyle(s);
+                    if(DrawPropertySubsectionFoldout("garment.zipper.parts","Hardware Height & Shine"))
+                    {
+                        s.Normalize();
+                        DrawZipperPart("Teeth",s.zipperTeeth,s.variant==0?1:0,s.metalRoughness);
+                        DrawZipperPart("Stops",s.zipperStops,1,s.metalRoughness);
+                        DrawZipperPart("Slider",s.zipperSlider,1,s.metalRoughness);
+                        DrawZipperPart("Pull",s.zipperPull,1,s.metalRoughness);
+                        DrawZipperPart("Tang / Attachment",s.zipperTang,1,s.metalRoughness);
+                        EditorGUILayout.HelpBox("Smoothness 1 is shiny; 0 is matte. It is written as inverse Roughness. Enable Metallic, Roughness and Height (Normal Control) under Generated Channels. Height changes surface lighting, not mesh geometry.",MessageType.Info);
+                    }
                 }
                 else s.repeat=EditorGUILayout.IntSlider("Hardware Count",s.repeat,1,32);}
             if(s.kind==TexturePaintGarmentKind.Distress||s.kind==TexturePaintGarmentKind.Labels)
@@ -355,6 +423,51 @@ namespace UMA.TexturePaint.Editor
                 if(missing.Length>0)EditorGUILayout.HelpBox("Outputs unavailable on this target: "+missing,MessageType.Info);
             }
             EditorGUILayout.LabelField("Relief, openings and loose threads are texture effects. Use Normal layer blending to preserve fabric beneath grayscale shading.",EditorStyles.wordWrappedMiniLabel);
+        }
+
+        private void DrawZipperStyle(TexturePaintGarmentSettings s)
+        {
+            var z=s.zipperStyle;
+            if(DrawPropertySubsectionFoldout("garment.zipper.teeth","Tooth Design"))
+            {
+                z.toothShape=(TexturePaintZipperToothShape)EditorGUILayout.EnumPopup(new GUIContent("Tooth Shape","Construction Default preserves the original metal or coil design. Other choices work on either construction."),z.toothShape);
+                z.toothWidth=EditorGUILayout.Slider("Tooth Width Multiplier",z.toothWidth,.4f,2);
+                z.toothLength=EditorGUILayout.Slider(new GUIContent("Tooth Length Multiplier","Length of each tooth along the path; Feature Spacing controls its pitch."),z.toothLength,.3f,1.4f);
+                z.toothRoundness=EditorGUILayout.Slider("Tooth Corner Rounding",z.toothRoundness,0,2);
+                z.bankOffset=EditorGUILayout.Slider(new GUIContent("Bank Stagger (%)","Relative phase between the two banks. 50% alternates interlocking teeth; 0% aligns the banks."),z.bankOffset*100,0,100)/100;
+            }
+            if(DrawPropertySubsectionFoldout("garment.zipper.tape","Tape & Edge Cords"))
+            {
+                z.tapeWidth=EditorGUILayout.Slider(new GUIContent("Tape Width (%)","Full tape width relative to the ribbon. Does not resize hardware. Stitch rows follow the tape edges."),z.tapeWidth*100,10,98)/100;
+                z.tapeHeight=EditorGUILayout.Slider("Tape Height / Relief",z.tapeHeight,0,2);
+                z.weave=(TexturePaintZipperTapeWeave)EditorGUILayout.EnumPopup("Weave Pattern",z.weave);
+                z.weaveScale=EditorGUILayout.FloatField(new GUIContent("Weave Spacing","World units (UV units on 2D paths). Zero follows thread width as in older projects. Unresolved fibers fade rather than alias."),z.weaveScale);
+                z.weaveContrast=EditorGUILayout.Slider("Weave Color Contrast",z.weaveContrast,0,1);
+                z.weaveHeight=EditorGUILayout.Slider("Weave Height / Relief",z.weaveHeight,0,1);
+                z.cordHeight=EditorGUILayout.Slider(new GUIContent("Edge Cord Height","Zero hides the raised cords running along the tape edges."),z.cordHeight,0,3);
+                if(z.cordHeight>0)
+                {
+                    z.cordWidth=EditorGUILayout.Slider("Cord Width / Ribbon",z.cordWidth,.002f,.1f);
+                    z.cordInset=EditorGUILayout.Slider("Cord Inset / Ribbon",z.cordInset,0,.2f);
+                    z.cordColor=EditorGUILayout.ColorField("Cord Color",z.cordColor);
+                }
+            }
+        }
+
+        private static void DrawZipperPart(string label,TexturePaintZipperPartSettings part,float defaultMetallic,float defaultRoughness)
+        {
+            EditorGUILayout.LabelField(label,EditorStyles.boldLabel);
+            using(new EditorGUI.IndentLevelScope())
+            {
+                part.height=EditorGUILayout.Slider(new GUIContent("Height Multiplier","Scales this part's relief. Relief and 3D Depth set the overall strength; high values are smoothly limited to preserve bevels."),part.height,0,10);
+                EditorGUI.BeginChangeCheck();
+                float metallic=EditorGUILayout.Slider("Metallic",part.metallic<0?defaultMetallic:part.metallic,0,1);
+                if(EditorGUI.EndChangeCheck())part.metallic=metallic;
+                EditorGUI.BeginChangeCheck();
+                float smoothness=EditorGUILayout.Slider(new GUIContent("Smoothness","0 = matte, 1 = shiny. Until overridden, follows Hardware Roughness."),part.smoothness<0?1-defaultRoughness:part.smoothness,0,1);
+                if(EditorGUI.EndChangeCheck())part.smoothness=smoothness;
+                if(GUILayout.Button("Use Shared Finish")){part.metallic=-1;part.smoothness=-1;GUI.changed=true;}
+            }
         }
     }
 }

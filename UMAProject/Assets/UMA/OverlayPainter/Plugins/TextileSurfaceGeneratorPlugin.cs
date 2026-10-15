@@ -26,7 +26,7 @@ namespace UMA.TexturePaint.Examples
             id = "com.uma.texturepaint.textile-surface",
             displayName = "Quilt, Embroidery, Perforation & Atlas Scatter",
             description = "Builds coordinated stitched, padded, punched, embroidered, or atlas-scattered material detail.",
-            pluginVersion = "1.3.0",
+            pluginVersion = "1.4.0",
             capabilities = TexturePaintPluginCapability.Generator | TexturePaintPluginCapability.LongRunning,
             declaredChannels = TexturePaintChannelMask.All,
             readChannels = TexturePaintChannelMask.All,
@@ -49,11 +49,18 @@ namespace UMA.TexturePaint.Examples
                 throw new InvalidOperationException("Atlas Scatter requires an Atlas Texture. " +
                     "Assign a regular grid atlas in the Atlas Fabric section and set Atlas Columns and Atlas Rows " +
                     "to match it (use 1 by 1 for a single image). Alpha defines the stamp shape.");
-            return Task.Run(() => Generate(context, s, pattern, atlas), context.cancellationToken);
+            var parameters=context.parameters.Clone();
+            var regions=context.GetTextureParameter("threadRegions");
+            return Task.Run(() =>
+            {
+                var embroidery=s.mode==Mode.Embroidery && parameters.Integer("embroideryStyle",0)>0
+                    ? new AdvancedEmbroidery(parameters,pattern,regions,context.cancellationToken) : null;
+                Generate(context, s, pattern, atlas, embroidery);
+            }, context.cancellationToken);
         }
 
         private static void Generate(TexturePaintCommandContextV2 c, Settings s,
-            TexturePaintReadOnlyParameterTexture pattern, TexturePaintReadOnlyParameterTexture atlas)
+            TexturePaintReadOnlyParameterTexture pattern, TexturePaintReadOnlyParameterTexture atlas, AdvancedEmbroidery embroidery)
         {
             int surfaces = Math.Max(1, c.source.surfaceIds.Count);
             for (int si = 0; si < c.source.surfaceIds.Count; si++)
@@ -64,7 +71,7 @@ namespace UMA.TexturePaint.Examples
                 {
                     TexturePaintReadOnlyMask mask = c.source.GetMask(id);
                     if (mask == null) continue;
-                    GenerateSize(c, s, pattern, atlas, id, mask.width, mask.height, si, surfaces, true);
+                    GenerateSize(c, s, pattern, atlas, id, mask.width, mask.height, si, surfaces, true, embroidery:embroidery);
                     continue;
                 }
                 var groups = new Dictionary<long, List<TexturePaintChannel>>();
@@ -80,7 +87,7 @@ namespace UMA.TexturePaint.Examples
                 foreach (KeyValuePair<long, List<TexturePaintChannel>> pair in groups)
                 {
                     int width = (int)(pair.Key >> 32), height = (int)pair.Key;
-                    GenerateSize(c, s, pattern, atlas, id, width, height, si, surfaces, false, pair.Value);
+                    GenerateSize(c, s, pattern, atlas, id, width, height, si, surfaces, false, pair.Value, embroidery);
                 }
 
                 void Add(TexturePaintChannel channel, bool enabled)
@@ -99,7 +106,7 @@ namespace UMA.TexturePaint.Examples
         private static void GenerateSize(TexturePaintCommandContextV2 c, Settings s,
             TexturePaintReadOnlyParameterTexture pattern, TexturePaintReadOnlyParameterTexture atlas,
             string id, int width, int height, int si, int surfaces, bool mask,
-            List<TexturePaintChannel> channels = null)
+            List<TexturePaintChannel> channels = null, AdvancedEmbroidery embroidery = null)
         {
             var spriteSet = s.mode == Mode.Quilt ? c.source.GetParameterSpriteSet("quiltSpriteSet") : null;
             for (int y0 = 0; y0 < height; y0 += Rows)
@@ -118,6 +125,11 @@ namespace UMA.TexturePaint.Examples
                         Vector2 uv = Rotate(new Vector2((x + .5f) / width,
                             (y0 + ly + .5f) / height), s.rotation);
                         Sample sample = SampleMode(s, uv, pattern, spriteSet == null ? atlas : null, new Vector2(1f / width, 1f / height));
+                        if(embroidery!=null)
+                        {
+                            var e=embroidery.Sample(uv*s.patternTiling+s.offset,s.patternTiling/Math.Min(width,height));
+                            sample=new Sample(e.color,e.roughness,s.baseMetallic,e.ao,e.height,e.coverage);
+                        }
                         float occlusion = s.shadingStrength > 0f
                             ? Mathf.Pow(Mathf.Max(.025f, sample.ao), s.shadingStrength) : 1f;
                         Color shaded = sample.color;
@@ -145,6 +157,7 @@ namespace UMA.TexturePaint.Examples
                             };
                             if (spriteSet != null)
                                 result = SpriteSetPanel(s, spriteSet, uv, channel, result, sample.fabricWeight, contactShade);
+                            if(embroidery!=null)result.a=sample.coverage;
                             buffers[channel][index] = (Color32)result;
                         }
                     }
@@ -439,6 +452,18 @@ namespace UMA.TexturePaint.Examples
 
         private static List<TexturePaintPluginParameterDefinition> WithPanelAtlas(List<TexturePaintPluginParameterDefinition> parameters)
         {
+            parameters.InsertRange(parameters.FindIndex(p=>p.id=="perforation"),new[]
+            {
+                E("embroideryStyle","Stitch Construction",new[]{"Legacy directional fill","Satin + contour border","Tatami + contour border"},0,"Legacy preserves saved layers. Advanced modes produce transparent embroidered motifs; place fabric underneath."),
+                F("threadLength","Tatami Stitch Length",.005f,1,.12f,"Length in one motif tile. Satin spans the region; Tatami breaks threads into staggered stitches."),
+                F("borderWidth","Contour Border Width",0,.2f,.025f,"Inward width in one motif tile. Zero disables the border; holes also receive borders."),
+                C("borderColor","Border Thread Color",new Color(.65f,.48f,.17f),"Independent border thread."),
+                F("threadVariation","Layered Thread Color Variation",0,1,.18f,"Deterministic per-stitch variation and lighter crowns over darker gaps."),
+                T("threadRegions","Thread Region Map (RGB)","Optional RGB masks: red, green and blue independently select thread angle and color. Black uses the main thread. Import this control map as linear data."),
+                F("redDirection","Red Region Direction",-180,180,0,"Stitch direction in degrees."), C("redThread","Red Region Thread",new Color(.75f,.16f,.12f),"Thread color for red regions."),
+                F("greenDirection","Green Region Direction",-180,180,60,"Stitch direction in degrees."), C("greenThread","Green Region Thread",new Color(.18f,.42f,.15f),"Thread color for green regions."),
+                F("blueDirection","Blue Region Direction",-180,180,120,"Stitch direction in degrees."), C("blueThread","Blue Region Thread",new Color(.16f,.3f,.65f),"Thread color for blue regions.")
+            });
             var source = new List<TexturePaintPluginParameterDefinition>
             {
                 H("atlasSource", "Atlas Fabric", "Quilt fits one fabric tile to each panel and retains its stitches and relief. Use a Sprite Set for all material channels, or a texture atlas for color. Atlas Scatter uses the texture for separate stamps.")

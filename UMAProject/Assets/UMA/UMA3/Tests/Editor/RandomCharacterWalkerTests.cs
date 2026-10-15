@@ -442,6 +442,20 @@ namespace UMA.Examples.Tests
 
     public sealed class RandomCharacterWalkerPlayModeTests
     {
+        private static IEnumerator WaitForPhysicsStep()
+        {
+            // These are Edit Mode tests entering Play Mode: ordinary YieldInstructions
+            // do not synchronize the editor test runner with the player loop.
+            double before = Time.fixedTimeAsDouble;
+            double timeout = Time.realtimeSinceStartupAsDouble + 5d;
+            while (Time.fixedTimeAsDouble <= before)
+            {
+                Assert.That(Time.realtimeSinceStartupAsDouble, Is.LessThan(timeout),
+                    "The player loop did not advance a physics step within five seconds.");
+                yield return null;
+            }
+        }
+
         [UnityTest]
         public IEnumerator PhysicsWalkerIdlesAtWallAndResumesAfterItIsRemoved()
         {
@@ -470,14 +484,20 @@ namespace UMA.Examples.Tests
                     fixture.walker.blockedRetryInterval = 10f;
                     fixture.walker.movementStartGraceTime = 0.1f;
                     fixture.root.SetActive(true);
-                    yield return null;
+                    yield return WaitForPhysicsStep();
                     fixture.walker.ApplyShot(target.transform, false);
                     float deadline = Time.time + 5f;
                     while (!fixture.walker.IsMovementBlocked && Time.time < deadline)
-                        yield return new WaitForFixedUpdate();
+                        yield return WaitForPhysicsStep();
                     Assert.That(fixture.walker.IsMovementBlocked, Is.True, "The collision solver should block forward travel.");
-                    yield return null;
-                    yield return new WaitForFixedUpdate();
+                    yield return WaitForPhysicsStep();
+                    Assert.That(fixture.Get<Vector3>("requestedPhysicsVelocity"), Is.EqualTo(Vector3.zero),
+                        "A blocked walker must stop requesting locomotion.");
+                    // The collision solver can briefly push an overlapping capsule away
+                    // from the wall even after its requested locomotion has been cleared.
+                    double settleDeadline = Time.fixedTimeAsDouble + 0.25d;
+                    while (Mathf.Abs(body.linearVelocity.z) >= 0.01f && Time.fixedTimeAsDouble < settleDeadline)
+                        yield return WaitForPhysicsStep();
                     Assert.That(fixture.animator.GetFloat("Speed"), Is.Zero);
                     Assert.That(Mathf.Abs(body.linearVelocity.z), Is.LessThan(0.01f));
                     float blockedZ = body.position.z;
@@ -485,14 +505,14 @@ namespace UMA.Examples.Tests
                     fixture.Set("blockedRetryAt", Time.time);
                     deadline = Time.time + 3f;
                     while (body.position.z < blockedZ + 0.25f && Time.time < deadline)
-                        yield return new WaitForFixedUpdate();
+                        yield return WaitForPhysicsStep();
                     Assert.That(body.position.z, Is.GreaterThan(blockedZ + 0.25f));
                     Assert.That(fixture.walker.IsMovementBlocked, Is.False);
                     Assert.That(body.position.y, Is.EqualTo(1f).Within(0.1f), "Gravity/floor contact must remain controlled by physics.");
 
                     target.transform.position = body.position;
                     yield return null;
-                    yield return new WaitForFixedUpdate();
+                    yield return WaitForPhysicsStep();
                     Assert.That(fixture.animator.GetFloat("Speed"), Is.Zero, "Pursuit stopping distance should idle immediately.");
                     target.transform.position += Vector3.forward * 20f;
                     yield return null;
@@ -529,7 +549,7 @@ namespace UMA.Examples.Tests
                     fixture.root.SetActive(true);
                     float deadline = Time.time + 3f;
                     while (!fixture.walker.IsMovementBlocked && Time.time < deadline)
-                        yield return new WaitForFixedUpdate();
+                        yield return WaitForPhysicsStep();
                     Assert.That(fixture.walker.IsMovementBlocked, Is.True);
                     float stoppedAt = Time.time;
                     float stoppedZ = body.position.z;

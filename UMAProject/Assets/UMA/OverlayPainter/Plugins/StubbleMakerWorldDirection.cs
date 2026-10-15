@@ -11,6 +11,12 @@ namespace UMA.TexturePaint.Examples
         internal static bool TryWorldDirection(TexturePaintReadOnlyMeshMap position,
             TexturePaintReadOnlyMeshMap normal, TexturePaintReadOnlyMeshMap ids,
             Vector2 uv, int outputWidth, int outputHeight, float degrees, out Vector2 direction)
+            => TrySurfaceGrowthDirection(position, normal, ids, uv, outputWidth, outputHeight,
+                Vector3.down, degrees, out direction);
+
+        internal static bool TrySurfaceGrowthDirection(TexturePaintReadOnlyMeshMap position,
+            TexturePaintReadOnlyMeshMap normal, TexturePaintReadOnlyMeshMap ids,
+            Vector2 uv, int outputWidth, int outputHeight, Vector3 growth, float degrees, out Vector2 direction)
         {
             direction = Vector2.down;
             if (position == null || normal == null || ids == null ||
@@ -36,7 +42,7 @@ namespace UMA.TexturePaint.Examples
             Vector3 du = Derivative(1, 0), dv = Derivative(0, 1);
             Color encoded = normal.GetPixel(x, y);
             Vector3 n = new Vector3(encoded.r * 2 - 1, encoded.g * 2 - 1, encoded.b * 2 - 1).normalized;
-            Vector3 down = Vector3.ProjectOnPlane(Vector3.down, n);
+            Vector3 down = Vector3.ProjectOnPlane(growth, n);
             // Gravity has no tangent at a horizontal surface. Use an explicit world axis,
             // never the arbitrary orientation or handedness of its UV island.
             if (down.sqrMagnitude < .000001f)
@@ -90,6 +96,7 @@ namespace UMA.TexturePaint.Examples
                 columns = (width + BinSize - 1) / BinSize;
                 rows = (height + BinSize - 1) / BinSize;
                 bins = new List<int>[columns * rows];
+                if (s.density <= 0f) return;
                 var position = context.GetMeshMap(surfaceId, TexturePaintMeshMap.WorldPosition);
                 var normal = context.GetMeshMap(surfaceId, TexturePaintMeshMap.WorldNormal);
                 ids = context.GetMeshMap(surfaceId, TexturePaintMeshMap.SurfaceId);

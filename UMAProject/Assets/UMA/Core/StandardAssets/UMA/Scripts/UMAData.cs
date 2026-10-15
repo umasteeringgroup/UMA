@@ -442,6 +442,10 @@ namespace UMA
         [NonSerialized] public int LastBoneCleanupRemoved;
         [NonSerialized] public double LastBoneCleanupMilliseconds;
         [NonSerialized] internal bool BoneCleanupPending;
+        [NonSerialized] internal bool AnimatorBindingsDirty;
+
+        internal bool NeedsAnimatorBindingRefresh => AnimatorBindingsDirty && !rawAvatar &&
+            (animationController != null || !disableAnimation);
 
         /// <summary>Call only after a complete rig/mesh transaction, never between renderer builds.</summary>
         public int CleanupUnusedBones(UMAGeneratorBase generator = null)
@@ -507,6 +511,23 @@ namespace UMA
 
 		public void SetRenderers(SkinnedMeshRenderer[] renderers)
 		{
+			int previousCount = this.renderers == null ? 0 : this.renderers.Length;
+			int nextCount = renderers == null ? 0 : renderers.Length;
+			if (previousCount != nextCount)
+			{
+				AnimatorBindingsDirty = true;
+			}
+			else
+			{
+				for (int i = 0; i < nextCount; i++)
+				{
+					if (!ReferenceEquals(this.renderers[i], renderers[i]))
+					{
+						AnimatorBindingsDirty = true;
+						break;
+					}
+				}
+			}
 			this.renderers = renderers;
 		}
 
@@ -555,7 +576,9 @@ namespace UMA
 
 			Mesh mesh = renderer.sharedMesh;
             bool releasedSharedMesh = UMAResourceLeaseOwner.ReleaseMesh(renderer);
-			renderer.sharedMesh = null;
+			// Keep the mesh assigned until deferred destruction. Rebind first releases
+			// the Animator's previous blendshape bindings; clearing this mesh now makes
+			// those bindings write to an empty blendshape array during that release.
 			if (mesh != null && !releasedSharedMesh)
 			{
 				UMAUtils.DestroySceneObject(mesh);
@@ -567,6 +590,11 @@ namespace UMA
 				 renderer.transform.parent == transform);
 			if (ownsRendererObject)
 			{
+				// Destroy is deferred in play mode. Remove the old animation path
+				// before a replacement renderer is published and the Animator binds it.
+				rendererObject.name = "__UMARetired_" + rendererObject.name;
+				renderer.transform.SetParent(null, false);
+				rendererObject.SetActive(false);
 				UMAUtils.DestroySceneObject(rendererObject);
 			}
 			else

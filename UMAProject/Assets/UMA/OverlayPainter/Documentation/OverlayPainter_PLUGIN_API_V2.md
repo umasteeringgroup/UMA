@@ -368,3 +368,9 @@ regions; bare-metal mode preserves metal response throughout the generated damag
 The host reports registration, duration, command count, dirty pixels, cancellation, and exception diagnostics. Plugin exceptions are isolated from the stage and never leave partially replaced layer output.
 
 See `ExampleBrushPlugin`, `ExampleModelPlugin`, and `AgifyGeneratorPlugin` for working v2 examples.
+
+### Anatomical snapshots and selective mesh maps
+
+`context.source.GetAnatomy(surfaceId)` returns a detached `TexturePaintAnatomy` in the same world coordinates as World Position. It may be null for an unrigged target. Resolve required landmarks before scheduling CPU work and fail clearly when placement cannot be defined. Mutating the returned copy cannot modify the character or another plugin's snapshot.
+
+Declare only the mesh maps a generator actually uses. Capture now skips undeclared AO, thickness, curvature and exposed-edge calculations. `TextureSet.GetProceduralMeshMaps` accepts an optional `requestedMaps` mask; its default remains All. A later broader request upgrades the cache, retaining the previous cache on cancellation. Consumers of a selectively built `ProceduralMeshMaps` must check `availableMaps` or individual textures; unrequested optional textures are null.

@@ -247,6 +247,12 @@ namespace UMA.Tests
         [SetUp]
         public void SetUp()
         {
+            // Project-window asset decoration is unrelated to these isolated
+            // inspectors and must not deserialize whatever assets the user has visible.
+            EditorApplication.projectWindowItemOnGUI -=
+                (EditorApplication.ProjectWindowItemCallback)Delegate.CreateDelegate(
+                    typeof(EditorApplication.ProjectWindowItemCallback),
+                    typeof(UMAEditorUtilities).GetMethod("DrawItems", BindingFlags.Static | BindingFlags.NonPublic));
             string viewKey = UMAInspectorView.PreferenceKey(typeof(DynamicCharacterAvatar));
             hadViewPreference = EditorPrefs.HasKey(viewKey);
             originalAdvancedView = EditorPrefs.GetBool(viewKey);
@@ -295,6 +301,8 @@ namespace UMA.Tests
             objects.Clear();
             IndexerField.SetValue(null, originalIndexer);
             UMASettings.instance = originalSettings;
+            typeof(UMAEditorUtilities).GetMethod("RefreshProjectWindowTypeDisplay",
+                BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
             Selection.activeObject = originalSelection;
             DynamicCharacterAvatarEditor.showEditorCustomization = originalCustomization;
             DynamicCharacterAvatarEditor.showPrefinedDNA = originalDna;
@@ -662,6 +670,10 @@ namespace UMA.Tests
         {
             var testIndexer = IndexerField.GetValue(null);
             var testSettings = UMASettings.instance;
+            // During the transition, project-window repaint callbacks can initialize
+            // the real indexer before this coroutine restores our isolated services.
+            UMASettings.instance = originalSettings;
+            IndexerField.SetValue(null, originalIndexer);
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload |
                 EnterPlayModeOptions.DisableSceneReload;

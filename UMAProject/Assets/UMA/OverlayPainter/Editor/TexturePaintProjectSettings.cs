@@ -98,6 +98,11 @@ namespace UMA.TexturePaint.Editor
                 EditorGUILayout.PropertyField(serialized.FindProperty("recoveryMinimumIntervalSeconds"), new GUIContent("Minimum Save Interval (seconds)"));
                 if (serialized.ApplyModifiedProperties()) settings.SaveSettings();
                 EditorGUILayout.HelpBox("Settings and authored documents stay in UMAProjectData when the plugin is removed.", MessageType.Info);
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Performance & Memory", EditorStyles.boldLabel);
+                var stage = TexturePaintStageWindow.ActiveStage;
+                if (stage != null) stage.DrawPerformanceProperties();
+                else EditorGUILayout.HelpBox("Open OverlayPainter to adjust document memory budgets and inspect performance.", MessageType.Info);
             }
         };
     }

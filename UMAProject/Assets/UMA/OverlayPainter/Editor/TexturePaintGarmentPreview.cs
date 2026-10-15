@@ -32,7 +32,12 @@ namespace UMA.TexturePaint.Editor
                 pathGenerator=pathGenerator?.Clone();pathGenerator?.Normalize();
                 var generator=pathGenerator?.enabled==true ? TexturePaintPathGenerators.Find(pathGenerator.generatorId) : null;
                 if(pathGenerator?.enabled==true && generator==null)throw new InvalidOperationException("Path generator is not installed.");
-                using var prepared=generator?.Prepare(pathGenerator);
+                using var prepared = generator is ITexturePaintContextualPathGenerator contextual
+                    ? contextual.Prepare(pathGenerator, new TexturePaintPathGeneratorContext { size=size,
+                        resolution=TexturePaintPreviewDisplay.Resolution, footprintPixels=TexturePaintPreviewDisplay.Resolution,
+                        draft=true, closed=closed }) : generator?.Prepare(pathGenerator);
+                if (prepared is ITexturePaintPaddedPathRaster padded)
+                    size = Vector2.Scale(size,new Vector2(1+2*padded.Padding.y,1+2*padded.Padding.x));
                 using var inputs = !isHem && garment?.HasReferences == true && set != null
                     ? new TexturePaintGarmentSettings.Inputs(garment, set, sets, owner) : null;
                 int resolution = TexturePaintPreviewDisplay.Resolution;

@@ -77,12 +77,26 @@ namespace UMA.TexturePaint.Editor
         [NonSerialized] private TexturePaintPreviewMaterialStates previewMaterialStates = new TexturePaintPreviewMaterialStates();
         internal TextureSet MaterialWindowTarget => ActiveTextureSet;
 
-        internal void PreviewMaterialChanged(TextureSet set)
+        internal TextureSet[] MaterialWindowTargets
         {
-            if (set?.previewMaterial == null) return;
+            get
+            {
+                var set = MaterialWindowTarget;
+                if (set == null) return Array.Empty<TextureSet>();
+                var target = controller?.LogicalLayers?.FindTarget(set);
+                return target != null ? controller.LogicalLayers.GetTextureSets(target).ToArray() : new[] { set };
+            }
+        }
+
+        internal void PreviewMaterialChanged(IEnumerable<TextureSet> sets)
+        {
             previewMaterialStates ??= new TexturePaintPreviewMaterialStates();
-            previewMaterialStates.materials.RemoveAll(s => s.surfaceId == set.persistentId);
-            previewMaterialStates.materials.Add(TexturePaintPreviewMaterialState.Capture(set.previewMaterial, set.persistentId));
+            foreach (var set in sets)
+            {
+                if (set?.previewMaterial == null) continue;
+                previewMaterialStates.materials.RemoveAll(s => s.surfaceId == set.persistentId);
+                previewMaterialStates.materials.Add(TexturePaintPreviewMaterialState.Capture(set.previewMaterial, set.persistentId));
+            }
             // Shader controls do not change texture pixels or generator inputs.
             SetDocumentDirtyFlags();
             RepaintAll();
@@ -129,6 +143,7 @@ namespace UMA.TexturePaint.Editor
         private MaterialEditor materialEditor;
         private Material boundMaterial;
         private TextureSet boundSet;
+        private TextureSet[] boundSets = Array.Empty<TextureSet>();
         private string lastState;
         private bool refreshPreview;
 
@@ -165,6 +180,7 @@ namespace UMA.TexturePaint.Editor
         {
             if (materialEditor != null) DestroyImmediate(materialEditor);
             materialEditor = null; boundMaterial = null; boundSet = null; lastState = null;
+            boundSets = Array.Empty<TextureSet>();
         }
 
         private void OnInspectorUpdate()
@@ -177,7 +193,7 @@ namespace UMA.TexturePaint.Editor
         {
             var stage = TexturePaintStageWindow.ActiveStage;
             if (boundMaterial != null && stage?.MaterialWindowTarget == boundSet &&
-                JsonUtility.ToJson(TexturePaintPreviewMaterialState.Capture(boundMaterial, boundSet.persistentId)) != lastState)
+                CaptureBoundState() != lastState)
                 NotifyChanged(stage);
             Repaint();
         }
@@ -185,8 +201,43 @@ namespace UMA.TexturePaint.Editor
         private void NotifyChanged(TexturePaintStageWindow stage)
         {
             materialEditor.PropertiesChanged();
-            stage.PreviewMaterialChanged(boundSet);
-            lastState = JsonUtility.ToJson(TexturePaintPreviewMaterialState.Capture(boundMaterial, boundSet.persistentId));
+            stage.PreviewMaterialChanged(boundSets);
+            lastState = CaptureBoundState();
+        }
+
+        private string CaptureBoundState()
+        {
+            var state = new TexturePaintPreviewMaterialStates();
+            foreach (var set in boundSets)
+                if (set.previewMaterial != null)
+                    state.materials.Add(TexturePaintPreviewMaterialState.Capture(set.previewMaterial, set.persistentId));
+            return JsonUtility.ToJson(state);
+        }
+
+        internal static TextureSet[] EditableTargets(TextureSet active, IEnumerable<TextureSet> group)
+        {
+            if (active?.previewMaterial == null) return Array.Empty<TextureSet>();
+            // MaterialEditor requires a common shader. Keep the active tile first for its sphere preview.
+            return new[] { active }.Concat(group).Where(s => s?.previewMaterial != null &&
+                s.previewMaterial.shader == active.previewMaterial.shader).Distinct().ToArray();
+        }
+
+        internal static void ResetMaterialsToSource(IReadOnlyList<TextureSet> sets)
+        {
+            Undo.RecordObjects(sets.Where(s => s.previewMaterial != null).Select(s => (UnityEngine.Object)s.previewMaterial)
+                .Distinct().ToArray(), "Reset Preview Materials");
+            foreach (var set in sets)
+                if (set.surface?.sourceMaterial != null && set.previewMaterial != null)
+                {
+                    TexturePaintPreviewMaterialState.Capture(set.surface.sourceMaterial, set.persistentId).Apply(set.previewMaterial);
+                    set.BindPreviewTextures(false);
+                }
+        }
+
+        internal static void RecordMaterialUndo(UnityEngine.Object[] materials)
+        {
+            // Explicitly include every tile: MaterialEditor drawers can record only the primary target.
+            Undo.RecordObjects(materials, "Change Preview Materials");
         }
 
         private void OnGUI()
@@ -200,23 +251,29 @@ namespace UMA.TexturePaint.Editor
                 EditorGUILayout.HelpBox("Open Overlay Painter and select a paint target to edit its preview material.", MessageType.Info);
                 return;
             }
-            if (material != boundMaterial)
+            var group = stage.MaterialWindowTargets;
+            var editable = EditableTargets(set, group);
+            var materials = editable.Select(s => (UnityEngine.Object)s.previewMaterial).Distinct().ToArray();
+            if (material != boundMaterial || !boundSets.SequenceEqual(editable) ||
+                materialEditor == null || !materialEditor.targets.SequenceEqual(materials))
             {
-                ReleaseEditor(); boundSet = set; boundMaterial = material;
-                materialEditor = (MaterialEditor)UnityEditor.Editor.CreateEditor(material);
-                lastState = JsonUtility.ToJson(TexturePaintPreviewMaterialState.Capture(material, set.persistentId));
+                ReleaseEditor(); boundSet = set; boundMaterial = material; boundSets = editable;
+                materialEditor = (MaterialEditor)UnityEditor.Editor.CreateEditor(materials);
+                lastState = CaptureBoundState();
             }
             EditorGUILayout.LabelField(set.surface?.slotName ?? set.Name, EditorStyles.boldLabel);
             EditorGUILayout.LabelField(material.shader.name, EditorStyles.wordWrappedMiniLabel);
+            if (group.Length > 1)
+                EditorGUILayout.HelpBox($"Editing {boundSets.Length} materials in this paint target. Each tile keeps its own textures.", MessageType.None);
+            if (editable.Length < group.Length)
+                EditorGUILayout.HelpBox("Some tiles use a different shader. Select those tiles to edit their shader settings separately.", MessageType.Warning);
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("Show on Character")) stage.SetScenePreviewMode(TexturePaintScenePreviewMode.Material);
                 using (new EditorGUI.DisabledScope(set.surface?.sourceMaterial == null || stage.IsPersistenceActive))
                     if (GUILayout.Button("Reset to Source"))
                     {
-                        Undo.RecordObject(material, "Reset Preview Material");
-                        TexturePaintPreviewMaterialState.Capture(set.surface.sourceMaterial, set.persistentId).Apply(material);
-                        set.BindPreviewTextures(false);
+                        ResetMaterialsToSource(boundSets);
                         NotifyChanged(stage);
                     }
             }
@@ -230,7 +287,8 @@ namespace UMA.TexturePaint.Editor
             using (new EditorGUI.DisabledScope(stage.IsPersistenceActive))
             {
                 scroll = scrolling.scrollPosition;
-                MaterialProperty[] properties = MaterialEditor.GetMaterialProperties(new UnityEngine.Object[] { material });
+                MaterialProperty[] properties = MaterialEditor.GetMaterialProperties(materials);
+                RecordMaterialUndo(materials);
                 EditorGUI.BeginChangeCheck();
                 foreach (MaterialProperty property in properties)
                     if ((property.propertyFlags & (ShaderPropertyFlags.HideInInspector | ShaderPropertyFlags.PerRendererData)) == 0 &&

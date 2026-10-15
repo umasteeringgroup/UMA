@@ -935,7 +935,8 @@ namespace UMA.TexturePaint.Editor
             return true;
         }
 
-        private bool PasteLayerMaskFromClipboardWithHistory(TextureSet set, TexturePaintLayer layer)
+        private bool PasteLayerMaskFromClipboardWithHistory(TextureSet set, TexturePaintLayer layer,
+            bool invert = false)
         {
             if (!HasLayerMaskClipboard)
             {
@@ -966,13 +967,17 @@ namespace UMA.TexturePaint.Editor
                     return false;
                 }
                 before[peer.layer] = peer.layer.layerMask;
+                // Invert the complete copied result after its procedural/reference effects.
+                // Keep the paint surface and clipboard intact so the copy stays editable.
+                if (invert)
+                    pasted.effects.stack.Add(TexturePaintMaskEffect.Create(TexturePaintMaskEffectKind.Invert));
                 after[peer.layer] = pasted;
             }
 
             Action restore = () => ApplyLayerMaskClipboardState(peers, before);
             Action apply = () => ApplyLayerMaskClipboardState(peers, after);
             apply();
-            PushLightweightCommand("Paste Layer Mask", restore, apply, () =>
+            PushLightweightCommand(invert ? "Paste Layer Mask (Inverted)" : "Paste Layer Mask", restore, apply, () =>
             {
                 for (int i = 0; i < peers.Count; i++)
                 {
@@ -986,7 +991,7 @@ namespace UMA.TexturePaint.Editor
                 }
             });
             MarkDocumentDirty(peers);
-            ShowWorkspaceStatus($"Pasted mask from '{layerMaskClipboard.sourceLayerName}' onto '{layer.name}'.");
+            ShowWorkspaceStatus($"Pasted {(invert ? "inverted " : string.Empty)}mask from '{layerMaskClipboard.sourceLayerName}' onto '{layer.name}'.");
             return true;
         }
 

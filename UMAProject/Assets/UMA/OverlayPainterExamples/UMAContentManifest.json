@@ -18,6 +18,137 @@
         "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset"
     ],
     "ownedPaths": [
+        "Assets/UMA/OverlayPainterExamples/Artist Generators",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/AdhesiveDressing.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Blue Iris.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Brown Iris.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/ClothBandage.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Colored Tatami Crest.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Crest Motif.png",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Crest Regions.png",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Embroidery-Satin.png",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Embroidery-Tatami.png",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Eyes-Gallery.png",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/GauzeWrap.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Gold Satin Crest.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Gray Iris.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Green Iris.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/GripTape.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Hazel Iris.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/LeatherWrap.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/README.md",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/UMA Eyes Blue Project.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/UMA Eyes Hazel Project.asset",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/UMA-Eye-Slot.png",
+        "Assets/UMA/OverlayPainterExamples/Artist Generators/Wraps-Gallery.png",
+        "Assets/UMA/OverlayPainterExamples/Editor",
+        "Assets/UMA/OverlayPainterExamples/Editor/ArtistGeneratorExamples.cs",
+        "Assets/UMA/OverlayPainterExamples/Editor/MakeupExampleComposite.shader",
+        "Assets/UMA/OverlayPainterExamples/Editor/MakeupFaceExamples.cs",
+        "Assets/UMA/OverlayPainterExamples/Editor/SurfaceDetailExamples.cs",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor/EyebrowExampleComposite.shader",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor/EyebrowFaceExamples.cs",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor/EyebrowShellExamples.cs",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor/UMA.Eyebrow.Examples.Editor.asmdef",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/2908756bcabc02418f328c496dc4524f_816fbcf9.bytes",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/3b352a7712b789f81fbf120692e87ea6_816fbcf9.bytes",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/805c9f6d67824e2b58a37327ab63fe3c_816fbcf9.bytes",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/85bcbde2a705c4cce887482790e6ad06_816fbcf9.bytes",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/91a5505afbe53d5be9473ad8dc9ea3ed_59c5bc33.bytes",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/c9daa08ef207139569c250482687ddfd_816fbcf9.bytes",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/d912e5c3089739def14f58f650b2ce87_816fbcf9.bytes",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy on UMA.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy.asset",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Groomed Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Groomed on UMA.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Groomed.asset",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/README.md",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Arched-4096-Closeup.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Arched-4096-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Arched-4096-Transparent-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Bushy-4096-Closeup.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Bushy-4096-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Bushy-4096-Transparent-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Natural-4096-Closeup.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Natural-4096-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Natural-4096-Transparent-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Performance.txt",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/ScenePathEnvironment.txt",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/ScenePathTests.txt",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Tests.txt",
+        "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Validation.md",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/README.md",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-AmbientOcclusion.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-Metallic.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-Normal.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-NormalControl.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-AmbientOcclusion.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-Metallic.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-Normal.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-NormalControl.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Bronze Editorial-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Bronze Editorial-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Bronze Editorial-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-AmbientOcclusion.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-Metallic.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-Normal.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-NormalControl.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/CoatingResults.txt",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Evening Berry-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Evening Berry-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Evening Berry-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/FaceResults.txt",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Festival Color-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Festival Color-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Festival Color-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Gothic Velvet-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Gothic Velvet-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Gothic Velvet-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Natural Rose-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Natural Rose-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Natural Rose-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Original Skin-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-AmbientOcclusion.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-Metallic.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-Normal.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-NormalControl.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-AmbientOcclusion.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-Metallic.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-Normal.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-NormalControl.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/War Paint-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/War Paint-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/War Paint-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-AmbientOcclusion.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-Metallic.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-Normal.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-NormalControl.png",
+        "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-Roughness.png",
         "Assets/UMA/OverlayPainterExamples/Region Masks",
         "Assets/UMA/OverlayPainterExamples/Region Masks/AnkleCuffs Mask.asset",
         "Assets/UMA/OverlayPainterExamples/Region Masks/Armpits Mask.asset",
@@ -51,9 +182,1182 @@
         "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/dddfe1853b2ad0a41f477ea9f1b5ac06_80597c2b.bytes",
         "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/fa6e03d4db5d38d20aeefe3ae4f9a418_80597c2b.bytes",
         "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Blue Paint.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/BrazedSeam.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Dried Mud.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Dried Water Rings.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/FloralLace.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Fresh Blood.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/GothicLace.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/MigWeld.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Oily Fingerprints.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Oily Runoff.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Peeled Adhesive.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/README.md",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Salt Crust.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/ScallopedLace.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/SolderSeam.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/TigWeld.asset",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Benchmark.txt",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/BrazedSeam-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/BrazedSeam-Checker.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/BrazedSeam-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/FloralLace-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/FloralLace-Checker.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/FloralLace-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/GothicLace-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/GothicLace-Checker.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/GothicLace-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/MigWeld-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/MigWeld-Checker.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/MigWeld-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Regression.txt",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-0-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-0-Coverage.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-0-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-1-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-1-Coverage.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-1-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-2-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-2-Coverage.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-2-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-3-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-3-Coverage.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-3-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-4-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-4-Coverage.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-4-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/ScallopedLace-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/ScallopedLace-Checker.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/ScallopedLace-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/SolderSeam-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/SolderSeam-Checker.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/SolderSeam-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-0-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-0-Coverage.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-0-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-1-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-1-Coverage.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-1-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-2-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-2-Coverage.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-2-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-3-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-3-Coverage.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-3-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Tests.txt",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/TigWeld-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/TigWeld-Checker.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/TigWeld-Material.png",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Timings.txt",
+        "Assets/UMA/OverlayPainterExamples/Surface Details/Wiped Smudges.asset",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Leather - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Leather - PBR.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Leather - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Metals - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Metals - PBR.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Metals - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/ImportSpriteSets.cs.txt",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/generate_expansion.py",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/generate_materials.py",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/validate_expansion_periodicity.py",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/validate_materials.py",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Bone Horn and Keratin - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Bone Horn and Keratin - PBR Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Bone Horn and Keratin - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Brocade and Decorative Fabrics - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Brocade and Decorative Fabrics - PBR Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Brocade and Decorative Fabrics - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - PBR Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Denim - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Denim - PBR.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Denim - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Library Overview.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion PBR Overview.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Periodicity Validation.txt",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Seam Measurements.json",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Knits and Soft Clothing - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Knits and Soft Clothing - PBR Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Knits and Soft Clothing - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Material Library Overview.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/PBR Library Overview.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Plastics and Coatings - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Plastics and Coatings - PBR Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Plastics and Coatings - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/README.md",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Render Timing.txt",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Rubber and Elastomers - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Rubber and Elastomers - PBR Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Rubber and Elastomers - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Seam Measurements.json",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Source Validation.txt",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Technical Weaves and Composites - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Technical Weaves and Composites - PBR Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Technical Weaves and Composites - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Unity Validation.txt",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Wood and Natural Materials - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Wood and Natural Materials - PBR Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Wood and Natural Materials - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Woven Fabrics - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Woven Fabrics - PBR.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Woven Fabrics - Repeat.png",
         "Assets/UMA/OverlayPainterExamples/UMAContentManifest.json"
     ],
     "assets": [
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators",
+            "guid": "ab6a086e29b25e74dbdaa3240223625a",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "edecff3bcf04fc181562382141eb580fff2809498c181f4fa7d81a5defabb9ef"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/AdhesiveDressing.asset",
+            "guid": "5b838ce8b86d09c4aa7bd40f83dd4693",
+            "bytes": 2875,
+            "sha256": "29f8ca069af63f871e8c4ca7c3880cf322b8841cf1ccf16d49af2feb48e851e3",
+            "metaBytes": 189,
+            "metaSha256": "e0b046383f14a1797dd9698d3328500c0f02e7156a572c71b7bf64a748f79ea2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Blue Iris.asset",
+            "guid": "a7dd2417a53f0f44eb1c0c8ecf5227c5",
+            "bytes": 93409,
+            "sha256": "b787d66a6a34709093858a23bae2ffc6b183bd556e5c911879dc3a2dac74c65c",
+            "metaBytes": 189,
+            "metaSha256": "6279f8a5d53afc0c20c7f5feb079895434a2c9bf8ba4bf92760d28e46f5217f7"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Brown Iris.asset",
+            "guid": "e3f4643ea1845d445960b237ad0628d1",
+            "bytes": 93412,
+            "sha256": "be1f4065e92c7092ee26c8f60d00664bb7f2c78609008bf961bae25487453f8b",
+            "metaBytes": 189,
+            "metaSha256": "d2b41358bb38a10978d67f6ba549059df23dbb9e005967261b1fcc4227c3415a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/ClothBandage.asset",
+            "guid": "c276ab824b6fb294ab9acf727db4c2ef",
+            "bytes": 2877,
+            "sha256": "c63a0969e9a0fbb6bc18b2bcb7934cc281aa0fd96205c716eb684676fc663df1",
+            "metaBytes": 189,
+            "metaSha256": "26c79e12664ae840edf5f63555ae99977b3da71410856556f8d8c77e909df34a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Colored Tatami Crest.asset",
+            "guid": "f6dbf4dd26f9b2f439e450b0efbe0bef",
+            "bytes": 172164,
+            "sha256": "91fbb0245f3164cfbdabcde5e07a1c30dd2bef51a8f6851faea43d7eb95f4bbc",
+            "metaBytes": 189,
+            "metaSha256": "3c3463b10743975c8270cc39878e5c3f731aa9a9368f06e56efcd6840b60b5a3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Crest Motif.png",
+            "guid": "47cd00650aa828f41b68a6f96afa6373",
+            "bytes": 5980,
+            "sha256": "34a5965fa8cd1e780ff7e68ca3fd4bdcf5f884f5068e9aeff444caedc6bbc43a",
+            "metaBytes": 3364,
+            "metaSha256": "279efee0efd5271ffe75e3a211a3483465e3123736c46521cba5480ec1c0bf73"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Crest Regions.png",
+            "guid": "fa1a1dd69f701cc4fb9b3f3c6b7a3416",
+            "bytes": 2111,
+            "sha256": "8cc23e603a8deae0f1634b6e9f3a16a3158d6f2fa45ee1ae0afa04c125a70da4",
+            "metaBytes": 3364,
+            "metaSha256": "cd4cd7a56d8670c852f9b25491ddfdf00fffffa96ac5d3017c9af2c942d88207"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Embroidery-Satin.png",
+            "guid": "0a8efafa0b66a5444ba1b5b9b5a885ff",
+            "bytes": 77030,
+            "sha256": "1803995c958332de4f62565a0a353450f56b65d551f7ec22aa51d6faa3bdbcea",
+            "metaBytes": 3364,
+            "metaSha256": "93236e4478dec3ca3239196f6568a3cb230fa048b1bcaed7a754456ff01ad351"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Embroidery-Tatami.png",
+            "guid": "6d64cce68bcb4d74e9c9ff518b38fdb4",
+            "bytes": 122038,
+            "sha256": "2a1741c592a6152bdcc0e852c7ad18ba932951274d781e651a4ee1cf8dee7ba6",
+            "metaBytes": 3364,
+            "metaSha256": "7283c036cd7cdb1f89c1bd964b0e48a45012e831b02aa8986ee9de519cf1d944"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Eyes-Gallery.png",
+            "guid": "793316b7abdc2824eb3d1225d01c60f8",
+            "bytes": 433136,
+            "sha256": "f6c013a8761fe7b9e89a56997a7879ad8f61d99de4aee9bed0a11a6c8cf64549",
+            "metaBytes": 3364,
+            "metaSha256": "d8005581bd1403b062c49d77c2272e6105619cfa6bc2b3e233529884cb35ae0d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/GauzeWrap.asset",
+            "guid": "0d5c7d1c0a60405408403147e97e95a7",
+            "bytes": 2874,
+            "sha256": "1799e2747ea7ec31ec82054a86910c4116b08cbe66b64f525a4f33871f55cf19",
+            "metaBytes": 189,
+            "metaSha256": "640a5d4e41a4f4f84c4cd442687866225d90475024d5cd098bc213fbaaf4b674"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Gold Satin Crest.asset",
+            "guid": "b85e40974f5a6bc42a32cfc7d93488c1",
+            "bytes": 172092,
+            "sha256": "34d2d4292c9e72720785e2e2bc9622810acc3f040326dc8f8e66510a421f3d72",
+            "metaBytes": 189,
+            "metaSha256": "0010df515f50477e1d7744c888679bf8f6a57076378f5352eddb35718ee4bedd"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Gray Iris.asset",
+            "guid": "68c2794f7396a3542b02e69eedc8acb8",
+            "bytes": 93409,
+            "sha256": "753f79412687a3879ccb8b6ee66301b2c340a03eae5f2f10c4b447c31c747c03",
+            "metaBytes": 189,
+            "metaSha256": "08c8f38ba7c12cde998a02df9195800c553b08a5053ecf30692d39c78044434f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Green Iris.asset",
+            "guid": "3698b0b431ea16c429cda546dfe568fb",
+            "bytes": 93412,
+            "sha256": "a69e7f82e250433ad8a1550429d2504adfc5953ec3238f52c3d4530feec80e3d",
+            "metaBytes": 189,
+            "metaSha256": "b45939a7aff2df475808541459bb241083f5ea95d9ecf344b8981a5ca4357515"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/GripTape.asset",
+            "guid": "441745d8b39c0a6479cd83f3bfa79431",
+            "bytes": 2875,
+            "sha256": "393cafe489a078a616f62d2494c2cf29ea84e8b6babb06b63a7b3be106422a8a",
+            "metaBytes": 189,
+            "metaSha256": "99f838efc3885a06434a614acd5dfa9a903c52a32da6fc06f90b71fc02c0b380"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Hazel Iris.asset",
+            "guid": "6efc42eb82387664480e2e002f425771",
+            "bytes": 93412,
+            "sha256": "251b460eecf8d48d8afab6276e53176a4aa2e981c964169913a1d4d16dd5cf61",
+            "metaBytes": 189,
+            "metaSha256": "21bc33296e87aa269e1317ae6c87ac4a93c3537e9ab86a15a8030029ed88b3cf"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/LeatherWrap.asset",
+            "guid": "5315af462cf34e34fba8d12f1571afbe",
+            "bytes": 2878,
+            "sha256": "e7b8dc5e053d7d060f7669f0a9cc54c2df5236a51f0a92b671308f05437ebb0b",
+            "metaBytes": 189,
+            "metaSha256": "079052ac4137ea00851274cec6d27100096cff21e5092d90e5ec767ff81b518a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/README.md",
+            "guid": "61118c08359036c42b84576757a9e07d",
+            "bytes": 2959,
+            "sha256": "18bf594d978278b8f88a8af16be4aaf471bdbb8a6bcd3ae56a461573d703d501",
+            "metaBytes": 158,
+            "metaSha256": "3123382272f136653fa673944e8f1749f7c8c5f8ba898f23fc0d17404f825a9d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/UMA Eyes Blue Project.asset",
+            "guid": "21c154d52d1a9974cae51b2e513fd770",
+            "bytes": 802120,
+            "sha256": "a32e641c1314019a2712101db8764b6427e5d62c12b09286bff57fc28b9052e9",
+            "metaBytes": 189,
+            "metaSha256": "f62e10ddb86b105ac4443c48906f85a8668fece223df9603274d98d7c310fba9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/UMA Eyes Hazel Project.asset",
+            "guid": "1489b26dc0060d64f9623ee65f236325",
+            "bytes": 668435,
+            "sha256": "ca63d5ddddbe9965636bd953f97e17d843df35ee51af126103107929c4029f84",
+            "metaBytes": 189,
+            "metaSha256": "6d58eb53f2eb057771786ea10e3064b74eee73a5309ee0d86dffd381a0e0a0c6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/UMA-Eye-Slot.png",
+            "guid": "7d0eee1dd5d74534b9b54e68a266d3ac",
+            "bytes": 56999,
+            "sha256": "2329f4ea501526d2eb85326067f95fbdc7b2015109d10c886f7a8ce31130cc80",
+            "metaBytes": 3364,
+            "metaSha256": "c34fb02ef27e43149a13d634a3829f41ec51c408a2365aaf14837ea4a364e26d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Wraps-Gallery.png",
+            "guid": "f4825342967174344a33f990be657747",
+            "bytes": 1584154,
+            "sha256": "6d1f94ff1852cdc605380827f0fc9de1c5cfa228fd82c63c1684a8d6c061c38a",
+            "metaBytes": 3364,
+            "metaSha256": "f3ddc0bab817641b7bf4c93ab93735ecdd9f887470d26365fba8c1f8eba7d1ae"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Editor",
+            "guid": "4d601df19add2b84d87491464262087f",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "ff0a2ea3f8e3e0e907ca09c1cdd81e6cbf3fc9249a0abbdd76b06698b27f6058"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Editor/ArtistGeneratorExamples.cs",
+            "guid": "156bf4c2856bcc546bc955827e71e28e",
+            "bytes": 10382,
+            "sha256": "d449802b79a67696cb484a0d8e12f348a29637cbb4829916ed9c734311c60345",
+            "metaBytes": 59,
+            "metaSha256": "5c0e436297afc162418ed67a23e1094077d53f827348c5821e863255aa03d33a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Editor/MakeupExampleComposite.shader",
+            "guid": "9629dd01bdfb2374aa75e34b8148b3fc",
+            "bytes": 608,
+            "sha256": "774d1f4f128d2b7cc09c97dd101d3af19cdad91fa1239acc6cb7a59bc7731118",
+            "metaBytes": 204,
+            "metaSha256": "d11a3a50d9a991585b2e0db8bbd4b82b78330549eb72fa7fd9f048b26cdd2a8f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Editor/MakeupFaceExamples.cs",
+            "guid": "2a592fbaef46dc448a0e16f12b133aed",
+            "bytes": 9853,
+            "sha256": "384259c9c60857a11cb601a0b532a6f2b325edcfacdafd2642a3bc04995e73bf",
+            "metaBytes": 59,
+            "metaSha256": "860c42c90891fd7f2995e9e50d8492c65b38c0423a5c04f382adeade2d94d3b9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Editor/SurfaceDetailExamples.cs",
+            "guid": "648f6dff181d7c448b1caa42b6e3f158",
+            "bytes": 4762,
+            "sha256": "750e0bdacd19bf28aac54c1ab65770aee9b68623662820670248eb347876c31d",
+            "metaBytes": 59,
+            "metaSha256": "cb8102ecb5ec672742b638519c4969af48c8c932292ac45b92244ba4c8430a2c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows",
+            "guid": "cbfdb6b71ed14ff4889a4ddf136485dd",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "72259d54254b8f0d5e61a0f2dc1093726b7eefaf0eec26008b537edb4736441b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor",
+            "guid": "c02fcaa4d85536448a711ac83edc5132",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "eb5b690a2151e479c97261249fbacf32166f80e03011a360b943099faa89aeec"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor/EyebrowExampleComposite.shader",
+            "guid": "8eff281d4338d2c40805ffb6566434b2",
+            "bytes": 1386,
+            "sha256": "4747b538e47fed2e9a2f2bc08c96bf1e021d4c610d503b8a6495f37c864ccc46",
+            "metaBytes": 204,
+            "metaSha256": "74a6ee47fb5c9edd6d1a70edfbe8dc153aaadb2c80ca0b593daa96c81fa7eb70"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor/EyebrowFaceExamples.cs",
+            "guid": "1380bb69670b9ae439c880d1965908b0",
+            "bytes": 12751,
+            "sha256": "19ca4af2b5fda8b1add91a866fc8becca27370462a5e329698ac5f6d464d1a6b",
+            "metaBytes": 59,
+            "metaSha256": "1bbd13a6db4de62e45553347f7fa539eba893617f2b6527235cf3a21e45b4c13"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor/EyebrowShellExamples.cs",
+            "guid": "d11e13b2eab0ea14ba3663ddd4f2ef6d",
+            "bytes": 13188,
+            "sha256": "9a9bccb178d54d007ecca2619988b3f5f8f4b194ff733ed28e19d104dafe42b9",
+            "metaBytes": 59,
+            "metaSha256": "9f85b19ac99a967f5cb6c7fb9b64d86446a8384f628a5e83ce86ad1818063900"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor/UMA.Eyebrow.Examples.Editor.asmdef",
+            "guid": "891b187c72fd36e4bb145eae4342dbf1",
+            "bytes": 189,
+            "sha256": "f143806f3ebea818f28d8ddda4a1ff3cc0d2164eb21fa4f84311dd4248099c51",
+            "metaBytes": 166,
+            "metaSha256": "b09e05700d659f653807af78da75b0ab3d6f0d9ccda5853a5f4cb91b1767b456"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects",
+            "guid": "0c08ad77a4c35274ab7a9935a485820b",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "02cfdc3c7cbd2a0bdccc891f5fee1bf6197fa40d5aa37c157dd1cad46290cf18"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Albedo.png",
+            "guid": "f0476bb482551c841b27bcd9c607c639",
+            "bytes": 124354,
+            "sha256": "fc28f52eee385bdde6d748fab8eb58c86401e7a71e8188c1cc72cf386d00c467",
+            "metaBytes": 3364,
+            "metaSha256": "84b236c3c823911ff9cb42d890df85ba0475b5ca31e15cd246863b210136e9c3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data",
+            "guid": "9e1132e6dc5adaf4f92ee80a9a84bb15",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "29397f4a2436f0949983e0dedcfc50b13c92c5adc633adc93209e6e977cbad3a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/2908756bcabc02418f328c496dc4524f_816fbcf9.bytes",
+            "guid": "a70ff89d693386b48917bed9407ff6b3",
+            "bytes": 14,
+            "sha256": "3384d6f2a043bac35003b1cd39ece9a74b6453454c21b66421613f500c7726a2",
+            "metaBytes": 158,
+            "metaSha256": "9d91791a5a198e679942042f84ae8758dcb870e20c50194b43b55cdd9e1f12e3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/3b352a7712b789f81fbf120692e87ea6_816fbcf9.bytes",
+            "guid": "f0b68266d558ead4ab08073a7c946200",
+            "bytes": 4080,
+            "sha256": "2d217f5cfc4b106bad9a35b821af5e03aa05100fdadf60c06b297e2dfddbad17",
+            "metaBytes": 158,
+            "metaSha256": "1f2064d3bf81411fb364943fc1c02024a5a82bf8db929cb5b26d1a50a463ca1c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/805c9f6d67824e2b58a37327ab63fe3c_816fbcf9.bytes",
+            "guid": "f60ae1f64c3a4ee4fb3689f9d1c4b13b",
+            "bytes": 14,
+            "sha256": "76858cde8395399a56c2cafbb12cce00e05cb1fc4d1a8e7ce4ce513ee346cccc",
+            "metaBytes": 158,
+            "metaSha256": "2d4186611b4e5f8bcb4dabcfe75ff06ddcd4a77e5acab9591c1756b654dc7320"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/85bcbde2a705c4cce887482790e6ad06_816fbcf9.bytes",
+            "guid": "b303010a248881d489df1cbb8228c37e",
+            "bytes": 4080,
+            "sha256": "2d217f5cfc4b106bad9a35b821af5e03aa05100fdadf60c06b297e2dfddbad17",
+            "metaBytes": 158,
+            "metaSha256": "3577873535e5a9f6d435190ee5c4a19fd66741b0447848bc4805dd0d2097cd37"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/91a5505afbe53d5be9473ad8dc9ea3ed_59c5bc33.bytes",
+            "guid": "0f1f19984a53ce24d995f731e7f67f85",
+            "bytes": 65820,
+            "sha256": "154a33bcf474df49c3c6350ea4f2ef901acef6a7dbec322fb13f07af17aafa5f",
+            "metaBytes": 158,
+            "metaSha256": "ea25a845c3aa3921f757e02330710203f283e68e6fd6ba5e9ece1686e6c76b13"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/c9daa08ef207139569c250482687ddfd_816fbcf9.bytes",
+            "guid": "02bc3e041da04644989fd68d6a825a0c",
+            "bytes": 4080,
+            "sha256": "2d217f5cfc4b106bad9a35b821af5e03aa05100fdadf60c06b297e2dfddbad17",
+            "metaBytes": 158,
+            "metaSha256": "1a3d98a1ad47a5f1aa639f50518c6da4106b0d0f79f420d384b834974a6c0725"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy Data/d912e5c3089739def14f58f650b2ce87_816fbcf9.bytes",
+            "guid": "2afdb47938712dd41aa59f5ae839ebe1",
+            "bytes": 65746,
+            "sha256": "20ffa8ec87907cc4c97ad9faa5ae22c12198d5d5598c2a924346dfec594dd5ff",
+            "metaBytes": 158,
+            "metaSha256": "f0e816e1a9985ad211460a325d7ae621a023161988d8e3ab94d41c2042b8e9c6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy on UMA.png",
+            "guid": "a9b3ca0e3705e5649b2fc2227f240d22",
+            "bytes": 1000157,
+            "sha256": "f2161dc8cb1a8be54cbfccfec7ccaa4d34ac6fae07b260d90b5112fdea020196",
+            "metaBytes": 3364,
+            "metaSha256": "17af969176bcc2fa4f3adbe8c26c2a874d80cfd539c95b2be275dde70ecd9575"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy.asset",
+            "guid": "0c39f01b98a392040a0b0e5f3cb815b2",
+            "bytes": 506118,
+            "sha256": "a6ec80d9f4abbd401fb1d1ea9f382e0b80d71a4a93dabbc07ee480752ca39afc",
+            "metaBytes": 189,
+            "metaSha256": "1c3cbd19f0772828437bf2d8a0919ddd0432c252a782087a0d6d2de2e9c4bd1f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Groomed Albedo.png",
+            "guid": "0f9ff4467ba470d4b8e46f787f77c69c",
+            "bytes": 87074,
+            "sha256": "8e12d47ca30a3be679f5b346bf2ca02da75f39ff64fdb74eb903c9d74b194067",
+            "metaBytes": 3364,
+            "metaSha256": "c9999e168853893daa2870150427607108dff5391118173310b290da47decaba"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Groomed on UMA.png",
+            "guid": "1a9152451ba60f34e9f6ad49861338a8",
+            "bytes": 992351,
+            "sha256": "41e3922dc5d91af65d2c245c5e22396c6bd2e7b958ee863c1c5bd9deac1851ea",
+            "metaBytes": 3364,
+            "metaSha256": "39d6eb7b9b77385b9b2922c15ceeafb59b09bffad2aaeaac7ed31ccdf55f60fc"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Groomed.asset",
+            "guid": "3663de4091ddafd4d8013ae5f20b9bbb",
+            "bytes": 616954,
+            "sha256": "7ba70d1d7f6ab8d16af3f30e2e294e5537dae0255981274006ea09586202bd53",
+            "metaBytes": 189,
+            "metaSha256": "ef58c244e56054e59cef6067eead80b26b099bd2be6187dfd2855dde5bb8a1ea"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/README.md",
+            "guid": "e2239414c4a356c419b761326b0446d3",
+            "bytes": 2169,
+            "sha256": "dc501ec474cba1a5798d4281523d97024cbdc7de1e4f248d0bed1405204f5252",
+            "metaBytes": 158,
+            "metaSha256": "227169cf0c51191172c1f134849858f1b35589e36cd289032bcafe659f695859"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation",
+            "guid": "556b39db4861d2e40a37de5b5493e50c",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "d97833c094238b9d72db1c823c7c210a20884de2f7a7618eec462f95d2204adf"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Arched-4096-Closeup.png",
+            "guid": "2ad387318e733614da65bde36b6d0fc6",
+            "bytes": 1050449,
+            "sha256": "fb9779e9efd01221e4efddf4dbcd67441aa07a567b4bab73636f96f287486606",
+            "metaBytes": 3364,
+            "metaSha256": "181384b922156f44ee8fcf0a35d75d0bb813f19f52e9d789a0a758f29044751d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Arched-4096-Face.png",
+            "guid": "ac75a9c9b0c44274b9f7769013d90538",
+            "bytes": 729198,
+            "sha256": "948f4bc9db3f6b7675f872039e70846405efe9d145c966c179ab44230b443703",
+            "metaBytes": 3364,
+            "metaSha256": "90a3b273d876a53b944f8f4fccffbedc3fedc7ca233d6ff582f11305af5c725f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Arched-4096-Transparent-Albedo.png",
+            "guid": "298c8718fdefa9248ac9a1ddb9174efe",
+            "bytes": 219916,
+            "sha256": "544c78dccbff1807346238ab7f3b05071d31ff82484782c6cfb92ced1c533f00",
+            "metaBytes": 3364,
+            "metaSha256": "f5ea4c33738423abf90b5d27169e2fbe169c1e3a179b23ce845d2fadfa49b923"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Bushy-4096-Closeup.png",
+            "guid": "55fc210a54c3ffa458a80fa5553de209",
+            "bytes": 1060903,
+            "sha256": "4d26838859c617154c2e68898b59946e7d373c356bee379a9e24193533956da9",
+            "metaBytes": 3364,
+            "metaSha256": "6d583c0d23f7a7715f2cb90246b1b1d91de08a3d9268e7da7853e69f2a66995d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Bushy-4096-Face.png",
+            "guid": "0dee57bbc3d2cd8479ca6463f1c7225f",
+            "bytes": 732983,
+            "sha256": "d084449dd54f5ac2c58e6eae984997e439dc172da91616876a7f76d5a3cc0de2",
+            "metaBytes": 3364,
+            "metaSha256": "0705a581be06a7aafdadef2ca9fed370808018b9b1677c28eac399459fd6f98e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Bushy-4096-Transparent-Albedo.png",
+            "guid": "30fc73c5f68759248b6a6856c039d24b",
+            "bytes": 368200,
+            "sha256": "653f2da2c108f082c0da0d27e8257740a7f362a81e760b6a317c4e6e19df58ff",
+            "metaBytes": 3364,
+            "metaSha256": "d66f6a7f5421a1fbd2037c91dc05ac0af610c6719259c1ebc72d70b2811507f2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Natural-4096-Closeup.png",
+            "guid": "81479715576140043810aca231807ad7",
+            "bytes": 1048382,
+            "sha256": "037b5b0985e92d43385d2d80a937d2cee187e8480da08b6529c3408668a067c5",
+            "metaBytes": 3364,
+            "metaSha256": "af154776360643609a8606bf935abf727d43dc71839187b499ad32c2af0ba287"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Natural-4096-Face.png",
+            "guid": "dd53b46ff6016c944b5921c2ca95b78a",
+            "bytes": 728493,
+            "sha256": "ec68b5dacda6365466a1d5e3ea4261694403a83dd66ad4f48d80b92741580f29",
+            "metaBytes": 3364,
+            "metaSha256": "82fcb75db0be01725ba50ef620b0ac28c3aa1e79a0129d02df7fac06e53de5a2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Natural-4096-Transparent-Albedo.png",
+            "guid": "1af6005c593e08c4ca3332bafe535d86",
+            "bytes": 214247,
+            "sha256": "e7cc8f4bb749925442fb986f2b29678be361609be6b33b4dbca0736a43e8dcee",
+            "metaBytes": 3364,
+            "metaSha256": "61e824467088ee94b5081b8d400e48ed98bd79b6ccd8e5f892387c095c7df18d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Performance.txt",
+            "guid": "90943f1be03bf2a42aec55a4bfdae26a",
+            "bytes": 1878,
+            "sha256": "66b3ed0215fd58fad35fd69e6d02bff6457c26b7a4f3f1c82c22b30b3e99c2e2",
+            "metaBytes": 158,
+            "metaSha256": "8de69337ae99056c2a66153e05df372f7aaf11583c4b11f53edd3d37cbca380a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/ScenePathEnvironment.txt",
+            "guid": "8099371c6831e454a8e6304cc3300b86",
+            "bytes": 132,
+            "sha256": "4ff8b958d3c4e3634e928a118a3b084baad6036513440ab0bc53f8ce80f97cdc",
+            "metaBytes": 158,
+            "metaSha256": "241b9df423a9e9be78f375b9a12be7acff23a6427f48126b3c3e65c80039c212"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/ScenePathTests.txt",
+            "guid": "dfafd0be2be6d844284cdc2cdd4934b5",
+            "bytes": 196,
+            "sha256": "eb9b5a5b2a16dbaafa767ffe63328663c760786a3cba71ccf66a80843dc4b6ef",
+            "metaBytes": 158,
+            "metaSha256": "10f44bc9156a2463cd4229368fdb53d7b9f78feda1a9c29b35c9290d81d82cef"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Tests.txt",
+            "guid": "5e0a303a25547a14c8dd558aff11b28c",
+            "bytes": 9849,
+            "sha256": "68506eecfb491f7c25e4641a240d5c531f8c1657eb39d80a82eeefbe4f0282c4",
+            "metaBytes": 158,
+            "metaSha256": "1fe5104010487840d6ca9ae233ff85079c29ee9f4e53ccc2dcd64ebe72a49e16"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Validation/Validation.md",
+            "guid": "f556922c3195d76459c1870e7bb913ff",
+            "bytes": 5835,
+            "sha256": "f5e860e653b1a56bb62c1257c50302303255dc178918be9bf67aa32fa5771c1c",
+            "metaBytes": 158,
+            "metaSha256": "ba5ec9702ecbdadb2e89be6aa38af185793bdd13b2d2634b46cf04fd30d8693e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings",
+            "guid": "bb9aa3a4901316f4baba9b7e21b1e30e",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "8ce539e7ee68960238a559b16c2dbfb0f97668305fd78317167161c9d54b9044"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/README.md",
+            "guid": "4e0944c8803228b4ebfee724ef4c4e08",
+            "bytes": 2282,
+            "sha256": "3144d6b3aab77bb37974763b80201465ac9b0e5d22ca368faa4e29b0e5aaa849",
+            "metaBytes": 158,
+            "metaSha256": "b5b02e73a748de4d037279d1190fc0f7ee73a7cdd855ef38605b3f9b7f893d39"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation",
+            "guid": "bcfe8b4ce8f9e60468ba9f6f4a9e95e0",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "fcca22dd3a0b0e0b8ad28a8d99f500d300b90d55479daf2203639ba932449f12"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-Albedo.png",
+            "guid": "969db6b879e90cf469d809d343c8ad4f",
+            "bytes": 247104,
+            "sha256": "d0f734bff11a5189621a9f72fdb3fb439b315143c3bd34e13f750d5736534f8d",
+            "metaBytes": 3364,
+            "metaSha256": "cbe843fae5f2ff3ca9ff2d82c6ef8b58d137bc954a838ec29ff160ec1bb549b9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-AmbientOcclusion.png",
+            "guid": "ef394df624c84a948a9008f46b9351a5",
+            "bytes": 11859,
+            "sha256": "e4a4fc9f877755c61eab601a16366c34886beeec97e202df78363b9b7a1ea182",
+            "metaBytes": 3364,
+            "metaSha256": "6eadf3bd534ca3d495d8d2cba4614fb638905160cde384d94347c3660f182c7c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-Material.png",
+            "guid": "323e7dbeaa5fe0349b865dd5a2c1dff6",
+            "bytes": 764586,
+            "sha256": "a6f115745c9de1e0be44262608665a0b29fc90a4eb4648126c3d30e10f769e49",
+            "metaBytes": 3364,
+            "metaSha256": "5840fd5641cc2764f25b0341f56ab9f8632b8dbfd4789b8958acf6d0fdf9889d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-Metallic.png",
+            "guid": "ccaa0f2b364e6f548a8a469a0aa2a5ae",
+            "bytes": 11862,
+            "sha256": "a4b69d25a7b4b179d63c6d12a6356a9c05df5ee2aecd14b93821adbf7a427274",
+            "metaBytes": 3364,
+            "metaSha256": "12460fcd1f5c298b5c8fc29a4a909ba96dce5d5d089d9c33d4704c264eef9f8b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-Normal.png",
+            "guid": "6fc3b17528371e541a8484bdbce53b7e",
+            "bytes": 470200,
+            "sha256": "97cf68a8e2ac856ea8562f597c1d011bc825c9e231949624003d6a552b17436b",
+            "metaBytes": 3364,
+            "metaSha256": "41ef5541870dd10df48a2773b36d358a5740a403b780eb42ed037e9028024411"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-NormalControl.png",
+            "guid": "73ff25e4b4128a54580e1ac98cd22ff0",
+            "bytes": 264493,
+            "sha256": "27b3d9c7dab7e0592686f5815737da64ec8eaef024adf84f7059a8cd770bb696",
+            "metaBytes": 3364,
+            "metaSha256": "2deab88ba5e8ed77614673a394632ca3f844d4afb65f5f4ae77b70efbbfe0174"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Aged Black Coated Canvas-Roughness.png",
+            "guid": "6f1172a93d24de04487bcdd961892ba7",
+            "bytes": 146377,
+            "sha256": "1b0e8de6e0f2a0c94d3cf9c95022cb6326e498091bc850abc01943d77a30f40c",
+            "metaBytes": 3364,
+            "metaSha256": "8f550bf32c457ef3f4be04fb3a713c524256d209a5343d07135d8ae1fb9ce4dc"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-Albedo.png",
+            "guid": "aba4ccea62669004593f6a6fdeb16859",
+            "bytes": 80678,
+            "sha256": "e4e2311698713fc932f933067f4ef879e5743fb8d27290c3e9d5e8e56af343e2",
+            "metaBytes": 3364,
+            "metaSha256": "cfaef02cea5a46b8b7a1ef11ac016c2a083ad80f32307ecc83d57182891ec58e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-AmbientOcclusion.png",
+            "guid": "f5cc50196ebb21243a96b02a741dfddf",
+            "bytes": 91598,
+            "sha256": "03d8d332826ae3586dc61ac50cfaecb060120ffb45009aaa02a421407f1d9601",
+            "metaBytes": 3364,
+            "metaSha256": "a168aba74e274f9af268aa07970d771808c1105566dc64d8e64e5bf695da45e3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-Material.png",
+            "guid": "b83594c55f10ee4479148bbdeefb25bb",
+            "bytes": 836027,
+            "sha256": "0ad6ab5418ce41e2ca0a39096cdde49b51375cbffd3110d436ae54fc9ad7e26f",
+            "metaBytes": 3364,
+            "metaSha256": "465334ba4c02465b5c6b8be21fc347175f716a14e7cdfd5854771ecf7f938db3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-Metallic.png",
+            "guid": "8e51de3b8ff66da41aeb35753c3ece76",
+            "bytes": 31806,
+            "sha256": "303c98c878962b4310165305dd83450fbe6b560d9e9237744dd9b0f345b27dbc",
+            "metaBytes": 3364,
+            "metaSha256": "ee9d06a6891346f019b157e90499d0e3bac88fa449553005b7d9a9ef9548391f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-Normal.png",
+            "guid": "c4a1962f9824fe344846ad665a0ff089",
+            "bytes": 421649,
+            "sha256": "719b204e4c78bbf7acd02507ac5834d21131dd9a0f8449b9b3ebef2b295e0fe8",
+            "metaBytes": 3364,
+            "metaSha256": "9886f1fea408b5872a3cee477a02c899aebc78247adb8f81b0adc11b362d6e2a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-NormalControl.png",
+            "guid": "bcaf0c6b94e3cf94f9963956076bab59",
+            "bytes": 175826,
+            "sha256": "194588971d4473ad9d1f940288da9a4a00401c9189b252bb9e78702be68f8107",
+            "metaBytes": 3364,
+            "metaSha256": "bdb91d3249a5f16cef410b9c5139d7cfd3cb47909408a78d393fe4ac5857dc03"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Blistered Naval Paint-Roughness.png",
+            "guid": "d161e8b3265d6c24880fa14062e1d021",
+            "bytes": 37870,
+            "sha256": "0f93f978f16c86fa9feb99d42ab601ed4d9f43ab712d3cfa6fe21e18a67bef46",
+            "metaBytes": 3364,
+            "metaSha256": "365e7dc6618a4d65a8caa274f1691ded008fa93da5b0fd1a3f63f557dc050889"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Bronze Editorial-Albedo.png",
+            "guid": "fdf37c819af61de4e937deda981d6499",
+            "bytes": 321009,
+            "sha256": "d7db89a86324d487d6f6f290cf6a2ec7660b07a1f832edacbbda999a5560c349",
+            "metaBytes": 3364,
+            "metaSha256": "4215b81c86ecb82c7ab77d3609e25eaa84e6a896cb3311becff0e9da0b5f656f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Bronze Editorial-Face.png",
+            "guid": "4c4bc1bb96c3ce54691f31c303acb8ed",
+            "bytes": 943151,
+            "sha256": "f3a59ef03de94074118b38b30b43467e8af2892129e732693b94986914540eb1",
+            "metaBytes": 3364,
+            "metaSha256": "5236cb0a8e53796cf7a015d2dfe7e0b808381888ba8b882f488e29153f5bf3c1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Bronze Editorial-Roughness.png",
+            "guid": "52e182f5e2302b24a899a9476753cbe0",
+            "bytes": 300714,
+            "sha256": "b12d5e215e509ec42e3aa1d3c4fc1a7279f506915ee1fab9f55a7d0b71e2e883",
+            "metaBytes": 3364,
+            "metaSha256": "7c51a0f3c87fa80704baf4fa8c72ae3953c277f90d903be7fb6b1a8c4bb2eb05"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-Albedo.png",
+            "guid": "d6843b08aaf6be1448b41fd5320790a7",
+            "bytes": 564641,
+            "sha256": "a42a354bc79893d1ee46241646a198d8b6ecd871cd3c57e27b1cf5202b54b454",
+            "metaBytes": 3364,
+            "metaSha256": "87339b2eeb6b843496df50321e2be8424d7036683b9bb5337d69342ffbf62f54"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-AmbientOcclusion.png",
+            "guid": "66b8c452084211649ac333996e743eef",
+            "bytes": 11859,
+            "sha256": "e4a4fc9f877755c61eab601a16366c34886beeec97e202df78363b9b7a1ea182",
+            "metaBytes": 3364,
+            "metaSha256": "359d844283cba79dbc23fc825ab86049a4c4ab83fe5139f2aafb98625b1a44e7"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-Material.png",
+            "guid": "db503e9a637835e488a8c6d7bdf13fca",
+            "bytes": 869192,
+            "sha256": "956da8865f16a11d7126d3d33a3584fc7a0ee5089f033038430e56876984f212",
+            "metaBytes": 3364,
+            "metaSha256": "57e9e4643216e5a270b8c046c9c9b803bbbda25c886f6a9435ac1fc1587fc987"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-Metallic.png",
+            "guid": "1f40e44ab24508d46afad6fd4bae8229",
+            "bytes": 177160,
+            "sha256": "5dc1d674dd7866c85ec384321af22208133a3e065b9a5c6c60cf2cf963d5eb87",
+            "metaBytes": 3364,
+            "metaSha256": "e348720a591bf9f3d5989bcb004ffb3ffe6c8bd051e01d0ac09a9fdfa82b4a94"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-Normal.png",
+            "guid": "a040c4aa441128d478517d28fe1902da",
+            "bytes": 458213,
+            "sha256": "1401e998f850a809a619cbdbf6f27083c08abc4388e4d3b32b24c5eaaa0f96b4",
+            "metaBytes": 3364,
+            "metaSha256": "cf70df0bdd1c17d5de7979d0c4039e5dbd960deef19da4a51d4be5ed794585c3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-NormalControl.png",
+            "guid": "61490a55e14f4e846aa9e46ece60cf74",
+            "bytes": 259225,
+            "sha256": "9bc1f3d0f884e4bfb7d1f14439de8f5f2da0ee651c3edce2784433c77baa4738",
+            "metaBytes": 3364,
+            "metaSha256": "e8eb6c19017e4a27a577869ab92d896870d5575b60930c1549efc1003dfaf9cd"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Chipped Ivory Enamel-Roughness.png",
+            "guid": "4b972e9bf0980f84f9ee7d52df29cb27",
+            "bytes": 169279,
+            "sha256": "c9d7604e542f0e2ac0700c37cdae11c5794d45f7de44b28f56b5b41a2ffe74ab",
+            "metaBytes": 3364,
+            "metaSha256": "3eb436b8092c295c4ca08b27bc9a3c2ddc328207ee30304a822bb5cbef38bc53"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/CoatingResults.txt",
+            "guid": "281cb10520a095e4d8aef40cfb5371f9",
+            "bytes": 474,
+            "sha256": "c5e3c9605d65af4ce04026388b743d5fbe2be7a9d5131e9a270472c7a8d72842",
+            "metaBytes": 158,
+            "metaSha256": "013c0e5ffdec87b2f9ad28402db48218e8bd51e48166f4b6a1b1d369f19d57c1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Evening Berry-Albedo.png",
+            "guid": "22559e71d88b97448b9a4b3d6f3db3a9",
+            "bytes": 310643,
+            "sha256": "ae713b6d0eb7f10cee08060f93d5ad32de3ba3a424d5bf2e25e423d1ff2e0338",
+            "metaBytes": 3364,
+            "metaSha256": "44dfffaed68b72d2585f3ab50daaa8b726d59e1a2978472a0a93f6a796cf5625"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Evening Berry-Face.png",
+            "guid": "b115854290963d74f99461e6aec39afe",
+            "bytes": 943599,
+            "sha256": "98b375860f355247b28b4f5f89c53fb9bcbb5a4ca7d3fe4ef39e2baa00c5979e",
+            "metaBytes": 3364,
+            "metaSha256": "c9fee0f3f487d91cbd1b5d052c1bf3b27bdeeb52a0a7bbe4d51f18fe7456a6fd"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Evening Berry-Roughness.png",
+            "guid": "0411ba143bb6a3b4ca023c8d94911efa",
+            "bytes": 302285,
+            "sha256": "b86650096583bf9606eb57a12f744bcf57552e8a0181f1db7ec8fe0d26c83f28",
+            "metaBytes": 3364,
+            "metaSha256": "ec249431c85d62bf63baf95448210b62107a7fee73b043fca32a4220680f1e53"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/FaceResults.txt",
+            "guid": "bf522117c48646d4b981c23d4f886ae8",
+            "bytes": 627,
+            "sha256": "6afbb0ea5c6bc138bf80f3c5ac29f5d103f44eff8d89d39e88df5bc2c28b3596",
+            "metaBytes": 158,
+            "metaSha256": "23b441c9b976be09d0087e4c63396af60c9fba636185a6195544da7b87cadf0e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Festival Color-Albedo.png",
+            "guid": "7efb9988b93b0304985896cf5dbcfa09",
+            "bytes": 433900,
+            "sha256": "d8b0a9c9feb223a8b0273449e70627366d2c8a8503c1bdc87c43e79a3d7fdf6f",
+            "metaBytes": 3364,
+            "metaSha256": "f128d152e4017e2e7e07f0f20b9a48ebb659e6b101b2ca7556bdd0a9c1fad3ac"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Festival Color-Face.png",
+            "guid": "6a3bcda52237f6249b23d13880332353",
+            "bytes": 954448,
+            "sha256": "ae930f5f948b7579f106803c1f7bfb698b3cdc464244b209a20ed56a0812e5ba",
+            "metaBytes": 3364,
+            "metaSha256": "6a57df85ebb22e94a5248ff5bce2f5cff12750d916c2c9c18baab2177b743878"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Festival Color-Roughness.png",
+            "guid": "791a61bd8eabc9246b921c02fdcfa472",
+            "bytes": 348675,
+            "sha256": "61a70c38af8fcd5d7a73d8881550b935abecaa65ca7976011bc416bdfbe31780",
+            "metaBytes": 3364,
+            "metaSha256": "177bc4b2da62a735c273b4c595b9da45df0020813e312232144e88bdd84245d4"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Gothic Velvet-Albedo.png",
+            "guid": "4ebf9e8d5d83c384fb73ebfb347fca24",
+            "bytes": 299206,
+            "sha256": "9261049584f9c22faf389d10e1c83046794c9a86625ec1d942b8d958aef29bef",
+            "metaBytes": 3364,
+            "metaSha256": "2c88fa46eb961446fa09519ff68e8430fb7ace1124dac388e9641ccf80fa8df3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Gothic Velvet-Face.png",
+            "guid": "cf47dd6218fcdde40b0f7ec7d3840222",
+            "bytes": 942676,
+            "sha256": "02bae745a3c6bb097c4f4ab4e3f2edc6738b26357749340db289b6d736abee83",
+            "metaBytes": 3364,
+            "metaSha256": "5df502d496fcefb0cc47b495fb9a83f23efe709f71370c1cd00c8dd059c29cc0"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Gothic Velvet-Roughness.png",
+            "guid": "a2ddc59e3fcf4cc4bad2da554d699add",
+            "bytes": 300769,
+            "sha256": "8df6edbcde945a1312132e3e68fe1e4bea84d72865dbc49f289e26b158a6f8e5",
+            "metaBytes": 3364,
+            "metaSha256": "db268a0484f19d04d61a8cfe5a2649af7944571919d8918d7978c6e10cb7dd68"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Natural Rose-Albedo.png",
+            "guid": "e994fe3d829944a488a7b4a240fcbfe5",
+            "bytes": 287220,
+            "sha256": "1dc4ef24737f62f383f1cab9658c62de8782b72ca935b02eb741dd792cffd57f",
+            "metaBytes": 3364,
+            "metaSha256": "3fec7889b2f9ea7fcc33aea4a1feae48a945f5dfa0d87e56c0c84f277862dc5c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Natural Rose-Face.png",
+            "guid": "39759cc9f30159a4381b43c30da70194",
+            "bytes": 942924,
+            "sha256": "603067c9d434b2b7bd807dd0299717cb9994ab4c79a834d645a3cf2c317bb993",
+            "metaBytes": 3364,
+            "metaSha256": "007cae94d68aa7b87ca82d74387fb2654ec9c45d5bb500763c406ac82109d577"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Natural Rose-Roughness.png",
+            "guid": "f4def111d9df31e4b839885e11fac08d",
+            "bytes": 274983,
+            "sha256": "f818cf9a239b3ade8b51e82c7022b369e8d86f7b1360c766931a3563128e3e2b",
+            "metaBytes": 3364,
+            "metaSha256": "6d2dc5ebffe0c2d93c2bf6a990566bba630b6e346fd2c6df42191828287577c5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Original Skin-Face.png",
+            "guid": "c9870d5cdac373c4a8507862ce52d406",
+            "bytes": 943124,
+            "sha256": "9416cd9d409ffd023d5573d84f51c7b2ad8cf05c8b2aa5ea0fdf43f19e53db6a",
+            "metaBytes": 3364,
+            "metaSha256": "9ed89abde8993d540c8225bad18d18cf083e500038a88826d963488c432de902"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-Albedo.png",
+            "guid": "68f67b9de5c8ba546a92e4a9b0f7abe3",
+            "bytes": 161686,
+            "sha256": "58ea5f2d96b691e2a04876309ba5872eecab6e743094bc8b02106771bdf59b38",
+            "metaBytes": 3364,
+            "metaSha256": "7db36f8876c193a70a809cd12f849e8f95345784e7d3c218babca33b42bacf1b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-AmbientOcclusion.png",
+            "guid": "c4f4aec91b19e764ab4a08a41393d949",
+            "bytes": 11859,
+            "sha256": "e4a4fc9f877755c61eab601a16366c34886beeec97e202df78363b9b7a1ea182",
+            "metaBytes": 3364,
+            "metaSha256": "eed8f0293967ba690f95f2eb4d2efc5d230726b5c1c240d151c5c13b468bf108"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-Material.png",
+            "guid": "8e7c05911d1eac04fb765771b9d71c8d",
+            "bytes": 537954,
+            "sha256": "b3286fe720808c6fa5e9ca9f936c0d0cceaf197baaf642b024737b482a6989c8",
+            "metaBytes": 3364,
+            "metaSha256": "af6ba95b202e358d202aa18798a9ee8e11f53cfc3c5b8df6109a67a414f504f6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-Metallic.png",
+            "guid": "da657c79fd5868b4fb7a67a761e4e3b0",
+            "bytes": 11862,
+            "sha256": "a4b69d25a7b4b179d63c6d12a6356a9c05df5ee2aecd14b93821adbf7a427274",
+            "metaBytes": 3364,
+            "metaSha256": "6623b485386b26c53a22612611ad259eb8bf2989fc36d5b66c38246aee7e3fe9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-Normal.png",
+            "guid": "036a13c90b017c647bcf59fbd092e153",
+            "bytes": 397864,
+            "sha256": "f9d4617670180fdb6bf9e0d05b6a7dade415d49b03cf5d6de46715ecc8dcd936",
+            "metaBytes": 3364,
+            "metaSha256": "a5955a9b2b6f427b495b90d6ae09794f6b65b49ebc179062efef8414db17d44b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-NormalControl.png",
+            "guid": "d2048b6b67070ed40a25f159b17e60fd",
+            "bytes": 179498,
+            "sha256": "3568191161619331ef418e9193a43efb4cc0b7d9ec1fce1d5bfc582abfbf1a2e",
+            "metaBytes": 3364,
+            "metaSha256": "00a2d2fb1aaaf037bd40bedd2a135562aebbdf15b172042f6724136f47b9276a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Peeling Oxblood Leather-Roughness.png",
+            "guid": "23be22ac855785244a11bb243a140b29",
+            "bytes": 167348,
+            "sha256": "55bb8d93d8b764cbcff6f4fb4b150d3b13ace3d88aa6b419143781bad133e20d",
+            "metaBytes": 3364,
+            "metaSha256": "12fd75df4ea0228bed4e9b4b3bdf6c902818fa7134bf23c57a9b7f931c4c5cbe"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-Albedo.png",
+            "guid": "ee2b046ef7df5594f812ff48c39f7706",
+            "bytes": 183924,
+            "sha256": "56b89e3fcef2ab0c0291d3a75dbcd1a738733bff69dd6c4cde47ae64ed7b5f38",
+            "metaBytes": 3364,
+            "metaSha256": "0042bea8096c0a6a72acb90c044031beb19b04072a95cf131f3b642f7137fa1f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-AmbientOcclusion.png",
+            "guid": "65dfcf62c50ff564c97ab70dc13ab42c",
+            "bytes": 11859,
+            "sha256": "e4a4fc9f877755c61eab601a16366c34886beeec97e202df78363b9b7a1ea182",
+            "metaBytes": 3364,
+            "metaSha256": "a53287ed7619e3d520e2ba7557882f7adbe1340cf29e08f7ca6f07815d4e6a75"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-Material.png",
+            "guid": "63269ed8b7c4e8345a1e534c2178664f",
+            "bytes": 532082,
+            "sha256": "28391ca7ca09f652ecd4680bae7a29a576a80e2da7d5badc1769af6d0a937d57",
+            "metaBytes": 3364,
+            "metaSha256": "598918dfacde3bea6252ae5a3934187964c5c53f32b911d3306369b24396540b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-Metallic.png",
+            "guid": "adf27c3d9c27eed4d9744dc510a496df",
+            "bytes": 11862,
+            "sha256": "a4b69d25a7b4b179d63c6d12a6356a9c05df5ee2aecd14b93821adbf7a427274",
+            "metaBytes": 3364,
+            "metaSha256": "af322f2daff1c0777e9c0b1c3b65ab465ac276e77c661efa483abd49b5d26d5f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-Normal.png",
+            "guid": "8cff1e3855774a2488863c3c9c9ac44c",
+            "bytes": 397864,
+            "sha256": "f9d4617670180fdb6bf9e0d05b6a7dade415d49b03cf5d6de46715ecc8dcd936",
+            "metaBytes": 3364,
+            "metaSha256": "7fd61b9e312e93dacacae94a6e8a33e852ca863cc90e39f39cdf32c625c760ab"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-NormalControl.png",
+            "guid": "2d83c100d10543d47b3c62d79d65b11f",
+            "bytes": 179498,
+            "sha256": "3568191161619331ef418e9193a43efb4cc0b7d9ec1fce1d5bfc582abfbf1a2e",
+            "metaBytes": 3364,
+            "metaSha256": "d4d3f910055a7e2ad11d676850884abf3eda76ca8efd4c71b821183e39bbe986"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Salt-worn Brown Leather-Roughness.png",
+            "guid": "266c396687686e249b9508eff2041f7c",
+            "bytes": 126891,
+            "sha256": "f7e50cfb7e894315dcdbfd4389808a6a5b9806ab67086cd562f5415c5b7b9936",
+            "metaBytes": 3364,
+            "metaSha256": "b279f9ac19dbbccbefc94b8e9d6b6f6f519e5e41fd1fe4bd1ca29d81ade16962"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/War Paint-Albedo.png",
+            "guid": "be5d605030c27174c99a152ebe100b71",
+            "bytes": 190604,
+            "sha256": "1cb294feca448337256079c29b2b5e2afeffa4abfdecf2f146665f34cfec1cc3",
+            "metaBytes": 3364,
+            "metaSha256": "074deff8ad95e8eabef10fa85570e7e8d22c47199c65e1b59f319db7646e478b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/War Paint-Face.png",
+            "guid": "34184c0f6c02ec344ad55eb0ec9c531f",
+            "bytes": 946610,
+            "sha256": "f6ec2a0598e6f85bac4bf38c6c340d95cd855b6ab0e008784c74cc9d20171a7a",
+            "metaBytes": 3364,
+            "metaSha256": "8f7cd1eea115460c95eb0129c365cb12fdc118790d7c7e07df22a80975f805e4"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/War Paint-Roughness.png",
+            "guid": "27fb8bc02d2238b41ade76f040af2dfd",
+            "bytes": 204596,
+            "sha256": "9e6d1c099e3dc9545c7117563b279a503c54c7ba04326be415dac41646fbf1a1",
+            "metaBytes": 3364,
+            "metaSha256": "bd3de436b0ae8d8ecf6edf21b43fc0f3b685d006e3b33a5055acab9132f6b32a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-Albedo.png",
+            "guid": "83b9e728a87ef0b498019c0b475818f4",
+            "bytes": 586131,
+            "sha256": "3c8808418c3de3016880553773f9ab4dc83a7d3ec5f3b6e13365dd1837b33e19",
+            "metaBytes": 3364,
+            "metaSha256": "9677c3b814791bdb929e8de0a50a99ce057a53fa134ead37ffb183e842d0369a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-AmbientOcclusion.png",
+            "guid": "52659733b89224e47b95fae173a24625",
+            "bytes": 476409,
+            "sha256": "34f9d5ae96db11cfd2e3df2b52e8a708d535978733ab62756802862566ffde65",
+            "metaBytes": 3364,
+            "metaSha256": "dc6fc60a7b3668e9d6b7d2db1909e7ab0c1bab1045d90aab64654abe104b3d79"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-Material.png",
+            "guid": "d531c37ee30166f4092a02bc324d5048",
+            "bytes": 802978,
+            "sha256": "caeff3c7e9d82f730b248ba411318593a90b4ebd938e42d1783a3b6ea0d92a41",
+            "metaBytes": 3364,
+            "metaSha256": "ab6679396d4cdc10b7afa176d5c04caa860bfb74a54d774c1b429a957a0a1331"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-Metallic.png",
+            "guid": "13653820ca29917438cf3ca0543b665a",
+            "bytes": 279487,
+            "sha256": "96684b37f68b4e59c865e8910a42586e760a6e00c625765fe36a64dc4f441ba1",
+            "metaBytes": 3364,
+            "metaSha256": "9c1bf4f49dfd9668f00f6e8f088216fe1fe91eb85208d176c8c7e4b387a51aaf"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-Normal.png",
+            "guid": "78fa4340427b56d41b0874223ccf99e9",
+            "bytes": 450091,
+            "sha256": "add7e8d4bafa382a13618aa669e816f8f9f3b8fb5bda0167f1e8b1cce4fe7650",
+            "metaBytes": 3364,
+            "metaSha256": "81c1742eb552b43de8c6e258e3705b461b4d9ced9cd66d8d6ef2aa82de7a5711"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-NormalControl.png",
+            "guid": "a68f52a804ada9b469cbf3badda00925",
+            "bytes": 268409,
+            "sha256": "5a798764d1e3d64d8ce4f9202669939d808531200d795095fe2b81cd3a79ecc7",
+            "metaBytes": 3364,
+            "metaSha256": "38e9261804a4f3aa6f8f9728a95aa1b36509ba942f995c62a62f28afa1aad4b0"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Face and Coatings/Validation/Weathered Teal Enamel-Roughness.png",
+            "guid": "eb1ee9066468a534987c7de310c94ab4",
+            "bytes": 360913,
+            "sha256": "f5e1085286237936b4b276e509006c5c972f65b507cbfd127bd1dde60de543ef",
+            "metaBytes": 3364,
+            "metaSha256": "66ec96ea150f61624f8fcf5daf9519f3a584d3262e8cd597d0703ff793bcba50"
+        },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks",
             "guid": "e7e1a33ecd1f0c2479f204b290361795",
@@ -317,6 +1621,1006 @@
             "sha256": "f971ba0666b32726cee92e3ff748da2e3cb42f3634f610cd8f78917737e07a25",
             "metaBytes": 189,
             "metaSha256": "b4d2a2ae79f4fcc484adb33ed557cd82bb52316b9eb9b91a6313cf0bea016567"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details",
+            "guid": "10682f44932a87a489fd74460d12aa73",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "76888e3abfcd9cbbf1087dcad9fbd3256e18f40a3db65962a4c88e0107047247"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Blue Paint.asset",
+            "guid": "02c7bc7a055066349a6e081c7750c032",
+            "bytes": 99000,
+            "sha256": "95ebb2e7bfbadc09d7803b20b82848353b4f429385f6bfee48155b544cd58d9c",
+            "metaBytes": 189,
+            "metaSha256": "7a37fde4ce23bd344aeb891febed8b1a08799beab3f26687efebebae45b36359"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/BrazedSeam.asset",
+            "guid": "5b1c25ee1771a5e4fb8aefa9ba35f286",
+            "bytes": 3077,
+            "sha256": "27b24b7d395c9719184896abbaf5a35788908edc84fee2f2bc31c3a8a42837d1",
+            "metaBytes": 189,
+            "metaSha256": "40fcb1d81194762376dc498b6b794b923de468dd265ad2805b432d0d22ed900d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Dried Mud.asset",
+            "guid": "32c6d2f51a56b514facad688027a75b9",
+            "bytes": 98996,
+            "sha256": "69c13978d8982636023fae3615ccad2e5418740450065ec67b1628ba32933935",
+            "metaBytes": 189,
+            "metaSha256": "e92882e6135c90bef3ca07180ead2ee0519bf921bbf1a1247fd98cd9b5b43933"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Dried Water Rings.asset",
+            "guid": "94bc0161f186fca4cbadf84ac2359594",
+            "bytes": 90921,
+            "sha256": "1da82c3a4b69b0386976cf9661696ffe36c9df9b5bd4ceceb6823ad4a2aaaef5",
+            "metaBytes": 189,
+            "metaSha256": "05e9ccde9bf89a15f25d1a8789059e32a6466eb876add6f26ee0afe8e62c13eb"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/FloralLace.asset",
+            "guid": "5c4fb198c03c5f747ad5cce237690c91",
+            "bytes": 3080,
+            "sha256": "97a943177b6e2c55c4ea20e74872bef42eedeb8d6adaedaaca06275ae727346d",
+            "metaBytes": 189,
+            "metaSha256": "7efa689b8c09090f511a678d66260f733a130650460704884b82075d88889b5d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Fresh Blood.asset",
+            "guid": "ee9051f2383d4e0429d13c01bcec0bc8",
+            "bytes": 99004,
+            "sha256": "86a2168b58e56f178ff6a3d3bf5dc73e8c363b80208e1411d29af342c82ff3e7",
+            "metaBytes": 189,
+            "metaSha256": "ac83e44afae5706669e57904d6b8003415470706999bfb450636059e77697a98"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/GothicLace.asset",
+            "guid": "a3164701ee759b0469a0b9d69632c232",
+            "bytes": 3083,
+            "sha256": "edba51d84148f0ee8d02617550928ce034913db89b505d7ae4e9babf35071d04",
+            "metaBytes": 189,
+            "metaSha256": "e5df984d9857f86288fcf0c96b5b5d197e1e2b3bc91c57126c21351b780b8b5c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/MigWeld.asset",
+            "guid": "e9d088ada0991c048b0a770e950fac2d",
+            "bytes": 3073,
+            "sha256": "6bb384aa96cd0d877a359bc82db92f05fd9fc501ad2cb0007c9c5e0cf8135a07",
+            "metaBytes": 189,
+            "metaSha256": "3d891ff34adac9b23e6dd306627346d5eb5f4061a588fd09b5ab43750f387cf6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Oily Fingerprints.asset",
+            "guid": "3d4960678b102cc4785f0b484c9bf0bd",
+            "bytes": 87424,
+            "sha256": "85aff2bf079ac4c916b8bffd956fa23be90701c3494017ed8d786cbc11968fe6",
+            "metaBytes": 189,
+            "metaSha256": "950185130167b05fc1affac86ac5b60f5fde01e459e82c8ddc1a48f1e88d73d3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Oily Runoff.asset",
+            "guid": "900e34615fdaa8c45bd695130c3cfcdd",
+            "bytes": 99004,
+            "sha256": "f1aa450e926f611e6ae2eb73e9a24ea8d7f45e36f6a64e80bd24ccae443d6894",
+            "metaBytes": 189,
+            "metaSha256": "c1f5aff14a3f329ef0733f5601f383c699b3ab4a2ba591d0b35b3be35bdb1efd"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Peeled Adhesive.asset",
+            "guid": "60c93d760dc04c142981720debda5808",
+            "bytes": 90915,
+            "sha256": "969775330a5bd248b343a6de2fcb48301b9fae57083fda62c0a0642d61f1e3e1",
+            "metaBytes": 189,
+            "metaSha256": "af0cfbb9af664f466ccfa5ba0313663e7bd2684cb956b36e2fbc49eff63d5a3c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/README.md",
+            "guid": "eb2a2a251921a8b48b77e8588ec20e51",
+            "bytes": 4414,
+            "sha256": "01d95328d881f1308062c8b3a022792e87662d6b5bbb7290dfc0a22cfd2d71b7",
+            "metaBytes": 158,
+            "metaSha256": "98aa2368b7c7e71ee81dc7c16b4256a1ece6f5cbd41dcd6a794c5b73f6a537bd"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Salt Crust.asset",
+            "guid": "114806224e64e9d4a917ff7aff4ae194",
+            "bytes": 90900,
+            "sha256": "941d66096a827d126cc939f0400d70c4d4e1deff4b7df68b6cea8e645a03c8f0",
+            "metaBytes": 189,
+            "metaSha256": "473d1d3532f86915c6a910ad4369597fb7b9686e1e26a23fcbee5bf2f1ef4c54"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/ScallopedLace.asset",
+            "guid": "665ff6869e828d440bc918986aa70a5d",
+            "bytes": 3084,
+            "sha256": "9cc55ba9a4859283b0670dc853dc058f33447d87828ae54bdc412e00ab3d91db",
+            "metaBytes": 189,
+            "metaSha256": "ffad2548f0cf3d38e51f04ca98c72d77dfe162d18de833a61af052bc750d7dc7"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/SolderSeam.asset",
+            "guid": "faf9df648a11481408ccc4c342429f10",
+            "bytes": 3070,
+            "sha256": "9fc88f576eca5eade3629b870ef7e3b5898dda79d41d236c19b4776210ecd40b",
+            "metaBytes": 189,
+            "metaSha256": "4973b1a7a09d155b86d30822a5d985daa8c2b950b796b382c1a55248546f2f1f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/TigWeld.asset",
+            "guid": "ab8de1a281c8a1c469d95896db1d8666",
+            "bytes": 3075,
+            "sha256": "19503372c6f34d23da3ea15726a1f1433851d697df2f00487db153458926f6cb",
+            "metaBytes": 189,
+            "metaSha256": "ee8975c35c87aa58eb8cf77c54298a91828077405910b5b1cd355907c13a58c2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation",
+            "guid": "4795a52843a5efe4cb8dad15e36d605b",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "c232f8075edb97f0e6da5bf15f33f2c91879d90be9262c3594665a2f19ac6bad"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Benchmark.txt",
+            "guid": "c3de829db2520fb4b8fe7d39df1a1a34",
+            "bytes": 403,
+            "sha256": "6d0d00634e1ba517f589aa52b5d0f9f6b6ca4c0bf93023692ee10f6c34c631c5",
+            "metaBytes": 158,
+            "metaSha256": "ade0625d7f897182f260ed006c4c21b2bc5c030e36372b38fad084f17ab7af2f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/BrazedSeam-Albedo.png",
+            "guid": "cc8adfc4f440a324ebf5ddd9ac1c38c3",
+            "bytes": 187540,
+            "sha256": "38c86bdcd3fc0d2ad3bc3e434aaaf6e7135b215df7da2aa0e0b6c7a189ae0cc3",
+            "metaBytes": 3364,
+            "metaSha256": "29fe2c9af5161491b04bd351f69d4aafb5154c9678ffd632e6f7bfd6324f7421"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/BrazedSeam-Checker.png",
+            "guid": "fb661739e7adb5b44b5230e0662611d5",
+            "bytes": 133574,
+            "sha256": "9ae4cac96ba09a6e0c4284932349dea9934d95c63699f3608307a074107c2905",
+            "metaBytes": 3364,
+            "metaSha256": "5415ad3d646e7c98deebcc47372d1a3d011d629757a840bc301538b924de4e9f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/BrazedSeam-Material.png",
+            "guid": "667f174ce9c6a8447aa1445a32815cba",
+            "bytes": 223963,
+            "sha256": "a41fb3e41068420341f687e5a5dcff148b17b249e5be780cbc0edd80adad5861",
+            "metaBytes": 3364,
+            "metaSha256": "e699bce616a6ee0c1bf6367739d05489098688a1604f5d1ed10275e4201757ac"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/FloralLace-Albedo.png",
+            "guid": "951ef744db8dd4542896d7547c2ab9e2",
+            "bytes": 325325,
+            "sha256": "ea13bf64435a705094960b46cf600889eb156abf6731752335058aaf8cc201ff",
+            "metaBytes": 3364,
+            "metaSha256": "a333327b822933b17f810eb0d61efb9dcd995693335b664bf319d5135025863f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/FloralLace-Checker.png",
+            "guid": "30182b88c1a7dc545b936c71d5c9eaab",
+            "bytes": 372237,
+            "sha256": "bf16e1b682df91583c795ed9166dd550be41887ff65eff7fd5d49177659f72bf",
+            "metaBytes": 3364,
+            "metaSha256": "e66ac43d54c1e27e607a53833267a6cbdd45b5b139092b6d87f534536da0ba0d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/FloralLace-Material.png",
+            "guid": "a9d6ada31897ebf4f94a37c4832b399a",
+            "bytes": 350139,
+            "sha256": "3b2e9e2aa58cc72813c8735046a6fdda71fa258cb9a61499860737bf9c2c7ff1",
+            "metaBytes": 3364,
+            "metaSha256": "a7b8607ba78dbc107b1cf73206c679f1f4a48f01d3b82e5fd9add7ec45c73918"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/GothicLace-Albedo.png",
+            "guid": "5944a1892793a2a4c8b824e00d957287",
+            "bytes": 196182,
+            "sha256": "363a94a55afaacc144270f6de4298f3e846d5156a132fa4350f4c8b5dfd32d15",
+            "metaBytes": 3364,
+            "metaSha256": "da92a5802b7485e4a605d5704bab6c45cd4780551d034f643c9baafd7228b077"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/GothicLace-Checker.png",
+            "guid": "2fd87b07107afca4eb9e85515f20ded1",
+            "bytes": 147810,
+            "sha256": "d9f6f9981adbf317b927ce6d2d417533374d43379f855ccea3bf9df208d699f5",
+            "metaBytes": 3364,
+            "metaSha256": "c528859272bd28c45a0d3ae95fe78b47e9a670e0a26058eeffe2b2d735b9f43c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/GothicLace-Material.png",
+            "guid": "fc08012ddaedacd4698e76abc25d6b92",
+            "bytes": 267250,
+            "sha256": "8265a93eb20381affc3389f555f1a909cd6c874c51136f54c04477f41834091e",
+            "metaBytes": 3364,
+            "metaSha256": "594d9a546aaaa94a9f011cc3c8dc5c242e2aaca8b7a4b5e53f288adce9fbe774"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/MigWeld-Albedo.png",
+            "guid": "93a312a4b9a3c9548a892a4d8a6a3758",
+            "bytes": 260074,
+            "sha256": "d7c25cb79a377dd0d9efe76a0a2427e7fcf9ca263e0f3c2cf604a679d9d636b6",
+            "metaBytes": 3364,
+            "metaSha256": "46de45574f14015760c4206b2ef5e368902294e8423402017cbd149b6bdf4abe"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/MigWeld-Checker.png",
+            "guid": "0eb3f1edaf428194caeb171ddff152f6",
+            "bytes": 171375,
+            "sha256": "acf16c816055363c37cad999c48caa8c2a5f6e4b50640db4587ac872547ef8cf",
+            "metaBytes": 3364,
+            "metaSha256": "d8b9449f527efb4a4978249acb912fd62222e57d54feb9d2d3dbf6f4eb5f5ee2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/MigWeld-Material.png",
+            "guid": "de7e89fb14229ea4d93695ced1e71ecd",
+            "bytes": 264423,
+            "sha256": "c7f37ee1d4608717da9dc0ca178f8cde2d7d0fe128a89d50399d987e67777174",
+            "metaBytes": 3364,
+            "metaSha256": "c956a55a38e6299bb11a51115b1700bfb2979926201e643dad14ecdfacefd832"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Regression.txt",
+            "guid": "1616a05a794fe1a4a8d89490724aad26",
+            "bytes": 8956,
+            "sha256": "94e578ae95e0f32fe2642cd42930c52eb8cef4c1d9be75c347480ad296a10196",
+            "metaBytes": 158,
+            "metaSha256": "7058a04ad7d8e12419734ddf731cb8d400b8c7e6f0c8fc239e220a2fb1956e4d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-0-Albedo.png",
+            "guid": "973c2b1a7e59faa4fa48f00ae8b29153",
+            "bytes": 355375,
+            "sha256": "140fdb1493c9421dd711d9009511a4c81123e8565e115085b8d7fe839a44cd7c",
+            "metaBytes": 3364,
+            "metaSha256": "5d0133908eda165352678322debda4d05b75a972978e165f5a5f6a5c28bf3c81"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-0-Coverage.png",
+            "guid": "b7f295466fa04004ca288fd8dc2f4012",
+            "bytes": 319129,
+            "sha256": "ad1f49dd549556272ca5262898a9df8c3169d87cd6c8750c1782f702e2228706",
+            "metaBytes": 3364,
+            "metaSha256": "03e1af2fd804e8fa0685871e5b0b4bf85721ea93531ce6ddd14bf448b3f4c6e2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-0-Material.png",
+            "guid": "66d37fd8e92ffff44864a39bcdc1dd8f",
+            "bytes": 278020,
+            "sha256": "fc5d3388a7870bc1a3df4f9e78cf3ee6cfcc31434ad35ee2e5a41e09b7c5bd5c",
+            "metaBytes": 3364,
+            "metaSha256": "1987683445a0806c72ffa123e9e7dc54ef28a091f3a28871346945628dcf4d13"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-1-Albedo.png",
+            "guid": "20c5d9f214743734d932aaa3791f48da",
+            "bytes": 169377,
+            "sha256": "978ecc5652b18d85acd7f38b180fcc107e0fbab2d58b0c638583cb586dbbedac",
+            "metaBytes": 3364,
+            "metaSha256": "151b00d90b0cc7d317e3ca73f78cd65c57633927153106724bbc7a587b4adb15"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-1-Coverage.png",
+            "guid": "12ec0f5c433f3b54291c853e4e25570d",
+            "bytes": 163882,
+            "sha256": "581f4d113aa4740d35bf2cf641d92e192ac1346b97c3b30ddb39507cfca6935e",
+            "metaBytes": 3364,
+            "metaSha256": "f8c3798d7a07578f19195cb6ea27995508382138c81576398b20e841a8ef5ca1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-1-Material.png",
+            "guid": "9e12d98d26ca0f14cb781f95f138addb",
+            "bytes": 168288,
+            "sha256": "986f818ec0a97666b5c67194e0caa1d972a4c7c405da080d9e10831011dc6dcb",
+            "metaBytes": 3364,
+            "metaSha256": "75d366d980722efadfec598979262b8509d6824ce170e2d2100e22a8fa2faaef"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-2-Albedo.png",
+            "guid": "1d3546dc5255bda49aa5395e2ee53559",
+            "bytes": 89988,
+            "sha256": "fc1affd1ca606e6c7a59028233419bb859a65517186b519d72b52924ec8ee27d",
+            "metaBytes": 3364,
+            "metaSha256": "472223dccfb470deef7413b6aeb48fefcc6c7a7686f1868d7575862c9fbb6119"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-2-Coverage.png",
+            "guid": "5ecdf94902c560945aba4f76b74e2b27",
+            "bytes": 80501,
+            "sha256": "114b7a12933886d6386bc3051d9192c4bd930a86ea8e174626bf46eacecabe33",
+            "metaBytes": 3364,
+            "metaSha256": "a9591ee5eb0b721e1ae813bcac2372995d8fae202625746e226375fd3da15108"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-2-Material.png",
+            "guid": "493a1d66571adc84184a7c6659a57380",
+            "bytes": 151229,
+            "sha256": "0151dbde30bdc7f10cbf15d0beee3185373043f3993d6e9d1150ce4e9e794dd1",
+            "metaBytes": 3364,
+            "metaSha256": "0e5cc7bf660faa6f5000584a96b00c5b2150d9c98766c106b44cc42b6e728f72"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-3-Albedo.png",
+            "guid": "50c3ccf99d34fa04881fc555358b764f",
+            "bytes": 99308,
+            "sha256": "7b57bfe53e1cd0f963b2dd9d218017cacb81a7b23d721b4fb7e79ae7e7a93a52",
+            "metaBytes": 3364,
+            "metaSha256": "1b33fda20a4af936feffc3b0d26dceceb7fe7201e3b88678bbb8d3842f44afb1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-3-Coverage.png",
+            "guid": "359f86ba2e8363d41be3ad248dfa2993",
+            "bytes": 96967,
+            "sha256": "e75112ea8d52f93faaa56bd1dcbe0c3c47fefe23fcf8ba5f6bdff1fed386610f",
+            "metaBytes": 3364,
+            "metaSha256": "8c891ae68d2558572553c41404d3686f21078ba8da70f0c999293baff10ae785"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-3-Material.png",
+            "guid": "1b3218ae2feebbd47942507cd15a377b",
+            "bytes": 186172,
+            "sha256": "731ff4fb52590b9d67cac730f1a842e7637bed6fb0b6cf0d5864f40f65756d8e",
+            "metaBytes": 3364,
+            "metaSha256": "be2d8a55e2359860a7f4ed22f52dd19514c409b42a8bb0b4fdc01bccbc7dcebf"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-4-Albedo.png",
+            "guid": "73ba8d364167b6647a9181bb464a17f8",
+            "bytes": 105582,
+            "sha256": "54b10424c43e6049cd107480afae233e8ba68af6fbb885ab284c826c8688797f",
+            "metaBytes": 3364,
+            "metaSha256": "5d7c33747f58f4520bf6e885ebd5ac207cc937f9b48cc362f8127a8bb5868dd1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-4-Coverage.png",
+            "guid": "791065eb6df3e7844844dd5ede2d9d28",
+            "bytes": 104867,
+            "sha256": "99f5c2f7c70e94ea253f24461daff85e0002da597ba12aaaf5a98b48675b46a0",
+            "metaBytes": 3364,
+            "metaSha256": "a009d88c489e7ec12042c40d2df203f69ad055a19558d140a084fb853d079996"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Residue-4-Material.png",
+            "guid": "3bc5e746e46d43e4f88d8010f8222a57",
+            "bytes": 175064,
+            "sha256": "f8a8d9d9cdfa9b51e19bfa67fd54eb6885eb07ef2e5bb86e3de02466805be75e",
+            "metaBytes": 3364,
+            "metaSha256": "fc7e4dc6a6a7cb46f7dd0dd0c6a7820b9fc5ec85ba2109e037dd73700be38c62"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/ScallopedLace-Albedo.png",
+            "guid": "c1e98849a13ed2146a0df2267a24cf23",
+            "bytes": 250146,
+            "sha256": "b03ffc40001b844a4856b0721e3d4de54dbcfa001c5f3d00ccc5c98897317d47",
+            "metaBytes": 3364,
+            "metaSha256": "598221b4f70f75a4d3047dfe3315a50c7f6afc5a937ce83952690d4b1d8186f8"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/ScallopedLace-Checker.png",
+            "guid": "4d462b7293e5e3a459fb33667149d854",
+            "bytes": 289559,
+            "sha256": "7e5a517f4aeafd9b62d7ba48ecd581f1e3ee4cb04507e2cfa14a7d96d7e538f9",
+            "metaBytes": 3364,
+            "metaSha256": "341d580dfff0b43e8456a7a1fedfce3071033512d7e311e9c22df18e2fd1ae3b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/ScallopedLace-Material.png",
+            "guid": "a2859ddc42b6f4949894099f7605877d",
+            "bytes": 293837,
+            "sha256": "88767a7c945595994150b5374002f893da60307d696d9a4c1d198c974eb7b7d5",
+            "metaBytes": 3364,
+            "metaSha256": "0558ba598abe592077ca22e6b1b3398161a5a13ff93d554417af33254fe8d45a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/SolderSeam-Albedo.png",
+            "guid": "ce89a6a8f34f13f49b97e43d7057448f",
+            "bytes": 103172,
+            "sha256": "cf7a195fc9be8dd4d5aac5f967d5517c35facc40b994138405de47950d1981dd",
+            "metaBytes": 3364,
+            "metaSha256": "97555bbbc67e98caec67ca06938494dd04b55c160a484fe344686e4ba911dd52"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/SolderSeam-Checker.png",
+            "guid": "cec8180137727e943b6ec44af2b45d66",
+            "bytes": 103246,
+            "sha256": "05b7d995fe3781cd72fbf7d804456dca0b09c6241639a2730f483a71977fa8f7",
+            "metaBytes": 3364,
+            "metaSha256": "e94bcdce8cbecd1e89c31f97a70444a0471613888add8f66301deacabaa3eca9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/SolderSeam-Material.png",
+            "guid": "58f50d7565cad1d468c99d81d660aa06",
+            "bytes": 157653,
+            "sha256": "3bf7f39709fb5f394fd3b1a975a2d6142d6efde5ba9e85ad40d8516264ea8b23",
+            "metaBytes": 3364,
+            "metaSha256": "6c7b11bbc9310521f37a9643f167eafea8275f3cc3904d504851eaf0bbf67519"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-0-Albedo.png",
+            "guid": "65176baa886f4e74b99a378229a1c3cb",
+            "bytes": 35979,
+            "sha256": "54882be4291a1dd982e83a70a843c194eef303267e3bb93b998c1aac0ef25c26",
+            "metaBytes": 3364,
+            "metaSha256": "1615dd71ee8b4b81fc1b57b6e8bf7c1c66e663c15d1d1a36fe2b0ee4350db630"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-0-Coverage.png",
+            "guid": "ce29d6831663467478868a91eb318957",
+            "bytes": 34085,
+            "sha256": "94abf0e06089fb909db3830e5e5bfd53e22af00d89a70cc988718cea8e152533",
+            "metaBytes": 3364,
+            "metaSha256": "0851af883829d5b11db301713354bd16715e18e5fd5da66a701bcba88448d5a4"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-0-Material.png",
+            "guid": "14b0bf0f594b9c143bad73f370cd49a9",
+            "bytes": 95880,
+            "sha256": "b267cf5a0acbc66546bf6203a90937525b541340429ccf09c37f87fd75454c9d",
+            "metaBytes": 3364,
+            "metaSha256": "5ba3c455d48b179bf5c41558bb3cd14f65ac7b7174fbb75b8dcef689c0e31879"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-1-Albedo.png",
+            "guid": "1d4d53f3ab933d042918b11a4ec627ae",
+            "bytes": 92736,
+            "sha256": "684f2d78548b8bb1f6270f5ea74a0f1e5c44e11f0df439693d9340ec028016f4",
+            "metaBytes": 3364,
+            "metaSha256": "d6e86d0e926f9608b94362c3f653e1794fb6a53e57c8c6bd5e7929ff28882b47"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-1-Coverage.png",
+            "guid": "3dddc9499ff735148a5ae3403abe403d",
+            "bytes": 32643,
+            "sha256": "d499727fd9ddbf50629209cf1d69a7251eee45be18e17dc613169c36fe15fc36",
+            "metaBytes": 3364,
+            "metaSha256": "37421c0763e77b9e68ae4b56060fa54f1297ef64eff34dd8a41a2eb6070b8d49"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-1-Material.png",
+            "guid": "263b22fcb9467f7488ccd3b3ef477f90",
+            "bytes": 109042,
+            "sha256": "0880e4ed4c8fa48e5fcdf8e48430b531a80c7c80d6d6eaeed551bdd7f144895f",
+            "metaBytes": 3364,
+            "metaSha256": "41561f83493451ffbc93edf9108233e670397e1cad9c0650bb5b2b85842d2092"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-2-Albedo.png",
+            "guid": "d8aed54f0bf9c5446906d1f7722f2fb3",
+            "bytes": 35886,
+            "sha256": "e089fa212cf268ae78dfef2eb330a6efe7247605ea4942b28a82bbaceafcb584",
+            "metaBytes": 3364,
+            "metaSha256": "5d9ba9b237e4ba0472ab0f38e15c462ff6e4b50abc37f37d7abc761b3a2687bf"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-2-Coverage.png",
+            "guid": "93310e940060c27419e238f6ade772a9",
+            "bytes": 34085,
+            "sha256": "94abf0e06089fb909db3830e5e5bfd53e22af00d89a70cc988718cea8e152533",
+            "metaBytes": 3364,
+            "metaSha256": "8f7a99149365c52fad74f0bf67fac7cc6d9a1e2e1375454d8d2142db4a984166"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-2-Material.png",
+            "guid": "90935c83cbdd6d94e840eb2ece3d8028",
+            "bytes": 96303,
+            "sha256": "8972fd98eea25fd114e6c5ae880af0fa3cfe3a0ec679fcc99de923bf39bf92e2",
+            "metaBytes": 3364,
+            "metaSha256": "3be17c3ed71825daa6ae0b741ecb9bdc13888e6bcec0c87ab05e8e76a8bc86c4"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-3-Albedo.png",
+            "guid": "10d364b3529da6046bb99a08462567d2",
+            "bytes": 29488,
+            "sha256": "66c34b2d1684ce40b4e8bd71942bb304fa26d224e2d544be094ee23ea29e0523",
+            "metaBytes": 3364,
+            "metaSha256": "8c8c8b73c8786940d330fa5cb0bf874cfc2ad857e64522a63cfb7841df37d3d3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-3-Coverage.png",
+            "guid": "56d1df527c8d54440b0013b6f92ea3e5",
+            "bytes": 34085,
+            "sha256": "94abf0e06089fb909db3830e5e5bfd53e22af00d89a70cc988718cea8e152533",
+            "metaBytes": 3364,
+            "metaSha256": "cbe3c3126b00a5bdc67cc221616f0a08332489cd6da2d7a1f9a00a4e2e7ce895"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Splash-3-Material.png",
+            "guid": "f8b6549a0bd68544daa9e7dea2121fba",
+            "bytes": 88542,
+            "sha256": "f42171f5f4cef67bb6f9b4c57b51fe911fa4122983b2684a8539c1dc56241d34",
+            "metaBytes": 3364,
+            "metaSha256": "c9a36020e795bfa100f944d5779185f23500daa63c77c252fca5b7566ed4394e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Tests.txt",
+            "guid": "c75839cce57affa47a03fbddf04d9e91",
+            "bytes": 1447,
+            "sha256": "f024e0d500a65a298b7b1de6783d0e86a41c3e9ff3703b3e799a9454dcbb37b3",
+            "metaBytes": 158,
+            "metaSha256": "fd5cb0eec53f4bf17cbc1cfda472fc7e363706e9f221b9cc41269f302bf7de05"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/TigWeld-Albedo.png",
+            "guid": "72ea4653ef0ecd245b8d556c6e42845c",
+            "bytes": 195709,
+            "sha256": "1a4588b03f0ab6d3532d2eddd38f24b66e61468f55d0e1a30d8fe86e96eec7a7",
+            "metaBytes": 3364,
+            "metaSha256": "030af1f18076abe9397a82785d0feb53476fd4860f475bab41959d6ccc6ceb09"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/TigWeld-Checker.png",
+            "guid": "fb575c77f42d7e547904f92a0a81d061",
+            "bytes": 159826,
+            "sha256": "674737da8b83db361eeb979a84ff564926a2eda77e7d659f31853a5074dd767a",
+            "metaBytes": 3364,
+            "metaSha256": "a42a300b6dec1eaffed18bc16e1ba82a6f3dc8c9b28801c7316a27330af44a4b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/TigWeld-Material.png",
+            "guid": "6f566ec395ddbd64a90686fb379207c1",
+            "bytes": 279153,
+            "sha256": "da92941293cfb5255ceb150d0949c5810e720c0b2137d03d47e031c91098c182",
+            "metaBytes": 3364,
+            "metaSha256": "59071f814b24136e3b1861ef8bdd4a56a4205c90443fa05720bbf29fd1b3503d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Validation/Timings.txt",
+            "guid": "047fd20ffbe43974fab68c1678793040",
+            "bytes": 1091,
+            "sha256": "24c3392f920f25711fe9bfd5e12eb460f86d9c7e49b8221e57c670ea2a987e7e",
+            "metaBytes": 158,
+            "metaSha256": "8a89af99b4209f3fdc8d85dd5b6a2fb3e37f36ec186c3d528b0253afd1f62e4c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Surface Details/Wiped Smudges.asset",
+            "guid": "71a67553f515dff439c4401e168e8176",
+            "bytes": 87412,
+            "sha256": "61e6fb85a489d7996f38d6a3a75d4198dafa6e4617beb1c7c339fb37e7fd7710",
+            "metaBytes": 189,
+            "metaSha256": "9035020909b01567c5d9964bede5f6a1c1d3bcf72a24ba07b7b766d76c23ab8c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials",
+            "guid": "23a1bd8c6fcd2d54cadb1ade2c4185b2",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "350dcd65e9a41dc7d3fd2288432dda7d171d3ff065ca8aa4f8476e2268d95898"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Leather - Catalog.png",
+            "guid": "4c036669033fa9d4086ecab469910bdc",
+            "bytes": 487131,
+            "sha256": "de730839b052a2289dfd26e1e5bb82dd3201e7b85c3766878223a45f7ba431c9",
+            "metaBytes": 3364,
+            "metaSha256": "93a217ef116257bf4e0b0e5f96b74a731b61aa234fa7250cf3398cade24d0957"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Leather - PBR.png",
+            "guid": "ef7e183c6aa7286468521aa404a56af3",
+            "bytes": 963118,
+            "sha256": "66c278635ff37c1c4b80991b3cb487004df1ddd15d0b622b493ea4bfe9b4d49c",
+            "metaBytes": 3364,
+            "metaSha256": "3ca9d1a4015eaeab673c1e160f90860b0902afe5f025d9eb0c2a15c95c5a76e8"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Leather - Repeat.png",
+            "guid": "2e3bc4d5a2e58444c8c9827224fb8f03",
+            "bytes": 130268,
+            "sha256": "3132c7860b28be89e9521528dbcb8f66a32b30a1f7d64d3aedd9c875bc85862b",
+            "metaBytes": 3364,
+            "metaSha256": "f448ec8fe7218ee612b7e3abfbce9218e2f310694499514ae2f21eec246c2b8c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Metals - Catalog.png",
+            "guid": "21e0ba1340ac5e14bb08a6e2eb08b809",
+            "bytes": 595329,
+            "sha256": "fd3a0a6d11af9ce41795a5d18b4de45d50e16626e88f17378c14a2a73e522bff",
+            "metaBytes": 3364,
+            "metaSha256": "1147a2b0a4fdaa4415b3634736c9240eb7ce5485a892b3d17fbf9b3359d33a34"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Metals - PBR.png",
+            "guid": "02dcb77c2f863c647a6797dae11886eb",
+            "bytes": 735362,
+            "sha256": "98e8b1cd2301362aff3e6f20654a907fbdbe2ea3bde9fc4915b1ccbc990dc172",
+            "metaBytes": 3364,
+            "metaSha256": "403de7ed2cf130722e09b94502398902834869f7618d63e19d1edb9524d2bae5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Metals - Repeat.png",
+            "guid": "a79ce19ebd9b2a542a726bf75188684b",
+            "bytes": 193005,
+            "sha256": "8239003621c9535fb616ea98b5b714df268e664465b6baece0d13469bc49c6f9",
+            "metaBytes": 3364,
+            "metaSha256": "ce324733de347fb0665dd600391d94e9e54e1d318aff28e3d5b5cd838ed5d9fb"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring",
+            "guid": "3b1b8ea3447a5c34fa8ebe480eca870c",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "48a0a338e5171c02281a98a097c4c70a4391d1309792d63bac8b81efa23a15c2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/ImportSpriteSets.cs.txt",
+            "guid": "8965444e8930760459902cbe61e2c2c8",
+            "bytes": 4945,
+            "sha256": "9d9a5963a915b5cdd39aaa0e54fe77ee33706563cc3a7ef52c73c5540004ef3a",
+            "metaBytes": 158,
+            "metaSha256": "99c62736c4bb6f1db49b5e8aac95a63c103005ff282c3b65bce205e1f7b69ccc"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/generate_expansion.py",
+            "guid": "83482113a097fc043a834e431e858c4f",
+            "bytes": 21700,
+            "sha256": "ca5f64136eeb99d4965e1dbab8fa23c8927b3b7702fda64cfbfc5ba37212b971",
+            "metaBytes": 155,
+            "metaSha256": "71ff116f26462a00b4bc73c7c33d8060148c92557715501c231fa2f2608c3c81"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/generate_materials.py",
+            "guid": "ee63165eb3e5d0246a0fef25c066c93b",
+            "bytes": 16678,
+            "sha256": "f4584c048674f293c4b85d1bfcb0f6379dc4f9eb84d7623ceefe58d5b283427f",
+            "metaBytes": 155,
+            "metaSha256": "8874523c086734b401abbde642111aa15706ab25b29f2ff136ab400286f4bf46"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/validate_expansion_periodicity.py",
+            "guid": "57a390e54d61fd144b78ad85c1c96aba",
+            "bytes": 1306,
+            "sha256": "eac2d42e42b1a273daa6770c2c79f77e29af8953299dca5ce91d3057126b003a",
+            "metaBytes": 155,
+            "metaSha256": "482859e6028d57fa3cd3be850144a6a44fb842448f9c20c5e91e6c8940b1de32"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/validate_materials.py",
+            "guid": "afc9980c5cb340346b88b5db0d146e28",
+            "bytes": 4310,
+            "sha256": "c7cae5faeffc1cc3bef84a0c08ce129cf7badcc2b7d5c6c5c06c5eea1ba8a880",
+            "metaBytes": 155,
+            "metaSha256": "15ae91eb14fd7931440430f5b37ff811afad3a0ff25df61712cb015ea40db939"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Bone Horn and Keratin - Catalog.png",
+            "guid": "f94e497095e95614089659abb9655bfd",
+            "bytes": 252277,
+            "sha256": "f168e04a2618b423aebf68678fbab664d88a6f740ff1d39c09c006e446a15700",
+            "metaBytes": 3364,
+            "metaSha256": "7f433405bf4487cc47c9d86525558cba1dd4dced961311faf361327062e08e15"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Bone Horn and Keratin - PBR Catalog.png",
+            "guid": "b45dd9728551741498c8a81761de5033",
+            "bytes": 502669,
+            "sha256": "a2be420bdcf9b76e044e09111d51a81377884f62565d2e1abc21733953895943",
+            "metaBytes": 3364,
+            "metaSha256": "fa63df230d97d951a17894d463ac1648028dfb905d323160155a34cdddbe2a4b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Bone Horn and Keratin - Repeat.png",
+            "guid": "a6b69b7a0ea4de14b9219d90ebc861f4",
+            "bytes": 77189,
+            "sha256": "c500fa57e58f2bdcb41870e89db4c98320669627eab964146318d2be8809c96f",
+            "metaBytes": 3364,
+            "metaSha256": "a8784b0c1ff0005dca691f68accf45b9993f8f77789a09a1b6143614da16de9c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Brocade and Decorative Fabrics - Catalog.png",
+            "guid": "fe10555c19d7d0a4babe882b0f870281",
+            "bytes": 919845,
+            "sha256": "ebba0b0276e306646e815f4f46be7f74b37c92f45f17f4ec414eefef3c6960ef",
+            "metaBytes": 3364,
+            "metaSha256": "e35b42f0b1f0a77b04963e3f6b06bf1f558058a2f5c15604dc2bb730b8cae718"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Brocade and Decorative Fabrics - PBR Catalog.png",
+            "guid": "e904b15f7480bac4eb96b613364396be",
+            "bytes": 836406,
+            "sha256": "8eb4094980843660d3a1d6fb4ae53542911b161d42f9b85a57ccaf639a9f4220",
+            "metaBytes": 3364,
+            "metaSha256": "83417edc3e60713951f46b9f51e99dad55995f37f4ec548dd5a052063c73035b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Brocade and Decorative Fabrics - Repeat.png",
+            "guid": "265cff9a83d54a6478292614a837e1fb",
+            "bytes": 278898,
+            "sha256": "d7d10943057d309891ccceda1b4bb230a53874f12bf0394a85f3cca55e9cb4e2",
+            "metaBytes": 3364,
+            "metaSha256": "898588a10a383038dcce2f1a778be7fe03b4a6a5930febc030a86bd79d7e2023"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - Catalog.png",
+            "guid": "6ef0d48c3c8601e4e84d0b8fd7e2a996",
+            "bytes": 195406,
+            "sha256": "3814ac48511ebe233bcbf560cb997ba4b84f659916db86424901e0a7c751a9cd",
+            "metaBytes": 3364,
+            "metaSha256": "85469b37a47e7e95e6164dbf594a7f1d9208f79d85f41c6bd00649755514a804"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - PBR Catalog.png",
+            "guid": "2198e877ba2a2b04dbcfafde08bcff10",
+            "bytes": 999127,
+            "sha256": "5fca17494852780b1a22b61423f0a8ec55e9c6069d686a48f5d713739ba07fd4",
+            "metaBytes": 3364,
+            "metaSha256": "2685ccade92fe4df0bc2aa45feb437ac6733d3f363c65fb77d10a904437594e6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - Repeat.png",
+            "guid": "5c3f8ef0c65cc484b83d7b64277a9ccb",
+            "bytes": 80584,
+            "sha256": "4a433fafec1157e62dd84769925a2565192a298dbfc0cb60b0ca8c01271cf762",
+            "metaBytes": 3364,
+            "metaSha256": "349957d62451df5f8d094684ae705e3f4dfa93954411130c796959be51e0d782"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Denim - Catalog.png",
+            "guid": "7dda7b69df9e16a48a1568259580f05b",
+            "bytes": 1313422,
+            "sha256": "3c43bddf201dcef8b1fe8e23fc23761cbcf1d4bed7f386c9998bdc939d6fd2d7",
+            "metaBytes": 3364,
+            "metaSha256": "5c03d04ada946aa3cd3d637ad5f68d03c4e807b304f87680423b4d66613fe1b0"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Denim - PBR.png",
+            "guid": "12eddab4e64c6ce4c9a462932a8fd859",
+            "bytes": 1069163,
+            "sha256": "4b63ecc7ef513f3fc52bdd8e0a5ee005a212170c822d95ee787f6672321d9eae",
+            "metaBytes": 3364,
+            "metaSha256": "88a50f31604a0a8deeb9adc27c66ef4cb8c4a04735d15aa5e54f668e82f89bcb"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Denim - Repeat.png",
+            "guid": "81c91bbeac8595c4fbf05d56bd36c241",
+            "bytes": 426527,
+            "sha256": "e32eb0fd1e76dcad2fbd9511efdbcc7a9d70dab050390d58c8f5ce8aa151049d",
+            "metaBytes": 3364,
+            "metaSha256": "857d8194ab2cab08f8e1d5d29547ddd380e26a9c4e8772e42172d42d11cf1b0d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Library Overview.png",
+            "guid": "4bae3289735c31d4baaec8e60dea1256",
+            "bytes": 1242973,
+            "sha256": "792434e9103a8f29484a8eb44a09579b871093cf38b7f33b727a012ef623494a",
+            "metaBytes": 3364,
+            "metaSha256": "bffec6b49322e1b7b0de8ee3ce08216ede8a7771f4a94306fee8b2b221034278"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion PBR Overview.png",
+            "guid": "8c65ae5edef3d4f43baf58bf741c123a",
+            "bytes": 1809128,
+            "sha256": "40522689fd7cc313ad82a89faa1f0afdd578c0aa9a317a99665d6c623fd631e0",
+            "metaBytes": 3364,
+            "metaSha256": "071af1607a70fda728dc5eb3faa1e192445ea89d92faa13d096c01405a1b981d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Periodicity Validation.txt",
+            "guid": "73b484fa97abcf346855f08d493e2df0",
+            "bytes": 8944,
+            "sha256": "30c0745aa9ef3d8c9108685fff37081cb08a34e763f138c16c8cff0c9ccf9a06",
+            "metaBytes": 158,
+            "metaSha256": "1c89c8a6564395094cf76819eddff9320d10ce317749ae813f0e532708e6f0bd"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Seam Measurements.json",
+            "guid": "2596d2449e2ceb443844183fa2eef941",
+            "bytes": 174898,
+            "sha256": "c07ec59cc3b7229900f840032fef3cf350b1d1fdbb0c98ffdeb50f1ccaad1207",
+            "metaBytes": 158,
+            "metaSha256": "95461b93aa58caaa202dc38e1761d16eea2c4101721e582fec3a739b69b6dc95"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Knits and Soft Clothing - Catalog.png",
+            "guid": "cc9670dadfd30b844a67b28e50467a61",
+            "bytes": 746143,
+            "sha256": "94348879519ae4957b32d6ab7534fb8367d3bfa4b505717964cf509d6993aa1c",
+            "metaBytes": 3364,
+            "metaSha256": "88900d01b4718d67680895c25a852675fa2f6f5392ec8fefb2c1739f6548bed8"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Knits and Soft Clothing - PBR Catalog.png",
+            "guid": "1244795baa6ad154fb0a9d080b66c2e6",
+            "bytes": 971655,
+            "sha256": "cbd57b6e7bc9d6c0dff148b5248013a89a6818d54c8d338fd326409060c9d69a",
+            "metaBytes": 3364,
+            "metaSha256": "9554726cac952cc116dee37a7a0866575c2f820f77a4630103b496f9718b6ee0"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Knits and Soft Clothing - Repeat.png",
+            "guid": "bdee44d3e90c42548a60b07097a93295",
+            "bytes": 265831,
+            "sha256": "77c32dc99337041d1d3fdb4e2f621fd50d0623bc1f4758010ecbcbd78dc53e6a",
+            "metaBytes": 3364,
+            "metaSha256": "a79e522abcd3ed1b2a4bab50b487e267ac0cdb42567cb133137e0a53c70c3729"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Material Library Overview.png",
+            "guid": "714bb4803ca069d44ade68cfd8428256",
+            "bytes": 878989,
+            "sha256": "3e4a7efa2ba664d726956fa9c4090d72f414dacf08db33f0a7244641fb3290f9",
+            "metaBytes": 3364,
+            "metaSha256": "66068966a92d2b9fe2156e25d5d11f96be1ce70fc7cd02273cf702f2022cfe21"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/PBR Library Overview.png",
+            "guid": "806684d4e60af3d4c9df0291cf56ddc6",
+            "bytes": 1791736,
+            "sha256": "5b3f40adab777aa2dfdafc4e68cba5f5aac62c4f4e997dd4c69a030953caa4be",
+            "metaBytes": 3364,
+            "metaSha256": "ac1326a75eea5d008bcb3cbeb6dd14924a2e8abd0af3d090b582a570575b40ce"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Plastics and Coatings - Catalog.png",
+            "guid": "a4cb55a1deb5e1a42836dadda260b88b",
+            "bytes": 164817,
+            "sha256": "d5b49185a6d6ee370353687263dd015363be04e1bff877e63fb25926228e29bb",
+            "metaBytes": 3364,
+            "metaSha256": "ba55653cf60f13f3dc4c220a792c8df4ba6288c457db22a23e6d3a957746e04e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Plastics and Coatings - PBR Catalog.png",
+            "guid": "af26a144093f6dc4cad736922c10f02b",
+            "bytes": 491032,
+            "sha256": "62c21830f1269b4b1154e6b6d3822cc5c5caceb7df31a1d560f71cf7719947e0",
+            "metaBytes": 3364,
+            "metaSha256": "c4ee76220278716db898520592cb5ff657846482bebdaa6690cab5cdff279b24"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Plastics and Coatings - Repeat.png",
+            "guid": "846da20a1a995a747aa2b256e30f4831",
+            "bytes": 119797,
+            "sha256": "d282a4abe6a23e9f718c8b8123d3b9193f6397be39b4d9c8792e2b148b85f039",
+            "metaBytes": 3364,
+            "metaSha256": "0c2eed823e9058eee27b9eda3d9ff8ce88dbdd553ed1007a78935e22c1115a82"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/README.md",
+            "guid": "13e9f1de9bc27a34eb526045fc9d67b5",
+            "bytes": 4305,
+            "sha256": "67a5732aad3006d30ab1de1eae8a920a5c046cea58bf9cc62fbe118d47255fda",
+            "metaBytes": 158,
+            "metaSha256": "911cb700f23400d9a1c65527e2a521562b6ab5cdd50bf3fd0a31373304bd570b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Render Timing.txt",
+            "guid": "bafbfa2af99dd6e4d9990cd706d24a43",
+            "bytes": 95,
+            "sha256": "263f0eef6e3a61f77296d36864b3a113391b5aef3f8fd0ff7f976bbf91556d16",
+            "metaBytes": 158,
+            "metaSha256": "0c5714bccf633611b89301e8dbc35b4422bbb762b1a7eb9e66e55e65675b88a6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Rubber and Elastomers - Catalog.png",
+            "guid": "55eb47c571f727240a640ec281cdc10c",
+            "bytes": 114241,
+            "sha256": "80e0927c9973c8c5aa50eee9cb66f54690dadf1242decb9e9301052c5c4600c7",
+            "metaBytes": 3364,
+            "metaSha256": "9232b80f3487d5ae88ee446494477aeebe96276f68c276dbc892e571c63ce90c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Rubber and Elastomers - PBR Catalog.png",
+            "guid": "a558a903357ae134c81b59c1aa468ffa",
+            "bytes": 610693,
+            "sha256": "b9bc7ba370b94830c1417076cf9124c606f049db52d4bb0b328b5bfd62808b90",
+            "metaBytes": 3364,
+            "metaSha256": "54e130e1ca9af0b82ddba016cde95054c9d30b5089026c328a9a7d72f0225174"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Rubber and Elastomers - Repeat.png",
+            "guid": "fd5c357b441226349a290a64a809e7db",
+            "bytes": 4027,
+            "sha256": "04407645aa88589a18184697c565a82daf7174ab64f58017ef5a6afccea01f49",
+            "metaBytes": 3364,
+            "metaSha256": "e45304711d8dec1538a60e6e8e5f0d1e4d9c2e0ca74b1f4175d0cf8190f7384f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Seam Measurements.json",
+            "guid": "344c6d37a4759834c8b83cdbd1dde196",
+            "bytes": 95771,
+            "sha256": "d957cf73a2059f0f50672c40ff057132f4ee9a5e55836e6545720dea505d76ca",
+            "metaBytes": 158,
+            "metaSha256": "69f1a31cc4ffd1e0590cd7bee4a30fab5a0883a08225abbda889d38e54b2e12e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Source Validation.txt",
+            "guid": "077fcaecd52edfb419d757f4164f22a1",
+            "bytes": 17306,
+            "sha256": "7a9f9880e18c758e6c1bf1999ac940fcd77cfb3d4112ab4c3b122ac165469d46",
+            "metaBytes": 158,
+            "metaSha256": "f714dc1ad692ec9a24bd63189ab58008812047bf128aaa10d06a2a4c30612c4b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Technical Weaves and Composites - Catalog.png",
+            "guid": "0827bd5f54e3d7a4c9f7a1adfe1c8d23",
+            "bytes": 915780,
+            "sha256": "0123bc2dc7d2e4d9d3f2aa5125f969ed65f597a7dada42a46f5ace229a4beb21",
+            "metaBytes": 3364,
+            "metaSha256": "6b81370f0cf8b5903ae08f5eb4aef9455739b3b48e96d387253cfaf6feff05cf"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Technical Weaves and Composites - PBR Catalog.png",
+            "guid": "a521a0e3e09d3994da5749f647425a10",
+            "bytes": 850755,
+            "sha256": "60582af5ea9da85610cda919b406a821b06cb0f9431340e5c9c0c32d4798df2e",
+            "metaBytes": 3364,
+            "metaSha256": "30efb2cb945b44942c34022d0e751b0675b40b4d0a582e1cf841b48ea35d7e33"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Technical Weaves and Composites - Repeat.png",
+            "guid": "e1b8e1df799aac24fbd5dfc142650f1e",
+            "bytes": 232743,
+            "sha256": "9c5202d4714a34262a7addfff5d87e50f5f711e45ccdbd5bc046e5b9d670e3d1",
+            "metaBytes": 3364,
+            "metaSha256": "5acc257091258cbf91c67f7082ef5880d83e612103172346ca42dbe35434cfaf"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Unity Validation.txt",
+            "guid": "790e3c020a6170049a4f857f94445eef",
+            "bytes": 2246,
+            "sha256": "509a06211158b61859b5e645fa5bf3f5e9acf25b2da13989ff9e0d8387a1fb4b",
+            "metaBytes": 158,
+            "metaSha256": "cfe18f20c453ec193a4fa9a61ac20169628abf5935b5a57fe218b77a439391f9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Wood and Natural Materials - Catalog.png",
+            "guid": "56fa0d0153ad0dd45b811d8fb7442ae5",
+            "bytes": 582484,
+            "sha256": "d57fefd14a5b4c1674df82425affe967c4bc3812d0e5ff90484286a45fd56878",
+            "metaBytes": 3364,
+            "metaSha256": "6ff8b34c4312fd3728cc6aaac398805eaae5bae3f843832e28d665d7a1c95188"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Wood and Natural Materials - PBR Catalog.png",
+            "guid": "7e1023088275b40429186aa49f9a84f3",
+            "bytes": 603860,
+            "sha256": "4d58d49a0c0fbe7e382334f7a62ad49ceff2213c0cde5f4df66447ef828fe336",
+            "metaBytes": 3364,
+            "metaSha256": "9e8d91fb2897ad5a7c403994a8d8d865aa90267bbc84e800861c30542ba853ae"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Wood and Natural Materials - Repeat.png",
+            "guid": "609c5d8f09ff5294fa771fc2a9bcf87e",
+            "bytes": 190883,
+            "sha256": "a55b20f36b0e9894f92738cd45b5289be4a6ff12b5541ed3709bf3433548ed20",
+            "metaBytes": 3364,
+            "metaSha256": "447efae00300e2a795da0427d301334f6fb104b541f075d862449621cba4b479"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Woven Fabrics - Catalog.png",
+            "guid": "8e1bda0473ff5b5418b46fe9019ed44f",
+            "bytes": 728708,
+            "sha256": "f226a74f7df82abde7b5bd1f032cb1b726479d1983bdf36e5393bde57756259f",
+            "metaBytes": 3364,
+            "metaSha256": "58da37454b7eb7bfe7ab8f714a88a6537a0f3802f4490263de3b4cbd7dc22ad5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Woven Fabrics - PBR.png",
+            "guid": "37ea9fd46288c1f4f896a6e14eb244f4",
+            "bytes": 861427,
+            "sha256": "52912a5f3beb7aa7463a81c1d9d1c0a420401ea9243c5cd947f2a5b58ebdc3d5",
+            "metaBytes": 3364,
+            "metaSha256": "0542d3f8df99b0529abab5e62aaed1416ad208fa500ed3f8fd8a5ec8e15ef3dc"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Woven Fabrics - Repeat.png",
+            "guid": "1e35604f6b35e3d458c4599e0130fcb2",
+            "bytes": 264461,
+            "sha256": "d0ce075387eebfe7582afb76d8b52687bbaa28ce0dab3b03e69a8c7624bae2e2",
+            "metaBytes": 3364,
+            "metaSha256": "46d3d8d5f205ef4b9a762eaac170780a3dada9413de59cf0708afe5826627601"
         }
     ]
 }

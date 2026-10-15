@@ -579,6 +579,9 @@ namespace UMA.TexturePaint
         public string Name => surface?.sourceMaterial != null ? surface.sourceMaterial.name : "Material";
         public ReconstructedSurface surface;
         public string persistentId;
+        // Plugins can run before the document assigns persistent surface IDs. Keep a
+        // per-set identity across async execution, even if saving assigns an ID meanwhile.
+        internal readonly string pluginSessionId = "plugin-session:" + Guid.NewGuid().ToString("N");
         public Material previewMaterial;
         public UMAMaterial umaMaterial;
 #if UNITY_EDITOR
@@ -590,6 +593,8 @@ namespace UMA.TexturePaint
         public readonly List<TextureSourceBinding> sources = new List<TextureSourceBinding>();
         public readonly List<TexturePaintLayer> layers = new List<TexturePaintLayer>();
         public readonly List<TexturePaintStrokeRecord> baseStrokes = new List<TexturePaintStrokeRecord>();
+        // Keep source/base pixels intact so visibility can be restored without reimporting.
+        public bool hideOriginalOverlay;
         public TangentSpaceMaps tangentSpaceMaps;
         public ProceduralMeshMaps proceduralMeshMaps;
         private sealed class RegionMaskCache { public string key; public Texture2D texture; }
@@ -773,7 +778,7 @@ namespace UMA.TexturePaint
         }
 
         public ProceduralMeshMaps GetProceduralMeshMaps(int maximumResolution = 512,
-            TexturePaintOperationContext operation = default)
+            TexturePaintOperationContext operation = default, TexturePaintMeshMapMask requestedMaps = TexturePaintMeshMapMask.All)
         {
             int resolution = Mathf.Clamp(maximumResolution, 16, 1024);
             foreach (TextureChannelTarget channel in channels.Values)
@@ -782,12 +787,15 @@ namespace UMA.TexturePaint
                 resolution = Mathf.Min(resolution, Mathf.Min(channel.Texture.width, channel.Texture.height));
                 break;
             }
-            if (proceduralMeshMaps?.position != null && proceduralMeshMaps.position.width >= resolution)
+            if (proceduralMeshMaps?.position != null && proceduralMeshMaps.position.width >= resolution &&
+                (proceduralMeshMaps.availableMaps&requestedMaps)==requestedMaps)
                 return proceduralMeshMaps;
             operation.ThrowIfCancellationRequested();
             // A draft request must not permanently pin full generation to its lower resolution.
             // Keep the previous cache intact if a more detailed bake is canceled or fails.
-            ProceduralMeshMaps rebuilt = ProceduralMeshMapBuilder.Build(surface, resolution, resolution, operation);
+            if(proceduralMeshMaps?.position!=null)
+            {resolution=Mathf.Max(resolution,proceduralMeshMaps.position.width);requestedMaps|=proceduralMeshMaps.availableMaps;}
+            ProceduralMeshMaps rebuilt = ProceduralMeshMapBuilder.Build(surface, resolution, resolution, operation,requestedMaps);
             proceduralMeshMaps?.Dispose();
             proceduralMeshMaps = rebuilt;
             return proceduralMeshMaps;
@@ -2251,6 +2259,7 @@ namespace UMA.TexturePaint
         /// </summary>
         public void ClearModifications()
         {
+            hideOriginalOverlay = false;
             for (int i = 0; i < layers.Count; i++) layers[i]?.Dispose();
             layers.Clear();
             activeLayerIndex = -1;

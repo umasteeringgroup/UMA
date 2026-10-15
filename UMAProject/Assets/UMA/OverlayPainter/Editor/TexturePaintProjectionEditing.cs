@@ -82,7 +82,7 @@ namespace UMA.TexturePaint.Editor
             new Dictionary<TexturePaintLayer, int>();
 
         private void AddProjectionLayer(TextureSet set) => AddProjectionLayerCore(set, null);
-        private void AddProjectionLayerCore(TextureSet set, TexturePaintGarmentSettings garment)
+        private void AddProjectionLayerCore(TextureSet set, TexturePaintGarmentSettings garment, Action<TexturePaintLayer> configure = null)
         {
             if (set == null) return;
             FinishProjectionEdit();
@@ -99,6 +99,7 @@ namespace UMA.TexturePaint.Editor
             layer.projectionSettings.channel = selectedChannel;
             layer.projectionSettings.normalConvention = normalConvention;
             layer.projectionSettings.UpgradeChannelSources();
+            configure?.Invoke(layer);
             MatchProjectionAspect(layer.projectionSettings);
             layer.projectionSettings.lockAspect = false;
             if (garment != null)

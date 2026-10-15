@@ -156,7 +156,7 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintStageState
     {
-        public const int CurrentVersion = 18;
+        public const int CurrentVersion = 19;
         public int version = CurrentVersion;
         public string documentGuid;
         public string previewMaterialSettingsJson;
@@ -213,6 +213,7 @@ namespace UMA.TexturePaint
         public bool soloLayerMask;
         public float layerMaskPaintValue = 1f;
         public bool isolateSelectedSlots;
+        public System.Collections.Generic.List<string> visibleReferenceSlots = new System.Collections.Generic.List<string>();
         public bool wireframe;
         public string assetShelfSearch;
         public string assetShelfFolder;

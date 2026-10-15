@@ -72,6 +72,7 @@ MonoBehaviour:
         rightAnchor: 
         rightParent: 
         rightChild: 
+      regionUnion: []
       tiling: {x: 1, y: 1}
       offset: {x: 0, y: 0}
       rotation: 0
@@ -147,6 +148,7 @@ MonoBehaviour:
         rightAnchor: 
         rightParent: 
         rightChild: 
+      regionUnion: []
       tiling: {x: 1, y: 1}
       offset: {x: 0, y: 0}
       rotation: 0

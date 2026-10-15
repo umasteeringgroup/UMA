@@ -33,8 +33,8 @@ namespace UMA.TexturePaint.Editor
             for (int i = 0; i < spriteSet.spriteSheets.Count; i++)
             {
                 OverlayPainterSpriteSheet sheet = spriteSet.spriteSheets[i];
-                if (sheet?.spriteSheet == null) return 0;
-                count = Mathf.Min(count, GetOrderedSprites(sheet.spriteSheet).Count);
+                if (sheet == null || !sheet.HasSource) return 0;
+                count = Mathf.Min(count, TexturePaintSpriteSetSource.GetOrderedSprites(sheet).Count);
             }
             return count == int.MaxValue ? 0 : count;
         }
@@ -42,7 +42,7 @@ namespace UMA.TexturePaint.Editor
         public static bool TryGetSprite(OverlayPainterSpriteSheet sheet, int spriteIndex,
             out Sprite sprite)
         {
-            List<Sprite> sprites = GetOrderedSprites(sheet?.spriteSheet);
+            List<Sprite> sprites = TexturePaintSpriteSetSource.GetOrderedSprites(sheet);
             sprite = (uint)spriteIndex < (uint)sprites.Count ? sprites[spriteIndex] : null;
             return sprite != null;
         }
@@ -152,8 +152,7 @@ namespace UMA.TexturePaint.Editor
             previewSprites.Clear();
             OverlayPainterSpriteSet spriteSet = SelectedSet;
             if (spriteSet?.spriteSheets != null && spriteSet.spriteSheets.Count > 0)
-                previewSprites.AddRange(OverlayPainterSpriteSetEditorUtility.GetOrderedSprites(
-                    spriteSet.spriteSheets[0]?.spriteSheet));
+                previewSprites.AddRange(TexturePaintSpriteSetSource.GetOrderedSprites(spriteSet.spriteSheets[0]));
             int commonCount = OverlayPainterSpriteSetEditorUtility.GetCommonSpriteCount(spriteSet);
             if (previewSprites.Count > commonCount)
                 previewSprites.RemoveRange(commonCount, previewSprites.Count - commonCount);

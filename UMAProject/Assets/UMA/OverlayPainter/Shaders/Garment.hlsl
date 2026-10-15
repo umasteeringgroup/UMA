@@ -4,7 +4,13 @@ int _GarmentEnabled,_GarmentKind,_GarmentVariant,_GarmentChannel,_GarmentHasMoti
 float4 _GarmentSize,_GarmentShape,_GarmentFold,_GarmentAging,_GarmentStitch,_GarmentFinish,_GarmentDetail,_GarmentPrint;
 float4 _GarmentThread,_GarmentCloth,_GarmentAccent,_GarmentFoldRead,_GarmentProtectionRead;
 float4 _GarmentEnds;
+float4 _GarmentWrap,_GarmentWrapSurface;
+float4 _GarmentWeld,_GarmentWeldFinish,_GarmentLace;
 float _GarmentZipperWidth,_GarmentZipperDepth;
+float4 _GarmentZipperTeeth,_GarmentZipperStops,_GarmentZipperSlider,_GarmentZipperPull,_GarmentZipperTang;
+int _GarmentToothShape;
+float4 _GarmentToothLayout,_GarmentTape,_GarmentWeave,_GarmentCord,_GarmentCordColor,_GarmentZipperStitch;
+float _GarmentZipperThreadRoughness;
 float _GarmentDepth,_GarmentShading;
 sampler2D _GarmentMotif,_GarmentFoldInput,_GarmentProtectionInput;
 #define GARMENT_TAU 6.28318530718
@@ -64,6 +70,16 @@ float GarmentWeave(float2 world,float pitch)
 }
 float GarmentLoopWeave(float2 world,float pitch,float2 period,float blend)
 {return lerp(GarmentWeave(world,pitch),GarmentWeave(world-period,pitch),blend);}
+float GarmentTapeWeave(float2 world,float pitch)
+{
+    float2 q=world/max(pitch,.00005);
+    int style=(int)_GarmentWeave.x;
+    if(style==0)return GarmentWeave(world,pitch);
+    if(style==1)return GarmentWave(q.x)*GarmentWave(q.y)*.7;
+    if(style==2)return GarmentWave(q.x+q.y)*.6+GarmentWave(q.x*3-q.y)*.15;
+    if(style==3)return GarmentWave(abs(frac(q.x*.125)-.5)*8+q.y)*.65+GarmentWave(q.x)*.1;
+    return GarmentWave(q.x)*.65+GarmentWave(q.y*2)*.1;
+}
 float GarmentRead(float4 pixel,float4 settings,float neutral)
 {
     if(settings.x<.5)return neutral;
@@ -113,9 +129,11 @@ void GarmentBorder(inout GarmentSample s,float distance,float along,float aa,boo
     float contactShading=GarmentIsZipper() ? depthShading : 1;
     float width=max(_GarmentSize.x,.0001),halfWidth=_GarmentStitch.x*.5/width;
     float pitch=max(_GarmentStitch.y,_GarmentStitch.x*3);
+    bool zipper=GarmentIsZipper();
     float count=max(1,round(_GarmentSize.y/pitch));
+    if(closed && zipper && _GarmentZipperStitch.x==1)count=max(2,round(count*.5)*2);
     if(closed)pitch=_GarmentSize.y/count;
-    float halfLength=pitch*.32/width;
+    float halfLength=pitch*(zipper?_GarmentZipperStitch.y*.5:.32)/width;
     float phase=along/pitch,cell=floor(phase),local=(frac(phase)-.5)*pitch/width;
     if(closed)cell=cell-floor(cell/count)*count;
     float jitter=(GarmentHash(float2(cell,31))-.5)*_GarmentShape.z*halfWidth*.65;
@@ -124,11 +142,17 @@ void GarmentBorder(inout GarmentSample s,float distance,float along,float aa,boo
         if(row>=_GarmentStitch.z)break;
         float across=distance+_GarmentStitch.w*(row+1)+jitter;
         float d=length(float2(across,max(abs(local)-halfLength,0)));
+        int style=zipper?(int)_GarmentZipperStitch.x:0;
+        float spread=_GarmentZipperStitch.z;
+        float zigzagSign=fmod(abs(cell),2)<.5?1:-1;
+        if(style==1)d=GarmentLine(float2(across,local),float2(-spread*zigzagSign,-pitch*.5/width),float2(spread*zigzagSign,pitch*.5/width));
+        if(style==2)d=abs(length(float2(across/max(spread,.001),local/max(halfLength,.001)))-1)*min(spread,halfLength);
         float resolved=saturate(halfWidth/max(aa,.00001));
         float threadCoverage=GarmentCoverage(d-halfWidth,aa)*resolved;
         float stitch=threadCoverage*_GarmentThread.a;
         float needleDistance=length(float2(across,abs(local)-halfLength));
         float endContact=1-smoothstep(halfLength+halfWidth*.5,halfLength+halfWidth*1.5,abs(local));
+        if(style==1){needleDistance=min(length(float2(across+spread*zigzagSign,local+pitch*.5/width)),length(float2(across-spread*zigzagSign,local-pitch*.5/width)));endContact=1;}
         float needle=GarmentBell(needleDistance,max(halfWidth*1.65,aa*.7))*_GarmentThread.a*endContact;
         float contact=GarmentContact(d-halfWidth,halfWidth*1.6,threadCoverage,aa)*_GarmentThread.a*endContact;
         float shadow=saturate(contact*.72+needle*.58);
@@ -142,9 +166,11 @@ void GarmentBorder(inout GarmentSample s,float distance,float along,float aa,boo
         float seated=1-needle*.24;
         float threadTone=(.68+.32*roundness)*(1+twist*.045)*seated;
         threadTone=max(.1,1+(threadTone-1)*depthShading);
-        GarmentColor(s,stitch,_GarmentThread.rgb*threadTone,.66,0);
+        GarmentColor(s,stitch,_GarmentThread.rgb*threadTone,zipper?_GarmentZipperThreadRoughness:.66,0);
         float arch=1-smoothstep(halfLength*.6,halfLength+halfWidth,abs(local));
         float threadRelief=min(_GarmentStitch.x*.65*depth,GarmentRelief()*.5);
+        if(zipper)threadRelief*=_GarmentZipperStitch.w;
+        if(style==1)arch=1;
         s.height+=threadRelief*(stitch*roundness*arch-needle*.18);
         s.protection=max(s.protection,contact*.8);
     }
@@ -168,8 +194,16 @@ void GarmentHardware(inout GarmentSample s,float distance,float bevel,float elev
     // material has no AO texture slot. Its height still supplies actual lighting.
     float crownTone=zipper ? .48+.52*top : .58+.42*GarmentRoundedEdge(distance,bevel*1.5);
     crownTone=max(.1,1+(crownTone-1)*depthShading);
-    GarmentColor(s,coverage,color*crownTone,lerp(saturate(roughness+.18*depthShading),roughness,top),metal);
-    float shapeHeight=zipper ? max(0,elevation-GarmentRelief()*.65)+GarmentRelief()*.65*top :
+    float edgeRoughness=zipper ? saturate(roughness*(1+.18*depthShading)) : saturate(roughness+.18*depthShading);
+    GarmentColor(s,coverage,color*crownTone,lerp(edgeRoughness,roughness,top),metal);
+    if(zipper)
+    {
+        elevation*=(_GarmentSize.w*GarmentDepthScale())/max(GarmentRelief(),1e-8);
+        float budget=max(_GarmentSize.x,.0001)*.38;
+        elevation=budget*elevation/(budget+elevation);
+    }
+    float bevelHeight=min(elevation,GarmentRelief()*.65);
+    float shapeHeight=zipper ? elevation-bevelHeight+bevelHeight*top :
         max(s.height,elevation*(.22+.78*GarmentRoundedEdge(distance,bevel*1.5)));
     s.height=lerp(s.height,shapeHeight,coverage);
     s.ao=max(s.ao,contact*.88*contactShading);s.dark=max(s.dark,contact*_GarmentAging.y*1.45*contactShading);
@@ -202,7 +236,153 @@ GarmentSample EvaluateGarment(float2 uv,float2 destinationUV,float aa,bool close
     int variant=_GarmentVariant;
     float inputFold=GarmentRead(tex2Dlod(_GarmentFoldInput,float4(destinationUV,0,0)),_GarmentFoldRead,.5);
     float protectedInput=GarmentRead(tex2Dlod(_GarmentProtectionInput,float4(destinationUV,0,0)),_GarmentProtectionRead,0);
-    if(_GarmentKind==0)
+    if(_GarmentKind==7)
+    {
+        // Physical longitudinal pitch; beads remain the same size as the path grows.
+        float pitch=max(size,.0001),count=max(1,round(_GarmentSize.y/pitch));
+        if(closed)pitch=_GarmentSize.y/count;
+        float phase=(world.y+_GarmentSize.y*.5)/pitch,cell=floor(phase);
+        float key=closed ? cell-floor(cell/count)*count : cell;
+        float random=GarmentHash(float2(key,77))-.5;
+        float width=max(_GarmentWeld.x*.5,.01);
+        float x=p.x+GarmentWave(phase*.17)*_GarmentShape.z*.012;
+        float halfWidth=width*(1+random*_GarmentShape.z*.18);
+        // Overlapping crescent fronts produce the stacked-dime profile of a TIG bead.
+        float ripplePhase=phase+.42*pow(x/max(halfWidth,.001),2)+random*_GarmentShape.z*.3;
+        float ripple=.5+.5*GarmentWave(ripplePhase);
+        float edge=abs(x)-halfWidth;
+        float core=GarmentCoverage(edge,aa);
+        float dome=sqrt(saturate(1-pow(x/max(halfWidth,.001),2)));
+        float crown=dome*(.78+_GarmentWeld.y*(ripple-.5)*.44);
+        float heatDistance=max(edge,0)/max(_GarmentWeld.w,.001);
+        float heat=(1-smoothstep(.05,1,heatDistance))*_GarmentWeld.z*(1-core);
+        float3 heatColor=lerp(float3(.48,.24,.055),float3(.23,.09,.27),smoothstep(.08,.43,heatDistance));
+        heatColor=lerp(heatColor,float3(.075,.22,.38),smoothstep(.42,.8,heatDistance));
+        float soot=GarmentBell(edge-.045,.045)*_GarmentWeldFinish.x*(.4+noise*.6)*(1-core);
+        float spatter=0,spatterHeight=0;
+        float2 sq=float2(p.x,world.y/max(_GarmentSize.x,.0001))*19;
+        float2 si=floor(sq);
+        [unroll]for(int sy=-1;sy<=1;sy++)[unroll]for(int sx=-1;sx<=1;sx++)
+        {
+            float2 k=si+float2(sx,sy);float chance=GarmentHash(k+41);
+            float2 center=k+float2(GarmentHash(k+83),GarmentHash(k+119));
+            float radius=lerp(.035,.16,GarmentHash(k+211));
+            float d=length(sq-center)/19;
+            float c=GarmentCoverage(d-radius/19,aa)*step(chance,_GarmentWeldFinish.y*.45)*(1-core);
+            spatter=max(spatter,c);spatterHeight=max(spatterHeight,c*sqrt(saturate(1-pow(d*19/radius,2)))*.28);
+        }
+        float metallicCoverage=max(core,spatter);
+        s.coverage=saturate(metallicCoverage+heat*.65+soot*.5);
+        float3 metal=_GarmentCloth.rgb*GarmentTone(.82+.18*ripple);
+        s.color=(metal*metallicCoverage+heatColor*heat*.65+float3(.025,.022,.02)*soot*.5)/max(s.coverage,1e-6);
+        s.material=1;s.metal=lerp(.9,1,metallicCoverage);
+        s.roughness=lerp(.48,_GarmentFinish.x,metallicCoverage);s.roughness=lerp(s.roughness,.86,soot);
+        s.height=relief*max(crown*core,spatterHeight);s.ao=GarmentBell(edge,.025)*.35+soot*.3;
+    }
+    else if(_GarmentKind==8)
+    {
+        // A motif must fit its physical width. Extra repeats must not squash roses into bars.
+        float pitch=max(size,_GarmentSize.x*.9);if(closed)pitch=_GarmentSize.y/max(1,floor(_GarmentSize.y/pitch));
+        float phase=(world.y+_GarmentSize.y*.5)/pitch;
+        float repeatAspect=pitch/max(_GarmentSize.x,.0001);
+        float2 q=float2(p.x,(frac(phase)-.5)*repeatAspect);
+        float scallop=.46-_GarmentLace.y*(.5+.5*cos(phase*GARMENT_TAU));
+        float border=abs(abs(p.x)-scallop);
+        float thread=max(_GarmentLace.x,.002),d=10,petalYarn=0;
+        float2 flower=float2(q.x,q.y/max(repeatAspect,.01));
+        float theta=atan2(flower.y,flower.x),r=length(flower);
+        if(variant==0)
+        {
+            float rose=.2+.10*cos(theta*5);
+            d=abs(r-rose)*min(1,repeatAspect);
+            d=min(d,abs(r-.065)*min(1,repeatAspect));
+            // Satin-like radial yarn fills each petal, retaining air between individual stitches.
+            float petalRegion=smoothstep(.09,.12,r)*(1-smoothstep(rose-thread,rose,r));
+            float yarnPhase=theta/GARMENT_TAU*96;
+            float yarnDistance=abs(frac(yarnPhase)-.5)*GARMENT_TAU*max(r,.01)/96;
+            float yarnWidth=thread*.14;
+            petalYarn=GarmentCoverage(yarnDistance-yarnWidth,aa)*saturate(yarnWidth/max(aa,.00001))*petalRegion;
+            // Connecting stalks anchor each flower to the trim instead of floating islands.
+            d=min(d,GarmentLine(q,float2(0,-pitch/_GarmentSize.x*.5),float2(0,-.12*repeatAspect)));
+            d=min(d,GarmentLine(q,float2(0,.12*repeatAspect),float2(0,pitch/_GarmentSize.x*.5)));
+        }
+        else if(variant==1)
+        {
+            // Pointed gothic arches with a central diamond and paired eyelets.
+            float a=abs(flower.y);
+            d=abs(abs(flower.x)-(.34*(1-pow(saturate(a/.5),.7))))*min(1,repeatAspect);
+            d=min(d,abs(abs(flower.x)+abs(flower.y)*.5-.16)*min(1,repeatAspect));
+        }
+        else
+        {
+            d=abs(r-(.23+.055*cos(theta*6)))*min(1,repeatAspect);
+            d=min(d,abs(r-.12)*min(1,repeatAspect));
+        }
+        d=min(d,border*.75);
+        float metricY=world.y/max(_GarmentSize.x,.0001);
+        float net1=abs(frac((p.x+metricY)*12)-.5)/12;
+        float net2=abs(frac((p.x-metricY)*12)-.5)/12;
+        float netD=min(net1,net2),netThread=thread*.32*_GarmentLace.z;
+        float thick=GarmentCoverage(d-thread,aa)*saturate(thread/max(aa,.00001));
+        float net=_GarmentLace.z>0 ? GarmentCoverage(netD-netThread,aa)*saturate(netThread/max(aa,.00001)) : 0;
+        float inside=GarmentCoverage(abs(p.x)-scallop,aa);
+        s.coverage=max(max(thick,net),petalYarn)*inside;
+        float roundThread=sqrt(saturate(1-pow(d/max(thread,.00001),2)));
+        float twist=GarmentWave((p.x+metricY)*160+d/max(thread,.0001)*.65)*_GarmentLace.w;
+        s.height=relief*max(roundThread*thick*(.85+twist*.12),max(net*.3,petalYarn*.48))*inside;
+        s.material=1;s.color=_GarmentCloth.rgb*GarmentTone(.72+roundThread*.25+twist*.05);
+        s.roughness=saturate(_GarmentFinish.x-twist*.06);s.ao=s.coverage*(1-roundThread)*.22;
+    }
+    else if(_GarmentKind==6)
+    {
+        float pitch=max(size*(1-_GarmentWrap.x),.0001);
+        if(closed)pitch=_GarmentSize.y/max(1,round(_GarmentSize.y/pitch));
+        float phase=(world.y+world.x*tan(_GarmentWrap.y))/pitch;
+        float strip=floor(phase),t=frac(phase);
+        float phaseAA=max(fwidth(phase),.0001);
+        float seat=(1-smoothstep(0,max(.06,phaseAA),t));
+        float lip=GarmentBell(t-.09,max(.045,phaseAA));
+        float2 weaveUV=world/max(_GarmentWrapSurface.w,.0001);
+        float wx=.5+.5*GarmentWave(weaveUV.x),wy=.5+.5*GarmentWave(weaveUV.y);
+        float weave=max(wx,wy),grain=GarmentNoise(weaveUV*2);
+        float wrinkle=GarmentWave(world.x/max(size*.24,.0001)+GarmentNoise(world/max(size*2,.0001))*.8);
+        float along,d=GarmentStrip(p,float2(.46,.49),.035,openEdges,along);
+        float fray=(GarmentNoise(float2(world.y/max(_GarmentWrapSurface.w,.0001),3))-.5)*_GarmentWrapSurface.x*.035;
+        float body=GarmentCoverage(d+fray,aa);
+        float holes=1;
+        if(variant==3)
+        {
+            float aperture=(1-smoothstep(.25,.55,wx))*(1-smoothstep(.25,.55,wy));
+            // Multiple overlapped gauze layers partially cover the openings.
+            holes=1-aperture*(1-_GarmentWrap.x*.8);body*=holes;
+        }
+        float shade=1-seat*.3,profile=.5+lip*_GarmentWrap.w-seat*.13;
+        float3 cloth=_GarmentCloth.rgb;
+        if(variant==0){cloth*=.8+grain*.3;profile+=(grain-.5)*.12;}
+        else if(variant==2){cloth*=.65+grain*.55;profile+=grain*.2;}
+        else {cloth*=.75+weave*.25;profile+=weave*.14;}
+        float stain=smoothstep(.42,.8,GarmentNoise(world/max(size*2,.0001)+11))*_GarmentWrapSurface.y;
+        cloth=lerp(cloth,_GarmentAccent.rgb,stain);
+        profile+=wrinkle*_GarmentWrap.z*.18;
+        if(variant==4)
+        {
+            // Rounded adhesive strip with a separately raised gauze pad and perforated wings.
+            float pad=GarmentCoverage(GarmentBox(float2(p.x,p.y*_GarmentSize.y/_GarmentSize.x),float2(.34,.3),.045),aa);
+            float2 cell=frac(weaveUV*.2)-.5;
+            float hole=(1-smoothstep(.11,.18,length(cell)))*(1-pad);
+            body*=1-hole;
+            cloth=lerp(cloth,float3(.76,.71,.6)*(.8+weave*.2),pad);
+            profile=.25+pad*.8+wrinkle*_GarmentWrap.z*.12;
+            profile+=GarmentBell(d+.025,.035)*_GarmentWrap.w*.4;
+            shade=1-pad*(1-weave)*.15;
+        }
+        float residue=GarmentBell(d,.025)*(1-body)*_GarmentWrapSurface.z*.45;
+        s.coverage=saturate(body+residue);
+        s.material=1;s.color=cloth*GarmentTone(shade);
+        s.roughness=lerp(_GarmentFinish.x,.35,residue);
+        s.height=relief*profile*body;s.ao=(1-shade)*body;
+    }
+    else if(_GarmentKind==0)
     {
         float2 delta=(p+.5-_GarmentFold.xy)*_GarmentSize.xy;
         float phase=world.y/size;
@@ -316,37 +496,67 @@ GarmentSample EvaluateGarment(float2 uv,float2 destinationUV,float aa,bool close
             float zipperX=p.x/hardwareScale;
             float sliderAlong=(p.y-(_GarmentDetail.y-.5))*_GarmentSize.y/(width*hardwareScale);
             float gap=closed?0:min(_GarmentDetail.x*.9,.2)*smoothstep(.15,.65,sliderAlong);
-            float tapeDistance=abs(p.x)-.36,tape=GarmentCoverage(tapeDistance,aa);
-            float weave=GarmentLoopWeave(world,max(_GarmentStitch.x*1.6,.0002),loopPeriod,loopBlend);
-            s.coverage=tape*envelope;s.height=tape*relief*(.12+weave*.025);
-            GarmentColor(s,tape,_GarmentCloth.rgb*(1+weave*.075),_GarmentFinish.x,0);
+            float tapeDistance=abs(p.x)-_GarmentTape.x,tape=GarmentCoverage(tapeDistance,aa);
+            float weave=lerp(GarmentTapeWeave(world,_GarmentWeave.y),GarmentTapeWeave(world-loopPeriod,_GarmentWeave.y),loopBlend);
+            s.coverage=tape*envelope;s.height=tape*relief*(_GarmentTape.y+weave*_GarmentTape.w);
+            GarmentColor(s,tape,_GarmentCloth.rgb*(1+weave*_GarmentTape.z),_GarmentFinish.x,0);
             float tapeLip=GarmentBell(tapeDistance,max(.008,aa));
             s.dark=tapeLip*_GarmentAging.y*.45*depthShading;s.ao=tapeLip*.3*depthShading;
             float trench=GarmentBell(zipperX,max(gap,.012));
             s.dark=max(s.dark,trench*.75*depthShading);s.ao=max(s.ao,trench*.8*depthShading);
+            if(_GarmentCord.y>0)
+            {
+                float cord=abs(abs(p.x)-max(0,_GarmentTape.x-_GarmentCord.z))-_GarmentCord.x*.5;
+                GarmentHardware(s,cord,_GarmentCord.x*.5,relief*_GarmentCord.y*_GarmentCordColor.a,
+                    lerp(_GarmentCloth.rgb,_GarmentCordColor.rgb,_GarmentCordColor.a),_GarmentFinish.x,0,aa);
+            }
             float rows=max(1,round(_GarmentSize.y/size)),pitch=(closed?_GarmentSize.y/rows:size)/(width*hardwareScale);
             float toothDistance=1,toothCrease=0;
             [unroll] for(int bank=0;bank<2;bank++)
             {
                 float side=bank==0?-1:1;
-                float row=(closed ? uv.y*rows : world.y/size)+bank*.5;
+                float row=(closed ? uv.y*rows : world.y/size)+bank*_GarmentToothLayout.w;
                 float2 toothPoint=float2(zipperX*side-gap,(frac(row)-.5)*pitch);
+                toothPoint/=max(_GarmentToothLayout.xy,float2(.01,.01));
                 float bankDistance;
-                if(variant==0)
+                int toothShape=_GarmentToothShape==0?(variant==0?1:6):_GarmentToothShape;
+                float rounding=_GarmentToothLayout.z;
+                if(toothShape==1)
                 {
                     // Both banks extend past the center, so alternating heads really interlock.
-                    float root=GarmentBox(toothPoint-float2(.087,0),float2(.062,pitch*.32),min(.012,pitch*.13));
-                    float head=GarmentBox(toothPoint-float2(.018,0),float2(.039,pitch*.22),min(.014,pitch*.16));
+                    float root=GarmentBox(toothPoint-float2(.087,0),float2(.062,pitch*.32),min(min(.012,pitch*.13)*rounding,min(.061,pitch*.31)));
+                    float head=GarmentBox(toothPoint-float2(.018,0),float2(.039,pitch*.22),min(min(.014,pitch*.16)*rounding,min(.038,pitch*.21)));
                     bankDistance=min(root,head);
+                }
+                else if(toothShape==2)
+                {
+                    float root=GarmentBox(toothPoint-float2(.1,0),float2(.065,pitch*.26),min(.009*rounding,pitch*.24));
+                    float head=length(float2((toothPoint.x-.009)/.042,toothPoint.y/(pitch*.29)))-1;
+                    bankDistance=min(root,head*min(.042,pitch*.29));
+                }
+                else if(toothShape==3)
+                    bankDistance=GarmentBox(toothPoint-float2(.045,0),float2(.11,pitch*.21),min(.008*rounding,pitch*.2));
+                else if(toothShape==4)
+                {
+                    float baseDistance=GarmentBox(toothPoint-float2(.115,0),float2(.06,pitch*.39),min(.008*rounding,pitch*.2));
+                    float neck=GarmentBox(toothPoint-float2(.04,0),float2(.06,pitch*.13),min(.005*rounding,pitch*.12));
+                    float head=GarmentBox(toothPoint-float2(-.012,0),float2(.023,pitch*.28),min(.012*rounding,pitch*.25));
+                    bankDistance=min(baseDistance,min(neck,head));
+                }
+                else if(toothShape==5)
+                {
+                    float shift=abs(toothPoint.y)/(pitch*.38)*.065;
+                    bankDistance=GarmentBox(float2(toothPoint.x-.04-shift,toothPoint.y),float2(.072,pitch*.38),min(.006*rounding,pitch*.2));
                 }
                 else
                 {
                     // Continuous flattened coil turns with a return on the tape side.
                     float2 coil=toothPoint-float2(.047,0);
-                    float ring=abs(GarmentBox(coil,float2(.056,pitch*.32),min(.032,pitch*.25)))-min(.012,pitch*.12);
+                    float ring=abs(GarmentBox(coil,float2(.056,pitch*.32),min(min(.032,pitch*.25)*rounding,min(.055,pitch*.31))))-min(.012,pitch*.12);
                     float join=GarmentLine(coil,float2(.05,-pitch*.5),float2(.05,pitch*.5))-min(.01,pitch*.1);
                     bankDistance=min(ring,join);
                 }
+                bankDistance*=min(_GarmentToothLayout.x,_GarmentToothLayout.y);
                 toothDistance=min(toothDistance,bankDistance);
                 // Retain each bank's contact where interlocking teeth overlap;
                 // the union silhouette alone would erase these small creases.
@@ -355,8 +565,8 @@ GarmentSample EvaluateGarment(float2 uv,float2 destinationUV,float aa,bool close
             float tooth=GarmentCoverage(toothDistance,hardwareAA);
             s.dark*=1-tooth*.9;s.ao*=1-tooth*.8;
             float machining=GarmentWave((closed?uv.y*rows:world.y/size)*7)*.025*depthShading;
-            GarmentHardware(s,toothDistance,min(.018,pitch*.14),relief,
-                _GarmentAccent.rgb*(1+machining),_GarmentFinish.y,variant==0?1:0,hardwareAA);
+            GarmentHardware(s,toothDistance,min(.018,pitch*.14),relief*_GarmentZipperTeeth.x,
+                _GarmentAccent.rgb*(1+machining),_GarmentZipperTeeth.z,_GarmentZipperTeeth.y,hardwareAA);
             s.dark=max(s.dark,toothCrease*_GarmentAging.y*.9*depthShading);
             s.ao=max(s.ao,toothCrease*.72*depthShading);
             float3 sliderColor=variant==0?_GarmentAccent.rgb:lerp(_GarmentAccent.rgb,float3(.34,.35,.36),.55);
@@ -369,7 +579,7 @@ GarmentSample EvaluateGarment(float2 uv,float2 destinationUV,float aa,bool close
                 float endY=fromEnd-stopHalfHeight;
                 float stop=p.y>0 ? GarmentBox(float2(abs(zipperX)-gap-.085,endY),float2(.045,stopHalfHeight),.012) :
                     GarmentBox(float2(zipperX,endY),float2(.12,stopHalfHeight),.012);
-                GarmentHardware(s,stop,.01,relief*1.1,sliderColor,_GarmentFinish.y,1,hardwareAA);
+                GarmentHardware(s,stop,.01,relief*1.1*_GarmentZipperStops.x,sliderColor,_GarmentZipperStops.z,_GarmentZipperStops.y,hardwareAA);
                 // Area Edge Fade softens cloth; a finished metal stop must still
                 // reach the end. User-authored path fades apply after generation.
                 float stopCoverage=GarmentCoverage(stop,hardwareAA);
@@ -382,15 +592,15 @@ GarmentSample EvaluateGarment(float2 uv,float2 destinationUV,float aa,bool close
             float sliderDistance=GarmentBox(sliderPoint,float2(bodyHalfWidth,.19),.035);
             float slider=GarmentCoverage(sliderDistance,hardwareAA);
             s.dark*=1-slider*.9;s.ao*=1-slider*.85;
-            GarmentHardware(s,sliderDistance,.032,relief*1.8,sliderColor,_GarmentFinish.y,1,hardwareAA);
+            GarmentHardware(s,sliderDistance,.032,relief*1.8*_GarmentZipperSlider.x,sliderColor,_GarmentZipperSlider.z,_GarmentZipperSlider.y,hardwareAA);
             float inset=GarmentCoverage(GarmentBox(sliderPoint-float2(0,.025),float2(bodyHalfWidth-.035,.115),.022),hardwareAA)*slider;
-            s.height-=inset*relief*.15;s.dark=max(s.dark,inset*_GarmentAging.y*.12*depthShading);
+            s.height-=inset*relief*.15*min(1,_GarmentZipperSlider.x);s.dark=max(s.dark,inset*_GarmentAging.y*.12*depthShading);
             float insetEdge=GarmentBox(sliderPoint-float2(0,.025),float2(bodyHalfWidth-.035,.115),.022);
             float insetContact=GarmentBell(insetEdge,max(.012,hardwareAA))*inset;
             s.dark=max(s.dark,insetContact*_GarmentAging.y*.65*depthShading);s.ao=max(s.ao,insetContact*.4*depthShading);
             // Raised attachment bridge and a hanging stamped pull with a genuine open cutout.
             float bridge=GarmentBox(sliderPoint-float2(0,.055),float2(.05,.055),.018);
-            GarmentHardware(s,bridge,.012,relief*2.5,sliderColor,_GarmentFinish.y,1,hardwareAA);
+            GarmentHardware(s,bridge,.012,relief*2.5*_GarmentZipperTang.x,sliderColor,_GarmentZipperTang.z,_GarmentZipperTang.y,hardwareAA);
             float2 pullPoint=sliderPoint-float2(.015,-.205);
             pullPoint=float2(pullPoint.x*.992+pullPoint.y*.126,-pullPoint.x*.126+pullPoint.y*.992);
             float pullOuter=GarmentBox(pullPoint,float2(.085,.235),.048);
@@ -405,8 +615,8 @@ GarmentSample EvaluateGarment(float2 uv,float2 destinationUV,float aa,bool close
                 GarmentBell(max(castDistance,0),sqrt(.016*.016+hardwareAA*hardwareAA))*.65)*(1-pull);
             s.dark=max(s.dark,pullShadow*_GarmentAging.y*1.4*depthShading);s.ao=max(s.ao,pullShadow*.85*depthShading);
             s.dark*=1-pull*.9;s.ao*=1-pull*.85;
-            GarmentHardware(s,pullDistance,.014,relief*2.65,sliderColor,_GarmentFinish.y,1,hardwareAA);
-            GarmentBorder(s,abs(p.x)-.33,closed?uv.y*_GarmentSize.y:world.y,aa,closed);
+            GarmentHardware(s,pullDistance,.014,relief*2.65*_GarmentZipperPull.x,sliderColor,_GarmentZipperPull.z,_GarmentZipperPull.y,hardwareAA);
+            GarmentBorder(s,abs(p.x)-(_GarmentTape.x-.03),closed?uv.y*_GarmentSize.y:world.y,aa,closed);
         }
         else
         {

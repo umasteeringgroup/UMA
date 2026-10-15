@@ -294,20 +294,43 @@ namespace UMA.TexturePaint.Editor
             s.irregularity=EditorGUILayout.Slider("Edge Irregularity",s.irregularity,0,1);
             s.inflammation=EditorGUILayout.Slider("Inflammation",s.inflammation,0,1);
             s.color=EditorGUILayout.ColorField("Wound Color",s.color);
+            s.woundColorNoise=EditorGUILayout.Slider(new GUIContent("Wound Color Noise","Seeded light/dark variation in the wound tissue; zero keeps the original color."),s.woundColorNoise,0,1);
+            s.woundHeightNoise=EditorGUILayout.Slider(new GUIContent("Wound Height Noise","Tissue relief amplitude, as a fraction of path width. Add Normal Control to see the relief."),s.woundHeightNoise,0,.2f);
+            s.woundNoiseScale=EditorGUILayout.Slider(new GUIContent("Wound Noise Scale","Noise cells per path width. Higher values produce finer detail. Uses the Seed below."),s.woundNoiseScale,.5f,128);
             s.rimColor=EditorGUILayout.ColorField("Rim Color",s.rimColor);
             s.healedColor=EditorGUILayout.ColorField("Healed Color",s.healedColor);
-            s.roughness=EditorGUILayout.Slider("Fresh Roughness",s.roughness,0,1);
+            EditorGUI.BeginChangeCheck();
+            float woundRoughness=EditorGUILayout.Slider("Wound Roughness",s.WoundRoughness,0,1);
+            if(EditorGUI.EndChangeCheck())s.woundRoughness=woundRoughness;
+            EditorGUI.BeginChangeCheck();
+            float rimRoughness=EditorGUILayout.Slider("Rim Roughness",s.RimRoughness,0,1);
+            if(EditorGUI.EndChangeCheck())s.rimRoughness=rimRoughness;
             s.normalStrength=EditorGUILayout.Slider("Normal Strength",s.normalStrength,0,4);
             s.seed=EditorGUILayout.IntField("Seed",s.seed);
             s.stitches=EditorGUILayout.Toggle("Sutures",s.stitches);
             if(!s.stitches)return;
             s.removedStitches=EditorGUILayout.Toggle("Removed (Punctures Only)",s.removedStitches);
             s.stitchCount=EditorGUILayout.IntSlider("Stitch Count",s.stitchCount,1,256);
+            s.sutureStartOffset=EditorGUILayout.Slider(new GUIContent("Suture Start Offset (%)","Reserve this percentage of path length before distributing the stitch centers."),s.sutureStartOffset*100,0,100)/100;
+            s.sutureEndOffset=EditorGUILayout.Slider(new GUIContent("Suture End Offset (%)","Reserve this percentage from the last path point. The same offsets apply to removed-stitch punctures."),s.sutureEndOffset*100,0,100)/100;
+            if(s.sutureStartOffset+s.sutureEndOffset>=1)
+                EditorGUILayout.HelpBox("The offsets leave no room for sutures. Reduce either offset to show them.",MessageType.Info);
             s.stitchSpan=EditorGUILayout.Slider("Stitch Span / Width",s.stitchSpan,.05f,.9f);
             s.stitchThickness=EditorGUILayout.Slider("Thread Thickness / Width",s.stitchThickness,.002f,.08f);
             s.stitchAngle=EditorGUILayout.Slider("Stitch Angle",s.stitchAngle,-75,75);
+            s.stitchDistanceRandomness=EditorGUILayout.Slider(new GUIContent("Distance Randomness (%)","Seeded variation of each stitch's position along the wound. At 100%, centers move up to 45% of their spacing in either direction, keeping stitches in order. Zero keeps even spacing."),s.stitchDistanceRandomness*100,0,100)/100;
+            s.stitchAngleRandomness=EditorGUILayout.Slider(new GUIContent("Angle Randomness (degrees)","Independent seeded angle offset in either direction around Stitch Angle. Final angles are limited to -75 to 75 degrees. Zero keeps the same angle for every stitch. Punctures and puckering follow each stitch."),s.stitchAngleRandomness,0,75);
             s.threadColor=EditorGUILayout.ColorField("Thread Color",s.threadColor);
+            s.stitchHeight=EditorGUILayout.Slider(new GUIContent("Suture Height","Raised thread relief as a fraction of path width. Written to Normal Control; independent of puncture depth."),s.stitchHeight,0,.4f);
+            s.stitchEndTaper=EditorGUILayout.Slider(new GUIContent("End Sink Length (%)","Percentage of each thread's length used at each end to descend smoothly into its puncture. Zero keeps uniform thread height."),s.stitchEndTaper*100,0,50)/100;
+            s.stitchEndCurve=EditorGUILayout.Slider(new GUIContent("End Sink Curve","Shapes the smooth height transition: 1 uses smoothstep; higher values keep more of the end low."),s.stitchEndCurve,.2f,4);
+            s.punctureDepth=EditorGUILayout.Slider(new GUIContent("Puncture Depth","Recess below the skin, as a fraction of path width. Independent of raised thread height and color shading."),s.punctureDepth,0,.4f);
+            s.punctureSize=EditorGUILayout.Slider(new GUIContent("Puncture Size","Puncture radius relative to thread thickness."),s.punctureSize,.5f,6);
+            s.punctureShading=EditorGUILayout.Slider(new GUIContent("Puncture Shading","Darkening in Albedo and Ambient Occlusion, including thread ends entering a hole. Zero removes this shading without flattening the puncture."),s.punctureShading,0,1);
             s.puckering=EditorGUILayout.Slider("Skin Puckering",s.puckering,0,1);
+            s.puckerHeight=EditorGUILayout.Slider(new GUIContent("Pucker Height","Strength of raised skin around the recessed stitch entry points. Written to Normal Control."),s.puckerHeight,0,.3f);
+            s.puckerRadius=EditorGUILayout.Slider(new GUIContent("Pucker Radius / Width","Width of gathered skin around each puncture, relative to path width."),s.puckerRadius,.01f,.2f);
+            EditorGUILayout.HelpBox("Enable Normal Control in Layer Channels & Settings to see thread height, puncture depth and puckering. Puncture and pucker controls also work with Removed (Punctures Only).",MessageType.None);
         }
     }
 }

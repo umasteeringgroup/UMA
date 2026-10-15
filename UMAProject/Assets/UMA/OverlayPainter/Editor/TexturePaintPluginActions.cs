@@ -12,7 +12,6 @@ namespace UMA.TexturePaint.Editor
         private static void PaintAvatar(UnityEditor.Editor editor)
         {
             var avatar = (DynamicCharacterAvatar)editor.target;
-            avatar.GenerateNow();
             TexturePaintStageWindow.ShowStage(avatar);
         }
 

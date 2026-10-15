@@ -137,6 +137,8 @@ This path is useful for adding wear, graphics, tint variation, normal detail, or
 
 ### From a generated DynamicCharacterAvatar
 
+Once the workspace opens, a getting-started dialog explains target selection, reference visibility, layer types and masks. You can leave it open while working. **Close dialog** dismisses it for this launch; **Close and do not show again** remembers your preference in this Unity editor. Reopen it at any time with **View > Show initial help dialog**, or **UMA > Overlay Painter > Show initial help dialog**. Reopening it manually does not change your automatic-show preference.
+
 Use this path when the important context is the assembled character and its current slots or overlays.
 
 1. Place a `DynamicCharacterAvatar` in an open scene.
@@ -144,8 +146,13 @@ Use this path when the important context is the assembled character and its curr
 3. Select it in the Hierarchy.
 4. Find **Editors > Plugins** above the inspector controls.
 5. Click **Overlay Painter**.
-6. Select one or more slots in the Target region.
-7. Choose a layer, configure its per-channel sources, then choose the Paint / Preview Channel, tool, and brush.
+6. Choose **Build in Current Pose** to preserve the visible pose through generation, **Build in A-Pose** to use UMA's neutral A-pose, or **Build in Default Pose** to generate without animation. **Cancel** leaves the character untouched.
+7. Select the slot to paint in the Target region.
+8. Choose a layer, configure its per-channel sources, then choose the Paint / Preview Channel, tool, and brush.
+
+When opening a character in Edit mode after a script reload, Overlay Painter restores its serialized default wardrobe if its runtime wardrobe caches are empty, before generating the paint targets. An already populated wardrobe is preserved. Play-mode wardrobe selections are not replaced with editor defaults. The recovery prompt restores painter work; discarding recovery does not remove equipped clothing.
+
+The selected pose is baked into the painter preview; the scene character's original transforms and blendshape weights are restored afterward. A-Pose requires a valid Humanoid avatar and the `UMA_APose` animation from the UMA3 content. Current Pose and Default Pose also support other rigs. Default Pose keeps the race's DNA adjustments but applies no Animator pose: animation is disabled and the generation controller cleared temporarily. The scene Animator is preserved, rebound to the generated bones, and restored afterward. When reopening saved world-space paths or projections, choose the pose used to author them; switching poses does not automatically retarget those placements. Standalone slot launches do not show this dialog.
 
 Overlay Painter cannot open a DCA from Prefab Mode. Exit Prefab Mode and use a generated avatar in an ordinary open scene.
 
@@ -193,8 +200,13 @@ multiply texture smoothness by a material slider, set **Smoothness** to **1** to
 channel cover the full range from mirror-smooth to rough. These parameters apply to the entire
 preview material; layer-channel settings still control each layer's contribution.
 
+For a grouped **UDIM paint target**, parameter edits apply to every tile material using the active
+tile's shader. Mixed values are shown until you change that parameter. Each tile retains its own
+textures and other unchanged settings; visible reference targets are not edited. The window shows
+how many materials are being edited and warns if any tile uses a different shader.
+
 Changes support Undo and save with the painter project and recovery. **Reset to Source** restores
-the source material's parameters. Shared material assets remain unchanged, and the read-only
+each tile's own source material parameters. Shared material assets remain unchanged, and the read-only
 **Layer Textures** section shows maps controlled by the layer stack. Texture export continues to
 use the original UMA material, so configure that material separately when the exported character
 should use the same shader parameters. The existing Layer Preview **Lit Surface** thumbnail is a
@@ -260,17 +272,23 @@ Tool selection does not choose a layer. Always confirm the active layer and chan
 The Target region contains:
 
 - Searchable slot selection.
-- Multi-slot selection.
+- One active paint target, with separate reference visibility.
 - Logical UDIM grouping.
 - Texture Set thumbnails.
 
-Select every slot that should be allowed to receive the brush footprint. Geometry belonging to unselected slots is excluded even when it is under the brush.
+Select the target that should receive paint. Only that target's slots (including its grouped UDIM members) receive the brush footprint. Geometry belonging to other targets is excluded even when it is visible under the brush.
+
+Use **Show** beside each target in **Paint Target > Targets** to display other slots for reference. Other targets start hidden; the active paint target is always visible. Showing a reference never changes paint selection. These visibility choices are saved with the painter document and recovery session. Older documents without per-target visibility start with other targets hidden. **Isolate** hides all references; turning it off shows all other targets for reference only. Slots sharing a reconstructed mesh are filtered in the preview without modifying the source mesh or paint collider.
 
 Every character-launched session gives startup priority to a logical target whose visible name
-contains the standalone word **Body**, and enables **Isolate** by default for a fresh or legacy
-workspace. A saved target is used only when no visibly named Body target exists; an explicit current
-Isolate choice is still restored. Standalone slot sessions keep their existing target and visibility
-defaults.
+contains the standalone word **Body**. A saved target is used only when no visibly named Body target
+exists. Saved per-target reference visibility is restored independently of that selection.
+
+#### Starting without the original overlay
+
+The overlays already equipped on a slot are reconstructed into its base texture, beneath the editable layer stack. In **Layers**, scroll to **Original Overlay (base)** at the bottom and switch **ON** to **OFF** to hide that artwork and start on transparency. Your new paint, path and generator layers remain visible. The switch affects all channels and all members of the current logical target, supports undo/redo, and is saved with the project and recovery session. Turn it back on to restore the preserved base. Original overlay assets and the avatar recipe are unchanged.
+
+This hides the combined imported overlays and any direct **Base Texture** edits; it does not toggle individual source overlays separately. **Before / Original Material** preview intentionally still shows the original material for comparison. Export an authored transparent overlay and replace the old overlay in your recipe if you want the exported eyebrows to replace, rather than cover, the old artwork.
 
 #### Import warning indicators
 
@@ -333,8 +351,11 @@ Properties are contextual. The available sections can include:
 - Layer Channels & Settings. Collapse the whole section to hide its contents; the foldout state is remembered. Inside, **New Channel**, the channel dropdown, and **Add Channel** share one row above the existing channels. Adding a channel opens its settings. Generated and referenced outputs hide manual channel-add controls when their source owns the channel list.
 - Path.
 - Plugins.
-- Document.
-- Performance and Memory.
+Save, Export, and Clear All are available from the document menus. Open **Edit > Configuration Options**
+for **Performance & Memory**, including document memory budgets and diagnostics.
+
+For Fill layers, **Fill Channel** selects the channel whose independent mapping you are editing.
+It is hidden when **Fill Type (All Channels)** shares the mapping across the layer.
 
 The panel follows the selected layer type:
 
@@ -1762,6 +1783,8 @@ Neither operation replaces the destination's painted corrections. Appended effec
 
 A recipe with layer references still needs those source layers. Use a Material Preset to carry the mask and its related source layers together. Stack settings survive mask copy/paste, layer duplication, Undo/Redo, saving, and recovery.
 
+In the layer options menu, **Mask > Paste Mask (Inverted)** pastes an independent copy with an Invert effect at the end of its mask stack. It reverses the complete mask result, including procedural effects, without changing the source or clipboard. Both paste commands support Undo/Redo and are disabled until a mask has been copied.
+
 ### Filter or generate a mask
 
 For an editable sequence that you can reorder later, use the mask-effect stack above. The existing **Mask Filter / Generator** workflow instead generates replacement mask pixels in a single operation.
@@ -2836,13 +2859,13 @@ The exported overlay is indexed and recipe-ready, but it is not automatically in
 - Start look development at an appropriate working resolution; doubling both dimensions quadruples the texel count.
 - Reduce very large effect widths or mask-filter radii.
 - Hide unneeded effects while painting.
-- Check the **Performance & Memory** panel for fallback counts and latency.
+- Check **Edit > Configuration Options > Performance & Memory** for fallback counts and latency.
 
 Projection manipulation reuses geometry and channel targets and uses GPU visibility where supported. If it is still slow, inspect the working resolution, active channel count, Visibility Quality, and downstream effects/references. A large spatial mask stack may need broader recomposition than the directly edited pixels. Performance depends on the target and hardware; it is not a fixed frame-rate guarantee.
 
 ### A long freehand stroke becomes progressively slower
 
-- Enable **Performance & Memory > Stroke Diagnostics**, choose **Capture Next Stroke**, and repeat
+- Open **Edit > Configuration Options**, enable **Performance & Memory > Stroke Diagnostics**, choose **Capture Next Stroke**, and repeat
   the stroke. Diagnostics are opt-in and add no per-stroke capture work while disabled.
 - Freehand contacts from one raw input event are rasterized in bounded destination-tile batches.
   Normal and mirrored queries still test every selected slot/UDIM member; batching begins only after

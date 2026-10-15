@@ -8,6 +8,7 @@ namespace UMA.TexturePaint
     /// <summary>UV-space geometry inputs shared by generators and model plugins.</summary>
     public sealed class ProceduralMeshMaps : IDisposable
     {
+        public TexturePaintMeshMapMask availableMaps = TexturePaintMeshMapMask.All;
         public Texture2D position;
         public Texture2D worldNormal;
         public Texture2D curvature;
@@ -35,7 +36,7 @@ namespace UMA.TexturePaint
     public static class ProceduralMeshMapBuilder
     {
         public static ProceduralMeshMaps Build(ReconstructedSurface surface, int width, int height,
-            TexturePaintOperationContext operation = default)
+            TexturePaintOperationContext operation = default, TexturePaintMeshMapMask requestedMaps = TexturePaintMeshMapMask.All)
         {
             if (surface?.mesh == null) throw new ArgumentNullException(nameof(surface));
             Mesh mesh = surface.mesh;
@@ -56,16 +57,20 @@ namespace UMA.TexturePaint
             Transform transform = surface.gameObject != null ? surface.gameObject.transform : null;
             Matrix4x4 localToWorld = transform != null ? transform.localToWorldMatrix : Matrix4x4.identity;
             Matrix4x4 normalToWorld = localToWorld.inverse.transpose;
-            float[] vertexCurvature = BuildVertexSignedCurvature(vertices, normals, triangles);
-            var geometry = new TexturePaintGeometryQueries(vertices, triangles, localToWorld);
-            var exposedEdges = new TexturePaintExposedEdges(vertices, triangles, localToWorld);
+            bool needsCurvature=(requestedMaps&TexturePaintMeshMapMask.SignedCurvature)!=0;
+            bool needsAo=(requestedMaps&TexturePaintMeshMapMask.AmbientOcclusion)!=0;
+            bool needsThickness=(requestedMaps&TexturePaintMeshMapMask.Thickness)!=0;
+            bool needsEdges=(requestedMaps&TexturePaintMeshMapMask.ExposedEdgeDistance)!=0;
+            float[] vertexCurvature = needsCurvature?BuildVertexSignedCurvature(vertices, normals, triangles):null;
+            var geometry = needsAo||needsThickness?new TexturePaintGeometryQueries(vertices, triangles, localToWorld):null;
+            var exposedEdges = needsEdges?new TexturePaintExposedEdges(vertices, triangles, localToWorld):null;
             Color[] positions = new Color[width * height];
             Color[] worldNormals = Fill(width * height, new Color(0.5f, 0.5f, 1f, 0f));
-            Color[] curvatures = new Color[width * height];
-            Color[] ao = new Color[width * height];
-            Color[] thickness = new Color[width * height];
+            Color[] curvatures = needsCurvature ? new Color[width * height] : null;
+            Color[] ao = needsAo ? new Color[width * height] : null;
+            Color[] thickness = needsThickness ? new Color[width * height] : null;
             Color[] ids = new Color[width * height];
-            Color[] edgeDistances = Fill(width * height, Color.white);
+            Color[] edgeDistances = needsEdges ? Fill(width * height, Color.white) : null;
             float[] distances = new float[width * height];
             Array.Fill(distances, float.PositiveInfinity);
 
@@ -86,24 +91,26 @@ namespace UMA.TexturePaint
                     Vector3 localNormal = (normals[ia] * barycentric.x + normals[ib] * barycentric.y + normals[ic] * barycentric.z).normalized;
                     Vector3 worldPosition = localToWorld.MultiplyPoint3x4(localPosition);
                     Vector3 normal = normalToWorld.MultiplyVector(localNormal).normalized;
-                    float curve = Mathf.Clamp(vertexCurvature[ia] * barycentric.x +
+                    float curve = needsCurvature?Mathf.Clamp(vertexCurvature[ia] * barycentric.x +
                         vertexCurvature[ib] * barycentric.y + vertexCurvature[ic] * barycentric.z,
-                        -1f, 1f);
+                        -1f, 1f):0;
                     int index = y * width + x;
                     positions[index] = new Color(worldPosition.x, worldPosition.y, worldPosition.z, 1f);
                     worldNormals[index] = Encode(normal, 1f);
                     float encodedCurvature = curve * 0.5f + 0.5f;
-                    curvatures[index] = new Color(encodedCurvature, encodedCurvature,
+                    if (needsCurvature) curvatures[index] = new Color(encodedCurvature, encodedCurvature,
                         encodedCurvature, 1f);
                     ids[index] = new Color(triangle, surface.index, island, 1f);
                 });
             }
 
-            float extent = Mathf.Max(.0001f, geometry.Bounds.size.magnitude);
+            var worldBounds=new Bounds(localToWorld.MultiplyPoint3x4(vertices[0]),Vector3.zero);
+            foreach(var vertex in vertices)worldBounds.Encapsulate(localToWorld.MultiplyPoint3x4(vertex));
+            float extent = Mathf.Max(.0001f, worldBounds.size.magnitude);
             float bias = Mathf.Max(1e-7f, extent * .00001f);
             // Bake at covered texels, not vertices: a large flat polygon can still sit under
             // an overhang. Chunking bounds cancellation latency and reports ordered progress.
-            for (int start = 0; start < height; start += 8)
+            for (int start = 0; (needsAo||needsThickness||needsEdges) && start < height; start += 8)
             {
                 int end = Math.Min(height, start + 8);
                 Parallel.For(start, end, new ParallelOptions { CancellationToken = operation.cancellationToken }, y =>
@@ -115,27 +122,39 @@ namespace UMA.TexturePaint
                         Color p = positions[i], n = worldNormals[i];
                         Vector3 position = new Vector3(p.r, p.g, p.b);
                         Vector3 normal = new Vector3(n.r * 2 - 1, n.g * 2 - 1, n.b * 2 - 1);
-                        float accessibility = geometry.Occlusion(position, normal, 32, extent * .25f, bias);
-                        float thick = geometry.Thickness(position, normal, extent, bias);
-                        ao[i] = new Color(accessibility, accessibility, accessibility, 1);
-                        thickness[i] = new Color(thick, thick, thick, 1);
-                        float edgeDistance = Mathf.Min(1f, exposedEdges.Distance(position, Mathf.RoundToInt(ids[i].r)) / extent);
-                        edgeDistances[i] = new Color(edgeDistance, edgeDistance, edgeDistance, 1);
+                        float accessibility = needsAo?geometry.Occlusion(position, normal, 32, extent * .25f, bias):1;
+                        float thick = needsThickness?geometry.Thickness(position, normal, extent, bias):0;
+                        if (needsAo) ao[i] = new Color(accessibility, accessibility, accessibility, 1);
+                        if (needsThickness) thickness[i] = new Color(thick, thick, thick, 1);
+                        float edgeDistance = needsEdges?Mathf.Min(1f, exposedEdges.Distance(position, Mathf.RoundToInt(ids[i].r)) / extent):1;
+                        if (needsEdges) edgeDistances[i] = new Color(edgeDistance, edgeDistance, edgeDistance, 1);
                     }
                 });
                 operation.Report(.2f + .8f * end / height);
             }
 
-            return new ProceduralMeshMaps
+            operation.ThrowIfCancellationRequested();
+            var result = new ProceduralMeshMaps
             {
-                position = Create("World Position Map", width, height, positions, TextureFormat.RGBAFloat),
-                worldNormal = Create("World Normal Map", width, height, worldNormals, TextureFormat.RGBAHalf),
-                curvature = Create("Curvature Map", width, height, curvatures, TextureFormat.RHalf),
-                ambientOcclusion = Create("Ambient Occlusion Map", width, height, ao, TextureFormat.RHalf),
-                thickness = Create("Thickness Map", width, height, thickness, TextureFormat.RHalf),
-                id = Create("Mesh ID Map", width, height, ids, TextureFormat.RGBAFloat),
-                exposedEdgeDistance = Create("Exposed Edge Distance Map", width, height, edgeDistances, TextureFormat.RHalf)
+                availableMaps = requestedMaps | TexturePaintMeshMapMask.WorldPosition |
+                    TexturePaintMeshMapMask.WorldNormal | TexturePaintMeshMapMask.SurfaceId
             };
+            try
+            {
+                result.position = Create("World Position Map", width, height, positions, TextureFormat.RGBAFloat);
+                result.worldNormal = Create("World Normal Map", width, height, worldNormals, TextureFormat.RGBAHalf);
+                result.curvature = needsCurvature ? Create("Curvature Map", width, height, curvatures, TextureFormat.RHalf) : null;
+                result.ambientOcclusion = needsAo ? Create("Ambient Occlusion Map", width, height, ao, TextureFormat.RHalf) : null;
+                result.thickness = needsThickness ? Create("Thickness Map", width, height, thickness, TextureFormat.RHalf) : null;
+                result.id = Create("Mesh ID Map", width, height, ids, TextureFormat.RGBAFloat);
+                result.exposedEdgeDistance = needsEdges ? Create("Exposed Edge Distance Map", width, height, edgeDistances, TextureFormat.RHalf) : null;
+                return result;
+            }
+            catch
+            {
+                result.Dispose();
+                throw;
+            }
         }
 
         internal static float[] BuildVertexSignedCurvature(Vector3[] vertices, Vector3[] normals,

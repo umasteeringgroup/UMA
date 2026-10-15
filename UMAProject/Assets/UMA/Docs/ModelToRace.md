@@ -34,6 +34,8 @@ The existing base recipe/body is never replaced. Bone DNA is normally already su
 
 ## 3. DNA and blendshapes
 
+Generated DNA asset names use the import name's initials and a short type marker: `ElfMale` produces names such as `EM_B_LeftUpperArm` and `EM_BS_MouthSmileLeft`. Groups use `EM_BDNA` and `EM_BSDNA`. Bone and blendshape names are kept in full, with the usual filename-safe character replacements only in asset names; display labels and effect targets retain the original names. A number is added to the prefix only when needed to avoid a collision, for example `EM2_BS_MouthSmileLeft`. Existing imports are not renamed.
+
 ### Bone DNA
 
 Each checked bone gets an UMA 3 DNA item with a Bone Scale effect. At DNA **0.5**, the original scale is preserved. With a local scale range of `(0.2, 0.2, 0.2)`, the endpoints are 80% and 120% size. Scaling is in the bone's own coordinates, not an assumed world up axis; children inherit it.

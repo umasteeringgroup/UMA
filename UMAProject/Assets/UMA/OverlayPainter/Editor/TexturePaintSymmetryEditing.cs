@@ -221,16 +221,93 @@ namespace UMA.TexturePaint.Editor
         private List<TexturePaintRibbonSegment> ExpandPathRibbon(List<TexturePaintRibbonSegment> source,bool uvSpace,BrushPreset pathBrush,Vector3 legacyPivot)
         {
             var result=new List<TexturePaintRibbonSegment>();
-            foreach(var matrix in GetPathSymmetryTransforms(uvSpace,pathBrush,legacyPivot))foreach(var original in source)
+            var transforms = GetPathSymmetryTransforms(uvSpace,pathBrush,legacyPivot);
+            foreach(var matrix in transforms)
             {
-                var segment=original;
-                Vector4 Point(Vector4 p){Vector3 v=matrix.MultiplyPoint3x4(p);return new Vector4(v.x,v.y,v.z,p.w);}
-                Vector4 Direction(Vector4 p){Vector3 v=matrix.MultiplyVector(p);return new Vector4(v.x,v.y,v.z,p.w);}
-                segment.leftStartAlong=Point(segment.leftStartAlong);segment.rightStartFlow=Point(segment.rightStartFlow);
-                segment.leftEndAlong=Point(segment.leftEndAlong);segment.rightEndFlow=Point(segment.rightEndFlow);
-                segment.normalStartPressure=Direction(segment.normalStartPressure);segment.normalEndPressure=Direction(segment.normalEndPressure);result.Add(segment);
+                var copy = new List<TexturePaintRibbonSegment>(source.Count);
+                foreach(var original in source)
+                {
+                    var segment=original;
+                    Vector4 Point(Vector4 p){Vector3 v=matrix.MultiplyPoint3x4(p);return new Vector4(v.x,v.y,v.z,p.w);}
+                    Vector4 Direction(Vector4 p){Vector3 v=matrix.MultiplyVector(p);return new Vector4(v.x,v.y,v.z,p.w);}
+                    segment.leftStartAlong=Point(segment.leftStartAlong);segment.rightStartFlow=Point(segment.rightStartFlow);
+                    segment.leftEndAlong=Point(segment.leftEndAlong);segment.rightEndFlow=Point(segment.rightEndFlow);
+                    segment.normalStartPressure=Direction(segment.normalStartPressure);segment.normalEndPressure=Direction(segment.normalEndPressure);copy.Add(segment);
+                }
+                // The original path has already been projected. Copies need their own surface
+                // attachment: a posed or asymmetric character is not symmetric in world space.
+                // Do not carry the original triangle/component hint onto the other eyebrow.
+                if (!uvSpace && matrix != Matrix4x4.identity && strokeTextureSets.Count > 0)
+                {
+                    Matrix4x4 inverse = matrix.inverse;
+                    ConformSymmetryRibbon(copy, (Vector3 point, Vector3 normal,
+                        out Vector3 position, out Vector3 surfaceNormal) =>
+                    {
+                        // Retain the original section's authored normal offset above the mesh.
+                        Vector3 originalPoint = inverse.MultiplyPoint3x4(point);
+                        Vector3 originalNormal = inverse.MultiplyVector(normal).normalized;
+                        float offset = TryProjectWorldPathPoint(strokeTextureSets, originalPoint, originalNormal, -1, -1,
+                            out _, out var sourcePoint, out _, out _, out _, out _)
+                            ? Vector3.Dot(originalPoint - sourcePoint, originalNormal) : 0;
+                        bool attached = TryProjectWorldPathPoint(strokeTextureSets, point - normal * offset, normal, -1, -1,
+                            out _, out position, out surfaceNormal, out _, out _, out _);
+                        if (attached) position += surfaceNormal * offset;
+                        return attached;
+                    });
+                }
+                result.AddRange(copy);
             }
             return result;
+        }
+
+        internal delegate bool SymmetrySurfaceProjector(Vector3 point, Vector3 normal,
+            out Vector3 position, out Vector3 surfaceNormal);
+
+        internal static void ConformSymmetryRibbon(List<TexturePaintRibbonSegment> segments,
+            SymmetrySurfaceProjector project)
+        {
+            if (segments == null || segments.Count == 0 || project == null) return;
+            // Bound attachment to this path's scale. A misplaced mirror plane must not pull a
+            // distant copy across the character onto an unrelated part of the selected slot.
+            float reach = 0, width = 0;
+            foreach (var segment in segments)
+            {
+                reach += Vector3.Distance(((Vector3)segment.leftStartAlong + (Vector3)segment.rightStartFlow) * .5f,
+                    ((Vector3)segment.leftEndAlong + (Vector3)segment.rightEndFlow) * .5f);
+                width = Mathf.Max(width, Vector3.Distance(segment.leftStartAlong, segment.rightStartFlow));
+            }
+            reach = Mathf.Max(reach, width * 2);
+            var sections = new Dictionary<(Vector3, Vector3), (Vector3, Quaternion)>();
+            void Attach(ref Vector4 left, ref Vector4 right, ref Vector4 normal)
+            {
+                Vector3 center = ((Vector3)left + (Vector3)right) * .5f;
+                Vector3 direction = ((Vector3)normal).normalized;
+                var key = (center, direction);
+                if (!sections.TryGetValue(key, out var attachment))
+                {
+                    attachment = (center, Quaternion.identity);
+                    if (project(center, direction, out var point, out var surfaceNormal) &&
+                        float.IsFinite(point.x) && float.IsFinite(point.y) && float.IsFinite(point.z) &&
+                        Vector3.Distance(center, point) <= reach && Vector3.Dot(direction, surfaceNormal) > 0)
+                        attachment = (point, Quaternion.FromToRotation(direction, surfaceNormal));
+                    sections.Add(key, attachment);
+                }
+                // Rotate the existing across vector rather than rebuilding it with a cross
+                // product, which would reverse upper/lower semantics on reflected copies.
+                Vector3 l = attachment.Item1 + attachment.Item2 * ((Vector3)left - center);
+                Vector3 r = attachment.Item1 + attachment.Item2 * ((Vector3)right - center);
+                Vector3 n = attachment.Item2 * direction;
+                left = new Vector4(l.x,l.y,l.z,left.w);
+                right = new Vector4(r.x,r.y,r.z,right.w);
+                normal = new Vector4(n.x,n.y,n.z,normal.w);
+            }
+            for (int i = 0; i < segments.Count; i++)
+            {
+                var segment = segments[i];
+                Attach(ref segment.leftStartAlong, ref segment.rightStartFlow, ref segment.normalStartPressure);
+                Attach(ref segment.leftEndAlong, ref segment.rightEndFlow, ref segment.normalEndPressure);
+                segments[i] = segment;
+            }
         }
         private void CreateProjectionSymmetry(TextureSet set,TexturePaintLayer source)
         {

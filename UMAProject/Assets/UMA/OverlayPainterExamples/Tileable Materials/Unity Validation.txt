@@ -1,0 +1,30 @@
+C:/GitHub/UMA/UMAProject/Assets | UMA 3.1f3 | Unity 6000.3.18f1
+12th Gen Intel(R) Core(TM) i7-12700K | NVIDIA GeForce RTX 5070 Ti
+Direct NUnit invocation in live editor; no scene changes.
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Aged Metals
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Woven Fabrics
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Aged Leather
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Denim
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Rubber and Elastomers
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Plastics and Coatings
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Knits and Soft Clothing
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Chainmail and Scale Armor
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Technical Weaves and Composites
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Brocade and Decorative Fabrics
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Wood and Natural Materials
+PASS SpriteSetHasAlignedLinearDataAndFullResolution / Bone Horn and Keratin
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Aged Metals
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Woven Fabrics
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Aged Leather
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Denim
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Rubber and Elastomers
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Plastics and Coatings
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Knits and Soft Clothing
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Chainmail and Scale Armor
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Technical Weaves and Composites
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Brocade and Decorative Fabrics
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Wood and Natural Materials
+PASS AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel / Bone Horn and Keratin
+PASS OpenMaterialsPreserveIdenticalCoverageAcrossChannels / Chainmail and Scale Armor
+PASS OpenMaterialsPreserveIdenticalCoverageAcrossChannels / Technical Weaves and Composites
+RESULT 26 passed; 0 failed.

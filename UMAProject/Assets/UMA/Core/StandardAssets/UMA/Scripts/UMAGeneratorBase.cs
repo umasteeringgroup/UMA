@@ -470,6 +470,7 @@ namespace UMA
                         SetAvatar(umaData, animator, !evaluateAnimatorPoseAfterAvatarUpdate);
                         animator.runtimeAnimatorController = umaData.animationController;
                         umaData.animator = animator;
+                        umaData.AnimatorBindingsDirty = false;
 
                         umaTransform.SetParent(oldParent, false);
                         umaTransform.localRotation = originalRot;
@@ -482,11 +483,23 @@ namespace UMA
                         snapshot.FreezeTime = FreezeTime;
 #endif
                         snapshot.SaveAnimatorState(animator, umaData);
+                        var previousAvatar = animator.avatar;
                         if (!umaData.KeepAvatar || animator.avatar == null)
                         {
                             UMAUtils.DestroyAvatar(animator.avatar);
                             SetAvatar(umaData, animator, !evaluateAnimatorPoseAfterAvatarUpdate);
                         }
+
+                        // Assigning a new Avatar refreshes Unity's bindings. When
+                        // retaining it, renderer replacement still needs a rebind.
+                        // Do this while the DNA pose is live, before restoring or
+                        // evaluating animation (including write-defaults curves).
+                        if (umaData.ForceRebindAnimator ||
+                            (umaData.AnimatorBindingsDirty && ReferenceEquals(previousAvatar, animator.avatar)))
+                        {
+                            animator.Rebind();
+                        }
+                        umaData.AnimatorBindingsDirty = false;
 
                         umaTransform.SetParent(oldParent, false);
                         umaTransform.localRotation = originalRot;
@@ -495,10 +508,6 @@ namespace UMA
                         if (animator.runtimeAnimatorController != null)
                         {
                             snapshot.RestoreAnimatorState(animator, umaData, evaluateAnimatorPoseAfterAvatarUpdate);
-                        }
-                        if (umaData.ForceRebindAnimator)
-                        {
-                            animator.Rebind();
                         }
                     }
                 }

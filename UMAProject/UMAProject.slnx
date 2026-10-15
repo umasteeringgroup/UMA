@@ -24,6 +24,7 @@
   <Project Path="UMA.TestRunner.Editor.csproj" />
   <Project Path="Shaderpackager-editor.csproj" />
   <Project Path="UMA_Core_Runtime_Tests.csproj" />
+  <Project Path="UMA.TexturePaint.CompanionExamples.Editor.csproj" />
   <Project Path="UMA.Dismemberment.Editor.Tests.csproj" />
   <Project Path="UMA.HairCards.Runtime.csproj" />
   <Project Path="UMA3.Samples.Editor.csproj" />
@@ -31,6 +32,7 @@
   <Project Path="UMA.Dismemberment.Samples.csproj" />
   <Project Path="UMA.TexturePaint.Sprite.Editor.csproj" />
   <Project Path="UMA2Compatibility.Editor.Tests.csproj" />
+  <Project Path="UMA.Eyebrow.Examples.Editor.csproj" />
   <Project Path="Samples.csproj" />
   <Project Path="JBooth.BetterShaders.Samples.csproj" />
   <Project Path="UMA_Core.Player.csproj" />

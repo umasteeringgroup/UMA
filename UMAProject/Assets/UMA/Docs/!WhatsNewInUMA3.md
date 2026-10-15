@@ -1,5 +1,60 @@
 # What's New in UMA 3
 
+## UMA 3.1f3 additions
+
+- Reduced aging throughout the 36-material sprite library to very minor wear: removed broad pale denim patches and large corrosion/peeling areas, kept chips and marks tiny, and softened the matching height, roughness and AO changes. Existing sprite references are preserved.
+
+- **Tileable PBR sprite library:** 108 original 1K materials in twelve ready-to-use Sprite Sets. The 72-material expansion adds rubber, plastics/coatings, knits, chainmail/scale armor, technical weaves/composites, decorative fabrics, wood/natural surfaces, and bone/horn/keratin. The first six new sets have no wear; the final two have only tiny, sparse micro marks. All sets include aligned Albedo, Normal, Roughness, Metallic and AO, separate height alternatives, and wrapped atlas borders. Open mail and sports mesh preserve transparent openings. Catalogs, Unity PBR previews and reproducible authoring sources are in Examples; asset validation is in Tests.
+
+- **Makeup & Face Paint:** landmark-based lipstick, liner, eyeshadow, blush and face paint with adjustable placement, mirrored/one-sided coverage, masks, pigment variation and matte/satin/gloss finishes. Six editable cosmetic stacks retain the underlying skin normals.
+- **Coating damage:** Print Aging and corrosion now support blistered paint, chipped enamel and peeling coated leather, with exposed substrate, independent roughness/metallic response, raised rims and recessed Normal Control. Six finished coating stacks combine foundations, damage and masked residue.
+- Generator mesh-map baking skips undeclared expensive maps and upgrades cached maps on demand. Makeup no longer performs unnecessary AO, thickness or edge-distance work. Examples and regression tests remain separate companion packages.
+
+- **Surface residue:** roughness-first fingerprints, wiped smudges, evaporation rings, salt crystals and peeled adhesive, with optional color and Normal Control relief.
+- **Weld paths:** TIG, MIG, solder and brazed seams, with bead pitch, raised relief, heat discoloration, soot, spatter and metallic/roughness output.
+- **Splashes, smears and drips:** blood, mud, paint and oil presets with irregular impacts, droplets, directional smears, world-plane runoff and wet-to-dry material transitions.
+- **Lace and decorative openwork:** Floral, Gothic and Scalloped path/projection trim with genuine transparent openings, raised yarn, netting and scalloped borders. Editable presets and visual references are in the separate Overlay Painter Examples package.
+
+- **Eyes — Iris & Sclera:** editable eye colors, fibers, pupils, limbal rings and veins, with UMA 3 shared-UV placement, custom paired UVs and iris-only Normal Control relief.
+- **Wraps, Tape & Dressings:** native path and projection leather wraps, bandages, grip tape, gauze and adhesive dressings, with overlap, winding angle, wrinkles, edge lift, fraying, staining and residue.
+- **Advanced embroidery:** satin/tatami fills, RGB region direction/color controls, contour borders, stitch length and layered thread colors. Existing legacy embroidery is preserved. Editable presets and eye projects are in the separate Overlay Painter Examples companion.
+
+- New metal and coil zipper paths default Area Edge Fade to 0.001 to avoid the previous broad endpoint fade. Existing authored values are preserved.
+
+- **Zipper styles:** seven editable presets; interlocking, rounded, bar, molded, chevron and coil teeth; adjustable tape width, weave and edge cords; straight, zigzag and chain stitch rows with independent thread relief and roughness. Available for paths and projections.
+
+- **Suture variation:** per-stitch distance and angle randomness, both zero by default. Seeded variation keeps thread, punctures, puckering and material channels aligned.
+
+- **Suture relief:** adjustable thread height, smooth end sinking, independent puncture depth/size/shading, and more visible raised/recessed skin puckering with height and radius controls. All relief writes to Normal Control.
+
+- **Zipper hardware:** separate height, metallic and smoothness controls for teeth, stops, slider, pull and attachment tang. Stops and pull hardware have stronger default relief, with bounded heights that preserve bevels and fully shiny finishes.
+
+- **Scar and Wound:** seeded wound color and Normal Control height noise, independent wound/rim roughness, and separate start/end suture offsets, including removed-stitch punctures.
+
+- On Windows, the Overlay Painter getting-started dialog stays above the painter windows while you follow its steps, without taking keyboard focus. It releases its topmost status when you switch to another application.
+
+- Overlay Painter now opens a short getting-started guide covering paint targets, reference visibility, layer types and masks. Choose **Close and do not show again** to hide it on future launches, or reopen it from **View > Show initial help dialog**.
+
+- Fixed opening Overlay Painter after a script reload rebuilding only the base race and leaving the character undressed. Empty editor wardrobe caches are restored from saved defaults before generation; populated wardrobes and play-mode selections are preserved.
+
+- Fixed disabled eyebrow generator color pickers, Master seed and other serialized controls. Color alpha and seed edits remain saved with each path.
+
+- Fixed upside-down eyebrow growth on right-side world paths. Eyebrow coverage and material shading now use worker threads, and procedural path edits wait two seconds after the last edit before regenerating; explicit Update remains immediate.
+
+- Character launches now offer **Build in Current Pose**, **Build in A-Pose**, or **Build in Default Pose** (DNA-adjusted base pose without animation). Current pose survives the rebuild; the scene character's pose and animation settings are restored after creating the painter preview.
+
+- Fixed mirrored world-space ribbon paths missing posed or asymmetric surfaces. Mirrored eyebrows now attach to the selected shell while preserving hair direction and matching material-channel coverage.
+
+- **Start from scratch:** switch off **Original Overlay (base)** in Overlay Painter to hide equipped artwork while keeping your new layers and source assets intact.
+
+- **Reference target visibility:** show or hide other slots while painting just the selected target. Other slots start hidden; visibility choices are saved with the painter project.
+
+- UV-authored paths now show their curve and all editable points in Scene view immediately on layer selection. Eyebrow shell examples support direct surface positioning, curve and width handles, and head/tail labels without first selecting a point in 2D.
+
+- **Eyebrow path generator:** editable hair growth, shape and strand profiles, tapered curved hairs, clumping, fine/baby populations, mirrored variation, layered hair color, presets and diagnostics. Matching albedo, coverage, roughness, Normal Control and AO outputs follow the receiving material's channels.
+- **Editable HDEyebrows shell projects** in the separate OverlayPainter Examples package, with groomed and bushy styles, real UMA face captures and performance reports. Focused regression coverage ships in the separate Tests package.
+- Fixed path-generator scalar values being decoded as color, and improved saved-document matching between standalone slots and equipped meshes with reordered but equivalent UV layouts.
+
 ## UMA 3.1f2 - Changes since the last main merge
 
 Changes since the September 27, 2026 merge into master (PR #579, merge c99e59475; develop baseline 10494b238), including updates through October 9, 2026. Supports **Unity 6.3 and newer**. UMA **3.1f2** uses package version **3.1.2**. Earlier cumulative changes since v3.05 remain below.
@@ -129,7 +184,7 @@ See [Source-UV cropping](SourceUVCropping.md) for setup, compatibility fallbacks
 
 ### Guided Model-to-Race and Clothing Creation
 
-- Added **UMA → Model to Race & Clothing…**, a four-step UI Toolkit workflow built on the existing UMA Slot Builder.
+- Added **UMA Ã¢â€ â€™ Model to Race & ClothingÃ¢â‚¬Â¦**, a four-step UI Toolkit workflow built on the existing UMA Slot Builder.
 - Creates a new race, TPose, base recipe, slots, overlays, copied material wrappers, DNA groups, and an optional configured avatar prefab. Clothing-only imports target an existing race without replacing its body.
 - Assigns individual material submeshes to Body, Clothing, or Skip. Groups clothing pieces into wardrobe recipes and assigns supported wardrobe regions.
 - Generates editable local-axis bone-scale DNA and selected blendshape DNA. All blendshapes start selected; included shapes retain their frames and source weight ranges.

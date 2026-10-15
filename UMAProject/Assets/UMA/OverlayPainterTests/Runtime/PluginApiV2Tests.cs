@@ -692,6 +692,7 @@ namespace UMA.TexturePaint.Tests
                     Is.EqualTo(new[] { "Facial Hair", "Shaved Head", "Custom / Neutral" }));
 
                 TexturePaintPluginParameterSet parameters = host.CreateParameters(plugin);
+                parameters.Get("renderModel", true).number = 0; // Legacy destination-pixel coverage/budget contract.
                 parameters.Get("placementShape").number = 0f;
                 parameters.Get("placementWidth").number = 0.75f;
                 parameters.Get("placementHeight").number = 0.75f;
@@ -741,6 +742,7 @@ namespace UMA.TexturePaint.Tests
             try
             {
                 var parameters = host.CreateParameters(plugin);
+                parameters.Get("renderModel", true).number = 0; // Legacy destination-pixel coverage/budget contract.
                 Assert.That(parameters.Get("placementShape").number, Is.EqualTo(2f));
                 if (shape != 2) parameters.Get("placementShape").number = shape;
                 parameters.Get("edgeFeather").number = 0f;
@@ -991,6 +993,76 @@ namespace UMA.TexturePaint.Tests
                 Is.GreaterThan(0.9f));
             Assert.That(host.Redo(), Is.True);
             Assert.That(set.layers[0], Is.SameAs(generated));
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        public async Task ChannelOperationsRegeneratesBeforeFirstSave(string unsavedId)
+        {
+            set.persistentId = unsavedId;
+            var cached = set.AddPluginLayer("Unsaved filter");
+            var plugin = ScriptableObject.CreateInstance<ChannelOperationsFilterPlugin>();
+            try
+            {
+                await host.ExecutePluginLayerAsync(plugin, store, host.CreateParameters(plugin),
+                    new Dictionary<TextureSet, TexturePaintLayer> { { set, cached } }, null, CancellationToken.None);
+                Assert.That(Read(set.layers[0].channels[TexturePaintChannel.Albedo].Front, 1, 1).r, Is.GreaterThan(.95f));
+                Assert.That(set.persistentId, Is.EqualTo(unsavedId), "Session IDs must not change document bindings.");
+                Assert.That(host.Undo(), Is.True);
+                Assert.That(set.layers[0], Is.SameAs(cached));
+                Assert.That(host.Redo(), Is.True);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(plugin); }
+        }
+
+        [Test]
+        public async Task UnsavedSurfacesWithSameIndexKeepSeparateGeometryMasks()
+        {
+            set.persistentId = null;
+            var otherMesh = UnityEngine.Object.Instantiate(mesh);
+            otherMesh.uv = new[] { Vector2.one, Vector2.up, Vector2.right };
+            var other = new TextureSet { surface = new ReconstructedSurface
+                { index = 0, mesh = otherMesh, triangleIslands = new[] { 0 } } };
+            other.channels.Add(TexturePaintChannel.Albedo, MakeChannel(TexturePaintChannel.Albedo, true, Color.black));
+            ((List<TextureSet>)typeof(TextureStore).GetField("sets", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(store)).Add(other);
+            var plugin = ScriptableObject.CreateInstance<ChannelOperationsFilterPlugin>();
+            try
+            {
+                var destinations = new Dictionary<TextureSet, TexturePaintLayer>
+                    { { set, set.AddPluginLayer("First") }, { other, other.AddPluginLayer("Second") } };
+                await host.ExecutePluginLayerAsync(plugin, store, host.CreateParameters(plugin), destinations, null, CancellationToken.None);
+                var first = set.layers[0].channels[TexturePaintChannel.Albedo].Front;
+                var second = other.layers[0].channels[TexturePaintChannel.Albedo].Front;
+                Assert.That(Read(first, 1, 1).a, Is.GreaterThan(.95f));
+                Assert.That(Read(first, 6, 6).a, Is.LessThan(.01f));
+                Assert.That(Read(second, 6, 6).a, Is.GreaterThan(.95f));
+                Assert.That(Read(second, 1, 1).a, Is.LessThan(.01f));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(plugin); UnityEngine.Object.DestroyImmediate(otherMesh); }
+        }
+
+        [Test]
+        public async Task SavingAfterPluginSnapshotStillResolvesUnsavedDestination()
+        {
+            set.persistentId = null;
+            var cached = set.AddPluginLayer("Filter");
+            var destinations = new Dictionary<TextureSet, TexturePaintLayer> { { set, cached } };
+            var plugin = ScriptableObject.CreateInstance<ChannelOperationsFilterPlugin>();
+            try
+            {
+                var parameters = host.CreateParameters(plugin);
+                var snapshot = TexturePaintPluginTransactionExecutor.Capture(store, plugin.Descriptor, parameters,
+                    CancellationToken.None, null, 1024 * 1024, destinations);
+                var context = new TexturePaintCommandContextV2(plugin.Descriptor, snapshot, parameters,
+                    CancellationToken.None, null, 1024 * 1024);
+                await plugin.ExecuteAsync(context);
+                set.persistentId = "now-saved";
+                using var commit = TexturePaintPluginTransactionExecutor.CommitIntoPluginLayers(store,
+                    plugin.Descriptor, context.SealAndSnapshot(), destinations, CancellationToken.None, null, parameters);
+                Assert.That(commit.hasChanges, Is.True);
+                Assert.That(Read(set.layers[0].channels[TexturePaintChannel.Albedo].Front, 1, 1).r, Is.GreaterThan(.95f));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(plugin); }
         }
 
         [Test]

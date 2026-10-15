@@ -55,6 +55,7 @@ Material:
     - _Detail_Normal_Scale: 0.235
     - _DiffuseNormalStrength: 0.35
     - _DiffusionWrap: 0.12
+    - _Metallic: 0
     - _OilLobeWeight: 0.1
     - _OilSmoothness: 0.72
     - _SSSBlend: 0.537

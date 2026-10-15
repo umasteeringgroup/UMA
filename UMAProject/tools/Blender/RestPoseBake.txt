@@ -1,0 +1,46 @@
+UMA Tools 1.31 - Bake Pose to Rest Pose
+
+Use: select the mesh in Object Mode, then open UMA Tools > Rigging and Weights
+and click "Bake Pose to Rest Pose — Preserve Shape Keys".
+
+The operation always creates independent mesh, shape-key, armature and object
+data in a new <mesh>_RestPose collection, at the original location. It selects
+the new mesh and rig. Hide/show the collection to compare with the original.
+Materials and unrelated modifier target assets remain shared.
+
+Every stored key, including Basis, is evaluated through Blender's Armature
+modifier. Names, order, relative-key links, slider limits/values, masks, mute
+flags, interpolation, absolute-key frames, custom properties, and shape-key
+animation are retained. Key actions are copied and driver references to the
+source mesh/rig/key data are remapped to the new copies.
+
+The copied mesh and rig capture the current frame. Their object animation,
+parenting and constraints are frozen to evaluated transforms; rig bone
+constraints/animation are baked into the new rest pose. The original objects
+and the original rig's other meshes are never edited.
+
+Validation checks every stored key, individual relative keys at slider
+endpoints, a combined blend, absolute-key times and midpoints, and the current
+display including drivers. It compares world-space vertices and connectivity,
+including the downstream viewport modifier stack. Default tolerance is
+0.00001 Blender units (adjustable in Adjust Last Operation). Failure removes
+the entire new collection and reports the mismatch. A successful collection
+stores the per-check JSON report as the uma_rest_pose_validation property.
+
+Supported: one enabled Armature modifier before other enabled modifiers,
+vertex-group weights, Preserve Volume, relative and absolute shape keys.
+Bone envelopes, multi-modifier skinning, and segmented deform B-Bones are
+rejected explicitly. No partial output is kept after a failed geometry check.
+
+Source: UMAToolsNPanel.py (install as a single-file Blender add-on).
+Regression tests: tests/test_rest_pose.py (run inside Blender).
+Tests use temporary geometry, restore the original scene/selection, and check
+for leaked datablocks. They also test UMA30_Body.001 when it is present.
+Results (from project root): Build/Validation/BlenderRestPose/results.json.
+
+Validated in Blender 5.2.2 LTS against the connected
+E:/UMAURP/content-pack/ContentPack_3.0/UMA_3_Clothing_Hair.blend.
+The selected mesh had 23 keys; 73 geometry checks passed with maximum error
+0.00000214908 Blender units. Installed-operator smoke test also passed.
+Unity project metadata verified without changing Unity assets:
+C:/GitHub/UMA/UMAProject; Unity 6000.3.18f1; installed UMA 3.1f4.

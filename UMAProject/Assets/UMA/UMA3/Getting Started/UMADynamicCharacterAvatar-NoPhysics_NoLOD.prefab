@@ -3813,7 +3813,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UMA_Core::UMA.UMAResourceLeaseOwner
   privateResources: []
-  originalOwner: 205004
+  originalOwner: 287166
 --- !u!1 &2558463356566487466
 GameObject:
   m_ObjectHideFlags: 0

@@ -12,3 +12,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d6b01ca862641f1ab1dccd0b963b24e, type: 3}
   m_Name: SlotMaskExample
   m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintMaskPreset
+  version: 1
+  description: 
+  effects:
+    noise:
+      enabled: 0
+      seed: 0
+      tiling: {x: 4, y: 4}
+      offset: {x: 0, y: 0}
+      octaves: 4
+      balance: 0.5
+      contrast: 1
+      invert: 0
+      opacity: 1
+      combine: 1
+    textureOverlay:
+      enabled: 0
+      texture: {fileID: 0}
+      sourceChannel: 0
+      tiling: {x: 1, y: 1}
+      offset: {x: 0, y: 0}
+      rotation: 0
+      invert: 0
+      opacity: 1
+      combine: 1
+    stack: []
+    startFromPaint: 1
+    initialValue: 1

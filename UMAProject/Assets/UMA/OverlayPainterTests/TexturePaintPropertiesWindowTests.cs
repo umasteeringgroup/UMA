@@ -48,9 +48,12 @@ namespace UMA.TexturePaint.Editor.Tests
             CollectionAssert.AreEqual(new[] { "TexturePaintDockWindow", "TexturePaintBrushWindow" },
                 group.children[0].children.Select(child => child.class_name).ToArray());
             Assert.That(group.children[1].tabs, Is.True);
-            Assert.That(group.children[1].children.Single().class_name, Is.EqualTo("TexturePaintPropertiesWindow"));
-            Assert.That(layout.view.children[1].children.Any(child => child.class_name == "TexturePaintPropertiesWindow"),
-                Is.False, "Properties belongs below Layers, not in the canvas group.");
+            CollectionAssert.AreEqual(new[] { "TexturePaintPropertiesWindow", "TexturePaintMaterialWindow" },
+                group.children[1].children.Select(child => child.class_name).ToArray());
+            Assert.That(layout.view.children.Length, Is.EqualTo(3));
+            Assert.That(layout.view.children[1].children.Single().class_name, Is.EqualTo("TexturePaintSpriteMaterialsWindow"));
+            CollectionAssert.AreEqual(new[] { "SceneView", "TexturePaintUVWindow" },
+                layout.view.children[2].children.Select(child => child.class_name).ToArray());
         }
 
         [Test]

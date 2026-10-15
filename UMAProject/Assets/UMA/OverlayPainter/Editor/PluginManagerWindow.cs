@@ -408,7 +408,7 @@ namespace UMA.TexturePaint.Editor
             if (set == null) return Mathf.Max(1, values.Integer("atlasColumns", 4) * values.Integer("atlasRows", 4));
             foreach (var sheet in set.spriteSheets)
                 if (sheet?.channel == TexturePaintChannel.Albedo)
-                    return Mathf.Max(1, TexturePaintSpriteSetSource.GetOrderedSprites(sheet.spriteSheet).Count);
+                    return Mathf.Max(1, TexturePaintSpriteSetSource.GetOrderedSprites(sheet).Count);
             return 1;
         }
 

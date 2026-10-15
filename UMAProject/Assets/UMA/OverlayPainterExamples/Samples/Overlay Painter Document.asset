@@ -60,6 +60,7 @@ MonoBehaviour:
     meshSignature: ED34E60FA75BC643
     topologySignature: 3BFBCE45B0FC7D4A
     uvSignature: D602F9A136575B86
+    uvLayoutSignature: 
     materialSignature: dea9ba94a1760408499afdd143af91c4
     orphaned: 0
     orphanReason: 
@@ -367,6 +368,7 @@ MonoBehaviour:
         recoveryBlobKey: 
         dataAsset: {fileID: 4900000, guid: 8379b1470f70a4046bd86ebf5250937d, type: 3}
         compressedBytes: 
+    hideOriginalOverlay: 0
     baseStrokes: []
     layers:
     - id: 49745f47d74a453d82bedb33251901e4
@@ -1098,6 +1100,9 @@ MonoBehaviour:
       fillChannel: 0
       fillColor: {r: 1, g: 1, b: 1, a: 1}
       fillSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         generatorRevision: 8
         source: 2
         sourceTexture: {fileID: 0}
@@ -1131,6 +1136,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -1156,6 +1179,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -1506,6 +1571,13 @@ MonoBehaviour:
           roughness: 0.5
           relief: 0.015
           normalStrength: 1
+          woundRoughness: -1
+          rimRoughness: -1
+          woundColorNoise: 0
+          woundHeightNoise: 0
+          woundNoiseScale: 12
+          sutureStartOffset: 0
+          sutureEndOffset: 0
           stitches: 0
           removedStitches: 0
           stitchCount: 13
@@ -1514,6 +1586,16 @@ MonoBehaviour:
           stitchSpan: 0.65
           stitchAngle: 12
           puckering: 0.25
+          stitchDistanceRandomness: 0
+          stitchAngleRandomness: 0
+          stitchHeight: 0.05
+          stitchEndTaper: 0.2
+          stitchEndCurve: 1
+          punctureDepth: 0.025
+          punctureShading: 0.7
+          punctureSize: 1.7
+          puckerHeight: 0.08
+          puckerRadius: 0.06
           seam:
             enabled: 0
             preset: 0
@@ -1566,6 +1648,24 @@ MonoBehaviour:
             relief: 0.0015
             normalStrength: 1
             amount: 1
+            wrapOverlap: 0.25
+            wrapAngle: 25
+            wrapWrinkles: 0.2
+            wrapLift: 0.2
+            wrapFray: 0.15
+            wrapStain: 0.1
+            wrapResidue: 0.1
+            wrapWeave: 0.001
+            weldWidth: 0.22
+            weldRipple: 0.45
+            weldHeat: 0.65
+            weldHeatWidth: 0.25
+            weldSoot: 0.1
+            weldSpatter: 0.15
+            laceThread: 0.012
+            laceScallop: 0.14
+            laceNet: 0.5
+            laceTwist: 0.3
             angle: 0
             irregularity: 0.35
             falloff: 0.15
@@ -1591,6 +1691,48 @@ MonoBehaviour:
             opening: 0.08
             slider: 0.82
             zipperWidth: 1
+            zipperStyle:
+              preset: 0
+              toothShape: 0
+              toothWidth: 1
+              toothLength: 1
+              toothRoundness: 1
+              bankOffset: 0.5
+              tapeWidth: 0.72
+              tapeHeight: 0.12
+              weaveScale: 0
+              weaveContrast: 0.075
+              weaveHeight: 0.025
+              weave: 0
+              cordWidth: 0.018
+              cordHeight: 0
+              cordInset: 0.018
+              cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+              stitchStyle: 0
+              stitchLength: 0.64
+              stitchSpread: 0.025
+              stitchHeight: 1
+              stitchRoughness: 0.66
+            zipperTeeth:
+              height: 1
+              metallic: -1
+              smoothness: -1
+            zipperStops:
+              height: 2.5
+              metallic: -1
+              smoothness: -1
+            zipperSlider:
+              height: 1.5
+              metallic: -1
+              smoothness: -1
+            zipperPull:
+              height: 2
+              metallic: -1
+              smoothness: -1
+            zipperTang:
+              height: 2
+              metallic: -1
+              smoothness: -1
             zipperDepth: 1
             zipperDepthVersion: 1
             shadingStrength: 1
@@ -1677,6 +1819,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -1702,6 +1862,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -1816,6 +2018,9 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         source: 2
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -1861,7 +2066,12 @@ MonoBehaviour:
           blendMode: 0
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 0
             sourceTexture: {fileID: 2800000, guid: c16db8c9b3a1cf641963becca902affd, type: 3}
             sourceSprite: {fileID: 0}
@@ -1883,6 +2093,9 @@ MonoBehaviour:
         sourceSprite: {fileID: 0}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 1, g: 1, b: 1, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 0
         sourceTiling: {x: 1, y: 1}
@@ -2634,6 +2847,9 @@ MonoBehaviour:
       fillChannel: 0
       fillColor: {r: 1, g: 1, b: 1, a: 1}
       fillSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         generatorRevision: 8
         source: 2
         sourceTexture: {fileID: 0}
@@ -2667,6 +2883,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -2692,6 +2926,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -3042,6 +3318,13 @@ MonoBehaviour:
           roughness: 0.5
           relief: 0.015
           normalStrength: 1
+          woundRoughness: -1
+          rimRoughness: -1
+          woundColorNoise: 0
+          woundHeightNoise: 0
+          woundNoiseScale: 12
+          sutureStartOffset: 0
+          sutureEndOffset: 0
           stitches: 0
           removedStitches: 0
           stitchCount: 13
@@ -3050,6 +3333,16 @@ MonoBehaviour:
           stitchSpan: 0.65
           stitchAngle: 12
           puckering: 0.25
+          stitchDistanceRandomness: 0
+          stitchAngleRandomness: 0
+          stitchHeight: 0.05
+          stitchEndTaper: 0.2
+          stitchEndCurve: 1
+          punctureDepth: 0.025
+          punctureShading: 0.7
+          punctureSize: 1.7
+          puckerHeight: 0.08
+          puckerRadius: 0.06
           seam:
             enabled: 0
             preset: 0
@@ -3102,6 +3395,24 @@ MonoBehaviour:
             relief: 0.0015
             normalStrength: 1
             amount: 1
+            wrapOverlap: 0.25
+            wrapAngle: 25
+            wrapWrinkles: 0.2
+            wrapLift: 0.2
+            wrapFray: 0.15
+            wrapStain: 0.1
+            wrapResidue: 0.1
+            wrapWeave: 0.001
+            weldWidth: 0.22
+            weldRipple: 0.45
+            weldHeat: 0.65
+            weldHeatWidth: 0.25
+            weldSoot: 0.1
+            weldSpatter: 0.15
+            laceThread: 0.012
+            laceScallop: 0.14
+            laceNet: 0.5
+            laceTwist: 0.3
             angle: 0
             irregularity: 0.35
             falloff: 0.15
@@ -3127,6 +3438,48 @@ MonoBehaviour:
             opening: 0.08
             slider: 0.82
             zipperWidth: 1
+            zipperStyle:
+              preset: 0
+              toothShape: 0
+              toothWidth: 1
+              toothLength: 1
+              toothRoundness: 1
+              bankOffset: 0.5
+              tapeWidth: 0.72
+              tapeHeight: 0.12
+              weaveScale: 0
+              weaveContrast: 0.075
+              weaveHeight: 0.025
+              weave: 0
+              cordWidth: 0.018
+              cordHeight: 0
+              cordInset: 0.018
+              cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+              stitchStyle: 0
+              stitchLength: 0.64
+              stitchSpread: 0.025
+              stitchHeight: 1
+              stitchRoughness: 0.66
+            zipperTeeth:
+              height: 1
+              metallic: -1
+              smoothness: -1
+            zipperStops:
+              height: 2.5
+              metallic: -1
+              smoothness: -1
+            zipperSlider:
+              height: 1.5
+              metallic: -1
+              smoothness: -1
+            zipperPull:
+              height: 2
+              metallic: -1
+              smoothness: -1
+            zipperTang:
+              height: 2
+              metallic: -1
+              smoothness: -1
             zipperDepth: 1
             zipperDepthVersion: 1
             shadingStrength: 1
@@ -3213,6 +3566,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -3238,6 +3609,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -3352,6 +3765,9 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         source: 2
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -3397,7 +3813,12 @@ MonoBehaviour:
           blendMode: 1
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 2
             sourceTexture: {fileID: 0}
             sourceSprite: {fileID: 0}
@@ -3419,6 +3840,9 @@ MonoBehaviour:
         sourceSprite: {fileID: 0}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 0.275, g: 0.275, b: 0.275, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 0
         sourceTiling: {x: 1, y: 1}
@@ -4170,6 +4594,9 @@ MonoBehaviour:
       fillChannel: 0
       fillColor: {r: 1, g: 1, b: 1, a: 1}
       fillSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         generatorRevision: 0
         source: 2
         sourceTexture: {fileID: 0}
@@ -4203,6 +4630,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -4228,6 +4673,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -4882,6 +5369,13 @@ MonoBehaviour:
           roughness: 0.5
           relief: 0.015
           normalStrength: 1
+          woundRoughness: -1
+          rimRoughness: -1
+          woundColorNoise: 0
+          woundHeightNoise: 0
+          woundNoiseScale: 12
+          sutureStartOffset: 0
+          sutureEndOffset: 0
           stitches: 0
           removedStitches: 0
           stitchCount: 13
@@ -4890,6 +5384,16 @@ MonoBehaviour:
           stitchSpan: 0.65
           stitchAngle: 12
           puckering: 0.25
+          stitchDistanceRandomness: 0
+          stitchAngleRandomness: 0
+          stitchHeight: 0.05
+          stitchEndTaper: 0.2
+          stitchEndCurve: 1
+          punctureDepth: 0.025
+          punctureShading: 0.7
+          punctureSize: 1.7
+          puckerHeight: 0.08
+          puckerRadius: 0.06
           seam:
             enabled: 0
             preset: 0
@@ -4942,6 +5446,24 @@ MonoBehaviour:
             relief: 0.0015
             normalStrength: 1
             amount: 1
+            wrapOverlap: 0.25
+            wrapAngle: 25
+            wrapWrinkles: 0.2
+            wrapLift: 0.2
+            wrapFray: 0.15
+            wrapStain: 0.1
+            wrapResidue: 0.1
+            wrapWeave: 0.001
+            weldWidth: 0.22
+            weldRipple: 0.45
+            weldHeat: 0.65
+            weldHeatWidth: 0.25
+            weldSoot: 0.1
+            weldSpatter: 0.15
+            laceThread: 0.012
+            laceScallop: 0.14
+            laceNet: 0.5
+            laceTwist: 0.3
             angle: 0
             irregularity: 0.35
             falloff: 0.15
@@ -4967,6 +5489,48 @@ MonoBehaviour:
             opening: 0.08
             slider: 0.82
             zipperWidth: 1
+            zipperStyle:
+              preset: 0
+              toothShape: 0
+              toothWidth: 1
+              toothLength: 1
+              toothRoundness: 1
+              bankOffset: 0.5
+              tapeWidth: 0.72
+              tapeHeight: 0.12
+              weaveScale: 0
+              weaveContrast: 0.075
+              weaveHeight: 0.025
+              weave: 0
+              cordWidth: 0.018
+              cordHeight: 0
+              cordInset: 0.018
+              cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+              stitchStyle: 0
+              stitchLength: 0.64
+              stitchSpread: 0.025
+              stitchHeight: 1
+              stitchRoughness: 0.66
+            zipperTeeth:
+              height: 1
+              metallic: -1
+              smoothness: -1
+            zipperStops:
+              height: 2.5
+              metallic: -1
+              smoothness: -1
+            zipperSlider:
+              height: 1.5
+              metallic: -1
+              smoothness: -1
+            zipperPull:
+              height: 2
+              metallic: -1
+              smoothness: -1
+            zipperTang:
+              height: 2
+              metallic: -1
+              smoothness: -1
             zipperDepth: 1
             zipperDepthVersion: 1
             shadingStrength: 1
@@ -5053,6 +5617,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -5078,6 +5660,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -5192,6 +5816,9 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         source: 2
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -5237,7 +5864,12 @@ MonoBehaviour:
           blendMode: 0
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 0
             sourceTexture: {fileID: 0}
             sourceSprite: {fileID: 1403575400, guid: 56620daab9d7d1b4e99f5743a72f3f96, type: 3}
@@ -5259,6 +5891,9 @@ MonoBehaviour:
         sourceSprite: {fileID: 1403575400, guid: 56620daab9d7d1b4e99f5743a72f3f96, type: 3}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 1, g: 1, b: 1, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 0
         sourceTiling: {x: 1, y: 1}
@@ -5290,7 +5925,12 @@ MonoBehaviour:
           blendMode: 0
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 0
             sourceTexture: {fileID: 0}
             sourceSprite: {fileID: 1403575400, guid: b53bff0ab88afa046b0a5d7f10ba3a0e, type: 3}
@@ -5312,6 +5952,9 @@ MonoBehaviour:
         sourceSprite: {fileID: 1403575400, guid: b53bff0ab88afa046b0a5d7f10ba3a0e, type: 3}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 1, g: 1, b: 1, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 1
         sourceTiling: {x: 1, y: 1}
@@ -5343,7 +5986,12 @@ MonoBehaviour:
           blendMode: 0
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 0
             sourceTexture: {fileID: 0}
             sourceSprite: {fileID: 1403575400, guid: 821e32b3a7aa5de4eb1e79c12c300e79, type: 3}
@@ -5365,6 +6013,9 @@ MonoBehaviour:
         sourceSprite: {fileID: 1403575400, guid: 821e32b3a7aa5de4eb1e79c12c300e79, type: 3}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 1, g: 1, b: 1, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 0
         sourceTiling: {x: 1, y: 1}
@@ -13181,6 +13832,9 @@ MonoBehaviour:
       fillChannel: 0
       fillColor: {r: 1, g: 1, b: 1, a: 1}
       fillSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         generatorRevision: 0
         source: 2
         sourceTexture: {fileID: 0}
@@ -13214,6 +13868,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -13239,6 +13911,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -13760,6 +14474,13 @@ MonoBehaviour:
           roughness: 0.5
           relief: 0.015
           normalStrength: 1
+          woundRoughness: -1
+          rimRoughness: -1
+          woundColorNoise: 0
+          woundHeightNoise: 0
+          woundNoiseScale: 12
+          sutureStartOffset: 0
+          sutureEndOffset: 0
           stitches: 0
           removedStitches: 0
           stitchCount: 13
@@ -13768,6 +14489,16 @@ MonoBehaviour:
           stitchSpan: 0.65
           stitchAngle: 12
           puckering: 0.25
+          stitchDistanceRandomness: 0
+          stitchAngleRandomness: 0
+          stitchHeight: 0.05
+          stitchEndTaper: 0.2
+          stitchEndCurve: 1
+          punctureDepth: 0.025
+          punctureShading: 0.7
+          punctureSize: 1.7
+          puckerHeight: 0.08
+          puckerRadius: 0.06
           seam:
             enabled: 0
             preset: 0
@@ -13820,6 +14551,24 @@ MonoBehaviour:
             relief: 0.0015
             normalStrength: 1
             amount: 1
+            wrapOverlap: 0.25
+            wrapAngle: 25
+            wrapWrinkles: 0.2
+            wrapLift: 0.2
+            wrapFray: 0.15
+            wrapStain: 0.1
+            wrapResidue: 0.1
+            wrapWeave: 0.001
+            weldWidth: 0.22
+            weldRipple: 0.45
+            weldHeat: 0.65
+            weldHeatWidth: 0.25
+            weldSoot: 0.1
+            weldSpatter: 0.15
+            laceThread: 0.012
+            laceScallop: 0.14
+            laceNet: 0.5
+            laceTwist: 0.3
             angle: 0
             irregularity: 0.35
             falloff: 0.15
@@ -13845,6 +14594,48 @@ MonoBehaviour:
             opening: 0.08
             slider: 0.82
             zipperWidth: 1
+            zipperStyle:
+              preset: 0
+              toothShape: 0
+              toothWidth: 1
+              toothLength: 1
+              toothRoundness: 1
+              bankOffset: 0.5
+              tapeWidth: 0.72
+              tapeHeight: 0.12
+              weaveScale: 0
+              weaveContrast: 0.075
+              weaveHeight: 0.025
+              weave: 0
+              cordWidth: 0.018
+              cordHeight: 0
+              cordInset: 0.018
+              cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+              stitchStyle: 0
+              stitchLength: 0.64
+              stitchSpread: 0.025
+              stitchHeight: 1
+              stitchRoughness: 0.66
+            zipperTeeth:
+              height: 1
+              metallic: -1
+              smoothness: -1
+            zipperStops:
+              height: 2.5
+              metallic: -1
+              smoothness: -1
+            zipperSlider:
+              height: 1.5
+              metallic: -1
+              smoothness: -1
+            zipperPull:
+              height: 2
+              metallic: -1
+              smoothness: -1
+            zipperTang:
+              height: 2
+              metallic: -1
+              smoothness: -1
             zipperDepth: 1
             zipperDepthVersion: 1
             shadingStrength: 1
@@ -13931,6 +14722,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -13956,6 +14765,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -14070,6 +14921,9 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         source: 2
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -14115,7 +14969,12 @@ MonoBehaviour:
           blendMode: 0
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 0
             sourceTexture: {fileID: 0}
             sourceSprite: {fileID: -1483830720, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -14137,6 +14996,9 @@ MonoBehaviour:
         sourceSprite: {fileID: -1483830720, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 1, g: 1, b: 1, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 0
         sourceTiling: {x: 1, y: 1}
@@ -14168,7 +15030,12 @@ MonoBehaviour:
           blendMode: 0
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 0
             sourceTexture: {fileID: 0}
             sourceSprite: {fileID: -1483830720, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -14190,6 +15057,9 @@ MonoBehaviour:
         sourceSprite: {fileID: -1483830720, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 1, g: 1, b: 1, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 0
         sourceTiling: {x: 1, y: 1}
@@ -19318,6 +20188,9 @@ MonoBehaviour:
       fillChannel: 0
       fillColor: {r: 1, g: 1, b: 1, a: 1}
       fillSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         generatorRevision: 0
         source: 2
         sourceTexture: {fileID: 0}
@@ -19351,6 +20224,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -19376,6 +20267,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -19726,6 +20659,13 @@ MonoBehaviour:
           roughness: 0.5
           relief: 0.015
           normalStrength: 1
+          woundRoughness: -1
+          rimRoughness: -1
+          woundColorNoise: 0
+          woundHeightNoise: 0
+          woundNoiseScale: 12
+          sutureStartOffset: 0
+          sutureEndOffset: 0
           stitches: 0
           removedStitches: 0
           stitchCount: 13
@@ -19734,6 +20674,16 @@ MonoBehaviour:
           stitchSpan: 0.65
           stitchAngle: 12
           puckering: 0.25
+          stitchDistanceRandomness: 0
+          stitchAngleRandomness: 0
+          stitchHeight: 0.05
+          stitchEndTaper: 0.2
+          stitchEndCurve: 1
+          punctureDepth: 0.025
+          punctureShading: 0.7
+          punctureSize: 1.7
+          puckerHeight: 0.08
+          puckerRadius: 0.06
           seam:
             enabled: 0
             preset: 0
@@ -19786,6 +20736,24 @@ MonoBehaviour:
             relief: 0.0015
             normalStrength: 1
             amount: 1
+            wrapOverlap: 0.25
+            wrapAngle: 25
+            wrapWrinkles: 0.2
+            wrapLift: 0.2
+            wrapFray: 0.15
+            wrapStain: 0.1
+            wrapResidue: 0.1
+            wrapWeave: 0.001
+            weldWidth: 0.22
+            weldRipple: 0.45
+            weldHeat: 0.65
+            weldHeatWidth: 0.25
+            weldSoot: 0.1
+            weldSpatter: 0.15
+            laceThread: 0.012
+            laceScallop: 0.14
+            laceNet: 0.5
+            laceTwist: 0.3
             angle: 0
             irregularity: 0.35
             falloff: 0.15
@@ -19811,6 +20779,48 @@ MonoBehaviour:
             opening: 0.08
             slider: 0.82
             zipperWidth: 1
+            zipperStyle:
+              preset: 0
+              toothShape: 0
+              toothWidth: 1
+              toothLength: 1
+              toothRoundness: 1
+              bankOffset: 0.5
+              tapeWidth: 0.72
+              tapeHeight: 0.12
+              weaveScale: 0
+              weaveContrast: 0.075
+              weaveHeight: 0.025
+              weave: 0
+              cordWidth: 0.018
+              cordHeight: 0
+              cordInset: 0.018
+              cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+              stitchStyle: 0
+              stitchLength: 0.64
+              stitchSpread: 0.025
+              stitchHeight: 1
+              stitchRoughness: 0.66
+            zipperTeeth:
+              height: 1
+              metallic: -1
+              smoothness: -1
+            zipperStops:
+              height: 2.5
+              metallic: -1
+              smoothness: -1
+            zipperSlider:
+              height: 1.5
+              metallic: -1
+              smoothness: -1
+            zipperPull:
+              height: 2
+              metallic: -1
+              smoothness: -1
+            zipperTang:
+              height: 2
+              metallic: -1
+              smoothness: -1
             zipperDepth: 1
             zipperDepthVersion: 1
             shadingStrength: 1
@@ -19897,6 +20907,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -19922,6 +20950,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -20036,6 +21106,9 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         source: 2
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -20081,7 +21154,12 @@ MonoBehaviour:
           blendMode: 0
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 0
             sourceTexture: {fileID: 0}
             sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -20103,6 +21181,9 @@ MonoBehaviour:
         sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 1, g: 1, b: 1, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 1
         sourceTiling: {x: 1, y: 1}
@@ -26080,6 +27161,9 @@ MonoBehaviour:
       fillChannel: 0
       fillColor: {r: 1, g: 1, b: 1, a: 1}
       fillSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         generatorRevision: 0
         source: 2
         sourceTexture: {fileID: 0}
@@ -26113,6 +27197,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -26138,6 +27240,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -26545,6 +27689,13 @@ MonoBehaviour:
           roughness: 0.5
           relief: 0.015
           normalStrength: 1
+          woundRoughness: -1
+          rimRoughness: -1
+          woundColorNoise: 0
+          woundHeightNoise: 0
+          woundNoiseScale: 12
+          sutureStartOffset: 0
+          sutureEndOffset: 0
           stitches: 0
           removedStitches: 0
           stitchCount: 13
@@ -26553,6 +27704,16 @@ MonoBehaviour:
           stitchSpan: 0.65
           stitchAngle: 12
           puckering: 0.25
+          stitchDistanceRandomness: 0
+          stitchAngleRandomness: 0
+          stitchHeight: 0.05
+          stitchEndTaper: 0.2
+          stitchEndCurve: 1
+          punctureDepth: 0.025
+          punctureShading: 0.7
+          punctureSize: 1.7
+          puckerHeight: 0.08
+          puckerRadius: 0.06
           seam:
             enabled: 0
             preset: 0
@@ -26605,6 +27766,24 @@ MonoBehaviour:
             relief: 0.0015
             normalStrength: 1
             amount: 1
+            wrapOverlap: 0.25
+            wrapAngle: 25
+            wrapWrinkles: 0.2
+            wrapLift: 0.2
+            wrapFray: 0.15
+            wrapStain: 0.1
+            wrapResidue: 0.1
+            wrapWeave: 0.001
+            weldWidth: 0.22
+            weldRipple: 0.45
+            weldHeat: 0.65
+            weldHeatWidth: 0.25
+            weldSoot: 0.1
+            weldSpatter: 0.15
+            laceThread: 0.012
+            laceScallop: 0.14
+            laceNet: 0.5
+            laceTwist: 0.3
             angle: 0
             irregularity: 0.35
             falloff: 0.15
@@ -26630,6 +27809,48 @@ MonoBehaviour:
             opening: 0.08
             slider: 0.82
             zipperWidth: 1
+            zipperStyle:
+              preset: 0
+              toothShape: 0
+              toothWidth: 1
+              toothLength: 1
+              toothRoundness: 1
+              bankOffset: 0.5
+              tapeWidth: 0.72
+              tapeHeight: 0.12
+              weaveScale: 0
+              weaveContrast: 0.075
+              weaveHeight: 0.025
+              weave: 0
+              cordWidth: 0.018
+              cordHeight: 0
+              cordInset: 0.018
+              cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+              stitchStyle: 0
+              stitchLength: 0.64
+              stitchSpread: 0.025
+              stitchHeight: 1
+              stitchRoughness: 0.66
+            zipperTeeth:
+              height: 1
+              metallic: -1
+              smoothness: -1
+            zipperStops:
+              height: 2.5
+              metallic: -1
+              smoothness: -1
+            zipperSlider:
+              height: 1.5
+              metallic: -1
+              smoothness: -1
+            zipperPull:
+              height: 2
+              metallic: -1
+              smoothness: -1
+            zipperTang:
+              height: 2
+              metallic: -1
+              smoothness: -1
             zipperDepth: 1
             zipperDepthVersion: 1
             shadingStrength: 1
@@ -26716,6 +27937,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -26741,6 +27980,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -26855,6 +28136,9 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         source: 2
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -26900,7 +28184,12 @@ MonoBehaviour:
           blendMode: 0
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 2
             sourceTexture: {fileID: 0}
             sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -26922,6 +28211,9 @@ MonoBehaviour:
         sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 1, g: 1, b: 1, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 0
         sourceTiling: {x: 1, y: 1}
@@ -37018,6 +38310,9 @@ MonoBehaviour:
       fillChannel: 0
       fillColor: {r: 1, g: 1, b: 1, a: 1}
       fillSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         generatorRevision: 0
         source: 2
         sourceTexture: {fileID: 0}
@@ -37051,6 +38346,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -37076,6 +38389,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -37502,6 +38857,13 @@ MonoBehaviour:
           roughness: 0.5
           relief: 0.015
           normalStrength: 1
+          woundRoughness: -1
+          rimRoughness: -1
+          woundColorNoise: 0
+          woundHeightNoise: 0
+          woundNoiseScale: 12
+          sutureStartOffset: 0
+          sutureEndOffset: 0
           stitches: 0
           removedStitches: 0
           stitchCount: 13
@@ -37510,6 +38872,16 @@ MonoBehaviour:
           stitchSpan: 0.65
           stitchAngle: 12
           puckering: 0.25
+          stitchDistanceRandomness: 0
+          stitchAngleRandomness: 0
+          stitchHeight: 0.05
+          stitchEndTaper: 0.2
+          stitchEndCurve: 1
+          punctureDepth: 0.025
+          punctureShading: 0.7
+          punctureSize: 1.7
+          puckerHeight: 0.08
+          puckerRadius: 0.06
           seam:
             enabled: 0
             preset: 0
@@ -37562,6 +38934,24 @@ MonoBehaviour:
             relief: 0.0015
             normalStrength: 1
             amount: 1
+            wrapOverlap: 0.25
+            wrapAngle: 25
+            wrapWrinkles: 0.2
+            wrapLift: 0.2
+            wrapFray: 0.15
+            wrapStain: 0.1
+            wrapResidue: 0.1
+            wrapWeave: 0.001
+            weldWidth: 0.22
+            weldRipple: 0.45
+            weldHeat: 0.65
+            weldHeatWidth: 0.25
+            weldSoot: 0.1
+            weldSpatter: 0.15
+            laceThread: 0.012
+            laceScallop: 0.14
+            laceNet: 0.5
+            laceTwist: 0.3
             angle: 0
             irregularity: 0.35
             falloff: 0.15
@@ -37587,6 +38977,48 @@ MonoBehaviour:
             opening: 0.08
             slider: 0.82
             zipperWidth: 1
+            zipperStyle:
+              preset: 0
+              toothShape: 0
+              toothWidth: 1
+              toothLength: 1
+              toothRoundness: 1
+              bankOffset: 0.5
+              tapeWidth: 0.72
+              tapeHeight: 0.12
+              weaveScale: 0
+              weaveContrast: 0.075
+              weaveHeight: 0.025
+              weave: 0
+              cordWidth: 0.018
+              cordHeight: 0
+              cordInset: 0.018
+              cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+              stitchStyle: 0
+              stitchLength: 0.64
+              stitchSpread: 0.025
+              stitchHeight: 1
+              stitchRoughness: 0.66
+            zipperTeeth:
+              height: 1
+              metallic: -1
+              smoothness: -1
+            zipperStops:
+              height: 2.5
+              metallic: -1
+              smoothness: -1
+            zipperSlider:
+              height: 1.5
+              metallic: -1
+              smoothness: -1
+            zipperPull:
+              height: 2
+              metallic: -1
+              smoothness: -1
+            zipperTang:
+              height: 2
+              metallic: -1
+              smoothness: -1
             zipperDepth: 1
             zipperDepthVersion: 1
             shadingStrength: 1
@@ -37673,6 +39105,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -37698,6 +39148,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -37812,6 +39304,9 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         source: 2
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -37857,7 +39352,12 @@ MonoBehaviour:
           blendMode: 0
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 2
             sourceTexture: {fileID: 0}
             sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -37879,6 +39379,9 @@ MonoBehaviour:
         sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 1, g: 1, b: 1, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 0
         sourceTiling: {x: 1, y: 1}
@@ -47951,6 +49454,9 @@ MonoBehaviour:
       fillChannel: 0
       fillColor: {r: 1, g: 1, b: 1, a: 1}
       fillSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         generatorRevision: 0
         source: 2
         sourceTexture: {fileID: 0}
@@ -47984,6 +49490,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -48009,6 +49533,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -48359,6 +49925,13 @@ MonoBehaviour:
           roughness: 0.5
           relief: 0.015
           normalStrength: 1
+          woundRoughness: -1
+          rimRoughness: -1
+          woundColorNoise: 0
+          woundHeightNoise: 0
+          woundNoiseScale: 12
+          sutureStartOffset: 0
+          sutureEndOffset: 0
           stitches: 0
           removedStitches: 0
           stitchCount: 13
@@ -48367,6 +49940,16 @@ MonoBehaviour:
           stitchSpan: 0.65
           stitchAngle: 12
           puckering: 0.25
+          stitchDistanceRandomness: 0
+          stitchAngleRandomness: 0
+          stitchHeight: 0.05
+          stitchEndTaper: 0.2
+          stitchEndCurve: 1
+          punctureDepth: 0.025
+          punctureShading: 0.7
+          punctureSize: 1.7
+          puckerHeight: 0.08
+          puckerRadius: 0.06
           seam:
             enabled: 0
             preset: 0
@@ -48419,6 +50002,24 @@ MonoBehaviour:
             relief: 0.0015
             normalStrength: 1
             amount: 1
+            wrapOverlap: 0.25
+            wrapAngle: 25
+            wrapWrinkles: 0.2
+            wrapLift: 0.2
+            wrapFray: 0.15
+            wrapStain: 0.1
+            wrapResidue: 0.1
+            wrapWeave: 0.001
+            weldWidth: 0.22
+            weldRipple: 0.45
+            weldHeat: 0.65
+            weldHeatWidth: 0.25
+            weldSoot: 0.1
+            weldSpatter: 0.15
+            laceThread: 0.012
+            laceScallop: 0.14
+            laceNet: 0.5
+            laceTwist: 0.3
             angle: 0
             irregularity: 0.35
             falloff: 0.15
@@ -48444,6 +50045,48 @@ MonoBehaviour:
             opening: 0.08
             slider: 0.82
             zipperWidth: 1
+            zipperStyle:
+              preset: 0
+              toothShape: 0
+              toothWidth: 1
+              toothLength: 1
+              toothRoundness: 1
+              bankOffset: 0.5
+              tapeWidth: 0.72
+              tapeHeight: 0.12
+              weaveScale: 0
+              weaveContrast: 0.075
+              weaveHeight: 0.025
+              weave: 0
+              cordWidth: 0.018
+              cordHeight: 0
+              cordInset: 0.018
+              cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+              stitchStyle: 0
+              stitchLength: 0.64
+              stitchSpread: 0.025
+              stitchHeight: 1
+              stitchRoughness: 0.66
+            zipperTeeth:
+              height: 1
+              metallic: -1
+              smoothness: -1
+            zipperStops:
+              height: 2.5
+              metallic: -1
+              smoothness: -1
+            zipperSlider:
+              height: 1.5
+              metallic: -1
+              smoothness: -1
+            zipperPull:
+              height: 2
+              metallic: -1
+              smoothness: -1
+            zipperTang:
+              height: 2
+              metallic: -1
+              smoothness: -1
             zipperDepth: 1
             zipperDepthVersion: 1
             shadingStrength: 1
@@ -48530,6 +50173,24 @@ MonoBehaviour:
           relief: 0.0015
           normalStrength: 1
           amount: 1
+          wrapOverlap: 0.25
+          wrapAngle: 25
+          wrapWrinkles: 0.2
+          wrapLift: 0.2
+          wrapFray: 0.15
+          wrapStain: 0.1
+          wrapResidue: 0.1
+          wrapWeave: 0.001
+          weldWidth: 0.22
+          weldRipple: 0.45
+          weldHeat: 0.65
+          weldHeatWidth: 0.25
+          weldSoot: 0.1
+          weldSpatter: 0.15
+          laceThread: 0.012
+          laceScallop: 0.14
+          laceNet: 0.5
+          laceTwist: 0.3
           angle: 0
           irregularity: 0.35
           falloff: 0.15
@@ -48555,6 +50216,48 @@ MonoBehaviour:
           opening: 0.08
           slider: 0.82
           zipperWidth: 1
+          zipperStyle:
+            preset: 0
+            toothShape: 0
+            toothWidth: 1
+            toothLength: 1
+            toothRoundness: 1
+            bankOffset: 0.5
+            tapeWidth: 0.72
+            tapeHeight: 0.12
+            weaveScale: 0
+            weaveContrast: 0.075
+            weaveHeight: 0.025
+            weave: 0
+            cordWidth: 0.018
+            cordHeight: 0
+            cordInset: 0.018
+            cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+            stitchStyle: 0
+            stitchLength: 0.64
+            stitchSpread: 0.025
+            stitchHeight: 1
+            stitchRoughness: 0.66
+          zipperTeeth:
+            height: 1
+            metallic: -1
+            smoothness: -1
+          zipperStops:
+            height: 2.5
+            metallic: -1
+            smoothness: -1
+          zipperSlider:
+            height: 1.5
+            metallic: -1
+            smoothness: -1
+          zipperPull:
+            height: 2
+            metallic: -1
+            smoothness: -1
+          zipperTang:
+            height: 2
+            metallic: -1
+            smoothness: -1
           zipperDepth: 1
           zipperDepthVersion: 1
           shadingStrength: 1
@@ -48669,6 +50372,9 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        blur: 0
+        multiplier: {r: 1, g: 1, b: 1, a: 1}
+        additive: {r: 0, g: 0, b: 0, a: 0}
         source: 2
         sourceTexture: {fileID: 0}
         sourceSprite: {fileID: 0}
@@ -48714,7 +50420,12 @@ MonoBehaviour:
           blendMode: 0
           hasNormalControlStrength: 0
           normalControlStrength: 2
+          normalControlInvert: 0
+          normalControlRadius: 1
           sourceSettings:
+            blur: 0
+            multiplier: {r: 1, g: 1, b: 1, a: 1}
+            additive: {r: 0, g: 0, b: 0, a: 0}
             source: 2
             sourceTexture: {fileID: 0}
             sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
@@ -48736,6 +50447,9 @@ MonoBehaviour:
         sourceSprite: {fileID: -187155261, guid: 2c5e171e389629544a0bd36b82c50a81, type: 3}
         sourceOverlay: {fileID: 0}
         sourceColor: {r: 0, g: 0, b: 0, a: 1}
+        sourceMultiplier: {r: 1, g: 1, b: 1, a: 1}
+        sourceAdditive: {r: 0, g: 0, b: 0, a: 0}
+        sourceBlur: 0
         sourceNormalConvention: 0
         sourceInvert: 0
         sourceTiling: {x: 1, y: 1}

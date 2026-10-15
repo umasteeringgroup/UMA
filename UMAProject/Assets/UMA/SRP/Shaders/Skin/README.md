@@ -33,6 +33,7 @@ The previous graph mixes a main-light-dependent effect into its base color. This
 
 | Want to change | Controls |
 |---|---|
+| Metallic skin or a metallic character finish | **Metallic (Entire Material)** under Surface Reflection: 0 keeps normal skin, 1 gives fully metallic reflections; intermediate values blend the response |
 | Plastic-looking skin | Lower **Oil Reflection Blend**; lower the maximum **Smoothness Range**; try Matte |
 | Softer transition into shade | Increase **Scattering Strength** slightly, then **Broad Diffusion** |
 | Diffusion on small curved features | **Scattering Radius in Millimeters**; start around 2–3 mm |
@@ -43,6 +44,8 @@ The previous graph mixes a main-light-dependent effect into its base color. This
 | Tint seems to do nothing | **Tint Protection Strength = 0** disables the existing UMA tint-protection mask. White mask pixels protect the original albedo from tint |
 
 **Skin Tint is multiplicative**, not a replacement albedo. Root material color/texture changes can also be overridden by UMA shared colors or material property blocks during a build.
+
+**Metallic is one material-wide float**, defaults to zero, and requires no texture or additional UMA channel. It applies to both reflection lobes and direct/environment lighting. Increasing it reduces diffuse lighting, diffusion and transmission contributions; fully metallic surfaces use albedo-colored reflections and have no diffuse contribution. Smoothness remains independently controlled by Smoothness Range and Oil Smoothness. The packed mask's red channel remains scattering, not metallic.
 
 The copy command preserves your existing scalar values. It does not silently apply a preset. For the newer preset finish, use an example material or copy its reflection and detail controls deliberately.
 

@@ -5345,7 +5345,11 @@ namespace UMA.CharacterSystem
                         SlotDataAsset referencedSlot = null;
                         if (buildSlots != null && !string.IsNullOrEmpty(assetSlotName))
                         {
-                            buildSlots.TryGetValue(assetSlotName, out referencedSlot);
+                            bool slotIsInBuild = buildSlots.TryGetValue(assetSlotName, out referencedSlot);
+                            if (!slotIsInBuild && (buildRecipe.raceData == null || !buildRecipe.raceData.UsesFbxRoute))
+                            {
+                                continue;
+                            }
                         }
 
                         // A collection may contain masks for slots that are not part of this

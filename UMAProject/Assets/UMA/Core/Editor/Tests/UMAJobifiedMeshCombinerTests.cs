@@ -487,7 +487,9 @@ namespace UMA.Editors.Tests
                     Quaternion.identity,
                     false,
                     false);
-                Assert.AreSame(outputMesh, renderer.sharedMesh);
+                Assert.AreNotSame(outputMesh, renderer.sharedMesh);
+                Assert.IsTrue(outputMesh == null, "The owned unreadable mesh must be released when replaced.");
+                outputMesh = renderer.sharedMesh;
                 Assert.AreEqual(3, renderer.sharedMesh.vertexCount);
                 CollectionAssert.AreEqual(new[] { 0, 1, 2 }, renderer.sharedMesh.GetIndices(0));
             }

@@ -2,6 +2,18 @@
 
 ## 3.1f3 (package version 3.1.3)
 
+- Added **Original Overlay (base)** visibility in the painter layer stack, allowing transparent replacement artwork without deleting the imported textures. Includes all-channel composition, undo/redo and document/recovery persistence.
+
+- Added per-target **Show** controls in Overlay Painter: other slots default to hidden and can be displayed as non-paintable references. Visibility persists separately from the active target, including shared-mesh preview filtering.
+
+- UV-authored paths now show their curve and all editable points in Scene view immediately on layer selection. Eyebrow shell examples support direct surface positioning, curve and width handles, and head/tail labels without first selecting a point in 2D.
+
+- Added **Path > Generators > Hair > Eyebrows** with deterministic tapered hairs, curve-driven shape and growth, clumping, independent hair populations, layered color variation, mirrored variation, coordinated material coverage, presets and diagnostics. Separate Examples and Tests companions include editable HDEyebrows shell projects and focused validation.
+- Corrected path-generator shader color binding so linear data values such as metallic are not decoded as sRGB a second time.
+- Painter documents now retain raster artwork when a slot's equipped mesh has the same UV triangle layout with reordered vertices; this enables the eyebrow-shell example projects to load onto equipped characters.
+
+- Added **Welcome > UMA Defaults** with Maximum Speed (Atlas skin materials) and Maximum Flexibility (No Atlas) setup buttons, reviewable skin-material selection, Jobified generator configuration, bounded generation settings, and mode-specific UV cropping/bone cleanup.
+
 - Fixed projection symmetry switches not rendering mirrors. Projection layers now update mirrored and radial copies automatically across all channels, including Normal Control, with live placement edits and Undo/Redo.
 
 - Added a dockable **Overlay Painter Material** window with interactive shader preview, editable shader parameters, live character updates, Undo, and Reset to Source. Preview overrides save with painter documents/recovery without modifying shared material assets or generated texture maps. Open it from the Layer Preview button, View menu, or Window > UMA; saved workspace layouts include the new dock.

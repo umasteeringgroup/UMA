@@ -42,11 +42,39 @@ The window manages a GameObject, animation clip, expression folder, and named fr
 
 The current `Build Expressions` implementation samples and logs configured frames but does not yet create final `UMABonePose` expression assets. Treat it as a diagnostic and setup utility, not a complete production extractor.
 
+## Bone Groups
+
+In the Bone Pose editor, check bones in the upper pose list, then choose **Create bone group** and enter a name. Groups are saved in the bone-pose asset. Entering an existing name (case-insensitive) replaces its membership without changing the bones' current transforms. **Select members** restores a group's checkboxes for editing its membership; create it again with the same name to replace it.
+
+Click a group to select it, then use its numeric controls or **Move**, **Rotate**, and **Scale** scene handles. Unity's W/E/R shortcuts also switch tools. Translation adds the same local offset to each member, rotation composes the same local rotation on each member, and scale multiplies each member's scale. Existing differences between bones are retained. Each bone uses its own pivot; the group does not orbit around a common center. Parent-child members still inherit transforms normally through their skeleton hierarchy. The first available member positions and orients the scene handle.
+
+Group controls start at zero translation, zero rotation, and scale factors of one. They track relative adjustments, not the absolute transform of every member. Scale factors must be positive. Only explicitly listed members are edited, once each; automatic mirroring and linked translation do not expand the group. Disabled members' stored values are edited but remain disabled. Missing members are skipped and their names retained. Groups can overlap.
+
+Group creation, replacement, removal, and transforms support Undo/Redo. Removing a group keeps the member transforms. Selecting or editing an individual bone returns to single-bone editing. Groups contain authoring metadata only: their changes are stored in the ordinary bone pose values, so playback never applies them twice. In a temporary race T-pose editing session, saving the T-pose saves the resulting transforms; group definitions belong to the temporary session, not the `UmaTPose` format.
+
 ## Extract T-Pose
 
 Use `UMA > Tools > Pose Tools > Extract T-Pose`, `Assets > UMA > Extract T-Pose`, or the Animator/UMA avatar context command.
 
 The tool extracts humanoid pose data from a selected model Animator or generated avatar and creates an `UmaTPose` asset, normally named with a `_TPose` suffix. Verify the Animator avatar is valid and the model is in the intended reference pose.
+
+## Edit a Character's Race T-Pose
+
+In a `UMABonePose` inspector, assign the built character as **Source UMA**, expand **TPose Tools**, and choose **Extract and Edit Race T-Pose**. Alternatively, select a built character and use **UMA > Tools > Pose Tools > Edit Selected Character Race T-Pose**; this does not require an existing bone-pose asset.
+
+The window creates a temporary bone pose and an editable preview beside the source character. **Frame Preview** locates it in the Scene view. Expand a bone and choose **Move**, **Rotate**, or **Scale** under **Scene handles** to activate its gizmo. Unity's W/E/R tools also switch the active bone's gizmo. Numeric fields can be edited directly without first clicking Edit, including on a mirrored partner. Choosing a Scene handles button exits IK mode; otherwise turn off IK Editor before editing numeric values. Mirroring and IK remain available. The temporary pose starts with zero position offsets, identity rotations, and scale multipliers of one relative to the race's stored T-pose, independently of character DNA and animation. Resetting offsets returns to that extracted T-pose. Only bones belonging to the original T-pose can be saved; unmatched T-pose bones are retained unchanged.
+
+**Save to Race T-Pose** writes back to the existing `UmaTPose` asset using Unity serialization. It preserves the asset reference, humanoid bone mapping, limits, stretch/twist settings, jaw setting, extracted human-pose metadata, and unmatched bones. Saves support Undo/Redo and refuse to overwrite a T-pose that changed outside the editing session. Multiple saves do not accumulate offsets.
+
+**Cancel / Close** offers Save, Discard, or Cancel for pending edits. Closing disposes the temporary pose, skeleton, meshes, and materials. Script reloads recreate the preview and restore the draft against its original baseline. Finish the session before entering Play mode. The source character, Animator, meshes, and ordinary bone-pose assets are not modified by this preview. All races referencing the saved T-pose will use it on their next build; the editor does not automatically rebuild existing characters. Review the new reference pose with the race's animations after rebuilding.
+
+This is an Edit-mode tool for built UMA characters with their own skeleton. External skeletons are rejected. The preview uses the character's existing mesh, blend-shape weights, and material textures with race T-pose bone transforms; it is not a new neutral-DNA mesh bake.
+
+### Copy another race's T-pose
+
+While editing a race T-pose, select a **Source race** and click **Copy from race**. This replaces the current draft with that race's local position, rotation, and scale for matching bone names. Continue editing the preview, then use **Save to Race T-Pose** to save to the original destination shown at the top. The source race is never modified. Humanoid mappings and other destination T-pose metadata remain those of the original race; this operation copies transforms, not skeleton topology or humanoid retargeting settings.
+
+Destination bones missing from the source reset to their original session baseline. Source-only bones are ignored. Matching destination bones absent from the preview are copied too and included when saving; the status reports these separately. Bone group membership is retained, with its adjustment controls reset. Copy supports Undo/Redo and draft recovery after script reloads. Invalid or incompatible source poses leave the draft unchanged.
 
 ## Set Clip Generic and Set Clip Legacy
 

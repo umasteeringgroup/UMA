@@ -207,6 +207,56 @@ namespace UMA.Tests
             Assert.That(EditorJsonUtility.ToJson(race), Is.EqualTo(before));
         }
 
+        [TestCase("ElfMale", "EM")]
+        [TestCase("elf_male", "EM")]
+        [TestCase("ELF-MALE", "EM")]
+        [TestCase("UMAHumanMale2", "UHM2")]
+        public void GeneratedDnaAbbreviatesOnlyThePrefixAndType(string importName, string initials)
+        {
+            plan.name = importName;
+            plan.parts[0].renderer.bones[1].name = "LeftUpperArm";
+            mesh.ClearBlendShapes();
+            mesh.AddBlendShapeFrame("MouthSmileLeft", 100, new Vector3[4], new Vector3[4], new Vector3[4]);
+            var result = ModelToRaceBuilder.Build(plan);
+            var dna = result.dnaGroups.SelectMany(g => g.dnaList).ToArray();
+            var bone = dna.Single(d => d.effects[0] is DNAEffect_BoneScale effect && effect.BoneName == "LeftUpperArm");
+            var shape = dna.Single(d => d.effects[0] is DNAEffect_BlendShape);
+            // Existing project assets may already use these initials; only a collision number may be added.
+            Assert.That(bone.name, Does.Match("^" + initials + "[0-9]*_B_LeftUpperArm$"));
+            Assert.That(shape.name, Does.Match("^" + initials + "[0-9]*_BS_MouthSmileLeft$"));
+            Assert.That(bone.GetDisplayName(), Is.EqualTo("LeftUpperArm size"));
+            Assert.That(shape.GetDisplayName(), Is.EqualTo("MouthSmileLeft"));
+            Assert.That(((DNAEffect_BlendShape)shape.effects[0]).BlendShapeName, Is.EqualTo("MouthSmileLeft"));
+            Assert.That(result.dnaGroups.Select(g => g.name), Has.Some.Matches<string>(n => System.Text.RegularExpressions.Regex.IsMatch(n, "^" + initials + "[0-9]*_BDNA$")));
+            Assert.That(result.dnaGroups.Select(g => g.name), Has.Some.Matches<string>(n => System.Text.RegularExpressions.Regex.IsMatch(n, "^" + initials + "[0-9]*_BSDNA$")));
+            foreach (var item in dna)
+                Assert.That(System.IO.Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(item)), Is.EqualTo(item.name));
+        }
+
+        [Test]
+        public void AbbreviatedDnaNamesStayUniqueAcrossImportsAndFilenameCollisions()
+        {
+            mesh.ClearBlendShapes();
+            foreach (string name in new[] { "Smile/Left", "Smile:Left", "smile_Left", "Hips" })
+                mesh.AddBlendShapeFrame(name, 100, new Vector3[4], new Vector3[4], new Vector3[4]);
+            plan.name = "ElfMale";
+            var first = ModelToRaceBuilder.Build(plan);
+            var firstDna = first.dnaGroups.SelectMany(g => g.dnaList).ToArray();
+            plan.name = "ElderMage"; // Same initials, distinct import.
+            var second = ModelToRaceBuilder.Build(plan);
+            var all = firstDna.Concat(second.dnaGroups.SelectMany(g => g.dnaList)).ToArray();
+            Assert.That(all.Select(d => d.name).Distinct(StringComparer.OrdinalIgnoreCase).Count(), Is.EqualTo(all.Length));
+            var groups = first.dnaGroups.Concat(second.dnaGroups).ToArray();
+            Assert.That(groups.Select(g => g.name).Distinct(StringComparer.OrdinalIgnoreCase).Count(), Is.EqualTo(groups.Length));
+            foreach (var result in new[] { first, second })
+            {
+                var shapes = result.dnaGroups.SelectMany(g => g.dnaList).Where(d => d.effects[0] is DNAEffect_BlendShape).ToArray();
+                CollectionAssert.AreEquivalent(new[] { "Smile/Left", "Smile:Left", "smile_Left", "Hips" }, shapes.Select(d => d.GetDisplayName()));
+                CollectionAssert.AreEquivalent(shapes.Select(d => d.GetDisplayName()), shapes.Select(d => ((DNAEffect_BlendShape)d.effects[0]).BlendShapeName));
+                Assert.That(result.race.DNACollection.dnaDictionary.Count, Is.EqualTo(firstDna.Length));
+            }
+        }
+
         [Test]
         public void ClothingDnaAttachmentIsAdditiveAndExplicit()
         {
@@ -217,6 +267,9 @@ namespace UMA.Tests
             Assert.That(race.DNACollection.DNAGroups.Count, Is.EqualTo(4));
             CollectionAssert.AreEqual(original, race.DNACollection.DNAGroups.Take(2));
             Assert.AreSame(race, result.race);
+            var dna = race.DNACollection.DNAGroups.SelectMany(g => g.dnaList).ToArray();
+            Assert.That(dna.Select(d => d.name).Distinct(StringComparer.OrdinalIgnoreCase).Count(), Is.EqualTo(dna.Length));
+            Assert.That(race.DNACollection.dnaDictionary.Count, Is.EqualTo(dna.Length));
         }
 
         [Test]
@@ -271,6 +324,9 @@ namespace UMA.Tests
             var rendererSettings = ScriptableObject.CreateInstance<UMARendererAsset>();
             var textureMerge = ScriptableObject.CreateInstance<TextureMerge>();
             var gen = UMAAssetIndexer.Instance.generator;
+            var previousCombiner = gen.meshCombiner;
+            var previousRendererSettings = gen.defaultRendererAsset;
+            var previousTextureMerge = gen.textureMerge;
             var combiner = gen.gameObject.AddComponent<UMADefaultMeshCombiner>(); gen.meshCombiner = combiner;
             gen.defaultRendererAsset = rendererSettings;
             gen.textureMerge = textureMerge;
@@ -293,7 +349,17 @@ namespace UMA.Tests
                 Assert.NotNull(data.animator.avatar); Assert.True(data.animator.avatar.isValid);
                 Assert.That(data.animator.avatar.isHuman, Is.EqualTo(humanoid));
             }
-            finally { Object.DestroyImmediate(go); Object.DestroyImmediate(rendererSettings); Object.DestroyImmediate(textureMerge); if (sourceAvatar != null) Object.DestroyImmediate(sourceAvatar); gen.defaultRendererAsset = null; gen.textureMerge = null; }
+            finally
+            {
+                Object.DestroyImmediate(go);
+                gen.meshCombiner = previousCombiner;
+                gen.defaultRendererAsset = previousRendererSettings;
+                gen.textureMerge = previousTextureMerge;
+                Object.DestroyImmediate(combiner);
+                Object.DestroyImmediate(rendererSettings);
+                Object.DestroyImmediate(textureMerge);
+                if (sourceAvatar != null) Object.DestroyImmediate(sourceAvatar);
+            }
         }
 
         private Avatar AddHumanoidRig()

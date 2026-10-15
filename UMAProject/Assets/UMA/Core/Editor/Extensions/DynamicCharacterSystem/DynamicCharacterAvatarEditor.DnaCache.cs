@@ -17,11 +17,11 @@ namespace UMA.CharacterSystem.Editors
         private int _dnaViewRebuildCount;
         private readonly List<DNAInstance> _dnaInstanceSnapshot = new List<DNAInstance>();
         private readonly List<string> _dnaInstanceNames = new List<string>();
-        private readonly Dictionary<DNAGroup, List<(int index, DNAInstance inst)>> _assignedDnaGroups =
-            new Dictionary<DNAGroup, List<(int, DNAInstance)>>();
-        private readonly List<KeyValuePair<DNAGroup, List<(int index, DNAInstance inst)>>> _sortedDnaGroups =
-            new List<KeyValuePair<DNAGroup, List<(int, DNAInstance)>>>();
-        private readonly List<(int index, DNAInstance inst)> _unknownDna = new List<(int, DNAInstance)>();
+        private readonly Dictionary<DNAGroup, List<(int index, DNAInstance inst, DNA dna)>> _assignedDnaGroups =
+            new Dictionary<DNAGroup, List<(int, DNAInstance, DNA)>>();
+        private readonly List<KeyValuePair<DNAGroup, List<(int index, DNAInstance inst, DNA dna)>>> _sortedDnaGroups =
+            new List<KeyValuePair<DNAGroup, List<(int, DNAInstance, DNA)>>>();
+        private readonly List<(int index, DNAInstance inst, DNA dna)> _unknownDna = new List<(int, DNAInstance, DNA)>();
         private readonly HashSet<string> _assignedDnaNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<DNAGroup, string[]> _availableDnaNames = new Dictionary<DNAGroup, string[]>();
 
@@ -92,13 +92,19 @@ namespace UMA.CharacterSystem.Editors
                 _dnaInstanceNames.Add(instance?.Name);
                 if (instance == null) continue;
                 if (!string.IsNullOrEmpty(instance.Name)) _assignedDnaNames.Add(instance.Name);
+                DNA dna = null;
+                if (!string.IsNullOrEmpty(instance.Name))
+                {
+                    if (!_nameToDnaCache.TryGetValue(instance.Name, out dna) || dna == null)
+                        _cachedDNACollectionRef?.dnaDictionary?.TryGetValue(instance.Name, out dna);
+                }
                 if (!string.IsNullOrEmpty(instance.Name) && _nameToGroupCache.TryGetValue(instance.Name, out var group))
                 {
                     if (!_assignedDnaGroups.TryGetValue(group, out var entries))
-                        _assignedDnaGroups.Add(group, entries = new List<(int, DNAInstance)>());
-                    entries.Add((i, instance));
+                        _assignedDnaGroups.Add(group, entries = new List<(int, DNAInstance, DNA)>());
+                    entries.Add((i, instance, dna));
                 }
-                else _unknownDna.Add((i, instance));
+                else _unknownDna.Add((i, instance, dna));
             }
             _sortedDnaGroups.Clear();
             foreach (var pair in _assignedDnaGroups)
@@ -110,7 +116,7 @@ namespace UMA.CharacterSystem.Editors
             _unknownDna.Sort(CompareDnaEntries);
         }
 
-        private static int CompareDnaEntries((int index, DNAInstance inst) a, (int index, DNAInstance inst) b) =>
+        private static int CompareDnaEntries((int index, DNAInstance inst, DNA dna) a, (int index, DNAInstance inst, DNA dna) b) =>
             string.Compare(a.inst?.Name, b.inst?.Name, StringComparison.OrdinalIgnoreCase);
 
         private string[] GetAvailableDNANames(DNAGroup group)

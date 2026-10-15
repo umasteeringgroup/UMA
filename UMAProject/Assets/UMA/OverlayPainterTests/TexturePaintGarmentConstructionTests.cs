@@ -135,9 +135,13 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             var paths=(string[])Call("BuildGarmentConstructionNames",true);
             var projections=(string[])Call("BuildGarmentConstructionNames",false);
-            Assert.That(paths.Length,Is.EqualTo(48));Assert.That(projections.Length,Is.EqualTo(32));
+            int garmentCount=Enum.GetValues(typeof(TexturePaintGarmentPreset)).Length;
+            int hemCount=Enum.GetValues(typeof(TexturePaintSeamPreset)).Length;
+            Assert.That(projections.Length,Is.EqualTo(garmentCount));
+            Assert.That(paths.Length,Is.EqualTo(garmentCount+hemCount));
+            CollectionAssert.IsSubsetOf(projections,paths,"Every garment remains available in the legacy path catalog.");
             Assert.That(paths.Distinct().Count(),Is.EqualTo(paths.Length));
-            Assert.That(paths.Count(n=>n.StartsWith("Hems & Seams/",StringComparison.Ordinal)),Is.EqualTo(16));
+            Assert.That(paths.Count(n=>n.StartsWith("Hems & Seams/",StringComparison.Ordinal)),Is.EqualTo(hemCount));
             Assert.That(projections.Any(n=>n.StartsWith("Hems & Seams/",StringComparison.Ordinal)),Is.False);
             using var p=new Path(false);
             var menu=new GenericMenu();Invoke(p.stage,"AddGarmentMenu",menu,p.set,true);
@@ -145,7 +149,7 @@ namespace UMA.TexturePaint.Editor.Tests
                 .Count(preset=>!TexturePaintPathGenerators.IsLinearGarment(preset));
             Assert.That(menu.GetItemCount(),Is.EqualTo(garmentEntries),"Linear garments and hems now belong under Generators, while the construction catalog preserves older documents.");
             var projectionMenu=new GenericMenu();Invoke(p.stage,"AddGarmentMenu",projectionMenu,p.set,false);
-            Assert.That(projectionMenu.GetItemCount(),Is.EqualTo(32),"Do not offer unsupported hem projections");
+            Assert.That(projectionMenu.GetItemCount(),Is.EqualTo(garmentCount),"Do not offer unsupported hem projections");
         }
 
         [TestCase(false)] [TestCase(true)]

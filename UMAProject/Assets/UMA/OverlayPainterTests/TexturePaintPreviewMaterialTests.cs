@@ -1,11 +1,105 @@
 #if UNITY_INCLUDE_TESTS
 using NUnit.Framework;
+using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace UMA.TexturePaint.Editor.Tests
 {
     public sealed class TexturePaintPreviewMaterialTests
     {
+        [Test]
+        public void FiveTileMaterialEditPreservesTexturesAndOtherSettingsAndSupportsUndo()
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            var tiles = Enumerable.Range(0, 5).Select(i => new TextureSet
+            { persistentId = "tile-" + i, previewMaterial = new Material(shader) }).ToArray();
+            var textures = Enumerable.Range(0, 5).Select(_ => new Texture2D(2, 2)).ToArray();
+            var unrelated = new Material(shader);
+            MaterialEditor editor = null;
+            Undo.IncrementCurrentGroup();
+            int undoGroup = Undo.GetCurrentGroup();
+            try
+            {
+                for (int i = 0; i < tiles.Length; i++)
+                {
+                    tiles[i].previewMaterial.SetTexture("_BaseMap", textures[i]);
+                    tiles[i].previewMaterial.SetFloat("_Smoothness", i * .1f);
+                    tiles[i].previewMaterial.SetFloat("_Metallic", 0);
+                }
+                var targets = TexturePaintMaterialWindow.EditableTargets(tiles[2], tiles);
+                Assert.That(targets.Length, Is.EqualTo(5));
+                Assert.That(targets[0], Is.SameAs(tiles[2]));
+                var materials = targets.Select(t => (Object)t.previewMaterial).ToArray();
+                editor = (MaterialEditor)UnityEditor.Editor.CreateEditor(materials);
+                editor.RegisterPropertyChangeUndo("Change grouped metallic");
+                TexturePaintMaterialWindow.RecordMaterialUndo(materials);
+                MaterialEditor.GetMaterialProperties(materials).Single(p => p.name == "_Metallic").floatValue = 1;
+                Undo.FlushUndoRecordObjects();
+                foreach (var tile in tiles) Assert.That(tile.previewMaterial.GetFloat("_Metallic"), Is.EqualTo(1));
+                Assert.That(unrelated.GetFloat("_Metallic"), Is.Zero);
+                Undo.PerformUndo();
+                foreach (var tile in tiles) Assert.That(tile.previewMaterial.GetFloat("_Metallic"), Is.Zero);
+                Undo.PerformRedo();
+                var saved = new TexturePaintPreviewMaterialStates();
+                foreach (var tile in tiles)
+                    saved.materials.Add(TexturePaintPreviewMaterialState.Capture(tile.previewMaterial, tile.persistentId));
+                var restored = JsonUtility.FromJson<TexturePaintPreviewMaterialStates>(JsonUtility.ToJson(saved));
+                for (int i = 0; i < tiles.Length; i++)
+                {
+                    var material = tiles[i].previewMaterial;
+                    Assert.That(material.GetFloat("_Metallic"), Is.EqualTo(1));
+                    material.SetFloat("_Metallic", 0);
+                    Assert.That(restored.materials.Single(s => s.surfaceId == tiles[i].persistentId).Apply(material), Is.True);
+                    Assert.That(material.GetFloat("_Metallic"), Is.EqualTo(1));
+                    Assert.That(material.GetFloat("_Smoothness"), Is.EqualTo(i * .1f));
+                    Assert.That(material.GetTexture("_BaseMap"), Is.SameAs(textures[i]));
+                }
+            }
+            finally
+            {
+                Undo.RevertAllDownToGroup(undoGroup);
+                Object.DestroyImmediate(editor); Object.DestroyImmediate(unrelated);
+                foreach (var tile in tiles) Object.DestroyImmediate(tile.previewMaterial);
+                foreach (var texture in textures) Object.DestroyImmediate(texture);
+            }
+        }
+
+        [Test]
+        public void GroupResetUsesEachTilesOwnSourceAndKeepsItsTextures()
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            var sets = Enumerable.Range(0, 5).Select(i => new TextureSet
+            {
+                persistentId = "tile-" + i, previewMaterial = new Material(shader),
+                surface = new ReconstructedSurface { sourceMaterial = new Material(shader) }
+            }).ToArray();
+            Undo.IncrementCurrentGroup();
+            int undoGroup = Undo.GetCurrentGroup();
+            try
+            {
+                for (int i = 0; i < sets.Length; i++)
+                {
+                    sets[i].surface.sourceMaterial.SetFloat("_Metallic", i * .1f);
+                    sets[i].previewMaterial.SetFloat("_Metallic", 1);
+                    sets[i].previewMaterial.SetTexture("_BaseMap", Texture2D.blackTexture);
+                }
+                TexturePaintMaterialWindow.ResetMaterialsToSource(sets);
+                for (int i = 0; i < sets.Length; i++)
+                {
+                    Assert.That(sets[i].previewMaterial.GetFloat("_Metallic"), Is.EqualTo(i * .1f));
+                    Assert.That(sets[i].previewMaterial.GetTexture("_BaseMap"), Is.SameAs(Texture2D.blackTexture));
+                    Assert.That(sets[i].surface.sourceMaterial.GetFloat("_Metallic"), Is.EqualTo(i * .1f));
+                }
+            }
+            finally
+            {
+                Undo.RevertAllDownToGroup(undoGroup);
+                foreach (var set in sets)
+                { Object.DestroyImmediate(set.previewMaterial); Object.DestroyImmediate(set.surface.sourceMaterial); }
+            }
+        }
+
         [Test]
         public void PreviewParametersRoundTripWithoutCapturingOrReplacingLayerTextures()
         {

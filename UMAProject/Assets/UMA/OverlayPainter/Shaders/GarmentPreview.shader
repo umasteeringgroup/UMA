@@ -32,7 +32,7 @@ Shader "Hidden/UMA/TexturePaint/GarmentPreview"
                 if (_PathGeneratorEnabled != 0)
                     value = ShadePathGenerator(uv.x,uv.y*_PreviewSize.y/_PreviewSize.x,
                         _PreviewSize.y/_PreviewSize.x,_PreviewClosed!=0,1.0/(128*_PreviewFrame.x),
-                        position,float3(0,0,1),float4(1,0,0,1),uv,_PreviewSize.x);
+                        position,float3(0,0,1),float4(1,0,0,1),uv,_PreviewSize.x,0);
                 else if (_PreviewHem != 0)
                     value = ShadeHem(uv.x, uv.y * _PreviewSize.y / _PreviewSize.x,
                         _PreviewSize.y / _PreviewSize.x, _PreviewClosed != 0,

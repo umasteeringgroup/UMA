@@ -1,0 +1,338 @@
+[
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "Albedo",
+    "axis": 0,
+    "seam": 10.07763671875,
+    "interior": 9.234917216520039
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "Albedo",
+    "axis": 1,
+    "seam": 6.357177734375,
+    "interior": 9.039909474660924
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "Normal",
+    "axis": 0,
+    "seam": 9.839599609375,
+    "interior": 10.722441702178031
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "Normal",
+    "axis": 1,
+    "seam": 8.51708984375,
+    "interior": 9.396902492668621
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "Roughness",
+    "axis": 0,
+    "seam": 5.65234375,
+    "interior": 5.177258503635142
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "Roughness",
+    "axis": 1,
+    "seam": 3.404052734375,
+    "interior": 5.067403097889174
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "Metallic",
+    "axis": 0,
+    "seam": 12.48291015625,
+    "interior": 11.295869322000245
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "Metallic",
+    "axis": 1,
+    "seam": 7.689453125,
+    "interior": 11.097531196542032
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seam": 12.48291015625,
+    "interior": 13.094791953048631
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seam": 7.97802734375,
+    "interior": 11.585560430413
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "Height",
+    "axis": 0,
+    "seam": 2496.029296875,
+    "interior": 2293.5009756078935
+  },
+  {
+    "material": "Interlinked Round Steel",
+    "channel": "Height",
+    "axis": 1,
+    "seam": 1292.65625,
+    "interior": 1889.323834998167
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "Albedo",
+    "axis": 0,
+    "seam": 8.578125,
+    "interior": 7.629969681695992
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "Albedo",
+    "axis": 1,
+    "seam": 3.78125,
+    "interior": 8.194506812072337
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "Normal",
+    "axis": 0,
+    "seam": 7.87744140625,
+    "interior": 8.855956553946726
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "Normal",
+    "axis": 1,
+    "seam": 8.03564453125,
+    "interior": 8.6553865583761
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "Roughness",
+    "axis": 0,
+    "seam": 5.384765625,
+    "interior": 4.918961063508065
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "Roughness",
+    "axis": 1,
+    "seam": 2.212890625,
+    "interior": 5.282158785434995
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "Metallic",
+    "axis": 0,
+    "seam": 10.92626953125,
+    "interior": 9.58362353372434
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "Metallic",
+    "axis": 1,
+    "seam": 4.544921875,
+    "interior": 10.332716657502443
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seam": 11.033203125,
+    "interior": 11.724898620784458
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seam": 5.411376953125,
+    "interior": 11.283189044553398
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "Height",
+    "axis": 0,
+    "seam": 2106.9140625,
+    "interior": 2031.6911179588221
+  },
+  {
+    "material": "Riveted Flat Steel Chain",
+    "channel": "Height",
+    "axis": 1,
+    "seam": 1015.4462890625,
+    "interior": 1775.0678620249878
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "Albedo",
+    "axis": 0,
+    "seam": 25.713134765625,
+    "interior": 21.827884200497923
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "Albedo",
+    "axis": 1,
+    "seam": 4.712646484375,
+    "interior": 16.013621042201247
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "Normal",
+    "axis": 0,
+    "seam": 22.08203125,
+    "interior": 22.47306291239003
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "Normal",
+    "axis": 1,
+    "seam": 5.161865234375,
+    "interior": 15.331550844254032
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "Roughness",
+    "axis": 0,
+    "seam": 12.359375,
+    "interior": 10.674711136058162
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "Roughness",
+    "axis": 1,
+    "seam": 1.875244140625,
+    "interior": 7.797770659594941
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "Metallic",
+    "axis": 0,
+    "seam": 29.68115234375,
+    "interior": 25.092341955339688
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "Metallic",
+    "axis": 1,
+    "seam": 5.447998046875,
+    "interior": 18.48624292636547
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seam": 29.68115234375,
+    "interior": 28.535204457630744
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seam": 5.390869140625,
+    "interior": 19.37344995761547
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "Height",
+    "axis": 0,
+    "seam": 6345.544921875,
+    "interior": 5478.460733214199
+  },
+  {
+    "material": "Fine Polished Steel Chain",
+    "channel": "Height",
+    "axis": 1,
+    "seam": 1287.615234375,
+    "interior": 3366.2028271627564
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "Albedo",
+    "axis": 0,
+    "seam": 9.136962890625,
+    "interior": 8.46401348095369
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "Albedo",
+    "axis": 1,
+    "seam": 0.247802734375,
+    "interior": 6.471920964305352
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "Normal",
+    "axis": 0,
+    "seam": 12.636962890625,
+    "interior": 14.972970554206379
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "Normal",
+    "axis": 1,
+    "seam": 7.904052734375,
+    "interior": 10.923088066272605
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "Roughness",
+    "axis": 0,
+    "seam": 7.841796875,
+    "interior": 7.248453060086755
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "Roughness",
+    "axis": 1,
+    "seam": 0.262451171875,
+    "interior": 5.533621958623534
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "Metallic",
+    "axis": 0,
+    "seam": 15.702880859375,
+    "interior": 14.516767902691226
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "Metallic",
+    "axis": 1,
+    "seam": 0.2177734375,
+    "interior": 11.145638116293988
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seam": 15.702880859375,
+    "interior": 17.84074322802114
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seam": 1.746337890625,
+    "interior": 12.457052012692449
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "Height",
+    "axis": 0,
+    "seam": 3258.2685546875,
+    "interior": 3659.354994310545
+  },
+  {
+    "material": "Dark Oiled Steel Chain",
+    "channel": "Height",
+    "axis": 1,
+    "seam": 737.9013671875,
+    "interior": 2385.0541061446115
+  }
+]

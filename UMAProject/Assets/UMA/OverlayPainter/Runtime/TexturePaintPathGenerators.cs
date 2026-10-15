@@ -43,9 +43,19 @@ namespace UMA.TexturePaint
         public TexturePaintPathWoundType woundType = TexturePaintPathWoundType.FreshCut;
         public float depth = .12f, edgeLift = .07f, inflammation = .25f;
         public float roughness = .5f, relief = .015f, normalStrength = 1;
+        // Negative values preserve the healing-adjusted finish of older saved wounds.
+        public float woundRoughness = -1, rimRoughness = -1;
+        public float woundColorNoise, woundHeightNoise, woundNoiseScale = 12;
+        public float sutureStartOffset, sutureEndOffset;
+        public float WoundRoughness => woundRoughness < 0 ? Mathf.Lerp(roughness,.75f,healing) : woundRoughness;
+        public float RimRoughness => rimRoughness < 0 ? Mathf.Lerp(roughness,.75f,healing) : rimRoughness;
         public bool stitches, removedStitches;
         public int stitchCount = 13, seed = 17;
         public float stitchThickness = .012f, stitchSpan = .65f, stitchAngle = 12f, puckering = .25f;
+        public float stitchDistanceRandomness, stitchAngleRandomness;
+        public float stitchHeight=.05f, stitchEndTaper=.2f, stitchEndCurve=1;
+        public float punctureDepth=.025f, punctureShading=.7f, punctureSize=1.7f;
+        public float puckerHeight=.08f, puckerRadius=.06f;
         public TexturePaintHemSeamSettings seam;
         public TexturePaintGarmentSettings garment;
 
@@ -85,9 +95,19 @@ namespace UMA.TexturePaint
             healing=F(healing,0,1,.25f); opening=F(opening,.005f,.8f,.35f); taper=F(taper,0,1,.65f);
             irregularity=F(irregularity,0,1,.2f); depth=F(depth,0,.4f,.12f); edgeLift=F(edgeLift,0,.3f,.07f);
             inflammation=F(inflammation,0,1,.25f); roughness=F(roughness,0,1,.5f);
+            woundRoughness=F(woundRoughness,-1,1,-1);rimRoughness=F(rimRoughness,-1,1,-1);
+            woundColorNoise=F(woundColorNoise,0,1,0);woundHeightNoise=F(woundHeightNoise,0,.2f,0);
+            woundNoiseScale=F(woundNoiseScale,.5f,128,12);
+            sutureStartOffset=F(sutureStartOffset,0,1,0);sutureEndOffset=F(sutureEndOffset,0,1,0);
             relief=F(relief,-.4f,.4f,.015f); normalStrength=F(normalStrength,0,4,1);
             stitchCount=Mathf.Clamp(stitchCount,1,256); stitchThickness=F(stitchThickness,.002f,.08f,.012f);
             stitchSpan=F(stitchSpan,.05f,.9f,.65f); stitchAngle=F(stitchAngle,-75,75,12);
+            stitchDistanceRandomness=F(stitchDistanceRandomness,0,1,0); stitchAngleRandomness=F(stitchAngleRandomness,0,75,0);
+            stitchHeight=F(stitchHeight,0,.4f,.05f);stitchEndTaper=F(stitchEndTaper,0,.5f,.2f);
+            stitchEndCurve=F(stitchEndCurve,.2f,4,1);
+            punctureDepth=F(punctureDepth,0,.4f,.025f);punctureShading=F(punctureShading,0,1,.7f);
+            punctureSize=F(punctureSize,.5f,6,1.7f);puckerHeight=F(puckerHeight,0,.3f,.08f);
+            puckerRadius=F(puckerRadius,.01f,.2f,.06f);
             puckering=F(puckering,0,1,.25f); seam?.Normalize(); garment?.Normalize();
         }
     }
@@ -117,10 +137,11 @@ namespace UMA.TexturePaint
         {
             if(Coverage==null)throw new InvalidOperationException("A path generator raster requires shared RGBA coverage.");
             properties.SetInt("_PathGeneratorEnabled",5);
+            properties.SetFloat("_PathRasterVariants",1);
             properties.SetTexture("_PathRasterCoverage",Coverage);
             bool has=Channels.TryGetValue(channel,out var texture)&&texture!=null;
             properties.SetTexture("_PathRaster",has?texture:Texture2D.whiteTexture);
-            properties.SetColor("_PathRasterColor",has?Color.white:TexturePaintChannelUtility.WorkingColor(channel,fallback));
+            properties.SetVector("_PathRasterColor",has?Color.white:TexturePaintChannelUtility.WorkingColor(channel,fallback));
         }
         public void Dispose()
         {
@@ -152,7 +173,10 @@ namespace UMA.TexturePaint
         public static bool Unregister(string id) => generators.RemoveAll(x=>x.Id==id)>0;
         public static bool IsLinearGarment(TexturePaintGarmentPreset preset) =>
             preset == TexturePaintGarmentPreset.MetalZipper || preset == TexturePaintGarmentPreset.CoilZipper ||
-            preset == TexturePaintGarmentPreset.FrayedTear || preset == TexturePaintGarmentPreset.ExposedThreads;
+            preset == TexturePaintGarmentPreset.FrayedTear || preset == TexturePaintGarmentPreset.ExposedThreads ||
+            TexturePaintGarmentSettings.Kind(preset)==TexturePaintGarmentKind.Wraps ||
+            TexturePaintGarmentSettings.Kind(preset)==TexturePaintGarmentKind.Welds ||
+            TexturePaintGarmentSettings.Kind(preset)==TexturePaintGarmentKind.Lace;
         private static List<ITexturePaintPathGenerator> CreateBuiltins()
         {
             var result = new List<ITexturePaintPathGenerator>
@@ -188,8 +212,15 @@ namespace UMA.TexturePaint
             {
                 if (!IsLinearGarment(preset)) continue;
                 var p=preset;
-                result.Add(new Builtin("com.uma.path.garment."+p,"Fasteners and Distress/"+p,4,
-                    ()=>new TexturePaintPathGeneratorSettings { garment=TexturePaintGarmentSettings.Create(p) }));
+                string family=TexturePaintGarmentSettings.Kind(p) switch {TexturePaintGarmentKind.Wraps=>"Wraps, Tape and Dressings/",TexturePaintGarmentKind.Welds=>"Welds and Heat/",TexturePaintGarmentKind.Lace=>"Lace and Openwork/",_=>"Fasteners and Distress/"};
+                result.Add(new Builtin("com.uma.path.garment."+p,family+p,4,
+                    ()=>
+                    {
+                        var garment=TexturePaintGarmentSettings.Create(p);
+                        if(p==TexturePaintGarmentPreset.MetalZipper || p==TexturePaintGarmentPreset.CoilZipper)
+                            garment.falloff=.001f;
+                        return new TexturePaintPathGeneratorSettings { garment=garment };
+                    }));
             }
             return result;
         }
@@ -214,16 +245,24 @@ namespace UMA.TexturePaint
             {
                 p.SetInt("_PathGeneratorEnabled",kind); p.SetInt("_PathChannel",(int)channel);
                 p.SetInt("_PathWoundType",(int)s.woundType);
-                p.SetColor("_PathChannelColor",TexturePaintChannelUtility.WorkingColor(channel,channelColor));
-                p.SetColor("_PathColor",TexturePaintChannelUtility.WorkingColor(TexturePaintChannel.Albedo,s.color));
-                p.SetColor("_PathHealedColor",TexturePaintChannelUtility.WorkingColor(TexturePaintChannel.Albedo,s.healedColor));
-                p.SetColor("_PathRimColor",TexturePaintChannelUtility.WorkingColor(TexturePaintChannel.Albedo,s.rimColor));
-                p.SetColor("_PathThreadColor",TexturePaintChannelUtility.WorkingColor(TexturePaintChannel.Albedo,s.threadColor));
+                // WorkingColor already performs the required color-space conversion. SetColor
+                // would decode it again in a linear project, including non-color scalar channels.
+                p.SetVector("_PathChannelColor",TexturePaintChannelUtility.WorkingColor(channel,channelColor));
+                p.SetVector("_PathColor",TexturePaintChannelUtility.WorkingColor(TexturePaintChannel.Albedo,s.color));
+                p.SetVector("_PathHealedColor",TexturePaintChannelUtility.WorkingColor(TexturePaintChannel.Albedo,s.healedColor));
+                p.SetVector("_PathRimColor",TexturePaintChannelUtility.WorkingColor(TexturePaintChannel.Albedo,s.rimColor));
+                p.SetVector("_PathThreadColor",TexturePaintChannelUtility.WorkingColor(TexturePaintChannel.Albedo,s.threadColor));
                 p.SetVector("_PathShape",new Vector4(s.healing,s.opening,s.taper,s.irregularity));
                 p.SetVector("_PathRelief",new Vector4(s.depth,s.edgeLift,s.inflammation,s.relief));
                 p.SetVector("_PathFinish",new Vector4(s.roughness,s.normalStrength,s.seed,s.puckering));
+                p.SetVector("_PathWoundNoise",new Vector4(s.woundColorNoise,s.woundHeightNoise,s.woundNoiseScale,0));
+                p.SetVector("_PathWoundFinish",new Vector4(s.WoundRoughness,s.RimRoughness,0,0));
+                p.SetVector("_PathSutureOffsets",new Vector4(s.sutureStartOffset,s.sutureEndOffset,0,0));
+                p.SetVector("_PathSutureRelief",new Vector4(s.stitchHeight,s.stitchEndTaper,s.stitchEndCurve,s.punctureDepth));
+                p.SetVector("_PathPuncture",new Vector4(s.punctureShading,s.punctureSize,s.puckerHeight,s.puckerRadius));
                 p.SetVector("_PathStitches",new Vector4(s.stitches ? (s.removedStitches?2:1):0,s.stitchCount,s.stitchThickness,s.stitchSpan));
                 p.SetFloat("_PathStitchSlant",Mathf.Tan(s.stitchAngle*Mathf.Deg2Rad));
+                p.SetVector("_PathStitchVariation",new Vector4(s.stitchDistanceRandomness,s.stitchAngleRandomness,s.stitchAngle,0));
                 if (prepared is TexturePaintPathTextMask text)
                 {
                     p.SetTexture("_PathText",text.Texture);

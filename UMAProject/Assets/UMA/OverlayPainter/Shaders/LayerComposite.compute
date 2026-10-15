@@ -18,6 +18,9 @@
 #pragma kernel CSClear
 
 Texture2D<float4> _Base;
+int _UseEmptyBase;
+float4 _EmptyBaseColor;
+float4 _UnassociateNeutral;
 Texture2D<float4> _HeightDelta;
 RWTexture2D<float4> _FilteredHeightDelta;
 int _LayerSampleRadius;
@@ -287,7 +290,9 @@ void CSUnassociateAlpha(uint3 dispatchID : SV_DispatchThreadID)
     int2 pixel = int2(dispatchID.xy) + _TileOffset;
     if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
     float4 value = _Composite[pixel];
-    value.rgb = value.a > 0.00001 ? value.rgb / value.a : 0.0;
+    value.rgb = value.a > 0.00001
+        ? (value.rgb - _UnassociateNeutral.rgb * (1.0 - value.a)) / value.a
+        : _UnassociateNeutral.rgb;
     _Composite[pixel] = value;
 }
 
@@ -306,7 +311,7 @@ void CSCopyBase(uint3 dispatchID : SV_DispatchThreadID)
     if (any(dispatchID.xy >= (uint2)_DispatchSize)) return;
     int2 pixel = int2(dispatchID.xy) + _TileOffset;
     if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
-    _Composite[pixel] = _Base.Load(int3(pixel, 0));
+    _Composite[pixel] = _UseEmptyBase != 0 ? _EmptyBaseColor : _Base.Load(int3(pixel, 0));
 }
 
 [numthreads(16, 16, 1)]

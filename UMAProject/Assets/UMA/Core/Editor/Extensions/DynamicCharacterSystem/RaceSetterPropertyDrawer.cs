@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using UMA.Editors;
+using UMA.PoseTools;
 
 
 namespace UMA.CharacterSystem.Editors
@@ -172,11 +173,14 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
             }
-			if (showAdvancedTools && GUILayout.Button("BonePose"))
+			bool useNewDNA = theRace != null && theRace.useNewDNA;
+			if (showAdvancedTools && GUILayout.Button(useNewDNA ? "Edit TPose" : "BonePose"))
 			{
-				//UMABonePose firstPose = null;
-
-                if (theRace != null)
+                if (useNewDNA)
+                {
+                    UMARaceTPoseEditorWindow.Open(thisDCA);
+                }
+                else if (theRace != null)
                 {
                     if (theRace.dnaConverterList != null)
                     {

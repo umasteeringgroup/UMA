@@ -106,11 +106,11 @@ namespace UMA.TexturePaint
 
             if (!IsAvailable)
             {
-                Graphics.Blit(baseChannel.editable.Front, baseChannel.composite);
+                CopyBaseFallback(set, channel, baseChannel.editable.Front, baseChannel.composite);
                 return;
             }
 
-            CopyInto(baseChannel.editable.Front, baseChannel.composite, rect);
+            CopyBaseInto(set, channel, baseChannel.editable.Front, baseChannel.composite, rect);
 
             for (int i = 0; i < set.layers.Count; i++)
             {
@@ -121,6 +121,7 @@ namespace UMA.TexturePaint
                 else
                     CompositeAuthoredLayer(baseChannel.composite, set, layer, channel, rect, 0);
             }
+            if (set.hideOriginalOverlay) UnassociateAlpha(baseChannel.composite, rect, EmptyBaseColor(channel));
             PruneEffectDistanceCache();
             PruneLayerMaskCache();
         }
@@ -218,11 +219,11 @@ namespace UMA.TexturePaint
             RectInt rect = new RectInt(0, 0, destination.width, destination.height);
             if (!IsAvailable)
             {
-                Graphics.Blit(baseChannel.editable.Front, destination);
+                CopyBaseFallback(set, channel, baseChannel.editable.Front, destination);
                 return false;
             }
 
-            CopyInto(baseChannel.editable.Front, destination, rect);
+            CopyBaseInto(set, channel, baseChannel.editable.Front, destination, rect);
             for (int i = 0; i < set.layers.Count; i++)
             {
                 TexturePaintLayer layer = set.layers[i];
@@ -235,6 +236,7 @@ namespace UMA.TexturePaint
                 else if (i < boundary)
                     CompositeAuthoredLayer(destination, set, layer, channel, rect, 0);
             }
+            if (set.hideOriginalOverlay) UnassociateAlpha(destination, rect, EmptyBaseColor(channel));
             PruneEffectDistanceCache();
             PruneLayerMaskCache();
             return true;
@@ -248,12 +250,13 @@ namespace UMA.TexturePaint
             RectInt rect = new RectInt(0, 0, destination.width, destination.height);
             if (!IsAvailable)
             {
-                Graphics.Blit(baseChannel.editable.Front, destination);
+                CopyBaseFallback(set, channel, baseChannel.editable.Front, destination);
                 return;
             }
-            CopyInto(baseChannel.editable.Front, destination, rect);
+            CopyBaseInto(set, channel, baseChannel.editable.Front, destination, rect);
             if (group != null && group.kind == TexturePaintLayerKind.Group)
                 CompositeGroupChildren(destination, set, group, channel, rect, 0);
+            if (set.hideOriginalOverlay) UnassociateAlpha(destination, rect, EmptyBaseColor(channel));
         }
 
         internal void ComposeIsolatedGroup(TextureSet set,TexturePaintLayer group,TexturePaintChannel channel,RenderTexture destination)
@@ -356,8 +359,32 @@ namespace UMA.TexturePaint
             }
         }
 
-        private void CopyInto(Texture source, RenderTexture destination, RectInt rect)
+        private static Color EmptyBaseColor(TexturePaintChannel channel)
         {
+            Color neutral = TextureSet.DefaultColor(channel);
+            neutral.a = 0f;
+            return neutral;
+        }
+
+        private static void CopyBaseFallback(TextureSet set, TexturePaintChannel channel,
+            Texture source, RenderTexture destination)
+        {
+            if (!set.hideOriginalOverlay) { Graphics.Blit(source, destination); return; }
+            RenderTexture previous = RenderTexture.active;
+            try { RenderTexture.active = destination; GL.Clear(false, true, EmptyBaseColor(channel)); }
+            finally { RenderTexture.active = previous; }
+        }
+
+        private void CopyBaseInto(TextureSet set, TexturePaintChannel channel, Texture source,
+            RenderTexture destination, RectInt rect)
+            => CopyInto(source, destination, rect, set.hideOriginalOverlay, EmptyBaseColor(channel));
+
+        private void CopyInto(Texture source, RenderTexture destination, RectInt rect,
+            bool emptyBase = false, Color emptyColor = default)
+        {
+            // Reset on every copy: group and effect scratch copies must never inherit this flag.
+            shader.SetInt("_UseEmptyBase", emptyBase ? 1 : 0);
+            shader.SetVector("_EmptyBaseColor", emptyColor);
             shader.SetInts("_TextureSize", destination.width, destination.height);
             shader.SetInts("_TileOffset", rect.x, rect.y);
             shader.SetTexture(copyKernel, "_Base", source);
@@ -610,9 +637,11 @@ namespace UMA.TexturePaint
             return true;
         }
 
-        internal bool UnassociateAlpha(RenderTexture target, RectInt requestedRect = default)
+        internal bool UnassociateAlpha(RenderTexture target, RectInt requestedRect = default,
+            Color neutral = default)
         {
             if (!IsAvailable || unassociateAlphaKernel < 0 || target == null) return false;
+            shader.SetVector("_UnassociateNeutral", neutral);
             RectInt rect = ClampRect(requestedRect, target.width, target.height);
             shader.SetInts("_TextureSize", target.width, target.height);
             shader.SetInts("_TileOffset", rect.x, rect.y);

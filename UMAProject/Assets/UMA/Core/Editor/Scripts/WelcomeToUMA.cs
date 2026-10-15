@@ -612,6 +612,10 @@ namespace UMA
             {
                 ShowPluginsPage();
             }
+            if (GUILayout.Button("UMA Defaults", GUILayout.Height(40)))
+            {
+                ShowDefaultsPage();
+            }
             SrpSupport installedSrp = navigationInstalledSrp;
             string srpButton = RequiresSrpSelection(installedSrp)
                 ? "Install SRP Package"
@@ -1225,6 +1229,10 @@ namespace UMA
             GUIHelper.BeginInsetArea(PanelColor, ContentRect, 4, 10);
             switch (currentButton)
             {
+                case DefaultsPage:
+                    DrawDefaultsPage();
+                    showLog = false;
+                    break;
                 case PluginsPage:
                     DrawPluginsPage();
                     showLog = false;
@@ -1249,6 +1257,7 @@ namespace UMA
                     false, false, GUIStyle.none, GUI.skin.verticalScrollbar,
                     GUILayout.ExpandWidth(true));
                 ShowLogItems();
+                DrawScanFixes();
                 GUILayout.EndScrollView();
             }
             GUIHelper.EndInsetArea();
@@ -1380,8 +1389,22 @@ namespace UMA
                 else
                 {
                     GUIStyle style = item.Style ?? InfoStyle;
-                    GUILayout.Label(item.Message ?? string.Empty, style,
-                        GUILayout.ExpandWidth(true), GUILayout.MaxWidth(rowWidth));
+                    string message = item.Message ?? string.Empty;
+                    if (item.logType == LogType.Error || item.logType == LogType.Warning)
+                    {
+                        // SelectableLabel is read-only but supports selection and Ctrl+C.
+                        // Explicit wrapped height keeps long diagnostics fully selectable.
+                        float height = Mathf.Max(EditorGUIUtility.singleLineHeight,
+                            style.CalcHeight(new GUIContent(message), rowWidth));
+                        EditorGUILayout.SelectableLabel(message, style,
+                            GUILayout.ExpandWidth(true), GUILayout.MaxWidth(rowWidth),
+                            GUILayout.Height(height));
+                    }
+                    else
+                    {
+                        GUILayout.Label(message, style,
+                            GUILayout.ExpandWidth(true), GUILayout.MaxWidth(rowWidth));
+                    }
                 }
                 GUILayout.EndHorizontal();
             }
@@ -1425,6 +1448,7 @@ namespace UMA
         {
             if (LoggedItems == null) LoggedItems = new List<LogLine>();
             LoggedItems.Clear();
+            ClearScanFixes();
             projectScanHasRun = false;
             Repaint();
         }
@@ -2028,8 +2052,9 @@ namespace UMA
                     if (overlay.overlayBlend == null ||
                         overlay.overlayBlend.Length != overlay.textureList.Length)
                     {
-                        AddText($"Overlay '{overlay.overlayName}' blend-mode count does not match its texture count.",
+                        LogLine blendError = AddText($"Overlay '{overlay.overlayName}' blend-mode count does not match its texture count.",
                             LogType.Error);
+                        RecordBlendModeFix(overlay, blendError);
                         invalid = true;
                     }
                     if (overlay.textureNames != null &&
@@ -2285,8 +2310,9 @@ namespace UMA
                     continue;
                 }
 
-                var Slots = PackRecipe.slotsV3;
-                if (Slots == null)
+                var Slots = UMAScanRepairUtility.GetRecipeSlotsForScan(PackRecipe);
+                if (Slots == null || Slots.Length == 0 ||
+                    (PackRecipe.version != 3 && !Slots.Any(s => !UMAScanRepairUtility.IsEmptySlotEntry(s))))
                 {
                     AddText($"Wardrobe Recipe {uwr.name} has no slots assigned!", LogType.Error);
                     ReviewAssetItem(r);
@@ -2295,14 +2321,13 @@ namespace UMA
                 for (int i = 0; i < Slots.Length; i++)
                 {
                     UMAPackedRecipeBase.PackedSlotDataV3 s = Slots[i];
-                    if (s == null)
+                    if (UMAScanRepairUtility.IsEmptySlotEntry(s))
                     {
-                        continue;
-                    }
-                    if (string.IsNullOrEmpty(s.id))
-                    {
-                        AddText($"Wardrobe Recipe '{uwr.name}' has a slot entry with no slot or placeholder name.",
+                        // Older recipes keep empty positions in their indexed slot arrays.
+                        if (PackRecipe.version != 3) continue;
+                        var emptySlotError = AddText($"Wardrobe Recipe '{uwr.name}' has a slot entry with no slot or placeholder name.",
                             LogType.Error);
+                        RecordEmptySlotFix(uwr, emptySlotError);
                         invalid = true;
                         continue;
                     }
@@ -2448,21 +2473,25 @@ namespace UMA
 
                 if (string.IsNullOrWhiteSpace(PackRecipe.race))
                 {
-                    AddText($"Character recipe '{utr.name}' has no race.",
-                        LogType.Error);
-                    invalid = true;
+                    if (!UMAScanRepairUtility.IsRaceIndependentRecipe(PackRecipe,
+                            name => lib.HasAsset<SlotDataAsset>(name) ? lib.GetAsset<SlotDataAsset>(name) : null))
+                    {
+                        AddText($"Character recipe '{utr.name}' has no race.",
+                            LogType.Error);
+                        invalid = true;
+                    }
                 }
                 else if (!lib.HasAsset<RaceData>(PackRecipe.race))
                 {
-                    AddText($"Character recipe '{utr.name}' references missing race '{PackRecipe.race}'.",
+                    var missingRaceError = AddText($"Character recipe '{utr.name}' references missing race '{PackRecipe.race}'.",
                         LogType.Error);
+                    RecordMissingRecipeRaceFix(utr, PackRecipe.race, missingRaceError);
                     invalid = true;
                 }
 
-                var Slots = PackRecipe?.slotsV3;
-                var Slot2 = PackRecipe?.slotsV2;
+                var Slots = UMAScanRepairUtility.GetRecipeSlotsForScan(PackRecipe);
 
-                if (Slots == null && Slot2 == null)
+                if (Slots == null || !Slots.Any(s => !UMAScanRepairUtility.IsEmptySlotEntry(s)))
                 {
                     AddText($"Character recipe '{utr.name}' has no slot data.",
                         LogType.Error);
@@ -2541,6 +2570,9 @@ namespace UMA
                     continue;
                 }
 
+                if (UMAScanRepairUtility.HasValidManualBounds(race) && !boundsSources.Contains(race))
+                    boundsSources.Add(race);
+
                 if (string.IsNullOrWhiteSpace(race.raceName))
                 {
                     AddText($"Race asset '{race.name}' has an empty race name.",
@@ -2574,8 +2606,8 @@ namespace UMA
 
                 if (race.forceRebuildRaceSlots)
                 {
-                    AddText($"Race '{race.raceName}' has Force Rebuild Race Slots enabled. This is an authoring option and should normally be disabled for production.",
-                        LogType.Warning);
+                    AddText($"Race '{race.raceName}' has Force Rebuild Race Slots enabled. Disable this authoring option to allow cached race slots to be reused.",
+                        LogType.Error);
                     invalid = true;
                 }
 
@@ -2584,13 +2616,11 @@ namespace UMA
                     ValidateNewDnaCollection(race, ref invalid);
                 }
 
-                if (race.useManualRendererBounds &&
-                    (race.manualRendererBounds.x <= 0f ||
-                     race.manualRendererBounds.y <= 0f ||
-                     race.manualRendererBounds.z <= 0f))
+                if (UMAScanRepairUtility.NeedsBoundsFix(race))
                 {
-                    AddText($"Race '{race.raceName}' enables manual renderer bounds, but every extent must be greater than zero.",
+                    LogLine boundsError = AddText($"Race '{race.raceName}' enables manual renderer bounds, but every extent must be finite and greater than zero, and the center must be finite.",
                         LogType.Error);
+                    RecordBoundsFix(race, boundsError);
                     invalid = true;
                 }
 

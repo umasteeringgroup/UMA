@@ -582,6 +582,7 @@ namespace UMA.TexturePaint
 
     public sealed class StrokeContext
     {
+        public TexturePaintPathGeneratorContext pathGeneratorContext;
         public TexturePaintPathGeneratorSettings pathGenerator;
         public TexturePaintHemSeamSettings hemSeam;
         public TexturePaintGarmentSettings garment;

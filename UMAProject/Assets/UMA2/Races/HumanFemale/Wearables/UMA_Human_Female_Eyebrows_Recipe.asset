@@ -16,8 +16,12 @@ MonoBehaviour:
   resourcesOnly: 0
   recipeType: Wardrobe
   DisplayValue: 
-  compatibleRaces: []
-  wardrobeRecipeThumbs: []
+  compatibleRaces:
+  - HumanFemale
+  wardrobeRecipeThumbs:
+  - race: HumanFemale
+    filename: 
+    thumb: {fileID: 0}
   thumbnailFromTexture: 0
   thumbnailRect:
     serializedVersion: 2
@@ -25,7 +29,7 @@ MonoBehaviour:
     y: 0.25
     width: 0.5
     height: 0.5
-  wardrobeSlot: None
+  wardrobeSlot: Eyebrows
   Appended: 0
   Hides: []
   HideTags: []

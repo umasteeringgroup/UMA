@@ -1,0 +1,6 @@
+Residue 1024 square core sampling: 265.6 ms; mean coverage 0.0534
+Residue 2048 square core sampling: 1061.6 ms; mean coverage 0.0534
+Residue 4096 square core sampling: 4087.6 ms; mean coverage 0.0534
+Splash 1024 square core sampling: 446.0 ms; mean coverage 0.0876
+Splash 2048 square core sampling: 1707.0 ms; mean coverage 0.0876
+Splash 4096 square core sampling: 6654.3 ms; mean coverage 0.0876

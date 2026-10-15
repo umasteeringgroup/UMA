@@ -73,6 +73,36 @@ namespace UMA.TexturePaint.Editor.Tests
             Assert.That(Pixels(layer),Is.EqualTo(original));
         }
 
+        [TestCase(false)] [TestCase(true)]
+        public void InvertedPasteComplementsTheEntireMaskWithoutChangingClipboard(bool alreadyInverted)
+        {
+            var source=Mask();
+            source.layerMask.target.Reset(Image((x,y)=>new Color(x/63f,x/63f,x/63f,1)),Color.white);
+            var fill=TexturePaintMaskEffect.Create(TexturePaintMaskEffectKind.Fill);
+            fill.value=.15f;fill.blend=TexturePaintMaskBlend.Add;source.layerMask.effects.stack.Add(fill);
+            if(alreadyInverted)source.layerMask.effects.stack.Add(TexturePaintMaskEffect.Create(TexturePaintMaskEffectKind.Invert));
+            var original=Pixels(source);
+            var destination=Mask();
+            var stage=ScriptableObject.CreateInstance<TexturePaintStageWindow>();
+            const BindingFlags flags=BindingFlags.Instance|BindingFlags.NonPublic;
+            object Invoke(string method,params object[] args)=>typeof(TexturePaintStageWindow).GetMethod(method,flags).Invoke(stage,args);
+            try
+            {
+                Assert.That(Invoke("CopyLayerMaskToClipboard",fixture.set,source),Is.True);
+                Assert.That(Invoke("PasteLayerMaskFromClipboardWithHistory",fixture.set,destination,true),Is.True);
+                var inverted=Pixels(destination);
+                for(int i=0;i<original.Length;i++)
+                {
+                    Assert.That(inverted[i].r,Is.EqualTo(1-original[i].r).Within(.006f));
+                    Assert.That(inverted[i].a,Is.EqualTo(1).Within(.002f));
+                }
+                TexturePaintGpuTestFixture.AssertImage("Source retained",original,Pixels(source));
+                Assert.That(Invoke("PasteLayerMaskFromClipboardWithHistory",fixture.set,destination,false),Is.True);
+                TexturePaintGpuTestFixture.AssertImage("Clipboard retained",original,Pixels(destination));
+            }
+            finally {Invoke("ClearLightweightHistory");Object.DestroyImmediate(stage);}
+        }
+
         [TestCase(true)] [TestCase(false)]
         public void WhiteAndBlackPaintedMasksReplaceDormantEntriesAndUndoEverything(bool white)
         {

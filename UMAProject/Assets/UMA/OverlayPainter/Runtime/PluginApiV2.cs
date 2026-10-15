@@ -553,6 +553,7 @@ namespace UMA.TexturePaint
         private readonly Dictionary<string, TexturePaintReadOnlyParameterTexture> parameterTextures;
         private readonly Dictionary<string, TexturePaintReadOnlyMask> masks;
         private readonly Dictionary<string, TexturePaintReadOnlySpriteSet> spriteSets;
+        private readonly Dictionary<string, TexturePaintAnatomy> anatomies;
         public IReadOnlyList<string> surfaceIds { get; }
 
         internal TexturePaintReadContextV2(Dictionary<string, TexturePaintReadOnlyImage> images,
@@ -560,7 +561,8 @@ namespace UMA.TexturePaint
             Dictionary<string, TexturePaintReadOnlyMeshMap> meshMaps,
             Dictionary<string, TexturePaintReadOnlyParameterTexture> parameterTextures,
             List<string> surfaceIds, Dictionary<string, TexturePaintReadOnlyMask> masks = null,
-            Dictionary<string, TexturePaintReadOnlySpriteSet> spriteSets = null)
+            Dictionary<string, TexturePaintReadOnlySpriteSet> spriteSets = null,
+            Dictionary<string, TexturePaintAnatomy> anatomies = null)
         {
             this.images = images ?? new Dictionary<string, TexturePaintReadOnlyImage>(StringComparer.Ordinal);
             this.channelInfo = channelInfo ??
@@ -570,6 +572,8 @@ namespace UMA.TexturePaint
                 new Dictionary<string, TexturePaintReadOnlyParameterTexture>(StringComparer.Ordinal);
             this.masks = masks ?? new Dictionary<string, TexturePaintReadOnlyMask>(StringComparer.Ordinal);
             this.spriteSets = spriteSets ?? new Dictionary<string, TexturePaintReadOnlySpriteSet>(StringComparer.Ordinal);
+            this.anatomies = new Dictionary<string, TexturePaintAnatomy>(StringComparer.Ordinal);
+            if(anatomies!=null)foreach(var pair in anatomies)this.anatomies[pair.Key]=pair.Value?.Copy(Matrix4x4.identity);
             this.surfaceIds = surfaceIds != null
                 ? (IReadOnlyList<string>)surfaceIds
                 : Array.Empty<string>();
@@ -579,6 +583,10 @@ namespace UMA.TexturePaint
         {
             images.TryGetValue(Key(surfaceId, channel), out TexturePaintReadOnlyImage image); return image;
         }
+
+        /// <summary>Detached bones in the same world coordinates as WorldPosition. Safe for worker use.</summary>
+        public TexturePaintAnatomy GetAnatomy(string surfaceId) =>
+            anatomies.TryGetValue(surfaceId??string.Empty,out var rig)?rig?.Copy(Matrix4x4.identity):null;
 
         public TexturePaintReadOnlyChannelInfo GetChannelInfo(string surfaceId, TexturePaintChannel channel)
         {

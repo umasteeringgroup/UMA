@@ -1,0 +1,4 @@
+Project C:/GitHub/UMA/UMAProject/Assets; UMA 3.1f3; Unity 6000.3.18f1
+Stubble version 2.0.0; Five-O-Clock-2048; anatomical flow; 2048px face texture; 3675 ms generation
+12th Gen Intel(R) Core(TM) i7-12700K; NVIDIA GeForce RTX 5070 Ti
+Snapshot of Human Female 3.0, UMARenderer, material 0. Existing EyebrowExampleComposite shader uses unit relief. Display-only lower-face mask; no avatar/document changes.

@@ -590,6 +590,7 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                 float bestPressure = 1;
                 float4 bestColor = _PaintColor;
                 float3 bestAcrossVector = float3(1.0, 0.0, 0.0);
+                float bestMirrored = 0;
                 bool found = false;
                 float3 surfaceNormal = normalize(input.worldNormal);
 
@@ -652,6 +653,7 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                     bestPressure = pressure;
                     bestColor = color;
                     bestAcrossVector = lerp(right0 - left0, right1 - left1, longitudinal);
+                    bestMirrored = dot(cross(segmentDirection,bestAcrossVector),ribbonNormal)<0 ? 1 : 0;
                 }
 
                 if (!found) discard;
@@ -675,7 +677,7 @@ Shader "Hidden/UMA/TexturePaint/RibbonProjection"
                     float pixelWidth=max(length(float2(dot(ddx(input.worldPosition),bestAcrossVector),
                         dot(ddy(input.worldPosition),bestAcrossVector)))/(width*width),.0001);
                     desired=ShadePathGenerator(bestAcross,localAlong,alongSpan,_RibbonClosed!=0,pixelWidth,
-                        input.worldPosition,input.worldNormal,input.worldTangent,input.uv,width);
+                        input.worldPosition,input.worldNormal,input.worldTangent,input.uv,width,bestMirrored);
                 }
                 else if (_GarmentEnabled != 0)
                 {

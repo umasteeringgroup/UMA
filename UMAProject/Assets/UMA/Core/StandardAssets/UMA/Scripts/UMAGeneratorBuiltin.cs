@@ -957,7 +957,7 @@ namespace UMA
             gstopWatch.Restart();
 #endif
 
-            if (umaData.isShapeDirty)
+            if (umaData.isShapeDirty || umaData.NeedsAnimatorBindingRefresh)
 			{
                 UpdateUMABody(umaData);
 				umaData.isShapeDirty = false;
@@ -2102,7 +2102,7 @@ namespace UMA
             var stageStopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
-                if (data.isShapeDirty)
+                if (data.isShapeDirty || data.NeedsAnimatorBindingRefresh)
                 {
                     UpdateUMABody(data);
                     data.isShapeDirty = false;
@@ -2898,9 +2898,19 @@ namespace UMA
 
         protected void CompleteBoneCleanup(UMAData data)
         {
-            if (data == null || !data.BoneCleanupPending) return;
+            if (FinishBoneCleanup(data)) UpdateAvatar(data);
+        }
+
+        private bool FinishBoneCleanup(UMAData data)
+        {
+            if (data == null || !data.BoneCleanupPending) return false;
             data.BoneCleanupPending = false;
-            if (CleanupUnusedBones && data.CleanupUnusedBones(this) > 0) UpdateAvatar(data);
+            if (CleanupUnusedBones && data.CleanupUnusedBones(this) > 0)
+            {
+                data.AnimatorBindingsDirty = true;
+                return true;
+            }
+            return false;
         }
 
 		public virtual void UMAReady(bool fireEvents = true)
@@ -2958,9 +2968,8 @@ namespace UMA
             if (umaData.skeleton is UMAImprovedSkeleton)
             {
                 // ResetAll clears the bone-baking preservation flags. Restore them and
-                // apply the post-DNA cache only during a real shape update. Mesh-only
-                // rebuilds never enter this path and therefore leave the animated pose
-                // untouched.
+                // apply the post-DNA cache during a body update, including mesh-only
+                // rebuilds that must establish fresh Animator bindings.
                 umaData.RestoreRegisteredAnimatedBones();
                 UMABoneLifecycle.PreserveBaseBonesForBaking(umaData, this);
                 umaData.skeleton.EnsureBoneHierarchy();
@@ -2975,6 +2984,9 @@ namespace UMA
             // End the batched skeleton update (begun in GenerateSingleUMA when isShapeDirty)
             umaData.skeleton.EndSkeletonUpdate();
 
+            // Finish hierarchy changes before the one Animator refresh. A second
+            // refresh in UMAReady would capture an already animated/adjusted pose.
+            FinishBoneCleanup(umaData);
             UpdateAvatar(umaData);
 
             // Blendshape DNA must be applied after the avatar is reset on the animator

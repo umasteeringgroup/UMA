@@ -2084,7 +2084,7 @@ Avatar:
         m_X: []
     m_RootMotionSkeletonIndexArray: 
   m_TOS:
-    1839225688: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightLowerLid/RightLowerLidAdjust
+    1064671690: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger05_01/LeftHandFinger05_02/LeftHandFinger05_03
     4080949736: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLipsInferior/RightLipsInferiorAdjust
     2598818297: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LeftEar/LeftEarAdjust
     2816949640: Root/Global
@@ -2239,8 +2239,8 @@ Avatar:
     3376823606: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/Mandible/RightLipsInferior
     3765766273: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEyebrowMiddle
     4034865265: Root/Global/Position/Hips/LowerBack/Spine/Spine1/RightShoulder/RightArm/RightForeArm/RightHand/RightHandFinger03_01/RightHandFinger03_02
-    1064671690: Root/Global/Position/Hips/LowerBack/Spine/Spine1/LeftShoulder/LeftArm/LeftForeArm/LeftHand/LeftHandFinger05_01/LeftHandFinger05_02/LeftHandFinger05_03
     945871846: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/LipsSuperior/LipsSuperiorAdjust
+    1839225688: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightEye/RightLowerLid/RightLowerLidAdjust
     2017219695: Root/Global/Position/Hips/LowerBack/Spine/Spine1/Neck/Head/RightLowCheek/RightLowCheekAdjust
   m_HumanDescription:
     serializedVersion: 3

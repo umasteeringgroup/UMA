@@ -24,6 +24,115 @@ namespace UMA.TexturePaint.Editor.Tests
             return maximum;
         }
 
+        [TestCase(false)] [TestCase(true)]
+        public void ZipperToothDesignsAndStitchPatternsHaveDistinctCoordinatedOutputs(bool path)
+        {
+            using var f=new Fixture(TexturePaintGarmentPreset.MetalZipper);ConfigureZipperDepth(f);
+            var s=f.settings.garment;
+            var original=f.Render(path);s.zipperStyle.toothShape=TexturePaintZipperToothShape.Interlocking;
+            Assert.That(Difference(original[TexturePaintChannel.Albedo],f.Render(path)[TexturePaintChannel.Albedo]),Is.LessThan(.00001f));
+            var designs=new List<Color[]>();
+            foreach(TexturePaintZipperToothShape shape in Enum.GetValues(typeof(TexturePaintZipperToothShape)))
+            {
+                if(shape==TexturePaintZipperToothShape.ConstructionDefault)continue;
+                s.zipperStyle.toothShape=shape;var images=f.Render(path);
+                foreach(var pair in images)
+                {
+                    Assert.That(pair.Value.All(c=>float.IsFinite(c.r)&&float.IsFinite(c.g)&&float.IsFinite(c.b)&&float.IsFinite(c.a)),Is.True);
+                    // Garments intentionally use material/shadow alpha for Albedo and AO;
+                    // physical channels share the full construction coverage.
+                    bool shading=pair.Key==TexturePaintChannel.Albedo || pair.Key==TexturePaintChannel.AmbientOcclusion;
+                    // Shading channels may be stored in 8-bit targets; allow one alpha quantization step.
+                    Assert.That(pair.Value.Zip(images[TexturePaintChannel.NormalControl],(a,b)=>shading?a.a-b.a:Mathf.Abs(a.a-b.a)).Max(),Is.LessThan(shading?1f/255+.001f:.001f),shape+" "+pair.Key);
+                }
+                foreach(var previous in designs)Assert.That(Difference(previous,images[TexturePaintChannel.Metallic]),Is.GreaterThan(.002f),shape.ToString());
+                designs.Add(images[TexturePaintChannel.Metallic]);
+            }
+            s.stitchRows=1;s.stitchSize=.0015f;s.stitchSpacing=.018f;s.threadColor=Color.white;
+            var stitches=new List<Color[]>();
+            foreach(TexturePaintZipperStitchStyle style in Enum.GetValues(typeof(TexturePaintZipperStitchStyle)))
+            {
+                s.zipperStyle.stitchStyle=style;var image=f.Render(path)[TexturePaintChannel.NormalControl];
+                // Thread occupies very few texels: compare the local relief, not a whole-image average.
+                foreach(var previous in stitches)Assert.That(previous.Zip(image,(a,b)=>Mathf.Abs(a.r-b.r)).Max(),Is.GreaterThan(.0001f),style.ToString());
+                stitches.Add(image);
+            }
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void ZipperTapeWidthWeaveAndCordsAreIndependentOfHardware(bool path)
+        {
+            using var f=new Fixture(TexturePaintGarmentPreset.MetalZipper);ConfigureZipperDepth(f);
+            var s=f.settings.garment;s.openStart=s.openEnd=true;
+            var original=f.Render(path);s.zipperStyle.tapeWidth=.95f;var wide=f.Render(path);
+            Assert.That(wide[TexturePaintChannel.Albedo].Count(c=>c.a>.9f),Is.GreaterThan(original[TexturePaintChannel.Albedo].Count(c=>c.a>.9f)));
+            Assert.That(wide[TexturePaintChannel.Metallic].Count(c=>c.r>.95f),Is.EqualTo(original[TexturePaintChannel.Metallic].Count(c=>c.r>.95f)));
+            s.zipperStyle.weave=TexturePaintZipperTapeWeave.Herringbone;s.zipperStyle.weaveScale=.008f;
+            s.zipperStyle.weaveContrast=.8f;s.zipperStyle.weaveHeight=.5f;
+            var woven=f.Render(path);
+            Assert.That(Difference(wide[TexturePaintChannel.Albedo],woven[TexturePaintChannel.Albedo]),Is.GreaterThan(.002f));
+            Assert.That(Difference(wide[TexturePaintChannel.NormalControl],woven[TexturePaintChannel.NormalControl]),Is.GreaterThan(.0001f));
+            s.zipperStyle.cordHeight=2;s.zipperStyle.cordWidth=.04f;var cord=f.Render(path);
+            Assert.That(Difference(woven[TexturePaintChannel.NormalControl],cord[TexturePaintChannel.NormalControl]),Is.GreaterThan(.0001f));
+        }
+
+        [Test]
+        public void ZipperStylePresetsPreserveOutputsAndDeepCloneThroughSerialization()
+        {
+            var s=TexturePaintGarmentSettings.Create(TexturePaintGarmentPreset.MetalZipper);
+            s.slider=.3f;s.angle=23;s.openEnd=true;s.normal=true;s.metallic=false;
+            foreach(TexturePaintZipperStylePreset preset in Enum.GetValues(typeof(TexturePaintZipperStylePreset)))
+            {
+                s.ApplyZipperStyle(preset);
+                Assert.That(s.slider,Is.EqualTo(.3f));Assert.That(s.angle,Is.EqualTo(23));Assert.That(s.openEnd,Is.True);
+                Assert.That(s.normal,Is.True);Assert.That(s.metallic,Is.False);
+                var copy=JsonUtility.FromJson<TexturePaintGarmentSettings>(JsonUtility.ToJson(s)).Clone();copy.Normalize();
+                Assert.That(JsonUtility.ToJson(copy),Is.EqualTo(JsonUtility.ToJson(s)));
+                copy.zipperStyle.tapeWidth=.1f;Assert.That(s.zipperStyle.tapeWidth,Is.GreaterThan(.1f));
+            }
+        }
+
+        [TestCase("zipperTeeth",false)] [TestCase("zipperStops",false)]
+        [TestCase("zipperSlider",false)] [TestCase("zipperPull",false)] [TestCase("zipperTang",false)]
+        [TestCase("zipperTeeth",true)] [TestCase("zipperStops",true)]
+        [TestCase("zipperSlider",true)] [TestCase("zipperPull",true)] [TestCase("zipperTang",true)]
+        public void EachZipperPartWritesIndependentMetalShineAndHeight(string field,bool path)
+        {
+            using var f=new Fixture(TexturePaintGarmentPreset.MetalZipper);ConfigureZipperDepth(f);
+            var s=f.settings.garment;s.falloff=.001f;
+            var part=(TexturePaintZipperPartSettings)typeof(TexturePaintGarmentSettings).GetField(field).GetValue(s);
+            part.height=0;part.metallic=0;part.smoothness=0;
+            var flat=f.Render(path);
+            part.height=3;part.metallic=1;part.smoothness=1;
+            var raised=f.Render(path);
+            int changed=0;float heightGain=0;
+            for(int i=0;i<Fixture.Size*Fixture.Size;i++)
+            {
+                Assert.That(raised[TexturePaintChannel.Metallic][i].a,Is.EqualTo(raised[TexturePaintChannel.NormalControl][i].a).Within(.001f));
+                if(raised[TexturePaintChannel.Metallic][i].r-flat[TexturePaintChannel.Metallic][i].r<.95f)continue;
+                changed++;
+                Assert.That(raised[TexturePaintChannel.Roughness][i].r,Is.LessThan(.055f),"Fully smooth hardware must not retain matte bevels");
+                heightGain+=raised[TexturePaintChannel.NormalControl][i].r-flat[TexturePaintChannel.NormalControl][i].r;
+            }
+            Assert.That(changed,Is.GreaterThan(0),field+" must have visible independent hardware pixels");
+            Assert.That(heightGain/Mathf.Max(1,changed),Is.GreaterThan(.003f),field+" must raise Normal Control");
+        }
+
+        [Test]
+        public void ZipperPartControlsCloneSerializeAndRetainExplicitZeroes()
+        {
+            var s=TexturePaintGarmentSettings.Create(TexturePaintGarmentPreset.MetalZipper);
+            s.zipperPull.height=0;s.zipperPull.smoothness=1;s.zipperPull.metallic=.75f;
+            var copy=s.Clone();copy.zipperPull.height=4;
+            Assert.That(s.zipperPull.height,Is.Zero);
+            var restored=JsonUtility.FromJson<TexturePaintGarmentSettings>(JsonUtility.ToJson(s));restored.Normalize();
+            Assert.That(restored.zipperPull.height,Is.Zero);Assert.That(restored.zipperPull.smoothness,Is.EqualTo(1));
+            Assert.That(restored.zipperPull.metallic,Is.EqualTo(.75f));
+            Assert.That(s.OutputChannels(),Does.Contain(TexturePaintChannel.Metallic));
+            Assert.That(s.OutputChannels(),Does.Contain(TexturePaintChannel.Roughness));
+            Assert.That(s.OutputChannels(),Does.Contain(TexturePaintChannel.NormalControl));
+        }
+
         [TestCase(TexturePaintGarmentPreset.MetalZipper,false,.5f)]
         [TestCase(TexturePaintGarmentPreset.MetalZipper,false,1.5f)]
         [TestCase(TexturePaintGarmentPreset.MetalZipper,true,.5f)]
@@ -102,11 +211,10 @@ namespace UMA.TexturePaint.Editor.Tests
             for(int y=0;y<8;y++)for(int x=Fixture.Size*35/100;x<Fixture.Size*65/100;x++)
             {
                 int i=y*Fixture.Size+x;
-                // On the coil preset the backing and teeth are nonmetal, so the pre-stop
-                // metallic value independently identifies fully covered pull metal. Overall
-                // alpha is already one from the backing and cannot distinguish an AA rim.
-                bool opaqueMetal=preset!=TexturePaintGarmentPreset.CoilZipper ||
-                    without[TexturePaintChannel.Metallic][i].r>.9995f;
+                // Tall hardware can approach its crown height inside an antialiased edge.
+                // Require fully metallic pixels on both presets; backing alpha alone cannot
+                // distinguish the partially covered rim from the solid pull.
+                bool opaqueMetal=without[TexturePaintChannel.Metallic][i].r>.9995f;
                 if(opaqueMetal&&height[i].a>.95f&&height[i].r-.5f>maximum*.92f)
                 {
                     solid++;

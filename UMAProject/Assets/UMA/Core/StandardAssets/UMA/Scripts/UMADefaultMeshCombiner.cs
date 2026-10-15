@@ -92,7 +92,7 @@ namespace UMA
                 umaData.CleanMesh(false);
 
                 renderers = umaData.GetRenderers();
-                if (UMAAssetIndexer.Instance.generator.alwaysRegenerateRenderers)
+                if (UMAAssetIndexer.Instance.Generator.alwaysRegenerateRenderers)
                 {
                     if (renderers != null)
                     {

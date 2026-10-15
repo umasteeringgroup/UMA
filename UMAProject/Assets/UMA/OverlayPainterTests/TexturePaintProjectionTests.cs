@@ -17,7 +17,7 @@ namespace UMA.TexturePaint.Editor.Tests
         private readonly List<TextureSet> sets = new List<TextureSet>();
         private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
         private static float ProjectionGizmoScale => (float)typeof(TexturePaintStageWindow)
-            .GetField("projectionGizmoScale", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            .GetProperty("projectionGizmoScale", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
         private T Own<T>(T value) where T : Object { objects.Add(value); return value; }
         [TearDown] public void TearDown()
         {

@@ -18,7 +18,6 @@ MonoBehaviour:
   DisplayValue: 
   compatibleRaces:
   - HumanMale
-  - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
@@ -60,6 +59,4 @@ MonoBehaviour:
         recipe: MaleRobe Hood
       - slot: Chest
         recipe: MaleRobe
-    - targetRace: Human Male 3.0
-      wardrobeSet: []
   arbitraryRecipes: []

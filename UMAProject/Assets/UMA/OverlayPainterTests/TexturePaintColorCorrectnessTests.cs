@@ -97,9 +97,9 @@ namespace UMA.TexturePaint.Editor.Tests
             finally { UnityEngine.Object.DestroyImmediate(asset); }
         }
 
-        [TestCase("DirtifyGeneratorPlugin")] [TestCase("EdgeWearGeneratorPlugin")]
-        [TestCase("DrippingCorrosionGeneratorPlugin")]
-        public async Task CpuAndGpuGeneratorsRenderTheSameLinearPigment(string pluginName)
+        [TestCase("DirtifyGeneratorPlugin", 1)] [TestCase("EdgeWearGeneratorPlugin", 1)]
+        [TestCase("EdgeWearGeneratorPlugin", 0)] [TestCase("DrippingCorrosionGeneratorPlugin", 1)]
+        public async Task CpuAndGpuGeneratorsRenderTheSameLinearPigment(string pluginName, int wearMode)
         {
             using var fixture = new TexturePaintGpuTestFixture(Color.clear, TexturePaintChannel.Albedo, size: 32);
             bool convex = pluginName == "EdgeWearGeneratorPlugin";
@@ -118,11 +118,19 @@ namespace UMA.TexturePaint.Editor.Tests
                 p.Get("normalCurvature", true).number = 0;
                 p.Get("cavityInfluence", true).number = 0;
                 p.Get("dripAmount", true).number = 0;
+                if (convex)
+                {
+                    p.Get("wearMode").number = wearMode;
+                    // Resolve the physical rim on this 32px fixture; the default .35% band
+                    // is narrower than the distance from the edge to the first texel center.
+                    p.Get("edgeWidth").number = 3;
+                }
                 string original = JsonUtility.ToJson(p);
                 foreach (bool gpu in new[] { false, true })
                 {
                     host.GpuGeneratorShader = gpu ? TexturePaintGpuTestFixture.LoadShader("PluginGenerators.compute") : null;
                     await host.ExecuteCommandAsync(plugin, store, p, null, CancellationToken.None);
+                    Assert.That(fixture.set.layers, Is.Not.Empty, gpu ? "GPU output layer" : "CPU output layer");
                     var pixels = TexturePaintGpuTestFixture.ReadPixels(fixture.set.layers.Last().channels[TexturePaintChannel.Albedo].Front);
                     Assert.That(pixels.Count(c => c.a > .01f), Is.GreaterThan(10), gpu ? "GPU coverage" : "CPU coverage");
                     foreach (Color pixel in pixels.Where(c => c.a > .05f)) AssertRgb(pixel, Linear, .004f);

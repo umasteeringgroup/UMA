@@ -12,6 +12,55 @@ namespace UMA.TexturePaint.Editor.Tests
 {
     public sealed class TexturePaintStubbleReliefTests
     {
+        [TestCase(false)] [TestCase(true)]
+        public async Task NaturalStubbleUploadsDarkColorAndStraightRoughness(bool gpuUpload)
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            using var fixture = new TexturePaintGpuTestFixture(Color.clear, size: 128);
+            var set = fixture.set;
+            set.channels[TexturePaintChannel.Roughness] = new TextureChannelTarget
+            {
+                channel = TexturePaintChannel.Roughness, format = RenderTextureFormat.ARGBHalf,
+                editable = new EditableTextureTarget("Natural stubble roughness", 128, 128,
+                    RenderTextureFormat.ARGBHalf, null, Color.clear)
+            };
+            set.channelPackShader = gpuUpload ? TexturePaintGpuTestFixture.LoadShader("ChannelPack.compute") : null;
+            var store = new TextureStore();
+            var sets = (List<TextureSet>)typeof(TextureStore).GetField("sets", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(store);
+            sets.Add(set);
+            using var host = new PluginHost();
+            var type = AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType("UMA.TexturePaint.Examples.StubbleMakerGeneratorPlugin")).First(t => t != null);
+            var asset = ScriptableObject.CreateInstance(type);
+            try
+            {
+                var plugin = (ITexturePaintCommandExtensionV2)asset;
+                var p = host.CreateParameters(plugin);
+                p.Get("directionSpace").number = 1; p.Get("referenceResolution").number = 256;
+                p.Get("hairWidth").number = 3; p.Get("hairLength").number = 8;
+                p.Get("hairOpacity").number = 1; p.Get("hairRoughness").number = .23f;
+                foreach (var id in new[] { "shadowAmount", "rednessAmount", "follicleDepth", "roughnessVariation", "fineFraction", "hairColorVariation", "grayFraction", "opacityVariation" }) p.Get(id).number = 0;
+                await host.ExecuteCommandAsync(plugin, store, p, null, CancellationToken.None);
+                var layer = set.layers[0];
+                var albedo = TexturePaintGpuTestFixture.ReadPixels(layer.channels[TexturePaintChannel.Albedo].Front);
+                var roughness = TexturePaintGpuTestFixture.ReadPixels(layer.channels[TexturePaintChannel.Roughness].Front);
+                Color expected = p.Get("hairColor").color.linear;
+                int checkedPixels = 0;
+                for (int i = 0; i < albedo.Length; i++)
+                {
+                    if (albedo[i].a < .5f) continue;
+                    checkedPixels++;
+                    Assert.That(albedo[i].r, Is.InRange(expected.r * .7f, expected.r * 1.3f), "sRGB transport must decode exactly once.");
+                    Assert.That(albedo[i].g / albedo[i].r, Is.EqualTo(expected.g / expected.r).Within(.08f));
+                    Assert.That(roughness[i].r, Is.EqualTo(.23f).Within(.006f));
+                    Assert.That(roughness[i].a, Is.EqualTo(albedo[i].a).Within(.006f));
+                }
+                Assert.That(checkedPixels, Is.GreaterThan(30));
+                Assert.That(host.Undo(), Is.True);
+                Assert.That(host.Redo(), Is.True);
+            }
+            finally { sets.Clear(); store.Dispose(); UnityEngine.Object.DestroyImmediate(asset); }
+        }
+
         [TestCase(0, false)]
         [TestCase(1, false)]
         [TestCase(0, true)]
@@ -52,6 +101,7 @@ namespace UMA.TexturePaint.Editor.Tests
             {
                 var plugin = (ITexturePaintCommandExtensionV2)asset;
                 var p = host.CreateParameters(plugin);
+                p.Get("renderModel", true).number = 0; // Explicit legacy geometry regression.
                 p.Get("directionSpace").number = direction;
                 p.Get("density").number = 1;
                 p.Get("hairLength").number = 24;

@@ -42,7 +42,7 @@ namespace UMA.TexturePaint.Examples
                 F("amount","Effect Amount",0,1,.65f), F("scale","Pattern Scale",1,128,12),
                 F("rotation","Rotation",-180,180,0), F("seed","Seed",0,65535,1731),
                 new() { id="projection",displayName="Mapping",type=TexturePaintPluginParameterType.Enum,enumOptions=new[]{"Flat (UV)","World"} },
-                new() { id="controlMask",displayName=mode==ClothingFinish.PrintAging ? "Print Coverage Mask (required)" : "Control Mask",
+                new() { id="controlMask",displayName=mode==ClothingFinish.PrintAging ? "Print / Coating Coverage Mask" : "Control Mask",
                     description="White applies the effect; black protects the material. Texture alpha is also respected.",type=TexturePaintPluginParameterType.Texture },
                 new() { id="color",displayName=mode==ClothingFinish.PrintAging ? "Exposed Fabric Color" : mode==ClothingFinish.Leather ? "Leather / Coating Color" : "Residue Color",
                     type=TexturePaintPluginParameterType.Color,defaultColor=mode==ClothingFinish.Leather ? new Color(.22f,.095f,.045f,1) : new Color(.72f,.7f,.65f,1) },
@@ -56,15 +56,15 @@ namespace UMA.TexturePaint.Examples
             else if(mode==ClothingFinish.Leather)
             { p.Add(F("grain","Grain Size",8,256,80)); p.Add(F("crease","Creases",0,1,.35f)); p.Add(F("wear","Dye / Coating Wear",0,1,.22f)); }
             else
-            { p.Add(F("crack","Crack Width",.005f,.3f,.065f)); p.Add(F("fade","Color Fade",0,1,.25f)); }
+            { p.Add(F("crack","Crack Width",.005f,.3f,.065f)); p.Add(F("fade","Color Fade",0,1,.25f)); CoatingDamageField.AddParameters(p,false); }
             foreach(var channel in Channels)
                 p.Add(new TexturePaintPluginParameterDefinition { id="output"+channel,displayName="Output "+channel,
                     type=TexturePaintPluginParameterType.Boolean, defaultBoolean=channel!=TexturePaintChannel.Metallic });
             return new TexturePaintPluginDescriptor
             {
-                id="com.uma.texturepaint."+ids[(int)mode], displayName=names[(int)mode], pluginVersion="1.0.0",
+                id="com.uma.texturepaint."+ids[(int)mode], displayName=names[(int)mode], pluginVersion=mode==ClothingFinish.PrintAging?"1.1.0":"1.0.0",
                 description=mode==ClothingFinish.PrintAging
-                    ? "Ages artwork inside an explicit print mask. Exposed Fabric Color defines the revealed backing; add a matching fabric layer beneath the original print."
+                    ? "Ages artwork inside an explicit print mask. Optional coating damage adds blisters, enamel chips or peeling leather with raised rims and exposed substrate. Treat Entire Layer as Coating explicitly enables unmasked coating."
                     : "Coordinated color, roughness and additive relief. Preserves lower-layer normals and respects the control mask.",
                 capabilities=TexturePaintPluginCapability.Generator|TexturePaintPluginCapability.ReadsMeshMaps|TexturePaintPluginCapability.LongRunning,
                 declaredChannels=TexturePaintChannelMask.Albedo|TexturePaintChannelMask.Roughness|TexturePaintChannelMask.Metallic|TexturePaintChannelMask.NormalControl,
@@ -81,9 +81,10 @@ namespace UMA.TexturePaint.Examples
         public static Task Execute(TexturePaintCommandContextV2 context, ClothingFinish mode)
         {
             var mask=context.GetTextureParameter("controlMask");
-            if(mode==ClothingFinish.PrintAging && mask==null)
+            if(mode==ClothingFinish.PrintAging && mask==null && !(context.parameters.Boolean("wholeCoating")&&context.parameters.Float("coatingAmount")>0))
                 throw new InvalidOperationException("Choose a Print Coverage Mask: white artwork on transparent or black background. Aging is restricted to that artwork.");
             var p=context.parameters.Clone();
+            var coating=mode==ClothingFinish.PrintAging?new CoatingDamageField(p):null;
             bool anyOutput=false;
             foreach(var channel in Channels)anyOutput|=p.Boolean("output"+channel,channel!=TexturePaintChannel.Metallic);
             if(!anyOutput)throw new InvalidOperationException("Enable at least one output channel before generating the finish.");
@@ -101,19 +102,26 @@ namespace UMA.TexturePaint.Examples
                     var position=context.GetMeshMap(surface,TexturePaintMeshMap.WorldPosition);
                     var curvature=context.GetMeshMap(surface,TexturePaintMeshMap.SignedCurvature);
                     var ao=context.GetMeshMap(surface,TexturePaintMeshMap.AmbientOcclusion);
+                    var groups=new Dictionary<Vector2Int,List<TexturePaintChannel>>();
                     foreach(var channel in Channels)
                     {
                         if(!p.Boolean("output"+channel,channel!=TexturePaintChannel.Metallic))continue;
                         var info=context.source.GetChannelInfo(surface,channel); if(info==null)continue;
-                        for(int y0=0;y0<info.height;y0+=64)
+                        var size=new Vector2Int(info.width,info.height);
+                        if(!groups.TryGetValue(size,out var list))groups[size]=list=new();list.Add(channel);
+                    }
+                    foreach(var group in groups)
+                    {
+                        var info=group.Key;
+                        for(int y0=0;y0<info.y;y0+=64)
                         {
-                            context.cancellationToken.ThrowIfCancellationRequested(); int rows=Math.Min(64,info.height-y0);
-                            var pixels=new Color[info.width*rows];
+                            context.cancellationToken.ThrowIfCancellationRequested(); int rows=Math.Min(64,info.y-y0);
+                            var buffers=new Dictionary<TexturePaintChannel,Color[]>();foreach(var channel in group.Value)buffers[channel]=new Color[info.x*rows];
                             Parallel.For(0,rows,new ParallelOptions{CancellationToken=context.cancellationToken},row=>
                             {
-                                for(int x=0;x<info.width;x++)
+                                for(int x=0;x<info.x;x++)
                                 {
-                                    float u=(x+.5f)/info.width,v=(y0+row+.5f)/info.height;
+                                    float u=(x+.5f)/info.x,v=(y0+row+.5f)/info.y;
                                     if(ids!=null && ids.GetPixelBilinear(u,v).a<.5f)continue;
                                     Color maskPixel=mask?.GetPixelBilinear(u,v)??Color.white;
                                     float coverage=Mathf.Clamp01(maskPixel.r*maskPixel.a); if(coverage<=0)continue;
@@ -127,20 +135,38 @@ namespace UMA.TexturePaint.Examples
                                     Color baseColor=albedo?.GetPixelBilinear(u,v)??new Color(.18f,.18f,.18f,1);
                                     float baseRough=rough?.GetPixelBilinear(u,v).r??.65f;
                                     Sample(mode,p,q,tint,baseColor,baseRough,cavity,Mathf.Max(0,curve),out Color color,out float roughness,out float height,out float effect);
+                                    float metallic=0;
+                                    if(coating!=null&&coating.amount>0)
+                                    {
+                                        float footprint=1f/Mathf.Max(info.x,info.y);
+                                        if(p.Integer("projection")!=0&&position!=null)
+                                        {
+                                            var dx=position.GetPixelBilinear(u+1f/info.x,v);var dy=position.GetPixelBilinear(u,v+1f/info.y);
+                                            Vector3 point=new(pos.r,pos.g,pos.b);
+                                            footprint=Mathf.Max(Vector3.Distance(point,new(dx.r,dx.g,dx.b)),Vector3.Distance(point,new(dy.r,dy.g,dy.b)));
+                                        }
+                                        var result=coating.Sample(q,color,roughness,height,0,false,footprint);
+                                        color=result.color;roughness=result.roughness;height=result.height;metallic=result.metallic;
+                                    }
                                     float alpha=coverage*effect;
-                                    float value=channel==TexturePaintChannel.Roughness ? roughness : channel==TexturePaintChannel.NormalControl ? Mathf.Clamp01(.5f+height) : 0;
-                                    pixels[row*info.width+x]=channel==TexturePaintChannel.Albedo ? new Color(color.r,color.g,color.b,alpha) : new Color(value,value,value,alpha);
+                                    foreach(var channel in group.Value)
+                                    {
+                                        float value=channel==TexturePaintChannel.Roughness ? roughness : channel==TexturePaintChannel.NormalControl ? Mathf.Clamp01(.5f+height) : metallic;
+                                        buffers[channel][row*info.x+x]=channel==TexturePaintChannel.Albedo ? new Color(color.r,color.g,color.b,alpha) : new Color(value,value,value,alpha);
+                                    }
                                 }
                             });
-                            var rect=new RectInt(0,y0,info.width,rows);
-                            if(channel==TexturePaintChannel.NormalControl)
-                                context.WriteTile(surface,channel,rect,pixels,TexturePaintPluginColorSpace.Data);
-                            else
+                            var rect=new RectInt(0,y0,info.x,rows);
+                            foreach(var pair in buffers)
                             {
-                                var compact=new Color32[pixels.Length];for(int i=0;i<pixels.Length;i++)compact[i]=pixels[i];
-                                context.WriteTileCompactOwned(surface,channel,rect,compact,channel==TexturePaintChannel.Albedo?TexturePaintPluginColorSpace.Linear:TexturePaintPluginColorSpace.Data);
+                                if(pair.Key==TexturePaintChannel.NormalControl)context.WriteTile(surface,pair.Key,rect,pair.Value,TexturePaintPluginColorSpace.Data);
+                                else
+                                {
+                                    var compact=new Color32[pair.Value.Length];for(int i=0;i<compact.Length;i++)compact[i]=pair.Value[i];
+                                    context.WriteTileCompactOwned(surface,pair.Key,rect,compact,pair.Key==TexturePaintChannel.Albedo?TexturePaintPluginColorSpace.Linear:TexturePaintPluginColorSpace.Data);
+                                }
                             }
-                            context.progress?.Report((surfaceIndex+(Array.IndexOf(Channels,channel)+(y0+rows)/(float)info.height)/Channels.Length)/context.source.surfaceIds.Count);
+                            context.progress?.Report((surfaceIndex+(y0+rows)/(float)info.y)/context.source.surfaceIds.Count);
                         }
                     }
                     surfaceIndex++;

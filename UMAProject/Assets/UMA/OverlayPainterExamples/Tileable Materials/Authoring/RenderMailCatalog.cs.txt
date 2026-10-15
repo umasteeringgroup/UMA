@@ -1,0 +1,82 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEditor;
+using UMA;
+using UMA.TexturePaint;
+public static class MailCatalogRender
+{
+ const string Root="Assets/UMA/OverlayPainter/Textures/Tileable Materials/";
+ const string Output="Assets/UMA/OverlayPainterExamples/Tileable Materials/";
+ public static string Capture()
+ {
+  string folder="Build/Validation/TileableMaterials/Renders";Directory.CreateDirectory(folder);
+  var watch=System.Diagnostics.Stopwatch.StartNew();int count=0;
+  foreach(string family in new[]{"Chainmail and Scale Armor","Interlinked Chain Mail"})
+  {
+   var set=AssetDatabase.LoadAssetAtPath<OverlayPainterSpriteSet>(Root+family+" Sprite Set.asset");
+   var channels=TexturePaintSpriteSetSource.Resolve(set);
+   var sources=new Dictionary<TexturePaintChannel,Texture2D>();
+   try
+   {
+    foreach(var sheet in set.spriteSheets)
+    {
+     var t=new Texture2D(2,2,TextureFormat.RGBA32,false,sheet.channel!=TexturePaintChannel.Albedo);
+     t.LoadImage(File.ReadAllBytes(AssetDatabase.GetAssetPath(sheet.spriteSheet)));sources[sheet.channel]=t;
+    }
+    for(int i=0;i<set.spriteNames.Count;i++)
+    {
+     var rect=channels[TexturePaintChannel.Albedo][i].rect;
+     var maps=sources.ToDictionary(k=>k.Key,k=>k.Value.GetPixels((int)rect.x,(int)rect.y,1024,1024));
+     Draw(maps,folder+"/"+family+"_"+i+".png");count++;
+    }
+   }
+   finally{foreach(var t in sources.Values)UnityEngine.Object.DestroyImmediate(t);}
+  }
+  string result=$"{count} Unity URP PBR previews at 512px from full 1024px source tiles: {watch.Elapsed.TotalSeconds:F2}s including PNG encoding.";
+  File.WriteAllText("Build/Validation/TileableMaterials/RenderTiming.txt",result);return result;
+ }
+ static void Draw(Dictionary<TexturePaintChannel,Color[]> maps,string path)
+ {
+  var material=new Material(Shader.Find("Universal Render Pipeline/Lit"));var preview=new PreviewRenderUtility();
+  var textures=new List<Texture2D>();var mesh=new Mesh();
+  try
+  {
+   // Curved sample panel keeps the whole repeat visible, with varying light response.
+   const int grid=64;var vertices=new Vector3[65*65];var uv=new Vector2[vertices.Length];var triangles=new List<int>();
+   for(int y=0;y<=grid;y++)for(int x=0;x<=grid;x++)
+   {
+    int i=y*65+x;float u=x/64f,v=y/64f;uv[i]=new Vector2(u,v);
+    vertices[i]=new Vector3((u-.5f)*2,(v-.5f)*2,.65f*((u-.5f)*(u-.5f)+(v-.5f)*(v-.5f)));
+    if(x<grid&&y<grid)triangles.AddRange(new[]{i,i+65,i+1,i+1,i+65,i+66});
+   }
+   mesh.vertices=vertices;mesh.uv=uv;mesh.triangles=triangles.ToArray();mesh.RecalculateNormals();mesh.RecalculateTangents();
+   Texture2D Tex(Color[] pixels,bool linear)
+   {
+    var t=new Texture2D(1024,1024,TextureFormat.RGBA32,true,linear){wrapMode=TextureWrapMode.Repeat};
+    t.SetPixels(pixels);t.Apply();textures.Add(t);return t;
+   }
+   var packed=new Color[1024*1024];var r=maps[TexturePaintChannel.Roughness];var m=maps[TexturePaintChannel.Metallic];
+   for(int i=0;i<packed.Length;i++)packed[i]=new Color(m[i].r,0,0,1-r[i].r);
+   material.SetTexture("_BaseMap",Tex(maps[TexturePaintChannel.Albedo],false));
+   material.SetFloat("_AlphaClip",1);material.SetFloat("_Cutoff",.5f);material.EnableKeyword("_ALPHATEST_ON");
+   // These source normals are unpacked RGB. URP's runtime RG/AG decoder needs A=1.
+   var normals=maps[TexturePaintChannel.Normal];
+   for(int i=0;i<normals.Length;i++)normals[i].a=1;
+   material.SetTexture("_BumpMap",Tex(maps[TexturePaintChannel.Normal],true));material.EnableKeyword("_NORMALMAP");material.SetFloat("_BumpScale",1);
+   material.SetTexture("_MetallicGlossMap",Tex(packed,true));material.EnableKeyword("_METALLICSPECGLOSSMAP");material.SetFloat("_Metallic",1);material.SetFloat("_Smoothness",1);
+   material.SetTexture("_OcclusionMap",Tex(maps[TexturePaintChannel.AmbientOcclusion],true));material.EnableKeyword("_OCCLUSIONMAP");material.SetFloat("_OcclusionStrength",1);
+   material.SetFloat("_Cull",0);
+   preview.camera.transform.position=new Vector3(0,0,-3);preview.camera.transform.LookAt(Vector3.zero);preview.camera.fieldOfView=42;
+   preview.camera.nearClipPlane=.01f;preview.camera.farClipPlane=10;preview.camera.clearFlags=CameraClearFlags.Color;preview.camera.backgroundColor=new Color(.04f,.045f,.05f);
+   preview.ambientColor=new Color(.4f,.4f,.4f);preview.lights[0].intensity=1.2f;preview.lights[0].transform.rotation=Quaternion.Euler(25,-25,0);
+   preview.lights[1].intensity=.7f;preview.lights[1].transform.rotation=Quaternion.Euler(-35,30,0);
+   preview.BeginStaticPreview(new Rect(0,0,512,512));preview.DrawMesh(mesh,Matrix4x4.identity,material,0);preview.Render(true);
+   var output=preview.EndStaticPreview();File.WriteAllBytes(path,output.EncodeToPNG());UnityEngine.Object.DestroyImmediate(output);
+  }
+  finally{preview.Cleanup();UnityEngine.Object.DestroyImmediate(mesh);UnityEngine.Object.DestroyImmediate(material);foreach(var t in textures)UnityEngine.Object.DestroyImmediate(t);}
+ }
+}

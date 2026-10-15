@@ -166,6 +166,7 @@ namespace UMA.TexturePaint
             var parameterSpriteSets = new Dictionary<string, TexturePaintReadOnlySpriteSet>(StringComparer.Ordinal);
             var masks = new Dictionary<string, TexturePaintReadOnlyMask>(StringComparer.Ordinal);
             var surfaceIds = new List<string>();
+            var anatomies = new Dictionary<string, TexturePaintAnatomy>(StringComparer.Ordinal);
             TexturePaintChannel[] channels = (TexturePaintChannel[])Enum.GetValues(typeof(TexturePaintChannel));
             TexturePaintMeshMap[] meshMaps = (TexturePaintMeshMap[])Enum.GetValues(typeof(TexturePaintMeshMap));
             int parameterTextureCount = CountParameterTextures(descriptor, parameters);
@@ -190,8 +191,10 @@ namespace UMA.TexturePaint
             for (int setIndex = 0; setIndex < setCount; setIndex++)
             {
                 TextureSet set = captureSets[setIndex];
-                string surfaceId = set.persistentId ?? set.surface?.index.ToString() ?? setIndex.ToString();
+                string surfaceId = string.IsNullOrEmpty(set.persistentId) ? set.pluginSessionId : set.persistentId;
                 surfaceIds.Add(surfaceId);
+                if(set.surface?.anatomy!=null)anatomies[surfaceId]=set.surface.anatomy.Copy(
+                    set.surface.gameObject!=null?set.surface.gameObject.transform.localToWorldMatrix:Matrix4x4.identity);
                 if (captureLayerMasks)
                 {
                     token.ThrowIfCancellationRequested();
@@ -266,9 +269,9 @@ namespace UMA.TexturePaint
                     token.ThrowIfCancellationRequested();
                     // Preview maps are temporary: never seed the full-size cache with draft data.
                     using ProceduralMeshMaps previewMaps = previewResolution > 0
-                        ? BuildPreviewMaps(set.surface, previewResolution, token) : null;
+                        ? BuildPreviewMaps(set.surface, previewResolution, token, requestedMeshMaps) : null;
                     ProceduralMeshMaps available = previewMaps ?? set.GetProceduralMeshMaps(1024,
-                        new TexturePaintOperationContext(token));
+                        new TexturePaintOperationContext(token), requestedMeshMaps);
                     for (int mapIndex = 0; mapIndex < meshMaps.Length; mapIndex++)
                     {
                         TexturePaintMeshMap map = meshMaps[mapIndex];
@@ -360,7 +363,7 @@ namespace UMA.TexturePaint
             }
 
             return new TexturePaintReadContextV2(images, channelInfo, meshMapImages,
-                parameterTextures, surfaceIds, masks, parameterSpriteSets);
+                parameterTextures, surfaceIds, masks, parameterSpriteSets, anatomies);
         }
 
         private static int CountParameterTextures(TexturePaintPluginDescriptor descriptor,
@@ -444,7 +447,7 @@ namespace UMA.TexturePaint
                         layer.channels.Add(command.channel, target);
                         layer.GetChannelSettings(command.channel);
                     }
-                    string maskKey = set.persistentId + "|" + target.Width + "x" + target.Height;
+                    string maskKey = set.pluginSessionId + "|" + target.Width + "x" + target.Height;
                     if (!geometryMasks.TryGetValue(maskKey, out Texture2D geometryMask))
                     {
                         geometryMask = TexturePaintGeometryMask.Build(set.surface, target.Width,
@@ -851,7 +854,7 @@ namespace UMA.TexturePaint
                         layer.channels.Add(command.channel, target);
                         layer.GetChannelSettings(command.channel);
                     }
-                    string maskKey = set.persistentId + "|" + target.Width + "x" + target.Height;
+                    string maskKey = set.pluginSessionId + "|" + target.Width + "x" + target.Height;
                     if (!geometryMasks.TryGetValue(maskKey, out Texture2D geometryMask))
                     {
                         geometryMask = TexturePaintGeometryMask.Build(set.surface, target.Width,
@@ -956,7 +959,7 @@ namespace UMA.TexturePaint
                     if (command.rect.xMin < 0 || command.rect.yMin < 0 ||
                         command.rect.xMax > target.Width || command.rect.yMax > target.Height)
                         throw new InvalidOperationException("Plugin mask tile lies outside the target mask.");
-                    string maskKey = set.persistentId + "|mask|" + target.Width + "x" + target.Height;
+                    string maskKey = set.pluginSessionId + "|mask|" + target.Width + "x" + target.Height;
                     if (!geometryMasks.TryGetValue(maskKey, out Texture2D geometryMask))
                     {
                         geometryMask = TexturePaintGeometryMask.Build(set.surface, target.Width,
@@ -1299,7 +1302,7 @@ namespace UMA.TexturePaint
         }
 
         private static ProceduralMeshMaps BuildPreviewMaps(ReconstructedSurface surface, int resolution,
-            System.Threading.CancellationToken token)
+            System.Threading.CancellationToken token, TexturePaintMeshMapMask requestedMaps)
         {
             // The builder may recalculate missing normals. Keep even that repair off the live mesh.
             Mesh mesh = surface?.mesh != null ? UnityEngine.Object.Instantiate(surface.mesh) : null;
@@ -1308,7 +1311,7 @@ namespace UMA.TexturePaint
                 var draft = new ReconstructedSurface { mesh = mesh, gameObject = surface?.gameObject,
                     triangleIslands = surface?.triangleIslands, index = surface?.index ?? 0 };
                 return ProceduralMeshMapBuilder.Build(draft, resolution, resolution,
-                    new TexturePaintOperationContext(token));
+                    new TexturePaintOperationContext(token), requestedMaps);
             }
             finally { Destroy(mesh); }
         }
@@ -1357,8 +1360,12 @@ namespace UMA.TexturePaint
         private static TextureSet FindSet(TextureStore store, string surfaceId)
         {
             if (store != null)
+            {
                 for (int i = 0; i < store.Sets.Count; i++)
                     if (string.Equals(store.Sets[i].persistentId, surfaceId, StringComparison.Ordinal)) return store.Sets[i];
+                for (int i = 0; i < store.Sets.Count; i++)
+                    if (string.Equals(store.Sets[i].pluginSessionId, surfaceId, StringComparison.Ordinal)) return store.Sets[i];
+            }
             throw new InvalidOperationException("Plugin command references an unknown surface: " + surfaceId);
         }
 

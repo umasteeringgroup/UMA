@@ -128,7 +128,7 @@ namespace UMA.TexturePaint.Examples
                 id = Id(mode),
                 displayName = DisplayName(mode),
                 description = Description(mode),
-                pluginVersion = mode == AAAOrganicGeneratorMode.VeinsSubdermal || mode == AAAOrganicGeneratorMode.RustCorrosion ? "1.2.0" : mode == AAAOrganicGeneratorMode.FabricFuzz
+                pluginVersion = mode == AAAOrganicGeneratorMode.RustCorrosion ? "1.3.0" : mode == AAAOrganicGeneratorMode.VeinsSubdermal ? "1.2.0" : mode == AAAOrganicGeneratorMode.FabricFuzz
                     ? "1.2.0" : mode == AAAOrganicGeneratorMode.ScratchDent ? "1.1.0" : "1.0.2",
                 capabilities = TexturePaintPluginCapability.Generator |
                                TexturePaintPluginCapability.ReadsMeshMaps |
@@ -263,7 +263,8 @@ namespace UMA.TexturePaint.Examples
             TexturePaintCommandContextV2 context, int surfaceIndex, int surfaceCount)
         {
             var output = new OutputBuffers(width * rowCount, outputChannels,
-                settings.mode == AAAOrganicGeneratorMode.VeinsSubdermal);
+                settings.mode == AAAOrganicGeneratorMode.VeinsSubdermal ||
+                (settings.mode == AAAOrganicGeneratorMode.RustCorrosion && settings.coating.amount>0));
             Parallel.For(0, rowCount, new ParallelOptions
                 { CancellationToken = context.cancellationToken }, localY =>
             {
@@ -281,7 +282,7 @@ namespace UMA.TexturePaint.Examples
                     GeneratedPixel pixel = settings.mode switch
                     {
                         AAAOrganicGeneratorMode.FabricFuzz => Fabric(inputs, settings, u, v),
-                        AAAOrganicGeneratorMode.RustCorrosion => Rust(inputs, settings, u, v),
+                        AAAOrganicGeneratorMode.RustCorrosion => Rust(inputs, settings, u, v, width, height),
                         AAAOrganicGeneratorMode.SurfaceMicroDetail => MicroDetail(inputs, settings, u, v),
                         AAAOrganicGeneratorMode.VeinsSubdermal => Skin(inputs, settings, u, v,
                             width, height, control),
@@ -362,7 +363,7 @@ namespace UMA.TexturePaint.Examples
             };
         }
 
-        private static GeneratedPixel Rust(SurfaceInputs input, Settings s, float u, float v)
+        private static GeneratedPixel Rust(SurfaceInputs input, Settings s, float u, float v, int width, int resolutionHeight)
         {
             Vector3 p = input.Coordinates(u, v, s.worldProjection) * s.scale;
             float n = Noise.Fbm(p, s.seed, 5, 0.53f);
@@ -398,12 +399,25 @@ namespace UMA.TexturePaint.Examples
             Color rustColor = Color.Lerp(s.primaryColor, s.secondaryColor, depthMix);
             rustColor = Color.Lerp(rustColor, s.tertiaryColor, Mathf.Clamp01(streak));
             float height = 0.5f + flakes * s.height - pits * s.depth;
+            float roughness=Mathf.Lerp(s.roughness*.8f,s.roughness,flakes);
+            float metallic=Mathf.Lerp(s.metallic,0f,Mathf.Clamp01(coverage+pits));
+            float occlusion=Mathf.Lerp(1f,s.aoValue,depthMix);
+            if(s.coating.amount>0)
+            {
+                var origin=input.Coordinates(u,v,s.worldProjection);
+                float footprint=Mathf.Max(Vector3.Distance(origin,input.Coordinates(u+(u<.5f?1f:-1f)/width,v,s.worldProjection)),
+                    Vector3.Distance(origin,input.Coordinates(u,v+(v<.5f?1f:-1f)/resolutionHeight,s.worldProjection)));
+                var coating=s.coating.Sample(origin,rustColor,roughness,height-.5f,metallic,true,footprint);
+                rustColor=coating.color;roughness=coating.roughness;metallic=coating.metallic;height=.5f+coating.height;
+                occlusion=Mathf.Lerp(occlusion,Mathf.Lerp(1,occlusion,coating.exposed)-coating.rim*.08f,s.coating.amount);
+                coverage=Mathf.Lerp(coverage,1,s.coating.amount);
+            }
             return new GeneratedPixel
             {
                 albedo = WithAlpha(rustColor, coverage),
-                roughness = Scalar(Mathf.Lerp(s.roughness * 0.8f, s.roughness, flakes), coverage),
-                metallic = Scalar(Mathf.Lerp(s.metallic, 0f, Mathf.Clamp01(coverage + pits)), coverage),
-                ambientOcclusion = Scalar(Mathf.Lerp(1f, s.aoValue, depthMix), coverage),
+                roughness = Scalar(roughness, coverage),
+                metallic = Scalar(metallic, coverage),
+                ambientOcclusion = Scalar(Mathf.Clamp01(occlusion), coverage),
                 normalControl = Scalar(Mathf.Clamp01(height), coverage)
             };
         }
@@ -1011,6 +1025,7 @@ namespace UMA.TexturePaint.Examples
             p.Add(Float("metallic", "Residual Metallic", 0f, 1f, 0.08f, "Metallic response remaining beneath oxidation."));
             p.Add(Float("aoValue", "Pit AO", 0f, 1f, 0.35f, "Ambient occlusion inside deep corrosion."));
             p.Add(Float("height", "Flake Height", 0f, 0.5f, 0.08f, "Raised oxide flake response."));
+            CoatingDamageField.AddParameters(p,true);
         }
 
         private static void AddMicroParameters(List<TexturePaintPluginParameterDefinition> p)
@@ -1444,6 +1459,7 @@ namespace UMA.TexturePaint.Examples
 
         private readonly struct Settings
         {
+            public readonly CoatingDamageField coating;
             public readonly AAAOrganicGeneratorMode mode;
             public readonly bool worldProjection, fullSurface, veinsEnabled, bruisesEnabled,
                 mottlingEnabled;
@@ -1480,6 +1496,7 @@ namespace UMA.TexturePaint.Examples
             public Settings(TexturePaintPluginParameterSet v, AAAOrganicGeneratorMode mode)
             {
                 v ??= new TexturePaintPluginParameterSet(); this.mode = mode;
+                coating=mode==AAAOrganicGeneratorMode.RustCorrosion?new CoatingDamageField(v):null;
                 worldProjection = v.Integer("projection", 1) == 1;
                 fullSurface = v.Integer("surfaceMode", 0) == 1;
                 seed = v.Integer("seed", 317 + (int)mode * 211);

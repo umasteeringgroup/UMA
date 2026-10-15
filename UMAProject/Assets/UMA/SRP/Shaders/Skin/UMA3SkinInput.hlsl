@@ -1,6 +1,7 @@
 #ifndef UMA_REALISTIC_SKIN_INPUT
 #define UMA_REALISTIC_SKIN_INPUT
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/BRDF.hlsl"
 // Identical layout in every pass: compatible with the SRP Batcher.
 CBUFFER_START(UnityPerMaterial)
 float4 _BaseMap_ST;
@@ -10,6 +11,7 @@ half _BumpScale, _Skinmask_Amount, _DetailNormalMapScale, _Detail_Normal_Scale;
 half _Detail_Gloss_Scale, _SSSBlend, _ScatterRadiusMM, _DiffusionWrap;
 half _DiffuseNormalStrength, _TransmissionStrength, _TransmissionPower, _SkinIOR;
 half _OilLobeWeight, _OilSmoothness, _SpecularAA, _SkinDebug;
+half _Metallic;
 CBUFFER_END
 TEXTURE2D(_MaskMap); SAMPLER(sampler_MaskMap);
 TEXTURE2D(_Skinmask); SAMPLER(sampler_Skinmask);
@@ -48,11 +50,24 @@ SkinData SampleSkin(float2 uv)
     s.surface.occlusion = saturate(lerp(_Ambient_Occlusion_Remap.x, _Ambient_Occlusion_Remap.y, mask.g));
     half f0 = Sq((_SkinIOR - 1) / (_SkinIOR + 1));
     s.surface.specular = f0.xxx;
+    s.surface.metallic = saturate(_Metallic);
     s.surface.alpha = 1;
     s.scatter = saturate(mask.r * controls.r * _SSSBlend);
     s.transmission = saturate(mask.r * controls.b) * _TransmissionStrength;
     s.oil = saturate(_OilLobeWeight * controls.g);
     return s;
+}
+
+// URP's specular workflow ignores SurfaceData.metallic. Blend explicitly so the
+// skin IOR remains unchanged at zero and both reflection lobes become metallic.
+void InitializeSkinBRDFData(SurfaceData surface, out BRDFData brdf)
+{
+    half metallic = saturate(_Metallic);
+    half oneMinusReflectivity = (1 - ReflectivitySpecular(surface.specular)) * (1 - metallic);
+    half3 specular = lerp(surface.specular, surface.albedo, metallic);
+    InitializeBRDFDataDirect(surface.albedo, surface.albedo * oneMinusReflectivity,
+        specular, 1 - oneMinusReflectivity, oneMinusReflectivity,
+        surface.smoothness, surface.alpha, brdf);
 }
 
 // Used by URP's lightmapping pass. No light-dependent color or emission is baked.

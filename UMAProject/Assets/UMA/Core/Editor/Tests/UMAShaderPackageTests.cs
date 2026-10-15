@@ -16,6 +16,7 @@ namespace UMA.Tests
         private string folder;
         private Shader sourceShader, targetShader;
         private Material source;
+        private Texture2D sourceTexture;
         private UMAMaterial owner, other;
 
         [Serializable] private sealed class Pack { public Entry[] entries; }
@@ -39,8 +40,14 @@ namespace UMA.Tests
             AssetDatabase.ImportAsset(shaderPath, ImportAssetOptions.ForceSynchronousImport);
             targetShader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
             Assert.NotNull(targetShader);
+            // Exercise a serialized texture reference. Unity's transient whiteTexture
+            // is not a project asset and is not guaranteed to survive material import.
+            sourceTexture = new Texture2D(2, 2);
+            sourceTexture.SetPixels(new[] { Color.white, Color.red, Color.green, Color.blue });
+            sourceTexture.Apply();
+            AssetDatabase.CreateAsset(sourceTexture, folder + "/SourceTexture.asset");
             source = new Material(sourceShader) { name = "Shared source" };
-            source.SetTexture("_OldTex", Texture2D.whiteTexture);
+            source.SetTexture("_OldTex", sourceTexture);
             source.SetTextureScale("_OldTex", new Vector2(2, 3));
             source.SetTextureOffset("_OldTex", new Vector2(.1f, .2f));
             source.SetColor("_Tint", Color.red);
@@ -110,7 +117,7 @@ namespace UMA.Tests
             Assert.AreEqual(1, copies.Count);
             Assert.AreNotSame(source, owner.material);
             Assert.AreSame(targetShader, owner.material.shader);
-            Assert.AreSame(Texture2D.whiteTexture, owner.material.GetTexture("_NewTex"));
+            Assert.AreEqual(sourceTexture, owner.material.GetTexture("_NewTex"));
             Assert.AreEqual(new Vector2(2, 3), owner.material.GetTextureScale("_NewTex"));
             Assert.AreEqual(new Vector2(.1f, .2f), owner.material.GetTextureOffset("_NewTex"));
             Assert.AreEqual(Color.red, owner.material.GetColor("_Tint"));
@@ -130,8 +137,9 @@ namespace UMA.Tests
             var request = Request(); request.Slots.AddRange(new[] { 1, 2, 3 });
             var copies = UMAShaderPackageUtility.Replace(request, folder);
             Assert.AreEqual(1, copies.Count);
-            for (int i = 0; i < 4; i++) Assert.AreSame(copies[0], UMAShaderPackageUtility.GetMaterial(owner, i));
-            Assert.AreSame(source, other.material);
+            // Asset import/undo may recreate managed wrappers for the same native asset.
+            for (int i = 0; i < 4; i++) Assert.AreEqual(copies[0], UMAShaderPackageUtility.GetMaterial(owner, i));
+            Assert.AreEqual(source, other.material);
         }
 
         [Test]
@@ -169,11 +177,11 @@ namespace UMA.Tests
             string copyPath = AssetDatabase.GetAssetPath(copy);
             Undo.FlushUndoRecordObjects();
             Undo.PerformUndo();
-            Assert.AreSame(source, owner.material);
+            Assert.AreEqual(source, owner.material);
             Assert.AreEqual("_OldTex", owner.channels[0].materialPropertyName);
             Assert.NotNull(AssetDatabase.LoadAssetAtPath<Material>(copyPath));
             Undo.PerformRedo();
-            Assert.AreSame(copy, owner.material);
+            Assert.AreEqual(copy, owner.material);
             Assert.AreEqual("_NewTex", owner.channels[0].materialPropertyName);
         }
 
@@ -194,9 +202,9 @@ namespace UMA.Tests
             Assert.AreEqual("_Tint", shared.Channels[1].Property);
             int before = AssetDatabase.FindAssets("t:Material", new[] { folder }).Length;
             var updated = UMAShaderPackageUtility.Update(request);
-            Assert.AreSame(source, updated.Single());
-            Assert.AreSame(source, owner.material);
-            Assert.AreSame(source, other.material);
+            Assert.AreEqual(source, updated.Single());
+            Assert.AreEqual(source, owner.material);
+            Assert.AreEqual(source, other.material);
             Assert.AreSame(targetShader, source.shader);
             Assert.AreEqual("_NewTex", owner.channels[0].materialPropertyName);
             Assert.AreEqual("_NewTex", other.channels[0].materialPropertyName);

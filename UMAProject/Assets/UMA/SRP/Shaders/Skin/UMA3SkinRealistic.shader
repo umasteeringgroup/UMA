@@ -28,6 +28,7 @@ Shader "UMA/URP/Realistic Skin"
         _TransmissionStrength("Backlight Transmission Strength", Range(0,1)) = 0.12
         _TransmissionPower("Backlight Focus", Range(1,16)) = 4
         [Header(Surface Reflection)]
+        _Metallic("Metallic (Entire Material)", Range(0,1)) = 0
         _SkinIOR("Skin Index of Refraction", Range(1.3,1.6)) = 1.43
         _OilLobeWeight("Oil Reflection Blend", Range(0,1)) = 0.25
         _OilSmoothness("Oil Reflection Smoothness", Range(0,0.9)) = 0.72

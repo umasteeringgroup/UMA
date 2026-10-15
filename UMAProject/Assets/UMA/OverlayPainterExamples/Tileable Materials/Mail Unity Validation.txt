@@ -1,0 +1,10 @@
+C:/GitHub/UMA/UMAProject/Assets | UMA 3.1f4 | Unity 6000.3.18f1
+PASS existing sprite GUIDs and local file IDs preserved
+PASS Chainmail and Scale Armor: SpriteSetHasAlignedLinearDataAndFullResolution
+PASS Chainmail and Scale Armor: AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel
+PASS Interlinked Chain Mail: SpriteSetHasAlignedLinearDataAndFullResolution
+PASS Interlinked Chain Mail: AtlasGuttersRepeatTheirOwnTileAcrossEveryChannel
+PASS chain mail shared coverage and real openings
+
+All updated sphere and cube previews saved.
+No scene saved or switched.

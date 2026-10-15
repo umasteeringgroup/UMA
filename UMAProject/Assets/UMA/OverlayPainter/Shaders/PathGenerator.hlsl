@@ -5,11 +5,25 @@ int _PathWoundType;
 float4 _PathColor, _PathHealedColor, _PathRimColor, _PathThreadColor, _PathChannelColor;
 float4 _PathShape, _PathRelief, _PathFinish, _PathStitches, _PathTextLayout;
 float _PathStitchSlant;
+float4 _PathStitchVariation;
+float4 _PathWoundNoise, _PathWoundFinish, _PathSutureOffsets;
+float4 _PathSutureRelief, _PathPuncture;
 Texture2D<float4> _PathText, _PathRaster, _PathRasterCoverage;
 SamplerState path_linear_clamp_sampler;
 float4 _PathRasterColor;
+float _PathRasterVariants;
 
 float PathBell(float d,float r) { return exp(-d*d/max(r*r,1e-8)); }
+float PathWoundHash(float2 cell)
+{
+    return frac(sin(dot(cell,float2(127.1,311.7))+_PathFinish.z*17.13)*43758.5453);
+}
+float PathWoundNoise(float2 p)
+{
+    float2 cell=floor(p),f=frac(p);f=f*f*(3-2*f);
+    return lerp(lerp(PathWoundHash(cell),PathWoundHash(cell+float2(1,0)),f.x),
+        lerp(PathWoundHash(cell+float2(0,1)),PathWoundHash(cell+1),f.x),f.y)*2-1;
+}
 float PathSegment(float2 p,float2 a,float2 b)
 { float2 v=b-a;return length(p-a-v*saturate(dot(p-a,v)/max(dot(v,v),1e-8))); }
 
@@ -38,11 +52,13 @@ float4 PathMaterial(float3 color,float coverage,float height,float roughness,flo
 }
 
 float4 ShadePathGenerator(float across,float along,float span,bool closed,float aa,
-    float3 position,float3 normal,float4 tangent,float2 uv,float width)
+    float3 position,float3 normal,float4 tangent,float2 uv,float width,float mirrored)
 {
     if(_PathGeneratorEnabled==5)
     {
         float2 q=float2(along/span,across);
+        float variants=max(1,_PathRasterVariants);
+        q.x=(q.x+(variants>1.5?mirrored:0))/variants;
         float4 raster=_PathRaster.Sample(path_linear_clamp_sampler,q)*_PathRasterColor;
         raster.a=_PathRasterCoverage.Sample(path_linear_clamp_sampler,q).a;return raster;
     }
@@ -105,26 +121,76 @@ float4 ShadePathGenerator(float across,float along,float span,bool closed,float 
         coverage=stretchCoverage;height=-stretchCoverage*_PathRelief.x*.4;
         color=lerp(_PathRimColor.rgb,_PathHealedColor.rgb,heal);recess=stretchCoverage*.12;
     }
-    if(_PathStitches.x>0)
+    float tissue=saturate(cavity*(1-rim));
+    if(_PathWoundType==2 || _PathWoundType==3)tissue=saturate(coverage*(1-rim));
+    if(_PathWoundNoise.x>0 || _PathWoundNoise.y>0)
     {
-        float count=_PathStitches.y,stepSize=span/count;
-        float y=(frac(u*count)-.5)*stepSize;
+        float2 q=float2(along,x)*_PathWoundNoise.z;
+        float mottling=PathWoundNoise(q);
+        if(closed)mottling=lerp(mottling,PathWoundNoise(q-float2(span*_PathWoundNoise.z,0)),smoothstep(0,1,u));
+        color=saturate(color*(1+mottling*_PathWoundNoise.x*tissue));
+        height+=mottling*_PathWoundNoise.y*tissue;
+    }
+    float roughness=lerp(_PathWoundFinish.x,_PathWoundFinish.y,saturate(rim+halo));
+    float sutureRange=1-_PathSutureOffsets.x-_PathSutureOffsets.y;
+    if(_PathStitches.x>0 && sutureRange>1e-5)
+    {
+        float count=_PathStitches.y,stepSize=span*sutureRange/count;
+        float stitchIndex=clamp(floor((u-_PathSutureOffsets.x)/sutureRange*count),0,count-1);
+        float y=(u-_PathSutureOffsets.x)*span-(stitchIndex+.5)*stepSize;
         float halfSpan=_PathStitches.w*.5;
         float2 a=float2(-halfSpan,-halfSpan*_PathStitchSlant),b=-a;
         float d=PathSegment(float2(x,y),a,b);
         float holeDistance=min(length(float2(x,y)-a),length(float2(x,y)-b));
-        float hole=PathBell(holeDistance,_PathStitches.z*1.7);
-        float pucker=PathBell(holeDistance,.045)*_PathFinish.w;
+        float3 segment=float3(b-a,dot(b-a,b-a));
+        float t=saturate(dot(float2(x,y)-a,segment.xy)/max(segment.z,1e-8));
+        if(_PathStitchVariation.x>0 || _PathStitchVariation.y>0)
+        {
+            // Search neighboring stitches too: displaced/slanted threads must not be
+            // clipped at the original spacing-cell boundary. Zero keeps legacy output.
+            float coordinate=(u-_PathSutureOffsets.x)*span;
+            float maxSlant=tan(radians(min(75,abs(_PathStitchVariation.z)+_PathStitchVariation.y)));
+            float support=max(_PathStitches.z+aa,3*max(_PathStitches.z*_PathPuncture.y,_PathPuncture.w));
+            float reach=halfSpan*maxSlant+support+stepSize*.45*_PathStitchVariation.x;
+            int first=(int)clamp(ceil((coordinate-reach)/stepSize-.5),0,count-1);
+            int last=(int)clamp(floor((coordinate+reach)/stepSize-.5),0,count-1);
+            d=1e6;holeDistance=1e6;
+            [loop] for(int stitch=first;stitch<=last;++stitch)
+            {
+                // Separate random streams keep angle and distance controls independent.
+                float jitter=(PathWoundHash(float2(stitch,113))- .5)*.9*_PathStitchVariation.x;
+                float angle=clamp(_PathStitchVariation.z+(PathWoundHash(float2(stitch,257))*2-1)*_PathStitchVariation.y,-75,75);
+                float2 samplePoint=float2(x,coordinate-(stitch+.5+jitter)*stepSize);
+                float2 start=float2(-halfSpan,-halfSpan*tan(radians(angle))),end=-start;
+                float distance=PathSegment(samplePoint,start,end);
+                if(distance<d)
+                {
+                    d=distance;
+                    float2 direction=end-start;
+                    t=saturate(dot(samplePoint-start,direction)/max(dot(direction,direction),1e-8));
+                }
+                holeDistance=min(holeDistance,min(length(samplePoint-start),length(samplePoint-end)));
+            }
+        }
+        float hole=PathBell(holeDistance,_PathStitches.z*_PathPuncture.y);
+        float puckerCenter=PathBell(holeDistance,_PathPuncture.w*.65);
+        float puckerRidge=PathBell(holeDistance-_PathPuncture.w*.65,_PathPuncture.w*.3);
+        float pucker=max(puckerCenter,puckerRidge)*_PathFinish.w;
+        float endDistance=min(t,1-t);
+        float arch=_PathSutureRelief.y>0 ? pow(smoothstep(0,_PathSutureRelief.y,endDistance),_PathSutureRelief.z) : 1;
         thread=_PathStitches.x==1 ? (1-smoothstep(_PathStitches.z-aa,_PathStitches.z+aa,d))*_PathThreadColor.a : 0;
         float roundThread=sqrt(saturate(1-pow(d/max(_PathStitches.z,.002),2)))*thread;
-        height+=roundThread*.05-hole*.025-pucker*.015;
-        coverage=max(coverage,max(thread,max(hole,pucker*.5)));
-        color=lerp(color,color*.3,hole);color=lerp(color,_PathThreadColor.rgb*(.65+.35*roundThread),thread);
-        recess=max(recess,hole*.7+pucker*.25);
+        height+=roundThread*_PathSutureRelief.x*arch-hole*_PathSutureRelief.w;
+        height+=(puckerRidge*.65-puckerCenter*.55)*_PathFinish.w*_PathPuncture.z;
+        coverage=max(coverage,max(thread,max(hole,pucker)));
+        color*=1-hole*_PathPuncture.x;
+        float3 threadColor=_PathThreadColor.rgb*(.65+.35*roundThread)*(1-hole*_PathPuncture.x*(1-arch));
+        color=lerp(color,threadColor,thread);
+        recess=max(recess,hole*_PathPuncture.x+puckerCenter*_PathFinish.w*.25);
     }
     coverage*=closed?1:smoothstep(0,.012,u)*smoothstep(0,.012,1-u);
     coverage*=1-smoothstep(.46,.5,abs(x));
-    return PathMaterial(color,coverage*_PathColor.a,height,lerp(_PathFinish.x,.75,heal),recess,
+    return PathMaterial(color,coverage*_PathColor.a,height,roughness,recess,
         position,normal,tangent,uv,width);
 }
 #endif
