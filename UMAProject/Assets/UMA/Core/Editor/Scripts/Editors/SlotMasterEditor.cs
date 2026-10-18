@@ -15,14 +15,15 @@ namespace UMA.Editors
         {
             LastSlot = "";
             OpenSlots = new Dictionary<string, bool>();
-            _slotPickerID = -1;
         }
 
         protected readonly UMAData.UMARecipe _recipe;
         protected readonly UnityEngine.Object _recipeContext;
+        internal bool IsEditing(UMAData.UMARecipe recipe) => ReferenceEquals(_recipe, recipe);
         protected readonly List<SlotEditor> _slotEditors = new List<SlotEditor>();
         protected readonly SharedColorsCollectionEditor _sharedColorsEditor = new SharedColorsCollectionEditor();
-        protected static int _slotPickerID = -1;
+        private readonly IndexedRecipeAssetPicker<SlotDataAsset> dropSlotPicker = new IndexedRecipeAssetPicker<SlotDataAsset>();
+        private readonly IndexedRecipeAssetPicker<SlotDataAsset> slotPicker = new IndexedRecipeAssetPicker<SlotDataAsset>();
 
         protected List<SlotDataAsset> DraggedSlots = new List<SlotDataAsset>();
         protected List<OverlayDataAsset> DraggedOverlays = new List<OverlayDataAsset>();
@@ -94,25 +95,16 @@ namespace UMA.Editors
             {
                 if (dropArea.Contains(evt.mousePosition))
                 {
-                    _slotPickerID = EditorGUIUtility.GetControlID(new GUIContent("slotObjectPicker"), FocusType.Passive);
-                    EditorGUIUtility.ShowObjectPicker<SlotDataAsset>(null, false, "", _slotPickerID);
+                    dropSlotPicker.Open(dropArea);
                     Event.current.Use();
                 }
             }
-            if (evt.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == _slotPickerID)
+            var pickedSlot = dropSlotPicker.TakeSelection();
+            if (pickedSlot != null)
             {
-                SlotDataAsset tempSlotDataAsset = EditorGUIUtility.GetObjectPickerObject() as SlotDataAsset;
-                if (tempSlotDataAsset)
-                {
-                    LastSlot = tempSlotDataAsset.slotName;
-                    AddSlotDataAsset(tempSlotDataAsset);
-                    pickedCount++;
-                    Event.current.Use();
-                }
-                else
-                {
-                    Event.current.Use();
-                }
+                LastSlot = pickedSlot.slotName;
+                AddSlotDataAsset(pickedSlot);
+                pickedCount++;
             }
             if (evt.type == EventType.DragUpdated)
             {
@@ -176,6 +168,8 @@ namespace UMA.Editors
 
             return false;
         }
+
+        protected SlotDataAsset DrawIndexedSlotPicker(string label) => slotPicker.Draw(label);
 
         protected void AddSlotDataAsset(SlotDataAsset added)
         {
@@ -268,7 +262,7 @@ namespace UMA.Editors
                 return string.Empty;
             }
 
-            string baseName = !string.IsNullOrEmpty(slotAsset.name) ? slotAsset.name : slotAsset.slotName;
+            string baseName = slotAsset.slotName;
             if (string.IsNullOrEmpty(baseName))
             {
                 return string.Empty;
@@ -299,7 +293,10 @@ namespace UMA.Editors
                 }
             }
 
-            string assetNameCandidate = GetBakedSlotAssetName(slotAsset, raceData);
+            // Older versions baked slots under Object.name rather than the logical slot name.
+            // Keep those existing assets resolvable, but create new baked slots with slotName.
+            string assetNameCandidate = string.IsNullOrEmpty(slotAsset.name)
+                ? string.Empty : slotAsset.name + "_baked_" + raceData.raceName;
             if (!string.IsNullOrEmpty(assetNameCandidate) && !candidates.Contains(assetNameCandidate))
             {
                 candidates.Add(assetNameCandidate);
@@ -522,7 +519,7 @@ namespace UMA.Editors
             }
 
             GUILayout.BeginHorizontal();
-            var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
+            var added = DrawIndexedSlotPicker("Add Slot");
 
             if (added != null)
             {

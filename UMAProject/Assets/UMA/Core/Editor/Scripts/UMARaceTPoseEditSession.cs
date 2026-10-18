@@ -97,6 +97,7 @@ namespace UMA.PoseTools
             }
             if (matching.Count == 0) throw new InvalidOperationException("No race T-pose bones match this character's skeleton.");
 
+            var textures = new Dictionary<Texture, Texture>();
             foreach (var renderer in Source.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 if (renderer.sharedMesh == null || !map.TryGetValue(renderer.transform, out var copy)) continue;
@@ -110,6 +111,8 @@ namespace UMA.PoseTools
                     if (material == null) return null;
                     var clone = new Material(material) { hideFlags = HideFlags.HideAndDontSave };
                     ownedResources.Add(clone);
+                    foreach (var property in material.GetTexturePropertyNames())
+                        clone.SetTexture(property, CopyPreviewTexture(material.GetTexture(property), textures));
                     return clone;
                 }).ToArray();
                 preview.bones = renderer.bones.Select(b => b != null && map.TryGetValue(b, out var mapped) ? mapped : null).ToArray();
@@ -135,6 +138,41 @@ namespace UMA.PoseTools
             var bounds = new Bounds(Source.transform.position, Vector3.one);
             foreach (var renderer in Source.GetComponentsInChildren<SkinnedMeshRenderer>()) bounds.Encapsulate(renderer.bounds);
             previewRoot.transform.position += Source.transform.right * (bounds.size.x + 0.5f);
+        }
+
+        private Texture CopyPreviewTexture(Texture source, Dictionary<Texture, Texture> textures)
+        {
+            // Asset textures can be shared. Generated atlases cannot: rebuilding the source
+            // releases them even though the preview's cloned materials still reference them.
+            if (source == null || EditorUtility.IsPersistent(source)) return source;
+            if (textures.TryGetValue(source, out var existing)) return existing;
+
+            Texture copy;
+            if (source is RenderTexture atlas)
+            {
+                if (!atlas.IsCreated())
+                    throw new InvalidOperationException("The character's generated atlas has been released. Rebuild the character before editing its T-pose.");
+                var snapshot = new RenderTexture(atlas.descriptor);
+                ownedResources.Add(snapshot);
+                snapshot.Create();
+                Graphics.CopyTexture(atlas, snapshot);
+                copy = snapshot;
+            }
+            else
+            {
+                copy = Object.Instantiate(source);
+                ownedResources.Add(copy);
+            }
+            copy.name = source.name + " - T-Pose Preview";
+            copy.hideFlags = HideFlags.HideAndDontSave;
+            copy.filterMode = source.filterMode;
+            copy.wrapModeU = source.wrapModeU;
+            copy.wrapModeV = source.wrapModeV;
+            copy.wrapModeW = source.wrapModeW;
+            copy.anisoLevel = source.anisoLevel;
+            copy.mipMapBias = source.mipMapBias;
+            textures.Add(source, copy);
+            return copy;
         }
 
         private static void CopyHierarchy(Transform source, Transform parent, Dictionary<Transform, Transform> map)

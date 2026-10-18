@@ -179,11 +179,6 @@ namespace UMA
         {
             return UMASettings.AddrStripTextures;
         }
-        public static bool PostProcessAllAssets()
-		{
-			return UMASettings.PostProcessAllAssets;
-        }
-
 		public static bool IsAddressable()
 		{
 #if UMA_ALWAYSADDRESSABLE

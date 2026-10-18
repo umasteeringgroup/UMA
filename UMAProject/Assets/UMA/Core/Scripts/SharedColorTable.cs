@@ -18,6 +18,8 @@ namespace UMA
 		public int channelCount = 3;
 		
         public string sharedColorName = "New Shared Color Table";
+        [Tooltip("Additional shared color names that can use this palette. Names are case-sensitive.")]
+        public string[] AlsoAppliesTo = new string[0];
         [NonReorderable]
 		public OverlayColorData[] colors = new OverlayColorData[0];
 

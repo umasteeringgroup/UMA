@@ -30,6 +30,9 @@ namespace UMA.Editors
         private readonly List<OverlayData> _overlayData = new List<OverlayData>();
         private readonly List<OverlayEditor> _overlayEditors = new List<OverlayEditor>();
         private string _name;
+        private readonly IndexedRecipeAssetPicker<SlotDataAsset> blendShapeSlotPicker = new IndexedRecipeAssetPicker<SlotDataAsset>();
+        private readonly IndexedRecipeAssetPicker<SlotDataAsset> sharedSlotPicker = new IndexedRecipeAssetPicker<SlotDataAsset>();
+        private readonly IndexedRecipeAssetPicker<OverlayDataAsset> overlayPicker = new IndexedRecipeAssetPicker<OverlayDataAsset>();
         public UnityEditorInternal.ReorderableList SlotTagsList = null;
         private List<string> backingTags = new List<string>();
         private static Dictionary<string, bool> _foldout = new Dictionary<string, bool>();
@@ -491,7 +494,7 @@ namespace UMA.Editors
                                 GUIUtility.ExitGUI();
                             }
                         }
-                        var addedSlot = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
+                        var addedSlot = blendShapeSlotPicker.Draw("Add Slot");
 
                         if (addedSlot != null)
                         {
@@ -610,7 +613,7 @@ namespace UMA.Editors
                 }
                 else
                 {
-                    var added = (OverlayDataAsset)EditorGUILayout.ObjectField("Add Overlay", null, typeof(OverlayDataAsset), false);
+                    var added = overlayPicker.Draw("Add Overlay");
 
                     if (added != null)
                     {
@@ -654,7 +657,7 @@ namespace UMA.Editors
 
                     if (!_slotData.isPlaceholderSlot)
                     {
-                        var addedSlot = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
+                        var addedSlot = sharedSlotPicker.Draw("Add Slot");
 
                         if (addedSlot != null)
                         {

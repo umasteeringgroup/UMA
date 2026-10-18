@@ -2,10 +2,10 @@
     "formatVersion": 2,
     "requiredPluginApiVersion": 1,
     "contentId": "overlay-painter",
-    "contentVersion": "3.1.3",
-    "umaVersion": "3.1f3",
-    "requiredCoreVersion": "3.1.3",
-    "minimumCoreVersion": "3.1.3",
+    "contentVersion": "3.1.5",
+    "umaVersion": "3.1.5",
+    "requiredCoreVersion": "3.1.5",
+    "minimumCoreVersion": "3.1.5",
     "maximumCoreVersionExclusive": "3.2.0",
     "installRoot": "Assets/UMA/OverlayPainter",
     "dependencies": [
@@ -86,6 +86,7 @@
         "Assets/UMA/OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md",
         "Assets/UMA/OverlayPainter/Documentation/OverlayPainter_PLUGIN_API_V2.md",
         "Assets/UMA/OverlayPainter/Documentation/PathGenerators.md",
+        "Assets/UMA/OverlayPainter/Documentation/SpriteMaterialBrowser.md",
         "Assets/UMA/OverlayPainter/Documentation/SurfaceDetails.md",
         "Assets/UMA/OverlayPainter/Documentation/TileableMaterialSpriteSets.md",
         "Assets/UMA/OverlayPainter/Editor",
@@ -95,6 +96,7 @@
         "Assets/UMA/OverlayPainter/Editor/Icons",
         "Assets/UMA/OverlayPainter/Editor/Icons/TexturePaintIcons.png",
         "Assets/UMA/OverlayPainter/Editor/MaskEditor.cs",
+        "Assets/UMA/OverlayPainter/Editor/OverlayPainterSpriteSetInspector.cs",
         "Assets/UMA/OverlayPainter/Editor/OverlayPainterSpriteSetPickerWindow.cs",
         "Assets/UMA/OverlayPainter/Editor/PluginManagerWindow.cs",
         "Assets/UMA/OverlayPainter/Editor/QuiltSpriteSetTileWindow.cs",
@@ -103,6 +105,7 @@
         "Assets/UMA/OverlayPainter/Editor/SpriteEditorIntegration/UMA.TexturePaint.Sprite.Editor.asmdef",
         "Assets/UMA/OverlayPainter/Editor/SpriteGridEditorBackend.cs",
         "Assets/UMA/OverlayPainter/Editor/SpriteGridOptionsWindow.cs",
+        "Assets/UMA/OverlayPainter/Editor/SpriteMaterialThumbnails.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintAnatomicalEditing.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintAssets.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintAutomaticSeams.cs",
@@ -145,10 +148,13 @@
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSamplePreview.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSavedLayout.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSessionLifecycle.cs",
+        "Assets/UMA/OverlayPainter/Editor/TexturePaintSpriteMaterialDrop.cs",
+        "Assets/UMA/OverlayPainter/Editor/TexturePaintSpriteMaterialsWindow.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintStageWindow.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintStaleLayerRegeneration.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintStandaloneSetupWindow.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintStencilEditing.cs",
+        "Assets/UMA/OverlayPainter/Editor/TexturePaintStubblePresets.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSymmetryEditing.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintWorkspace.cs",
         "Assets/UMA/OverlayPainter/Editor/TileProcessing",
@@ -173,6 +179,7 @@
         "Assets/UMA/OverlayPainter/Plugins/NoiseGeneratorPlugin.cs",
         "Assets/UMA/OverlayPainter/Plugins/ProductionFilterPlugins.cs",
         "Assets/UMA/OverlayPainter/Plugins/StubbleMakerGeneratorPlugin.cs",
+        "Assets/UMA/OverlayPainter/Plugins/StubbleMakerNaturalField.cs",
         "Assets/UMA/OverlayPainter/Plugins/StubbleMakerWorldDirection.cs",
         "Assets/UMA/OverlayPainter/Plugins/StylizationFilterPlugin.cs",
         "Assets/UMA/OverlayPainter/Plugins/SubdermalVeinField.cs",
@@ -223,6 +230,15 @@
         "Assets/UMA/OverlayPainter/Presets/Face and Coatings/War Paint.png",
         "Assets/UMA/OverlayPainter/Presets/Face and Coatings/Weathered Teal Enamel.asset",
         "Assets/UMA/OverlayPainter/Presets/Face and Coatings/Weathered Teal Enamel.png",
+        "Assets/UMA/OverlayPainter/Presets/Stubble",
+        "Assets/UMA/OverlayPainter/Presets/Stubble/Coarse Stubble-Preview.png",
+        "Assets/UMA/OverlayPainter/Presets/Stubble/Coarse Stubble.asset",
+        "Assets/UMA/OverlayPainter/Presets/Stubble/Five O Clock-Preview.png",
+        "Assets/UMA/OverlayPainter/Presets/Stubble/Five O Clock.asset",
+        "Assets/UMA/OverlayPainter/Presets/Stubble/Natural Short-Preview.png",
+        "Assets/UMA/OverlayPainter/Presets/Stubble/Natural Short.asset",
+        "Assets/UMA/OverlayPainter/Presets/Stubble/Salt and Pepper-Preview.png",
+        "Assets/UMA/OverlayPainter/Presets/Stubble/Salt and Pepper.asset",
         "Assets/UMA/OverlayPainter/QA",
         "Assets/UMA/OverlayPainter/QA/CLOTHING_FINISHES_VALIDATION.md",
         "Assets/UMA/OverlayPainter/QA/NORMAL_DETAIL_AUDIT.md",
@@ -247,6 +263,7 @@
         "Assets/UMA/OverlayPainter/Runtime/PluginTransaction.cs",
         "Assets/UMA/OverlayPainter/Runtime/ProceduralMeshMapBuilder.cs",
         "Assets/UMA/OverlayPainter/Runtime/StrokeHistory.cs",
+        "Assets/UMA/OverlayPainter/Runtime/StubbleMakerPresets.cs",
         "Assets/UMA/OverlayPainter/Runtime/TangentSpaceMapBuilder.cs",
         "Assets/UMA/OverlayPainter/Runtime/TextureLayerCompositor.cs",
         "Assets/UMA/OverlayPainter/Runtime/TexturePaintAnatomy.cs",
@@ -309,6 +326,7 @@
         "Assets/UMA/OverlayPainter/Shaders/RegionSelection.shader",
         "Assets/UMA/OverlayPainter/Shaders/RibbonProjection.shader",
         "Assets/UMA/OverlayPainter/Shaders/SourceExtract.shader",
+        "Assets/UMA/OverlayPainter/Shaders/SpriteMaterialPreviewPack.shader",
         "Assets/UMA/OverlayPainter/Shaders/Stencil.shader",
         "Assets/UMA/OverlayPainter/Shaders/StrokeRasterize.compute",
         "Assets/UMA/OverlayPainter/Shaders/UVTangentMaps.shader",
@@ -375,6 +393,14 @@
         "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Denim/Metallic.png",
         "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Denim/Normal.png",
         "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Denim/Roughness.png",
+        "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail",
+        "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail Sprite Set.asset",
+        "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/Albedo.png",
+        "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/AmbientOcclusion.png",
+        "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/Height.png",
+        "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/Metallic.png",
+        "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/Normal.png",
+        "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/Roughness.png",
         "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Knits and Soft Clothing",
         "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Knits and Soft Clothing Sprite Set.asset",
         "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Knits and Soft Clothing/Albedo.png",
@@ -936,8 +962,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Documentation/OverlayPainter.md",
             "guid": "bebd4323bc7256043886b55d67c73ce4",
-            "bytes": 201470,
-            "sha256": "d6f9f11ad90181df68693a64f62c706954732d54b6d02428e6a1a06d24df6703",
+            "bytes": 202195,
+            "sha256": "3fcaf23b0536728a6cbc1678c0bea8c30cdef17623aec9d9cd7e2aa300f9a13b",
             "metaBytes": 158,
             "metaSha256": "5fd30c8fa51fc3b56e91e4c19461f19ab26692469be66c6a3c1fc0671f574106"
         },
@@ -952,8 +978,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md",
             "guid": "6e18b46ecb214ea782542994d08bacfc",
-            "bytes": 114623,
-            "sha256": "3c7a55e4dfb6fd93b6b52e444745fbd1428939d9811315ba2e2d6bac48aa413a",
+            "bytes": 115895,
+            "sha256": "74409fb62110917254fd9073f5dc042edb13b964020f657d0bc3d99d43cb2546",
             "metaBytes": 158,
             "metaSha256": "5024b6c10cd586f6268d501af131dd453f71adfd8019545dc47c53a7737f9b47"
         },
@@ -974,6 +1000,14 @@
             "metaSha256": "6e1975c7717f820cb1d093cef23b10822b93f0b931016e0331c826e42c46654c"
         },
         {
+            "path": "Assets/UMA/OverlayPainter/Documentation/SpriteMaterialBrowser.md",
+            "guid": "9096d7d7a39c95e4283c4d915c3d9768",
+            "bytes": 4508,
+            "sha256": "a5358e72a3ea444c39aa21b331034ff40360b1367943dc5a5c5747a7dd5e7cda",
+            "metaBytes": 158,
+            "metaSha256": "ea24889511edc6bf09d5f9cfd46363aab90c79889f8642016fd6540dfb5cc476"
+        },
+        {
             "path": "Assets/UMA/OverlayPainter/Documentation/SurfaceDetails.md",
             "guid": "2bd728dbc61ca9446bf5ddc6d82e5ba4",
             "bytes": 8870,
@@ -984,8 +1018,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Documentation/TileableMaterialSpriteSets.md",
             "guid": "2ceb45bf0a4ebf14b9cec12fc5541653",
-            "bytes": 10953,
-            "sha256": "0422723e15208f5d52c9c1daa96125d7cbad223c514ed457d79b0e717f769143",
+            "bytes": 12239,
+            "sha256": "8d511e0fff7e4ae9f3c911326ee21e49f729688954307738bcead940e6683569",
             "metaBytes": 158,
             "metaSha256": "9d4d2ba8c1f8f5ea2a11e9e159b1f31992b4519348f8ace9060fe761c2f0e256"
         },
@@ -1046,18 +1080,26 @@
             "metaSha256": "50c8694b559aa543f73efdedd61204e13326e6232f31261c458534725d4cfb74"
         },
         {
+            "path": "Assets/UMA/OverlayPainter/Editor/OverlayPainterSpriteSetInspector.cs",
+            "guid": "015acb8e5e691f840b0c9444dfb38546",
+            "bytes": 1801,
+            "sha256": "de307d46ba13ea9197db77593d924f3f3b04fca08d19afadac90194171633541",
+            "metaBytes": 59,
+            "metaSha256": "6dd64933790397d5e12bf496441c14c566375b0aba81ecb878403c458ad62cfd"
+        },
+        {
             "path": "Assets/UMA/OverlayPainter/Editor/OverlayPainterSpriteSetPickerWindow.cs",
             "guid": "fa7f3ec1cfd24468a1ea55a2230e4b26",
-            "bytes": 21259,
-            "sha256": "f3a10bc6b67caf824d23dbb530ae481fb41edac1a021b6e5032e10ceec754f2e",
+            "bytes": 21254,
+            "sha256": "a6aadbd7acbc5294101e267c0e319ea0b27f326278eb644890b7a0a6f4ca785c",
             "metaBytes": 60,
             "metaSha256": "deda4235a6a727d1c8dd5a02de57cf3c18b8f6f3983ba732b04191be1161e2c6"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Editor/PluginManagerWindow.cs",
             "guid": "587950efd017d764a90488d80a19d263",
-            "bytes": 37955,
-            "sha256": "c7963412fe80e3a360ccd509d78aaeebdc9f09428d7e0242b2e6af7987dc519e",
+            "bytes": 37943,
+            "sha256": "977d9630edabe63f079b9aed64061f182c19ac3c3d561b75c03b37de5a12cafd",
             "metaBytes": 59,
             "metaSha256": "24e80a41c6d10393033a71c16f42f00c22f3e5ae6bc5cab4446b4de7c2600b3f"
         },
@@ -1108,6 +1150,14 @@
             "sha256": "0cb2f2f895e1ad8af5f6932e936b245ed979613960fbf9830436f534e3530829",
             "metaBytes": 60,
             "metaSha256": "95a9a8548b683165cee81721de674c1ecbc9060f8a450b372ac5a87c0bea6fda"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Editor/SpriteMaterialThumbnails.cs",
+            "guid": "b8af663d830bce24493728b9c9bdd016",
+            "bytes": 17062,
+            "sha256": "27a3427616316ee112589664c94ec7cf5c29272715d30593060e3f0db47d7d5d",
+            "metaBytes": 59,
+            "metaSha256": "61d28620b7aa340ef0257c852abe81a783d5b014bf1c8c5ecf4e5bbd3bb4f00c"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintAnatomicalEditing.cs",
@@ -1248,8 +1298,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintLightweightHistory.cs",
             "guid": "a5bb2417423e4f389986268660553eca",
-            "bytes": 140660,
-            "sha256": "b374b30de0bce0a3315ee171ec63396539c5e7e87d1594e16ca34554ee7b4d6f",
+            "bytes": 141097,
+            "sha256": "fb01066133a0e5c9a4a44f3d79a80541a752255b6f40403110b2343b1568cfa7",
             "metaBytes": 243,
             "metaSha256": "510c778a8c4aea9a6c64087c8f3983da9200f60c776df2fff79af85460bd71cd"
         },
@@ -1376,16 +1426,16 @@
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintProjectSettings.cs",
             "guid": "3bb475f35493d624bbb875610205bb57",
-            "bytes": 5411,
-            "sha256": "9ea3c622f4980ab5a861ebd5c792520040103cdde5f420b8e4cbefc5b235d214",
+            "bytes": 5825,
+            "sha256": "2ec5295f6fe68523d747414dcfee6f2b99d777cc5ccb26f6ed13857ed3ae64c1",
             "metaBytes": 59,
             "metaSha256": "793fff6b55763dca9a49cc8a57545c647a168ff3cc9099c5e94c69b589127675"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintProjectionEditing.cs",
             "guid": "d1b723edccb0482aad93e88010a724ef",
-            "bytes": 47338,
-            "sha256": "655d8dc1091989f93b1af5947a7022b79904e961636a2780890a98c0ac8aa95c",
+            "bytes": 47420,
+            "sha256": "aeb59c0a2ffcbd0590faced07181e3f788d71eeba05298beb4337c586ce522e6",
             "metaBytes": 60,
             "metaSha256": "1904fd80155ba6b028beab783c413a29bbcc783717764650a2396b7bb168e0d7"
         },
@@ -1432,8 +1482,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintSavedLayout.cs",
             "guid": "ee92fdf50a7926e41ac554d63c0160a4",
-            "bytes": 18355,
-            "sha256": "1172de376eb56b25915a5559b33317f31c78055d2187eeac7929a35304857ad4",
+            "bytes": 18528,
+            "sha256": "e52fc301554435f2cc3cde15ce6c265fdcda1950d0b35d7a6e2fff806120215d",
             "metaBytes": 59,
             "metaSha256": "d88c11ffc1d5a7ee915cc7ee21e7a11cf5876d7c9852543ced5bc617e029fb88"
         },
@@ -1446,10 +1496,26 @@
             "metaSha256": "21e6a5ac85edc18cfd5bd6a7415b3c1683e22ef953ff38bf8a7c5a3126e643cd"
         },
         {
+            "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintSpriteMaterialDrop.cs",
+            "guid": "4129c19a64e13214297dcd7c0a5f1e42",
+            "bytes": 5537,
+            "sha256": "6a60d954263b0f042460abfdf636d700f2b03f2f6e914860bc7eb6b2e7a63830",
+            "metaBytes": 59,
+            "metaSha256": "3d80f0384207b34d589741b5c1a980fe45e629563c6f6fc2dca2919103a70751"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintSpriteMaterialsWindow.cs",
+            "guid": "8e49e8f0b5e5c354093ec4e083f82aa4",
+            "bytes": 8379,
+            "sha256": "a5d8f1cbb65416a09a32bcef32e4f46c324cdd7887e58a73c5228c5f14e4535e",
+            "metaBytes": 59,
+            "metaSha256": "c0750358072c21097ae14b789e61ffff66ca02306ac4e113faf7d5a877c848dc"
+        },
+        {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintStageWindow.cs",
             "guid": "92248d2bbffa09842a5269c18be4ba44",
-            "bytes": 385370,
-            "sha256": "5f38adc3766253d0d9233a470bdc3755a583375a215827ee6a31a95bedb8c149",
+            "bytes": 383404,
+            "sha256": "332e8bc48fb232360885a83c004f195c2ee567beba95b200918680cc8be84418",
             "metaBytes": 59,
             "metaSha256": "a481770b445f9a41fbf44647a2884dc39a171c1378c38746bfb1c62b920ae554"
         },
@@ -1478,6 +1544,14 @@
             "metaSha256": "9df288af4cbb2fd0b75dcbea3fc55a26e2900ade2aaf6d02766662054e807cfb"
         },
         {
+            "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintStubblePresets.cs",
+            "guid": "a5fb6358d63fb2344af2560511abb4c1",
+            "bytes": 3520,
+            "sha256": "2a2cf0e64a21955ff6e9af7bd25884bf344212568f8df2da19cfff3c849174b5",
+            "metaBytes": 59,
+            "metaSha256": "94043b63c0897862c42e52b041e2d3a4bb8191e23963fe11442c8fbd499c5dcd"
+        },
+        {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintSymmetryEditing.cs",
             "guid": "4bc412eac1c740ec9a8c1b44120a3abb",
             "bytes": 21775,
@@ -1488,8 +1562,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintWorkspace.cs",
             "guid": "b5e8e60c9f344d50a7a5f35a38eecb7a",
-            "bytes": 441940,
-            "sha256": "974d0548a758a45e1ac1dbcaf67e4cb27e8f827e2e7ea7cb0beeac36aa75a3c9",
+            "bytes": 445124,
+            "sha256": "1f35733a39c1c9a3160db23bada57089e7cc32384212f5e3f54271304106ffb3",
             "metaBytes": 240,
             "metaSha256": "fcea792ea634ab43851d0a489e5aac4f3e66311e9231a365d9fc268bbe1cd9bb"
         },
@@ -1544,8 +1618,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/ExportTemplates/Production Export.asset",
             "guid": "4ca7bf48cd7f4b989555b940994b29e6",
-            "bytes": 969,
-            "sha256": "9667cfc7f6aefadf059a2780e1aaa08cffc14123c40dea9b47ea20750a114da3",
+            "bytes": 973,
+            "sha256": "5d8c1c4b165f21f6bc50ccbee507c9f64687139df90cf15450f0472dc00ec3f7",
             "metaBytes": 189,
             "metaSha256": "3a7a595f656f09a8c5f3bc262ff2c1e213e51768dfeb185b9d0d75fbd0e55dce"
         },
@@ -1664,16 +1738,24 @@
         {
             "path": "Assets/UMA/OverlayPainter/Plugins/StubbleMakerGeneratorPlugin.cs",
             "guid": "c52668b6b9d77fd46bd332bff60b4c1c",
-            "bytes": 44082,
-            "sha256": "8031f9d8e1ce1d04b9a1ae2b4b051c9ef436298a80b47d052a7ac6b731707f8e",
+            "bytes": 50611,
+            "sha256": "d45f7a744bdd3fa957df052beccd0e438e2199a005320a12a7ea605654bbd13b",
             "metaBytes": 59,
             "metaSha256": "8aca339d598d22d7644d9ce5197c7997fdf8410690beaedcd04afec41449879d"
         },
         {
+            "path": "Assets/UMA/OverlayPainter/Plugins/StubbleMakerNaturalField.cs",
+            "guid": "9604286fce10aa546a72bd6e3685101f",
+            "bytes": 15414,
+            "sha256": "54ca3b38d57830c3df0152961dc0a5085f00d3e6bee9cfb3b617eb99b26330df",
+            "metaBytes": 59,
+            "metaSha256": "0584f944592fad23dbcac8d7a7eea70aa5d1877e0f08ff773baab43642886a36"
+        },
+        {
             "path": "Assets/UMA/OverlayPainter/Plugins/StubbleMakerWorldDirection.cs",
             "guid": "bcd751d5f48996341825ffcdfc4ff57f",
-            "bytes": 9287,
-            "sha256": "8b3fc23ffbc8aadb9497bb38f95a6016ab2b4265b7e443ea9c1c96652084bd8d",
+            "bytes": 9764,
+            "sha256": "01402ac2f76ae2a97a49b6dd3de367d3ea526e6ea2e6364f08c6951d3c6f8e28",
             "metaBytes": 59,
             "metaSha256": "b9e2fd6d355d1c2a6ef1512c14ef9c83b87cf31892289e66c311a8592be16750"
         },
@@ -1760,8 +1842,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Presets/Clothing Finishes/Black Coated Fabric.asset",
             "guid": "a541dd8ff0b83bc4787b1c1a0562aa4e",
-            "bytes": 73834,
-            "sha256": "0d1aaff3d806530a07e6d83ea0f9df93d2684010c9c78aba7a3bcfe694e3a44c",
+            "bytes": 79933,
+            "sha256": "8d7e6379dbc72eec4533eafc9fd19fb977d155e90796002d50506d92a54a5e6c",
             "metaBytes": 189,
             "metaSha256": "162660fae077e8513a2125d17a16121aa6dc97a7d39af79c59c348c23f2ffbd6"
         },
@@ -1776,8 +1858,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Presets/Clothing Finishes/Chestnut Soft Leather.asset",
             "guid": "d7b7c17ab51bceb47b54d63ed88b3358",
-            "bytes": 73837,
-            "sha256": "470e2ecd66ec57d0cf85bf6c2bd55075caa157dfc488c1be478159a293a6ff95",
+            "bytes": 79936,
+            "sha256": "a54f3f2796fde7804dc4db625db71c5cc48623c13e7eb0876a10989c2378b991",
             "metaBytes": 189,
             "metaSha256": "f7e70deb576aa9e5d24c8f469c020c3beaccaac74254de4b3ef660fb7ec82a03"
         },
@@ -1792,8 +1874,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Presets/Clothing Finishes/Dried Salt on Charcoal Cotton.asset",
             "guid": "0b945de5879fb7648bffd5a948f994f8",
-            "bytes": 213715,
-            "sha256": "b1579feec00d014b53bcec7e988f0d4ea57baf7b135d7f65b9f0d512e1764708",
+            "bytes": 225913,
+            "sha256": "8ae303bef4ac2ed6984db636017cb9f0c2e93859beebeef15b86ea826f91b136",
             "metaBytes": 189,
             "metaSha256": "648d90188f2e6f48d9f62293f3ac7d3f7e2e6cf320799514dfc3d3428d1fff19"
         },
@@ -1808,8 +1890,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Presets/Clothing Finishes/Rain-soaked Navy Cotton.asset",
             "guid": "9431d31952f60a642bd91b0677d5e607",
-            "bytes": 213708,
-            "sha256": "9f6f61506fb6cc785edc60a48bf5f3b6e97d5f27f7115863149ac38f725ab4d6",
+            "bytes": 225906,
+            "sha256": "55fffd928258cf1e81816d76f60c39822286687ead3631d2fcb8a384a583bd81",
             "metaBytes": 189,
             "metaSha256": "6cda6d1809631fe13306b2f3b64185600daf043c5058d6ddb092b1ed663973a8"
         },
@@ -1824,8 +1906,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Presets/Clothing Finishes/Sand Suede.asset",
             "guid": "3fb3adae63a5e4f4195c63d009c60066",
-            "bytes": 73804,
-            "sha256": "3d66de657e513f8280759c2d9699285c1264e42786c7ad17f2cf383a2ef952fb",
+            "bytes": 79903,
+            "sha256": "98ae2e7a50fe62e14a680d8ea8d4dcf3b415a1d3a1683c81eaf2191847662100",
             "metaBytes": 189,
             "metaSha256": "a46363e74851e125c0ec5086dfbccc297127ee3fec39cf3ad6a8a185a2035c38"
         },
@@ -1840,8 +1922,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Presets/Clothing Finishes/Sweat-darkened Jersey.asset",
             "guid": "fb5ca08e136b3614b89c6ed5141f33d7",
-            "bytes": 213687,
-            "sha256": "edfa5a147dc980ed1a6d6af77055b6be0b813733f8501525618c54af429a6cb9",
+            "bytes": 225885,
+            "sha256": "e0ef940755b25ce74a909ddb57c4b92128d07ada4655a11adf286c9c2f8805f3",
             "metaBytes": 189,
             "metaSha256": "835b94c2e144a7fe184f980f4f512c9004d6e8a5b616688d8ead5dee66bb4f0f"
         },
@@ -1856,8 +1938,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Presets/Clothing Finishes/Weathered Brown Leather.asset",
             "guid": "3d25eb86184448f4bb35c28c613e0623",
-            "bytes": 73828,
-            "sha256": "fb8001611e13047ed6dc37da384fc11b5c3985b913ec50cb4431ec0316fe4633",
+            "bytes": 79927,
+            "sha256": "d4d15b85ca1d2a912e9e0f248045ebb4493a69aee5a5c6687b61dad203278b6b",
             "metaBytes": 189,
             "metaSha256": "9637debd429ee3c91f5a7fecae0fa6657aee42042ea46f29457055084902cca8"
         },
@@ -2070,6 +2152,78 @@
             "metaSha256": "70288c9788812a32b3cfe9cf3288c66e612652ac8082fdca98b16c0318644caf"
         },
         {
+            "path": "Assets/UMA/OverlayPainter/Presets/Stubble",
+            "guid": "dc59643ce7a4cb14e8d473fa5c1b2e26",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "f45c85d8474a2d326ddd0b512c642350c0090d71d68830eab6733085181a48fe"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Presets/Stubble/Coarse Stubble-Preview.png",
+            "guid": "caabc36e97c0400409e9e0be58d1e20a",
+            "bytes": 60992,
+            "sha256": "7f5418a38031d288b7e93c3ebd13e2dea724640d44ac3a3a0b8bb3a5d30146a1",
+            "metaBytes": 3364,
+            "metaSha256": "47eac6d01729e7164acf0c65988b72dce5ae7896058bfed6f3314c9a9b39526c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Presets/Stubble/Coarse Stubble.asset",
+            "guid": "9eded9ae8ad5fec4a88dfbd06d9a3dfb",
+            "bytes": 158912,
+            "sha256": "abdca1df798fa4060d46344dc4f7a3b65b12c1c2ce22214a9cf089f5ec5b54b8",
+            "metaBytes": 189,
+            "metaSha256": "50ea99e340e62ccf5c462716176d65054ded725d47f2f4d2082c130644fe6f3f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Presets/Stubble/Five O Clock-Preview.png",
+            "guid": "1b68a95270d7eb441af61a05972c18b0",
+            "bytes": 59231,
+            "sha256": "82b24b35a0efb28950cd6ac8e6862573d54d6cad8094138c104ed578f12bcd99",
+            "metaBytes": 3364,
+            "metaSha256": "662c3904fc34d9b25d2d31aef2fd4738d459737817cc799528022592c924821d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Presets/Stubble/Five O Clock.asset",
+            "guid": "a50734702f0ba8341b2ff00df5f9d4c1",
+            "bytes": 158899,
+            "sha256": "8304856396950330a8195032b734f58ecb914d1b002845a39c91e457d34d6f2e",
+            "metaBytes": 189,
+            "metaSha256": "7dd12ae5eead605489940771f74d057eb3e77ce607598747c243452788326dfa"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Presets/Stubble/Natural Short-Preview.png",
+            "guid": "c84353408cb93bf41bd845329b4b6cd6",
+            "bytes": 59742,
+            "sha256": "09fca7e109d39f58ef3e11c7d8241355f1b168c80b8c04435d5e097872e9c9fc",
+            "metaBytes": 3364,
+            "metaSha256": "7715ada55f9dd26a79c455fe8f96dc60f55aa5e5e1006ad65d917561db853673"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Presets/Stubble/Natural Short.asset",
+            "guid": "ba692ef4cf8364141a414774e6143fdc",
+            "bytes": 158885,
+            "sha256": "52582cf3fd7895b55060d982494520a067ecb6abcfdc04e11f73e22c846a6829",
+            "metaBytes": 189,
+            "metaSha256": "4fb71806e157ac8cd54f719373651f4a6bea96c5d84daf6b6d04b5d2e07f4f43"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Presets/Stubble/Salt and Pepper-Preview.png",
+            "guid": "57d70a4737a266c4dbd770d96b729c70",
+            "bytes": 59682,
+            "sha256": "d6edd77c5194819a2ccd568fc5224011ea5e2a91ed845561b3b731137109e403",
+            "metaBytes": 3364,
+            "metaSha256": "a811b3f974c0d224cdc767132924fb1bee2838215916f9377e6790eb97c973c1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Presets/Stubble/Salt and Pepper.asset",
+            "guid": "6f1fecc136f01c1458f2b55e6cfc7c83",
+            "bytes": 158909,
+            "sha256": "e335b94742b42e64a8cd67057d014748a1a8629bbf9eeb3e097547d49d97029b",
+            "metaBytes": 189,
+            "metaSha256": "448b2bc8f8ed91a50eb2994b23c9600e45e7c11a2765c9f61a286369d463cb73"
+        },
+        {
             "path": "Assets/UMA/OverlayPainter/QA",
             "guid": "2cd09d89d2e8406086c09d430e5c9935",
             "bytes": 0,
@@ -2200,8 +2354,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Runtime/OverlayPainterSpriteSet.cs",
             "guid": "e6d19d11b87f48a79a08cc592bbb8ebc",
-            "bytes": 1363,
-            "sha256": "58a86f1e6148fa93a46a96634f54786df03749a3b7cc5dc474405ce841519f41",
+            "bytes": 3327,
+            "sha256": "da13cc0ec81ebae0ab5273e7370125dfd2dcf6bbaf00b3fd79bb7e7518105e46",
             "metaBytes": 60,
             "metaSha256": "2ee1116193017e1d8be444884b304cae8c085e0ab595023f89101822b7880483"
         },
@@ -2232,8 +2386,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Runtime/PluginSpriteSetInput.cs",
             "guid": "bfba6f2bf50a2f141a5d5fbc4c1d1f77",
-            "bytes": 5061,
-            "sha256": "a55b3e89dd1061f987bc84de6e2d7b8f6fc548d8b5fc5a275d101d5ad4a5f24e",
+            "bytes": 5384,
+            "sha256": "e4801a9fbb3c13a625fe0268361f8c144868ddcdc1b5860ee58cfa7cad286966",
             "metaBytes": 59,
             "metaSha256": "b115b0e7dc6d4d594f9f57c3aa09ade79791282856e0c687e4cafd825cc2b49f"
         },
@@ -2260,6 +2414,14 @@
             "sha256": "79e65c187fae541c4537d05ae12f19b97d69def624543505c9c3636e2c966607",
             "metaBytes": 59,
             "metaSha256": "2b0f8970c5f8bf1968d10696688c60f3b4858c8f9ec390ff0ddd8b44b709231a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Runtime/StubbleMakerPresets.cs",
+            "guid": "2d5d85ed0fcb9274d89f717ccd345e77",
+            "bytes": 2327,
+            "sha256": "8ee3341592e04678831d72d4aa37e2d4073cca3a8c39c770e04adb813ab0fb99",
+            "metaBytes": 59,
+            "metaSha256": "26e74b389267a4959794a332e3094ad22f868d54566bfec47eeb6607ec3273c6"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Runtime/TangentSpaceMapBuilder.cs",
@@ -2600,8 +2762,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Samples/SlotMaskExample.asset",
             "guid": "56de2b79077dee2448925764f9945981",
-            "bytes": 469,
-            "sha256": "3612b28804a7be04b9909e2cf7467a2d00db898b3ef8ac0e72666417b64ff421",
+            "bytes": 974,
+            "sha256": "2c27307f9ea0d5339dbe1b91ddc403bfb80003bf53a7a70967433b7da5ca0f47",
             "metaBytes": 182,
             "metaSha256": "48e4f0cd096da65267226c27d282ef5c69412a350940782227a94b65fc388e5e"
         },
@@ -2758,6 +2920,14 @@
             "metaSha256": "0637e2ff9f3d255400e0090f71edfed42d5b288b08dd18c8625120875feae2ca"
         },
         {
+            "path": "Assets/UMA/OverlayPainter/Shaders/SpriteMaterialPreviewPack.shader",
+            "guid": "cced7e6a6c81dd9489b62635f29ef177",
+            "bytes": 1890,
+            "sha256": "db5e24f9c1a339f175e551584dab72b48211343c5d1abf4a34e53f6621df8af1",
+            "metaBytes": 204,
+            "metaSha256": "0e5120f81d9634b90f65885e0ecd5bf6086792eb79d808e75337b3ac2c4011c3"
+        },
+        {
             "path": "Assets/UMA/OverlayPainter/Shaders/Stencil.shader",
             "guid": "3b8450de5b121b1409db0ff0ff16aa23",
             "bytes": 1679,
@@ -2832,8 +3002,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/ClothSpriteSet.asset",
             "guid": "62e87395b83d1ad4ebe57959cb3eb3cb",
-            "bytes": 1108,
-            "sha256": "67719ffef0f355e72d83ee12792836612dd277887dbd5bfa4e89e63519ff7157",
+            "bytes": 12617711,
+            "sha256": "7b5012c4ff6e59d1887ed02bdd5d029e84373c63435c3bf5e156950e12cac516",
             "metaBytes": 189,
             "metaSha256": "6e3de7c82f049b02a6099e7ca22a92aa2d014348313a1b9819da98ca29f95042"
         },
@@ -2848,8 +3018,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/LeatherSpriteSet.asset",
             "guid": "3b5f7145e2054639b3a6398452eb1f60",
-            "bytes": 1328,
-            "sha256": "3a813dfa48d3c61d6ed5b7027a873e0750113cb1f3de90a9571f0f7d6a17fc35",
+            "bytes": 12617919,
+            "sha256": "69b6c401572790850d9c4bfa38d59cf7801ce77208c060d5079a9fc02e91e09f",
             "metaBytes": 189,
             "metaSha256": "e1773a121dd32684c82f3857bf38e3935338869afed25c1e125f7fd2e6e27164"
         },
@@ -2904,8 +3074,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Aged Leather Sprite Set.asset",
             "guid": "8a96bd176cd9ce844be9935c28164221",
-            "bytes": 1334,
-            "sha256": "c9c5c5e4fd5f173b4892d4e6484387f4e9cd6736da65ee4db1356023c42666e5",
+            "bytes": 7098295,
+            "sha256": "09ff4918d104606d7bf023a00a2c222b784297ca04021044762ced014307d0bd",
             "metaBytes": 189,
             "metaSha256": "6a43823e14879e673a9761afd2e8c4f996360e84e6fc578d1ccb820bd3aab4f5"
         },
@@ -2968,8 +3138,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Aged Metals Sprite Set.asset",
             "guid": "188b818d7174d134dba772cbba6699db",
-            "bytes": 1327,
-            "sha256": "add23deb9ffe07e7a86f2f3420d24fd420810a5dc1298bff6d08d736083ae59d",
+            "bytes": 7098292,
+            "sha256": "069b200152bb34b9ac4809356b3e19a2f388c2fff98cefc7c4faa4a74daed4c5",
             "metaBytes": 189,
             "metaSha256": "474f1f48c3b134f92b127d477cb445a1f85bb92e4da49f3fce933c4c5bd8781e"
         },
@@ -3032,8 +3202,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Bone Horn and Keratin Sprite Set.asset",
             "guid": "c373456c6ea73b245b7a6d5753cb989e",
-            "bytes": 1319,
-            "sha256": "a53134023be5d962f8c563066bc5f19c1deabfc73efaa88eb2958008a9d88016",
+            "bytes": 7098288,
+            "sha256": "ea47d6c399a6b0db0505e2ded72dc859f61ba371131b777e1fe977d50ad67b60",
             "metaBytes": 189,
             "metaSha256": "6591dcae212222b2edbd54b9224912c45cedfc5534ecdfd884986e053b46ea11"
         },
@@ -3096,8 +3266,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Brocade and Decorative Fabrics Sprite Set.asset",
             "guid": "496c8fa8e444dc44789d58c9cfe7d643",
-            "bytes": 1386,
-            "sha256": "4840d59d90a55d3406d15395824db0be2c35157fc2273b05f7c085290b010336",
+            "bytes": 7098343,
+            "sha256": "bb13615a681622c1497fc7bb4454d14ad30605ce50bbbc007f728fea149d8c3b",
             "metaBytes": 189,
             "metaSha256": "ca519a931f4abab26bb0d33be6a50ccdd32e1cafaa828052e38b5e0e158f064e"
         },
@@ -3152,8 +3322,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Catalog.json",
             "guid": "478a999e6ee7d1d47841373bc6f05909",
-            "bytes": 21466,
-            "sha256": "7f538f9c2649aafc6b3761c421a400fc8891c5d784e0aa57ed7ab960aa25ec0d",
+            "bytes": 23692,
+            "sha256": "e9789a0b83ccb2dfdfaee89227b4d7f7128688b14e578bba1baab726a18775a5",
             "metaBytes": 158,
             "metaSha256": "19b2bfb09921c19460fd8e35d447f5a74caca64374c9bbec22a15b83be8928f4"
         },
@@ -3168,56 +3338,56 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Chainmail and Scale Armor Sprite Set.asset",
             "guid": "5f196680633db9f4eb0263d57f939d52",
-            "bytes": 1358,
-            "sha256": "79075076e3931a6bb152189a493bcd893dc5315ed17bf544692114bb117df932",
+            "bytes": 7098369,
+            "sha256": "4647a8e12406ed7f277b51b863734a8c511fc617c907b5b53b4f20025cd414fc",
             "metaBytes": 189,
             "metaSha256": "234831a549932797301bcc743e890e7aeab898a61dcda9e8b5672f1ee673cddb"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Chainmail and Scale Armor/Albedo.png",
             "guid": "23dfabec72f34ab458eefcc43072dfd1",
-            "bytes": 395874,
-            "sha256": "c77bb74ff10afb26572540f4eeda36b2604d17a27e837eb0f2edd7ab01af60f7",
+            "bytes": 2398400,
+            "sha256": "e724f9808b4eff16b1c36b05a93af444d4b344752a43efabb745632cc5dd1354",
             "metaBytes": 8336,
             "metaSha256": "7f64d88ae985b5e771b28cf9d9b134307611e39e49a660dfe39b37bbac7ccc48"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Chainmail and Scale Armor/AmbientOcclusion.png",
             "guid": "39f539798cb476c4ebea11c2fe4ee64d",
-            "bytes": 646676,
-            "sha256": "dc90b95002e34ddda350dad7c31bd16b8d1c637823b50cbee1b4303ac9db4144",
+            "bytes": 3689820,
+            "sha256": "1b80fe69ed944ec7e716f413d4e8240b73c0f4a04577612d594ba1bebf35ead3",
             "metaBytes": 8334,
             "metaSha256": "8a66543f7512ee6a5b8222553a24cf4ced0db6ba77dfb4ddb0e138110f2695ba"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Chainmail and Scale Armor/Height.png",
             "guid": "c75682562ea3a70429e30837ad5cc527",
-            "bytes": 10406094,
-            "sha256": "e496e5817ceb2464a623bb5e420690b18da365f783d9053baf2c3ecd98b9ab06",
+            "bytes": 14331845,
+            "sha256": "53979f594b42361916eca42f301bb2eb6123ac2f0bc05c124ea03ddffcbef86e",
             "metaBytes": 8336,
             "metaSha256": "46014a630bab7cd79b53b3c2a54708d589f15c4b8125358cf711b5c426e65514"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Chainmail and Scale Armor/Metallic.png",
             "guid": "e9cedbb32390bed4b9a6833cf3015528",
-            "bytes": 382486,
-            "sha256": "7d0a1631153691400e54d5376a84bf7054307f0ae386b01465496da625ad67e2",
+            "bytes": 348869,
+            "sha256": "6c8f0e0a7b602aac974ccc578edb03b482ca5f16a9d762575debf924d9f97813",
             "metaBytes": 8334,
             "metaSha256": "8816da192f4e648c7b058f5f9b85a36d492b91c887716395df72105b79051be3"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Chainmail and Scale Armor/Normal.png",
             "guid": "578a8fe133632784eb4eac33d7e08d5f",
-            "bytes": 6578882,
-            "sha256": "d3f231617a9084c7dbde51842b41a5f6450093f23291d2b8d017cd861b7f29c9",
+            "bytes": 12835269,
+            "sha256": "e66778c42d679a1945daa8c5c043a3241605ed02c66b5faffd6ce313438336f5",
             "metaBytes": 8332,
             "metaSha256": "3fef5dda06f4acc796894b75c51a08ca49ea29c3e40d8347f8a832e4ba268d57"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Chainmail and Scale Armor/Roughness.png",
             "guid": "e78a0a8dbae805a489a8933a1c040e07",
-            "bytes": 3454151,
-            "sha256": "51fdc434df42c1a00475b3e289c382f0b4c5696c0e106ca7bdee6c685e11f7b0",
+            "bytes": 4041979,
+            "sha256": "2a0f81035ef8ad6ef7008a16d173b512a73682ed5ae0cd95417ed3c58709029d",
             "metaBytes": 8336,
             "metaSha256": "1f020fd741f6ce72e5d0b141823a6541b95d6a489238745532949fcfafdaa36c"
         },
@@ -3232,8 +3402,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Denim Sprite Set.asset",
             "guid": "bab83b3900081d848b4f988d5f9757c1",
-            "bytes": 1288,
-            "sha256": "ca31eeac16edefa77a631f6536d23ba5c5e14ba46a7bb2c59d2857e86bfbf43c",
+            "bytes": 7098263,
+            "sha256": "b9ca25536b5eb50f82095d3bdeea9d763f8fc0e9263c679e4effddb2388386b9",
             "metaBytes": 189,
             "metaSha256": "b8eebcbc0cbf1dd4f529b6c50c3b24b3cab74134179c5632ad704fffcbdc805e"
         },
@@ -3286,6 +3456,70 @@
             "metaSha256": "7054edef6dcf56e018c3a680c76a0e5c7b331e783a06c3712fa840ae931d3a9b"
         },
         {
+            "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail",
+            "guid": "dc288ac2eb58586489e8f0f9207641c3",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "492c7b67578ff39a7aa8791d767446d0d2b6e845878356b099e3efa2c84e5c80"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail Sprite Set.asset",
+            "guid": "f95d960addbb9ab40a815b26a1af84e6",
+            "bytes": 3155621,
+            "sha256": "3417bdba5c020b9f679e6c62fe4353962a435285043542e4c183ec14b8667b6a",
+            "metaBytes": 189,
+            "metaSha256": "d6f910c40fef4b7e8403b594c27767e9b1023cbeb9b0bb16a07dc6cd118abb00"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/Albedo.png",
+            "guid": "94776c0febfe14f49bbe0069c7f7b505",
+            "bytes": 967418,
+            "sha256": "76dc881a338364cb819f1c1aef2617c21e5b0f9ab38a8653153956f0385c285f",
+            "metaBytes": 5634,
+            "metaSha256": "344bbb20e44097cbf5a4e323cb3acaf0aa38a00d93f2c7c6f982b3d5a001d251"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/AmbientOcclusion.png",
+            "guid": "763d9d6db63408d4aafb1e57e9ef91d9",
+            "bytes": 1100395,
+            "sha256": "2d350901394de3d70ee892ce39dd619607e3cc1447b019e8bdfdd66939b222fe",
+            "metaBytes": 5622,
+            "metaSha256": "713c2f7eb75aae6519efafafb6d3da8400503ef8ea88215bcadd29c4fa7acf71"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/Height.png",
+            "guid": "617b6a90783681846bc7e9ed2ac53c65",
+            "bytes": 5130287,
+            "sha256": "c20f993748f1556764cbba44b9eaf696f9ed30f04785a5f6db0492ecd0cb6b45",
+            "metaBytes": 5630,
+            "metaSha256": "7a8d497becd6e315bfe73190f161bcd5636066639edebd9d42a42db00cbce773"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/Metallic.png",
+            "guid": "52643d4e364f90746b7ba91827f54400",
+            "bytes": 419056,
+            "sha256": "7660aae7d20da11a30c18497007b9114c16dc28b367fef9ddd35c3b4b00eeb4c",
+            "metaBytes": 5628,
+            "metaSha256": "5781b349b0f601076c8c808965e8502ec8082c230a804cd81fdb6a434850de29"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/Normal.png",
+            "guid": "6f902954007cf36419fa34ff828c373f",
+            "bytes": 6452168,
+            "sha256": "a3b33910eb1ffee9eaa868bcde36a35def3dda5f0cbf550701272c7c8746afe2",
+            "metaBytes": 5630,
+            "metaSha256": "d7d72f9b954570c879f98f97feb9a108f11618e3ee4d19fd81abecbf4e356c79"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Interlinked Chain Mail/Roughness.png",
+            "guid": "aa6373f5f4b727447aa32815d0478330",
+            "bytes": 832199,
+            "sha256": "70b352b77c3c22062646da47b3485c584bd155f18b7d7170f487c262b786ffec",
+            "metaBytes": 5628,
+            "metaSha256": "b587b3cf7671afd39d9dfa8ed283da91e64ae0297ef4c374fa3696bd6b48cb3f"
+        },
+        {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Knits and Soft Clothing",
             "guid": "ac1e9bacc32e71a408c95312d8d2cb4b",
             "bytes": 0,
@@ -3296,8 +3530,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Knits and Soft Clothing Sprite Set.asset",
             "guid": "80a3b8a42bf4066439c8e8e13950ee41",
-            "bytes": 1334,
-            "sha256": "aa82f1f2a38282eaaad66f1a4e0614ef026d5ce06ab7fc7f616eefdaad63cf65",
+            "bytes": 7098305,
+            "sha256": "ac6f0e12d7c12b64c750edb43f8c6b44460c7584439ee334d0d63fffe1902861",
             "metaBytes": 189,
             "metaSha256": "c0809095dec23857f6b1c91717011f8469293ff6e203a817b6a4174e11d860b6"
         },
@@ -3360,8 +3594,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Plastics and Coatings Sprite Set.asset",
             "guid": "a08b5b3ee91705e4bb3fb5c75897d1d5",
-            "bytes": 1345,
-            "sha256": "4d7f846d94f616210da334acd8b4aaa1e68f2d11db9f41727ec25b435b170798",
+            "bytes": 7098302,
+            "sha256": "594a1a5dc44f6e5a563469e8f08d81aa4a0cd7e7f9eeb41c3380e59a0214792b",
             "metaBytes": 189,
             "metaSha256": "d2ba11989d9406de2e5d1b67853381037d2e461f688dcb03520f9f95e2dcf26c"
         },
@@ -3424,8 +3658,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Rubber and Elastomers Sprite Set.asset",
             "guid": "c8b2cc4af3a541248b399f0e16631dbb",
-            "bytes": 1354,
-            "sha256": "437b43665769ddb6cbb8efc8a99261e3aef013f3c62af4e5df60e3234a4fc0d5",
+            "bytes": 7098327,
+            "sha256": "874398cffb632612de3a6e7aca325be5ee3de6a561217053860470ad0a3abdf2",
             "metaBytes": 189,
             "metaSha256": "61258aab15a6ac2507c30135fd0ebda8293f4d95f25c10a6d08d7302b1ee7dc1"
         },
@@ -3488,8 +3722,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Technical Weaves and Composites Sprite Set.asset",
             "guid": "433c0756c5b61f346a07779dbe3ce4aa",
-            "bytes": 1371,
-            "sha256": "83f7f07c18b1b609bca74e5220e60d335b04a2ad91918d88c108155c0b8afd23",
+            "bytes": 7098334,
+            "sha256": "7e17059a5233501f76557feba87c8163c879be7944875f31d7e2c067b96f0d33",
             "metaBytes": 189,
             "metaSha256": "da6a87b9810d94d1f00528b87faa8bcffe9d82bb12d6fb2f26f8080330a73e5d"
         },
@@ -3552,8 +3786,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Wood and Natural Materials Sprite Set.asset",
             "guid": "3a41140d183d35c428c5a94c19c020da",
-            "bytes": 1325,
-            "sha256": "ea99b1190bbe8f89c1f3a5b6c918faeee87a37c19d1a8cc39ff741a3b344358f",
+            "bytes": 7098292,
+            "sha256": "be10bd4f1938d479cc8a6d660683b5eb043eb537f7ac56aabd3923b2fc5d56d2",
             "metaBytes": 189,
             "metaSha256": "72000ed575bf2939e7a7809db4468fe4edfef6828e1ee73e9c74f8b9ef0865ff"
         },
@@ -3616,8 +3850,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Woven Fabrics Sprite Set.asset",
             "guid": "04c3c387f1282a14db7c41d01b961092",
-            "bytes": 1329,
-            "sha256": "ad1fc72c1a95b4302a1851714ebb9bae1eef119eb4acdf1675eae7adf912f446",
+            "bytes": 7098286,
+            "sha256": "0a324fcf000cdf0afbc1dd52378831c7d618cd3c3f9f0ea492dea591198ad35a",
             "metaBytes": 189,
             "metaSha256": "ca694cb64f6c44a70eb20c7e011cba0986c218168aa5f89330a37da4a8cbdb99"
         },

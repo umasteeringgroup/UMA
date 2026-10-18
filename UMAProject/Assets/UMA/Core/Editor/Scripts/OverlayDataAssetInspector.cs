@@ -87,18 +87,21 @@ namespace UMA.Editors
 
         private void HandleBeforeAssemblyReload()
         {
+            DisposeOverlayPreview();
             // Detach update loop proactively to avoid calls into disposed state
             try { EditorApplication.update -= DoDelayedSave; } catch { }
         }
 
         void OnDisable()
         {
+            DisposeOverlayPreview();
             AssemblyReloadEvents.beforeAssemblyReload -= HandleBeforeAssemblyReload;
             try { EditorApplication.update -= DoDelayedSave; } catch { }
         }
 
         void OnDestroy()
         {
+            DisposeOverlayPreview();
             try { EditorApplication.update -= DoDelayedSave; } catch { }
         }
 

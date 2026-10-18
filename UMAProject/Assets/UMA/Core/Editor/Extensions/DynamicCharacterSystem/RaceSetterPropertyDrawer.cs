@@ -92,6 +92,8 @@ namespace UMA.CharacterSystem.Editors
 
         public List<Object> DoGUI(Rect position, SerializedProperty property, GUIContent label, bool showAdvancedTools = true)
 		{
+            bool changedBefore = GUI.changed;
+            bool raceChanged = false;
             CheckRaceDataLists();
 
             var RaceName = property.FindPropertyRelative("name");
@@ -119,6 +121,7 @@ namespace UMA.CharacterSystem.Editors
 			{
 				if (rIndex != newrIndex)
 				{
+                    raceChanged = true;
                     RaceName.stringValue = newrIndex == 0 ? string.Empty : foundRaces[newrIndex] != null
                         ? foundRaces[newrIndex].raceName : rn;
 					//somehow if the app is playing this already works- and doing it here makes it not work
@@ -178,7 +181,13 @@ namespace UMA.CharacterSystem.Editors
 			{
                 if (useNewDNA)
                 {
-                    UMARaceTPoseEditorWindow.Open(thisDCA);
+                    // Finish the inspector event before copying the built character, just as
+                    // the menu command does outside the avatar inspector's change checks.
+                    var avatar = thisDCA;
+                    EditorApplication.delayCall += () =>
+                    {
+                        if (avatar != null) UMARaceTPoseEditorWindow.Open(avatar);
+                    };
                 }
                 else if (theRace != null)
                 {
@@ -212,7 +221,9 @@ namespace UMA.CharacterSystem.Editors
             EditorGUILayout.EndHorizontal();
             GUIHelper.EndVerticalPadded(5);
 
-			 
+            // Tool buttons also set GUI.changed. Only a new race should make the
+            // parent inspector rebuild and release the character's generated atlases.
+            GUI.changed = changedBefore || raceChanged;
 			return InspectMe;
 /*			if (Event.current.type == EventType.Used && InspectMe.Count > 0)
 			{

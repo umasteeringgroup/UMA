@@ -2,10 +2,10 @@
     "formatVersion": 2,
     "requiredPluginApiVersion": 1,
     "contentId": "overlay-painter-examples",
-    "contentVersion": "3.1.3",
-    "umaVersion": "3.1f3",
-    "requiredCoreVersion": "3.1.3",
-    "minimumCoreVersion": "3.1.3",
+    "contentVersion": "3.1.5",
+    "umaVersion": "3.1.5",
+    "requiredCoreVersion": "3.1.5",
+    "minimumCoreVersion": "3.1.5",
     "maximumCoreVersionExclusive": "3.2.0",
     "installRoot": "Assets/UMA/OverlayPainterExamples",
     "dependencies": [
@@ -18,6 +18,56 @@
         "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset"
     ],
     "ownedPaths": [
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS Armor Stamps Sprite Set.asset",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Acanthus-Crest.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Bear-Head.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Dragon-Knot.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Knot-Diamond.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Knot-Round.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Triquetra.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Acanthus.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Braid.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Curved.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Square.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Triskele.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Fern.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Acanthus-Fan.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Celtic-Knot.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-French-Rocaille.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Ivy-Cluster.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Palmette-Rosette.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Scroll-Plate.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-French-Lily.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-French-Rococo.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Ivy.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Laurel.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Oak.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Crossed-Swords.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Dragon.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Eagle.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Fleur-De-Lis.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Gothic-Trefoil.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Griffin.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Laurel-Wreath.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Lion-Head.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Lion-Rampant.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Oak-Wreath.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Owl.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Palmette.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Phoenix.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Prussian-Eagle.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Raven.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Royal-Crown.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Scallop-Shell.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Scrollwork-Divider.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Stag-Head.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Sunburst.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Tudor-Rose.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Winged-Skull.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Wolf-Head.png",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/Prompts.json",
+        "Assets/UMA/OverlayPainterExamples/Armor Stamps/README.md",
         "Assets/UMA/OverlayPainterExamples/Artist Generators",
         "Assets/UMA/OverlayPainterExamples/Artist Generators/AdhesiveDressing.asset",
         "Assets/UMA/OverlayPainterExamples/Artist Generators/Blue Iris.asset",
@@ -42,10 +92,13 @@
         "Assets/UMA/OverlayPainterExamples/Artist Generators/UMA-Eye-Slot.png",
         "Assets/UMA/OverlayPainterExamples/Artist Generators/Wraps-Gallery.png",
         "Assets/UMA/OverlayPainterExamples/Editor",
+        "Assets/UMA/OverlayPainterExamples/Editor/ArmorStampSpriteSetExample.cs",
         "Assets/UMA/OverlayPainterExamples/Editor/ArtistGeneratorExamples.cs",
         "Assets/UMA/OverlayPainterExamples/Editor/MakeupExampleComposite.shader",
         "Assets/UMA/OverlayPainterExamples/Editor/MakeupFaceExamples.cs",
+        "Assets/UMA/OverlayPainterExamples/Editor/StubbleExamples.cs",
         "Assets/UMA/OverlayPainterExamples/Editor/SurfaceDetailExamples.cs",
+        "Assets/UMA/OverlayPainterExamples/Editor/UMA.TexturePaint.CompanionExamples.Editor.asmdef",
         "Assets/UMA/OverlayPainterExamples/Eyebrows",
         "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor",
         "Assets/UMA/OverlayPainterExamples/Eyebrows/Editor/EyebrowExampleComposite.shader",
@@ -182,6 +235,40 @@
         "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/dddfe1853b2ad0a41f477ea9f1b5ac06_80597c2b.bytes",
         "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document Data/fa6e03d4db5d38d20aeefe3ae4f9a418_80597c2b.bytes",
         "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset",
+        "Assets/UMA/OverlayPainterExamples/Stubble",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-Closeup.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-NormalControl.exr",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-Parameters.json",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048.txt",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-Closeup.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-NormalControl.exr",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-Parameters.json",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048.txt",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-Closeup.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-NormalControl.exr",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-Parameters.json",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048.txt",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-4096-Closeup.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-4096-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-4096.txt",
+        "Assets/UMA/OverlayPainterExamples/Stubble/README.md",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-Albedo.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-Closeup.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-Face.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-NormalControl.exr",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-Parameters.json",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-Roughness.png",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048.txt",
+        "Assets/UMA/OverlayPainterExamples/Stubble/Stubble-Preset-Comparison.png",
         "Assets/UMA/OverlayPainterExamples/Surface Details",
         "Assets/UMA/OverlayPainterExamples/Surface Details/Blue Paint.asset",
         "Assets/UMA/OverlayPainterExamples/Surface Details/BrazedSeam.asset",
@@ -262,8 +349,12 @@
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Aged Metals - Repeat.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/ImportSpriteSets.cs.txt",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/RenderMailCatalog.cs.txt",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/compose_mail_catalog.py",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/generate_expansion.py",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/generate_mail.py",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/generate_materials.py",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/mail_geometry.py",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/validate_expansion_periodicity.py",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/validate_materials.py",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Bone Horn and Keratin - Catalog.png",
@@ -275,16 +366,24 @@
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - Catalog.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - PBR Catalog.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Dark Oiled Steel Chain - Relief.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Denim - Catalog.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Denim - PBR.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Denim - Repeat.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Library Overview.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion PBR Overview.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Periodicity Validation.txt",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Seam Measurements - Chainmail and Scale Armor.json",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Seam Measurements.json",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Fine Polished Steel Chain - Relief.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Interlinked Chain Mail - Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Interlinked Chain Mail - PBR Catalog.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Interlinked Round Steel - Relief.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Knits and Soft Clothing - Catalog.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Knits and Soft Clothing - PBR Catalog.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Knits and Soft Clothing - Repeat.png",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Mail Seam Measurements.json",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Mail Unity Validation.txt",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Material Library Overview.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/PBR Library Overview.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Plastics and Coatings - Catalog.png",
@@ -292,6 +391,7 @@
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Plastics and Coatings - Repeat.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/README.md",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Render Timing.txt",
+        "Assets/UMA/OverlayPainterExamples/Tileable Materials/Riveted Flat Steel Chain - Relief.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Rubber and Elastomers - Catalog.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Rubber and Elastomers - PBR Catalog.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Rubber and Elastomers - Repeat.png",
@@ -311,6 +411,406 @@
     ],
     "assets": [
         {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps",
+            "guid": "fafa5d282f9f63342b100d8cfeb746ca",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "4699bfd33a062bd08bd72e929688b5f05dcf7bea2c082c4ce942cae85a86fcb5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS Armor Stamps Sprite Set.asset",
+            "guid": "505e2aa3b5269c1428352c9d671f672f",
+            "bytes": 36277363,
+            "sha256": "a762a4e3398b9f865920677dd9e5763ee1996f1ade5803c498db0d5ae26bafa8",
+            "metaBytes": 189,
+            "metaSha256": "1477ae6e8431d11bed1f9164b674b44d67c28c6a2cf35feccda4437c13e14eac"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Acanthus-Crest.png",
+            "guid": "58da98643d5afc34b8c57a30a88b9025",
+            "bytes": 113114,
+            "sha256": "51fb2d721bd313dc320e6fe68d8939c43ed3de07d727126ebff293cf135358d0",
+            "metaBytes": 3435,
+            "metaSha256": "66868b6faed6626e4b3c11cef9b666180f4d7ad84998c0b2d7157340a105ca10"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Bear-Head.png",
+            "guid": "b55dc2c63cac9a247a8cdd085298b5a5",
+            "bytes": 163211,
+            "sha256": "ce73997ad9e4780207719635638d2699fb6ee0e1c02eff7776bc527a4bdb5d46",
+            "metaBytes": 3435,
+            "metaSha256": "3d0cc698346d42d8457b12692bdeaafc01b3d9747e961ef873930255be768455"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Dragon-Knot.png",
+            "guid": "930972e11b026c443b61cebf530e7f30",
+            "bytes": 162127,
+            "sha256": "f5fc690d4a7abc6e756881ce953ed195678ad29f921cdca2e056641ffd889fcf",
+            "metaBytes": 3435,
+            "metaSha256": "7cb548890dff2c73364f0093cbe92f7e522e89af4ce3db05580a15f8d205f3bc"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Knot-Diamond.png",
+            "guid": "3ea432dfadd614c47a92ffb794793a42",
+            "bytes": 97680,
+            "sha256": "f5ca46aa26fb08e0c58bbdf8e905e52d8cc0fa6d98fda0536ecd004d4dbaf143",
+            "metaBytes": 3435,
+            "metaSha256": "58e8821963c43670fb79d80ec9e7846028a582d828872cf041450fe5c6d65fb3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Knot-Round.png",
+            "guid": "1365b2e8f007e834b856d9887bc4a844",
+            "bytes": 132696,
+            "sha256": "4be046b1aea22e28b63e59c922c93c4a359d3135be998104bd5c2f12743bd670",
+            "metaBytes": 3435,
+            "metaSha256": "5a4e4dbd5e5ff5bc28e4b5a4b6b5cde1a9278690a6af129fbe44d287cc864f91"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Triquetra.png",
+            "guid": "21e11cd062cf1484a91773fd89c90a51",
+            "bytes": 87576,
+            "sha256": "670c5af2409fe05df53c4bc04841f8b19cd605c8ea2598b039cc2dc1834aeb3b",
+            "metaBytes": 3435,
+            "metaSha256": "45d54677de2b674ac8c2cade0195057cb9555e03d99ca7e424365ea4e3ad61b8"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Acanthus.png",
+            "guid": "957441a6396d7c0479838f0864212bbd",
+            "bytes": 82239,
+            "sha256": "767fa58939e63dddb86853f8860ce37c5edc0e1a4cd3f6700b28ec0bc1690e8a",
+            "metaBytes": 3433,
+            "metaSha256": "f791f12cf48b2ec320ac9a44c2b5d05ee38af16fe03c35c1282cbb6f227f4d79"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Braid.png",
+            "guid": "2d22db8fda284f241a5e4e6b7c4366a7",
+            "bytes": 68248,
+            "sha256": "3a92dbce7fa515aebd82efbc12a5857a271f3531315f4e35ccdd4954d878a015",
+            "metaBytes": 3433,
+            "metaSha256": "0936204c16317ce842e7dea71b4ca92dd465c20c06bb6ca408f1d962ee9f78ce"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Curved.png",
+            "guid": "2bccc42f5d9a4e246b45f510ec718a8c",
+            "bytes": 59617,
+            "sha256": "3343864b6ab48e574237a9713b5fd108d425f8d1b001a63deae15a14153fb710",
+            "metaBytes": 3433,
+            "metaSha256": "0215b6059f207fc35bc2d81cd9db4f5d76c6a1fd7756a7f5d9a24609892dd1ba"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Square.png",
+            "guid": "7f7fe9eeb0018dd4d926e6c95dde5718",
+            "bytes": 73781,
+            "sha256": "5cbefb7330591a245ad9715215772d5658a3ac34d59c5f3a2c17c764693cba14",
+            "metaBytes": 3433,
+            "metaSha256": "35babcc8f5126e6eb98c1dd25a4e760b4e2acbf5ca9524b08b8f74179299b7bb"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Triskele.png",
+            "guid": "3f4470c53c2af4c438464f4ba42a216d",
+            "bytes": 75491,
+            "sha256": "777b93ca52547df4f81a1856586e3b9987609b2bdd4dc38115e200180013c84b",
+            "metaBytes": 3433,
+            "metaSha256": "3b57608d553c9adcddc895abd73ed5036c28baa487baf4084672def434c120c0"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Fern.png",
+            "guid": "8c79d739a1179894fb9803f6e8172f72",
+            "bytes": 81914,
+            "sha256": "87bbc32946a546ce266ab8b8938011e2297f44245cd1c1efa24f1d2dc48294a3",
+            "metaBytes": 3433,
+            "metaSha256": "888b1a163702571b4f8cfe87317b7a6bbaae0173de0872877ca086ba88c93132"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Acanthus-Fan.png",
+            "guid": "e85ae23164265bc45b30688328e3fc92",
+            "bytes": 91319,
+            "sha256": "ec533b41df6824d98da2fb9935fae4b8a5a94dd80574b6820bfe82fa09e894a1",
+            "metaBytes": 3433,
+            "metaSha256": "4034b06fe8da480e4bf90dc870be5b3a0ff9227bae1c69c522970c6e308a1ed5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Celtic-Knot.png",
+            "guid": "7b06a9d5a3ed4c64a90ac3ccabe5c349",
+            "bytes": 92569,
+            "sha256": "b0bfb115544a4c66f794263da30ad11d6515744e4c27a45958034aa642267ff6",
+            "metaBytes": 3433,
+            "metaSha256": "073a801a4d46540b4ac64c704e3d5e12bfb0cd796b07178a141d368c223ae8cb"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-French-Rocaille.png",
+            "guid": "717a16f98d35d114db570f3da139957c",
+            "bytes": 106876,
+            "sha256": "63c38af7f23d3d089a29e9608846a9cd70d2a2f1ab05a8811377914fd545d1f9",
+            "metaBytes": 3433,
+            "metaSha256": "8b72e9a3ec350fa34e7fead81748f83d99254f71b923eb9900c85bd4adf4e02c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Ivy-Cluster.png",
+            "guid": "cd35f7d8c2c193542b71462c4d57c2a5",
+            "bytes": 83557,
+            "sha256": "fd4fd9318e54be6669c34b62b30d20633f809b0ed03278810683fb0d7f78dfff",
+            "metaBytes": 3433,
+            "metaSha256": "195b829fe388624a765d6a487299b1d3f789506c2edbb5be2ab799067beb5a72"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Palmette-Rosette.png",
+            "guid": "b5f14b88a697f45489be0534b0d679a2",
+            "bytes": 94427,
+            "sha256": "6c1ba0f35b6621344e20b2e619a89724518544673e40d122a909ad04eb5409ca",
+            "metaBytes": 3433,
+            "metaSha256": "da3c5b29d83cdd7f109aa3521b7805287b20ddb00cfde7ea11df643454b98753"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Scroll-Plate.png",
+            "guid": "1f1b3396691b53248b027e5f7348530d",
+            "bytes": 56718,
+            "sha256": "f2d36136b1405ccff3bd09e3a2b53b3685f885629243cbad6228d3bdd8ef8c0e",
+            "metaBytes": 3433,
+            "metaSha256": "1496b99a80d32ca90543f727e067b1c1a7e6d3a6e439a7792b8f278abe5ff32e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-French-Lily.png",
+            "guid": "0d5a27932565d134ba92a64b8cbe1114",
+            "bytes": 70139,
+            "sha256": "2452173a8d3fb6a7fe7538246dfe2c3e5b4be0246e8d955688bee68cf0da5239",
+            "metaBytes": 3433,
+            "metaSha256": "867e9f056ab8c14ed21e7f6c31dc5e2da047b750ebff4a2c3604b2462daec00d"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-French-Rococo.png",
+            "guid": "e0bf6900dcb2acc40b40f0785f6086be",
+            "bytes": 90792,
+            "sha256": "3a84f06716419afa69b583129ae68f9d039b0d6e93e7aec46a23d654a3b44244",
+            "metaBytes": 3433,
+            "metaSha256": "17320200a447cc5f65240e5f31a963f22cd75c390674618db89cf9c0a9085afb"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Ivy.png",
+            "guid": "f5401d3bd1a3f914dad456225abbc43b",
+            "bytes": 71448,
+            "sha256": "58e8345759487a683013a246f95e608f075795ea3a36a99880c2d40e6a041cce",
+            "metaBytes": 3433,
+            "metaSha256": "efc30fc190f784308d525b279a48a4d5572f8ddc34d6699685e3e6861ebf7553"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Laurel.png",
+            "guid": "e9b8f5ab7c3f1534fab82897cbd80d20",
+            "bytes": 79135,
+            "sha256": "2311cf01815c21397e9bfd1a4555e8d3ddd924b64a531329e16bf6be44edd912",
+            "metaBytes": 3433,
+            "metaSha256": "9e33bc95a7d9afb8526c68c7a91b9bf889fd88f058e6c7ce9388edb6d83a8c31"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Oak.png",
+            "guid": "a811ebb9262c1e44fb4c26ce670b09e7",
+            "bytes": 80428,
+            "sha256": "21af3188ee348171d2587ad60ba8cca03af09b98d2e8243c7f0148c67be51d60",
+            "metaBytes": 3433,
+            "metaSha256": "5ae064fa3fb85f45ec7fd447f9f14809b8bde30de897a56ab7cd3454b7f57c28"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Crossed-Swords.png",
+            "guid": "827c66fc9c46ac342aa96ff96c97e316",
+            "bytes": 104159,
+            "sha256": "068db3c767775c6591371ad6abf1873892b42ddf06017e4413e18e756369ed8a",
+            "metaBytes": 3435,
+            "metaSha256": "7cdad9a7fb148bb8124cb1ef97e7f6a9ca47c6758c1eb80dab3432428a26704f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Dragon.png",
+            "guid": "4747fc3fd17732d4dac0f7a069022360",
+            "bytes": 142832,
+            "sha256": "ebf250f0ebefcb6e481b70d028383daac6c09d1b39fe38ea851c536ca12590cc",
+            "metaBytes": 3435,
+            "metaSha256": "2243b25be70a414e4945ae6c75a96164b75c6b5b7a85b1cb365511002b8ac4f1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Eagle.png",
+            "guid": "9a56e75c70d126240be77727da2c5864",
+            "bytes": 169818,
+            "sha256": "0e4249596e61fe698ab981b78382f0fd1e92c3d5b246ac2ddf2859e9e9c7c3ae",
+            "metaBytes": 3435,
+            "metaSha256": "01277e32d1b920fcacc7a8c05d9e04e66e1f35fd28254e73bb54460730b28a32"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Fleur-De-Lis.png",
+            "guid": "30b3f462ab2c04c4f86d9a76a28f7628",
+            "bytes": 93112,
+            "sha256": "49ff72de1c0ba2c86362e1814b7c4d1d605ca22753eafa5753afd6456ad14246",
+            "metaBytes": 3435,
+            "metaSha256": "5c50bbcaf96b1f00885c85b7f6e38acb7b55b51e21837d2425f2fc72ae5c9e31"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Gothic-Trefoil.png",
+            "guid": "090ffbf5b0d17c04d84f9a0f9181944e",
+            "bytes": 90579,
+            "sha256": "63f8d0f5aff7b42e14f25de02e669a3e9aaf8b9e0d21014c5e7669e23e3b4f38",
+            "metaBytes": 3435,
+            "metaSha256": "0b1bf7756ef92028d1382d9862b5ddf48dd03f6042aa0735049bedca58bf084c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Griffin.png",
+            "guid": "bd555bd5f3f31274898e5b5f70878024",
+            "bytes": 144460,
+            "sha256": "18f1fc775803b9507a2d074d4e540d37c9e6b27182a179fdf6b501733675b511",
+            "metaBytes": 3435,
+            "metaSha256": "99da51d650c4cd2b72f3c55c0bb63114cb7547a71d27dee2ba2f215aa1ffa67b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Laurel-Wreath.png",
+            "guid": "0ac27930f9e76294391d13b5abad8d2a",
+            "bytes": 113247,
+            "sha256": "b82d98e0181f7c565a65ad572db7cd4cadb1f93bbaba22960b135a4e1dd4072d",
+            "metaBytes": 3435,
+            "metaSha256": "ab6a97db234c74fa0e65f4767a76081cdfd14be0eb0ab0d6da247f1ee875011c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Lion-Head.png",
+            "guid": "0d72b2d37fb3f8b4f8d4d621722293e5",
+            "bytes": 173249,
+            "sha256": "b8ec7b1a09f39775a312e52023b6c68db2c3fbeea76d127a7039c957ac2b0286",
+            "metaBytes": 3435,
+            "metaSha256": "608452aeebeb9337ac492cbf99216dd2453fab19d5f3a4b7e5f734af608f0846"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Lion-Rampant.png",
+            "guid": "6f3f342902f77d942a6ef4daca126bfa",
+            "bytes": 141745,
+            "sha256": "9e5751a75e7eef84444d4b5deccd9ee415b26a4c2f2be2a050721faa99a4774d",
+            "metaBytes": 3435,
+            "metaSha256": "75ec4be52d917056e7670d1914ad500c2d9af5cd58edb8f4ce92115a93dc5722"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Oak-Wreath.png",
+            "guid": "48e831a25b75567439cdbf7795519db6",
+            "bytes": 130220,
+            "sha256": "050804a0c223d4b2f1dea32503f3573ce0a1b6ceb36b680c0d61d7ac41f8a7c3",
+            "metaBytes": 3435,
+            "metaSha256": "e4eec406430ae706db03b3e680c1d8eedcd5dc0ca53f38e964577eb03201809f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Owl.png",
+            "guid": "ad13436e6b389f1448d9b2a0791f5bdf",
+            "bytes": 163257,
+            "sha256": "1c373aa929dd88184e67d0149ad199a52bbc90a3a535dd465f85d3497ff0eeb0",
+            "metaBytes": 3435,
+            "metaSha256": "32135349af548582e57cab83268e43120ce687231b3e4ec0a2ff790c60dc7057"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Palmette.png",
+            "guid": "cf61022335d2d1a45838b9fe5ff34f36",
+            "bytes": 124277,
+            "sha256": "9c76ee8b36245634be7cfaf982b3328455c7cf1dd77f758ee1513d0f7e761f0a",
+            "metaBytes": 3435,
+            "metaSha256": "cb805df21a1dd74e2b6b81dd8a1029a4387c39274488e6d7a0cbba714ed14d39"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Phoenix.png",
+            "guid": "8bc1a6f4215803041978b20dd7e49491",
+            "bytes": 134591,
+            "sha256": "9e32793c8f0f8e32e35cd53149a4fb938e81e069e155e9dae98e8cfa6bd44220",
+            "metaBytes": 3435,
+            "metaSha256": "d17af76b7215628049394b71e3a4ae7644140a5205c3821234d701383aecdbd6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Prussian-Eagle.png",
+            "guid": "c0af0f13dc1fb8d409a76a547b7335c6",
+            "bytes": 216987,
+            "sha256": "5282a6cf00e5d3a7254b532bb48c003efaf5bb5a389ee973505531598f06bd7d",
+            "metaBytes": 3435,
+            "metaSha256": "0967a4fb93c67c7c19425ca52ff40cd332650848d4d783f2fb4a8fe910e195eb"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Raven.png",
+            "guid": "3eb5b3ff5bf8173439491d018171a452",
+            "bytes": 141921,
+            "sha256": "ff3f92ad6499a094c93394cb17cd12785e91811d82291a4c8045d05cfa70a3e6",
+            "metaBytes": 3435,
+            "metaSha256": "5b727ac0e2bd511285413b95675ca818112f58732b59a0a627177fb89012cf98"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Royal-Crown.png",
+            "guid": "e5dd9e5143a21d142a56b0caf1db1b9e",
+            "bytes": 108545,
+            "sha256": "f9aefe6f7f0df552d9c37736fa23a2685312fc4ceb6c9c1e72e8ab5692138310",
+            "metaBytes": 3435,
+            "metaSha256": "ad304cb62837823f86fb290332e83194a1d4eddc7f7abfb2968d4ed4b1138ecf"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Scallop-Shell.png",
+            "guid": "3e7c3c3aeb6afcb489a7a927fb3f7536",
+            "bytes": 106064,
+            "sha256": "514a89376e3ebea3c8333db4a52730cb4ec60de4d4c4a20280fa382f66266e73",
+            "metaBytes": 3435,
+            "metaSha256": "9b051176d0f362ce8924b6ac437a15b3098cfd7ecd09ddf4eafeccef8ba46bf5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Scrollwork-Divider.png",
+            "guid": "41d89555edb3e9844b21b399450d5e10",
+            "bytes": 52474,
+            "sha256": "48b6943df653e017653013873edef0d5ea791c16d136b0d7fd7ecdf870666619",
+            "metaBytes": 3435,
+            "metaSha256": "e2ca14d0f9e3e7616470e2598fa8b8121257576d3d7b3abd8341017a536e7fb2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Stag-Head.png",
+            "guid": "46c308cd06cf2224f931af9fcbc244a0",
+            "bytes": 105383,
+            "sha256": "ad2acf5b49fcf48125cddca0cd276e739ca36da268b4097064bcb82daddd5588",
+            "metaBytes": 3435,
+            "metaSha256": "96c13af7948d6b4b87202c8d93c13489b5478c8e4edd94548104552650d87096"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Sunburst.png",
+            "guid": "7b580df97156d9a4d9e9b9288c0833b3",
+            "bytes": 143566,
+            "sha256": "0a59e57e23c629e8da6d8c278b4c72b007406bbc344a80a6b350992cf8f019e8",
+            "metaBytes": 3435,
+            "metaSha256": "b3a41b81edb1d0450d087be33f0d47a27f4ddafa264623dee43d35bcfb10a4a2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Tudor-Rose.png",
+            "guid": "ad9367bb5f709604f8aaf9439021d142",
+            "bytes": 100124,
+            "sha256": "3dcc96bf6af9417e9ab42c69b6d08a07357f4726ef39763d3b356548b6deda8c",
+            "metaBytes": 3435,
+            "metaSha256": "4f059a462babd83f3ab9fac836df3889573135eeeccfb96ee82e160b5d1bd4d0"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Winged-Skull.png",
+            "guid": "2df36e6a8bc3bae48b6858cfbee0d5a6",
+            "bytes": 184929,
+            "sha256": "d4582621dbd8f65c57df4789fe2721c4b3b4bab4e04c00dcb4af035a58b53c6b",
+            "metaBytes": 3435,
+            "metaSha256": "a1f40958ade44878683fdb4cf5532fa22545903142b0f24c642e8eecb3d1aaba"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Wolf-Head.png",
+            "guid": "99de56edbd70f2745acf3b9ebec3547a",
+            "bytes": 162303,
+            "sha256": "6d1703ebc8b628ee0ce1a9fb367849481ef38d7462ae00915004f5b6301f1687",
+            "metaBytes": 3435,
+            "metaSha256": "826cacfc8f89c6480fb6d7abb7af6389d2263001d82eb9f66ff9040f624541a5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/Prompts.json",
+            "guid": "1f8b3445be1c0a646939107028c9a838",
+            "bytes": 16889,
+            "sha256": "c8497aee56ada8be6791a4d345dbf2716347710a6ab358ab74c2fb95cd46e6bc",
+            "metaBytes": 158,
+            "metaSha256": "89d1a6ca73415f86693e8c01fdf9808ab4fc854a69b9a8806003d1a4cda8382a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/README.md",
+            "guid": "a530068b50a40724c8840b26ddc271be",
+            "bytes": 4101,
+            "sha256": "d45ba4bb575ebce75e2e521c8463fdaff5cb47a37084444ed4fb7a73921568a8",
+            "metaBytes": 158,
+            "metaSha256": "b4ddfb6a3b09658a76167cb3d4a630300e223039652146e7071d8810cf14f765"
+        },
+        {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators",
             "guid": "ab6a086e29b25e74dbdaa3240223625a",
             "bytes": 0,
@@ -321,40 +821,40 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/AdhesiveDressing.asset",
             "guid": "5b838ce8b86d09c4aa7bd40f83dd4693",
-            "bytes": 2875,
-            "sha256": "29f8ca069af63f871e8c4ca7c3880cf322b8841cf1ccf16d49af2feb48e851e3",
+            "bytes": 3079,
+            "sha256": "5b3dccc5364a61f2e9d7d1c6713ebcf375bbf1f675534a24859722eff0abecb6",
             "metaBytes": 189,
             "metaSha256": "e0b046383f14a1797dd9698d3328500c0f02e7156a572c71b7bf64a748f79ea2"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Blue Iris.asset",
             "guid": "a7dd2417a53f0f44eb1c0c8ecf5227c5",
-            "bytes": 93409,
-            "sha256": "b787d66a6a34709093858a23bae2ffc6b183bd556e5c911879dc3a2dac74c65c",
+            "bytes": 94161,
+            "sha256": "991da0b1a11779d7343b741b4b5f5cad09172577600021f8ceda1838ce92c4ec",
             "metaBytes": 189,
             "metaSha256": "6279f8a5d53afc0c20c7f5feb079895434a2c9bf8ba4bf92760d28e46f5217f7"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Brown Iris.asset",
             "guid": "e3f4643ea1845d445960b237ad0628d1",
-            "bytes": 93412,
-            "sha256": "be1f4065e92c7092ee26c8f60d00664bb7f2c78609008bf961bae25487453f8b",
+            "bytes": 94164,
+            "sha256": "635f4620e5380025868647ac84b33f2c6146634807d1585880c8d95647dd81ea",
             "metaBytes": 189,
             "metaSha256": "d2b41358bb38a10978d67f6ba549059df23dbb9e005967261b1fcc4227c3415a"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/ClothBandage.asset",
             "guid": "c276ab824b6fb294ab9acf727db4c2ef",
-            "bytes": 2877,
-            "sha256": "c63a0969e9a0fbb6bc18b2bcb7934cc281aa0fd96205c716eb684676fc663df1",
+            "bytes": 3081,
+            "sha256": "0353b8f8e8797234df89584871465982a6938c75bb08b800cf8fbf64cea165a6",
             "metaBytes": 189,
             "metaSha256": "26c79e12664ae840edf5f63555ae99977b3da71410856556f8d8c77e909df34a"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Colored Tatami Crest.asset",
             "guid": "f6dbf4dd26f9b2f439e450b0efbe0bef",
-            "bytes": 172164,
-            "sha256": "91fbb0245f3164cfbdabcde5e07a1c30dd2bef51a8f6851faea43d7eb95f4bbc",
+            "bytes": 172916,
+            "sha256": "c4b909eefc9541fb81d6d89cb2afefa04afbb5875d6edacbdf021cdebad4583a",
             "metaBytes": 189,
             "metaSha256": "3c3463b10743975c8270cc39878e5c3f731aa9a9368f06e56efcd6840b60b5a3"
         },
@@ -401,56 +901,56 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/GauzeWrap.asset",
             "guid": "0d5c7d1c0a60405408403147e97e95a7",
-            "bytes": 2874,
-            "sha256": "1799e2747ea7ec31ec82054a86910c4116b08cbe66b64f525a4f33871f55cf19",
+            "bytes": 3078,
+            "sha256": "6287a96a8530cd22b25b0991268164f6486cbef3ab85f61e6fe2b4f6b17f4a60",
             "metaBytes": 189,
             "metaSha256": "640a5d4e41a4f4f84c4cd442687866225d90475024d5cd098bc213fbaaf4b674"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Gold Satin Crest.asset",
             "guid": "b85e40974f5a6bc42a32cfc7d93488c1",
-            "bytes": 172092,
-            "sha256": "34d2d4292c9e72720785e2e2bc9622810acc3f040326dc8f8e66510a421f3d72",
+            "bytes": 172844,
+            "sha256": "4190c4a93e62713b915560882a0ba01213fcc4c9bc6b2defc31089fd5875c2f8",
             "metaBytes": 189,
             "metaSha256": "0010df515f50477e1d7744c888679bf8f6a57076378f5352eddb35718ee4bedd"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Gray Iris.asset",
             "guid": "68c2794f7396a3542b02e69eedc8acb8",
-            "bytes": 93409,
-            "sha256": "753f79412687a3879ccb8b6ee66301b2c340a03eae5f2f10c4b447c31c747c03",
+            "bytes": 94161,
+            "sha256": "e5c1ca2d89494a835e709055a35d396af640f9ea19f383796d74904ac8e35724",
             "metaBytes": 189,
             "metaSha256": "08c8f38ba7c12cde998a02df9195800c553b08a5053ecf30692d39c78044434f"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Green Iris.asset",
             "guid": "3698b0b431ea16c429cda546dfe568fb",
-            "bytes": 93412,
-            "sha256": "a69e7f82e250433ad8a1550429d2504adfc5953ec3238f52c3d4530feec80e3d",
+            "bytes": 94164,
+            "sha256": "649644cdd75c419d9f0a13a032eba8b82144957bc896fd21915ad4cb193e21bf",
             "metaBytes": 189,
             "metaSha256": "b45939a7aff2df475808541459bb241083f5ea95d9ecf344b8981a5ca4357515"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/GripTape.asset",
             "guid": "441745d8b39c0a6479cd83f3bfa79431",
-            "bytes": 2875,
-            "sha256": "393cafe489a078a616f62d2494c2cf29ea84e8b6babb06b63a7b3be106422a8a",
+            "bytes": 3079,
+            "sha256": "95cf592a56b5ae0bb3b2e77c7b177088c039b60aac989ade7abc9a33c216f0cf",
             "metaBytes": 189,
             "metaSha256": "99f838efc3885a06434a614acd5dfa9a903c52a32da6fc06f90b71fc02c0b380"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/Hazel Iris.asset",
             "guid": "6efc42eb82387664480e2e002f425771",
-            "bytes": 93412,
-            "sha256": "251b460eecf8d48d8afab6276e53176a4aa2e981c964169913a1d4d16dd5cf61",
+            "bytes": 94164,
+            "sha256": "9cc7f2e41a83dbfcf4b5fb0528797636e3903d6bbf13b0b4fd8866e12de2be7e",
             "metaBytes": 189,
             "metaSha256": "21bc33296e87aa269e1317ae6c87ac4a93c3537e9ab86a15a8030029ed88b3cf"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/LeatherWrap.asset",
             "guid": "5315af462cf34e34fba8d12f1571afbe",
-            "bytes": 2878,
-            "sha256": "e7b8dc5e053d7d060f7669f0a9cc54c2df5236a51f0a92b671308f05437ebb0b",
+            "bytes": 3082,
+            "sha256": "6f6299acc4edb9174f71677acef8878612ed914c325ec1fc145f4037f15b71d3",
             "metaBytes": 189,
             "metaSha256": "079052ac4137ea00851274cec6d27100096cff21e5092d90e5ec767ff81b518a"
         },
@@ -465,16 +965,16 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/UMA Eyes Blue Project.asset",
             "guid": "21c154d52d1a9974cae51b2e513fd770",
-            "bytes": 802120,
-            "sha256": "a32e641c1314019a2712101db8764b6427e5d62c12b09286bff57fc28b9052e9",
+            "bytes": 802932,
+            "sha256": "9e53774a8abc42896e938e3633fb8458613e1468ba777c49cd1c4545d87eaf68",
             "metaBytes": 189,
             "metaSha256": "f62e10ddb86b105ac4443c48906f85a8668fece223df9603274d98d7c310fba9"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Artist Generators/UMA Eyes Hazel Project.asset",
             "guid": "1489b26dc0060d64f9623ee65f236325",
-            "bytes": 668435,
-            "sha256": "ca63d5ddddbe9965636bd953f97e17d843df35ee51af126103107929c4029f84",
+            "bytes": 669247,
+            "sha256": "00240c93fb9b3fce216cdc5561d17291011086ab82112b50a591df0721c1686d",
             "metaBytes": 189,
             "metaSha256": "6d58eb53f2eb057771786ea10e3064b74eee73a5309ee0d86dffd381a0e0a0c6"
         },
@@ -503,6 +1003,14 @@
             "metaSha256": "ff0a2ea3f8e3e0e907ca09c1cdd81e6cbf3fc9249a0abbdd76b06698b27f6058"
         },
         {
+            "path": "Assets/UMA/OverlayPainterExamples/Editor/ArmorStampSpriteSetExample.cs",
+            "guid": "9c28b6d177013044ca95020050607281",
+            "bytes": 1721,
+            "sha256": "61ab5d9456e1dd6140c5bd5c080bcc7206585a9afcf1dc1508a9f28aad28170d",
+            "metaBytes": 59,
+            "metaSha256": "65b98519d0a97f5eb2bf2de37d4a600f97074a93275f53057908ff4e8d58d60d"
+        },
+        {
             "path": "Assets/UMA/OverlayPainterExamples/Editor/ArtistGeneratorExamples.cs",
             "guid": "156bf4c2856bcc546bc955827e71e28e",
             "bytes": 10382,
@@ -527,12 +1035,28 @@
             "metaSha256": "860c42c90891fd7f2995e9e50d8492c65b38c0423a5c04f382adeade2d94d3b9"
         },
         {
+            "path": "Assets/UMA/OverlayPainterExamples/Editor/StubbleExamples.cs",
+            "guid": "59ca73d53a3e57748b1821dd67f13325",
+            "bytes": 14351,
+            "sha256": "8865074641d02a43b753db25dd2ad829b816c41b2cd02f62e8115b01c9abb7a1",
+            "metaBytes": 59,
+            "metaSha256": "c8d786103a2569d64193fc85b5514ac984361cfb260d7e5f5926c229fe303dd9"
+        },
+        {
             "path": "Assets/UMA/OverlayPainterExamples/Editor/SurfaceDetailExamples.cs",
             "guid": "648f6dff181d7c448b1caa42b6e3f158",
             "bytes": 4762,
             "sha256": "750e0bdacd19bf28aac54c1ab65770aee9b68623662820670248eb347876c31d",
             "metaBytes": 59,
             "metaSha256": "cb8102ecb5ec672742b638519c4969af48c8c932292ac45b92244ba4c8430a2c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Editor/UMA.TexturePaint.CompanionExamples.Editor.asmdef",
+            "guid": "a777bf72049ccaa4ebfe3cd517391faa",
+            "bytes": 278,
+            "sha256": "61216c673e0f85208c99537be6e775dc35798c7613e6d00f702e6e59fa5fb5fb",
+            "metaBytes": 166,
+            "metaSha256": "265c8dd3f6990e98f5d46942e4007d628dec7eb12932396780f7a20e19096e88"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Eyebrows",
@@ -673,8 +1197,8 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Bushy.asset",
             "guid": "0c39f01b98a392040a0b0e5f3cb815b2",
-            "bytes": 506118,
-            "sha256": "a6ec80d9f4abbd401fb1d1ea9f382e0b80d71a4a93dabbc07ee480752ca39afc",
+            "bytes": 522444,
+            "sha256": "7d93565367cea6f6cd41164f5c863dfc284ed26c7a8924e23a7ce5283c55c838",
             "metaBytes": 189,
             "metaSha256": "1c3cbd19f0772828437bf2d8a0919ddd0432c252a782087a0d6d2de2e9c4bd1f"
         },
@@ -697,8 +1221,8 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Eyebrows/Projects/HDEyebrows Groomed.asset",
             "guid": "3663de4091ddafd4d8013ae5f20b9bbb",
-            "bytes": 616954,
-            "sha256": "7ba70d1d7f6ab8d16af3f30e2e294e5537dae0255981274006ea09586202bd53",
+            "bytes": 627847,
+            "sha256": "c1cf4d1083ed42f9fbac670ee916cc949e804a21e0b7bf35d68bfafa2cdc461a",
             "metaBytes": 189,
             "metaSha256": "ef58c244e56054e59cef6067eead80b26b099bd2be6187dfd2855dde5bb8a1ea"
         },
@@ -1369,48 +1893,48 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks/AnkleCuffs Mask.asset",
             "guid": "24edb420c04b6364c9edaf027b8de9a2",
-            "bytes": 4350,
-            "sha256": "b8501aa18df6ee1e28f638fb9833993eb63b339950a97e65688b79e85c87187c",
+            "bytes": 4394,
+            "sha256": "e9e176e8b04f48db45eb9efa2677fed67cb6a1531ae3caf811ce8877563410d4",
             "metaBytes": 189,
             "metaSha256": "a12ff883619af7184ea7e124a24ea0190671009b72e39194b3f534ab5200d3ed"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Armpits Mask.asset",
             "guid": "9d9766a51b6a16c4f8b2bcd2d1445696",
-            "bytes": 4344,
-            "sha256": "3f46e0a98d5861194365d78911fdc394d2be0097fe2b339992817af0636ed6eb",
+            "bytes": 4388,
+            "sha256": "eb02d0d7beb8891140f1110bc1d698ceb72a3438acaa1e2671563569b8fef05e",
             "metaBytes": 189,
             "metaSha256": "4b338ad2a19858f0f8ed2f58cd5ab9dfaa30d1d9d1daf04a2da495497a3bb0ff"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Collar Mask.asset",
             "guid": "b74675e30e1ef4a44a94511e14be5e02",
-            "bytes": 4342,
-            "sha256": "6843f4d917b881e4ea71df792e46921986299ab3b87333468ba2e48327899c49",
+            "bytes": 4386,
+            "sha256": "d4eb4f71d0a1eb2018ea07d5564ba4a85567a7160c5644d35824ab777036f9e6",
             "metaBytes": 189,
             "metaSha256": "ffe207db324bc9fb7ec415096e83199bd24dd5eebc6c7bca2f205e023fd52b0e"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Elbows Mask.asset",
             "guid": "414ac3b75bf61c64db55200f4e0db7af",
-            "bytes": 4342,
-            "sha256": "e646a58030d572a6f6dbddc588b70d372c24c6fe3305a9f8bfa588b9395e481d",
+            "bytes": 4386,
+            "sha256": "380be0c65f7dc739c3d1f0c96e5ffb3e0acf4d7cbe539971f5bd89cc22af0e1a",
             "metaBytes": 189,
             "metaSha256": "1cf569712a3f042da960e6d6baa4c71cae2fae7e8088cf92c86beffe464766c6"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Knees Mask.asset",
             "guid": "8c9bef28a8ac4a14cb56a993c8614ca2",
-            "bytes": 4340,
-            "sha256": "c65a4197a6586b88b9d56d9b0bf771141f71ca092f24f5ce0a259c01d1d5a612",
+            "bytes": 4384,
+            "sha256": "8545f19b11ffb9801f0968a0ee7073d820d28a58baf1d4175333857101953a49",
             "metaBytes": 189,
             "metaSha256": "24109edb1b709a5bf297945c4b0b3442e1ea8e86fc21f7c8f3364d0d05bd6364"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Lips Mask.asset",
             "guid": "bba021a1245f16c4fa4d67fbe0d2c470",
-            "bytes": 4338,
-            "sha256": "46237c7eb9bdb9bd46b0fda612ed48626dab41bb4d964b238b2341563b3fc60f",
+            "bytes": 4382,
+            "sha256": "3d6456cfbf127e5571f6c26d0bf81348bb35f32e8b7a8bef80e8f443898744e0",
             "metaBytes": 189,
             "metaSha256": "930909e55d4d07e5ea750386b3838f207d15c6cc483ba4486a1cc42bcbc069fe"
         },
@@ -1425,16 +1949,16 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Seat Mask.asset",
             "guid": "cd2b162207c700b4aa76b2a5b8e601ca",
-            "bytes": 4338,
-            "sha256": "37b7ef3e15ae0a9d9f51c7e3152e08d6f10b025a8f531a46ed9aff563d27e2ad",
+            "bytes": 4382,
+            "sha256": "d4e13c57dc723f0fce43819348f91d1b96349812094f5b2022d1d31e7c210245",
             "metaBytes": 189,
             "metaSha256": "4e9eccc94cc81a5d4e2e45de04a348d51b0ef0c9f1d880708e099ace3aa98f52"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Shoulders Mask.asset",
             "guid": "e8f0551af4ebdb54eac1ae388888ac7d",
-            "bytes": 4348,
-            "sha256": "be4db7db7c0c019790aa7e8e56f90afa46a008b6f91971c9f6a86ffd4420dace",
+            "bytes": 4392,
+            "sha256": "3b6399bc6d049e4384f0822184b7c569d69fc1dbf3d2ba016bcbbac02d0f5d7e",
             "metaBytes": 189,
             "metaSha256": "63e8f101a84120352533fbecafdd4cbe5d5becf62c9be2c8ce85b6109e4962ea"
         },
@@ -1449,16 +1973,16 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks/Waist Mask.asset",
             "guid": "2fb57b0b48f4f9842a906e8e8186199f",
-            "bytes": 4340,
-            "sha256": "d7cf209157f1af9cbdc4ff1c4b5fee88c19355db5e4c967ef5cf321d6de4fd6a",
+            "bytes": 4384,
+            "sha256": "2e871cd7d4ad4d3f27634762b2655c58551483b0dd7462872622c4741b2c398c",
             "metaBytes": 189,
             "metaSha256": "3aac5a31e04c18c529ae09d6b275bbf4dd2ef1c6997bff887bfc2908987718c4"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Region Masks/WristCuffs Mask.asset",
             "guid": "2ac8dc44b76209b42b93ed71dd132c38",
-            "bytes": 4350,
-            "sha256": "4ccbec4df116768849c36ea3bb22b769296c21200397fbb56617f261937bbc7e",
+            "bytes": 4394,
+            "sha256": "750bc8740de0220f1d787bc1f8a46ab1bfc069111405d997b250dca2942e64ae",
             "metaBytes": 189,
             "metaSha256": "13e70ca19da643e86c077c7332c20877eade6734a552b209ddc822e76d5589f6"
         },
@@ -1617,10 +2141,282 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Samples/Overlay Painter Document.asset",
             "guid": "5bf302295ab188042a4a09e0cffd071b",
-            "bytes": 2616938,
-            "sha256": "f971ba0666b32726cee92e3ff748da2e3cb42f3634f610cd8f78917737e07a25",
+            "bytes": 2665461,
+            "sha256": "d8923b0d47e26f59d49d319c8d79dbcb06333df177299bfa362f2732b8d74a37",
             "metaBytes": 189,
             "metaSha256": "b4d2a2ae79f4fcc484adb33ed557cd82bb52316b9eb9b91a6313cf0bea016567"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble",
+            "guid": "abcb1ff128a776945b8ef60af3d1eb08",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "d82d93327328def9f6b9de739e58367a97e8da4d8a350fbbf641544fa1077769"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-Albedo.png",
+            "guid": "7ef3544c752ac014fa1bf652345cc6f6",
+            "bytes": 4061596,
+            "sha256": "b9b3440bd2b62f8be1fb3d575d38b8ceb0a0dab0076a16685efee554224698de",
+            "metaBytes": 3364,
+            "metaSha256": "4566c25c62784108233e7828ac613554d179724666e3bb956ad063a3f75289b2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-Closeup.png",
+            "guid": "a637249c4806fbb42b12ed6fa5420c60",
+            "bytes": 1108552,
+            "sha256": "f61b80124959b2bbdb0b1672ca0c7d3f054a7a84a03c42306c6d8f068c9a15b8",
+            "metaBytes": 3364,
+            "metaSha256": "19a68a88e3aaaea153412f3995951aa55dd87fd3e046fcae70895f20b3e466be"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-Face.png",
+            "guid": "535cb7d0b432984459a7f24f69ae4ef3",
+            "bytes": 787660,
+            "sha256": "ef0bf3cd9627dfd428ed57b38e47d03b8b18f504efc9874f4ff2f707338db2ef",
+            "metaBytes": 3364,
+            "metaSha256": "b5a56f43e18976b54a7368124bcc498247085fa2c1de129a42f509a262f94aa7"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-NormalControl.exr",
+            "guid": "92603a190d35e0f47b42c6c72795c0b5",
+            "bytes": 33587531,
+            "sha256": "68e02ef7010c1fe225de4631ccaa045d0fdb7de3043b2396ca1eae11a246d1de",
+            "metaBytes": 3364,
+            "metaSha256": "80c11149a259b26ebd6865e75a8ba57afa907df61edfb31cf02787a38754a883"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-Parameters.json",
+            "guid": "4063433b5b0870844b9f79b2127a4bc7",
+            "bytes": 119931,
+            "sha256": "ace95ffd9820a596e52db178b8408e257cc7e311860c7e0d0e754b268ca536c9",
+            "metaBytes": 158,
+            "metaSha256": "973ab2dbb4eff6d907500f17a19daa3e52f1afa028b77586c17c1fd26281576e"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048-Roughness.png",
+            "guid": "a97dd80b2a0d6044495b1fb9d9d7e690",
+            "bytes": 2615304,
+            "sha256": "03c70a217ba47c3c6ff869971e5e7ae79a8d12db96e68c7db5e620768090b48d",
+            "metaBytes": 3364,
+            "metaSha256": "f1fb4fe9ea8d2cc506b02bf3b1336637664b555df16dd5a9b02e7f1adcc21c04"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Coarse-Stubble-2048.txt",
+            "guid": "59504c38ec1c03c4c910fbef373483ac",
+            "bytes": 407,
+            "sha256": "588acd42b26f822519329f7fff18b0b4a400754b8c4500d3bfb3a59e17c87c9f",
+            "metaBytes": 158,
+            "metaSha256": "8090676664b752815d44392ae0baea579505ffeb9727275fcada8c3634770b17"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-Albedo.png",
+            "guid": "348822e0ecd0a184da7cfd80820c8557",
+            "bytes": 3349251,
+            "sha256": "9da34ab2e8aa248a9c615ff7741146ed3fba31197989c099eac2a45d4ae41bfb",
+            "metaBytes": 3364,
+            "metaSha256": "0d5e4c2f39ff6dd047908a02c6b8c552d36cf1b0707cf0b2d412c5825dd9fc69"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-Closeup.png",
+            "guid": "96eb0083d06c95c40a4b1cbec1394e43",
+            "bytes": 1032424,
+            "sha256": "8c1752c0cecd64b8b388d3fff970c05b246f5f69dbdf3dfbd8159ccf7f769277",
+            "metaBytes": 3364,
+            "metaSha256": "ce18831df2246fcd233f83750e33472b150f2504f0c86465a7704ae9a9542674"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-Face.png",
+            "guid": "f887856d2ebb1bc498df323dd1bf8df9",
+            "bytes": 761082,
+            "sha256": "bef974812e113f9ee67b452f1a3f6b4c5fd1e5204a4a2d8e409128c2d74ececf",
+            "metaBytes": 3364,
+            "metaSha256": "39fb838da6c024ea5ad44ad05267e4c0505e2562d13dc627f28e8c3004c54194"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-NormalControl.exr",
+            "guid": "3df5198e9c8c783409dfb3e017c60729",
+            "bytes": 33587531,
+            "sha256": "c29c2601092785bb396d306b0c83934becfde30485b26222edf9f81b03be2229",
+            "metaBytes": 3364,
+            "metaSha256": "ad4963cdcb008e8c6e301156a19d9109a3b507874a744cfc9e7daac8b6984402"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-Parameters.json",
+            "guid": "ca2630b47f236cf4c988fd7ce8f70c45",
+            "bytes": 119920,
+            "sha256": "ccca6d459d9da9a9f9f2aa14f78edb3d43a86870be9df755c519bcab5281a1e2",
+            "metaBytes": 158,
+            "metaSha256": "e85d84ab3ade67c768873c459cc9a62fa4775d495f9a04577d703449974b640a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048-Roughness.png",
+            "guid": "9d9d052dea2513947bbccd4a31efd02b",
+            "bytes": 2044087,
+            "sha256": "ca8be5b7be7a4f2b5e48be4433b78bd9454e10ce8d6b54e7c81045275e17dae7",
+            "metaBytes": 3364,
+            "metaSha256": "d76b614fa76949de3351e119adf1cd3580a2efac90ea323d295f97401b0ade78"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Five-O-Clock-2048.txt",
+            "guid": "109bcae9bf936ec45bce111227877216",
+            "bytes": 405,
+            "sha256": "cb21ad32190eb9ebdabbfe620b164bbfeae1f00ab355bd298c56313f0b011332",
+            "metaBytes": 158,
+            "metaSha256": "ecaed975ec1d03f803b3f349015be2f31480cd534ce7bcb2ee128a7f96d3e088"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-Albedo.png",
+            "guid": "6055fbd17c461e6449e8023abd4fa928",
+            "bytes": 2866851,
+            "sha256": "c88feacd6b057951ea7b77165e710bdaca969875a9af8f34bb347d8f3f66eca4",
+            "metaBytes": 3364,
+            "metaSha256": "9793732353540fd4da122fc95effe4131c589a35abfa8dbd1f772695323d0cb0"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-Closeup.png",
+            "guid": "91c8466aabbba5c4cac0032e900addf9",
+            "bytes": 1051496,
+            "sha256": "c362bad1dac6d6c132127f69e254369940ffae2f08d086439a0ef05ec75907d1",
+            "metaBytes": 3364,
+            "metaSha256": "378ef45a1d66fa406a6a7a209272330b756f29a9e07f6b9a6dc420ee3c896c17"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-Face.png",
+            "guid": "daf42fc64d9b2da448182cb4cfffd79f",
+            "bytes": 768244,
+            "sha256": "426a458e930bcd70a61412f53da9e9fd968e7cd25bb0d6e8276a4ecd7e0db37c",
+            "metaBytes": 3364,
+            "metaSha256": "5c03f221dfb6cf28eecab78f2a38b0ffe9a02c385b5448f91788817f042c63df"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-NormalControl.exr",
+            "guid": "ff38e0715190066478ce07cd502214ae",
+            "bytes": 33587531,
+            "sha256": "98a25ec073ca0319cb403b77fed96197ce6e61f83950178164a2283c6914e46d",
+            "metaBytes": 3364,
+            "metaSha256": "d7f6047d90fb2932ddc517a5eefb09c1512c43336c3cca00725fca21868c8c30"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-Parameters.json",
+            "guid": "dc3cd4db263ac6040a58fc5a493c2224",
+            "bytes": 119904,
+            "sha256": "39466cebc6649d265c296fbb9c39686c02339d150bf22987ce7cf7a596ac0c01",
+            "metaBytes": 158,
+            "metaSha256": "0c332556a10ff943bedf187383cf4eadbcb26a1a5ca480c74fa6316e3e7838bb"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048-Roughness.png",
+            "guid": "3de8cfa3d28a9154e902e6a7c7c9934c",
+            "bytes": 1876911,
+            "sha256": "70665559ecdeb69d6045f60a9792fca84db8de07bedff4af0e7b5ca266d6d98c",
+            "metaBytes": 3364,
+            "metaSha256": "5a0416f6fb747c94a07d089aad1ba165929c52907b9072cc85a904335445f1d7"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-2048.txt",
+            "guid": "fa8438cdc6f13654881b21a3a38ef2fd",
+            "bytes": 406,
+            "sha256": "b6b997afb674be39334920d84d621371abe6cac98d5b1906802e592e93e51f1b",
+            "metaBytes": 158,
+            "metaSha256": "615927cc38ad5ce122c14792e2a5be885d23c66859d2e346d1b57b9802ad4a3b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-4096-Closeup.png",
+            "guid": "ab9de9f74dd1a5642896635bbdf3b2f4",
+            "bytes": 1042534,
+            "sha256": "bf8d45f2084b40c0011c1542b62aaa34e6f1d9d3a2b4026dfb3919349b81879a",
+            "metaBytes": 3364,
+            "metaSha256": "172ab866f6ab951c19859cef20c3ccfb48734e269003de418be4c6222fe474ac"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-4096-Face.png",
+            "guid": "39b4a06bac372cd49bf63c22f831ca2e",
+            "bytes": 764273,
+            "sha256": "195294f1773bb555d7ff1bafc9f40bde0b63eaae9a3339d210d0a6dbed689886",
+            "metaBytes": 3364,
+            "metaSha256": "9a86b8e63533b8f12b157d863f5c1ec3371f2773b9d68906d3bb51d8553cb895"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Natural-Short-4096.txt",
+            "guid": "bee6a1e1cb429d448be339ba1ca27ba3",
+            "bytes": 407,
+            "sha256": "0f606977ebf80695e6505ea838eda4a5739ab06505b205261be19f95964af137",
+            "metaBytes": 158,
+            "metaSha256": "e9cb8c782dff773bbb6eafa85729f39a522d00df6bc7617f193f07eb19c4a3e5"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/README.md",
+            "guid": "30f7989e1b90f914e8323d39c166466b",
+            "bytes": 6724,
+            "sha256": "c87d405d09ebe47354682110531e241e63044ae51f2b2c8d49919c7bcf520777",
+            "metaBytes": 158,
+            "metaSha256": "86d93b5b0444d1516c6e5d5a1d2cae9eacc9ce020c4d1bd21853feb6807687a2"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-Albedo.png",
+            "guid": "dfb9340c431e45549a8348c7f81223b7",
+            "bytes": 3102877,
+            "sha256": "9633dca6be572d3547fbc4d4afed041c7f12cd4290f5576c94afaee629167f01",
+            "metaBytes": 3364,
+            "metaSha256": "473f1f4d2ef67907db3531c7eabf65bad28d8e1b72f8e78b831897ccc6ab7da1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-Closeup.png",
+            "guid": "71527a22421f381429408ac1e52e4366",
+            "bytes": 1048186,
+            "sha256": "e3a7c6019e756b26cdf6d27dd8987e68e13100bf93183aa4b843012d026692af",
+            "metaBytes": 3364,
+            "metaSha256": "51d100e9cad7963c4a6c7af2e650af4c322dfcdf8fc39bfcf1346afda2b487c0"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-Face.png",
+            "guid": "fdb4bdda7cd251c4b969e7a78e9314e4",
+            "bytes": 767177,
+            "sha256": "a3f593942bb2a75237d9ef23e4609bebd5861c303bbe4c743d5be8268108efc8",
+            "metaBytes": 3364,
+            "metaSha256": "4089744ddfba4ccbc10fe884bce9f4240ec5bcb1c9ab52d3d8379c3a048fd89a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-NormalControl.exr",
+            "guid": "696e495c2cce50741a2ae37730d82aba",
+            "bytes": 33587531,
+            "sha256": "98a25ec073ca0319cb403b77fed96197ce6e61f83950178164a2283c6914e46d",
+            "metaBytes": 3364,
+            "metaSha256": "e675d710b90db458c4bc30013a5f8f55f54e5a6b809d8edc1b866a600cf2a29a"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-Parameters.json",
+            "guid": "42ed1c01202bf8c46906990fa559d056",
+            "bytes": 119919,
+            "sha256": "ac42df3b6f4cb99e1c546c4b14ce163bb33f0ab70def5c64bfb9380d30a56825",
+            "metaBytes": 158,
+            "metaSha256": "728a21a9008f642391ae04aee046215fc9a484033c9574c8edb8e22c21f1a708"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048-Roughness.png",
+            "guid": "2e75c28d1ea4e614f8e7dfb4f656c08d",
+            "bytes": 1876911,
+            "sha256": "70665559ecdeb69d6045f60a9792fca84db8de07bedff4af0e7b5ca266d6d98c",
+            "metaBytes": 3364,
+            "metaSha256": "b9a033625b00633e6a7185e625baeea472367ed8baa27a087ad9e919f5072946"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Salt-and-Pepper-2048.txt",
+            "guid": "4ab7bce7fdb22044cbec25205422d3af",
+            "bytes": 408,
+            "sha256": "c698b4e6f6e340783c5b2b3faa26d3f66230ef6b3ba87dafdf285c083352b917",
+            "metaBytes": 158,
+            "metaSha256": "feb83cc7a846e771a8ec8908d3aab0c69a2747bd4f2a2d620cc5f34aadee517f"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Stubble/Stubble-Preset-Comparison.png",
+            "guid": "ff0321b59f4795e4aa274b98a15a5a25",
+            "bytes": 1189562,
+            "sha256": "805d10bc4c6450ebd0dff9749f021a9d3d10d5d5b2dd4368ce4a70f98a84dcb7",
+            "metaBytes": 3364,
+            "metaSha256": "3155c3561b6e9c890e2d34b214e1ae65c7e99576b199bb159d7c0c015475e546"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Surface Details",
@@ -2257,18 +3053,42 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/ImportSpriteSets.cs.txt",
             "guid": "8965444e8930760459902cbe61e2c2c8",
-            "bytes": 4945,
-            "sha256": "9d9a5963a915b5cdd39aaa0e54fe77ee33706563cc3a7ef52c73c5540004ef3a",
+            "bytes": 5290,
+            "sha256": "7f14b5e9b22320c4cb5bbb7d361eded6232fb0224de29473c8960d904478b37b",
             "metaBytes": 158,
             "metaSha256": "99c62736c4bb6f1db49b5e8aac95a63c103005ff282c3b65bce205e1f7b69ccc"
         },
         {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/RenderMailCatalog.cs.txt",
+            "guid": "8fbff62a479111945ae9fdd21fe0b3e1",
+            "bytes": 5077,
+            "sha256": "2da3c434dbd0fabc64e74fe5e17f35060a1306ffc8d52a1191a30c583fc8df1b",
+            "metaBytes": 158,
+            "metaSha256": "b16a40b6581fe4ab5ade7c2e2c91419d6fbebc0ab7c1c15c06f57549d6355ebd"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/compose_mail_catalog.py",
+            "guid": "9a7be03e685565744838f832a5e529de",
+            "bytes": 2039,
+            "sha256": "02b389c7935f11c11b5bfc6a5b66739cf65ce3b463cfd66ff7268ad9a0946b2e",
+            "metaBytes": 155,
+            "metaSha256": "b3ffcd926bbc78b2bd3c00d32e47ec822eeb987605847d88f3d798a7f296bb66"
+        },
+        {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/generate_expansion.py",
             "guid": "83482113a097fc043a834e431e858c4f",
-            "bytes": 21700,
-            "sha256": "ca5f64136eeb99d4965e1dbab8fa23c8927b3b7702fda64cfbfc5ba37212b971",
+            "bytes": 21122,
+            "sha256": "57ee7a60c2ca2f2b4af84b776ce0f2add5bb2f3c74fedef0926c04c40df39b3e",
             "metaBytes": 155,
             "metaSha256": "71ff116f26462a00b4bc73c7c33d8060148c92557715501c231fa2f2608c3c81"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/generate_mail.py",
+            "guid": "f03e80bb9a908a548ad8c8f0bae9f269",
+            "bytes": 3636,
+            "sha256": "2afadb143fc8868e8ee45d4833ddc1b7dec7dbf28330f5c75a06d005a75008a6",
+            "metaBytes": 155,
+            "metaSha256": "3a8d6191bb55146a752881b2cf217b82d4bc72c2e8c322eb57a6e9cca10435f1"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/generate_materials.py",
@@ -2279,18 +3099,26 @@
             "metaSha256": "8874523c086734b401abbde642111aa15706ab25b29f2ff136ab400286f4bf46"
         },
         {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/mail_geometry.py",
+            "guid": "e2e9f90d501ce884099d94301fbe81ff",
+            "bytes": 11334,
+            "sha256": "0eaf3a191222c1365fca0020c0019990bd83e785f7f0865b52d8184b519f46d3",
+            "metaBytes": 155,
+            "metaSha256": "aae331e85ce73a10d72a5c6ee7c8860f04611ff0183999c4718bc5f5120d5189"
+        },
+        {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/validate_expansion_periodicity.py",
             "guid": "57a390e54d61fd144b78ad85c1c96aba",
-            "bytes": 1306,
-            "sha256": "eac2d42e42b1a273daa6770c2c79f77e29af8953299dca5ce91d3057126b003a",
+            "bytes": 1583,
+            "sha256": "c5b24e29da279473390698068b127db205aa268b05a6f326c300ddffeed3fd90",
             "metaBytes": 155,
             "metaSha256": "482859e6028d57fa3cd3be850144a6a44fb842448f9c20c5e91e6c8940b1de32"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Authoring/validate_materials.py",
             "guid": "afc9980c5cb340346b88b5db0d146e28",
-            "bytes": 4310,
-            "sha256": "c7cae5faeffc1cc3bef84a0c08ce129cf7badcc2b7d5c6c5c06c5eea1ba8a880",
+            "bytes": 4815,
+            "sha256": "9a54b71843743aa11112c6579f334e69282743f465a5ec99d5cc378a24228c66",
             "metaBytes": 155,
             "metaSha256": "15ae91eb14fd7931440430f5b37ff811afad3a0ff25df61712cb015ea40db939"
         },
@@ -2345,26 +3173,34 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - Catalog.png",
             "guid": "6ef0d48c3c8601e4e84d0b8fd7e2a996",
-            "bytes": 195406,
-            "sha256": "3814ac48511ebe233bcbf560cb997ba4b84f659916db86424901e0a7c751a9cd",
+            "bytes": 1010021,
+            "sha256": "4da1410719bfb6b4422eb09fcaa9a55e5ea821d6bdb32480d30d84847c1e2bce",
             "metaBytes": 3364,
             "metaSha256": "85469b37a47e7e95e6164dbf594a7f1d9208f79d85f41c6bd00649755514a804"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - PBR Catalog.png",
             "guid": "2198e877ba2a2b04dbcfafde08bcff10",
-            "bytes": 999127,
-            "sha256": "5fca17494852780b1a22b61423f0a8ec55e9c6069d686a48f5d713739ba07fd4",
+            "bytes": 1010021,
+            "sha256": "4da1410719bfb6b4422eb09fcaa9a55e5ea821d6bdb32480d30d84847c1e2bce",
             "metaBytes": 3364,
             "metaSha256": "2685ccade92fe4df0bc2aa45feb437ac6733d3f363c65fb77d10a904437594e6"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Chainmail and Scale Armor - Repeat.png",
             "guid": "5c3f8ef0c65cc484b83d7b64277a9ccb",
-            "bytes": 80584,
-            "sha256": "4a433fafec1157e62dd84769925a2565192a298dbfc0cb60b0ca8c01271cf762",
+            "bytes": 462261,
+            "sha256": "dc9e446598ba392e54d3588e17ad0e96301412b3b2a796d5d4b141c2be6c7981",
             "metaBytes": 3364,
             "metaSha256": "349957d62451df5f8d094684ae705e3f4dfa93954411130c796959be51e0d782"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Dark Oiled Steel Chain - Relief.png",
+            "guid": "b8c72672f9a81d94b8a6e32e6082b087",
+            "bytes": 1120574,
+            "sha256": "b4f7f1d60f4371dcb6f430cafebed53fc5237914b9f31f3ba24ad3a231a793aa",
+            "metaBytes": 3364,
+            "metaSha256": "bb37da42835b16d01f32e85a0d17db34aebed870bc7d2f303617ae525257dd05"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Denim - Catalog.png",
@@ -2393,16 +3229,16 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Library Overview.png",
             "guid": "4bae3289735c31d4baaec8e60dea1256",
-            "bytes": 1242973,
-            "sha256": "792434e9103a8f29484a8eb44a09579b871093cf38b7f33b727a012ef623494a",
+            "bytes": 2249966,
+            "sha256": "bf853a21763310edca44df6fb2ff6bfdc255a180f2e2c0f8ab61e2cacf8421c4",
             "metaBytes": 3364,
             "metaSha256": "bffec6b49322e1b7b0de8ee3ce08216ede8a7771f4a94306fee8b2b221034278"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion PBR Overview.png",
             "guid": "8c65ae5edef3d4f43baf58bf741c123a",
-            "bytes": 1809128,
-            "sha256": "40522689fd7cc313ad82a89faa1f0afdd578c0aa9a317a99665d6c623fd631e0",
+            "bytes": 2249966,
+            "sha256": "bf853a21763310edca44df6fb2ff6bfdc255a180f2e2c0f8ab61e2cacf8421c4",
             "metaBytes": 3364,
             "metaSha256": "071af1607a70fda728dc5eb3faa1e192445ea89d92faa13d096c01405a1b981d"
         },
@@ -2415,12 +3251,52 @@
             "metaSha256": "1c89c8a6564395094cf76819eddff9320d10ce317749ae813f0e532708e6f0bd"
         },
         {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Seam Measurements - Chainmail and Scale Armor.json",
+            "guid": "55a0d35be3df68b4380178b3813050f0",
+            "bytes": 22237,
+            "sha256": "f7f4eb0f680a10205e289f2dc54b4908f48f5b909ab3cb1fd6c6edbf5d6fa23f",
+            "metaBytes": 158,
+            "metaSha256": "ed491514ec4e3384844a12efaf05d9392d571e4feb1f14a5a6aec08e3fd03864"
+        },
+        {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Expansion Seam Measurements.json",
             "guid": "2596d2449e2ceb443844183fa2eef941",
             "bytes": 174898,
             "sha256": "c07ec59cc3b7229900f840032fef3cf350b1d1fdbb0c98ffdeb50f1ccaad1207",
             "metaBytes": 158,
             "metaSha256": "95461b93aa58caaa202dc38e1761d16eea2c4101721e582fec3a739b69b6dc95"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Fine Polished Steel Chain - Relief.png",
+            "guid": "2286497d7730d984790d9b2963e85268",
+            "bytes": 1391163,
+            "sha256": "69ee83a783cd357257721340aa93d62054bbb6924ebc1d973e7227b5193df89f",
+            "metaBytes": 3364,
+            "metaSha256": "461c5bae886f82582a8ebfad9d5c236d9e03802e43a42634a8a53d0bed742949"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Interlinked Chain Mail - Catalog.png",
+            "guid": "d8bd5aa5bdd4b2b41a6febe1d46247a6",
+            "bytes": 742610,
+            "sha256": "31e0bc9b3fcc8192a8414f740650011efbf5cf03007e5f3623ceafdebc569384",
+            "metaBytes": 3364,
+            "metaSha256": "3ecb6974600dedb85d367e4a3c2405fdda9156283a58d0552e52a2c1beaedd3b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Interlinked Chain Mail - PBR Catalog.png",
+            "guid": "879b7b2fc32a69646adfaa4795af36c7",
+            "bytes": 742610,
+            "sha256": "31e0bc9b3fcc8192a8414f740650011efbf5cf03007e5f3623ceafdebc569384",
+            "metaBytes": 3364,
+            "metaSha256": "306e7340205cdd2baa9400a3d0efbc92ee6cf31507c9947fa5143215ba26a337"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Interlinked Round Steel - Relief.png",
+            "guid": "88625a9324919814398d8a18c6da949a",
+            "bytes": 1068469,
+            "sha256": "7ff3c571e12aa6bb5d2d4206a8b50fbd45668bf06ea2d4cc8392d6d0acccde4c",
+            "metaBytes": 3364,
+            "metaSha256": "fa7d24406ee49b77fb1977a6f4b234223144cd9a23a754aaf0bc19e72a9367e5"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Knits and Soft Clothing - Catalog.png",
@@ -2445,6 +3321,22 @@
             "sha256": "77c32dc99337041d1d3fdb4e2f621fd50d0623bc1f4758010ecbcbd78dc53e6a",
             "metaBytes": 3364,
             "metaSha256": "a79e522abcd3ed1b2a4bab50b487e267ac0cdb42567cb133137e0a53c70c3729"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Mail Seam Measurements.json",
+            "guid": "9b92378748708a247b2cf65405cec217",
+            "bytes": 7844,
+            "sha256": "6bd83a92ad48cd969f063ceaa9921c3c93341fd63cc9fa19abf9231346aa1cec",
+            "metaBytes": 158,
+            "metaSha256": "d9885f095599e6d9b2b8c04c0f3625c462abf5f8375da2146ca187fa59e34a30"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Mail Unity Validation.txt",
+            "guid": "6a3258f20bed4fc4a88b772b150ed32b",
+            "bytes": 563,
+            "sha256": "f2c4957338dd388670ec815dd5fb47d3e507edf666a11e6ea0ccdd93df26b00c",
+            "metaBytes": 158,
+            "metaSha256": "adc55119a6c9aa12cf9d86a1f8b1cdd3c213fa123c591b72e7ef99d7af7e4025"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Material Library Overview.png",
@@ -2503,6 +3395,14 @@
             "metaSha256": "0c5714bccf633611b89301e8dbc35b4422bbb762b1a7eb9e66e55e65675b88a6"
         },
         {
+            "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Riveted Flat Steel Chain - Relief.png",
+            "guid": "85a8ce9af7039564d90dffda93942612",
+            "bytes": 1184090,
+            "sha256": "b49320265d623d23ce93bb661ca9ae764f0a86d2795be1145233664caffbbd2a",
+            "metaBytes": 3364,
+            "metaSha256": "b157c7e1e490c0d236c3ae6916b29d1470d77f962590cceb03b6a5cb9297feec"
+        },
+        {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Rubber and Elastomers - Catalog.png",
             "guid": "55eb47c571f727240a640ec281cdc10c",
             "bytes": 114241,
@@ -2537,8 +3437,8 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Tileable Materials/Source Validation.txt",
             "guid": "077fcaecd52edfb419d757f4164f22a1",
-            "bytes": 17306,
-            "sha256": "7a9f9880e18c758e6c1bf1999ac940fcd77cfb3d4112ab4c3b122ac165469d46",
+            "bytes": 18428,
+            "sha256": "27cff62fd5287d7f75e67954f306ec0a2d65b0338664586ec122b3e3c53bb91c",
             "metaBytes": 158,
             "metaSha256": "f714dc1ad692ec9a24bd63189ab58008812047bf128aaa10d06a2a4c30612c4b"
         },

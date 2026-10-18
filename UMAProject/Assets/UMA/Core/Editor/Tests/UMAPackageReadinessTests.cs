@@ -35,6 +35,51 @@ namespace UMA.Editors.Tests
         }
 
         [Test]
+        public void LegacySettingsPreserveActiveValuesWithoutOverridingBuildSymbols()
+        {
+            bool burst = UMASettings.UseBurstCompiler;
+            bool addressables = UMASettings.UseAddressables;
+            bool alwaysGet = UMASettings.AlwaysGetAddressables;
+            var settings = ScriptableObject.CreateInstance<UMASettings>();
+            var restored = ScriptableObject.CreateInstance<UMASettings>();
+            try
+            {
+                // Old serialized build flags must not override the project's compiled configuration.
+                string json = "{\"useBurstCompiler\":" + (!burst).ToString().ToLowerInvariant() +
+                    ",\"useAddressables\":" + (!addressables).ToString().ToLowerInvariant() +
+                    ",\"alwaysGetAddressables\":" + (!alwaysGet).ToString().ToLowerInvariant() +
+                    ",\"enableGLTFExport\":true,\"postProcessAllAssets\":true," +
+                    "\"DebugMemoryUsage\":true,\"DisableDecalCallbacks\":true,\"addDNAOnRaceChange\":false," +
+                    "\"addrSharedGroupName\":\"OldGroup\",\"UMAFolder\":\"Assets/OldUMA\"," +
+                    "\"addrStripMaterials\":false,\"addrStripTextures\":true,\"autoRepairIndex\":true," +
+                    "\"texturePaintCompactView\":false,\"texturePaintRecoveryIdleDelaySeconds\":45}";
+                JsonUtility.FromJsonOverwrite(json, settings);
+                EditorJsonUtility.FromJsonOverwrite(EditorJsonUtility.ToJson(settings), restored);
+                Assert.That(restored.addrStripMaterials, Is.False);
+                Assert.That(restored.addrStripTextures, Is.True);
+                Assert.That(restored.autoRepairIndex, Is.True);
+                Assert.That(restored.texturePaintCompactView, Is.False);
+                Assert.That(restored.texturePaintRecoveryIdleDelaySeconds, Is.EqualTo(45));
+                Assert.That(UMASettings.UseBurstCompiler, Is.EqualTo(burst));
+                Assert.That(UMASettings.UseAddressables, Is.EqualTo(addressables));
+                Assert.That(UMASettings.AlwaysGetAddressables, Is.EqualTo(alwaysGet));
+                using (var serialized = new SerializedObject(restored))
+                {
+                    foreach (string removed in new[] { "useBurstCompiler", "useAddressables", "alwaysGetAddressables",
+                        "enableGLTFExport", "postProcessAllAssets", "DebugMemoryUsage", "DisableDecalCallbacks",
+                        "addDNAOnRaceChange", "addrSharedGroupName", "UMAFolder" })
+                        Assert.That(serialized.FindProperty(removed), Is.Null, removed);
+                    Assert.That(serialized.FindProperty("addrStripMaterials"), Is.Not.Null);
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(settings);
+                UnityEngine.Object.DestroyImmediate(restored);
+            }
+        }
+
+        [Test]
         public void InstallationRootResolvesCoreAssets()
         {
             string root = UMAPathUtility.InstallAssetRoot;
@@ -58,8 +103,6 @@ namespace UMA.Editors.Tests
             Assert.That(generator.meshCombiner, Is.Not.Null);
             Assert.That(generator.textureMerge, Is.Not.Null);
             Assert.That(generator.defaultRendererAsset, Is.Not.Null);
-            Assert.That(settings.ShaderFolder,
-                Is.EqualTo(UMAPathUtility.ShaderPackagesRelativePath));
 #if false // URP/HDRP installer-package checks are disabled for the next UMA version.
             string urpInstallerPath = UMAPathUtility.ResolveInstallAssetPath(
                 "SRP/UMAURP.unitypackage");

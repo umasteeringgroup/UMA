@@ -1754,6 +1754,11 @@ namespace UMA.Editors
 
             public WardrobeRecipeMasterEditor(UMAData.UMARecipe recipe, List<string> baseSlotOptions, List<string> baseSlotOptionsLabels, UnityEngine.Object recipeContext = null) : base(recipe, recipeContext)
 			{
+                SetBaseSlotOptions(baseSlotOptions, baseSlotOptionsLabels);
+			}
+
+            internal void SetBaseSlotOptions(List<string> baseSlotOptions, List<string> baseSlotOptionsLabels)
+			{
 				_baseSlotOptions = baseSlotOptions;
 				_baseSlotOptionsLabels = baseSlotOptionsLabels;
 			}
@@ -1805,7 +1810,7 @@ namespace UMA.Editors
 				}
 
              GUILayout.BeginHorizontal();
-				var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
+				var added = DrawIndexedSlotPicker("Add Slot");
 
 				if (added != null)
 				{

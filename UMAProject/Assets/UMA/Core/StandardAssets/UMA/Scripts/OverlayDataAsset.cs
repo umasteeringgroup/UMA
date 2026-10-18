@@ -31,7 +31,10 @@ namespace UMA
 				{
 					return _oldOverlayName;
 				}
-				return this.name;
+				string objectName = name;
+				// Cache native Object.name reads at runtime, without changing editor assets.
+				if (Application.isPlaying) _oldOverlayName = objectName;
+				return objectName;
             }
 		}
 

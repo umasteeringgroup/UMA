@@ -2,10 +2,10 @@
     "formatVersion": 2,
     "requiredPluginApiVersion": 1,
     "contentId": "overlay-painter-tests",
-    "contentVersion": "3.1.3",
-    "umaVersion": "3.1f3",
-    "requiredCoreVersion": "3.1.3",
-    "minimumCoreVersion": "3.1.3",
+    "contentVersion": "3.1.5",
+    "umaVersion": "3.1.5",
+    "requiredCoreVersion": "3.1.5",
+    "minimumCoreVersion": "3.1.5",
     "maximumCoreVersionExclusive": "3.2.0",
     "installRoot": "Assets/UMA/OverlayPainterTests",
     "dependencies": [
@@ -82,6 +82,7 @@
         "Assets/UMA/OverlayPainterTests/TexturePaintMaterialCapabilityTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintMaterialPresetTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintMigrationTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintNaturalStubbleTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintNormalControlTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintOriginalOverlayTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintPackedDirtyRectTests.cs",
@@ -104,6 +105,7 @@
         "Assets/UMA/OverlayPainterTests/TexturePaintSavedLayoutTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintSceneNavigationTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintSkinFieldTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintSpriteMaterialsTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintStaleLayerRegenerationTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintStandalonePhase3Tests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintStencilTests.cs",
@@ -273,8 +275,8 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/Runtime/PluginApiV2Tests.cs",
             "guid": "38cb5c34b51448aab83c0b4db5aa34aa",
-            "bytes": 93636,
-            "sha256": "72bc6d309fa26e1be5652c71afbb410047dd0fcdf5681755ab78d61a5f9c5917",
+            "bytes": 93872,
+            "sha256": "559f426a3782c5e359581ea86afc1378fe118566e0ec7f32958fdf68249781e8",
             "metaBytes": 60,
             "metaSha256": "feb3e06ac52ddd87f49b094090d2a5d287e019a62f87f5b0e6871f1f82c1a1e5"
         },
@@ -385,8 +387,8 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/Runtime/StubbleWorldDirectionTests.cs",
             "guid": "908bbac2239022b478338b5a61047d39",
-            "bytes": 9468,
-            "sha256": "fcf27a1fb41df4eff564e2b909e25dfc5d15d02cbdb8ad49c80c9bdba9192c40",
+            "bytes": 9563,
+            "sha256": "b3c4be11cb2262056faab85494b0e231b59d86d0a929c8a310e4820f9b806648",
             "metaBytes": 59,
             "metaSha256": "a2f1129026b585ea2264dedd64237ccc82cea1162c2b2466e73943a6471df8dc"
         },
@@ -449,8 +451,8 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintColorCorrectnessTests.cs",
             "guid": "f7f0cdad1184e3f45b5e4d0e6101532c",
-            "bytes": 15865,
-            "sha256": "f4bbf87b900ef1a4b697a1f2ec5a2e147c9d0a393472dabeee623f884368e7a0",
+            "bytes": 16401,
+            "sha256": "24273f7410e53654523f069acc08c477981100e93c1d866bddf556eba069d4f9",
             "metaBytes": 59,
             "metaSha256": "d518bd1540785da8975f2a724447abb0245c40c9c35340da8ea1c7bae5bb0e24"
         },
@@ -505,8 +507,8 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintGarmentConstructionTests.cs",
             "guid": "a89a5cb8a8e6e8c4a93eb9ba08a77bb2",
-            "bytes": 21593,
-            "sha256": "8c6b78cad229125b157ca5d63002c347592bea5272693e2ea2093ef0443df745",
+            "bytes": 21940,
+            "sha256": "80ab5b7ac1c0b889fee80ba36c21f517574e13dce8410999ca1e977a2c275c01",
             "metaBytes": 59,
             "metaSha256": "ca912ff38a5861554d43bf215594535890db0997d47c8dcc1f68e6e627947e84"
         },
@@ -609,8 +611,8 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintMaskStackTests.cs",
             "guid": "bce0afb5fa4880d40bcd68546634532e",
-            "bytes": 20915,
-            "sha256": "dcf1db33ac7504fb9560e8ebcc71eda475736dbaeb3ce639ec0918e73910d81a",
+            "bytes": 22887,
+            "sha256": "4ed8314567c8a24bede512ea0b9d5a3f42c459660d30576c2bbcb1e353b36762",
             "metaBytes": 59,
             "metaSha256": "06495af0be5e3fc3cde82a34bbce8b3afec81b095aa6e3118381fd0e1b3daab2"
         },
@@ -637,6 +639,14 @@
             "sha256": "ee8358bcb3c8bfcbf3837aa60da825e1763752b5b8ff37cc5c09b9019c45d6ed",
             "metaBytes": 59,
             "metaSha256": "5f93071941d101ac929aa5707e6976c3f35531bb32a277986d24ab50433cb1fb"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintNaturalStubbleTests.cs",
+            "guid": "0744429a1ce36d0489af970d15720f81",
+            "bytes": 9612,
+            "sha256": "14266b3e765ed2e441685f6fa517d760ee3231d2e93c2420d9dc79e4a29934be",
+            "metaBytes": 59,
+            "metaSha256": "56dc75e0c7866928fc4a076992c07d44e1828ce86dd1a6b316d244e2aa709f0e"
         },
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintNormalControlTests.cs",
@@ -753,16 +763,16 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintProjectionTests.cs",
             "guid": "218812b8cdbc467bbdf4ca32fd08a3a0",
-            "bytes": 144790,
-            "sha256": "65c10c6e6b6621c67c43b927ad82c7594623171a19c40b1c0aa562d4fc029103",
+            "bytes": 144793,
+            "sha256": "86cee1a0511f0b0e98e2101789720c71e3b19050d3e0a0b1b2cd6e94f8c54307",
             "metaBytes": 60,
             "metaSha256": "3a51386b0cd68732bf47f2933749e9930141d121eda7b6d1beea8502da231599"
         },
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintPropertiesWindowTests.cs",
             "guid": "667eb070133a48ef83ebba49d8e0c524",
-            "bytes": 4459,
-            "sha256": "b0296e5d171bbfc9e9c7dd12cd6d2ae07900f9e97bf31b8079dd6c0495b509ec",
+            "bytes": 4707,
+            "sha256": "171c9290aaebb49b54a8a472aebee750a1afdeb7333f2100e6187f3ff4cbc8df",
             "metaBytes": 60,
             "metaSha256": "5d03d902ec346826f3cb04c343a3dcc2f68c8351517cb336fc68a542afa586ea"
         },
@@ -777,8 +787,8 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintReleaseIntegrationTests.cs",
             "guid": "c98a3f57a9a04ecda3b076d15a11b50d",
-            "bytes": 331900,
-            "sha256": "6afdda5b455bebc2c84b990e00b36d36669b361cfdd7af60d82d58a0bdd3f8a2",
+            "bytes": 332602,
+            "sha256": "e7fb1bf7652445c4e112aedd47bbc14d9bb6ff737b6b06c5b2b86ec4d189efbc",
             "metaBytes": 60,
             "metaSha256": "bf3601cbb935fc2839c23d7ab81584444b2d43ae3b260a1dbf00ae7e5b5ce289"
         },
@@ -793,8 +803,8 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintSavedLayoutTests.cs",
             "guid": "e1ae6345453ed9544bce9e4e72f806cd",
-            "bytes": 7130,
-            "sha256": "dc6d682815f7d5dc2e63fa7748134c97a500e0e886b4b41958ef10fd88c8cb77",
+            "bytes": 7518,
+            "sha256": "fa4065253e7be14a5d188e0c8d255b82198f4fb8d151af049112a227fb8b3843",
             "metaBytes": 59,
             "metaSha256": "72e2b74538d1c65c70348cffcfc1e4b59e441d0efa025cc3661f647326bbb2f3"
         },
@@ -813,6 +823,14 @@
             "sha256": "ee241fda80ae727715796a68ba4d2c661cc60a934f510ae4395da3d4bf55cd7a",
             "metaBytes": 59,
             "metaSha256": "4871bc0d8e26abda399e3180feb5b506e14640fdaf65386b25c506ce7b91b21c"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintSpriteMaterialsTests.cs",
+            "guid": "0694916e649b9704380ff01d114315db",
+            "bytes": 6007,
+            "sha256": "5914cca6879605a25e3b0aa7ddce3749ad08b64472191cd743869b0b51e90d75",
+            "metaBytes": 59,
+            "metaSha256": "e2fe5f973c44b6bf18ea49496701f542416b2d9de7433249bacb40f32abf7383"
         },
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintStaleLayerRegenerationTests.cs",
@@ -841,16 +859,16 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintStubbleReliefTests.cs",
             "guid": "ce7acdf9407b54f4ab7e2ff535fafe95",
-            "bytes": 8137,
-            "sha256": "1d8536457113b5f6f91a0a0e0e86c3b6fd3e5cee691652b4823b4d49ce28aea8",
+            "bytes": 11546,
+            "sha256": "8f5684cf27d370bfde6dcd7e5cbc702ea6179783d2f98e402464f7f8990ee62a",
             "metaBytes": 59,
             "metaSha256": "8e860fd69e4d4d205c6d6258d40f68277b9a096715dcf3858a1188fc254ae5d1"
         },
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintTileableMaterialTests.cs",
             "guid": "779e9b4947baedb45961554735d48c3e",
-            "bytes": 6706,
-            "sha256": "b0a2af1b3d958963f3951921185df04e32630ec7b45dc6ab8470f93949a436b6",
+            "bytes": 7335,
+            "sha256": "cee29ca75d1f7234b204c966a18d48946e851c211cb4461de7d94548ea49a525",
             "metaBytes": 59,
             "metaSha256": "d4b8e95cbfba7bd662c8ed31625ad3537146f3292120567695c355a6b387a487"
         },

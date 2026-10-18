@@ -1,7 +1,7 @@
 {
   "name": "com.umasteeringgroup.uma",
-  "version": "3.1.4",
-  "umaVersion": "3.1f4",
+  "version": "3.1.5",
+  "umaVersion": "3.1.5",
   "displayName": "UMA - Unity Multipurpose Avatar",
   "description": "UMA Core is an open-source runtime character generation and authoring toolkit for Unity. Editable UMA3 and optional UMA2 character content are distributed separately.",
   "unity": "6000.3",

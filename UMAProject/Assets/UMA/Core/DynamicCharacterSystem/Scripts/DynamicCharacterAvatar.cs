@@ -537,14 +537,7 @@ namespace UMA.CharacterSystem
             }
 
 #else
-               List<GameObject> Cleaners = GetRenderers(gameObject);
-               HideAndCleanup(false);
-                for (int i=0;i<Cleaners.Count;i++)
-                {
-                    GameObject go = Cleaners[i];
-                    DestroyImmediate(go);
-                }
-               //ud.umaRoot = null;
+                HideAndCleanup(false);
 #endif
 
                 cacheStates = new Dictionary<string, string>();
@@ -693,35 +686,24 @@ namespace UMA.CharacterSystem
            // umaData.markDynamic = markDynamic;
         }
 
-        List<GameObject> GetRenderers(GameObject parent)
+        protected override bool IsRendererObjectProtected(GameObject rendererObject, string ignoreTag)
         {
-            List<GameObject> objs = new List<GameObject>();
-            int transformcount = parent.transform.childCount;
-            for(int i=0;i<transformcount;i++)
-            {
-                Transform t = parent.transform.GetChild(i);
-                if (t.GetComponent<SkinnedMeshRenderer>() != null && !IsFbxRouteRendererObject(t.gameObject))
-                {
-                    objs.Add(t.gameObject);
-                }
-            }
-            return objs;
+            return base.IsRendererObjectProtected(rendererObject, ignoreTag) ||
+                IsFbxRouteRendererObject(rendererObject);
+        }
+
+        public override void HideAndCleanup(bool DestroyRoot = true)
+        {
+            // Reconcile before clearing the tracked renderer array. Orphaned UMA
+            // output must release its meshes too, while authored attachments survive.
+            ReconcileGeneratedRendererObjects();
+            base.HideAndCleanup(DestroyRoot);
         }
 
 #if UNITY_EDITOR
         internal void CleanupEditorGeneratedDataForPlayMode()
         {
-            List<GameObject> cleaners = GetRenderers(gameObject);
             HideAndCleanup(false);
-
-            for (int i = 0; i < cleaners.Count; i++)
-            {
-                GameObject rendererObject = cleaners[i];
-                if (rendererObject != null)
-                {
-                    DestroyImmediate(rendererObject);
-                }
-            }
         }
 
         internal void PrepareForPlayMode()
@@ -1108,13 +1090,7 @@ namespace UMA.CharacterSystem
 
         public void CleanupGeneratedData()
         {
-            List<GameObject> Cleaners = GetRenderers(gameObject);
             HideAndCleanup(false);
-            for (int i=0;i<Cleaners.Count;i++)
-            {
-                var go = Cleaners[i];
-                DestroyImmediate(go);
-            }
             ClearSlots();
         }
 #endif

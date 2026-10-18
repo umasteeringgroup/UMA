@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using UMA.PoseTools;
 using UnityEditor;
@@ -194,6 +195,87 @@ namespace UMA.Editors.Tests
         }
 
         private static BoneWeight Weight() => new BoneWeight { boneIndex0 = 0, weight0 = 1 };
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void PreviewKeepsGeneratedAtlasAfterSourceReleasesIt(bool renderTexture)
+        {
+            var renderer = character.AddComponent<SkinnedMeshRenderer>();
+            sourceMesh = new Mesh();
+            sourceMesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+            sourceMesh.triangles = new[] { 0, 1, 2 };
+            sourceMesh.uv = new[] { Vector2.zero, Vector2.right, Vector2.up };
+            sourceMesh.boneWeights = new[] { Weight(), Weight(), Weight() };
+            sourceMesh.bindposes = new[] { Matrix4x4.identity };
+            sourceMaterial = new Material(Shader.Find("Unlit/Texture"));
+            Texture atlas = null;
+            var active = RenderTexture.active;
+            try
+            {
+                if (renderTexture)
+                {
+                    var rt = new RenderTexture(8, 8, 0, RenderTextureFormat.ARGB32);
+                    atlas = rt;
+                    rt.Create();
+                    RenderTexture.active = rt;
+                    GL.Clear(false, true, Color.red);
+                }
+                else
+                {
+                    var texture = new Texture2D(8, 8, TextureFormat.RGBA32, false);
+                    atlas = texture;
+                    texture.SetPixels(Enumerable.Repeat(Color.red, 64).ToArray());
+                    texture.Apply();
+                }
+                atlas.filterMode = FilterMode.Point;
+                atlas.wrapMode = TextureWrapMode.Clamp;
+                sourceMaterial.mainTexture = atlas;
+                sourceMaterial.mainTextureScale = new Vector2(.5f, .75f);
+                sourceMaterial.mainTextureOffset = new Vector2(.25f, .1f);
+                renderer.sharedMesh = sourceMesh;
+                renderer.sharedMaterials = new[] { sourceMaterial, sourceMaterial };
+                renderer.bones = new[] { hip };
+                renderer.rootBone = hip;
+                session = UMARaceTPoseEditSession.Create(source);
+                var copy = session.Pose.preview.GetComponent<SkinnedMeshRenderer>();
+                var copiedAtlas = copy.sharedMaterials[0].mainTexture;
+                Assert.That(copiedAtlas, Is.Not.SameAs(atlas), "Generated atlas lifetime must belong to the preview.");
+                Assert.That(copy.sharedMaterials[1].mainTexture, Is.SameAs(copiedAtlas), "Share a single snapshot across materials.");
+                Assert.That(copy.sharedMesh.uv, Is.EqualTo(sourceMesh.uv));
+                Assert.That(copy.sharedMaterials[0].mainTextureScale, Is.EqualTo(sourceMaterial.mainTextureScale));
+                Assert.That(copy.sharedMaterials[0].mainTextureOffset, Is.EqualTo(sourceMaterial.mainTextureOffset));
+                Assert.That(copiedAtlas.filterMode, Is.EqualTo(FilterMode.Point));
+                Assert.That(copiedAtlas.wrapMode, Is.EqualTo(TextureWrapMode.Clamp));
+
+                RenderTexture.active = active;
+                if (atlas is RenderTexture sourceRT) sourceRT.Release();
+                Object.DestroyImmediate(atlas); // A source rebuild destroys its generated atlases.
+                Assert.That(copiedAtlas != null, Is.True);
+                var readback = new Texture2D(8, 8, TextureFormat.RGBA32, false);
+                try
+                {
+                    if (copiedAtlas is RenderTexture copiedRT)
+                    {
+                        Assert.That(copiedRT.IsCreated(), Is.True);
+                        RenderTexture.active = copiedRT;
+                        readback.ReadPixels(new Rect(0, 0, 8, 8), 0, 0);
+                        readback.Apply();
+                    }
+                    var pixel = copiedAtlas is Texture2D copiedTexture ? copiedTexture.GetPixel(0, 0) : readback.GetPixel(0, 0);
+                    Assert.That(pixel.r, Is.GreaterThan(.99f));
+                    Assert.That(pixel.g, Is.LessThan(.01f));
+                    Assert.That(pixel.b, Is.LessThan(.01f));
+                }
+                finally { RenderTexture.active = active; Object.DestroyImmediate(readback); }
+                session.Dispose();
+                Assert.That(copiedAtlas == null, Is.True, "Closing the preview must release its atlas snapshot.");
+            }
+            finally
+            {
+                RenderTexture.active = active;
+                if (atlas != null) Object.DestroyImmediate(atlas);
+            }
+        }
 
         [Test]
         public void SaveRefusesExternalEditsAndInvalidTransforms()

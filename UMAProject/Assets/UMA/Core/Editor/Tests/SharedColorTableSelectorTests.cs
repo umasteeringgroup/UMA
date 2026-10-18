@@ -8,6 +8,56 @@ namespace UMA.Tests
     public class SharedColorTableSelectorTests
     {
         [Test]
+        public void StandardPalettePrefersExactNameThenAdditionalNameThenDefault()
+        {
+            var exact = ScriptableObject.CreateInstance<SharedColorTable>();
+            var additional = ScriptableObject.CreateInstance<SharedColorTable>();
+            var fallback = ScriptableObject.CreateInstance<SharedColorTable>();
+            try
+            {
+                exact.name = "EyebrowsColors";
+                additional.name = "HairColors";
+                additional.AlsoAppliesTo = new[] { "Eyebrows", "Beard" };
+                fallback.name = "DefaultColors";
+                var method = typeof(OverlayColorDataPropertyDrawer).GetMethod("FindStandardColorTable",
+                    BindingFlags.Static | BindingFlags.NonPublic, null,
+                    new[] { typeof(string), typeof(System.Collections.Generic.IEnumerable<SharedColorTable>) }, null);
+                var tables = new[] { fallback, additional, exact };
+                Assert.That(method.Invoke(null, new object[] { "Eyebrows", tables }), Is.SameAs(exact));
+                Assert.That(method.Invoke(null, new object[] { "Beard", tables }), Is.SameAs(additional));
+                Assert.That(method.Invoke(null, new object[] { "Skin", tables }), Is.SameAs(fallback));
+                additional.AlsoAppliesTo = null;
+                Assert.That(method.Invoke(null, new object[] { "Beard", tables }), Is.SameAs(fallback));
+            }
+            finally
+            {
+                Object.DestroyImmediate(exact);
+                Object.DestroyImmediate(additional);
+                Object.DestroyImmediate(fallback);
+            }
+        }
+
+        [TestCase("Beard", true)]
+        [TestCase("Eyebrows", true)]
+        [TestCase("beard", false)]
+        [TestCase("Skin", false)]
+        [TestCase("", false)]
+        [TestCase(null, false)]
+        public void AdditionalSharedColorsParticipateInCompatibility(string colorName, bool expected)
+        {
+            var table = ScriptableObject.CreateInstance<SharedColorTable>();
+            try
+            {
+                table.sharedColorName = "Hair";
+                table.AlsoAppliesTo = new[] { null, "", "Eyebrows", "Beard" };
+                Assert.That(CompatibilityMethod.Invoke(null, new object[] { table, colorName }), Is.EqualTo(expected));
+                table.AlsoAppliesTo = null;
+                Assert.That(CompatibilityMethod.Invoke(null, new object[] { table, colorName }), Is.False);
+            }
+            finally { Object.DestroyImmediate(table); }
+        }
+
+        [Test]
         public void StandardPaletteUsesAssetNameAndFallsBackOnlyWhenMissing()
         {
             var specific = ScriptableObject.CreateInstance<SharedColorTable>();

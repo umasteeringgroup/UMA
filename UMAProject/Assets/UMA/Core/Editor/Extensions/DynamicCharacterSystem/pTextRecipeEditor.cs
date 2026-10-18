@@ -233,7 +233,10 @@ namespace UMA.Editors
 				if ((activeWardrobeSet.Count > 0))
 				{
 					hideRaceField = false;
-					slotEditor = new WardrobeSetMasterEditor(_recipe, activeWardrobeSet);
+                    if (!(slotEditor is WardrobeSetMasterEditor wardrobeEditor) || !wardrobeEditor.IsEditing(_recipe))
+                        slotEditor = new WardrobeSetMasterEditor(_recipe, activeWardrobeSet);
+                    else
+                        wardrobeEditor.SetWardrobeSet(activeWardrobeSet);
 				}
 				
 			}

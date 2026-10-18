@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fb730a5788b4ad7a139b61e5e279277, type: 3}
   m_Name: Production Export
   m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintExportTemplate
-  version: 2
+  version: 5
   outputFolder: Assets/UMAProjectData/OverlayPainter/Generated
   filenamePattern: '{avatar}_{material}_{channel}_{resolution}'
-  scope: 1
-  content: 0
-  channels: 127
+  scope: 0
+  content: 1
+  channels: 2047
   overwritePolicy: 2
-  resolution: 0
+  resolution: 1024
   bitDepth: 0
   padding: 8
   invertedChannels: 0

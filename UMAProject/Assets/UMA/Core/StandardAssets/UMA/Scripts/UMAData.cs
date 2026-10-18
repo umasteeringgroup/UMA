@@ -605,6 +605,15 @@ namespace UMA
 		}
 
 		/// <summary>
+		/// Identifies externally owned renderer objects that must not be adopted
+		/// or removed when reconciling generated output.
+		/// </summary>
+		protected virtual bool IsRendererObjectProtected(GameObject rendererObject, string ignoreTag)
+		{
+			return !string.IsNullOrEmpty(ignoreTag) && rendererObject.CompareTag(ignoreTag);
+		}
+
+		/// <summary>
 		/// Migrates tracked direct-child renderers to explicit ownership markers
 		/// and removes marked renderer objects no longer tracked by this avatar.
 		/// This is required when Unity preserves scene objects while restoring
@@ -612,13 +621,15 @@ namespace UMA
 		/// </summary>
 		internal void ReconcileGeneratedRendererObjects()
 		{
+			string ignoreTag = UMASettings.GetValidatedIgnoreTag(gameObject);
 			SkinnedMeshRenderer[] trackedRenderers = renderers;
 			if (trackedRenderers != null)
 			{
 				for (int i = 0; i < trackedRenderers.Length; i++)
 				{
 					SkinnedMeshRenderer tracked = trackedRenderers[i];
-					if (tracked != null && tracked.transform.parent == transform)
+					if (tracked != null && tracked.transform.parent == transform &&
+						!IsRendererObjectProtected(tracked.gameObject, ignoreTag))
 					{
 						RegisterGeneratedRenderer(tracked);
 					}
@@ -634,7 +645,8 @@ namespace UMA
 				 childIndex--)
 			{
 				Transform child = transform.GetChild(childIndex);
-				if (child.GetComponent<UMAGeneratedRenderer>() != null)
+				if (IsRendererObjectProtected(child.gameObject, ignoreTag) ||
+					child.GetComponent<UMAGeneratedRenderer>() != null)
 				{
 					continue;
 				}
@@ -670,7 +682,8 @@ namespace UMA
 				 markerIndex++)
 			{
 				UMAGeneratedRenderer marker = markers[markerIndex];
-				if (marker == null || marker.transform.parent != transform)
+				if (marker == null || marker.transform.parent != transform ||
+					IsRendererObjectProtected(marker.gameObject, ignoreTag))
 				{
 					continue;
 				}
@@ -697,14 +710,14 @@ namespace UMA
 					continue;
 				}
 
-				if (candidate != null && candidate.sharedMesh != null)
+				if (candidate != null)
 				{
-					Mesh orphanedMesh = candidate.sharedMesh;
-                    bool releasedSharedMesh = UMAResourceLeaseOwner.ReleaseMesh(candidate);
-					candidate.sharedMesh = null;
-                    if (!releasedSharedMesh) UMAUtils.DestroySceneObject(orphanedMesh);
+					DestroyGeneratedRenderer(candidate);
 				}
-				UMAUtils.DestroySceneObject(marker.gameObject);
+				else
+				{
+					UMAUtils.DestroySceneObject(marker.gameObject);
+				}
 			}
 		}
 

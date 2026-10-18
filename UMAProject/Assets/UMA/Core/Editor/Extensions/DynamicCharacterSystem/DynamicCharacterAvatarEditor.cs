@@ -2560,23 +2560,6 @@ namespace UMA.CharacterSystem.Editors
             }
         }
 
-        List<GameObject> GetRenderers(GameObject parent)
-        {
-            List<GameObject> objs = new List<GameObject>();
-
-            var renderers = parent.GetComponentsInChildren<Renderer>();
-            for (int i =0; i < renderers.Length; i++)
-            {
-                Renderer renderer = renderers[i];
-                if (thisDCA != null && thisDCA.IsFbxRouteRendererObject(renderer.gameObject))
-                {
-                    continue;
-                }
-                objs.Add(renderer.gameObject);
-            }
-            return objs;
-        }
-
         void ShowBlendshapesGUI(DynamicCharacterAvatar thisDCA)
         {
             EditorGUI.BeginChangeCheck();
@@ -2835,13 +2818,7 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
-            List<GameObject> Cleaners = GetRenderers(thisDCA.gameObject);
             thisDCA.HideAndCleanup(clear);
-            for (int i =0; i < Cleaners.Count; i++)
-            {
-                GameObject go = Cleaners[i];
-                DestroyImmediate(go);
-            }
             /*if (killUMAData)
             {
                 DestroyImmediate(thisDCA.umaData);

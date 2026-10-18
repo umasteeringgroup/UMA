@@ -124,6 +124,9 @@ namespace UMA
                 using (new EditorGUI.DisabledScope(busy || !pluginCards.Exists(card => card.state != UMAContentInstallationState.Installed)))
                     if (GUILayout.Button(new GUIContent("Install all plugins", "Install all missing or unverified plugins, including their Examples and Tests packages."), GUILayout.ExpandWidth(false)))
                         QueueAllPluginActions(false);
+                using (new EditorGUI.DisabledScope(busy))
+                    if (GUILayout.Button(new GUIContent("Reinstall all plugins", "Reinstall every plugin and its Examples and Tests packages, including packages already installed."), GUILayout.ExpandWidth(false)))
+                        QueuePluginAction(UMAContentPackageInstaller.ReinstallAllPlugins);
                 using (new EditorGUI.DisabledScope(busy || !canRemoveAllPlugins))
                     if (GUILayout.Button(new GUIContent("Remove all plugins", canRemoveAllPlugins
                             ? "Remove all installed plugins and their Examples and Tests packages."

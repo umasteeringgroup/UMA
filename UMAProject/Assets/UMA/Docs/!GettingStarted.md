@@ -33,7 +33,7 @@ In the Editor Settings section:
 
 1. Assign the standard character prefab to `Character Prefab`.
 2. Assign `UMA_GLIB` to `Generator Prefab`.
-3. Confirm the UMA folder and shader folder point to the installed UMA locations.
+3. Check the read-only `UMA Folder` display for the detected installation location. UMA resolves installation and shader package paths automatically.
 
 The generator prefab is important even when it is not placed in every scene. At runtime, UMA can instantiate the configured generator when a DCA requests generation and no scene generator exists.
 

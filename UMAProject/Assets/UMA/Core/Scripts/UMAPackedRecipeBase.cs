@@ -1092,7 +1092,7 @@ namespace UMA
 					{
 						SlotData slot = umaRecipe.slotDataList[i];
 						SlotDataAsset original = slot.asset;
-						options.newSlotName = original.name + "_baked_" + race.raceName;
+						options.newSlotName = original.slotName + "_baked_" + race.raceName;
 						slot.asset = original.BakeNewSlotData(options);
 					}
 				}

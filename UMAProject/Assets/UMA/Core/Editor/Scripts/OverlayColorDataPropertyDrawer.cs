@@ -505,13 +505,22 @@ namespace UMA.Editors
         internal static SharedColorTable FindStandardColorTable(string sharedColorName, IEnumerable<SharedColorTable> tables)
         {
             SharedColorTable fallback = null;
+            SharedColorTable additionalMatch = null;
             foreach (var table in tables)
             {
                 if (table == null) continue;
                 if (table.name == sharedColorName + "Colors") return table;
+                if (additionalMatch == null && MatchesAdditionalSharedColor(table, sharedColorName)) additionalMatch = table;
                 if (table.name == "DefaultColors" && fallback == null) fallback = table;
             }
-            return fallback;
+            return additionalMatch != null ? additionalMatch : fallback;
+        }
+
+        private static bool MatchesAdditionalSharedColor(SharedColorTable table, string sharedColorName)
+        {
+            if (string.IsNullOrWhiteSpace(sharedColorName) || table.AlsoAppliesTo == null) return false;
+            return Array.Exists(table.AlsoAppliesTo, name =>
+                string.Equals(name, sharedColorName, StringComparison.Ordinal));
         }
 
 		private static void RefreshSharedColorTableCacheIfNeeded(bool force)
@@ -575,7 +584,7 @@ namespace UMA.Editors
 			string tableSharedColorName = table.sharedColorName;
 			if (string.IsNullOrWhiteSpace(tableSharedColorName)) return true;
 			return string.Equals(tableSharedColorName, sharedColorName ?? string.Empty,
-				StringComparison.Ordinal);
+				StringComparison.Ordinal) || MatchesAdditionalSharedColor(table, sharedColorName);
 		}
 
 		private static int CompareSharedColorTables(SharedColorTable leftTable, SharedColorTable rightTable)

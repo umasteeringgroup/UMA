@@ -15,6 +15,8 @@ namespace UMA.Editors
         private readonly Dictionary<SlotData, bool> standardSlotFoldouts = new Dictionary<SlotData, bool>();
         private readonly Dictionary<List<OverlayData>, int> standardOverlayUses = new Dictionary<List<OverlayData>, int>();
         private List<RaceData> standardRaces;
+        private readonly IndexedRecipeAssetPicker<SlotDataAsset> standardSlotPicker = new IndexedRecipeAssetPicker<SlotDataAsset>();
+        private readonly Dictionary<SlotData, IndexedRecipeAssetPicker<OverlayDataAsset>> standardOverlayPickers = new Dictionary<SlotData, IndexedRecipeAssetPicker<OverlayDataAsset>>();
         private string standardLoadedRecipe;
         private bool standardNeedsLoad = true;
 
@@ -147,6 +149,7 @@ namespace UMA.Editors
             standardNeedsLoad = true;
             standardEdits.Clear();
             standardSlotFoldouts.Clear();
+            standardOverlayPickers.Clear();
             standardOverlayUses.Clear();
         }
 
@@ -160,6 +163,7 @@ namespace UMA.Editors
             standardLoadedRecipe = wardrobe.recipeString;
             standardNeedsLoad = false;
             standardSlotFoldouts.Clear();
+            standardOverlayPickers.Clear();
             _rebuildOnLayout = true;
         }
 
@@ -390,11 +394,13 @@ namespace UMA.Editors
                         EditorGUILayout.HelpBox("This overlay list is shared with " + sharedWith + " other slot(s). Overlay edits affect those slots too.", MessageType.Info);
                     if (overlays != null) for (int j = 0; j < overlays.Count; j++)
                         DrawStandardOverlay(slot, overlays, j);
-                    var overlay = (OverlayDataAsset)EditorGUILayout.ObjectField("Add overlay", null, typeof(OverlayDataAsset), false);
+                    if (!standardOverlayPickers.TryGetValue(slot, out var picker))
+                        standardOverlayPickers[slot] = picker = new IndexedRecipeAssetPicker<OverlayDataAsset>();
+                    var overlay = picker.Draw("Add overlay");
                     if (overlay != null) standardEdits.Add(() => slot.AddOverlay(new OverlayData(overlay)));
                 }
             }
-            var asset = (SlotDataAsset)EditorGUILayout.ObjectField("Add slot", null, typeof(SlotDataAsset), false);
+            var asset = standardSlotPicker.Draw("Add slot");
             if (asset != null) standardEdits.Add(() =>
             {
                 var list = new List<SlotData>(_recipe.slotDataList ?? Array.Empty<SlotData>()) { new SlotData(asset) };

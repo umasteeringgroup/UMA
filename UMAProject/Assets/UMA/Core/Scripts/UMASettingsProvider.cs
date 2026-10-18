@@ -1,6 +1,4 @@
 #if UNITY_EDITOR
-using System.IO;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -17,34 +15,8 @@ namespace UMA
         public const string DefineSymbol_Addressables = "UMA_ADDRESSABLES";
         public const string DefineSymbol_BurstCompile = "UMA_BURSTCOMPILE";
         public const string DefineSymbol_UMAAlwaysGetAddressableItems = "UMA_ALWAYSGETADDR_NO_PROD";
-        public const string DefineSymbol_GLTFExport = "UMA_GLTF";
-
-        //private const string DefineSymbol_AsmDef = "UMA_ASMDEF";
-        public const string ConfigToggle_LeanMeanSceneFiles = "UMA_CLEANUP_GENERATED_DATA_ON_SAVE";
-        public const string ConfigToggle_UseSharedGroup = "UMA_ADDRESSABLES_USE_SHARED_GROUP";
-        public const string ConfigToggle_ArchiveGroups = "UMA_ADDRESSABLES_ARCHIVE_ASSETBUNDLE_GROUPS";
-
-        public const string ConfigToggle_AddCollectionLabels = "UMA_SHAREDGROUP_ADDCOLLECTIONLABELS";
-        public const string ConfigToggle_IncludeRecipes = "UMA_SHAREDGROUP_INCLUDERECIPES";
-        public const string ConfigToggle_IncludeOther = "UMA_SHAREDGROUP_INCLUDEOTHERINDEXED";
-        public const string ConfigToggle_StripUmaMaterials = "UMA_SHAREDGROUP_STRIPUMAMATERIALS";
-        public const string ConfigToggle_StripUmaTextures = "UMA_SHAREDGROUP_STRIPUMATEXTURES";
-        public const string ConfigToggle_PostProcessAllAssets = "UMA_POSTPROCESS_ALL_ASSETS";
-        public const string ConfigToggle_IndexAutoRepair = "UMA_INDEX_AUTOREPAIR";
-
         private string dots = "";
-        private string UMABasePath = "";
-        public string BasePath
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(UMABasePath))
-                {
-                    UMABasePath = FindUMAFullPath();
-                }
-                return UMABasePath;
-            }
-        }
+        public string BasePath => FindUMAFullPath();
 
         public static string FindUMAFolder()
         {
@@ -153,7 +125,7 @@ namespace UMA
         }
 
 
-        public void DrawBoolConfigToggle(string propertyName, string label, string tooltip, string defineSymbol, HashSet<string> defineSymbols, bool burst = false)
+        private void DrawBoolConfigToggle(string label, string tooltip, string defineSymbol, HashSet<string> defineSymbols)
         {
 
             EditorGUI.BeginChangeCheck();
@@ -161,7 +133,6 @@ namespace UMA
             boolValue = EditorGUILayout.Toggle(new GUIContent(label, tooltip), boolValue);
             if (EditorGUI.EndChangeCheck())
             {
-                Debug.Log($"{label} changed to {boolValue} burst = {burst}");
                 // Package content may be immutable. Burst is controlled solely by the
                 // project define and package dependency; never rewrite UMA_Core.asmdef.
                 m_CustomSettings.ApplyModifiedProperties();
@@ -217,105 +188,6 @@ namespace UMA
             }
         }
 
-        private void ForceRepaint()
-        {
-            // Schedule a repaint of the focused window to update UI immediately after folder selection
-            EditorApplication.delayCall += () =>
-            {
-                var wnd = EditorWindow.focusedWindow;
-                if (wnd != null) wnd.Repaint();
-            };
-        }
-
-        private void DrawFolderSetting(SerializedProperty prop, string label, string tooltip, bool mustStartWithAssets,
-            Action onChanged = null, bool allowMissing = false, string emptyFallback = null)
-        {
-            string current = prop.stringValue;
-            // Validation
-            string relPath = current;
-            if (string.IsNullOrEmpty(relPath))
-            {
-                relPath = !string.IsNullOrEmpty(emptyFallback) ? emptyFallback :
-                    label.Contains("UMA") ? UMAPathUtility.InstallAssetRoot :
-                    UMAPathUtility.ShaderPackagesRelativePath;
-            }
-
-            bool isAssetPath = relPath.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) ||
-                               relPath.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase);
-            if (!isAssetPath)
-            {
-                if (mustStartWithAssets)
-                {
-                    relPath = Path.Combine("Assets", relPath).Replace('\\', '/');
-                }
-                else
-                {
-                    relPath = relPath.StartsWith("SRP/",
-                        StringComparison.OrdinalIgnoreCase)
-                        ? UMAPathUtility.ResolveSrpAssetPath(
-                            relPath.Substring("SRP/".Length))
-                        : UMAPathUtility.ResolveInstallAssetPath(relPath);
-                }
-            }
-
-            bool exists = AssetDatabase.IsValidFolder(relPath);
-            if (!exists && !allowMissing)
-            {
-                EditorGUILayout.HelpBox($"{label} path '{prop.stringValue}' does not exist. Please set a valid folder.", MessageType.Error);
-            }
-            else if (!exists)
-            {
-                EditorGUILayout.HelpBox($"{label} path '{prop.stringValue}' will be created when recovery is first saved.",
-                    MessageType.Info);
-            }
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginChangeCheck();
-            string newVal = EditorGUILayout.TextField(new GUIContent(label, tooltip), prop.stringValue);
-            if (GUILayout.Button("Select", GUILayout.MaxWidth(60)))
-            {
-                string startPath = Application.dataPath;
-                if (!string.IsNullOrEmpty(prop.stringValue))
-                {
-                    string attempt = prop.stringValue;
-                    if (!attempt.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) &&
-                        !attempt.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase))
-                        attempt = mustStartWithAssets
-                            ? Path.Combine("Assets", attempt).Replace('\\', '/')
-                            : attempt.StartsWith("SRP/",
-                                StringComparison.OrdinalIgnoreCase)
-                                ? UMAPathUtility.ResolveSrpAssetPath(
-                                    attempt.Substring("SRP/".Length))
-                                : UMAPathUtility.ResolveInstallAssetPath(attempt);
-                    string fullAttempt = UMAPathUtility.ResolveAbsolutePath(attempt);
-                    if (Directory.Exists(fullAttempt)) startPath = fullAttempt;
-                }
-                string folderPicked = EditorUtility.OpenFolderPanel($"Select {label}", startPath, "");
-                if (!string.IsNullOrEmpty(folderPicked))
-                {
-                    folderPicked = folderPicked.Replace('\\', '/');
-                    // Convert to relative under project
-                    string proj = Directory.GetParent(Application.dataPath).FullName.Replace('\\', '/');
-                    if (folderPicked.StartsWith(proj))
-                    {
-                        string rel = folderPicked.Substring(proj.Length + 1); // remove trailing '/'
-                        bool valid = rel.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase) ||
-                                     (!mustStartWithAssets && rel.StartsWith("Packages/", StringComparison.OrdinalIgnoreCase));
-                        if (valid) newVal = rel;
-                    }
-                }
-            }
-            EditorGUILayout.EndHorizontal();
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                prop.stringValue = newVal;
-                m_CustomSettings.ApplyModifiedProperties();
-                onChanged?.Invoke();
-                ForceRepaint();
-            }
-        }
-
         public override void OnGUI(string searchContext)
         {
             UMASettings currentSettings = UMASettings.GetOrCreateSettings();
@@ -337,7 +209,6 @@ namespace UMA
                     dots = "";
                 GUILayout.Space(30);
                 EditorGUILayout.LabelField(" Adding support for selected options... Compile in progress  " + dots);
-                System.Threading.Thread.Sleep(100);
                 Repaint();
                 return;
             } 
@@ -350,10 +221,6 @@ namespace UMA
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("Tags", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These tags are used by UMA to identify different types of assets", MessageType.Info);
-
-            //DrawPropertiesExcluding(m_CustomSettings, new string[] { "UMAVersion","m_Script","Use32bitBuffers", "UseBurstCompiler", "UseAddressables", "EnableGLTFExport" ,
-            //    "AddrUseSharedGroup", "AddrSharedGroupName", "AddrDefaultLabel", "AddStripMaterials", "AddrIncludeRecipes", "CleanRegenOnSave", "AutoRepairIndex", "ShowIndexedTypes", "ShowUnindexedTypes", "PostProcessAllAssets" 
-            //    });
 
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "IgnoreTag", "KeepTag", "tagLookupValues" });
 
@@ -373,22 +240,18 @@ namespace UMA
             EditorGUILayout.LabelField("Groups", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These groups are used by UMA to identify slots with the same UV layout for decals", MessageType.Info);
             DrawPropertiesIncluding(m_CustomSettings, new string[] { "groupNames" });
-            DrawPropertiesIncluding(m_CustomSettings, new string[] { "addDNAOnRaceChange" });
-            DrawPropertiesIncluding(m_CustomSettings, new string[] { "UMAVersion" });
             EndVerticalPadded(10);
 
             GUILayout.Space(10);
 			BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
-			EditorGUILayout.LabelField("Debug Settings", EditorStyles.boldLabel);
+			EditorGUILayout.LabelField("Mesh Generation", EditorStyles.boldLabel);
 
 			DrawBoolProperty(
 				"useMeshAPICombiner",
-				"Use MeshAPI Combiner (Unity 2022.2+)",
-				"Enable the MeshData API based combiner at runtime on Unity 2022.2+. When disabled or on older Unity versions, UMA uses the legacy combiner."
+				"Use MeshAPI Combiner",
+				"Use the MeshData API based combiner. When disabled, UMA uses the managed combiner."
 			);
 
-			DrawBoolProperty("DebugMemoryUsage", "Debug Memory Usage", "If true, UMA will log memory usage information to the console");
-			DrawBoolProperty("DisableDecalCallbacks","Disable Decal Callbacks", "If true, UMA will disable decal callbacks to improve performance when decals are not used.");
 			
 
 
@@ -399,23 +262,12 @@ namespace UMA
             EditorGUILayout.LabelField("Editor Settings", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These settings control the behavior of UMA in the editor", MessageType.Info);
 
-            // Folder settings (UMAFolder & ShaderFolder) directly after the help box as requested
-            SerializedProperty umaFolderProp = m_CustomSettings.FindProperty("UMAFolder");
-            SerializedProperty shaderFolderProp = m_CustomSettings.FindProperty("ShaderFolder");
-            if (umaFolderProp != null)
+            using (new EditorGUI.DisabledScope(true))
             {
-                DrawFolderSetting(umaFolderProp, "UMA Folder",
-                    "Resolved UMA installation path below Assets or Packages.", false,
-                    () => { UMABasePath = ""; UMAPathUtility.InvalidateInstallPathCache(); });
-            }
-            if (shaderFolderProp != null)
-            {
-                DrawFolderSetting(shaderFolderProp, "Shader Folder",
-                    "UMA-relative folder containing the packages used to refresh UMA shaders.",
-                    false, null, false, UMAPathUtility.ShaderPackagesRelativePath);
+                EditorGUILayout.TextField(new GUIContent("UMA Folder",
+                    "Automatically detected UMA installation path."), UMAPathUtility.InstallAssetRoot);
             }
             DrawBoolProperty("cleanRegenOnSave", "Clean Regen On Save", "If true, UMA will destroy all UMAS when saving, then regenerate after save - Saving large amounts of memory in the scene file");
-            DrawBoolProperty("postProcessAllAssets", "Post Process All Assets", "If true, UMA will post process all assets in the project on startup");
             DrawBoolProperty("autoRepairIndex", "Index Auto Repair", "If true, UMA will attempt to repair any missing items in the UMA Global Library");
             DrawBoolProperty(
                 "showIndexedTypes",
@@ -447,8 +299,6 @@ namespace UMA
             DrawStringProperty("WikiURL", "Wiki URL", "The default wiki URL for UMA");
             DrawStringProperty("ForumURL", "Forum URL", "The default forum URL for UMA");
             DrawStringProperty("AssetStoreURL", "Asset Store URL", "The default asset store URL for UMA");
-            DrawStringProperty("ShaderFolder", "Shader Folder",
-                "The UMA-relative shader package folder. Usually SRP/ShaderPackages");
 
             EndVerticalPadded(10);
 
@@ -457,11 +307,10 @@ namespace UMA
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("Project Build Options", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("Modifying these settings will change the UMA define symbols in the project settings, and force a recompile.", MessageType.Info);
-            EditorGUILayout.HelpBox("Using the Burst compiler will speed up certain operations. But will require adding the following packages from the Package Manager: Collections, Jobs (Mathematics, Burst should be pulled in automatically. If not, please add these packages first.)", MessageType.Warning, true);
-            DrawBoolConfigToggle("useBurstCompiler", "Use Burst Compiler", "If true, UMA will use the Burst Compiler to speed up array math. Must install the appropriate packages first", DefineSymbol_BurstCompile, defineSymbols, true);
-            DrawBoolConfigToggle("useAddressables", "Use Addressables", "If true, UMA will use the Addressables system for loading assets", DefineSymbol_Addressables, defineSymbols);
-            DrawBoolConfigToggle("alwaysGetAddressables", "Always Get Addressables", "If true, UMA will always load items even if they bundles are not available in the editor. You should test with this off!", DefineSymbol_UMAAlwaysGetAddressableItems, defineSymbols);
-            DrawBoolConfigToggle("enableGLTFExport", "Enable GLTF Export", "If true, UMA will enable the GLTF export feature", DefineSymbol_GLTFExport, defineSymbols);
+            EditorGUILayout.HelpBox("Burst acceleration requires the Burst, Collections and Mathematics packages. Addressables support requires the Addressables package.", MessageType.Info);
+            DrawBoolConfigToggle("Use Burst Compiler", "Enable Burst acceleration for supported UMA operations.", DefineSymbol_BurstCompile, defineSymbols);
+            DrawBoolConfigToggle("Use Addressables", "Enable Addressables support for loading UMA assets.", DefineSymbol_Addressables, defineSymbols);
+            DrawBoolConfigToggle("Always Get Addressables", "Allow editor Play Mode to load indexed Addressable assets directly from the Asset Database. Disable this when testing bundle loading.", DefineSymbol_UMAAlwaysGetAddressableItems, defineSymbols);
             EndVerticalPadded(10);
 
             GUILayout.Space(10);
@@ -469,7 +318,7 @@ namespace UMA
             BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
             EditorGUILayout.LabelField("UMA Addressables Options", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox("These settings are only used if 'Use Addressables' is enabled. Note: Stripping Textures *requires* that you are indexing Texture2D type!", MessageType.Info); 
-            DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrSharedGroupName", "addrDefaultLabel", "addStripMaterials", "addrStripTextures", "addrStripUVAttachedShaders", "addrIncludeRecipes", "addrIncludeOther"});
+            DrawPropertiesIncluding(m_CustomSettings, new string[] { "addrUseSharedGroup", "addrDefaultLabel", "addrStripMaterials", "addrStripTextures", "addrStripUVAttachedShaders", "addrIncludeRecipes", "addrIncludeOther"});
             EndVerticalPadded(10);
 
             m_CustomSettings.ApplyModifiedPropertiesWithoutUndo();

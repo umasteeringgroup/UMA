@@ -2,10 +2,10 @@
     "formatVersion": 2,
     "requiredPluginApiVersion": 1,
     "contentId": "uma2",
-    "contentVersion": "3.1.3",
-    "umaVersion": "3.1f3",
-    "requiredCoreVersion": "3.1.3",
-    "minimumCoreVersion": "3.1.3",
+    "contentVersion": "3.1.5",
+    "umaVersion": "3.1.5",
+    "requiredCoreVersion": "3.1.5",
+    "minimumCoreVersion": "3.1.5",
     "maximumCoreVersionExclusive": "3.2.0",
     "installRoot": "Assets/UMA2",
     "dependencies": [
@@ -525,7 +525,6 @@
         "Assets/UMA2/Races/HumanMale/Slots/M_Eyebrow_Slot.asset",
         "Assets/UMA2/Races/HumanMale/Slots/M_Eyelash.asset",
         "Assets/UMA2/Races/HumanMale/Slots/MaleHair1_Slot.asset",
-        "Assets/UMA2/Races/HumanMale/Slots/UMA_2_Clothing_Hair_selected.fbx",
         "Assets/UMA2/Races/HumanMale/Slots/UMA_Human_Male_Eyebrows",
         "Assets/UMA2/Races/HumanMale/Slots/UMA_Human_Male_Eyebrows/New eyebrows 1.asset",
         "Assets/UMA2/Races/HumanMale/Slots/UMA_Human_Male_Eyebrows/New eyebrows 2.asset",
@@ -641,9 +640,6 @@
         "Assets/UMA2/Races/HumanMale/Textures/Original/M_H_face_Albedo2.png",
         "Assets/UMA2/Races/HumanMale/Textures/Original/M_H_face_Nnew.png",
         "Assets/UMA2/Races/HumanMale/Textures/Original/Male face metallic new.png",
-        "Assets/UMA2/Races/HumanMale/Wearables",
-        "Assets/UMA2/Races/HumanMale/Wearables/UMA_Human_Male_Eyebrows_Recipe 1.asset",
-        "Assets/UMA2/Races/HumanMale/Wearables/UMA_Human_Male_Eyebrows_Recipe.asset",
         "Assets/UMA2/Races/HumanShared",
         "Assets/UMA2/Races/HumanShared/BaseResources",
         "Assets/UMA2/Races/HumanShared/BaseResources/Cap_Hair Heightmap.png",
@@ -1786,7 +1782,7 @@
             "path": "Assets/UMA2/Races/HumanFemale/MechanimTemplates/DefaultFemaleAvatar.asset",
             "guid": "f988e41b65ea52d41aded70b0ed9b709",
             "bytes": 132531,
-            "sha256": "2129dd3fb4a85dad9c553e164f7700f0ee9a965745c1ab44fa12ab20e9ae2dcd",
+            "sha256": "8708b3d7bc80a456c2dafa82a897d88dc9dd4f4bf2f34bc9ada8127b620ceabc",
             "metaBytes": 196,
             "metaSha256": "85ecd4b76a61680c513bca1694c327647cc43ef696be41902986f9618bfb0b87"
         },
@@ -1945,32 +1941,32 @@
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/Elf/Elf Female.asset",
             "guid": "3d4a9b682ff9ab04e90c9b3c91e3e093",
-            "bytes": 8880,
-            "sha256": "627e35ce7bef97c3d5c19e70e7454f9ba9d2f77987d5aa190a5215758a0005d5",
+            "bytes": 9184,
+            "sha256": "46ffaccb9199cd0e6a44a5c99f8d67652e98ca33811cbc680a706610b44278cd",
             "metaBytes": 211,
             "metaSha256": "b3eb86d1313939627e5fa207af8d322f6bc3b4072205e2272c86abfbcaf77eab"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/Human Female HighPoly.asset",
             "guid": "59308c77f6c5a374da628a837b7d3401",
-            "bytes": 9164,
-            "sha256": "f312f23eb05c56da401c418b9b3d953d3ea2105d962099ddd85c36790e27b5a4",
+            "bytes": 9468,
+            "sha256": "dee703b597f397b3704bb0709f1d425705f2370835540e25cfb3f9f9e5303469",
             "metaBytes": 211,
             "metaSha256": "f1007c2cddeb2c3cadf4b7b5c0f73f4879322a3abf509fc6622cc50b308f87d2"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/Human Female.asset",
             "guid": "f8fea6f0ee17b3f42a4ae6cfb627bab3",
-            "bytes": 8816,
-            "sha256": "8e2e2aa9bb719c615940052c8257650ff4dfea3d25383d0c5ed2b3391cc11db7",
+            "bytes": 9120,
+            "sha256": "59e6fa406ee8c1ef9682ad401b1d32923ee9ad246817516822b9de4b877e11ff",
             "metaBytes": 211,
             "metaSha256": "f3771ebffa2cadb0dc688fa3e4250f2a644af12a7f9dc907d05d102e7764b023"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/Human Girl.asset",
             "guid": "8f9fc622c08165a4297be9de525ccd1b",
-            "bytes": 8756,
-            "sha256": "15cb2849d2cd43309eded021538fbed48881835654c15bd5be286ee500983313",
+            "bytes": 9060,
+            "sha256": "c6f6e04de4abd1739703aa2499e174837b0be84c75ed96e38def3b3fefdefcde",
             "metaBytes": 211,
             "metaSha256": "d50a0a890bbad4f83f8477dfe8d90f91180976f4221c4ad6a22470f64e3355f5"
         },
@@ -2185,8 +2181,8 @@
         {
             "path": "Assets/UMA2/Races/HumanFemale/Recipes/Wardrobe Recipes/HumanFemale/FemaleSwappedFace.asset",
             "guid": "01c906b0561bd394393d49b516a4f863",
-            "bytes": 11223,
-            "sha256": "820a89837da7e90a2503dbeb83a4f28a9066531551c6520f1c3cf0a65084efd8",
+            "bytes": 6270,
+            "sha256": "4f9deebfd10e2be5f8756d79f4ca91226128c846873f9ac3a9c0d5f4ed49672a",
             "metaBytes": 241,
             "metaSha256": "674e47c8f6f52cb04f8b378042c6db9cfc0c82fb2fb54b53512e6020b2dd460f"
         },
@@ -2297,24 +2293,24 @@
         {
             "path": "Assets/UMA2/Races/HumanFemale/Slots/UMA_Human_Female_Eyebrows/NewFemaleEyebrows 1.asset",
             "guid": "135a3079bae636b458f68f01fffa4a14",
-            "bytes": 2889,
-            "sha256": "0ebd7143d9e0b9e3d4c6e7943fb35b3514e439549d44318ef26c7961491c2f0d",
+            "bytes": 2607,
+            "sha256": "346a643686dd3c25a0ab1d3766b1a4846a9a285ebcc4ba85979c971dc20f3481",
             "metaBytes": 197,
             "metaSha256": "c669ce22f309663a221de780f4d1bb8a4b88e239b98ae5ba5ffe64b3a0c81e68"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/Slots/UMA_Human_Female_Eyebrows/NewFemaleEyebrows 2.asset",
             "guid": "ce16c037deea0d548834bfa47d6805d5",
-            "bytes": 2739,
-            "sha256": "71939dc73cce4650b782722db40358d1783489b1a984f59398607d6a35f02c72",
+            "bytes": 2457,
+            "sha256": "a2e7321dd47afef76f011a52f279cc572a50ecb5961005e7b00c3b234bec5058",
             "metaBytes": 197,
             "metaSha256": "9694a254ec4cef5bfdc82d4ed8de4fe8991ec2710bb6a9feb87ecdb89262993b"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/Slots/UMA_Human_Female_Eyebrows/NewFemaleEyebrows 3.asset",
             "guid": "67694afb53743d34dad6e7db7eb5e1a9",
-            "bytes": 2876,
-            "sha256": "2f635528ee3a24f27cb0496f7bf655a82b29231cf55154ade7c529db356f0924",
+            "bytes": 2503,
+            "sha256": "b4da49992eb10d6f4ebdfe22ff33e122d99710024f273209aa19ce5aef6322fb",
             "metaBytes": 197,
             "metaSha256": "4bd299223caa27746d946de1914eec3f18eb37cc9e9161047dc2dcc8b00fa760"
         },
@@ -3177,8 +3173,8 @@
         {
             "path": "Assets/UMA2/Races/HumanFemale/Wearables/UMA_Human_Female_Eyebrows_Recipe.asset",
             "guid": "5d053147ea1a0174192f7b07199db712",
-            "bytes": 1689,
-            "sha256": "ae1006190c39ef20dd767b697c421a01222f8bc16db1552225beda8da50cae3f",
+            "bytes": 1763,
+            "sha256": "8a6c2c2d4da098e38b04ade40cb3f6f2df38d6569e5f56c6d022929892d6a8a8",
             "metaBytes": 197,
             "metaSha256": "26bc409541053fa2a7f7b88608450e432f71f3b045ec2d5ad1f07c01496b2510"
         },
@@ -4090,7 +4086,7 @@
             "path": "Assets/UMA2/Races/HumanMale/MechanimTemplates/DefaultMaleAvatar.asset",
             "guid": "005e0967b9daf1b4a8adac3750400f56",
             "bytes": 132589,
-            "sha256": "f72f7fe8cefc46ef2456a0fa58060af6065e238adb45015e3d115adf456c57c0",
+            "sha256": "47e6ae9475abcdb63adc8077d264c2d7920c924343c1192f144a98f6fd25131f",
             "metaBytes": 196,
             "metaSha256": "24bc5623db290ed82638523f807703ffdb4d0501a35c64c13fa0ec5086efbdde"
         },
@@ -4265,16 +4261,16 @@
         {
             "path": "Assets/UMA2/Races/HumanMale/Overlays/Face/SwappedHead/Human Male PigNose/MaleHead_PigNose.asset",
             "guid": "5485425746189d647a627abc4e2f06e9",
-            "bytes": 3392,
-            "sha256": "f0fd0f420bca56edf17bec33477b738c3e9426ed568fa66c1c379541e9260e0a",
+            "bytes": 3824,
+            "sha256": "e789d0447fe5c358d93e42a7cfa619dced76c6aedee91a15cf582a1e3189f2da",
             "metaBytes": 214,
             "metaSha256": "6f2b1fc7630ab4f8555744c233bd3f7e4830c5f8f57126c1d19a821d0c3c7d06"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/Overlays/Face/SwappedHead/MaleFace01.asset",
             "guid": "a60d5c517fee0ce48b5b59b9ed45861e",
-            "bytes": 3384,
-            "sha256": "139a027d5d89d58e763312aaa47123bf1ef48413c488696c5b13935b2713cd60",
+            "bytes": 3816,
+            "sha256": "ca41fbbe0a2d46150d782c86958c19ed33e2773807ad5f8d13a7fe280d0bc625",
             "metaBytes": 214,
             "metaSha256": "a833d3588d5d8cd113be840b95fc55b747afa11dbf6ac3d8e6d9ddf82cb8c5aa"
         },
@@ -4369,8 +4365,8 @@
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/Elf/Elf Male.asset",
             "guid": "d0c61b35f6482b44986a2286c05757d3",
-            "bytes": 8696,
-            "sha256": "11370c3cc06465e1b8e4e5d783bb1f74d394b5aa0bbe7adde0ee86af1f66373f",
+            "bytes": 8828,
+            "sha256": "b399aaeee3bf2440186191c9d8fc9ae9e373ccff60b2521c22a663841356757e",
             "metaBytes": 211,
             "metaSha256": "90c6000f1f04a248a4006a8346f6f58a709a379f60116042bae53bc1eadb3d37"
         },
@@ -4385,16 +4381,16 @@
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/Human Boy.asset",
             "guid": "b57b35921e0f3d84aaafea12ef61470c",
-            "bytes": 8656,
-            "sha256": "64a23e97983bc38f74814ea5c48b64ee3fae18df7b8cd420828dfd2a19bebca3",
+            "bytes": 8788,
+            "sha256": "0cd030add30da141870ebbf647a8fefd2bc5166dad5e28852b3aca8d3b238c5f",
             "metaBytes": 211,
             "metaSha256": "3be009fe9a536db5fc6df14ddee8aa040fb81327644c1858bfa82cd240f86e6c"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/Human Male HighPoly.asset",
             "guid": "db2d831a2566b0b429982e394c380f7a",
-            "bytes": 8956,
-            "sha256": "cdbaabb657d5f0ffa2edec35d1ce08e394f61abba2fa7a222431ff4df77836b5",
+            "bytes": 9088,
+            "sha256": "68cbe5a8e52225d39c3e26f0ce37098b6e9324abf035e4b4c5ba901e0d7272d0",
             "metaBytes": 211,
             "metaSha256": "7177b5b20fc4b2df3111a2dbbf6e00664b6bfc81f7119704cc445f2d3f15304b"
         },
@@ -4473,8 +4469,8 @@
         {
             "path": "Assets/UMA2/Races/HumanMale/Recipes/WardrobeRecipes/MaleHandsMid.asset",
             "guid": "1faa765399f5d76478a152bd1615c95e",
-            "bytes": 2505,
-            "sha256": "c7bce465b6a73d63df63b9917546c7f2986e8bed2b77df0028b52bcb72cdec0c",
+            "bytes": 2324,
+            "sha256": "6c7cdf3ef431b1da309b386da86c7237df46a5883804fa32a9d83358a10d29df",
             "metaBytes": 241,
             "metaSha256": "81c41b0ed2cd8c1190278cc441dbe76bdfcd76340c9a1ebbc3aaef9b9ebaac7a"
         },
@@ -4821,14 +4817,6 @@
             "sha256": "668107d62db1e4d96dfa5ecc952966662686f1e3b274ff575dc94e66e1f00094",
             "metaBytes": 211,
             "metaSha256": "406e4cb66713085fc83b4571fd412ce625d584844f38d33a5611b5593847a89b"
-        },
-        {
-            "path": "Assets/UMA2/Races/HumanMale/Slots/UMA_2_Clothing_Hair_selected.fbx",
-            "guid": "6b9cb16f6048dd745bd46668ff83e9c4",
-            "bytes": 16857276,
-            "sha256": "d6f8b3bca4c5fc2eb40c04cc13fcefbfccd40fcec6371c8168d99bdde42a9023",
-            "metaBytes": 2971,
-            "metaSha256": "63b140e9b36110ca082ab00dd70b85b8bb820e5bcfeba26e31a2a1c663837066"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/Slots/UMA_Human_Male_Eyebrows",
@@ -5751,30 +5739,6 @@
             "metaSha256": "41cd5e7a85e01dfc4fb998a736ad1e15a6b7ab5d73b990412f45bc26ea44a080"
         },
         {
-            "path": "Assets/UMA2/Races/HumanMale/Wearables",
-            "guid": "bcd0dee93fddcba49b477083d57c9933",
-            "bytes": 0,
-            "sha256": "",
-            "metaBytes": 180,
-            "metaSha256": "446887210d616a51306822c6c5ff294f736724f90343fecdd38e2c3cee88eede"
-        },
-        {
-            "path": "Assets/UMA2/Races/HumanMale/Wearables/UMA_Human_Male_Eyebrows_Recipe 1.asset",
-            "guid": "b187c12c90421ff40bc0e91203299260",
-            "bytes": 1680,
-            "sha256": "ccebfb3793f1232ec04249b0df9cbc7c7a2900f9572cf732dc30d83bbfa8311e",
-            "metaBytes": 197,
-            "metaSha256": "d296985e404307b5e193b11b00fe6bcecc017cf2965d0cb14b45ce98f127a4a0"
-        },
-        {
-            "path": "Assets/UMA2/Races/HumanMale/Wearables/UMA_Human_Male_Eyebrows_Recipe.asset",
-            "guid": "cc8da170332e23148bcc53bc9e923492",
-            "bytes": 1678,
-            "sha256": "cdf1bf02e2e36e434082d0e4201e24a11e07822804639fad784340d3bda3a310",
-            "metaBytes": 197,
-            "metaSha256": "db12983d2f6069f6a1c648d379512dabcd72d276731de69048e8bbe301b63c35"
-        },
-        {
             "path": "Assets/UMA2/Races/HumanShared",
             "guid": "5cba43545bfc67e4f8460432d84b9b24",
             "bytes": 0,
@@ -6018,7 +5982,7 @@
             "path": "Assets/UMA2/Races/HumanShared/Materials/Other/HairMat_Solid.mat",
             "guid": "9ae673dab7af9db43afeb2f193929cd2",
             "bytes": 9112,
-            "sha256": "6763b73350919673a92bc14aeee75e5a9dee4ce430d98353bc7067a5794f1c3c",
+            "sha256": "144b2f33029d0cfd64c36cd90f2f32da3bff83bb529d1f07275584842b308462",
             "metaBytes": 187,
             "metaSha256": "90138d19c0ff2cee8a0f40c7354b3253c2d13c8783d66a9e87677c3023ab45e0"
         },
@@ -6049,8 +6013,8 @@
         {
             "path": "Assets/UMA2/Races/HumanShared/Materials/Other/UMA_Mat_Fade_Diffuse.mat",
             "guid": "15a5f99afe13df8468a9d786b532a08f",
-            "bytes": 6622,
-            "sha256": "84fd285299d46476addd4d9c1af7795ceb243c0f8d591e5432e6db8892303f8c",
+            "bytes": 6699,
+            "sha256": "929046b655b8d610bd67798a619cd1dbbac09ea01e9d121d968b476b09711c59",
             "metaBytes": 189,
             "metaSha256": "5d15d3c0c29ab4a12b72e4c7e2cdf24683a28b6aeef0ed15d2265405765cea31"
         },
@@ -6138,7 +6102,7 @@
             "path": "Assets/UMA2/Races/HumanShared/Materials/Standard(Specular)/UMA_Mat_Cutout_Diffuse_Normal_Specular.mat",
             "guid": "1cb41221da2bd204888180929437dd2e",
             "bytes": 7053,
-            "sha256": "901c44e24841d5106de3bbac21f06de00f595437ae3e0ba9c6a3669e258b6d77",
+            "sha256": "a1b48322168740d7a3fcd232410eda1e4cf769b0cbc98c4780986b6743d8e3a3",
             "metaBytes": 188,
             "metaSha256": "1535956dcfadbeb58b667def29b353aae513b5d3394c4192fc7cc0d316356f9b"
         },
@@ -6146,7 +6110,7 @@
             "path": "Assets/UMA2/Races/HumanShared/Materials/Standard(Specular)/UMA_Mat_Cutout_Diffuse_Normal_Specular_Occlusion.mat",
             "guid": "470f9cc3b76eb664fbb8947cc9f42769",
             "bytes": 7097,
-            "sha256": "7c37d08295bc3e35b950b0abdf287772a9f558fa10c788deabe7f1efc2ca9e04",
+            "sha256": "77c71dc38f04b85f4262097a394b82a42b04dc0964b89f9c7787daf89383dd5b",
             "metaBytes": 188,
             "metaSha256": "eb26d023dacc29ee7f32661f1b66bdfa78d2c8fac97f9e778d2255dda169e901"
         },
@@ -6154,7 +6118,7 @@
             "path": "Assets/UMA2/Races/HumanShared/Materials/Standard(Specular)/UMA_Mat_Diffuse_Normal_Specular.mat",
             "guid": "cd1ed1024fad50b4f82637b57f787dd1",
             "bytes": 7075,
-            "sha256": "857fc74ce86ae673639a47e81d3430624e3f45b783bf50c58cb2210df29f26ba",
+            "sha256": "b7904b5505cb51bd7e87b80f4c58f917fcf7ae13c1171b8f886f306f3cdf088f",
             "metaBytes": 188,
             "metaSha256": "0ff8a06a107a63fb9386be731dd94fecfe5ab268f97b2f14a2490af13887f023"
         },
@@ -6162,7 +6126,7 @@
             "path": "Assets/UMA2/Races/HumanShared/Materials/Standard(Specular)/UMA_Mat_Diffuse_Normal_Specular_Occlusion.mat",
             "guid": "b0aee38a443313348936284665aef607",
             "bytes": 7072,
-            "sha256": "7a9d01a53321d41d75a7e2a34c5b117ef409457bbd0d09ac04d34d845fb30754",
+            "sha256": "17019c194863b0c1fa544c5c25e66a59bea27f31e36258c38802d61ffb079628",
             "metaBytes": 188,
             "metaSha256": "269618b0444dc04ee4bf7e42ab27d0c4d40c27cf9c3cc0e840cddd90040f709f"
         },
@@ -6201,8 +6165,8 @@
         {
             "path": "Assets/UMA2/Races/HumanShared/Overlays/Face/ElvenEars- Body 1.asset",
             "guid": "3693609360e037e40a7784ab3308e7c0",
-            "bytes": 3392,
-            "sha256": "241abe4e44cfa06366a3fc962d45cb9b84a53e67a7faa77d56e777ba9b710ae0",
+            "bytes": 3824,
+            "sha256": "388cd7200b1d115eb761b24584b856c37bb7df9e1c519600f1eeede136ee29c3",
             "metaBytes": 214,
             "metaSha256": "81f8af308d65f908b510dfa1af004cd882c3dcc6e52424cfae62cfa04f48330e"
         },
@@ -6241,8 +6205,8 @@
         {
             "path": "Assets/UMA2/Races/HumanShared/Overlays/Face/Eye/EyeAdjust/Alligator_eye_Alternate_adjust.asset",
             "guid": "cda7e080be988c44ab8341720f86d6cd",
-            "bytes": 3832,
-            "sha256": "4ea9851ff5fc3eec11a56abf029440020f36457a40ec7b997d10dd0319286ffa",
+            "bytes": 3840,
+            "sha256": "6c304be9937fb4206fa1ef86d26a971c7ace5cfac2e0866135838a606f18c3ba",
             "metaBytes": 214,
             "metaSha256": "3404d0c59626d0b3669ab857ea43b0c5d61bee99b7ec2f6cd8b4019c4cc4c9a6"
         },
@@ -6257,16 +6221,16 @@
         {
             "path": "Assets/UMA2/Races/HumanShared/Overlays/Face/Eye/EyeAdjust/Cat_eye_Alternate_adjust.asset",
             "guid": "76a2d7b941eeeda4ba2df5ea0e2fb266",
-            "bytes": 3816,
-            "sha256": "83a77dae01cbb9a5a3749b66bb681b8e4cf5909314a649bfba09a53b64362a0b",
+            "bytes": 3824,
+            "sha256": "ff48d325fd9bf34593f84e693d7e215669684689cdff56ad4f4528066fa3277e",
             "metaBytes": 214,
             "metaSha256": "7ffcd2135112819e4496b8f2512c317445ac23b582535d49762a540fd10bca38"
         },
         {
             "path": "Assets/UMA2/Races/HumanShared/Overlays/Face/Eye/EyeAdjust/Cat_eye_adjust.asset",
             "guid": "2c830213a9d6eef409a4b7ce0e388acf",
-            "bytes": 3800,
-            "sha256": "1ea285777bf630d67fc7441c97fa8226f4dabb822922721a0b8049d1a26d87e5",
+            "bytes": 3808,
+            "sha256": "75f0fd98730e5777249a9d0748c5ef91eed84dc900362cfdb8d5a3f16cdc6a83",
             "metaBytes": 214,
             "metaSha256": "f8ec4e610af078b4d278e2969c930ca0ebe7ba9a030dab69467623918b29d8b9"
         },
@@ -6281,8 +6245,8 @@
         {
             "path": "Assets/UMA2/Races/HumanShared/Overlays/Face/Eye/EyeAdjust/EyeOverlayAdjust.asset",
             "guid": "5a63f3d521484f345b330eaa6ddd496e",
-            "bytes": 3392,
-            "sha256": "afd13420782e945acccaa92083423203b1cbb40cfaa7cecfe49ba271bcf5632b",
+            "bytes": 3824,
+            "sha256": "1d22e907db85db1fd1d66a132e95eb1d98cff9b5aaca5c57388aa00fa9cf9ef0",
             "metaBytes": 214,
             "metaSha256": "ebff11de0943f2792c70d27419aa443bc4f758c4ef5685cab90afc770eba48c1"
         },
@@ -6297,16 +6261,16 @@
         {
             "path": "Assets/UMA2/Races/HumanShared/Overlays/Face/Eye/EyeOverlayOld.asset",
             "guid": "79fb331967188a048837288f16dbc006",
-            "bytes": 3392,
-            "sha256": "cda9c434d60d03e4bc094e6db2d1242950477b91bb47398c43daff8c36587efc",
+            "bytes": 3824,
+            "sha256": "fe3d57b5289de276bf2e4f45e64a16d66bf236611fe2cde4a26dace8532c429a",
             "metaBytes": 214,
             "metaSha256": "bf0b7ce30f18da34fe84d2b601779c11985d6fd12018036f017fb533e9fa2d96"
         },
         {
             "path": "Assets/UMA2/Races/HumanShared/Overlays/Face/Eye/FP Default Eye Adjust.asset",
             "guid": "b50b1d40e34242d4da5d97c1e5f8804e",
-            "bytes": 3408,
-            "sha256": "2ba326c0a23307ef413c7ac5f13d6d45c2b005055908e7a476bcefa9534cbef0",
+            "bytes": 3840,
+            "sha256": "ee2b5dce613542e8193fb674cd07c5276bc650e9261fb6efe57b3c6e5f9e38aa",
             "metaBytes": 214,
             "metaSha256": "165c258d51bc69fe4832352d9bfdadd8a1904827b342f7c1baea01c06aeac457"
         },

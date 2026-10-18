@@ -24,7 +24,6 @@ namespace UMA.Editors.Tests
             previousSettings = UMASettings.instance;
             settings = ScriptableObject.CreateInstance<UMASettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
-            settings.postProcessAllAssets = false;
             UMASettings.instance = settings;
             root = "Assets/__UMAUnusedAssetsTests_" + Guid.NewGuid().ToString("N");
             AssetDatabase.CreateFolder("Assets", root.Substring("Assets/".Length));

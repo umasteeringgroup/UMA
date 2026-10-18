@@ -3179,15 +3179,7 @@ namespace UMA
 			}
             if (thisAssetItem != null)
             {
-#if UNITY_EDITOR
-                if (thisAssetItem.Item == null)
-                {
-                    if (settings.alwaysGetAddressables)
-                    {
-                        return thisAssetItem.GetItem<T>();
-                    }
-                }
-#endif
+                // AssetItem.Item applies the UMA_ALWAYSGETADDR_NO_PROD policy in the editor.
                 return (thisAssetItem.Item as T);
             }
             else

@@ -36,6 +36,73 @@ namespace UMA.Editors.Tests
         }
 
         [Test]
+        public void BackupRotationKeepsTheNewContentAndRootMetadataTogether()
+        {
+            string current = CreateBackupPair("Current", "current");
+            string previous = CreateBackupPair("Previous", "previous");
+            PreserveBackupPair(current, previous, null);
+            Assert.That(File.ReadAllText(previous + "/Content.txt"), Is.EqualTo("current"));
+            Assert.That(File.ReadAllText(previous + ".root.meta"), Is.EqualTo("current root identity"));
+            Assert.That(Directory.Exists(current), Is.False);
+            Assert.That(File.Exists(current + ".root.meta"), Is.False);
+            Assert.That(Directory.GetDirectories(root, "Previous.retired-*"), Is.Empty);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void UnmovablePreviousBackupPreservesBothCompleteBackups(bool accessDenied)
+        {
+            string current = CreateBackupPair("Current", "current");
+            string previous = CreateBackupPair("Previous", "previous");
+            PreserveBackupPair(current, previous, (source, destination) =>
+            {
+                if (source == previous)
+                {
+                    if (accessDenied) throw new UnauthorizedAccessException("Backup directory access denied");
+                    throw new IOException("Backup directory is locked");
+                }
+                Directory.Move(source, destination);
+            });
+            Assert.That(File.ReadAllText(previous + "/Content.txt"), Is.EqualTo("previous"));
+            Assert.That(File.ReadAllText(previous + ".root.meta"), Is.EqualTo("previous root identity"));
+            string[] retained = Directory.GetDirectories(root, "Previous.preserved-*");
+            Assert.That(retained.Length, Is.EqualTo(1));
+            Assert.That(File.ReadAllText(retained[0] + "/Content.txt"), Is.EqualTo("current"));
+            Assert.That(File.ReadAllText(retained[0] + ".root.meta"), Is.EqualTo("current root identity"));
+            Assert.That(Directory.Exists(current), Is.False);
+        }
+
+        [Test]
+        public void FailedBackupPromotionRestoresPreviousBackupAndRetainsCurrentBackup()
+        {
+            string current = CreateBackupPair("Current", "current");
+            string previous = CreateBackupPair("Previous", "previous");
+            var exception = Assert.Throws<TargetInvocationException>(() => PreserveBackupPair(current, previous, (source, destination) =>
+            {
+                if (source == current) throw new IOException("Current backup cannot be moved");
+                Directory.Move(source, destination);
+            }));
+            Assert.That(exception.InnerException, Is.TypeOf<IOException>());
+            Assert.That(File.ReadAllText(previous + "/Content.txt"), Is.EqualTo("previous"));
+            Assert.That(File.ReadAllText(previous + ".root.meta"), Is.EqualTo("previous root identity"));
+            Assert.That(File.ReadAllText(current + "/Content.txt"), Is.EqualTo("current"));
+            Assert.That(File.ReadAllText(current + ".root.meta"), Is.EqualTo("current root identity"));
+        }
+
+        private string CreateBackupPair(string name, string content)
+        {
+            string path = Path.Combine(root, name);
+            Directory.CreateDirectory(path);
+            File.WriteAllText(path + "/Content.txt", content);
+            File.WriteAllText(path + ".root.meta", content + " root identity");
+            return path;
+        }
+
+        private static void PreserveBackupPair(string current, string previous, Action<string, string> move) =>
+            typeof(UMAContentPackageInstaller).GetMethod("PreserveBackupPair", BindingFlags.Static | BindingFlags.NonPublic)
+                .Invoke(null, new object[] { current, previous, move });
+
+        [Test]
         public void IdenticalReinstallIgnoresEmptyFolderTreesAndTheirMetadata()
         {
             Directory.CreateDirectory(root + "/Empty/Nested");

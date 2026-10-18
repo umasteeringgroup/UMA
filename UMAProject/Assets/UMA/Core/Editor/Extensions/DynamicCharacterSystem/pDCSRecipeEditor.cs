@@ -414,6 +414,7 @@ namespace UMA.Editors
 			{
 				_wardrobeSet = wardrobeSet;
 			}
+            internal void SetWardrobeSet(List<WardrobeSettings> wardrobeSet) => _wardrobeSet = wardrobeSet;
 			public override bool OnGUI(string targetName, ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
 			{
 				bool changed = false;

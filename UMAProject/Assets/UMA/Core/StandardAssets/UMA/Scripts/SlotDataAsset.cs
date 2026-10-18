@@ -44,7 +44,10 @@ namespace UMA
                 {
                     return _oldSlotName;
                 }
-                return this.name;
+                string objectName = name;
+                // Cache native Object.name reads at runtime, without changing editor assets.
+                if (Application.isPlaying) _oldSlotName = objectName;
+                return objectName;
             }
         }
 
@@ -56,13 +59,19 @@ namespace UMA
             {
                 if (string.IsNullOrEmpty(_sourceSlotName))
                 {
-                    return this.name;
+                    return slotName;
                 }
                 return _sourceSlotName;
             }
         }
 
         private int _nameHash = 0;
+
+        internal void SetSlotName(string logicalName)
+        {
+            _oldSlotName = logicalName;
+            _nameHash = 0;
+        }
 
         public int nameHash
         {
@@ -1444,7 +1453,7 @@ namespace UMA
             {
                 //Debug.Log("Renaming slot to " + p.newSlotName);
                 newSlotData.name = p.newSlotName;
-                newSlotData._oldSlotName = "";
+                newSlotData.SetSlotName(p.newSlotName);
                 if (!UMAMeshData.IsNullOrEmptyMeshData(newSlotData.meshData))
                 {
                     newSlotData.meshData.SlotName = newSlotData.slotName;
@@ -1481,10 +1490,7 @@ namespace UMA
 
             var clone = ScriptableObject.CreateInstance<SlotDataAsset>();
             clone.name = newAssetName;
-            if (!string.IsNullOrEmpty(_oldSlotName))
-            {
-                clone._oldSlotName = (string)_oldSlotName.Clone();
-            }
+            clone.SetSlotName(newSlotName);
             clone.maxLOD = maxLOD;
             clone.useAtlasOverlay = useAtlasOverlay;
             clone.overlayScale = overlayScale;
@@ -1508,7 +1514,7 @@ namespace UMA
             clone.isBaked = isBaked;
             clone._rendererAsset = _rendererAsset;
             clone.slotDNA = slotDNA;
-            clone._sourceSlotName = (string)_sourceSlotName.Clone(); 
+            clone._sourceSlotName = _sourceSlotName;
 
             if (!UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
@@ -1547,10 +1553,7 @@ namespace UMA
 
         public void Assign(SlotDataAsset source)
         {
-            if (!string.IsNullOrEmpty(source._oldSlotName))
-            {
-                _oldSlotName = (string)source._oldSlotName.Clone();
-            }
+            SetSlotName(source._oldSlotName);
             name = (string)source.name.Clone();
             overlayScale = source.overlayScale;
             sourceUVCropping = source.sourceUVCropping;
@@ -1583,10 +1586,7 @@ namespace UMA
                 UdimSharedVertexMap = null;
             }
 #endif
-            if (source._sourceSlotName != null)
-            {
-                _sourceSlotName = (string)source._sourceSlotName.Clone();
-            }
+            _sourceSlotName = source._sourceSlotName;
             slotGroup = source.slotGroup;
             if (source.tags != null)
             {

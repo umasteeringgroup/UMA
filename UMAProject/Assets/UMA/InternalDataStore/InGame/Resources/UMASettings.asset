@@ -15,13 +15,11 @@ MonoBehaviour:
   IgnoreTag: UMAIgnore
   KeepTag: UMAKeepChain
   useMeshAPICombiner: 0
-  DebugMemoryUsage: 0
-  DisableDecalCallbacks: 0
   WarningMessage: "Warning: Please do not modify these\n settings using the inspector.\n
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"
   Initialized: 1
-  UMAVersion: 3.1f4
+  UMAVersion: 3.1.5
   tagLookupValues:
   - Head
   - Hair
@@ -54,15 +52,8 @@ MonoBehaviour:
   autoRepairIndex: 0
   showIndexedTypes: 1
   showUnindexedTypes: 0
-  postProcessAllAssets: 0
-  useBurstCompiler: 1
-  useAddressables: 0
-  enableGLTFExport: 0
-  alwaysGetAddressables: 1
   ignoreBackupFolders: 0
-  addDNAOnRaceChange: 0
   addrUseSharedGroup: 1
-  addrSharedGroupName: UMAShared
   addrDefaultLabel: UMA_Default
   addrStripMaterials: 0
   addrStripTextures: 0
@@ -81,8 +72,6 @@ MonoBehaviour:
   AssetStoreURL: https://assetstore.unity.com/packages/3d/characters/uma-2-35611
   GithubURL: https://github.com/umasteeringgroup/UMA
   YoutubeURL: https://www.youtube.com/@SecretAnorak/videos
-  ShaderFolder: SRP/ShaderPackages
-  UMAFolder: Assets/UMA
   texturePaintCompactView: 1
   texturePaintRecoveryFolder: Assets/UMAProjectData/OverlayPainter/Recovery
   texturePaintAutomaticRecovery: 1

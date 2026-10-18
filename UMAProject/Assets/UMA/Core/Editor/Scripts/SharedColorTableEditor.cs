@@ -75,6 +75,7 @@ namespace UMA.Editors
             {
                 inspectorView.Field(serializedObject, "sharedColorName",
                     "Table Name");
+                EditorGUILayout.PropertyField(serializedObject.FindProperty("AlsoAppliesTo"), true);
                 inspectorView.Field(serializedObject, "channelCount",
                     "Channel Count");
             }
@@ -159,6 +160,7 @@ namespace UMA.Editors
                 sct.colors = new OverlayColorData[0];
             }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("sharedColorName"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("AlsoAppliesTo"), true);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("channelCount"));
             }
             using (inspectorView.Section("Donor material and shader properties",
