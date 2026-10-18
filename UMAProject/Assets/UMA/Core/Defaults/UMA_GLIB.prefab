@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 6782112333398131214}
   - component: {fileID: 7066486438860346000}
   - component: {fileID: -3414846516618717208}
-  - component: {fileID: 3271675556559036597}
   m_Layer: 0
   m_Name: UMA_GLIB
   m_TagString: Untagged
@@ -99,15 +98,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cb02512637c3904a9c5f38f9ae07e93, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UMA_Core::UMA.UMAJobifiedMeshCombiner
---- !u!114 &3271675556559036597
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6782112333398131213}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 10a9eb5309083c449ab447538c71855e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UMA_Core::UMA.UMADefaultMeshCombiner
