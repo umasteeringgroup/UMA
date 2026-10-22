@@ -1421,7 +1421,7 @@ namespace UMA.TexturePaint
         }
     }
 
-    public static class MeshReconstructor
+    public static partial class MeshReconstructor
     {
         public static readonly Vector3 DefaultStandaloneSlotRotationEuler = Vector3.zero;
 
@@ -1592,9 +1592,13 @@ namespace UMA.TexturePaint
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (!context.IsStandalone) throw new ArgumentException("A standalone slot launch context is required.", nameof(context));
-            if (context.umaMaterial == null || context.umaMaterial.material == null)
+            bool fromRecipe = context.kind == TexturePaintLaunchKind.WardrobeRecipe;
+            OverlayColorData[] sharedColors = null;
+            List<SlotData> recipeSlots = fromRecipe ? LoadWardrobeSlots(context.wardrobeRecipe, out sharedColors,
+                out _, context.wardrobePreviewRace) : null;
+            if (!fromRecipe && (context.umaMaterial == null || context.umaMaterial.material == null))
                 throw new InvalidOperationException("The selected UMAMaterial has no active preview material.");
-            if (context.members == null || context.members.Count == 0)
+            if (!fromRecipe && (context.members == null || context.members.Count == 0))
                 throw new InvalidOperationException("The standalone slot group contains no members.");
 
             MeshReconstructionResult result = new MeshReconstructionResult
@@ -1607,30 +1611,83 @@ namespace UMA.TexturePaint
 
             try
             {
-                for (int memberIndex = 0; memberIndex < context.members.Count; memberIndex++)
+                int memberCount = fromRecipe ? recipeSlots.Count : context.members.Count;
+                for (int memberIndex = 0; memberIndex < memberCount; memberIndex++)
                 {
-                    TexturePaintStandaloneMemberContext member = context.members[memberIndex];
-                    SlotDataAsset asset = member?.slot;
+                    TexturePaintStandaloneMemberContext member = fromRecipe ? null : context.members[memberIndex];
+                    SlotDataAsset asset = fromRecipe ? recipeSlots[memberIndex].asset : member?.slot;
                     if (asset == null || UMAMeshData.IsNullOrEmptyMeshData(asset.meshData))
                         throw new InvalidOperationException($"Standalone member {memberIndex + 1} has no usable SlotDataAsset mesh data.");
+                    SlotData slot = fromRecipe ? recipeSlots[memberIndex] : new SlotData(asset);
+                    UMAMaterial umaMaterial = fromRecipe ? slot.material : context.umaMaterial;
+                    if (umaMaterial == null || umaMaterial.material == null)
+                        throw new InvalidOperationException($"Slot '{asset.slotName}' has no active UMAMaterial.");
+                    if (fromRecipe && (asset.subMeshIndex < 0 ||
+                        asset.subMeshIndex >= asset.meshData.subMeshCount ||
+                        asset.subMeshIndex >= (asset.meshData.submeshes?.Length ?? 0)))
+                        throw new InvalidOperationException($"Slot '{asset.slotName}' has an invalid source submesh.");
 
                     Mesh mesh = BuildSlotMesh(asset.meshData, asset.slotName + " Overlay Painter Mesh",
                         context.fixupRotations, context.slotRotationEuler);
                     if (mesh == null)
                         throw new InvalidOperationException($"Standalone member '{asset.slotName}' could not be converted to a preview mesh.");
+                    if (fromRecipe)
+                    {
+                        // A recipe can assign distinct slots/overlays to submeshes of the same source mesh.
+                        int[] triangles = mesh.GetTriangles(asset.subMeshIndex);
+                        mesh.subMeshCount = 1;
+                        mesh.SetTriangles(triangles, 0);
+                    }
                     GameObject child = new GameObject($"{memberIndex:D2}_{asset.slotName}");
                     child.transform.SetParent(result.root.transform, false);
                     child.AddComponent<MeshFilter>().sharedMesh = mesh;
 
-                    Material source = context.umaMaterial.material;
+                    Material source = umaMaterial.material;
                     Material preview = new Material(source)
                     {
                         name = source.name + " (" + asset.slotName + " Overlay Painter Preview)",
                         hideFlags = HideFlags.HideAndDontSave
                     };
-                    Texture[] sourceTextures = BuildStandaloneSources(context.umaMaterial, member.overlay,
-                        context.resolution, out List<Texture> ownedSources);
-                    ApplyStandaloneSources(preview, context.umaMaterial, sourceTextures);
+                    // Register ownership before compositing, which can throw on an invalid overlay.
+                    var surface = new ReconstructedSurface
+                    {
+                        gameObject = child, mesh = mesh, previewMaterial = preview
+                    };
+                    result.surfaces.Add(surface);
+                    UMAData.GeneratedMaterial generated = null;
+                    Texture[] sourceTextures;
+                    List<Texture> ownedSources;
+                    bool[] packedNormals;
+                    bool materialSources = fromRecipe && UsesReadOnlyMaterialSources(umaMaterial);
+                    if (fromRecipe)
+                    {
+                        var fragment = BuildWardrobeFragment(slot);
+                        generated = new UMAData.GeneratedMaterial
+                        {
+                            umaMaterial = umaMaterial, material = preview,
+                            materialFragments = new List<UMAData.MaterialFragment> { fragment }
+                        };
+                        if (materialSources)
+                        {
+                            sourceTextures = BuildReadOnlyMaterialSources(umaMaterial, source);
+                            ownedSources = new List<Texture>();
+                            packedNormals = new bool[sourceTextures.Length];
+                        }
+                        else
+                        {
+                            sourceTextures = BuildNativeOverlaySources(umaMaterial, fragment,
+                                UMASettings.GetSettings().textureMerge, out ownedSources, out packedNormals);
+                        }
+                    }
+                    else
+                    {
+                        sourceTextures = BuildStandaloneSources(umaMaterial, member.overlay,
+                            context.resolution, out ownedSources);
+                        packedNormals = new bool[sourceTextures.Length];
+                    }
+                    surface.ownedSourceTextures = ownedSources;
+                    if (fromRecipe) ApplyWardrobeMaterialProperties(generated, sharedColors, preview);
+                    ApplyStandaloneSources(preview, umaMaterial, sourceTextures);
 
                     MeshRenderer renderer = child.AddComponent<MeshRenderer>();
                     Material[] previewMaterials = new Material[Mathf.Max(1, mesh.subMeshCount)];
@@ -1640,35 +1697,30 @@ namespace UMA.TexturePaint
                     MeshCollider collider = child.AddComponent<MeshCollider>();
                     collider.sharedMesh = mesh;
 
-                    SlotData slot = new SlotData(asset);
                     Matrix4x4 regionPreviewFromRoot = context.fixupRotations
                         ? Matrix4x4.Rotate(Quaternion.Euler(context.slotRotationEuler)) : Matrix4x4.identity;
-                    result.surfaces.Add(new ReconstructedSurface
-                    {
-                        index = result.surfaces.Count,
-                        rendererIndex = memberIndex,
-                        sourceSubmeshIndex = asset.subMeshIndex,
-                        gameObject = child,
-                        mesh = mesh,
-                        anatomy = TexturePaintAnatomy.CaptureSlot(asset.meshData, regionPreviewFromRoot),
-                        collider = collider,
-                        sourceMaterial = source,
-                        previewMaterial = preview,
-                        umaMaterial = context.umaMaterial,
-                        sourceTextures = sourceTextures,
-                        ownedSourceTextures = ownedSources,
-                        sourceNormalIsUnityPacked = new bool[sourceTextures.Length],
-                        standaloneSourceOverlay = member.overlay,
-                        allowMissingSourceTextures = true,
-                        triangleIslands = UVIslandUtility.BuildTriangleIslands(mesh),
-                        slotName = asset.slotName,
-                        slotNames = new List<string> { asset.slotName },
-                        slots = new List<SlotData> { slot }
-                    });
+                    surface.index = memberIndex;
+                    surface.rendererIndex = memberIndex;
+                    surface.sourceSubmeshIndex = asset.subMeshIndex;
+                    surface.anatomy = TexturePaintAnatomy.CaptureSlot(asset.meshData, regionPreviewFromRoot);
+                    surface.collider = collider;
+                    surface.sourceMaterial = source;
+                    surface.umaMaterial = umaMaterial;
+                    surface.sourceTextures = sourceTextures;
+                    surface.sourceNormalIsUnityPacked = packedNormals;
+                    surface.generatedMaterial = generated;
+                    surface.usesReadOnlyMaterialSources = materialSources;
+                    surface.standaloneSourceOverlay = member?.overlay;
+                    surface.allowMissingSourceTextures = true;
+                    surface.triangleIslands = UVIslandUtility.BuildTriangleIslands(mesh);
+                    surface.slotName = asset.slotName;
+                    surface.slotNames = new List<string> { asset.slotName };
+                    surface.slots = new List<SlotData> { slot };
                 }
                 result.logicalTargets.Rebuild(result.surfaces);
-                if (result.logicalTargets.Targets.Count != 1)
+                if (!fromRecipe && result.logicalTargets.Targets.Count != 1)
                     throw new InvalidOperationException("The selected slot assets did not resolve to one logical paint target.");
+                ApplyCanonicalUdimMaterialProperties(result.logicalTargets);
                 result.ResolveWarningScopes();
                 return result;
             }

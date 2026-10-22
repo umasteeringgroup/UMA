@@ -1,9 +1,7 @@
 ﻿<Solution>
   <Project Path="UMA_Core.csproj" />
   <Project Path="UMA_Core_Editor_Tests.csproj" />
-  <Project Path="asset-store-tools-editor.csproj" />
   <Project Path="UMA_Core_Editor.csproj" />
-  <Project Path="JBooth.BetterShaders.Editor.csproj" />
   <Project Path="UMA.PackageSupport.Editor.csproj" />
   <Project Path="UMA.HairCards.Editor.csproj" />
   <Project Path="UMA.Dismemberment.Runtime.csproj" />
@@ -12,7 +10,6 @@
   <Project Path="UMA.TexturePaint.Editor.csproj" />
   <Project Path="UMA3.Samples.Editor.Tests.csproj" />
   <Project Path="UMA3.Samples.csproj" />
-  <Project Path="UMA.TempTools.csproj" />
   <Project Path="UMA_Editor.csproj" />
   <Project Path="UMA.HairCards.Editor.Tests.csproj" />
   <Project Path="UMA.TexturePaint.Tests.csproj" />
@@ -33,20 +30,4 @@
   <Project Path="UMA.TexturePaint.Sprite.Editor.csproj" />
   <Project Path="UMA2Compatibility.Editor.Tests.csproj" />
   <Project Path="UMA.Eyebrow.Examples.Editor.csproj" />
-  <Project Path="Samples.csproj" />
-  <Project Path="JBooth.BetterShaders.Samples.csproj" />
-  <Project Path="UMA_Core.Player.csproj" />
-  <Project Path="UMA.Dismemberment.Runtime.Player.csproj" />
-  <Project Path="UMA.HairCards.Core.Player.csproj" />
-  <Project Path="UMA3.Samples.Player.csproj" />
-  <Project Path="UMA.TempTools.Player.csproj" />
-  <Project Path="UMA.TexturePaint.Tests.Player.csproj" />
-  <Project Path="UMA2.Content.Player.csproj" />
-  <Project Path="UMA.TexturePaint.Examples.Player.csproj" />
-  <Project Path="UMA.TexturePaint.Runtime.Player.csproj" />
-  <Project Path="UMA_Core_Runtime_Tests.Player.csproj" />
-  <Project Path="UMA.HairCards.Runtime.Player.csproj" />
-  <Project Path="UMA.SRP.SkyCar.Samples.Player.csproj" />
-  <Project Path="UMA.Dismemberment.Samples.Player.csproj" />
-  <Project Path="JBooth.BetterShaders.Samples.Player.csproj" />
 </Solution>

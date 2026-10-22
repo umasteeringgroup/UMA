@@ -111,7 +111,9 @@
         "Assets/UMA/OverlayPainterTests/TexturePaintStencilTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintStubbleReliefTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintTileableMaterialTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintVDMTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintVeinTests.cs",
+        "Assets/UMA/OverlayPainterTests/TexturePaintWardrobeRecipeTests.cs",
         "Assets/UMA/OverlayPainterTests/TexturePaintWeatheringNormalTests.cs",
         "Assets/UMA/OverlayPainterTests/UMA.TexturePaint.Editor.Tests.asmdef",
         "Assets/UMA/OverlayPainterTests/UMAContentManifest.json",
@@ -873,12 +875,28 @@
             "metaSha256": "d4b8e95cbfba7bd662c8ed31625ad3537146f3292120567695c355a6b387a487"
         },
         {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintVDMTests.cs",
+            "guid": "62d53406f1ed44846974d938c90c9e9c",
+            "bytes": 16963,
+            "sha256": "f5a8e3441eeb2f9f025afea9214a1c3ee04abf3643dd74a5d605b130e29f191d",
+            "metaBytes": 59,
+            "metaSha256": "9fd7fe430c98a02ee6b204e5368a54ecca62f2c5fca07ce281fb8ce7c56ea961"
+        },
+        {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintVeinTests.cs",
             "guid": "a2baf1d0a3e32d148b905ece488fb5c0",
             "bytes": 4468,
             "sha256": "c55e931d3f5d8365c22e0d15f476706a4dcda52877cedbb74e95138fce47b6da",
             "metaBytes": 59,
             "metaSha256": "62e4a9c52fce2b7b03817582a8ebf639465ecdacd0152d90775d942464bd17da"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterTests/TexturePaintWardrobeRecipeTests.cs",
+            "guid": "16cddac67dd44341ac44a861711322f5",
+            "bytes": 14092,
+            "sha256": "170c2ce14997a024c5aab93e475e17fd9f1002671b1d4d1662ba4afd481c817a",
+            "metaBytes": 60,
+            "metaSha256": "8c7c4a85e9c93946e167b68f06951c1b5332c65b3b1b31b6341dfa33c49611d6"
         },
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintWeatheringNormalTests.cs",

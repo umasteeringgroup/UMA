@@ -408,6 +408,7 @@ namespace UMA.TexturePaint
 
         public static void ClearCache()
         {
+            TexturePaintVDMSource.ClearCache();
             foreach (Texture2D texture in Cache.Values)
                 if (texture != null) DestroyTexture(texture);
             Cache.Clear();

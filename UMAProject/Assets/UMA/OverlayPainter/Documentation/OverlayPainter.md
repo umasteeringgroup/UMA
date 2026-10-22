@@ -2972,3 +2972,8 @@ Before approving an exported overlay:
 - Exported overlays are present in the UMA Global Library.
 - Exported overlays have been added to the correct recipe slots.
 - A rebuilt DCA has been reviewed under representative lighting and quality settings.
+
+
+## VDM relief brushes
+
+See [VDM relief brushes](VDMBrushes.md) for signed EXR import, Projection and Path usage, coverage, and preserved geometry authoring data.

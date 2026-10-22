@@ -96,6 +96,7 @@
         "Assets/UMA/OverlayPainterExamples/Editor/ArtistGeneratorExamples.cs",
         "Assets/UMA/OverlayPainterExamples/Editor/MakeupExampleComposite.shader",
         "Assets/UMA/OverlayPainterExamples/Editor/MakeupFaceExamples.cs",
+        "Assets/UMA/OverlayPainterExamples/Editor/ProceduralVDMExample.cs",
         "Assets/UMA/OverlayPainterExamples/Editor/StubbleExamples.cs",
         "Assets/UMA/OverlayPainterExamples/Editor/SurfaceDetailExamples.cs",
         "Assets/UMA/OverlayPainterExamples/Editor/UMA.TexturePaint.CompanionExamples.Editor.asmdef",
@@ -407,7 +408,27 @@
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Woven Fabrics - Catalog.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Woven Fabrics - PBR.png",
         "Assets/UMA/OverlayPainterExamples/Tileable Materials/Woven Fabrics - Repeat.png",
-        "Assets/UMA/OverlayPainterExamples/UMAContentManifest.json"
+        "Assets/UMA/OverlayPainterExamples/UMAContentManifest.json",
+        "Assets/UMA/OverlayPainterExamples/VDM",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen Height Map.png",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen Prompts.md",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen VDM.asset",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen VDM.exr",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Muscle Map Prompts.md",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs Height Map.png",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs VDM.asset",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs VDM.exr",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine Height Map.png",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine VDM.asset",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine VDM.exr",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Encoding.json",
+        "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/README.md",
+        "Assets/UMA/OverlayPainterExamples/VDM/README.md",
+        "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM Height.png",
+        "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM Preview.png",
+        "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM.asset",
+        "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM.exr"
     ],
     "assets": [
         {
@@ -1033,6 +1054,14 @@
             "sha256": "384259c9c60857a11cb601a0b532a6f2b325edcfacdafd2642a3bc04995e73bf",
             "metaBytes": 59,
             "metaSha256": "860c42c90891fd7f2995e9e50d8492c65b38c0423a5c04f382adeade2d94d3b9"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/Editor/ProceduralVDMExample.cs",
+            "guid": "16d6a2371bf194248ae04470c2648f3f",
+            "bytes": 5882,
+            "sha256": "359a5cf8a98eca03f02db1198ec3421b0a0704ae045001fa5a0898ff75688102",
+            "metaBytes": 59,
+            "metaSha256": "74dada491a97b6bab42754d86d7cd52165e8f1f2f140e6668d23c98ff2c4313c"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Editor/StubbleExamples.cs",
@@ -3521,6 +3550,166 @@
             "sha256": "d0ce075387eebfe7582afb76d8b52687bbaa28ce0dab3b03e69a8c7624bae2e2",
             "metaBytes": 3364,
             "metaSha256": "46d3d8d5f205ef4b9a762eaac170780a3dada9413de59cf0708afe5826627601"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM",
+            "guid": "1cfd752a412ceaa41930f056e6f15086",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "168f095c3f34e90c8f3a31fb766c73be5e4049b5ec75f7dc77844a6952ecdf97"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder",
+            "guid": "65542892077efc343a2a0ea1ce98f273",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "050b2e28f6a23e5eb05373388966f16a9c7ecd1adc9d3d917a0bea4dd2893610"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen Height Map.png",
+            "guid": "00d810accdcd2ff48a8776a4ac703135",
+            "bytes": 1489797,
+            "sha256": "4f2383efea67a668d0efe68929e38e58b4923ac3852c6a52cda64745024fb543",
+            "metaBytes": 3364,
+            "metaSha256": "4dac72797fa1f47024f7a28a3b680dcc5dd8be497fed6d22d41b4def67b2c075"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen Prompts.md",
+            "guid": "0e515c6a3e54381428df874807d56259",
+            "bytes": 3843,
+            "sha256": "4401dbb1070bc005f187bf6f65a8e56d4b68098e64c11afbd7ae191d80c4e6cb",
+            "metaBytes": 158,
+            "metaSha256": "23ec745381b583903ea4b0fc6d38b410b1d9fa9058a62ea4bed6ce4dad0492e3"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen VDM.asset",
+            "guid": "a5de25854c9a1b04a8100abcdf213d20",
+            "bytes": 954,
+            "sha256": "53cbb8824851bade1b90b2d187aad86363427f831784f5ffcab05ed3251323c4",
+            "metaBytes": 189,
+            "metaSha256": "7360227557e7e41360dc35731ff7396c9d951e81e6716cda40cc241fe20582e1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen VDM.exr",
+            "guid": "af672684c3467fe45a79b5bde79ebed1",
+            "bytes": 4025789,
+            "sha256": "6fcdde33bb57170439ffbff651e78ef04da4b351cbcd8ff8412fa7226d6055ce",
+            "metaBytes": 3364,
+            "metaSha256": "9c6a511d3e1bd5454ee7bd54d458eb0bd83e25661baa50ac0e98ebc83be8cf09"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Muscle Map Prompts.md",
+            "guid": "23b6fbc7bffbd524bbf247279f38e54d",
+            "bytes": 3511,
+            "sha256": "c67d001dbb510e59d73e62b3945539aa4e518212898533930a4ff697945bd9ad",
+            "metaBytes": 158,
+            "metaSha256": "70c4cd7cd180e7597716c32717b35898ab6905de5046265ef1cde6a3147d2780"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs Height Map.png",
+            "guid": "2a8c03f8936457a4eb72c72ed805dfa4",
+            "bytes": 1454754,
+            "sha256": "9e619d1bda08db8d258671e9f310282bfc677d185568a4173c1431cf3607887d",
+            "metaBytes": 3364,
+            "metaSha256": "d4626c8a587d32e772aea6d6c554732b1307ed3cf339d0dc101882d623486f27"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs VDM.asset",
+            "guid": "b6a77c91be9e08f4f8e2b85ca7139fd6",
+            "bytes": 948,
+            "sha256": "77165c6f3635ee3533ad253329fd797c19e67a95bccf956cdd138c598ced80e5",
+            "metaBytes": 189,
+            "metaSha256": "922ba99df3146b8bbe4f33d0ea22025bf393d5c53d32cb57e8a8c80045ce55a6"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs VDM.exr",
+            "guid": "36d963283aa2f9549926af5dc417b372",
+            "bytes": 3406531,
+            "sha256": "84a871d8afac2b1b1a5d5bf896e4af62e8ec2d715371d03e649718292b129ce4",
+            "metaBytes": 3364,
+            "metaSha256": "eec6917f0109355fd7035c4e19922be03e0260662671901c3062f0ca0d022ef1"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine Height Map.png",
+            "guid": "a9b58c999e113314c8be592765d58679",
+            "bytes": 1522095,
+            "sha256": "1592d747493277eab8a8153d5d00874b587709f702553b54687bc68cce101b1d",
+            "metaBytes": 3364,
+            "metaSha256": "8c6f7c2c5cde43a15d5fc8bd6a48016b2dcc507705e8435fe64abcc90db95e34"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine VDM.asset",
+            "guid": "08bc78809af60134cbbce82ce7cdc731",
+            "bytes": 950,
+            "sha256": "ba7bc4aafbe80d9a07ff73891a6c75cfac3eaf7dad63a1bcf0602f6f5c0dea83",
+            "metaBytes": 189,
+            "metaSha256": "d334730ec3ae38500231ea0b017b565a6aab983a7b6a46a2c4abe0ac31519e1b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine VDM.exr",
+            "guid": "4c374bce966be94429bb3a5c6771cb3c",
+            "bytes": 3892511,
+            "sha256": "f60fbd6ce3d3073f63b90d2e30451ea707a7b1e3c46093a8763dc6ccb95e1dfb",
+            "metaBytes": 3364,
+            "metaSha256": "4b6368bbcc88556e2b9afe39aefe122362959a6f0b7b3a93078177608e40f5c8"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Encoding.json",
+            "guid": "b0f69a2dbb2c6664dbaebab9a6d3e348",
+            "bytes": 1503,
+            "sha256": "58468fb8b034a11ed5eb2a115b6f01a51732853bd00eb99843521ce3e991a44a",
+            "metaBytes": 158,
+            "metaSha256": "2480c9b33c4d7cf1b5d775b3992e092541f870fd546a3d9f9427526bf5ff0687"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/README.md",
+            "guid": "6ae06ed662856824bac4ace254c9a53f",
+            "bytes": 2955,
+            "sha256": "d70c63ebd45966df9fedf0b32e45a542390be60e458084ebb628232dd46a317e",
+            "metaBytes": 158,
+            "metaSha256": "e3d912c0fa498b4b4b484c9b53342977b26ef330e9d8158ab8b33f37126a485b"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/README.md",
+            "guid": "a6ce6f756917bdb48bdee731a109904a",
+            "bytes": 1672,
+            "sha256": "13f83056ff3d679f9f890b1674b03d1bb8984900eb0edef2a02fa5a43f425453",
+            "metaBytes": 158,
+            "metaSha256": "e2c5cd3949327a9c473c258bb5a5c928d888bd1819c3d0b391d12ca30db48d02"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM Height.png",
+            "guid": "73518185f916f79439a4f81ec5bb717e",
+            "bytes": 48114,
+            "sha256": "3fcc0e83e67b71c4760cabf50bc6814150e87b7ae116dcc02bbf1c5a6f23fc9d",
+            "metaBytes": 3364,
+            "metaSha256": "79ae491444c731fe388aa5954f5c15b0b31671065188ca8bdd96b21041716513"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM Preview.png",
+            "guid": "0f7cc4075bcd2bb4fa4fd8212749474e",
+            "bytes": 145608,
+            "sha256": "588235ca8f314d7f226009d64e952a8155c23c00ee11b38b563550b3e3d2d28a",
+            "metaBytes": 3364,
+            "metaSha256": "a6365b1db5c060ee6856485905db071871e3a2a75f713e4f62b5aa9028db5f23"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM.asset",
+            "guid": "69657e83479f99244b82522e891d9a5a",
+            "bytes": 959,
+            "sha256": "a558803df0f707c80ba422da3bd22dad08b4c04f1c1b7581a01346dfc2934350",
+            "metaBytes": 189,
+            "metaSha256": "a0c2342eb2af72a720c3b19b6c918082a2c7126af9e2230e78fd5aff7c49ba43"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM.exr",
+            "guid": "4a03030fc6e36094687fcf248fae21ef",
+            "bytes": 2744531,
+            "sha256": "de83fe5ce60550276ce41a03986bcd0ebab2a8d232607c74a6a3812da7888f97",
+            "metaBytes": 3364,
+            "metaSha256": "760aca1cecae4ea112a563f66dd2fa21f77e6a2f5b20fb89db3d34faadbecd66"
         }
     ]
 }

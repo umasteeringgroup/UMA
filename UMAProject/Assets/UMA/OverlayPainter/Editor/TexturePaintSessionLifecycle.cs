@@ -156,7 +156,9 @@ namespace UMA.TexturePaint.Editor
             }
             if (!currentStandalone) return true;
             TexturePaintLaunchContext saved = candidate.launchContext;
-            if (saved.sourceMode != launchContext.sourceMode ||
+            if (saved.kind != launchContext.kind ||
+                !string.Equals(saved.wardrobeRecipeGuid, launchContext.wardrobeRecipeGuid, StringComparison.Ordinal) ||
+                saved.sourceMode != launchContext.sourceMode ||
                 !string.Equals(saved.umaMaterialGuid, launchContext.umaMaterialGuid, StringComparison.Ordinal) ||
                 !string.Equals(saved.udimGroupId ?? string.Empty, launchContext.udimGroupId ?? string.Empty,
                     StringComparison.Ordinal) || saved.members == null || launchContext.members == null ||

@@ -95,6 +95,7 @@ namespace UMA.TexturePaint
             public float ribbonCoverageAlpha = 1f;
             public float ribbonCoverageAdditive;
             public bool useRibbonCoverage;
+            public bool vdmSource;
             public TexturePaintBrushSource sourceKind = TexturePaintBrushSource.Color;
             public Color color = Color.white;
             public Color multiplier = Color.white;
@@ -292,6 +293,21 @@ namespace UMA.TexturePaint
             LastStrokeError = null;
             if (context?.textures == null || context.brush == null) return false;
             if (context.editLayerMask && context.tool == TexturePaintTool.NormalTouchup) return false;
+            foreach (var pair in context.channelSources)
+            {
+                if (!TexturePaintVDMSource.IsEnabled(pair.Value)) continue;
+                if (pair.Key != TexturePaintChannel.NormalControl || !context.derivedLayerRaster ||
+                    context.replaceLayer?.IsSplineLayer != true || context.editLayerMask)
+                    return FailStrokeStart("VDM is supported only on Projection and Path Normal Control sources.");
+                var path = context.replaceLayer.splineSettings;
+                if (path == null || (path.pathMode != TexturePaintPathMode.Stamps && path.pathMode != TexturePaintPathMode.Ribbon))
+                    return FailStrokeStart("VDM paths require Stamps or Ribbon mode.");
+                if (!TexturePaintVDMSource.Validate(pair.Value.vdm, out string vdmError)) return FailStrokeStart(vdmError);
+                var targets = textureSets ?? new[] { context.textures };
+                foreach (var set in targets)
+                    if (set?.GetChannel(pair.Key) is TextureChannelTarget target && !TexturePaintVDMSource.FloatingTarget(target.format))
+                        return FailStrokeStart("VDM requires floating-point Normal Control targets.");
+            }
             bool consumesPaintSource = context.tool == TexturePaintTool.Paint || context.tool == TexturePaintTool.Plugin;
             if (consumesPaintSource && context.channelSources.Count == 0 &&
                 context.paintSource == TexturePaintBrushSource.Texture &&
@@ -853,9 +869,9 @@ namespace UMA.TexturePaint
                     activeContext.ribbonEndTexture != null
                         ? ResolveRibbonCap(activeContext.ribbonEndTexture, active) : Texture2D.whiteTexture);
                 ribbonProperties.SetInt("_HasBeginningSource",
-                    !closed && activeContext.ribbonBeginningTexture != null ? 1 : 0);
+                    !active.vdmSource && !closed && activeContext.ribbonBeginningTexture != null ? 1 : 0);
                 ribbonProperties.SetInt("_HasEndSource",
-                    !closed && activeContext.ribbonEndTexture != null ? 1 : 0);
+                    !active.vdmSource && !closed && activeContext.ribbonEndTexture != null ? 1 : 0);
                 ribbonProperties.SetFloat("_RibbonMinimumAlong", minimumAlong);
                 ribbonProperties.SetFloat("_RibbonMaximumAlong", maximumAlong);
                 ribbonProperties.SetTexture("_GeometryMask",
@@ -1668,6 +1684,7 @@ namespace UMA.TexturePaint
                             target = target,
                             paintSource = paintTexture,
                             sourceKind = source.source,
+                            vdmSource = TexturePaintVDMSource.IsEnabled(source),
                             sourceBlur = source.source == TexturePaintBrushSource.Texture ? source.blur : 0,
                             color = TexturePaintChannelUtility.ConstrainColor(channel, source.color),
                             multiplier = source.source == TexturePaintBrushSource.Texture
@@ -1798,7 +1815,7 @@ namespace UMA.TexturePaint
             // Resolve even when Albedo is locked or has no writable destination. Coverage belongs
             // to the authored source, and linked physical members can have different sources.
             foreach (ActiveTarget active in activeTargets)
-                if (ReferenceEquals(active.textures, textures))
+                if (ReferenceEquals(active.textures, textures) && !active.vdmSource)
                 {
                     active.ribbonCoverageSource = coverageSettings != null
                         ? TexturePaintSpriteSource.Resolve(coverageSettings.sourceTexture, coverageSettings.sourceSprite,
@@ -1850,6 +1867,8 @@ namespace UMA.TexturePaint
             TexturePaintChannelSourceSettings source)
         {
             if (source == null || source.source == TexturePaintBrushSource.Color) return null;
+            if (TexturePaintVDMSource.IsEnabled(source))
+                return channel == TexturePaintChannel.NormalControl ? TexturePaintVDMSource.Resolve(source.vdm) : null;
             if (source.source == TexturePaintBrushSource.Texture)
                 return TexturePaintSpriteSource.Resolve(source.sourceTexture, source.sourceSprite,
                     channel, source.normalConvention, source.invert, source.blur);

@@ -186,6 +186,7 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintChannelSourceSettings
     {
+        public TexturePaintVDMApplicationSettings vdm;
         [Range(0, 16)] public int blur;
         public Color multiplier = Color.white;
         public Color additive = Color.clear;
@@ -207,7 +208,9 @@ namespace UMA.TexturePaint
 
         public TexturePaintChannelSourceSettings Clone()
         {
-            return (TexturePaintChannelSourceSettings)MemberwiseClone();
+            var copy = (TexturePaintChannelSourceSettings)MemberwiseClone();
+            copy.vdm = vdm?.Clone();
+            return copy;
         }
     }
 
@@ -1014,6 +1017,7 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintDocumentLayerChannel
     {
+        public TexturePaintVDMApplicationSettings sourceVDM;
         public TexturePaintChannel channel;
         public TexturePaintLayerChannelSettings settings = new TexturePaintLayerChannelSettings();
         public bool hasSourceSettings;
@@ -1042,6 +1046,7 @@ namespace UMA.TexturePaint
             hasSourceSettings = value != null;
             if (value == null) return;
             source = value.source;
+            sourceVDM = value.vdm?.Clone();
             sourceTexture = value.sourceTexture;
             sourceSprite = value.sourceSprite;
             sourceOverlay = value.sourceOverlay;
@@ -1071,6 +1076,7 @@ namespace UMA.TexturePaint
             return new TexturePaintChannelSourceSettings
             {
                 source = source,
+                vdm = sourceVDM?.Clone(),
                 sourceTexture = sourceTexture,
                 sourceSprite = sourceSprite,
                 sourceOverlay = sourceOverlay,
@@ -1101,7 +1107,7 @@ namespace UMA.TexturePaint
         private static bool LegacySourceIsAuthored(TexturePaintChannelSourceSettings legacy)
         {
             if (legacy == null) return false;
-            return legacy.sourceTexture != null || legacy.sourceSprite != null ||
+            return legacy.vdm?.enabled == true || legacy.sourceTexture != null || legacy.sourceSprite != null ||
                 legacy.sourceOverlay != null || legacy.source == TexturePaintBrushSource.Color ||
                 legacy.invert || (legacy.tiling - Vector2.one).sqrMagnitude > 0.000001f ||
                 legacy.offset.sqrMagnitude > 0.000001f || Mathf.Abs(legacy.rotation) > 0.000001f ||

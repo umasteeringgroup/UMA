@@ -7,7 +7,8 @@ namespace UMA.TexturePaint
     public enum TexturePaintLaunchKind
     {
         Avatar,
-        StandaloneSlot
+        StandaloneSlot,
+        WardrobeRecipe
     }
 
     public enum TexturePaintStandaloneSourceMode
@@ -42,13 +43,17 @@ namespace UMA.TexturePaint
         public string selectedSlotGuid;
         public string umaMaterialGuid;
         public string udimGroupId;
+        public UMA.CharacterSystem.UMAWardrobeRecipe wardrobeRecipe;
+        public string wardrobeRecipeGuid;
+        public RaceData wardrobePreviewRace;
         public int resolution = 2048;
         public int standaloneMeshTransformVersion = 2;
         public bool fixupRotations;
         public Vector3 slotRotationEuler = Vector3.zero;
         public List<TexturePaintStandaloneMemberContext> members = new List<TexturePaintStandaloneMemberContext>();
 
-        public bool IsStandalone => kind == TexturePaintLaunchKind.StandaloneSlot;
+        public bool IsStandalone => kind == TexturePaintLaunchKind.StandaloneSlot ||
+                                    kind == TexturePaintLaunchKind.WardrobeRecipe;
 
         public TexturePaintLaunchContext Clone()
         {

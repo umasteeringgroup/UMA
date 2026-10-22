@@ -3880,15 +3880,20 @@ namespace UMA.TexturePaint.Editor
             EditorGUI.BeginChangeCheck();
             if (TexturePaintChannelUtility.IsAuxiliary(channel))
             {
-                int sourceIndex = source.source == TexturePaintBrushSource.Texture ? 0 : 1;
+                bool supportsVDM = SupportsVDM(layer, channel);
+                int sourceIndex = supportsVDM && TexturePaintVDMSource.IsEnabled(source) ? 2 :
+                    source.source == TexturePaintBrushSource.Texture ? 0 : 1;
                 sourceIndex = EditorGUILayout.Popup("Type", sourceIndex,
-                    new[] { "Texture", "Color" });
-                source.source = sourceIndex == 0 ? TexturePaintBrushSource.Texture :
-                    TexturePaintBrushSource.Color;
+                    supportsVDM ? new[] { "Texture", "Color", "VDM Relief" } : new[] { "Texture", "Color" });
+                source.source = sourceIndex == 1 ? TexturePaintBrushSource.Color : TexturePaintBrushSource.Texture;
+                if (sourceIndex == 2) { source.vdm ??= new TexturePaintVDMApplicationSettings(); source.vdm.enabled = true; }
+                else if (source.vdm != null) source.vdm.enabled = false;
                 source.sourceOverlay = null;
             }
             else source.source = (TexturePaintBrushSource)EditorGUILayout.EnumPopup("Type", source.source);
-            switch (source.source)
+            if (SupportsVDM(layer, channel) && TexturePaintVDMSource.IsEnabled(source))
+                DrawVDMSource(source, layer);
+            else switch (source.source)
             {
                 case TexturePaintBrushSource.Texture:
                     Texture2D texture = source.sourceSprite == null ? source.sourceTexture : null;
@@ -5787,6 +5792,10 @@ namespace UMA.TexturePaint.Editor
                 menu.AddItem(new GUIContent("Rasterize to Paint Layer"), false, () =>
                 {
                     set.activeLayerIndex = index;
+                    bool hasVDM = layer.projectionSettings?.GetChannelSource(TexturePaintChannel.NormalControl)?.vdm?.enabled == true;
+                    if (hasVDM && !EditorUtility.DisplayDialog("Rasterize VDM Relief",
+                        "Rasterizing removes the editable VDM placement needed for future geometry output. Duplicate the layer first if you want to keep it.",
+                        "Rasterize", "Cancel")) return;
                     if (RasterizeFillLayerWithHistory(set, layer))
                         SyncActiveLayerSelection(set);
                 });
@@ -7415,19 +7424,9 @@ namespace UMA.TexturePaint.Editor
         {
             Sprite sprite = TexturePaintStageWindow.GetToolRailIcon(iconIndex);
             if (element == null || sprite == null) return false;
-            var image = new UnityEngine.UIElements.Image
-            {
-                sprite = sprite,
-                scaleMode = ScaleMode.ScaleToFit,
-                pickingMode = PickingMode.Ignore
-            };
-            image.style.width = 18f;
-            image.style.height = 18f;
-            image.style.alignSelf = Align.Center;
-            image.style.flexShrink = 0f;
             element.style.minWidth = 26f;
             element.style.justifyContent = Justify.Center;
-            element.Add(image);
+            element.Add(TexturePaintToolbarIcons.Create(sprite));
             return true;
         }
 
@@ -7944,7 +7943,7 @@ namespace UMA.TexturePaint.Editor
 
         public TexturePaintSceneTargetDropdown()
         {
-            icon = EditorGUIUtility.IconContent("d_Avatar Icon").image as Texture2D;
+            TexturePaintToolbarIcons.Add(this, EditorGUIUtility.IconContent("d_Avatar Icon").image);
             clicked += ShowMenu;
             schedule.Execute(UpdateDisplay).Every(250L);
             UpdateDisplay();
@@ -7984,7 +7983,7 @@ namespace UMA.TexturePaint.Editor
 
         public TexturePaintSceneToolDropdown()
         {
-            icon = EditorGUIUtility.IconContent("d_EditCollider").image as Texture2D;
+            TexturePaintToolbarIcons.Add(this, EditorGUIUtility.IconContent("d_EditCollider").image);
             clicked += ShowMenu;
             schedule.Execute(UpdateDisplay).Every(250L);
             UpdateDisplay();
@@ -8048,7 +8047,7 @@ namespace UMA.TexturePaint.Editor
 
         public TexturePaintSceneChannelDropdown()
         {
-            icon = EditorGUIUtility.IconContent("d_Texture Icon").image as Texture2D;
+            TexturePaintToolbarIcons.Add(this, EditorGUIUtility.IconContent("d_Texture Icon").image);
             clicked += ShowMenu;
             schedule.Execute(UpdateDisplay).Every(250L);
             UpdateDisplay();
@@ -8087,7 +8086,7 @@ namespace UMA.TexturePaint.Editor
 
         public TexturePaintScenePreviewDropdown()
         {
-            icon = EditorGUIUtility.IconContent("d_SceneViewVisibility").image as Texture2D;
+            TexturePaintToolbarIcons.Add(this, EditorGUIUtility.IconContent("d_SceneViewVisibility").image);
             clicked += ShowMenu;
             schedule.Execute(UpdateDisplay).Every(250L);
             UpdateDisplay();
@@ -8149,7 +8148,7 @@ namespace UMA.TexturePaint.Editor
         protected TexturePaintSceneSyncedToggle(string iconName, string toolTip, string label = null)
         {
             if (!string.IsNullOrEmpty(iconName))
-                icon = EditorGUIUtility.IconContent(iconName).image as Texture2D;
+                TexturePaintToolbarIcons.Add(this, EditorGUIUtility.IconContent(iconName).image);
             text = label;
             tooltip = toolTip;
             RegisterCallback<ChangeEvent<bool>>(OnChanged);
@@ -8207,7 +8206,7 @@ namespace UMA.TexturePaint.Editor
         public const string Id = "UMA/OverlayPainter3D/Frame";
         public TexturePaintSceneFrameButton()
         {
-            icon = EditorGUIUtility.IconContent("d_ViewToolZoom").image as Texture2D;
+            TexturePaintToolbarIcons.Add(this, EditorGUIUtility.IconContent("d_ViewToolZoom").image);
             tooltip = "Frame the active paint target";
             clicked += () => TexturePaintStageWindow.ActiveStage?.SceneToolbarFrameTarget();
         }
@@ -8276,6 +8275,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintSceneToolPaletteOverlay.RefreshAllInstances();
             TexturePaintPathToolbarOverlay.RefreshAllInstances();
             TexturePaintSceneToolbarOverlay.RefreshAllInstances();
+            TexturePaintSceneViewToolbarOverlay.RefreshAllInstances();
             TexturePaintLayerPreviewOverlay.RefreshAllInstances();
             SceneView.RepaintAll();
         }
@@ -8285,6 +8285,7 @@ namespace UMA.TexturePaint.Editor
             TexturePaintSceneToolPaletteOverlay.HideAllInstances();
             TexturePaintPathToolbarOverlay.HideAllInstances();
             TexturePaintSceneToolbarOverlay.HideAllInstances();
+            TexturePaintSceneViewToolbarOverlay.HideAllInstances();
             TexturePaintLayerPreviewOverlay.HideAllInstances();
             SceneView.RepaintAll();
         }

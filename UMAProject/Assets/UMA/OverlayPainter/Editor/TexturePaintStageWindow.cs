@@ -353,6 +353,20 @@ namespace UMA.TexturePaint.Editor
             TexturePaintDocument document)
         {
             if (context == null || !context.IsStandalone) return null;
+            if (context.kind == TexturePaintLaunchKind.WardrobeRecipe)
+            {
+                // Reopening a saved document must compare its saved inputs with today's recipe.
+                if (!TexturePaintWardrobeRecipeMenu.TryCreateContext(context.wardrobeRecipe,
+                    out var current, out string error, context.wardrobePreviewRace))
+                {
+                    EditorUtility.DisplayDialog("Open Wardrobe Recipe in Overlay Painter", error, "OK");
+                    return null;
+                }
+                current.resolution = context.resolution;
+                current.fixupRotations = context.fixupRotations;
+                current.slotRotationEuler = context.slotRotationEuler;
+                context = current;
+            }
             TexturePaintStageWindow stage = CreateInstance<TexturePaintStageWindow>();
             stage.launchContext = context;
             stage.launchDocument = document;
@@ -421,17 +435,13 @@ namespace UMA.TexturePaint.Editor
                 controller.Plugins.GpuGeneratorShader = pluginGenerators;
                 InitializeReconstructionWarnings(controller.Reconstruction);
                 SceneManager.MoveGameObjectToScene(controller.Reconstruction.root, scene);
-                lightObject = new GameObject("Overlay Painter Lighting");
-                Light light = lightObject.AddComponent<Light>();
-                light.type = LightType.Directional; light.intensity = 1.2f;
-                lightObject.transform.rotation = Quaternion.Euler(45f, -35f, 0f);
-                SceneManager.MoveGameObjectToScene(lightObject, scene);
+                CreateStageLighting();
                 TexturePaintStageState savedState = standalone ? null : controller.LoadRecipeState();
                 if (!InitializeDocumentSession())
                 {
                     controller.Dispose();
                     controller = null;
-                    if (lightObject != null) DestroyImmediate(lightObject);
+                    DisposeStageLighting();
                     if (transientBrush != null) DestroyImmediate(transientBrush);
                     return false;
                 }
@@ -470,6 +480,7 @@ namespace UMA.TexturePaint.Editor
                 Debug.LogException(exception);
                 EditorUtility.DisplayDialog("Overlay Painter", exception.Message, "OK");
                 controller?.Dispose(); controller = null;
+                DisposeStageLighting();
                 TexturePaintSpriteSource.ClearCache();
                 if (document != null && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(document))) DestroyImmediate(document);
                 document = null;
@@ -602,7 +613,7 @@ namespace UMA.TexturePaint.Editor
             SceneView.duringSceneGui -= OnSceneGUI;
             Tools.hidden = false;
             ClearLightweightHistory();
-            if (lightObject != null) DestroyImmediate(lightObject);
+            DisposeStageLighting();
             if (transientBrush != null) DestroyImmediate(transientBrush);
             if (ActiveStage == this) ActiveStage = null;
             TexturePaintSceneOverlayVisibility.HideAll();
@@ -641,6 +652,7 @@ namespace UMA.TexturePaint.Editor
 
         private void OnSceneGUI(SceneView sceneView)
         {
+            EnableStageLighting(sceneView);
             // Navigation must run before recovery/save guards, raycasts, layer eligibility,
             // or any handle can retain/reacquire mouse ownership. Do not consume the event.
             Event current = Event.current;
@@ -2382,7 +2394,7 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintChannelSourceSettings source = pair.Value?.sourceSettings;
                 if (source == null ||
                     (source.source == TexturePaintBrushSource.Texture &&
-                        source.sourceTexture == null && source.sourceSprite == null) ||
+                        source.sourceTexture == null && source.sourceSprite == null && !TexturePaintVDMSource.IsEnabled(source)) ||
                     (source.source == TexturePaintBrushSource.Overlay && source.sourceOverlay == null))
                     continue;
                 context.channelSources[pair.Key] = source;
@@ -4899,6 +4911,10 @@ namespace UMA.TexturePaint.Editor
             {
                 int hash = 17;
                 hash = hash * 31 + GetSplineSignature(set?.surface, layer?.spline);
+                if (layer != null)
+                    foreach (var pair in layer.channelSettings)
+                        if (pair.Value?.sourceSettings?.vdm?.enabled == true)
+                            hash = hash * 31 + JsonUtility.ToJson(pair.Value.sourceSettings.vdm).GetHashCode();
                 hash = hash * 31 + (int)settings.tool;
                 hash = hash * 31 + (int)settings.channel;
                 hash = hash * 31 + (int)settings.source;
@@ -6422,7 +6438,7 @@ namespace UMA.TexturePaint.Editor
             if (stage == null || stage.Controller == null)
             {
                 EditorGUILayout.HelpBox(
-                    "Open Overlay Painter from a SlotDataAssets Inspector, or a generated DynamicCharacterAvatar's Utilities section.",
+                    "Open Overlay Painter from a SlotDataAsset's Inspector, a wardrobe recipe's Assets > UMA menu, or a generated DynamicCharacterAvatar's Utilities section.",
                     MessageType.Info);
                 return;
             }

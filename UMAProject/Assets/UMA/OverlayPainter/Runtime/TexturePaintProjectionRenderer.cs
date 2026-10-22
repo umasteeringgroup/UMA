@@ -142,6 +142,14 @@ namespace UMA.TexturePaint
                         foreach (var item in settings.GetChannelSources())
                         {
                             if (set.GetChannel(item.channel) == null) continue;
+                            if (item.source == TexturePaintBrushSource.Texture && item.vdm?.enabled == true && !item.vdm.IsUnassigned)
+                            {
+                                if (item.channel != TexturePaintChannel.NormalControl)
+                                { error = "VDM is only supported on Normal Control."; return false; }
+                                if (!TexturePaintVDMSource.Validate(item.vdm, out error)) return false;
+                                if (!TexturePaintVDMSource.FloatingTarget(set.GetChannel(item.channel).format))
+                                { error = "VDM requires a floating-point Normal Control target."; return false; }
+                            }
                             Texture resolved = ResolveChannelSource(item, set);
                             if (item.HasSource && resolved == null)
                             { error = "The projection source cannot supply " + item.channel + " on '" + set.Name + "'."; return false; }

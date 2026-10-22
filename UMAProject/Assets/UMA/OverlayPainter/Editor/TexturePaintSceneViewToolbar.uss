@@ -1,0 +1,21 @@
+.op-scene-separator {
+    width: 1px;
+    height: 16px;
+    margin-left: 6px;
+    margin-right: 6px;
+    align-self: center;
+    flex-shrink: 0;
+    background-color: rgba(128, 128, 128, 0.65);
+}
+
+.op-scene-camera-label {
+    -unity-text-align: middle-center;
+    margin-left: 2px;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.op-scene-camera-button {
+    min-width: 34px;
+    flex-shrink: 0;
+}

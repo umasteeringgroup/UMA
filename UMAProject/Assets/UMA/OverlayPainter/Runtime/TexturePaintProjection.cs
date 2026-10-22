@@ -11,6 +11,7 @@ namespace UMA.TexturePaint
     [Serializable]
     public sealed class TexturePaintProjectionChannelSource
     {
+        public TexturePaintVDMApplicationSettings vdm;
         public TexturePaintChannel channel;
         public Texture2D texture;
         public Sprite sprite;
@@ -22,11 +23,19 @@ namespace UMA.TexturePaint
         public Color additive = Color.clear;
         [Range(0, 16)] public int blur;
         public bool invert;
-        public bool HasSource => source == TexturePaintBrushSource.Color ||
-            (source == TexturePaintBrushSource.Overlay ? overlay != null : texture != null || sprite != null);
-        public TexturePaintProjectionChannelSource Clone() => (TexturePaintProjectionChannelSource)MemberwiseClone();
+        public bool HasSource => source == TexturePaintBrushSource.Texture && vdm?.enabled == true
+            ? !vdm.IsUnassigned : source == TexturePaintBrushSource.Color ||
+                (source == TexturePaintBrushSource.Overlay ? overlay != null : texture != null || sprite != null);
+        public TexturePaintProjectionChannelSource Clone()
+        {
+            var copy = (TexturePaintProjectionChannelSource)MemberwiseClone();
+            copy.vdm = vdm?.Clone();
+            return copy;
+        }
         public Texture Resolve(TextureSet set = null)
         {
+            if (source == TexturePaintBrushSource.Texture && vdm?.enabled == true)
+                return channel == TexturePaintChannel.NormalControl ? TexturePaintVDMSource.Resolve(vdm) : null;
             if (source == TexturePaintBrushSource.Color) return Texture2D.whiteTexture;
             if (source == TexturePaintBrushSource.Overlay)
                 return set != null && set.TryResolveOverlaySource(overlay, channel, normalConvention, invert,
@@ -35,11 +44,12 @@ namespace UMA.TexturePaint
         }
         public TexturePaintChannelSourceSettings ToChannelSettings() => new TexturePaintChannelSourceSettings
         {
-            source = source, sourceTexture = texture, sourceSprite = sprite, sourceOverlay = overlay,
+            vdm = vdm?.Clone(), source = source, sourceTexture = texture, sourceSprite = sprite, sourceOverlay = overlay,
             color = color, multiplier = multiplier, additive = additive, blur = blur, invert = invert, normalConvention = normalConvention
         };
         public void ApplyChannelSettings(TexturePaintChannelSourceSettings settings)
         {
+            vdm = settings.vdm?.Clone();
             source = settings.source; texture = settings.sourceTexture; sprite = settings.sourceSprite;
             overlay = settings.sourceOverlay; color = settings.color; invert = settings.invert;
             multiplier = settings.multiplier; additive = settings.additive;
@@ -113,6 +123,7 @@ namespace UMA.TexturePaint
         {
             if (source == TexturePaintBrushSource.Overlay) return TextureSet.GetOverlayFillCoverage(overlay);
             var preferred = PreferredSource();
+            if (preferred?.vdm?.enabled == true) return preferred.Resolve();
             if (preferred?.source == TexturePaintBrushSource.Texture)
                 return TexturePaintSpriteSource.Resolve(preferred.texture, preferred.sprite, preferred.channel,
                     preferred.normalConvention, preferred.invert, blur);

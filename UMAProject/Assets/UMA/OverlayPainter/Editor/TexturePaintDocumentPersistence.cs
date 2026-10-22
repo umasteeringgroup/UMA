@@ -32,6 +32,8 @@ namespace UMA.TexturePaint.Editor
         public static string GetContextKey(TexturePaintLaunchContext context)
         {
             if (context == null || !context.IsStandalone) return GetContextKey((DynamicCharacterAvatar)null);
+            if (context.kind == TexturePaintLaunchKind.WardrobeRecipe)
+                return Hash128.Compute("wardrobe-recipe|" + context.wardrobeRecipeGuid).ToString();
             List<string> identities = new List<string>();
             for (int i = 0; context.members != null && i < context.members.Count; i++)
                 identities.Add(context.members[i]?.slotGuid ?? string.Empty);
