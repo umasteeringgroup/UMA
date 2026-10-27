@@ -64,6 +64,7 @@ namespace UMA
         /// <param name="context">Context.</param>
         public UMAData.UMARecipe GetCachedRecipe( bool loadSlots= true, bool loadRaceData=false)
 		{
+            using var profile = UMACharacterBuildProfiler.GetRecipe.Auto();
 			Stopwatch sw = Stopwatch.StartNew();
 
             if (!cached || umaRecipe == null)

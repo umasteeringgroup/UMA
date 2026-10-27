@@ -1,6 +1,6 @@
 # UMA — Unity Multipurpose Avatar
 
-UMA 3.1f0 is an open-source character creation and customization system for Unity. It assembles optimized characters from reusable races, meshes, textures, materials, wardrobe recipes, DNA, and animation data.
+UMA 3 is an open-source character creation and customization system for Unity. It assembles optimized characters from reusable races, meshes, textures, materials, wardrobe recipes, DNA, and animation data.
 
 UMA can be used for player characters, crowds, character creators, modular NPCs, and runtime customization. Its authoring tools support artists and technical artists while its runtime systems handle mesh generation, texture compositing, wardrobe changes, DNA-driven shapes, LOD, and asset loading.
 
@@ -38,7 +38,8 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [What's New in UMA 3](!WhatsNewInUMA3.md)
 - [Getting Started](!GettingStarted.md)
 - [Dynamic Character Avatar](DynamicCharacterAvatar.md)
-- [UMA Generator Setup](UMAGeneratorSetup.md)
+- [Configure UMA and Generator Setup](UMAGeneratorSetup.md) — Maximum Speed/Fidelity presets, editor rebuilds, atlas sizes, and fitting methods.
+- [Generator Quality Profiles](GeneratorQuality.md)
 - [UMA Asset Indexer and Global Library](UMAAssetIndexer.md)
 - [Icon Creator and Thumbnail Sprite Atlases](IconCreator.md)
 - [Addressables](Addressables.md)

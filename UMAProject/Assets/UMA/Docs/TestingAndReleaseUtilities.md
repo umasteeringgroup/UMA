@@ -40,7 +40,7 @@ See [Incremental Mesh Combiner](IncrementalMeshCombiner.md) for the established 
 
 ## Release Asset Validation
 
-`UMA > Testing > Release Asset Validation...` verifies the UMA3 and UMA2 package boundaries, writes structured JSON, and offers guarded move/copy/retarget actions.
+`UMA > Testing > Release Asset Validation...` verifies the UMA3 and UMA2 package boundaries and checks indexed recipes plus recipes discovered recursively under Content, UMA3, and UMA2. Missing recipes in the index, recipe load errors, and unavailable slots/overlays fail the same structured JSON report and window verdict. The window also offers guarded move/copy/retarget actions for package-reference issues.
 
 See [Release Asset Validation](ReleaseAssetValidation.md) before using `Auto`, `Universal`, `Copy`, or `Delete Source`.
 

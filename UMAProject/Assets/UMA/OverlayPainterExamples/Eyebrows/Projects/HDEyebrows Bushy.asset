@@ -25,15 +25,18 @@ MonoBehaviour:
     selectedSlotGuid: 42d7d4e347f81db4ea50e4c473f01ec6
     umaMaterialGuid: ca0cf02793087b2478cf7fd76b0299a0
     udimGroupId: 
+    wardrobeRecipe: {fileID: 0}
+    wardrobeRecipeGuid: 
+    wardrobePreviewRace: {fileID: 0}
     resolution: 2048
     standaloneMeshTransformVersion: 2
     fixupRotations: 0
     slotRotationEuler: {x: 0, y: 0, z: 0}
     members:
     - slot: {fileID: 11400000, guid: 42d7d4e347f81db4ea50e4c473f01ec6, type: 2}
-      overlay: {fileID: 11400000, guid: 00effb2712ffb804c86d1795eadcb67a, type: 2}
+      overlay: {fileID: 11400000, guid: acb8604863962a349a07d6606c7d0b3f, type: 2}
       slotGuid: 42d7d4e347f81db4ea50e4c473f01ec6
-      overlayGuid: 00effb2712ffb804c86d1795eadcb67a
+      overlayGuid: acb8604863962a349a07d6606c7d0b3f
       sourceFingerprint: 
       tileNumber: 0
   createdUtc: 2026-10-11T02:14:30.4394433Z
@@ -1991,6 +1994,23 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        vdm:
+          enabled: 0
+          decoderVersion: 1
+          brush: {fileID: 0}
+          vectorTexture: {fileID: 0}
+          coverageMask: {fileID: 0}
+          coverage: 0
+          uAxis: {x: 1, y: 0, z: 0}
+          vAxis: {x: 0, y: 1, z: 0}
+          nAxis: {x: 0, y: 0, z: 1}
+          neutral: {x: 0, y: 0, z: 0}
+          componentScale: {x: 1, y: 1, z: 1}
+          flipImageY: 0
+          sourceGuid: 
+          sourceRevision: 
+          amplitude: 1
+          reliefEncodingScale: 1
         blur: 0
         multiplier: {r: 1, g: 1, b: 1, a: 1}
         additive: {r: 0, g: 0, b: 0, a: 0}
@@ -2029,7 +2049,24 @@ MonoBehaviour:
         dataAsset: {fileID: 0}
         compressedBytes: 
       channels:
-      - channel: 0
+      - sourceVDM:
+          enabled: 0
+          decoderVersion: 1
+          brush: {fileID: 0}
+          vectorTexture: {fileID: 0}
+          coverageMask: {fileID: 0}
+          coverage: 0
+          uAxis: {x: 1, y: 0, z: 0}
+          vAxis: {x: 0, y: 1, z: 0}
+          nAxis: {x: 0, y: 0, z: 1}
+          neutral: {x: 0, y: 0, z: 0}
+          componentScale: {x: 1, y: 1, z: 1}
+          flipImageY: 0
+          sourceGuid: 
+          sourceRevision: 
+          amplitude: 1
+          reliefEncodingScale: 1
+        channel: 0
         settings:
           channel: 0
           enabled: 1
@@ -2042,6 +2079,23 @@ MonoBehaviour:
           normalControlInvert: 0
           normalControlRadius: 1
           sourceSettings:
+            vdm:
+              enabled: 0
+              decoderVersion: 1
+              brush: {fileID: 0}
+              vectorTexture: {fileID: 0}
+              coverageMask: {fileID: 0}
+              coverage: 0
+              uAxis: {x: 1, y: 0, z: 0}
+              vAxis: {x: 0, y: 1, z: 0}
+              nAxis: {x: 0, y: 0, z: 1}
+              neutral: {x: 0, y: 0, z: 0}
+              componentScale: {x: 1, y: 1, z: 1}
+              flipImageY: 0
+              sourceGuid: 
+              sourceRevision: 
+              amplitude: 1
+              reliefEncodingScale: 1
             blur: 0
             multiplier: {r: 1, g: 1, b: 1, a: 1}
             additive: {r: 0, g: 0, b: 0, a: 0}
@@ -5551,6 +5605,23 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        vdm:
+          enabled: 0
+          decoderVersion: 1
+          brush: {fileID: 0}
+          vectorTexture: {fileID: 0}
+          coverageMask: {fileID: 0}
+          coverage: 0
+          uAxis: {x: 1, y: 0, z: 0}
+          vAxis: {x: 0, y: 1, z: 0}
+          nAxis: {x: 0, y: 0, z: 1}
+          neutral: {x: 0, y: 0, z: 0}
+          componentScale: {x: 1, y: 1, z: 1}
+          flipImageY: 0
+          sourceGuid: 
+          sourceRevision: 
+          amplitude: 1
+          reliefEncodingScale: 1
         blur: 0
         multiplier: {r: 1, g: 1, b: 1, a: 1}
         additive: {r: 0, g: 0, b: 0, a: 0}
@@ -5589,7 +5660,24 @@ MonoBehaviour:
         dataAsset: {fileID: 0}
         compressedBytes: 
       channels:
-      - channel: 0
+      - sourceVDM:
+          enabled: 0
+          decoderVersion: 1
+          brush: {fileID: 0}
+          vectorTexture: {fileID: 0}
+          coverageMask: {fileID: 0}
+          coverage: 0
+          uAxis: {x: 1, y: 0, z: 0}
+          vAxis: {x: 0, y: 1, z: 0}
+          nAxis: {x: 0, y: 0, z: 1}
+          neutral: {x: 0, y: 0, z: 0}
+          componentScale: {x: 1, y: 1, z: 1}
+          flipImageY: 0
+          sourceGuid: 
+          sourceRevision: 
+          amplitude: 1
+          reliefEncodingScale: 1
+        channel: 0
         settings:
           channel: 0
           enabled: 1
@@ -5602,6 +5690,23 @@ MonoBehaviour:
           normalControlInvert: 0
           normalControlRadius: 1
           sourceSettings:
+            vdm:
+              enabled: 0
+              decoderVersion: 1
+              brush: {fileID: 0}
+              vectorTexture: {fileID: 0}
+              coverageMask: {fileID: 0}
+              coverage: 0
+              uAxis: {x: 1, y: 0, z: 0}
+              vAxis: {x: 0, y: 1, z: 0}
+              nAxis: {x: 0, y: 0, z: 1}
+              neutral: {x: 0, y: 0, z: 0}
+              componentScale: {x: 1, y: 1, z: 1}
+              flipImageY: 0
+              sourceGuid: 
+              sourceRevision: 
+              amplitude: 1
+              reliefEncodingScale: 1
             blur: 0
             multiplier: {r: 1, g: 1, b: 1, a: 1}
             additive: {r: 0, g: 0, b: 0, a: 0}
@@ -7464,7 +7569,24 @@ MonoBehaviour:
         normalConvention: 0
         channelSourcesVersion: 1
         channelSources:
-        - channel: 0
+        - vdm:
+            enabled: 0
+            decoderVersion: 1
+            brush: {fileID: 0}
+            vectorTexture: {fileID: 0}
+            coverageMask: {fileID: 0}
+            coverage: 0
+            uAxis: {x: 1, y: 0, z: 0}
+            vAxis: {x: 0, y: 1, z: 0}
+            nAxis: {x: 0, y: 0, z: 1}
+            neutral: {x: 0, y: 0, z: 0}
+            componentScale: {x: 1, y: 1, z: 1}
+            flipImageY: 0
+            sourceGuid: 
+            sourceRevision: 
+            amplitude: 1
+            reliefEncodingScale: 1
+          channel: 0
           texture: {fileID: 0}
           sprite: {fileID: 0}
           normalConvention: 0
@@ -8230,6 +8352,23 @@ MonoBehaviour:
         initialValue: 1
       maskReferenceCaches: []
       maskSourceSettings:
+        vdm:
+          enabled: 0
+          decoderVersion: 1
+          brush: {fileID: 0}
+          vectorTexture: {fileID: 0}
+          coverageMask: {fileID: 0}
+          coverage: 0
+          uAxis: {x: 1, y: 0, z: 0}
+          vAxis: {x: 0, y: 1, z: 0}
+          nAxis: {x: 0, y: 0, z: 1}
+          neutral: {x: 0, y: 0, z: 0}
+          componentScale: {x: 1, y: 1, z: 1}
+          flipImageY: 0
+          sourceGuid: 
+          sourceRevision: 
+          amplitude: 1
+          reliefEncodingScale: 1
         blur: 0
         multiplier: {r: 1, g: 1, b: 1, a: 1}
         additive: {r: 0, g: 0, b: 0, a: 0}
@@ -8268,7 +8407,24 @@ MonoBehaviour:
         dataAsset: {fileID: 0}
         compressedBytes: 
       channels:
-      - channel: 0
+      - sourceVDM:
+          enabled: 0
+          decoderVersion: 1
+          brush: {fileID: 0}
+          vectorTexture: {fileID: 0}
+          coverageMask: {fileID: 0}
+          coverage: 0
+          uAxis: {x: 1, y: 0, z: 0}
+          vAxis: {x: 0, y: 1, z: 0}
+          nAxis: {x: 0, y: 0, z: 1}
+          neutral: {x: 0, y: 0, z: 0}
+          componentScale: {x: 1, y: 1, z: 1}
+          flipImageY: 0
+          sourceGuid: 
+          sourceRevision: 
+          amplitude: 1
+          reliefEncodingScale: 1
+        channel: 0
         settings:
           channel: 0
           enabled: 1
@@ -8281,6 +8437,23 @@ MonoBehaviour:
           normalControlInvert: 0
           normalControlRadius: 1
           sourceSettings:
+            vdm:
+              enabled: 0
+              decoderVersion: 1
+              brush: {fileID: 0}
+              vectorTexture: {fileID: 0}
+              coverageMask: {fileID: 0}
+              coverage: 0
+              uAxis: {x: 1, y: 0, z: 0}
+              vAxis: {x: 0, y: 1, z: 0}
+              nAxis: {x: 0, y: 0, z: 1}
+              neutral: {x: 0, y: 0, z: 0}
+              componentScale: {x: 1, y: 1, z: 1}
+              flipImageY: 0
+              sourceGuid: 
+              sourceRevision: 
+              amplitude: 1
+              reliefEncodingScale: 1
             blur: 0
             multiplier: {r: 1, g: 1, b: 1, a: 1}
             additive: {r: 0, g: 0, b: 0, a: 0}

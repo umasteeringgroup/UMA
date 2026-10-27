@@ -37,6 +37,8 @@ Archive member names and tar checksums are validated before import. Empty leaf f
 
 Install order is Core, the selected UMA URP/HDRP support, UMA3 Content, then optional UMA2Compatibility. The Welcome window reports each state and rebuilds the Global Library after a completed content import.
 
+After installation, open **Welcome > Configure UMA** to review skin/hair materials and apply Maximum Speed or Maximum Fidelity. The active Welcome page is highlighted. See [UMA Generator Setup](UMAGeneratorSetup.md) for preset behavior, automatic editor-avatar rebuilds, and the separate runtime/editor atlas resolutions. For a read-only Core installation, assign a project-owned copy of the generator prefab in UMA Settings before applying a preset.
+
 Core package assets remain read-only. Duplicate a Core-owned default, brush, or preset into an appropriate folder below `Assets` before editing it.
 
 If a tool asks for an output folder, choose an `Assets/...` location. UMA rejects or redirects writable output paths below `Packages`.

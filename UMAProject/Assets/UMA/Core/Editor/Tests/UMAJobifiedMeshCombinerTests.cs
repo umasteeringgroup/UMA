@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
@@ -18,6 +19,34 @@ namespace UMA.Editors.Tests
 
         [Serializable]
         private sealed class DerivedVertexDeltaAdjustmentCollection : VertexDeltaAdjustmentCollection { }
+
+        private sealed class SynchronousBurstScope : IDisposable
+        {
+            private readonly object options;
+            private readonly PropertyInfo enabledProperty, synchronousProperty;
+            private readonly bool wasEnabled, wasSynchronous;
+
+            public SynchronousBurstScope()
+            {
+                // Burst is optional; avoid a mandatory test-assembly reference.
+                var compiler = Type.GetType("Unity.Burst.BurstCompiler, Unity.Burst", false);
+                if (compiler == null) return;
+                options = compiler.GetField("Options", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+                enabledProperty = options.GetType().GetProperty("EnableBurstCompilation");
+                synchronousProperty = options.GetType().GetProperty("EnableBurstCompileSynchronously");
+                wasEnabled = (bool)enabledProperty.GetValue(options);
+                wasSynchronous = (bool)synchronousProperty.GetValue(options);
+                enabledProperty.SetValue(options, true);
+                synchronousProperty.SetValue(options, true);
+            }
+
+            public void Dispose()
+            {
+                if (options == null) return;
+                synchronousProperty.SetValue(options, wasSynchronous);
+                enabledProperty.SetValue(options, wasEnabled);
+            }
+        }
 
         [Test]
         [Category("UMA")]
@@ -499,6 +528,96 @@ namespace UMA.Editors.Tests
                 if (outputMesh != null) UnityEngine.Object.DestroyImmediate(outputMesh);
                 UnityEngine.Object.DestroyImmediate(asset);
                 UnityEngine.Object.DestroyImmediate(gameObject);
+            }
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        public void ChunkedBoneRemapPreservesVariableInfluencesAndDuplicateBindPoses(bool incremental)
+        {
+            // An asynchronous Burst compile can make this test pass on the managed
+            // fallback while the compiled job still has incompatible remapping code.
+            using var burst = new SynchronousBurstScope();
+            var root = new GameObject("Global");
+            var assets = new List<SlotDataAsset>();
+            var outputs = new List<Mesh>();
+            bool previousParallel = SkinnedMeshCombinerMeshAPI.UseParallelBoneWeights;
+            try
+            {
+                const int count = 2052; // Several complete chunks plus a tail in each slot.
+                var data = root.AddComponent<UMAData>();
+                data.umaRoot = root;
+                data.umaRecipe = new UMAData.UMARecipe();
+                data.skeleton = new UMASkeleton(root.transform);
+                var sources = new List<SkinnedMeshCombiner.CombineInstance>();
+                float[] weights = { .4f, .25f, .15f, .12f, .08f };
+                for (int s = 0; s < 3; s++)
+                {
+                    var asset = ScriptableObject.CreateInstance<SlotDataAsset>(); assets.Add(asset);
+                    asset.name = "RemapSource" + s;
+                    var mesh = UMA.Tests.UMAMeshPreparationTests.Mesh(count); asset.meshData = mesh;
+                    mesh.blendShapes = Array.Empty<UMABlendShape>();
+                    mesh.bindPoses = Enumerable.Range(0, 5).Select(i => Matrix4x4.Translate(new Vector3(i, s == 2 ? .01f : 0f, 0f))).ToArray();
+                    mesh.boneNameHashes = Enumerable.Repeat(UMAUtils.StringToHash("Global"), 5).ToArray();
+                    mesh.ManagedBonesPerVertex = Enumerable.Range(0, count).Select(i => (byte)(i % 2 == 0 ? 5 : 1)).ToArray();
+                    mesh.ManagedBoneWeights = mesh.ManagedBonesPerVertex.SelectMany(n => Enumerable.Range(0, n).Select(i =>
+                        new BoneWeight1 { boneIndex = i, weight = n == 1 ? 1f : weights[i] })).ToArray();
+                    if (s == 0)
+                    {
+                        mesh.colors32 = Enumerable.Repeat(new Color32(13, 37, 127, 255), count).ToArray();
+                        mesh.uv2 = Enumerable.Repeat(new Vector2(.2f, .3f), count).ToArray();
+                        mesh.uv3 = Enumerable.Repeat(new Vector2(.4f, .5f), count).ToArray();
+                        mesh.uv4 = Enumerable.Repeat(new Vector2(.6f, .7f), count).ToArray();
+                    }
+                    else { mesh.tangents = null; if (s == 2) mesh.normals = null; }
+                    var slot = new SlotData(asset); if (s == 1) slot.expandAlongNormal = 1000;
+                    sources.Add(new SkinnedMeshCombiner.CombineInstance { meshData = mesh, slotData = slot, targetSubmeshIndices = new[] { 0 } });
+                }
+                foreach (bool parallel in new[] { false, true, true })
+                {
+                    SkinnedMeshCombinerMeshAPI.UseParallelBoneWeights = parallel;
+                    var child = new GameObject("Output"); child.transform.SetParent(root.transform);
+                    var renderer = child.AddComponent<SkinnedMeshRenderer>(); renderer.rootBone = root.transform;
+                    if (incremental)
+                    {
+                        using (var preparation = SkinnedMeshCombinerMeshAPI.BeginIncrementalCombinePreparation(
+                            new SkinnedMeshCombinerMeshAPI.RendererBatch { Renderer = renderer, Sources = sources.ToArray(), AtlasResolution = 512 },
+                            data, new Dictionary<string, float>(), false, false, Quaternion.identity))
+                        {
+                            while (!preparation.IsComplete) preparation.Step();
+                            using (var pending = preparation.TakeResult()) pending.FinalizeMesh();
+                        }
+                    }
+                    else SkinnedMeshCombinerMeshAPI.CombineIntoRenderer(renderer, sources.ToArray(), data, 0, 512,
+                        new Dictionary<string, float>(), Quaternion.identity, false, false);
+                    outputs.Add(renderer.sharedMesh);
+                }
+                var a = outputs[0]; var b = outputs[1];
+                Assert.AreEqual(10, b.bindposes.Length, "Equal poses merge; different poses of the same bone remain distinct.");
+                CollectionAssert.AreEqual(a.bindposes, b.bindposes);
+                CollectionAssert.AreEqual(a.vertices, b.vertices); CollectionAssert.AreEqual(a.normals, b.normals);
+                CollectionAssert.AreEqual(a.tangents, b.tangents); CollectionAssert.AreEqual(a.colors32, b.colors32);
+                CollectionAssert.AreEqual(a.uv, b.uv); CollectionAssert.AreEqual(a.uv2, b.uv2);
+                CollectionAssert.AreEqual(a.uv3, b.uv3); CollectionAssert.AreEqual(a.uv4, b.uv4);
+                CollectionAssert.AreEqual(a.triangles, b.triangles); Assert.AreEqual(a.bounds, b.bounds);
+                CollectionAssert.AreEqual(a.GetBonesPerVertex().ToArray(), b.GetBonesPerVertex().ToArray());
+                CollectionAssert.AreEqual(a.GetAllBoneWeights().ToArray(), b.GetAllBoneWeights().ToArray());
+                CollectionAssert.AreEqual(a.GetAllBoneWeights().ToArray(), outputs[2].GetAllBoneWeights().ToArray(),
+                    "A repeated build must retain the same compiled remapping behavior.");
+                Assert.AreEqual(5, b.GetBonesPerVertex()[0], "Never truncate variable bone influences.");
+            }
+            finally
+            {
+                SkinnedMeshCombinerMeshAPI.UseParallelBoneWeights = previousParallel;
+                foreach (var mesh in outputs) if (mesh) UnityEngine.Object.DestroyImmediate(mesh);
+                foreach (var asset in assets)
+                {
+                    foreach (var sub in asset.meshData.submeshes) sub.DisposeNativeTriangles(true);
+                    UnityEngine.Object.DestroyImmediate(asset);
+                }
+                UnityEngine.Object.DestroyImmediate(root);
             }
         }
 
@@ -1000,6 +1119,12 @@ namespace UMA.Editors.Tests
                             Quaternion.identity);
 
                 Assert.DoesNotThrow(() => pending.Dispose());
+                foreach (var field in pending.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    if (!field.FieldType.IsGenericType || field.FieldType.GetGenericTypeDefinition() != typeof(NativeArray<>)) continue;
+                    Assert.IsFalse((bool)field.FieldType.GetProperty("IsCreated").GetValue(field.GetValue(pending)), field.Name);
+                }
+                Assert.DoesNotThrow(() => pending.Dispose(), "Cancellation cleanup must be idempotent.");
                 pending = null;
             }
             finally
@@ -1061,6 +1186,43 @@ namespace UMA.Editors.Tests
                 UnityEngine.Object.DestroyImmediate(mesh);
                 UnityEngine.Object.DestroyImmediate(gameObject);
             }
+        }
+
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        public void FailedBuildReleasesPreviousAvatarReferencesButKeepsScratchCapacity()
+        {
+            var root = new GameObject("Combiner reference cleanup test");
+            root.SetActive(false);
+            try
+            {
+                var combiner = root.AddComponent<UMAJobifiedMeshCombiner>();
+                var data = root.AddComponent<UMAData>();
+                var sources = new List<SkinnedMeshCombiner.CombineInstance>(16)
+                {
+                    new SkinnedMeshCombiner.CombineInstance { slotData = new SlotData() }
+                };
+                var materials = new List<UMAData.GeneratedMaterial>(16) { new UMAData.GeneratedMaterial() };
+                const BindingFlags fields = BindingFlags.Instance | BindingFlags.NonPublic;
+                var type = typeof(UMAJobifiedMeshCombiner);
+                type.GetField("combinedMeshList", fields).SetValue(combiner, sources);
+                type.GetField("combinedMaterialList", fields).SetValue(combiner, materials);
+                type.GetField("umaData", fields).SetValue(combiner, data);
+                type.GetField("renderers", fields).SetValue(combiner, new[] { root.AddComponent<SkinnedMeshRenderer>() });
+                ((List<UMAData.GeneratedMaterial>)type.GetField("_filteredMaterials", fields).GetValue(combiner)).Add(materials[0]);
+
+                Assert.Throws<NullReferenceException>(() => combiner.UpdateUMAMesh(false, null, 512));
+
+                Assert.That(sources, Is.Empty);
+                Assert.That(materials, Is.Empty);
+                Assert.That(sources.Capacity, Is.EqualTo(16));
+                Assert.That(materials.Capacity, Is.EqualTo(16));
+                Assert.That((List<UMAData.GeneratedMaterial>)type.GetField("_filteredMaterials", fields).GetValue(combiner), Is.Empty);
+                Assert.IsNull(type.GetField("umaData", fields).GetValue(combiner));
+                Assert.IsNull(type.GetField("renderers", fields).GetValue(combiner));
+            }
+            finally { UnityEngine.Object.DestroyImmediate(root); }
         }
 
         private static void AssertDescriptor(VertexAttributeDescriptor descriptor, VertexAttribute attribute, VertexAttributeFormat format, int dimension, int stream)

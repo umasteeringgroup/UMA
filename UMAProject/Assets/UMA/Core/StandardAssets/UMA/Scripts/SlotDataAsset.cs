@@ -1246,6 +1246,20 @@ namespace UMA
 
             // Create destination SlotDataAsset and copy metadata
             var newSlotData = ScriptableObject.CreateInstance<SlotDataAsset>();
+            try
+            {
+                return PopulateBakedSlot(p, newSlotData);
+            }
+            catch
+            {
+                // A failed bake must not orphan its transient ScriptableObject.
+                UMAUtils.DestroySceneObject(newSlotData);
+                throw;
+            }
+        }
+
+        private SlotDataAsset PopulateBakedSlot(BakeSlotParams p, SlotDataAsset newSlotData)
+        {
             newSlotData.Assign(this);
 
             if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
@@ -1400,11 +1414,11 @@ namespace UMA
                     }
 #if UMA_BURSTCOMPILE
                     {
-                        Unity.Collections.NativeArray<UnityEngine.Vector3> v = new Unity.Collections.NativeArray<UnityEngine.Vector3>(md.vertices, Unity.Collections.Allocator.TempJob);
-                        Unity.Collections.NativeArray<UnityEngine.Vector3> n = new Unity.Collections.NativeArray<UnityEngine.Vector3>(md.normals, Unity.Collections.Allocator.TempJob);
-                        Unity.Collections.NativeArray<UnityEngine.Vector2> uv = new Unity.Collections.NativeArray<UnityEngine.Vector2>(md.uv, Unity.Collections.Allocator.TempJob);
-                        Unity.Collections.NativeArray<UnityEngine.Vector4> t = new Unity.Collections.NativeArray<UnityEngine.Vector4>(md.tangents, Unity.Collections.Allocator.TempJob);
-                        Unity.Collections.NativeArray<int> tri = new Unity.Collections.NativeArray<int>(allTriangles, Unity.Collections.Allocator.TempJob);
+                        using var v = new Unity.Collections.NativeArray<UnityEngine.Vector3>(md.vertices, Unity.Collections.Allocator.TempJob);
+                        using var n = new Unity.Collections.NativeArray<UnityEngine.Vector3>(md.normals, Unity.Collections.Allocator.TempJob);
+                        using var uv = new Unity.Collections.NativeArray<UnityEngine.Vector2>(md.uv, Unity.Collections.Allocator.TempJob);
+                        using var t = new Unity.Collections.NativeArray<UnityEngine.Vector4>(md.tangents, Unity.Collections.Allocator.TempJob);
+                        using var tri = new Unity.Collections.NativeArray<int>(allTriangles, Unity.Collections.Allocator.TempJob);
 
                         var handle = UMA.MeshUtilities.RecalculateNormalsTangentsJobified(v, n, uv, t, tri, (p.smoothingAngleDegrees == 0f ? 180f : p.smoothingAngleDegrees));
                         handle.Complete();
@@ -1412,35 +1426,35 @@ namespace UMA
                         md.normals = n.ToArray();
                         md.tangents = t.ToArray();
 
-                        v.Dispose();
-                        n.Dispose();
-                        uv.Dispose();
-                        t.Dispose();
-                        tri.Dispose();
                         md.normalsModified = true;
                         md.tangentsModified = true;
                     }
 #else
                     {
                         var mesh = new UnityEngine.Mesh();
-                        if (UMA.UMAAssetIndexer.Instance != null && UMA.UMAAssetIndexer.Instance.Generator.Use32BitBuffers)
+                        try
                         {
-                            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                            if (UMA.UMAAssetIndexer.Instance != null && UMA.UMAAssetIndexer.Instance.Generator.Use32BitBuffers)
+                                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                            mesh.vertices = md.vertices;
+                            mesh.uv = md.uv;
+                            mesh.subMeshCount = md.submeshes.Length;
+                            for (int i =0; i < md.submeshes.Length; i++)
+                            {
+                                var tris = md.submeshes[i].GetBaseTriangles();
+                                mesh.SetIndices(tris ?? System.Array.Empty<int>(), UnityEngine.MeshTopology.Triangles, i);
+                            }
+                            mesh.RecalculateNormals();
+                            mesh.RecalculateTangents();
+                            md.normals = mesh.normals;
+                            md.tangents = mesh.tangents;
+                            md.normalsModified = true;
+                            md.tangentsModified = true;
                         }
-                        mesh.vertices = md.vertices;
-                        mesh.uv = md.uv;
-                        mesh.subMeshCount = md.submeshes.Length;
-                        for (int i =0; i < md.submeshes.Length; i++)
+                        finally
                         {
-                            var tris = md.submeshes[i].GetBaseTriangles();
-                            mesh.SetIndices(tris ?? System.Array.Empty<int>(), UnityEngine.MeshTopology.Triangles, i);
+                            UMAUtils.DestroySceneObject(mesh);
                         }
-                        mesh.RecalculateNormals();
-                        mesh.RecalculateTangents();
-                        md.normals = mesh.normals;
-                        md.tangents = mesh.tangents;
-                        md.normalsModified = true;
-                        md.tangentsModified = true;
                     }
 #endif
                 }

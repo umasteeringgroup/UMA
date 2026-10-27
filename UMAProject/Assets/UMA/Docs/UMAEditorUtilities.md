@@ -2,6 +2,16 @@
 
 This page is the directory for UMA editor tools whose targeting, generated assets, or side effects are not obvious from their menu labels.
 
+## Configure UMA
+
+Open **UMA > Welcome to UMA > Configure UMA**. The navigation highlights the displayed page with bold text and an accent bar. Review the selected skin and hair UMAMaterials, then apply Maximum Speed or Maximum Fidelity. These presets save generator-prefab and material changes and request **Rebuild all editor UMA** for eligible characters in the active scene.
+
+See [UMA Generator Setup](UMAGeneratorSetup.md) for hair-material backup/restoration, settings preserved by the presets, runtime versus editor atlas resolution, and scene/quality overrides.
+
+## Shared Color Tables
+
+Select a Shared Color Table asset to paste color settings copied from an avatar. In Advanced View, **Copy All Checked** and **Paste/Update** transfer named sets of colors, updating matching names and creating missing entries. See [Shared Colors in Dynamic Character Avatar](DynamicCharacterAvatar.md) for the single-color and bulk workflows.
+
 ## Batch Asset Inspection
 
 - [Examine Wearables](ExamineWearables.md): assign wardrobe regions, add hides and suppressions, repair packed slots, update materials, and validate recipe dependencies.
@@ -27,6 +37,8 @@ This page is the directory for UMA editor tools whose targeting, generated asset
 - [Prefab and Scene-Building Tools](PrefabAndSceneBuildingTools.md): non-UMA prefab conversion, generated prefab saving, scene-mesh slot creation, and Bone Builder.
 
 ## Discovery and Global Library
+
+In the Plans browser, use the selector at the top to choose a subfolder or **All folders**. Each folder includes its nested plans, and nested choices show their full folder hierarchy. The selection survives refreshes and switching between Plans and Documentation; a removed folder falls back to **All folders**. Documentation continues to use the same selector for UMA and plugin sources.
 
 - [Asset Discovery Utilities](AssetDiscoveryUtilities.md): Quick Finder, Favorites, component usage, material usage, and Tags Editor.
 - [UMA Asset Indexer and Global Library](UMAAssetIndexer.md): indexing, filters, rebuild, repair, backup, and cached references.

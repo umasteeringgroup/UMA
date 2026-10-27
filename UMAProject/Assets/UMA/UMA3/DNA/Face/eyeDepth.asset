@@ -65,7 +65,7 @@ MonoBehaviour:
         showHelp: 0
         EffectName: LeftEyeMove
         BoneName: LeftEye
-        Translation: {x: 0, y: 0, z: 0.0031}
+        Translation: {x: 0, y: 0, z: 0.004}
     - rid: 3901257799854719613
       type: {class: DNAEffect_BoneTranslate, ns: UMA, asm: UMA_Core}
       data:

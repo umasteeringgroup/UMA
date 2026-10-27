@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.1f5 (package version 3.1.5)
+
+- The Plans browser now uses the top selector to filter by subfolder, including nested folders. **All folders** restores the complete list; switching to documentation restores the plugin selector.
+- Consolidated UMA3 eyebrows into `Wearables/eyebrows`, keeping the authoritative `eyebrows_31` assets and GUIDs. Updated overlay textures, character presets, sample scenes, export scene sources, and Global Library entries to remove duplicate eyebrow recipes.
+- Release recipe validation now includes saved Global Library entries hidden by duplicate lookup names. It reports these as recipe name collisions, showing the selected asset, instead of incorrectly claiming they are missing from the index.
+- Release Asset Validation now includes recipe load failures and unavailable slots/overlays in its JSON report and overall verdict. It recursively discovers recipes under Content, UMA3, and UMA2 in addition to the Global Library, flags unindexed recipes, and verifies that indexed dependencies can load.
+- Added **Assets > UMA > Texture Utilities > Resize Selected** with standard maximum sizes and previews of importer-limit changes. It only lowers Maximum Size in default settings and enabled platform overrides, then reimports; source images, smaller limits, and other import settings are preserved. Moved **Convert selected textures to PNG** into the same submenu.
+- Renamed the Welcome window's configuration page to **Configure UMA** and its customization preset to **Maximum Fidelity**. Navigation now highlights the displayed page with a selected button, bold text, and an accent bar, including Render Pipeline Support.
+- Maximum Speed uses only compatible opaque Alpha Clip hair passes, backing up default/HDRP material assignments and their second passes. Reapplying Speed preserves the originals; Maximum Fidelity restores them. Both presets now request **Rebuild all editor UMA** after successful setup. Atlas resolutions and quality overrides remain unchanged. See [UMA Generator Setup](Docs/UMAGeneratorSetup.md).
+- Accelerated Best Fit Square for single regions, pairs, and equal tiles, and prepared current texture/cropping dimensions once per fit without caching them across builds. Fixed Multiple Heuristics to retain the winning layout and avoid a redundant packing attempt. Consistent, bounded edge rounding prevents atlas overflow and keeps shared regions aligned.
+- Added `UMA.Character.*`, `UMA.Recipe.*`, and `UMA.Assets.*` CPU Profiler markers to expose recipe preparation, merging, DNA setup, callbacks, and asset-loading overhead separately from generator work. The generator guide covers initial creation and repeated-edit workloads.
+- Added shared-color **Copy** in the avatar editor, including every color channel and material parameter without the color name. Shared Color Tables support **Paste Values...** and **Paste as New**, plus named **Copy All Checked** / **Paste/Update** in Advanced View. Fixed selecting color checkboxes in the standard view. See [Dynamic Character Avatar](Docs/DynamicCharacterAvatar.md).
+- Fixed UMAMaterial inspection repeatedly opening Inspector windows; material Inspect buttons are now associated with their assigned material fields. Unresolved `AssetItem._Type` errors include the current AssetItem as JSON for diagnosis.
+
 ## 3.1f3 (package version 3.1.3)
 
 - Added **Original Overlay (base)** visibility in the painter layer stack, allowing transparent replacement artwork without deleting the imported textures. Includes all-channel composition, undo/redo and document/recovery persistence.
@@ -12,7 +26,7 @@
 - Corrected path-generator shader color binding so linear data values such as metallic are not decoded as sRGB a second time.
 - Painter documents now retain raster artwork when a slot's equipped mesh has the same UV triangle layout with reordered vertices; this enables the eyebrow-shell example projects to load onto equipped characters.
 
-- Added **Welcome > UMA Defaults** with Maximum Speed (Atlas skin materials) and Maximum Flexibility (No Atlas) setup buttons, reviewable skin-material selection, Jobified generator configuration, bounded generation settings, and mode-specific UV cropping/bone cleanup.
+- Added Welcome-page configuration presets for Atlas/No Atlas skin materials, reviewable skin-material selection, Jobified generator configuration, bounded generation settings, and mode-specific UV cropping/bone cleanup. See [Configure UMA](Docs/UMAGeneratorSetup.md) for the current workflow.
 
 - Fixed projection symmetry switches not rendering mirrors. Projection layers now update mirrored and radial copies automatically across all channels, including Normal Control, with live placement edits and Undo/Redo.
 

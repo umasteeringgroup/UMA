@@ -1,5 +1,12 @@
 # What's New in UMA 3
 
+## UMA 3.1f5 additions
+
+- **Configure UMA:** open it from **UMA > Welcome to UMA** to choose Maximum Speed or Maximum Fidelity. Speed keeps compatible Alpha Clip hair passes and backs up the original assignments; Fidelity restores them. Both presets automatically request editor-avatar rebuilds. The active Welcome page stays highlighted. See [UMA Generator Setup](UMAGeneratorSetup.md) for the settings changed, separate runtime/editor atlas sizes, and override behavior.
+- **Faster atlas fitting:** Best Fit Square uses direct layouts for single regions, pairs, and equal tiles. Multiple Heuristics retains its winning layout and avoids redundant packing work. Atlas edges stay within bounds, with shared regions aligned. The [fitting guide](UMAGeneratorSetup.md) explains the quality and CPU tradeoffs.
+- **Shared-color clipboard:** copy all channels and material parameters from the avatar's Edit Shared Color dialog without copying its name. Paste into an existing Shared Color Table entry or create a new one. Advanced View can copy checked colors by name and update matching entries or add missing ones. See [Dynamic Character Avatar](DynamicCharacterAvatar.md).
+- **Editor fixes:** color checkboxes can be selected in the standard Shared Color Table view; UMAMaterial Inspect buttons no longer repeatedly open windows; unresolved AssetItem type errors include JSON diagnostic data.
+
 ## UMA 3.1f3 additions
 
 - Reduced aging throughout the 36-material sprite library to very minor wear: removed broad pale denim patches and large corrosion/peeling areas, kept chips and marks tiny, and softened the matching height, roughness and AO changes. Existing sprite references are preserved.

@@ -720,374 +720,278 @@ Material secondPass = gm.secondPassMaterial;
 		/// <summary>
 		/// JRRM - this is where we calculate the atlas rectangles.
 		/// </summary>
-		private void GenerateAtlasData()
-		{
-			SizeInt area = new SizeInt();
-			float atlasRes = umaGenerator.atlasResolution;
-			Vector2 StartScale = Vector2.one / (float)scaleFactor;
-			Vector2 Scale = Vector2.one;
-			bool scaled = false;
-
-			for (int i = 0; i < atlassedMaterials.Count; i++)
-			{
-				var generatedMaterial = atlassedMaterials[i];
-				UMASourceUVCropping.Prepare(generatedMaterial, umaGenerator, umaData);
-				if (generatedMaterial.umaMaterial.channels == null || generatedMaterial.umaMaterial.channels.Length == 0)
-                    continue;
-				
-
-                area.Width = umaGenerator.atlasResolution;
-				area.Height = umaGenerator.atlasResolution;
-
-				generatedMaterial.materialFragments.Sort(comparer);
-				generatedMaterial.resolutionScale = StartScale;
-				generatedMaterial.cropResolution = new Vector2(atlasRes, atlasRes);
-
-				// We need a better method than this.
-				// if "BestFitSquare"
-				switch (umaGenerator.AtlasOverflowFitMethod)
-				{
-					case UMAGeneratorBase.FitMethod.MultipleHeuristics:
-						scaled = CalculateBestFit(area, atlasRes, ref Scale, generatedMaterial);
-						break;
-                    case UMAGeneratorBase.FitMethod.BestFitSquare:
-                        scaled = OriginalCalculateBestFitSquare(area, atlasRes, ref Scale, generatedMaterial);
-                        break;
-                    default: // Shrink Textures
-						while (!CalculateRects(generatedMaterial, area).success)
-						{
-							generatedMaterial.resolutionScale = generatedMaterial.resolutionScale * umaGenerator.FitPercentageDecrease;
-						}
-						break;
-				}
-
-				UpdateSharedRect(generatedMaterial);
-				if (scaled)
-				{
-					generatedMaterial.resolutionScale = Scale * StartScale; 
-					UpdateAtlasRects(generatedMaterial, Scale);
-				}
-			}
-		}
-
-        // Try packing using several heuristics and pick the best used extents.
-        // "Best" is defined as the minimal bounding area (xMax * yMax), with a tie-breaker on max(xMax,yMax).
-        private bool TryPackBest(UMAData.GeneratedMaterial generatedMaterial, SizeInt area, out PackSize bestPack, out MaxRectsBinPack.FreeRectChoiceHeuristic bestHeuristic)
+        private void GenerateAtlasData()
         {
-            bestPack = default;
-            bestHeuristic = MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit;
-
-            // Evaluate a small set of robust heuristics
-            var heuristics = new[]
+            int atlasRes = umaGenerator.atlasResolution;
+            Vector2 startScale = Vector2.one / scaleFactor;
+            for (int i = 0; i < atlassedMaterials.Count; i++)
             {
-                MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestShortSideFit,
-                MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit,
-                MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestAreaFit
-            };
+                var generatedMaterial = atlassedMaterials[i];
+                UMASourceUVCropping.Prepare(generatedMaterial, umaGenerator, umaData);
+                if (generatedMaterial.umaMaterial.channels == null || generatedMaterial.umaMaterial.channels.Length == 0)
+                    continue;
 
-            bool anySuccess = false;
+                var area = new SizeInt { Width = atlasRes, Height = atlasRes };
+                generatedMaterial.materialFragments.Sort(comparer);
+                generatedMaterial.resolutionScale = startScale;
+                generatedMaterial.cropResolution = new Vector2(atlasRes, atlasRes);
+                Vector2 scale = Vector2.one;
+                bool scaled = false;
+                switch (umaGenerator.AtlasOverflowFitMethod)
+                {
+                    case UMAGeneratorBase.FitMethod.MultipleHeuristics:
+                        scaled = CalculateBestFit(area, atlasRes, ref scale, generatedMaterial);
+                        break;
+                    case UMAGeneratorBase.FitMethod.BestFitSquare:
+                        scaled = CalculateBestFitSquare(area, atlasRes, ref scale, generatedMaterial);
+                        break;
+                    default:
+                        while (!CalculateRects(generatedMaterial, area).success)
+                            generatedMaterial.resolutionScale *= umaGenerator.FitPercentageDecrease;
+                        break;
+                }
+
+                if (scaled)
+                {
+                    generatedMaterial.resolutionScale = Vector2.Scale(scale, startScale);
+                    UpdateAtlasRects(generatedMaterial, scale);
+                }
+                UpdateSharedRect(generatedMaterial);
+            }
+            preparedAtlasRectangles.Clear();
+        }
+
+        private struct AtlasRectangle
+        {
+            public UMAData.MaterialFragment Fragment;
+            public int Width, Height;
+        }
+
+        // Scratch storage only: dimensions are rebuilt from current inputs for every fit.
+        private readonly List<AtlasRectangle> preparedAtlasRectangles = new List<AtlasRectangle>();
+        private readonly List<Rect> bestAtlasRectangles = new List<Rect>();
+        private static readonly MaxRectsBinPack.FreeRectChoiceHeuristic[] AtlasHeuristics =
+        {
+            MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestShortSideFit,
+            MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit,
+            MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestAreaFit
+        };
+
+        private void PrepareAtlasRectangles(UMAData.GeneratedMaterial material)
+        {
+            preparedAtlasRectangles.Clear();
+            foreach (var fragment in material.materialFragments)
+            {
+                fragment.atlasRegion = Rect.zero;
+                if (fragment.isRectShared || fragment.isNoTextures) continue;
+                var textures = fragment.baseOverlay?.textureList;
+                if (textures == null || textures.Length == 0 || textures[0] == null) continue;
+
+                var texture = textures[0];
+                int width = Mathf.FloorToInt(texture.width * material.resolutionScale.x *
+                    fragment.slotData.overlayScale * fragment.sourceUVRect.width);
+                int height = Mathf.FloorToInt(texture.height * material.resolutionScale.y *
+                    fragment.slotData.overlayScale * fragment.sourceUVRect.height);
+                if (width <= 0 || height <= 0) continue;
+                preparedAtlasRectangles.Add(new AtlasRectangle { Fragment = fragment, Width = width, Height = height });
+            }
+        }
+
+        private PackSize PackAtlasRectangles(SizeInt area, MaxRectsBinPack.FreeRectChoiceHeuristic heuristic)
+        {
+            packTexture.Init(area.Width, area.Height, false);
+            PackSize pack = default;
+            foreach (var rectangle in preparedAtlasRectangles)
+            {
+                Rect region = packTexture.Insert(rectangle.Width, rectangle.Height, heuristic);
+                rectangle.Fragment.atlasRegion = region;
+                pack.Width = rectangle.Width;
+                pack.Height = rectangle.Height;
+                pack.xMax = Math.Max(pack.xMax, (int)region.xMax);
+                pack.yMax = Math.Max(pack.yMax, (int)region.yMax);
+                if (region.height == 0)
+                {
+                    if (umaGenerator.fitAtlas) return pack;
+                    if (Debug.isDebugBuild)
+                        Debug.Log("Atlas fitting is disabled and the atlas is too small. Textures that do not fit are skipped. Enable atlas fitting or increase the atlas resolution.",
+                            umaData != null ? umaData.gameObject : null);
+                }
+            }
+            pack.success = true;
+            return pack;
+        }
+
+        private PackSize CalculateRects(UMAData.GeneratedMaterial material, SizeInt area)
+        {
+            // Decrease Resolution changes the scale on each attempt.
+            PrepareAtlasRectangles(material);
+            return PackAtlasRectangles(area, MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit);
+        }
+
+        // Keep the coordinates belonging to the winning bounds, including when a later attempt fails.
+        private bool TryPackBest(SizeInt area, out PackSize bestPack, out PackSize longSideAttempt)
+        {
+            bestPack = longSideAttempt = default;
+            bestAtlasRectangles.Clear();
             long bestArea = long.MaxValue;
             int bestMaxSpan = int.MaxValue;
-
-            for (int h = 0; h < heuristics.Length; h++)
+            foreach (var heuristic in AtlasHeuristics)
             {
-                var pack = CalculateRects(generatedMaterial, area, heuristics[h]);
+                var pack = PackAtlasRectangles(area, heuristic);
+                if (heuristic == MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit)
+                    longSideAttempt = pack;
                 if (!pack.success) continue;
 
-                // Used extents (what you later scale against)
-                int usedW = Math.Max(1, pack.xMax);
-                int usedH = Math.Max(1, pack.yMax);
-                long usedArea = (long)usedW * (long)usedH;
-                int maxSpan = Math.Max(usedW, usedH);
-
-                // Prefer smallest used area, break ties by smaller max span
+                long usedArea = (long)Math.Max(1, pack.xMax) * Math.Max(1, pack.yMax);
+                int maxSpan = Math.Max(pack.xMax, pack.yMax);
                 if (usedArea < bestArea || (usedArea == bestArea && maxSpan < bestMaxSpan))
                 {
                     bestArea = usedArea;
                     bestMaxSpan = maxSpan;
                     bestPack = pack;
-                    bestHeuristic = heuristics[h];
-                    anySuccess = true;
+                    bestAtlasRectangles.Clear();
+                    foreach (var rectangle in preparedAtlasRectangles)
+                        bestAtlasRectangles.Add(rectangle.Fragment.atlasRegion);
                 }
             }
-
-            return anySuccess;
+            if (!bestPack.success) return false;
+            for (int i = 0; i < preparedAtlasRectangles.Count; i++)
+                preparedAtlasRectangles[i].Fragment.atlasRegion = bestAtlasRectangles[i];
+            return true;
         }
 
-        // Overload that allows choosing a heuristic per attempt.
-        private PackSize CalculateRects(UMAData.GeneratedMaterial material, SizeInt area, MaxRectsBinPack.FreeRectChoiceHeuristic heuristic)
+        private bool CalculateBestFit(SizeInt area, float atlasRes, ref Vector2 scale, UMAData.GeneratedMaterial material)
         {
-            Rect nullRect = new Rect(0, 0, 0, 0);
-            PackSize lastPackSize = new PackSize();
-
-            packTexture.Init(area.Width, area.Height, false); // rotations disabled to keep UVs unmodified
-
-            for (int atlasElementIndex = 0; atlasElementIndex < material.materialFragments.Count; atlasElementIndex++)
-            {
-                var tempMaterialDef = material.materialFragments[atlasElementIndex];
-                if (tempMaterialDef.isRectShared) continue;
-                if (tempMaterialDef.isNoTextures) continue;
-                if (tempMaterialDef.baseOverlay == null) continue;
-                if (tempMaterialDef.baseOverlay.textureList == null) continue;
-                if (tempMaterialDef.baseOverlay.textureList[0] == null)
-                {
-                    // No base texture; skip but continue packing
-                    continue;
-                }
-
-                int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale * tempMaterialDef.sourceUVRect.width);
-                int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale * tempMaterialDef.sourceUVRect.height);
-
-                // Avoid zero-size inserts which can cause infinite loops
-                if (width == 0 || height == 0)
-                {
-                    tempMaterialDef.atlasRegion = nullRect;
-                    continue;
-                }
-
-                tempMaterialDef.atlasRegion = packTexture.Insert(width, height, heuristic);
-                lastPackSize.Width = width;
-                lastPackSize.Height = height;
-
-                if (tempMaterialDef.atlasRegion.xMax > lastPackSize.xMax) lastPackSize.xMax = (int)tempMaterialDef.atlasRegion.xMax;
-                if (tempMaterialDef.atlasRegion.yMax > lastPackSize.yMax) lastPackSize.yMax = (int)tempMaterialDef.atlasRegion.yMax;
-
-                if (tempMaterialDef.atlasRegion == nullRect)
-                {
-                    if (umaGenerator.fitAtlas)
-                    {
-                        lastPackSize.success = false;
-                        return lastPackSize;
-                    }
-                    else
-                    {
-#if UNITY_EDITOR
-                        Debug.LogError("Atlas resolution is too small, not all textures will fit.", umaData.gameObject);
-#endif
-                    }
-                }
-            }
-            lastPackSize.success = true;
-            return lastPackSize;
-        }
-
-        private bool CalculateBestFit(SizeInt area, float atlasRes, ref Vector2 Scale, UMAData.GeneratedMaterial generatedMaterial)
-        {
+            PrepareAtlasRectangles(material);
+            if (preparedAtlasRectangles.Count == 0) return false;
             while (true)
             {
-                // Try several heuristics and pick the best fit in the current area.
-                if (TryPackBest(generatedMaterial, area, out var bestPack, out _))
-                {
-                    // If we expanded beyond nominal atlas size, compute precise scale using used extents.
-                    if (area.Width != umaGenerator.atlasResolution || area.Height != umaGenerator.atlasResolution)
-                    {
-                        float usedW = Mathf.Max(1, bestPack.xMax);
-                        float usedH = Mathf.Max(1, bestPack.yMax);
-                        Scale.x = atlasRes / usedW;
-                        Scale.y = atlasRes / usedH;
-                        return true;
-                    }
-                    // Everything fit in the base square area; no scaling required.
-                    return false;
-                }
+                if (TryPackBest(area, out var bestPack, out var longSideAttempt))
+                    return GetAtlasScale(area, atlasRes, bestPack, ref scale);
+                // Reuse the failed long-side attempt instead of packing it a fourth time.
+                GrowAtlasArea(ref area, longSideAttempt);
+            }
+        }
 
-                // Failed to pack: grow the smaller dimension just enough to fit the last attempted block.
-                // We approximate needed growth from bestPack bounds (xMax/yMax) and last attempted rect size.
-                // Use the most recent attempt's sizes (from TryPackBest call) by re-running a single pass to get metrics.
-                var lastAttempt = CalculateRects(generatedMaterial, area, MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit);
+        private bool CalculateBestFitSquare(SizeInt area, float atlasRes, ref Vector2 scale, UMAData.GeneratedMaterial material)
+        {
+            PrepareAtlasRectangles(material);
+            if (preparedAtlasRectangles.Count == 0) return false;
+            if (umaGenerator.fitAtlas && TryFitSimpleRectangles(atlasRes, ref scale, out bool scaled))
+                return scaled;
+            while (true)
+            {
+                var pack = PackAtlasRectangles(area, MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit);
+                if (pack.success) return GetAtlasScale(area, atlasRes, pack, ref scale);
+                GrowAtlasArea(ref area, pack);
+            }
+        }
 
-                int projectedWidth = lastAttempt.xMax + lastAttempt.Width;
-                int projectedHeight = lastAttempt.yMax + lastAttempt.Height;
+        private static bool GetAtlasScale(SizeInt area, float atlasRes, PackSize pack, ref Vector2 scale)
+        {
+            if (area.Width == atlasRes && area.Height == atlasRes) return false;
+            scale = new Vector2(atlasRes / Math.Max(1, pack.xMax), atlasRes / Math.Max(1, pack.yMax));
+            return true;
+        }
 
+        private static void GrowAtlasArea(ref SizeInt area, PackSize pack)
+        {
+            // Retain the existing growth order for mixed rectangles.
+            checked
+            {
                 if (area.Width < area.Height)
                 {
-                    // Increase width
-                    if (projectedWidth <= area.Width)
-                    {
-                        // Ensure growth each loop
-                        area.Width += Math.Max(1, lastAttempt.Width);
-                    }
-                    else
-                    {
-                        area.Width = projectedWidth;
-                    }
+                    int projected = pack.xMax + pack.Width;
+                    area.Width = projected > area.Width ? projected : area.Width + Math.Max(1, pack.Width);
                 }
                 else
                 {
-                    // Increase height
-                    if (projectedHeight <= area.Height)
-                    {
-                        area.Height += Math.Max(1, lastAttempt.Height);
-                    }
-                    else
-                    {
-                        area.Height = projectedHeight;
-                    }
+                    int projected = pack.yMax + pack.Height;
+                    area.Height = projected > area.Height ? projected : area.Height + Math.Max(1, pack.Height);
                 }
             }
-            // no exit here! :)
         }
 
-        private bool OriginalCalculateBestFitSquare(SizeInt area, float atlasRes, ref Vector2 Scale, UMAData.GeneratedMaterial generatedMaterial)
+        private bool TryFitSimpleRectangles(float atlasRes, ref Vector2 scale, out bool scaled)
         {
-            while (true)
+            scaled = false;
+            int count = preparedAtlasRectangles.Count;
+            var first = preparedAtlasRectangles[0];
+            bool identical = true;
+            for (int i = 1; i < count; i++)
+                if (preparedAtlasRectangles[i].Width != first.Width || preparedAtlasRectangles[i].Height != first.Height)
+                { identical = false; break; }
+            if (!identical && count != 2) return false;
+
+            int bestColumns = 1;
+            float bestMinScale = -1, bestPixelScale = -1;
+            long bestArea = long.MaxValue, bestSpan = long.MaxValue;
+            Vector2 bestScale = Vector2.one;
+            for (int columns = 1; columns <= count; columns++)
             {
-                PackSize lastRect = 
-					
-					
-					CalculateRects(generatedMaterial, area);
-                if (lastRect.success)
+                long width, height;
+                if (identical)
                 {
-                    if (area.Width != umaGenerator.atlasResolution || area.Height != umaGenerator.atlasResolution)
-                    {
-						float neww = lastRect.xMax; // was area.Width;
-						float newh = lastRect.yMax; // was area.Height;
-
-                        Scale.x = atlasRes / neww;
-                        Scale.y = atlasRes / newh;
-						return true;
-                    }
-                    return false; // Everything fit, let's leave.
+                    width = (long)columns * first.Width;
+                    height = (long)((count + columns - 1) / columns) * first.Height;
                 }
-
-                int projectedWidth = lastRect.xMax + lastRect.Width;
-                int projectedHeight = lastRect.yMax + lastRect.Height;
-
-
-				if (area.Width < area.Height)
+                else
                 {
-					// increase width.
-					if (projectedWidth <= area.Width)
-					{
-						// If projectedWidth < the area width, then it's not
-						// increasing each loop, and it MUST.
-						area.Width += lastRect.Width;
-					}
-					else
-					{
-						area.Width = projectedWidth;
-					}
-				}
-				else
+                    var second = preparedAtlasRectangles[1];
+                    width = columns == 1 ? Math.Max(first.Width, second.Width) : (long)first.Width + second.Width;
+                    height = columns == 1 ? (long)first.Height + second.Height : Math.Max(first.Height, second.Height);
+                }
+                // Favor detail in the weaker axis, then total texels. Never upscale a source axis.
+                Vector2 candidate = new Vector2(Mathf.Min(1, atlasRes / width), Mathf.Min(1, atlasRes / height));
+                float minScale = Mathf.Min(candidate.x, candidate.y);
+                float pixelScale = candidate.x * candidate.y;
+                long usedArea = width * height, span = Math.Max(width, height);
+                if (minScale > bestMinScale || minScale == bestMinScale &&
+                    (pixelScale > bestPixelScale || pixelScale == bestPixelScale &&
+                    (usedArea < bestArea || usedArea == bestArea && span < bestSpan)))
                 {
-					// increase height
-					if (projectedHeight <= area.Height)
-					{
-						area.Height += lastRect.Height;
-					}
-					else
-					{
-						area.Height = projectedHeight;
-					}
-				}
+                    bestColumns = columns;
+                    bestMinScale = minScale;
+                    bestPixelScale = pixelScale;
+                    bestArea = usedArea;
+                    bestSpan = span;
+                    bestScale = candidate;
+                }
             }
-			// no exit here! :)
+            for (int i = 0; i < count; i++)
+            {
+                var rectangle = preparedAtlasRectangles[i];
+                rectangle.Fragment.atlasRegion = new Rect(
+                    (long)(i % bestColumns) * first.Width, (long)(i / bestColumns) * first.Height,
+                    rectangle.Width, rectangle.Height);
+            }
+            scale = bestScale;
+            scaled = scale.x != 1 || scale.y != 1;
+            return true;
         }
 
-        private void UpdateAtlasRects(UMAData.GeneratedMaterial generatedMaterial, Vector2 Scale)
-		{
-			for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
-			{
-				var fragment = generatedMaterial.materialFragments[i];
-				Vector2 pos = fragment.atlasRegion.position * Scale; //ceil ?
-				Vector2 size = fragment.atlasRegion.size *= Scale; // floor ?
-				pos.x = Mathf.Ceil(pos.x);
-				pos.y = Mathf.Ceil(pos.y);
-				size.x = Mathf.Floor(size.x);
-				size.y = Mathf.Floor(size.y);
-				fragment.atlasRegion.Set(pos.x, pos.y, size.x, size.y);
-			}
-		}
+        private void UpdateAtlasRects(UMAData.GeneratedMaterial material, Vector2 scale)
+        {
+            int atlasRes = umaGenerator.atlasResolution;
+            foreach (var fragment in material.materialFragments)
+            {
+                if (fragment.isRectShared) continue;
+                Rect region = fragment.atlasRegion;
+                // Round shared edges identically. Rounding position and size separately can
+                // overlap neighbors or extend one pixel past the atlas due to float error.
+                int xMin = Mathf.Clamp(Mathf.CeilToInt(region.xMin * scale.x), 0, atlasRes);
+                int yMin = Mathf.Clamp(Mathf.CeilToInt(region.yMin * scale.y), 0, atlasRes);
+                int xMax = Mathf.Clamp(Mathf.CeilToInt(region.xMax * scale.x), xMin, atlasRes);
+                int yMax = Mathf.Clamp(Mathf.CeilToInt(region.yMax * scale.y), yMin, atlasRes);
+                fragment.atlasRegion = Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+            }
+        }
 
-
-		private void UpdateSharedRect(UMAData.GeneratedMaterial generatedMaterial)
-		{
-			for (int i = 0; i < generatedMaterial.materialFragments.Count; i++)
-			{
-				var fragment = generatedMaterial.materialFragments[i];
-				if (fragment.isRectShared)
-				{
-					fragment.atlasRegion = fragment.rectFragment.atlasRegion;
-				}
-			}
-		}
-
-
-		// TODO:
-		// Calculate the smallest square to hold rectangles.
-
-		private PackSize CalculateRects(UMAData.GeneratedMaterial material, SizeInt area)
-		{
-			Rect nullRect = new Rect(0, 0, 0, 0);
-			PackSize lastPackSize = new PackSize();
-
-			packTexture.Init(area.Width, area.Height, false);
-
-			for (int atlasElementIndex = 0; atlasElementIndex < material.materialFragments.Count; atlasElementIndex++)
-			{
-				var tempMaterialDef = material.materialFragments[atlasElementIndex];
-				if (tempMaterialDef.isRectShared)
-                    continue;
-                if (tempMaterialDef.isNoTextures)
-                    continue;
-
-                if (tempMaterialDef.baseOverlay == null)
-                    continue;
-                if (tempMaterialDef.baseOverlay.textureList == null)
-                {
-					continue;
-                }
-				if (tempMaterialDef.baseOverlay.textureList[0] == null)
-				{
-					var t = tempMaterialDef.overlayData[0].textureArray;
-					continue;
-				}
-
-
-				int width = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].width * material.resolutionScale.x * tempMaterialDef.slotData.overlayScale * tempMaterialDef.sourceUVRect.width);
-				int height = Mathf.FloorToInt(tempMaterialDef.baseOverlay.textureList[0].height * material.resolutionScale.y * tempMaterialDef.slotData.overlayScale * tempMaterialDef.sourceUVRect.height);
-
-				// If either width or height are 0 we will end up with nullRect and potentially loop forever
-				if (width == 0 || height == 0)
-				{
-					tempMaterialDef.atlasRegion = nullRect;
-					continue;
-				}
-
-				tempMaterialDef.atlasRegion = packTexture.Insert(width, height, MaxRectsBinPack.FreeRectChoiceHeuristic.RectBestLongSideFit);
-				lastPackSize.Width = width;
-				lastPackSize.Height = height;
-				if (tempMaterialDef.atlasRegion.xMax > lastPackSize.xMax)
-                {
-                    lastPackSize.xMax = (int)tempMaterialDef.atlasRegion.xMax;
-                }
-
-                if (tempMaterialDef.atlasRegion.yMax > lastPackSize.yMax)
-                {
-                    lastPackSize.yMax = (int)tempMaterialDef.atlasRegion.yMax;
-                }
-
-                if (tempMaterialDef.atlasRegion == nullRect)
-				{
-					if (umaGenerator.fitAtlas)
-					{
-						//if (Debug.isDebugBuild) // JRRM : re-enable this
-						//	Debug.LogWarning("Atlas resolution is too small, Textures will be reduced.", umaData.gameObject);
-						lastPackSize.success = false;
-						return lastPackSize;
-					}
-					else
-					{
-						if (Debug.isDebugBuild)
-                        {
-                            Debug.LogError("Atlas resolution is too small, not all textures will fit.", umaData.gameObject);
-                        }
-                    }
-				}
-			}
-			lastPackSize.success = true;
-			return lastPackSize;
-		}
+        private void UpdateSharedRect(UMAData.GeneratedMaterial material)
+        {
+            foreach (var fragment in material.materialFragments)
+                if (fragment.isRectShared) fragment.atlasRegion = fragment.rectFragment.atlasRegion;
+        }
 
 		private bool OldCalculateRects(UMAData.GeneratedMaterial material)
 		{
@@ -1131,7 +1035,7 @@ Material secondPass = gm.secondPassMaterial;
 					{
 						if (Debug.isDebugBuild)
                         {
-                            Debug.LogError("Atlas resolution is too small, not all textures will fit.", umaData.gameObject);
+                            Debug.Log("Atlas fitting is disabled and the atlas is too small. Textures that do not fit are skipped. Enable atlas fitting or increase the atlas resolution.", umaData.gameObject);
                         }
                     }
 				}

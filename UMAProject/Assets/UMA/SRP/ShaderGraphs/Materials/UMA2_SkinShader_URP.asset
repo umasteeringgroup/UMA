@@ -17,7 +17,12 @@ MonoBehaviour:
   _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
-  materialType: 1
+  _hasSpeedMaterialBackup: 0
+  _speedBackupMaterial: {fileID: 0}
+  _speedBackupSecondPass: {fileID: 0}
+  _speedBackupHDRPMaterial: {fileID: 0}
+  _speedBackupHDRPSecondPass: {fileID: 0}
+  materialType: 2
   channels:
   - channelType: 0
     textureFormat: 0

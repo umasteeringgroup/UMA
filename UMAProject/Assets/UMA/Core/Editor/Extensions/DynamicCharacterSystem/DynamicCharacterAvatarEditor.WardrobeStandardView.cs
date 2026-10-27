@@ -82,7 +82,7 @@ namespace UMA.CharacterSystem.Editors
                     if (standardWardrobeFilter == 1 && equipped.recipe == null) continue;
                     visibleRegions++;
                     Rect row = GUILayoutUtility.GetRect(0f, WardrobeCardHeight, GUILayout.ExpandWidth(true));
-                    if (DrawWardrobeCard(row, region, equipped.recipe, equipped.name, race.raceName))
+                    if (DrawWardrobeCard(row, region, equipped.recipe, equipped.name, race.raceName, showInspect: true))
                     {
                         PopupWindow.Show(row, new DefaultWardrobeRegionPicker(
                             region,
@@ -220,7 +220,7 @@ namespace UMA.CharacterSystem.Editors
         }
 
         private static bool DrawWardrobeCard(Rect row, string region, UMATextRecipe recipe, string serializedName,
-            string raceName, bool selected = false)
+            string raceName, bool selected = false, bool showInspect = false)
         {
             EditorGUI.DrawRect(row, selected
                 ? new Color(0.38f, 0.68f, 1f, 1f)
@@ -233,13 +233,32 @@ namespace UMA.CharacterSystem.Editors
             Rect iconRect = new Rect(iconFrame.x + 2f, iconFrame.y + 2f, iconFrame.width - 4f, iconFrame.height - 4f);
             DrawWardrobeIcon(iconRect, recipe, raceName);
 
-            Rect textRect = new Rect(iconFrame.xMax + 10f, row.y + 7f,
-                Mathf.Max(0f, row.xMax - iconFrame.xMax - 16f), 22f);
+            float lineHeight = EditorGUIUtility.singleLineHeight;
+            Rect textRect = new Rect(iconFrame.xMax + 10f, row.y + (showInspect ? 4f : 7f),
+                Mathf.Max(0f, row.xMax - iconFrame.xMax - 16f), showInspect ? lineHeight : 22f);
             GUI.Label(textRect, "Region: " + region, WardrobeRegionStyle);
-            textRect.y += 27f;
+            textRect.y += showInspect ? lineHeight : 27f;
             string item = recipe != null ? RecipeDisplayName(recipe) : serializedName;
             GUI.Label(textRect, string.IsNullOrWhiteSpace(item) ? "Unequipped, Click to select" : "Item: " + item,
                 WardrobeItemStyle);
+            if (showInspect)
+            {
+                Rect inspectRect = new Rect(textRect.x, textRect.yMax + 3f,
+                    Mathf.Min(64f, textRect.width), lineHeight);
+                bool changed = GUI.changed;
+                using (new EditorGUI.DisabledScope(recipe == null))
+                {
+                    // Handle this button before the row so inspecting never opens the recipe picker.
+                    if (GUI.Button(inspectRect, new GUIContent("Inspect", "Inspect this wardrobe recipe"), EditorStyles.miniButton))
+                    {
+                        EditorApplication.delayCall += () =>
+                        {
+                            if (recipe != null) InspectorUtlity.InspectTarget(recipe);
+                        };
+                    }
+                }
+                GUI.changed = changed;
+            }
             return GUI.Button(row, GUIContent.none, GUIStyle.none);
         }
 

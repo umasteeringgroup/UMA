@@ -90,8 +90,11 @@ namespace UMA.Editors
                         if (GUILayout.Button("Duplicate Selected"))
                             DuplicateSelectedColor(table);
                 }
-                EditorGUILayout.PropertyField(
-                    serializedObject.FindProperty("colors"), true);
+                DrawClipboardControls(table);
+                var colors = serializedObject.FindProperty("colors");
+                for (int i = 0; i < colors.arraySize; i++)
+                    colors.GetArrayElementAtIndex(i).FindPropertyRelative("showSelected").boolValue = true;
+                EditorGUILayout.PropertyField(colors, true);
             }
             using (inspectorView.Section("Utilities",
                 "Bulk base-color flags are safe palette utilities. Donor-material property discovery, renderer preview and applying values to selected materials are available in Advanced View."))
@@ -111,7 +114,6 @@ namespace UMA.Editors
         private void ProcessStandardColorCommands(SharedColorTable table)
         {
             if (table.colors == null) return;
-            int selected = -1;
             for (int i = 0; i < table.colors.Length; i++)
             {
                 OverlayColorData color = table.colors[i];
@@ -136,9 +138,6 @@ namespace UMA.Editors
                     serializedObject.Update();
                     return;
                 }
-                if (!color.isSelected) continue;
-                if (selected < 0) selected = i;
-                else color.isSelected = false;
             }
         }
 
@@ -222,6 +221,8 @@ namespace UMA.Editors
                 }
             }
             EditorGUILayout.EndHorizontal();
+            DrawClipboardControls(sct);
+            DrawBulkClipboardControls(sct);
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Set all as base color"))
             {
@@ -237,30 +238,12 @@ namespace UMA.Editors
             bool hasDeletes = false;
             int moveUpIndex = -1;
             int moveDownIndex = -1;
-            int newlySelectedIndex = -1;
-            int firstSelectedIndex = -1;
-            int selectedCount = 0;
             for (int i = 0; i < sct.colors.Length; i++)
             {
                 var c = colorsProperty.GetArrayElementAtIndex(i);
                 var showSelected = c.FindPropertyRelative("showSelected");
-                var isSelected = c.FindPropertyRelative("isSelected");
-                bool wasSelected = isSelected.boolValue;
                 showSelected.boolValue = true;
                 EditorGUILayout.PropertyField(c, true);
-                if (!wasSelected && isSelected.boolValue)
-                {
-                    newlySelectedIndex = i;
-                }
-
-                if (isSelected.boolValue)
-                {
-                    selectedCount++;
-                    if (firstSelectedIndex < 0)
-                    {
-                        firstSelectedIndex = i;
-                    }
-                }
 
                 var deleteThis = c.FindPropertyRelative("deleteThis");
                 var moveUpThis = c.FindPropertyRelative("moveUpThis");
@@ -280,13 +263,6 @@ namespace UMA.Editors
                     moveDownIndex = i;
                 }
             }
-
-            if (selectedCount > 1 || newlySelectedIndex >= 0)
-            {
-                int selectedIndexToKeep = newlySelectedIndex >= 0 ? newlySelectedIndex : firstSelectedIndex;
-                SetExclusiveSelectedColor(colorsProperty, selectedIndexToKeep);
-            }
-
 
             serializedObject.ApplyModifiedProperties();
 
@@ -325,6 +301,123 @@ namespace UMA.Editors
                 serializedObject.ApplyModifiedProperties();
             }
             }
+        }
+
+        private void DrawBulkClipboardControls(SharedColorTable table)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                using (new EditorGUI.DisabledScope(GetSelectedOverlayColorData(table) == null))
+                    if (GUILayout.Button(new GUIContent("Copy All Checked", "Copy every checked color, including its name, channels and material parameters.")))
+                    {
+                        serializedObject.ApplyModifiedProperties();
+                        SharedColorClipboard.instance.CopyChecked(table.colors);
+                    }
+                using (new EditorGUI.DisabledScope(!SharedColorClipboard.instance.HasNamedColors))
+                    if (GUILayout.Button(new GUIContent("Paste/Update", "Paste the copied checked colors. Update matching names (case-sensitive) and add missing names.")))
+                    {
+                        PasteOrUpdateColors(table);
+                        GUIUtility.ExitGUI();
+                    }
+            }
+        }
+
+        private void PasteOrUpdateColors(SharedColorTable table)
+        {
+            if (this == null || table == null || target != table || !SharedColorClipboard.instance.HasNamedColors) return;
+            serializedObject.ApplyModifiedProperties();
+            var copies = SharedColorClipboard.instance.GetNamedColors();
+            Undo.RegisterCompleteObjectUndo(table, "Paste/Update Shared Colors");
+            var colors = new List<OverlayColorData>(table.colors ?? System.Array.Empty<OverlayColorData>());
+            foreach (var copy in copies)
+            {
+                // Match all existing duplicates as well, without adding more entries of that name.
+                bool found = false;
+                foreach (var color in colors)
+                {
+                    if (color == null || !string.Equals(color.name, copy.name, System.StringComparison.Ordinal)) continue;
+                    SharedColorClipboard.CopyValues(copy, color);
+                    found = true;
+                }
+                if (!found)
+                {
+                    copy.showSelected = true;
+                    colors.Add(copy);
+                }
+                table.channelCount = Mathf.Max(table.channelCount, copy.channelMask.Length, copy.channelAdditiveMask.Length);
+            }
+            table.colors = colors.ToArray();
+            foreach (var color in table.colors)
+                color?.EnsureChannelsExact(table.channelCount);
+            EditorUtility.SetDirty(table);
+            serializedObject.Update();
+            serializedObject.FindProperty("colors").isExpanded = true;
+            Repaint();
+        }
+
+        private void DrawClipboardControls(SharedColorTable table)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            using (new EditorGUI.DisabledScope(!SharedColorClipboard.instance.HasColor))
+            {
+                using (new EditorGUI.DisabledScope(table.colors == null || table.colors.Length == 0))
+                {
+                    if (GUILayout.Button(new GUIContent("Paste Values...", "Choose an existing color to replace its settings, keeping its name.")))
+                    {
+                        serializedObject.ApplyModifiedProperties();
+                        var menu = new GenericMenu();
+                        for (int i = 0; i < table.colors.Length; i++)
+                        {
+                            if (table.colors[i] == null) continue;
+                            int index = i;
+                            string label = string.IsNullOrEmpty(table.colors[i].name) ? "Unnamed Color" : table.colors[i].name.Replace('/', '\u2215');
+                            menu.AddItem(new GUIContent($"{i + 1}: {label}"), false, () => PasteColor(table, index));
+                        }
+                        menu.ShowAsContext();
+                    }
+                }
+                if (GUILayout.Button(new GUIContent("Paste as New", "Add a new color with the copied channels and material parameters. The source color's name is excluded.")))
+                {
+                    PasteColor(table, -1);
+                    GUIUtility.ExitGUI();
+                }
+            }
+        }
+
+        private void PasteColor(SharedColorTable table, int index)
+        {
+            if (this == null || table == null || target != table || !SharedColorClipboard.instance.HasColor) return;
+            serializedObject.ApplyModifiedProperties();
+            if (index < -1 || (index >= 0 && (table.colors == null || index >= table.colors.Length || table.colors[index] == null))) return;
+
+            Undo.RegisterCompleteObjectUndo(table, index < 0 ? "Paste New Shared Color" : "Paste Shared Color Values");
+            OverlayColorData color;
+            if (index < 0)
+            {
+                var names = new HashSet<string>(System.StringComparer.Ordinal);
+                foreach (var entry in table.colors ?? System.Array.Empty<OverlayColorData>())
+                    if (entry != null) names.Add(entry.name);
+                string name = "New Color";
+                for (int suffix = 2; names.Contains(name); suffix++) name = "New Color " + suffix;
+                color = new OverlayColorData { name = name, showSelected = true, isSelected = true };
+                foreach (var entry in table.colors ?? System.Array.Empty<OverlayColorData>())
+                    if (entry != null) entry.isSelected = false;
+                table.colors = AppendColor(table.colors ?? System.Array.Empty<OverlayColorData>(), color);
+                index = table.colors.Length - 1;
+            }
+            else color = table.colors[index];
+
+            SharedColorClipboard.instance.PasteValues(color);
+            // Tables normalize every entry on serialization. Grow, never truncate copied channels
+            // or shrink other entries when the source has fewer channels than the table.
+            table.channelCount = Mathf.Max(table.channelCount, SharedColorClipboard.instance.ChannelCount);
+            foreach (var entry in table.colors)
+                entry?.EnsureChannelsExact(table.channelCount);
+            EditorUtility.SetDirty(table);
+            serializedObject.Update();
+            serializedObject.FindProperty("colors").isExpanded = true;
+            serializedObject.FindProperty("colors").GetArrayElementAtIndex(index).FindPropertyRelative("name").isExpanded = true;
+            Repaint();
         }
 
         private void MoveColor(SharedColorTable sharedColorTable, int fromIndex, int toIndex)

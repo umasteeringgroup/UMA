@@ -23,6 +23,9 @@ namespace UMA
     /// <summary>
     /// Unity 2021.3+ MeshData API based combiner.
     /// </summary>
+#if UMA_BURSTCOMPILE
+    [BurstCompile]
+#endif
     public static partial class SkinnedMeshCombinerMeshAPI
     {
         public struct RendererBatch
@@ -60,6 +63,7 @@ namespace UMA
         private const int UV_PARALLEL_MIN_VERTS = 4000;
         private const int BOUNDS_VERTICES_PER_BATCH = 2048;
         private const int INDEX_COPY_BATCH_SIZE = 256;
+        private const int BONE_REMAP_BATCH_SIZE = 1024;
         public static Quaternion FixupRotation = Quaternion.Euler(0f, 270f, 90f);
         public static float BoundsInflationFraction = 0.01f;
 #endif
@@ -1074,6 +1078,7 @@ namespace UMA
             public NativeArray<BoneWeight1> BoneWeights;
             public NativeArray<byte> BonesPerVertex;
             public NativeArray<int> BoneWeightRemap;
+            internal NativeArray<BoneWeightRemapRange> BoneWeightRemapRanges;
             internal NativeArray<UVTransform> UVTransforms;
             internal NativeArray<VertexDeltaInput> VertexDeltaInputs;
             internal NativeArray<VertexDeltaRecord> VertexDeltaRecords;
@@ -1565,6 +1570,7 @@ namespace UMA
                         ref ModifiedBitangentSums,
                         ref cleanupException);
                     TryDisposeNativeArray(ref BoneWeightRemap, ref cleanupException);
+                    TryDisposeNativeArray(ref BoneWeightRemapRanges, ref cleanupException);
                     TryDisposeNativeArray(ref BonesPerVertex, ref cleanupException);
                     TryDisposeNativeArray(ref BoneWeights, ref cleanupException);
                     if (!meshDataApplied)
@@ -1575,6 +1581,11 @@ namespace UMA
                 }
                 finally
                 {
+                    // These are non-owning views into MeshData, already consumed or
+                    // disposed above. Clear dangling handles; never dispose them twice.
+                    Positions = default;
+                    NormalsTangents = default;
+                    ColorsUV = default;
                     if (SourceVertexOffsets != null) ArrayPool<int>.Shared.Return(SourceVertexOffsets, false);
                     if (SubIndexStart != null) ArrayPool<int>.Shared.Return(SubIndexStart, false);
                     if (SubWrite != null) ArrayPool<int>.Shared.Return(SubWrite, false);
@@ -1700,6 +1711,7 @@ namespace UMA
             NativeArray<BoneWeight1> nativeBoneWeights = default;
             NativeArray<byte> nativeBonesPerVertex = default;
             NativeArray<int> bwRemap = default;
+            NativeArray<BoneWeightRemapRange> bwRemapRanges = default;
             NativeArray<UVTransform> uvTransforms = default;
             NativeArray<VertexDeltaInput> vertexDeltaInputs = default;
             NativeArray<VertexDeltaRecord> vertexDeltaRecords = default;
@@ -1829,25 +1841,39 @@ namespace UMA
                     }
                 }
                 var bonesCollection = new Dictionary<int, BoneIndexEntry>(Math.Max(64, bindPoseCount)); var bindPoses = new List<Matrix4x4>(bindPoseCount); var bonesList = new List<int>(transformHierarchyCount);
-                nativeBoneWeights = new NativeArray<BoneWeight1>(boneWeightCount, nativeAllocator); nativeBonesPerVertex = new NativeArray<byte>(Math.Max(1, vertexCount), nativeAllocator);
-                int vertexOffset = 0; int boneWeightOffset = 0;
+                // Validation guarantees exact lengths; every element is copied below.
+                nativeBoneWeights = new NativeArray<BoneWeight1>(boneWeightCount, nativeAllocator, NativeArrayOptions.UninitializedMemory);
+                nativeBonesPerVertex = new NativeArray<byte>(vertexCount, nativeAllocator, NativeArrayOptions.UninitializedMemory);
+                int vertexOffset = 0; int boneWeightOffset = 0; int boneMapOffset = 0; int remapRangeIndex = 0;
                 subWrite = ArrayPool<int>.Shared.Rent(subMeshCount); sourceVertexOffsets = ArrayPool<int>.Shared.Rent(sources.Length);
-                if (UseParallelBoneWeights) bwRemap = new NativeArray<int>(boneWeightCount, nativeAllocator, NativeArrayOptions.UninitializedMemory);
+                if (UseParallelBoneWeights)
+                {
+                    // One entry per source bone, rather than one entry per weight.
+                    bwRemap = new NativeArray<int>(bindPoseCount, nativeAllocator, NativeArrayOptions.UninitializedMemory);
+                    int ranges = 0;
+                    foreach (var source in sources)
+                        ranges = checked(ranges + (int)(((long)source.meshData.ManagedBoneWeights.Length + BONE_REMAP_BATCH_SIZE - 1) / BONE_REMAP_BATCH_SIZE));
+                    bwRemapRanges = new NativeArray<BoneWeightRemapRange>(ranges, nativeAllocator, NativeArrayOptions.UninitializedMemory);
+                }
                 for (int s = 0; s < sources.Length; s++)
                 {
                     var ci = sources[s]; var src = ci.meshData; int srcCount = src.vertexCount; sourceVertexOffsets[s] = vertexOffset;
                     sw.Restart();
                     if (UseParallelBoneWeights)
                     {
-                        var bones = src.boneNameHashes; var bindPosesSrc = src.bindPoses; var pool = ArrayPool<int>.Shared; var map = pool.Rent(bones.Length);
-                        try
+                        var bones = src.boneNameHashes; var bindPosesSrc = src.bindPoses;
+                        for (int iMap = 0; iMap < bones.Length; iMap++)
+                            bwRemap[boneMapOffset + iMap] = TranslateBoneIndex(iMap, bones, bindPosesSrc, bonesCollection, bindPoses, bonesList);
+                        NativeArray<byte>.Copy(src.ManagedBonesPerVertex, 0, nativeBonesPerVertex, vertexOffset, src.ManagedBonesPerVertex.Length);
+                        NativeArray<BoneWeight1>.Copy(src.ManagedBoneWeights, 0, nativeBoneWeights, boneWeightOffset, src.ManagedBoneWeights.Length);
+                        for (int start = 0; start < src.ManagedBoneWeights.Length;)
                         {
-                            for (int iMap = 0; iMap < bones.Length; iMap++) map[iMap] = TranslateBoneIndex(iMap, bones, bindPosesSrc, bonesCollection, bindPoses, bonesList);
-                            NativeArray<byte>.Copy(src.ManagedBonesPerVertex, 0, nativeBonesPerVertex, vertexOffset, src.ManagedBonesPerVertex.Length);
-                            NativeArray<BoneWeight1>.Copy(src.ManagedBoneWeights, 0, nativeBoneWeights, boneWeightOffset, src.ManagedBoneWeights.Length);
-                            var srcWeights = src.ManagedBoneWeights; for (int w = 0; w < srcWeights.Length; w++) bwRemap[boneWeightOffset + w] = map[srcWeights[w].boneIndex];
+                            int count = Math.Min(BONE_REMAP_BATCH_SIZE, src.ManagedBoneWeights.Length - start);
+                            bwRemapRanges[remapRangeIndex++] = new BoneWeightRemapRange
+                            { Start = boneWeightOffset + start, Count = count, MapStart = boneMapOffset };
+                            start += count;
                         }
-                        finally { pool.Return(map, false); }
+                        boneMapOffset += bones.Length;
                     }
                     else
                     {
@@ -1920,11 +1946,12 @@ namespace UMA
                 // Schedule all independent native work before the single completion point.
                 if (UseParallelBoneWeights && bwRemap.IsCreated && nativeBoneWeights.Length > 0)
                 {
-                    var boneHandle = new RemapAllBoneWeightsJob
+                    var boneHandle = new RemapBoneWeightRangesJob
                     {
                         Weights = nativeBoneWeights,
-                        RemappedIndex = bwRemap
-                    }.Schedule(nativeBoneWeights.Length, 256);
+                        BoneMap = bwRemap,
+                        Ranges = bwRemapRanges
+                    }.Schedule(bwRemapRanges.Length, 1);
                     scheduledJobs = JobHandle.CombineDependencies(scheduledJobs, boneHandle);
                     jobsScheduled = true;
                 }
@@ -2343,6 +2370,7 @@ namespace UMA
                     BoneWeights = nativeBoneWeights,
                     BonesPerVertex = nativeBonesPerVertex,
                     BoneWeightRemap = bwRemap,
+                    BoneWeightRemapRanges = bwRemapRanges,
                     UVTransforms = uvTransforms,
                     VertexDeltaInputs = vertexDeltaInputs,
                     VertexDeltaRecords = vertexDeltaRecords,
@@ -2382,6 +2410,7 @@ namespace UMA
                 nativeBoneWeights = default;
                 nativeBonesPerVertex = default;
                 bwRemap = default;
+                bwRemapRanges = default;
                 uvTransforms = default;
                 vertexDeltaInputs = default;
                 vertexDeltaRecords = default;
@@ -2463,6 +2492,7 @@ namespace UMA
                         ref modifiedBitangentSums,
                         ref cleanupException);
                     TryDisposeNativeArray(ref bwRemap, ref cleanupException);
+                    TryDisposeNativeArray(ref bwRemapRanges, ref cleanupException);
                     TryDisposeNativeArray(ref nativeBonesPerVertex, ref cleanupException);
                     TryDisposeNativeArray(ref nativeBoneWeights, ref cleanupException);
                     if (writableMeshDataAllocated)
@@ -3412,10 +3442,7 @@ namespace UMA
                 fixed (Vector3* sV = srcVertices)
                 fixed (Vector3* sN = srcNormals)
                 {
-                    for (int i = 0; i < count; i++)
-                    {
-                        dstPtr[i] = sV[i] + sN[i] * expandAlongNormal;
-                    }
+                    ExpandPositionsBurst(dstPtr, sV, sN, count, expandAlongNormal);
                 }
             }
             else
@@ -3429,38 +3456,76 @@ namespace UMA
         private static unsafe void PackNormTanUnsafe(NativeArray<NormTan> dst, int dstStart, Vector3[] normals, Vector4[] tangents, int count, bool hasNormals, bool hasTangents)
         {
             var dstPtr = (NormTan*)((byte*)NativeArrayUnsafeUtility.GetUnsafePtr(dst) + dstStart * UnsafeUtility.SizeOf<NormTan>());
-            bool nValid = hasNormals && normals != null && normals.Length >= count; bool tValid = hasTangents && tangents != null && tangents.Length >= count; Vector3 zeroN = default; Vector4 defT = new Vector4(1, 0, 0, 1);
-            if (nValid && tValid)
-            {
-                fixed (Vector3* nP = normals) fixed (Vector4* tP = tangents) { for (int i = 0; i < count; i++) { dstPtr[i].normal = nP[i]; dstPtr[i].tangent = tP[i]; } }
-            }
-            else if (nValid)
-            {
-                fixed (Vector3* nP = normals) { for (int i = 0; i < count; i++) { dstPtr[i].normal = nP[i]; dstPtr[i].tangent = BuildFallbackTangent(nP[i], 1f); } }
-            }
-            else if (tValid)
-            {
-                fixed (Vector4* tP = tangents) { for (int i = 0; i < count; i++) { dstPtr[i].normal = zeroN; dstPtr[i].tangent = tP[i]; } }
-            }
-            else { for (int i = 0; i < count; i++) { dstPtr[i].normal = zeroN; dstPtr[i].tangent = defT; } }
+            fixed (Vector3* n = normals)
+            fixed (Vector4* t = tangents)
+                PackNormTanBurst(dstPtr,
+                    hasNormals && normals != null && normals.Length >= count ? n : null,
+                    hasTangents && tangents != null && tangents.Length >= count ? t : null, count);
         }
         private static unsafe void PackColUV01Unsafe(NativeArray<ColUV01> dst, int dstStart, Color32[] colors, Vector2[] uv0, Vector2[] uv1, int count, bool hasColors32, bool hasUV0, bool hasUV1)
         {
             var dstPtr = (ColUV01*)((byte*)NativeArrayUnsafeUtility.GetUnsafePtr(dst) + dstStart * UnsafeUtility.SizeOf<ColUV01>());
-            bool cValid = hasColors32 && colors != null && colors.Length >= count; bool u0Valid = hasUV0 && uv0 != null && uv0.Length >= count; bool u1Valid = hasUV1 && uv1 != null && uv1.Length >= count; Color32 white = new Color32(255, 255, 255, 255);
-            for (int i = 0; i < count; i++)
-            {
-                dstPtr[i].color = cValid ? colors[i] : white;
-                dstPtr[i].uv0 = u0Valid ? uv0[i] : default;
-                dstPtr[i].uv1 = u1Valid ? uv1[i] : default;
-            }
+            fixed (Color32* c = colors)
+            fixed (Vector2* u0 = uv0)
+            fixed (Vector2* u1 = uv1)
+                PackColUV01Burst(dstPtr,
+                    hasColors32 && colors != null && colors.Length >= count ? c : null,
+                    hasUV0 && uv0 != null && uv0.Length >= count ? u0 : null,
+                    hasUV1 && uv1 != null && uv1.Length >= count ? u1 : null, count);
         }
         private static unsafe void PackUV23Unsafe(NativeArray<UV23> dst, int dstStart, Vector2[] uv2, Vector2[] uv3, int count, bool hasUV2, bool hasUV3)
         {
             var dstPtr = (UV23*)((byte*)NativeArrayUnsafeUtility.GetUnsafePtr(dst) + dstStart * UnsafeUtility.SizeOf<UV23>());
-            bool u2Valid = hasUV2 && uv2 != null && uv2.Length >= count; bool u3Valid = hasUV3 && uv3 != null && uv3.Length >= count; for (int i = 0; i < count; i++) { dstPtr[i].uv2 = u2Valid ? uv2[i] : default; dstPtr[i].uv3 = u3Valid ? uv3[i] : default; }
+            fixed (Vector2* u2 = uv2)
+            fixed (Vector2* u3 = uv3)
+                PackUV23Burst(dstPtr,
+                    hasUV2 && uv2 != null && uv2.Length >= count ? u2 : null,
+                    hasUV3 && uv3 != null && uv3.Length >= count ? u3 : null, count);
         }
-#else
+
+        // Synchronous Burst direct calls: managed arrays stay pinned only for the call.
+        // No GC handles or pointers survive into jobs or across incremental yields.
+        // Writable MeshData cannot alias the pinned managed inputs. Only the output
+        // is marked NoAlias: callers may legitimately share input UV/normal arrays.
+        [BurstCompile(FloatMode = FloatMode.Strict)]
+        private static unsafe void ExpandPositionsBurst([NoAlias] Vector3* dst, Vector3* vertices, Vector3* normals, int count, float expand)
+        {
+            for (int i = 0; i < count; i++) dst[i] = vertices[i] + normals[i] * expand;
+        }
+
+        [BurstCompile(FloatMode = FloatMode.Strict)]
+        private static unsafe void PackNormTanBurst([NoAlias] NormTan* dst, Vector3* normals, Vector4* tangents, int count)
+        {
+            if (normals != null && tangents != null)
+                for (int i = 0; i < count; i++) { dst[i].normal = normals[i]; dst[i].tangent = tangents[i]; }
+            else if (normals != null)
+                for (int i = 0; i < count; i++) { dst[i].normal = normals[i]; dst[i].tangent = BuildFallbackTangent(normals[i], 1f); }
+            else if (tangents != null)
+                for (int i = 0; i < count; i++) { dst[i].normal = default; dst[i].tangent = tangents[i]; }
+            else
+                for (int i = 0; i < count; i++) { dst[i].normal = default; dst[i].tangent = new Vector4(1f, 0f, 0f, 1f); }
+        }
+
+        [BurstCompile(FloatMode = FloatMode.Strict)]
+        private static unsafe void PackColUV01Burst([NoAlias] ColUV01* dst, Color32* colors, Vector2* uv0, Vector2* uv1, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                dst[i].color = colors != null ? colors[i] : new Color32(255, 255, 255, 255);
+                dst[i].uv0 = uv0 != null ? uv0[i] : default;
+                dst[i].uv1 = uv1 != null ? uv1[i] : default;
+            }
+        }
+
+        [BurstCompile(FloatMode = FloatMode.Strict)]
+        private static unsafe void PackUV23Burst([NoAlias] UV23* dst, Vector2* uv2, Vector2* uv3, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                dst[i].uv2 = uv2 != null ? uv2[i] : default;
+                dst[i].uv3 = uv3 != null ? uv3[i] : default;
+            }
+        }
 #endif
         private static Vector4 BuildFallbackTangent(Vector3 normal, float handedness)
         {
@@ -4343,7 +4408,32 @@ namespace UMA
     #if UMA_BURSTCOMPILE
         [BurstCompile]
     #endif
-        private struct RemapAllBoneWeightsJob : IJobParallelFor { [NativeDisableParallelForRestriction] public NativeArray<BoneWeight1> Weights; [ReadOnly] public NativeArray<int> RemappedIndex; public void Execute(int i) { var bw = Weights[i]; bw.boneIndex = RemappedIndex[i]; Weights[i] = bw; } }
+        // This range-based payload has a different native layout and indexing contract
+        // from the legacy per-weight RemapAllBoneWeightsJob. Keep a distinct job type
+        // so an existing Editor cannot reuse that job's compiled Burst entry point.
+        private struct RemapBoneWeightRangesJob : IJobParallelFor
+        {
+            // Each range owns an exclusive, validated slice of the weight output.
+            [NativeDisableParallelForRestriction] public NativeArray<BoneWeight1> Weights;
+            [ReadOnly] public NativeArray<int> BoneMap;
+            [ReadOnly] public NativeArray<BoneWeightRemapRange> Ranges;
+            public void Execute(int index)
+            {
+                var range = Ranges[index];
+                int end = range.Start + range.Count;
+                for (int i = range.Start; i < end; i++)
+                {
+                    var weight = Weights[i];
+                    weight.boneIndex = BoneMap[range.MapStart + weight.boneIndex];
+                    Weights[i] = weight;
+                }
+            }
+        }
+
+        internal struct BoneWeightRemapRange
+        {
+            public int Start, Count, MapStart;
+        }
         internal struct BoundsResult { public Vector3 Min; public Vector3 Max; public byte IsValid; }
     #if UMA_BURSTCOMPILE
         [BurstCompile]

@@ -18,6 +18,7 @@ namespace UMA
     public partial class WelcomeToUMA : EditorWindow
     {
         private const string WhatsNewDocumentPath = "Docs/!WhatsNewInUMA3.md";
+        private const int SrpSupportPage = 13;
         private const string UrpPackageName = "com.unity.render-pipelines.universal";
         private const string HdrpPackageName = "com.unity.render-pipelines.high-definition";
         private const string UmaUrpPackagePath = "SRP/UMAURP.unitypackage";
@@ -348,6 +349,7 @@ namespace UMA
         public GUIStyle DescriptionStyle;
         public GUIStyle SceneTitleStyle;
         private GUIStyle informationButtonStyle;
+        private GUIStyle selectedNavigationStyle;
 
         public Rect HeaderRect;
         public Rect NavigationRect;
@@ -426,7 +428,8 @@ namespace UMA
         {
             if (ActiveLargeStyle != null && ErrorFound != null && Warning != null &&
                 InfoStyle != null && Hyperlink != null && DescriptionStyle != null &&
-                SceneTitleStyle != null && informationButtonStyle != null)
+                SceneTitleStyle != null && informationButtonStyle != null &&
+                selectedNavigationStyle != null)
                 return;
 
             // EditorStyles is only reliable while Unity is inside an IMGUI event.
@@ -495,6 +498,10 @@ namespace UMA
             {
                 wordWrap = true,
                 alignment = TextAnchor.MiddleCenter
+            };
+            selectedNavigationStyle = new GUIStyle(buttonStyle)
+            {
+                fontStyle = FontStyle.Bold
             };
         }
 
@@ -591,10 +598,27 @@ namespace UMA
             var version = settings != null && !string.IsNullOrEmpty(settings.UMAVersion) ? settings.UMAVersion : "UMA";
             GUIStyle headerStyle = ActiveLargeStyle ?? EditorStyles.largeLabel ??
                 EditorStyles.label ?? GUI.skin?.label ?? new GUIStyle();
-            EditorGUILayout.LabelField($"Welcome to {version}", headerStyle);
+            EditorGUILayout.LabelField($"Welcome to UMA {version}", headerStyle);
             GUIHelper.EndInsetArea();
         }
 
+
+        private bool DrawNavigationButton(string label, int page)
+        {
+            bool selected = currentButton == page;
+            bool pressed = GUILayout.Toggle(selected, label,
+                selected ? selectedNavigationStyle : GUI.skin.button,
+                GUILayout.Height(40)) != selected;
+            if (selected && Event.current.type == EventType.Repaint)
+            {
+                Rect rect = GUILayoutUtility.GetLastRect();
+                EditorGUI.DrawRect(new Rect(rect.x + 2, rect.y + 4, 3, rect.height - 8),
+                    EditorGUIUtility.isProSkin
+                        ? new Color32(80, 180, 255, 255)
+                        : new Color32(0, 90, 170, 255));
+            }
+            return pressed;
+        }
 
         public void DrawNavigation()
         {
@@ -602,17 +626,17 @@ namespace UMA
             navigationScroll = GUILayout.BeginScrollView(navigationScroll, false, false,
                 GUIStyle.none, GUI.skin.verticalScrollbar);
             GUILayout.BeginVertical();
-            if (GUILayout.Button("Welcome", GUILayout.Height(40)))
+            if (DrawNavigationButton("Welcome", 0))
             {
                 ClearLog();
                 DoWelcome();
                 currentButton = 0;
             }
-            if (GUILayout.Button("Plugins", GUILayout.Height(40)))
+            if (DrawNavigationButton("Plugins", PluginsPage))
             {
                 ShowPluginsPage();
             }
-            if (GUILayout.Button("UMA Defaults", GUILayout.Height(40)))
+            if (DrawNavigationButton("Configure UMA", DefaultsPage))
             {
                 ShowDefaultsPage();
             }
@@ -622,11 +646,11 @@ namespace UMA
                 : navigationSrpUpdateAvailable
                     ? "Update Render Pipeline Support"
                     : "Render Pipeline Support";
-            if (GUILayout.Button(srpButton, GUILayout.Height(40)))
+            if (DrawNavigationButton(srpButton, SrpSupportPage))
             {
                 DoSrpSupportPage();
             }
-            if (GUILayout.Button("Getting Started", GUILayout.Height(40)))
+            if (DrawNavigationButton("Getting Started", 1))
             {
                 DoGettingStarted();
                 currentButton = 1;
@@ -642,43 +666,43 @@ namespace UMA
                 UMADocumentationWindow.ShowWindow();
             }
 
-                if (GUILayout.Button("Create UMA Character", GUILayout.Height(40)))
+                if (DrawNavigationButton("Create UMA Character", 10))
                 {
                     CreateUMACharacter();
                     currentButton = 10;
                 }
-                if (GUILayout.Button("Example Scenes", GUILayout.Height(40)))
+                if (DrawNavigationButton("Example Scenes", 8))
                 {
                     ClearLog();
                     scrollPosition = Vector2.zero;
                     currentButton = 8;
                 }
-                if (GUILayout.Button("Rebuild Library", GUILayout.Height(40)))
+                if (DrawNavigationButton("Rebuild Library", 7))
                 {
                     ClearLog();
                     currentButton = 7;
                     RebuildLibrary();
                 }
-                if (GUILayout.Button("Install extra Shaders", GUILayout.Height(40)))
+                if (DrawNavigationButton("Install extra Shaders", 6))
                 {
                     ClearLog();
                     currentButton = 6;
                     DoExtraShadersPage();
                 }
-                if (GUILayout.Button("Scan UMA 3 Scene", GUILayout.Height(40)))
+                if (DrawNavigationButton("Scan UMA 3 Scene", 3))
                 {
                     ClearLog();
                     ScanScene();
                     currentButton = 3;
                 }
-                if (GUILayout.Button("Scan UMA 3 Project", GUILayout.Height(40)))
+                if (DrawNavigationButton("Scan UMA 3 Project", 4))
                 {
                     ClearLog();
                     ScanProject();
                     currentButton = 4;
                 }
            //}
-            if (GUILayout.Button("Links", GUILayout.Height(40)))
+            if (DrawNavigationButton("Links", 5))
             {
                 ClearLog();
                 currentButton = 5;
@@ -772,6 +796,7 @@ namespace UMA
             AddSeperator();
 
             AddText("<b>3. Use the current editor workflow</b>");
+            AddText("Open <b>Configure UMA</b> on the left to review skin and hair materials and apply the Maximum Speed or Maximum Fidelity preset. Both request editor UMA rebuilds after saving the configuration. Atlas resolutions and quality-profile overrides are preserved.");
             AddText("Enable the <b>UMA Toolbar</b> from the Scene view Overlays menu for character rebuild modes, mesh-combiner selection, focus and skeleton controls, editor-generation pause, diagnostics, and common tools.");
             AddText("Use <b>UMA > Content Creation</b> for slot, wardrobe, bone, and prefab authoring. Asset management, texture, animation, project setup, testing, and debug commands are grouped in their matching UMA submenus.");
             AddText("Open the <b>Documentation Browser</b> for the Markdown guides shipped with this UMA installation.");
@@ -2734,7 +2759,7 @@ namespace UMA
         {
             ClearLog();
             scrollPosition = Vector2.zero;
-            AddLargeText("Welcome to " + GetVersionName());
+            AddLargeText("Welcome to UMA " + GetVersionName());
 
             AddText("UMA NextGen builds customizable, runtime-ready characters from races, slots, overlays, recipes, DNA, and indexed project content.");
             AddText("This window links the most useful setup, authoring, maintenance, diagnostics, and documentation workflows in the current UMA editor.");
@@ -3059,7 +3084,7 @@ namespace UMA
         {
             ClearLog();
             scrollPosition = Vector2.zero;
-            currentButton = 0;
+            currentButton = SrpSupportPage;
             AddLargeText("UMA Render Pipeline Support");
 #if UMA_PACKAGE_MANAGER
             AddSrpSupportControls();
@@ -3143,7 +3168,7 @@ namespace UMA
         {
             ClearLog();
             scrollPosition = Vector2.zero;
-            currentButton = 0;
+            currentButton = SrpSupportPage;
             AddLargeText("UMA Editable Content Packages");
             AddText("UMA character content is installed below <b>Assets/UMA</b> so " +
                 "materials, textures, recipes, races, and wardrobe assets remain editable. " +

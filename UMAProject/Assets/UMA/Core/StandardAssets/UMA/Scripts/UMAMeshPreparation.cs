@@ -161,8 +161,10 @@ namespace UMA
                 try
                 {
                     var data = mesh.PreparedData;
+                    bool equivalentBake = UMAResourceReuse.TryGetBakedPreparation(mesh, out var bakedData);
+                    if (equivalentBake) data = bakedData;
                     // Check live content, not an asset GUID or a persisted 'valid' flag.
-                    state.Valid = data != null && data.Matches(mesh);
+                    state.Valid = equivalentBake || data != null && data.Matches(mesh);
                     if (!state.Valid)
                     {
                         // Automatic, non-destructive upgrade. Do not force a disk write
@@ -191,7 +193,18 @@ namespace UMA
                         state.SerializedData = data;
                         state.Valid = true;
                     }
+                    if (equivalentBake)
+                    {
+                        // UV setters invalidate through the buffer identity, including
+                        // shallow aliases. A cache hit must preserve that tracking even
+                        // though it does not fingerprint these fresh arrays.
+                        TrackSource(mesh.uv); TrackSource(mesh.uv2);
+                        TrackSource(mesh.uv3); TrackSource(mesh.uv4);
+                        mesh.SetPreparedBuildData(data);
+                        state.SerializedData = data;
+                    }
                     state.Data = data;
+                    UMAResourceReuse.RememberBakedPreparation(mesh, data);
                     if (mesh.blendShapes != null)
                         for (int i = 0; i < mesh.blendShapes.Length; i++)
                         {

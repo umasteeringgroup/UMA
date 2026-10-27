@@ -405,8 +405,8 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/Runtime/UMA.TexturePaint.Tests.asmdef",
             "guid": "2f520cab84fffec47bb3e93fe4eca14f",
-            "bytes": 760,
-            "sha256": "0b2f67ca19f00f77827611a37751e33670e402d8a93189f7ec51ee91b03c3a8b",
+            "bytes": 784,
+            "sha256": "42f44894b7781748f7835c9fd8bea437e2128b33bdda0c30f41abf9ca01888ce",
             "metaBytes": 166,
             "metaSha256": "4bed1dea856a3ef1bb3acfe7a6616df36a2d26d68e8e6ccbec3201403dbf4c0d"
         },
@@ -879,8 +879,8 @@
             "guid": "62d53406f1ed44846974d938c90c9e9c",
             "bytes": 16963,
             "sha256": "f5a8e3441eeb2f9f025afea9214a1c3ee04abf3643dd74a5d605b130e29f191d",
-            "metaBytes": 59,
-            "metaSha256": "9fd7fe430c98a02ee6b204e5368a54ecca62f2c5fca07ce281fb8ce7c56ea961"
+            "metaBytes": 60,
+            "metaSha256": "174f10c9e93dc3b74d4167c705b800c2de3bf5979e3703795cb070824ff8268e"
         },
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintVeinTests.cs",
@@ -893,10 +893,10 @@
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintWardrobeRecipeTests.cs",
             "guid": "16cddac67dd44341ac44a861711322f5",
-            "bytes": 14092,
-            "sha256": "170c2ce14997a024c5aab93e475e17fd9f1002671b1d4d1662ba4afd481c817a",
-            "metaBytes": 60,
-            "metaSha256": "8c7c4a85e9c93946e167b68f06951c1b5332c65b3b1b31b6341dfa33c49611d6"
+            "bytes": 14364,
+            "sha256": "0d917ac7d6e28864539f96a07ed331b956ca9597e260b0fac2bc0a0169099b88",
+            "metaBytes": 62,
+            "metaSha256": "91a2e4ff0216b12ce21c9efe66bcd89990086b5035f3a5c8bbd9254159974313"
         },
         {
             "path": "Assets/UMA/OverlayPainterTests/TexturePaintWeatheringNormalTests.cs",

@@ -43,6 +43,8 @@ Material:
   m_ValidKeywords:
   - _DISABLE_SSR_TRANSPARENT
   - _MATERIAL_FEATURE_SPECULAR_COLOR
+  - _METALLICSPECGLOSSMAP
+  - _NORMALMAP
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -62,11 +64,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 3b54f28c47468e548bf5d90f5c01936b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: e6e7016f874e7154888112b9f7d072b3, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -86,7 +88,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 614d6a0580b42ed4b96339e535ac0957, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -111,6 +113,8 @@ Material:
     - _AlphaCutoffEnable: 1
     - _AlphaDstBlend: 0
     - _AlphaSrcBlend: 1
+    - _BUILTIN_QueueControl: -1
+    - _BUILTIN_QueueOffset: 0
     - _BlendMode: 0
     - _BumpScale: 1
     - _ConservativeDepthOffsetEnable: 0
@@ -131,11 +135,11 @@ Material:
     - _EnableFogOnTransparent: 1
     - _EnvironmentReflections: 1
     - _ExcludeFromTUAndAA: 0
-    - _METALLICSPECGLOSSMAP: 0
+    - _METALLICSPECGLOSSMAP: 1
     - _MaterialID: 4
     - _MaterialTypeMask: 16
-    - _Metallic: 0
-    - _NORMALMAP: 0
+    - _Metallic: 0.503
+    - _NORMALMAP: 1
     - _OCCLUSIONMAP: 0
     - _OcclusionStrength: 1
     - _OpaqueCullMode: 2
@@ -148,8 +152,8 @@ Material:
     - _RefractionModel: 0
     - _RenderQueueType: 1
     - _RequireSplitLighting: 0
-    - _Smoothness: 0.5
-    - _SmoothnessSRC: 0
+    - _Smoothness: 0.27
+    - _SmoothnessSRC: 1
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _StencilRef: 0
@@ -180,7 +184,7 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
-    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &7671488869925138377

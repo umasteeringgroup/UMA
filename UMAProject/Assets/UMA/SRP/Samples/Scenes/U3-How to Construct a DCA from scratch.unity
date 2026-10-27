@@ -358,7 +358,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6bf1e7d4f0f7f014c97e78ceb7e21901, type: 2}
   - {fileID: 11400000, guid: f3ac0ca2b2909754fbdb795e47e96b80, type: 2}
   - {fileID: 11400000, guid: 511aa62754b82734e8a3ef2c7730b4d1, type: 2}
-  - {fileID: 11400000, guid: 8900db45718eb61469e720617c9deeb7, type: 2}
+  - {fileID: 11400000, guid: a8956554734f09e48946a52705e22b14, type: 2}
   hairColor:
     name: Hair
     channelMask: []

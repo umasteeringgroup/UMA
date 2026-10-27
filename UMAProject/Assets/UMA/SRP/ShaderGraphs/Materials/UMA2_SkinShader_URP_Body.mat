@@ -78,16 +78,17 @@ Material:
     m_Floats:
     - _BUILTIN_QueueControl: -1
     - _BUILTIN_QueueOffset: 0
-    - _BumpScale: 0.941
+    - _BumpScale: 0.5
     - _DetailNormalMapScale: 0.024
-    - _Detail_Gloss_Scale: 0.595
-    - _Detail_Normal_Scale: 0.235
+    - _Detail_Gloss_Scale: 0.25
+    - _Detail_Normal_Scale: 0.15
+    - _InvertDetailMap: 0
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _SSSBlend: 0.652
+    - _SSSBlend: 0.2
     - _Skinmask_Amount: 1
     m_Colors:
-    - _Ambient_Occlusion_Remap: {r: 0, g: 1, b: 0, a: 0}
+    - _Ambient_Occlusion_Remap: {r: 0.9, g: 1, b: 0, a: 0}
     - _Base_Color: {r: 1, g: 1, b: 1, a: 1}
     - _Detail_Tiling: {r: 48, g: 48, b: 0, a: 0}
     - _Smoothness_Remap: {r: 0, g: 0.38, b: 0, a: 0}

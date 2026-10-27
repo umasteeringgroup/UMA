@@ -76,7 +76,8 @@ namespace UMA.Editors
 
         public static bool CanRelocate(UMAReleaseValidationIssueReport issue)
         {
-            return issue != null && IsProjectAsset(issue.referencedAssetPath) &&
+            return issue != null && issue.kind != "Recipe name collision" &&
+                IsProjectAsset(issue.referencedAssetPath) &&
                 !AssetDatabase.IsValidFolder(issue.referencedAssetPath) &&
                 AssetDatabase.LoadMainAssetAtPath(issue.referencedAssetPath) != null;
         }

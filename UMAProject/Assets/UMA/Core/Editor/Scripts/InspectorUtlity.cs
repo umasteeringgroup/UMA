@@ -14,6 +14,8 @@ namespace UMA
 		/// <param name="revertProjectSelection">If true reverts the object selected in the project to the original selection. Otherwise selects the target object</param>
 		public static EditorWindow InspectTarget(Object target, bool revertProjectSelection = false)
 		{
+			// A missing or destroyed target must not create an empty Inspector window.
+			if (target == null) return null;
 			var prevSelection = Selection.activeObject;
 
 			// Get a reference to the `InspectorWindow` type object

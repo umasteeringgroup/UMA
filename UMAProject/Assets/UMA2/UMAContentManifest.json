@@ -1983,64 +1983,64 @@
             "guid": "0960bf37021a1a7429ade3f60120b82c",
             "bytes": 86383,
             "sha256": "5507a8003d80ac60c108f254d6fcc2bda4b973c61bc06d8c9f9c40e2d7538395",
-            "metaBytes": 2051,
-            "metaSha256": "8f758a1ff06ece498b361cf3c7b321427e0a9f3e12bccadde4cf86c747860acd"
+            "metaBytes": 4127,
+            "metaSha256": "65180e0741e725b8cc5cb0b62885a7dab9b4af1cbb4df2c618ee1ee841af2519"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanFemale BaseThumbs/HumanFemaleChestNone.png",
             "guid": "42de8aac87304e146a188c779e2968b4",
             "bytes": 37308,
             "sha256": "745bfc3a393cf6d1e79323973e5c3ecffe50e40fee4acb02891d7ac0df1e4cbf",
-            "metaBytes": 2051,
-            "metaSha256": "acc7308e13531c94acb8b6fc16703c2fb2cfe544db841f88ed9f51d330b3ff02"
+            "metaBytes": 4145,
+            "metaSha256": "15a6b48296da3466ee24d49d61d860c45d3dcb69d9b611ea1a2d202ef2c232f9"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanFemale BaseThumbs/HumanFemaleFeetNone.png",
             "guid": "836042b9488a339419e7497c1ee9d33f",
             "bytes": 16128,
             "sha256": "4eed5dd98cda7c1269b17154e307d9ce1e82de543badefb48b4b34bf4b893286",
-            "metaBytes": 2051,
-            "metaSha256": "521a9bdab2f2f4b4793acc06892ea4cb1fe75ac05f7eeb876416975db5d86cd8"
+            "metaBytes": 4143,
+            "metaSha256": "6661388998571adc6d8123d527f1a48fcf4be2b302186bfdeb2ffa7a84d06622"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanFemale BaseThumbs/HumanFemaleHandsNone.png",
             "guid": "8292b70d54e5a23498806f2ee4214b60",
             "bytes": 21511,
             "sha256": "2e0959e0c83ab084580c7629afb7988004c178e5a9346f8778df79898480057c",
-            "metaBytes": 2051,
-            "metaSha256": "43129b4079016eb17e76dfe45776ecb12b7800761c0b6313b8e35e0160e7b199"
+            "metaBytes": 4145,
+            "metaSha256": "f9a7c7e849e3dea826323d543af4de9b06445ed5a2fc13afd84bf1c2822c8e88"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanFemale BaseThumbs/HumanFemaleHeadNone.png",
             "guid": "700870015a5fd7b4ea871015b63eda46",
             "bytes": 26125,
             "sha256": "4b37c0cf118c317fa8b13cd840056f7c14de3c6286559714d6668315399d5dfa",
-            "metaBytes": 2051,
-            "metaSha256": "f02a6b61e4c62f6c3a71ed2796318f8495bbe5df5a5548ebc4ac1d846750644d"
+            "metaBytes": 4145,
+            "metaSha256": "5f36dbf8b6057ac167fdcf18832806e3d40444bace1123620bb6db5ba87a4409"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanFemale BaseThumbs/HumanFemaleHeadSkin.png",
             "guid": "ecadaada9dd71a946923ce1576e25862",
             "bytes": 59422,
             "sha256": "b88b5eed2baa6a3b44742de1a26addf8b3736812a24eb7cd291b2046abffa452",
-            "metaBytes": 2051,
-            "metaSha256": "8a97bed7b106d19839bff2db6d07591a04958416e00072105f9e20f1c4448606"
+            "metaBytes": 4143,
+            "metaSha256": "10cb710edd62cb013c6286a23508de8b2dd3d7e03fa3e7e4a1cc6ff28d1d6b1e"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanFemale BaseThumbs/HumanFemaleLegsNone.png",
             "guid": "ad3e4c3bd35e9984e8b951d0549bac80",
             "bytes": 15063,
             "sha256": "b0663ffdda54a473b780a71a23e58fd04e29f27892e75afbc03a7f07df8f7573",
-            "metaBytes": 2051,
-            "metaSha256": "a6c6fa6a7fd8b6133349f8dbb40febeef7bd9929fc6a48942532852afe83f9c7"
+            "metaBytes": 4143,
+            "metaSha256": "47bd9705511632349b59570bdd1233906c347e070550520dbe755ff571623c83"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanFemale BaseThumbs/HumanFemaleOutfitNone.png",
             "guid": "191b51ae42bb5484c844fbc5e997ef7b",
             "bytes": 46066,
             "sha256": "f6dfaec272014e0448f48a126db6724f113d16c92932e0f484170c1f209a03fe",
-            "metaBytes": 2051,
-            "metaSha256": "d5ce7d13a2e2ce4effe47128fa08cea0bf5aed12c142a0e2791c8f0ea052a0c2"
+            "metaBytes": 4149,
+            "metaSha256": "1232eff5b272bbe4288ba95b5a881a5857f2e3a6f7e7e7a2eac15c6572bc60a4"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanGirl BaseThumbs",
@@ -2055,64 +2055,64 @@
             "guid": "50e3801fc7aefb24583de1c1625c8277",
             "bytes": 59373,
             "sha256": "be32a66ad90e72abe73ad81f253d8e40fa7c3860e649eec43a6508880ff15862",
-            "metaBytes": 2051,
-            "metaSha256": "841b0240df6164e211f4d5230f4bd486e5d1cd9b6c686ff2db0114fc10f4258b"
+            "metaBytes": 4122,
+            "metaSha256": "5c72ddca82a6aa10540b9c5dc3cdda358aa23ae46c1f485fc03c611ee838b1d8"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanGirl BaseThumbs/HumanGirlChestNone.png",
             "guid": "a5d0638684cd4544cbbbd9ae8d26bc49",
             "bytes": 32751,
             "sha256": "8414873e70ac9fc5942b9bd464a55292e0ac6b94fd4378fce84644545f51700e",
-            "metaBytes": 2051,
-            "metaSha256": "e7adf40de85e9fcbbc73dc248b778498d3c0374d50efa62177522b02a553dc2f"
+            "metaBytes": 4140,
+            "metaSha256": "a508d163ef5956cccc41777753f4f4f6cdf04cd003c1440576df337b40451faf"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanGirl BaseThumbs/HumanGirlFeetNone.png",
             "guid": "ad4a350da2cf28a43ab13c45b5fb2c4b",
             "bytes": 18275,
             "sha256": "5ad6e8498caab133aac181f08fda1a6991a1cf425273b5fe97653ec6ad5db4e0",
-            "metaBytes": 2051,
-            "metaSha256": "619683b900afbf1816379d1870f3f965724f86769a019f2e60e76e90f3e8f506"
+            "metaBytes": 4138,
+            "metaSha256": "b6da6e05ffb74b9fa52f53e6262fc5459503bd3a221e6eb4b7eb1fbd5ea7499a"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanGirl BaseThumbs/HumanGirlHandsNone.png",
             "guid": "90015d316b9043141b6f0e262d0996d8",
             "bytes": 14979,
             "sha256": "8ef728fb44ac7248d0cf4985cfab4c0c1f04bea06622a775073570a9f06337e2",
-            "metaBytes": 2051,
-            "metaSha256": "d0416a5c8a92cfab968179202d450579bdaea484c3986c5c77ea1d25e8bd6502"
+            "metaBytes": 4140,
+            "metaSha256": "d8215c1a225a8063e56f2d25cdc20516d446695ec9fb4833aaac643c21945344"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanGirl BaseThumbs/HumanGirlHeadNone.png",
             "guid": "a49581ae9f0e32a48a24ce55651bbca7",
             "bytes": 25730,
             "sha256": "259a5dd61c247dfe54d2ce502822b7b42d3faa6a3605bb1325167084e2dd5504",
-            "metaBytes": 2051,
-            "metaSha256": "c57854435a528590e73c7cb8c34a2c1e4cdd406acc57cb84d433d21992cf9520"
+            "metaBytes": 4138,
+            "metaSha256": "0b362d5f9ef67a1f502092a72bd6c8cda1019778e7f8e6820e6540b0ac651cb5"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanGirl BaseThumbs/HumanGirlHeadSkin.png",
             "guid": "1550614af86fead4b9d72c0eea8235ef",
             "bytes": 61854,
             "sha256": "94c2427f49839fd0f4a87294d161ece48e05dec5849e6f168e457ee81528c78b",
-            "metaBytes": 2051,
-            "metaSha256": "0258c56283630312c51e19c632dcfe85fd3a1b27dae892763d8f36e5c1ebd9a3"
+            "metaBytes": 4140,
+            "metaSha256": "c1705c5d1bfdaf7f7d59dd55aaa3ae7251f6585deb7f5ed776f4f09916df175f"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanGirl BaseThumbs/HumanGirlLegsNone.png",
             "guid": "bdb70eb647dd4c64a8338051a07423d6",
             "bytes": 16351,
             "sha256": "5d1aba8ec48db628a8ff27f41e920cf655cbeddd6a5b1c7220bc0ee341948a9b",
-            "metaBytes": 2051,
-            "metaSha256": "49d8762e7e3684cf7e297b3f6099398278e247e2a94d4bca62038bd5258a4d25"
+            "metaBytes": 4138,
+            "metaSha256": "2564b66df01e866ca0c0e7d64876224dfdf0592a00676cb2fe040d3c830eaec4"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/RaceData/HumanGirl BaseThumbs/HumanGirlOutfitNone.png",
             "guid": "26c8ef1d447530743af6aea981ddd380",
             "bytes": 45970,
             "sha256": "5120d0629ca6aefba5af468daa53a754c9a93592332e0110e0ba1807ac71c59a",
-            "metaBytes": 2051,
-            "metaSha256": "67dde6202712b4a1487c7b06e9ae2dbcc9548fc37e6c669063e87d60ee952585"
+            "metaBytes": 4142,
+            "metaSha256": "3370cefb83e1fee6405db409a28bb92f4d6c1249c127422ba09460cf5955b723"
         },
         {
             "path": "Assets/UMA2/Races/HumanFemale/Recipes",
@@ -4295,64 +4295,64 @@
             "guid": "857fb3647a236444983e9933452b6d88",
             "bytes": 102118,
             "sha256": "846b88603e92e70f764901bf4e652e25c646d0250428489d0f3067f9faf8f2bf",
-            "metaBytes": 2051,
-            "metaSha256": "0d99c937a2e1350dd8b4257529a70b35c3e91c8dc529b4d06da3f431735bd271"
+            "metaBytes": 4122,
+            "metaSha256": "c874cb02e8a012375873a9b77be115cc3eb8a0beacea92038b3aa6ab0627d55f"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/BaseThumbs/HumanMaleChestNone.png",
             "guid": "bbfe33235dfdb3e4bb80975140825e28",
             "bytes": 46642,
             "sha256": "20b9253b2e50108c2d9fbdd9ec91b1a849e037e2acc52aa71193112da32c4891",
-            "metaBytes": 2051,
-            "metaSha256": "d5f5f31583c7a93c709afa1d14a637074979980f4e938e5dce99a42ec2b2fd8a"
+            "metaBytes": 4140,
+            "metaSha256": "a480572bca8c74e79eb307b05f5df78ecdfce20ada22bf13bd5f690c216da332"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/BaseThumbs/HumanMaleFeetNone.png",
             "guid": "2d7b0504bbf0d8d479fd4d26e149953e",
             "bytes": 20364,
             "sha256": "71ccba7b1965588945b777bc43b9933882fec2aca8f25f11b72a07c95a733429",
-            "metaBytes": 2051,
-            "metaSha256": "034bab4533718843704009d42128b30d5045889eff5538c38ae4dfaddebea625"
+            "metaBytes": 4138,
+            "metaSha256": "2a570a1e3aecad5023ff072667306909072d94555fe464c6c9b74622df1cea2f"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/BaseThumbs/HumanMaleHandsNone.png",
             "guid": "f536d09208d30bb429f74f93857902cb",
             "bytes": 30148,
             "sha256": "d46077c929be5c1a028354e5678a4f7e056e93d951559cbdd2573c6a7338adc2",
-            "metaBytes": 2051,
-            "metaSha256": "78e8740106b6494fe9943494e43d6631b2749da4f18de0949139b6b5cc285cf0"
+            "metaBytes": 4140,
+            "metaSha256": "c1f5410eb0aada7fed3ec014003b1dc7409649d4824fe16d7567472652880848"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/BaseThumbs/HumanMaleHeadNone.png",
             "guid": "9a4507c31fe88784dbdaa017e48ec3a7",
             "bytes": 28894,
             "sha256": "60412e7e5727ed04f82e808e4fa04850aa1048f0f17ef79d98582f6321952c24",
-            "metaBytes": 2051,
-            "metaSha256": "efcf7b209490650e9a287cbe25dfaaf63b6f3d74c7de458a85c3f0a2924b0f97"
+            "metaBytes": 4138,
+            "metaSha256": "578e4c2d7db1d4d42c360311ce8b2da91a6bfde49ef3ccf38562fb76de31c416"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/BaseThumbs/HumanMaleHeadSkin.png",
             "guid": "94540527e5fef3841a3dd9112ca48ac8",
             "bytes": 66318,
             "sha256": "559daa872f3693a2b5f9de77c2dfc32c9a804d7130046087beaa4d8bf74eb87b",
-            "metaBytes": 2051,
-            "metaSha256": "e3066c7f86e6f13914d9f16de2b3856ab30e68e0b9991af13e6d161290ab5c86"
+            "metaBytes": 4140,
+            "metaSha256": "e8280b778a155762139dd9cb7d83720421dd57a109d044d714de1bf570b6b8a5"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/BaseThumbs/HumanMaleLegsNone.png",
             "guid": "5ae15794e8817474daf4e194419e05c1",
             "bytes": 20532,
             "sha256": "3865b730fb306d2df5794b6c28a98d410c65d6c443535814403484a2ba116b10",
-            "metaBytes": 2051,
-            "metaSha256": "cd75d6cde1f2ddb7e952c49ec5efdeee9a87cd29f9b36a4d75b6a311bc9a7392"
+            "metaBytes": 4138,
+            "metaSha256": "f86d2ae63a65254acb553dfd6e67694ef1d15edf597b9240b01ae0eb32a28d95"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/BaseThumbs/HumanMaleOutfitNone.png",
             "guid": "1ffc37f943e361945b6e7918495b3270",
             "bytes": 62082,
             "sha256": "9194016b6cc794dcd73d9263eb5063e85aed89a83f3c112c6a63ae0eee81c1b8",
-            "metaBytes": 2051,
-            "metaSha256": "d833f034fccec3e4d318bb09fac2b642f9625eb427a1c62b20f50382bfdeb8dd"
+            "metaBytes": 4142,
+            "metaSha256": "77fc8ec90d6ba9638030c2a2a499b66f56751f5ac47922efc6d02fbadb37090f"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/RaceData/Elf",
@@ -4503,16 +4503,16 @@
             "guid": "7e7c4821126e72d4fafd080309f4bede",
             "bytes": 69732,
             "sha256": "198335eb2e5b9f4cb13b076724a0557965cf8a7bfea3b72123897d7056e37254",
-            "metaBytes": 2051,
-            "metaSha256": "56ceab5dd57ffa96bc3c8a4fb14dc2721c29854c05cfba3271c7463ba111d981"
+            "metaBytes": 4122,
+            "metaSha256": "57ff5688ed39afe730c75c163d378671499b9b54f7b4dd540a1e448e3d4b3ef1"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/Recipes/WardrobeRecipes/Thumbs/HumanMaleSilhouette.png",
             "guid": "5913a40eda2bb31498b4727ecf45727b",
             "bytes": 50713,
             "sha256": "90d8b904a4c37ae18a2aebcb8ab5f731eb623930251fbeb231a068ddfac0927a",
-            "metaBytes": 2051,
-            "metaSha256": "5895ac93e1a70723239379d8d0e946f7164cabddbd81e694fde53aea516b281f"
+            "metaBytes": 4142,
+            "metaSha256": "1467e98f33657919c483f541ebf5c9d01fdced2f798a86b6546aab2285a5b5cd"
         },
         {
             "path": "Assets/UMA2/Races/HumanMale/Recipes/WardrobeRecipes/UMA2AlternateFace.asset",

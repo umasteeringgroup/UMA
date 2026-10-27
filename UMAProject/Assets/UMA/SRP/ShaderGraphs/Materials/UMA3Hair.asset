@@ -17,6 +17,11 @@ MonoBehaviour:
   _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 2100000, guid: 6eebbc33ce23fd343a1c99344fe0f8ba, type: 2}
   _HDRPSecondPass: {fileID: 0}
+  _hasSpeedMaterialBackup: 0
+  _speedBackupMaterial: {fileID: 0}
+  _speedBackupSecondPass: {fileID: 0}
+  _speedBackupHDRPMaterial: {fileID: 0}
+  _speedBackupHDRPSecondPass: {fileID: 0}
   materialType: 8
   channels:
   - channelType: 3

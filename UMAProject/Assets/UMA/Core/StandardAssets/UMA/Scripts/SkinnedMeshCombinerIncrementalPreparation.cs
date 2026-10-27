@@ -99,6 +99,8 @@ namespace UMA
             private NativeArray<BoneWeight1> nativeBoneWeights;
             private NativeArray<byte> nativeBonesPerVertex;
             private NativeArray<int> boneWeightRemap;
+            private NativeArray<BoneWeightRemapRange> boneWeightRemapRanges;
+            private int boneMapOffset, remapRangeIndex;
             private int sourceCursor;
             private int vertexOffset;
             private int boneWeightOffset;
@@ -422,11 +424,11 @@ namespace UMA
                 nativeBoneWeights =
                     new NativeArray<BoneWeight1>(
                         boneWeightCount,
-                        nativeAllocator);
+                        nativeAllocator, NativeArrayOptions.UninitializedMemory);
                 nativeBonesPerVertex =
                     new NativeArray<byte>(
-                        Math.Max(1, vertexCount),
-                        nativeAllocator);
+                        vertexCount,
+                        nativeAllocator, NativeArrayOptions.UninitializedMemory);
                 subWrite =
                     ArrayPool<int>.Shared.Rent(subMeshCount);
                 sourceVertexOffsets =
@@ -435,9 +437,13 @@ namespace UMA
                 {
                     boneWeightRemap =
                         new NativeArray<int>(
-                            boneWeightCount,
+                            bindPoseCount,
                             nativeAllocator,
                             NativeArrayOptions.UninitializedMemory);
+                    int ranges = 0;
+                    foreach (var source in sources)
+                        ranges = checked(ranges + (int)(((long)source.meshData.ManagedBoneWeights.Length + BONE_REMAP_BATCH_SIZE - 1) / BONE_REMAP_BATCH_SIZE));
+                    boneWeightRemapRanges = new NativeArray<BoneWeightRemapRange>(ranges, nativeAllocator, NativeArrayOptions.UninitializedMemory);
                 }
                 sourceCursor = 0;
                 stage = sources.Length > 0
@@ -456,50 +462,26 @@ namespace UMA
 
                 var stopwatch =
                     System.Diagnostics.Stopwatch.StartNew();
-                if (UseParallelBoneWeights)
+                if (boneWeightRemap.IsCreated)
                 {
                     int[] bones = source.boneNameHashes;
                     Matrix4x4[] sourceBindPoses =
                         source.bindPoses;
-                    int[] map =
-                        ArrayPool<int>.Shared.Rent(bones.Length);
-                    try
+                    for (int i = 0; i < bones.Length; i++)
+                        boneWeightRemap[boneMapOffset + i] = TranslateBoneIndex(
+                            i, bones, sourceBindPoses, bonesCollection, bindPoses, bonesList);
+                    NativeArray<byte>.Copy(source.ManagedBonesPerVertex, 0, nativeBonesPerVertex,
+                        vertexOffset, source.ManagedBonesPerVertex.Length);
+                    NativeArray<BoneWeight1>.Copy(source.ManagedBoneWeights, 0, nativeBoneWeights,
+                        boneWeightOffset, source.ManagedBoneWeights.Length);
+                    for (int start = 0; start < source.ManagedBoneWeights.Length;)
                     {
-                        for (int i = 0; i < bones.Length; i++)
-                        {
-                            map[i] = TranslateBoneIndex(
-                                i,
-                                bones,
-                                sourceBindPoses,
-                                bonesCollection,
-                                bindPoses,
-                                bonesList);
-                        }
-                        NativeArray<byte>.Copy(
-                            source.ManagedBonesPerVertex,
-                            0,
-                            nativeBonesPerVertex,
-                            vertexOffset,
-                            source.ManagedBonesPerVertex.Length);
-                        NativeArray<BoneWeight1>.Copy(
-                            source.ManagedBoneWeights,
-                            0,
-                            nativeBoneWeights,
-                            boneWeightOffset,
-                            source.ManagedBoneWeights.Length);
-                        for (int i = 0;
-                             i < source.ManagedBoneWeights.Length;
-                             i++)
-                        {
-                            boneWeightRemap[boneWeightOffset + i] =
-                                map[source.ManagedBoneWeights[i]
-                                    .boneIndex];
-                        }
+                        int count = Math.Min(BONE_REMAP_BATCH_SIZE, source.ManagedBoneWeights.Length - start);
+                        boneWeightRemapRanges[remapRangeIndex++] = new BoneWeightRemapRange
+                        { Start = boneWeightOffset + start, Count = count, MapStart = boneMapOffset };
+                        start += count;
                     }
-                    finally
-                    {
-                        ArrayPool<int>.Shared.Return(map, false);
-                    }
+                    boneMapOffset += bones.Length;
                 }
                 else
                 {
@@ -740,18 +722,18 @@ namespace UMA
             {
                 var stopwatch =
                     System.Diagnostics.Stopwatch.StartNew();
-                if (UseParallelBoneWeights &&
-                    boneWeightRemap.IsCreated &&
+                if (boneWeightRemap.IsCreated &&
                     nativeBoneWeights.Length > 0)
                 {
                     JobHandle handle =
-                        new RemapAllBoneWeightsJob
+                        new RemapBoneWeightRangesJob
                         {
                             Weights = nativeBoneWeights,
-                            RemappedIndex = boneWeightRemap
+                            BoneMap = boneWeightRemap,
+                            Ranges = boneWeightRemapRanges
                         }.Schedule(
-                            nativeBoneWeights.Length,
-                            256);
+                            boneWeightRemapRanges.Length,
+                            1);
                     CombineScheduledJob(handle);
                 }
 
@@ -1242,6 +1224,7 @@ namespace UMA
                     BoneWeights = nativeBoneWeights,
                     BonesPerVertex = nativeBonesPerVertex,
                     BoneWeightRemap = boneWeightRemap,
+                    BoneWeightRemapRanges = boneWeightRemapRanges,
                     UVTransforms = uvTransforms,
                     VertexDeltaInputs = vertexDeltaInputs,
                     VertexDeltaRecords = vertexDeltaRecords,
@@ -1283,6 +1266,7 @@ namespace UMA
                 nativeBoneWeights = default;
                 nativeBonesPerVertex = default;
                 boneWeightRemap = default;
+                boneWeightRemapRanges = default;
                 uvTransforms = default;
                 vertexDeltaInputs = default;
                 vertexDeltaRecords = default;
@@ -1393,6 +1377,7 @@ namespace UMA
                     TryDisposeNativeArray(
                         ref boneWeightRemap,
                         ref cleanupException);
+                    TryDisposeNativeArray(ref boneWeightRemapRanges, ref cleanupException);
                     TryDisposeNativeArray(
                         ref nativeBonesPerVertex,
                         ref cleanupException);

@@ -1400,7 +1400,19 @@ namespace UMA.Editors
 			return GetSelectedTextures().Count > 0;
 		}
 
-		[MenuItem("Assets/UMA/Convert selected textures to PNG", false, 2004)]
+		[MenuItem("Assets/UMA/Texture Utilities/Resize Selected", false, 2003)]
+		private static void ResizeSelectedTexturesMenu()
+		{
+			UmaResizeTexturesWindow.Open(GetSelectedTextures());
+		}
+
+		[MenuItem("Assets/UMA/Texture Utilities/Resize Selected", true)]
+		private static bool ResizeSelectedTexturesMenu_Validate()
+		{
+			return GetSelectedTextures().Count > 0;
+		}
+
+		[MenuItem("Assets/UMA/Texture Utilities/Convert selected textures to PNG", false, 2004)]
 		private static void ConvertSelectedTexturesToPngMenu()
 		{
 			var textures = GetSelectedTextures();
@@ -1413,7 +1425,7 @@ namespace UMA.Editors
 			UmaConvertTexturesToPngWindow.Open(textures);
 		}
 
-		[MenuItem("Assets/UMA/Convert selected textures to PNG", true)]
+		[MenuItem("Assets/UMA/Texture Utilities/Convert selected textures to PNG", true)]
 		private static bool ConvertSelectedTexturesToPngMenu_Validate()
 		{
 			return GetSelectedTextures().Count > 0;

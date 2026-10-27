@@ -4,24 +4,31 @@ The UMA Generator is the point where an assembled character recipe becomes rende
 
 This guide explains how to set up the generator prefab and tune the current UMA Generator controls for mobile, PC, and console projects. The recommendations are starting points rather than universal limits. Always validate them on representative content and target hardware.
 
-## Quick setup: Welcome > UMA Defaults
+## Quick setup: Welcome > Configure UMA
 
-Open **UMA Defaults** in the UMA Welcome window. Review the skin UMAMaterials listed on the page, then choose **Setup UMA for maximum speed** or **Setup UMA for maximum flexibility**. The page uses the Generator Prefab assigned in UMA Settings and saves the selected material assets. It detects skin materials by material or shader name; use **Add Skin Material** for custom names and uncheck anything you want to preserve. Materials using existing textures/materials or other specialized types are skipped.
+Open **UMA > Welcome to UMA > Configure UMA**. The active page's navigation button stays highlighted, with bold text and an accent bar. Review the skin and hair UMAMaterials listed on the page, then choose **Setup UMA for maximum speed** or **Setup UMA for maximum fidelity**. The page uses the Generator Prefab assigned in UMA Settings and saves the selected material assets. It detects materials by material or shader name; use **Add Skin Material** or **Add Hair Material** for custom names and uncheck anything you want to preserve. The skin Atlas/No Atlas switch skips materials using existing textures/materials or other specialized types.
 
-| Setting | Maximum speed | Maximum flexibility |
+| Setting | Maximum speed | Maximum Fidelity |
 |---|---|---|
 | Skin UMAMaterial type | Atlas | No Atlas |
+| Hair material assignments | Existing opaque Alpha Clip pass only; original assignments backed up | Original assignments and additional passes restored |
 | Supported source-UV cropping | Enabled | Disabled |
 | Unused, non-T-pose bone cleanup | Enabled | Disabled |
 | Mesh combiner | Jobified | Jobified |
 
 Atlas mode can reduce compatible material groups and draw calls; it can add texture-packing work during character creation. No Atlas retains separate textures/materials for customization, potentially increasing material count and memory. These are starting configurations, not hardware-specific performance guarantees. Cropping keeps its existing shader-safety checks; unknown custom shaders are not automatically opted in. Bone cleanup preserves required bones and UMAIgnore subtrees; use the appropriate UMAIgnore/UMAKeepChain tags for external attachments.
 
+For hair, Maximum Speed keeps a compatible opaque Alpha Clip material already assigned to the first or second pass and clears the additional pass. It backs up the default and HDRP material assignments, including both second-pass fields, on the UMAMaterial. Applying Speed again preserves that original backup. Maximum Fidelity restores those references, including empty fields, and clears the backup. Hair without a compatible Alpha Clip configuration is preserved and reported in the results. Source Unity materials, shaders, and textures are not rewritten.
+
 Both modes disable Process All Pending, use Iteration Count 1, Inter Frame Delay 0, and a 2 ms **soft** incremental-work budget (an atomic step can exceed it). They keep generated RenderTextures, enable async/multithreaded conversion and mip regeneration for later conversion use, set conversion apply budget to 4, disable inline application and forced renderer recreation, enable atlas fitting, use automatic 16/32-bit index sizing, preserve ignored attachments, and disable bone-cleanup timing measurements. Garbage Collection Rate is set to 128 to avoid a forced collection after each mesh/rig build in players; zero is not an off switch in the current generator. Existing unused combiner components are retained; the generator's active combiner reference is changed to Jobified.
 
 The presets preserve atlas resolutions, runtime/editor scale factors, automatic memory scaling and thresholds, atlas overflow algorithm, material mip/filter/compression settings, shader/channel data, default renderer/overlay/texture merger references, keep tags, race blendshape behavior, and diagnostic visibility. These depend on content, platform, or application behavior rather than the Atlas/No Atlas choice. Blendshapes and MeshModifiers still need selective authoring; neither preset adds or removes them. Legacy fields such as Collect Garbage and Allow Read From Mesh are retained; the current work loop does not use them to control collection or mesh readability.
 
-The final dialog lists the configured prefab and materials. Rebuild existing avatars or re-enter Play mode afterward. Scene generator overrides, Generator Quality profiles, and per-character overrides are not rewritten and may take precedence. Applying the other mode switches the mode-specific settings; it does not restore every earlier custom generator value. Package reinstalls can replace bundled assets, so keep project-owned copies for lasting customization.
+After either preset succeeds, Configure UMA runs the generator's **Rebuild all editor UMA** action. It requests rebuilds for active characters in the active scene that have editor-time generation enabled, including when automatic editor generation is paused. The final dialog lists the configured prefab and materials and confirms the rebuild requests.
+
+The preset edits the generator prefab; it does not replace an existing scene generator or rewrite its overrides. Generator Quality profiles and per-character overrides may also take precedence. Check the active generator when an existing scene retains different settings. Applying the other preset switches the mode-specific settings and restores backed-up hair assignments; it does not restore every earlier custom generator value. Package reinstalls can replace bundled assets, so keep project-owned copies for lasting customization.
+
+**Atlas Resolution** controls runtime generation; **Editor Atlas Resolution** controls edit-time previews. Both presets preserve these separate values. A generator with runtime resolution `1024` and editor resolution `4096` can therefore produce a 4K editor atlas after either preset. Set **Editor Atlas Resolution** under **Edit Time Settings** to the desired preview size, then rebuild.
 
 ## How the generator works
 
@@ -38,6 +45,12 @@ At a high level, the generator:
 7. Updates the skeleton, avatar, materials, and generation events.
 
 The generator is therefore both a queue manager and an execution point for texture generation, mesh combination, and avatar updates. A setting that looks texture-specific can affect frame responsiveness because it changes the amount of work and temporary memory required during this sequence.
+
+### Measuring preparation and generation separately
+
+Use the Unity CPU Profiler's `UMA.Character.*`, `UMA.Recipe.*`, and `UMA.Assets.*` markers to separate character preparation from queued generator work. Recipe loading/unpacking, slot and overlay merging, DNA setup, callbacks, color updates, and asset lookup can dominate once mesh generation becomes faster. `UMA.Assets.LoadFromAssetDatabase` identifies editor asset loads; it is not a runtime Addressables download measurement.
+
+Measure both initial/random character creation and repeated edits to an existing character. Record atlas method and effective resolution, equipped content, and whether assets were already loaded. Compare end-to-end completion as well as individual markers: reducing fitting or combining time alone does not remove preparation, queue, GPU, or callback costs.
 
 ### How slots, overlays, materials, and texture merging interact
 
@@ -163,15 +176,15 @@ When fitting reduces texture content, this option uses a higher mip level while 
 
 This controls how UMA responds when packed regions do not fit.
 
-- **Decrease Resolution:** repeatedly reduces resolution using **Fit Percentage Decrease**. It is predictable and is a good mobile choice.
-- **Best Fit Square:** calculates a square-oriented fit and is a balanced general-purpose choice.
-- **Multiple Heuristics:** tries multiple packing approaches and selects a result. It can improve packing efficiency at the cost of more CPU work.
+- **Decrease Resolution:** repeatedly reduces both axes using **Fit Percentage Decrease** until packing succeeds. Coarse reductions can leave large unused areas and discard more detail; smaller reductions require more attempts.
+- **Best Fit Square:** uses direct layouts for a single region, a pair, or equally sized tiles. It compares simple layouts by the detail retained on their most reduced axis, then their pixel area. Mixed regions use MaxRects Best Long Side Fit with growing packing bounds. Input dimensions are prepared once for that fit from the current textures, overlay scales, and source-UV cropping; they are not cached across character builds.
+- **Multiple Heuristics:** tries MaxRects Best Short Side Fit, Best Long Side Fit, and Best Area Fit. It selects the successful layout with the smallest used bounding area, breaking ties by maximum span, and restores that layout's coordinates. Failed attempts reuse the Long Side Fit bounds when growing the next attempt, avoiding a redundant fourth packing pass. Trying three heuristics costs more CPU and does not guarantee a better result for every set of regions.
 
-Recommended starting points:
+Best Fit Square and Multiple Heuristics can scale the two axes differently to fill the atlas. The simple Best Fit Square layouts avoid upscaling either axis. Final rectangle edges are rounded consistently and clamped to the atlas, including overlays that share a region.
 
-- **Mobile low-end and mid-range:** Decrease Resolution or Best Fit Square.
-- **Mobile high-end:** Best Fit Square.
-- **PC and console:** Best Fit Square; test Multiple Heuristics for content with irregular atlas regions.
+Start with **Best Fit Square** on mobile, PC, and console. Compare **Multiple Heuristics** for content with irregular regions, measuring both fitting time and retained texture detail. Use **Decrease Resolution** when uniform reduction is preferred and its detail loss is acceptable. Neither Configure UMA preset changes the selected overflow method.
+
+For example, five equal `2048 × 2048` skin regions in a `1024 × 1024` atlas fit in a two-by-three Best Fit Square layout, using about 83% of the atlas. Decrease Resolution with a `0.5` step reaches `256 × 256` per region and uses about 31%. This example illustrates packing quality; whole-character build time also includes recipe preparation, texture compositing, and mesh generation.
 
 #### Fit Percentage Decrease
 
@@ -193,7 +206,7 @@ This controls mip creation when a generated RenderTexture is converted to a Text
 
 #### Atlas Resolution
 
-This is the nominal square size used for generated atlases. It has the largest direct effect on texture memory.
+This is the nominal square size used for runtime atlases. It has the largest direct effect on texture memory. Edit-time generation uses **Editor Atlas Resolution** instead; inspect the active scene generator and any quality overrides when the generated size differs from the prefab's runtime value.
 
 - **Memory:** doubling the dimension quadruples the base texture memory.
 - **Generation speed:** larger atlases require more pixels to clear, merge, copy, and upload.
@@ -363,7 +376,7 @@ On unified-memory mobile hardware, reported graphics memory may not describe the
 
 #### Editor Atlas Resolution
 
-This is the atlas size used for edit-time generation.
+This is the atlas size used for edit-time generation, independently of the runtime **Atlas Resolution** above. For example, an editor value of `4096` produces a 4K preview atlas even if the runtime value is `1024`. Configure UMA preserves both values, so applying Maximum Speed alone does not reduce preview atlas size. Change this setting on the effective generator and use **Rebuild all editor UMA** to update existing previews.
 
 - **Memory:** lower values reduce scene-editing and serialization pressure.
 - **Generation speed:** lower values make repeated Inspector rebuilds faster.

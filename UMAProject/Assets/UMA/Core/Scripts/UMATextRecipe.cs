@@ -30,6 +30,7 @@ namespace UMA
 
         protected override UMAPackRecipe PackedLoadForUnpack()
         {
+            using var profile = UMACharacterBuildProfiler.ParseRecipe.Auto();
             // Unknown derived formats retain their PackedLoad override and legacy behavior.
             // Cache only version 3's read-only unpack path. This contains names/numbers,
             // not loaded assets, so it cannot pin Addressables or generated resources.

@@ -13,19 +13,19 @@ MonoBehaviour:
   m_Name: LowPC
   m_EditorClassIdentifier: UMA_Core::UMA.GeneratorQualityProfile
   fitAtlas:
-    overrideValue: 0
+    overrideValue: 1
     value: 1
   SharperFitTextures:
-    overrideValue: 0
+    overrideValue: 1
     value: 1
   AtlasOverflowFitMethod:
-    overrideValue: 0
+    overrideValue: 1
     value: 1
   FitPercentageDecrease:
     overrideValue: 0
     value: 0.5
   convertMipMaps:
-    overrideValue: 0
+    overrideValue: 1
     value: 1
   atlasResolution:
     overrideValue: 1
@@ -56,7 +56,7 @@ MonoBehaviour:
     value: 0
   MaxMultiStepWorkMilliseconds:
     overrideValue: 1
-    value: 66
+    value: 20
   collectGarbage:
     overrideValue: 0
     value: 1
@@ -70,17 +70,17 @@ MonoBehaviour:
     overrideValue: 0
     value: 0
   InitialScaleFactor:
-    overrideValue: 0
-    value: 1
+    overrideValue: 1
+    value: 2
   AutomaticScaling:
-    overrideValue: 0
+    overrideValue: 1
     value: 0
   ScaleGPUMemoryCutoffMB:
     overrideValue: 1
     value: 2048
   ScaleSystemMemoryCutoffMB:
     overrideValue: 1
-    value: 14000
+    value: 12000
   editorAtlasResolution:
     overrideValue: 1
     value: 1024
@@ -120,15 +120,15 @@ MonoBehaviour:
   textures:
     maximumDimension:
       overrideValue: 1
-      value: 2048
+      value: 1024
     mipMaps:
       overrideValue: 1
       value: 1
     filterMode:
       overrideValue: 1
-      value: 2
+      value: 1
     anisotropy:
-      overrideValue: 1
+      overrideValue: 0
       value: 4
     mipBias:
       overrideValue: 0
@@ -180,7 +180,7 @@ MonoBehaviour:
       overrideValue: 1
       value: 2
     markMeshNotReadable:
-      overrideValue: 1
+      overrideValue: 0
       value: 0
     ignoreBlendShapes:
       overrideValue: 0
@@ -195,7 +195,7 @@ MonoBehaviour:
       overrideValue: 0
       value: 0
     castShadows:
-      overrideValue: 0
+      overrideValue: 1
       value: 1
     receiveShadows:
       overrideValue: 0

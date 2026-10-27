@@ -327,7 +327,16 @@ namespace UMA.CharacterSystem.Editors
                     owner.thisDCA.characterColors.RemoveDeletedItems();
                     owner.CommitStandardColorEdit();
                 }
-                if (GUILayout.Button("Done")) Close();
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button(new GUIContent("Copy", "Copy all color channels and material parameters for pasting into a Shared Color Table. The color name is excluded.")))
+                    {
+                        SharedColorClipboard.instance.Copy(owner.thisDCA.characterColors._colors[index]);
+                        ShowNotification(new GUIContent("Color settings copied"));
+                    }
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("Done")) Close();
+                }
             }
         }
 

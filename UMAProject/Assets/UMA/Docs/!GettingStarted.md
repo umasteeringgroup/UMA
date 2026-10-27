@@ -39,7 +39,9 @@ The generator prefab is important even when it is not placed in every scene. At 
 
 Do not intentionally keep several active generators unless the project has a tested custom architecture.
 
-For generator performance settings, see [UMAGeneratorSetup.md](UMAGeneratorSetup.md).
+Open **UMA > Welcome to UMA > Configure UMA** to review skin and hair UMAMaterials and choose **Setup UMA for maximum speed** or **Setup UMA for maximum fidelity**. The active page's navigation button stays highlighted. Speed uses Atlas skin materials and compatible Alpha Clip hair passes; Fidelity uses No Atlas and restores backed-up hair assignments. Both presets request rebuilds for active editor-generated avatars in the active scene.
+
+The presets preserve runtime/editor atlas resolutions, scene overrides, and quality profiles. An existing scene generator can retain settings that differ from the configured prefab. For the complete settings and performance guidance, see [Configure UMA and Generator Setup](UMAGeneratorSetup.md).
 
 ## Build the Global Library
 

@@ -1528,96 +1528,96 @@
             "guid": "b7453d0380dc0f1498dd4368b2a87da0",
             "bytes": 25236,
             "sha256": "9eb25339686b7357a4d04c4e35543c22b8bfa5bb6258e2631cebcb47b3182955",
-            "metaBytes": 2051,
-            "metaSha256": "3e298721d82a0804419984b77dee8f45ce504d48d6856e2ecf3da46f3da4fb2e"
+            "metaBytes": 4150,
+            "metaSha256": "43ad9ef214e81d9224da101a3880d48efab24352056e345617dbd5fe6cb69e31"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemaleHair1.png",
             "guid": "94642480dc4387e45a6900cf5c771049",
             "bytes": 57952,
             "sha256": "9c040156e223285f27b4d1f6a7338b1a85c5d1e405b26f7562e7651bb41f1d3b",
-            "metaBytes": 2051,
-            "metaSha256": "f196cd084439d4063214cdcc2ae1821c67953f65b0cae72f43311e9f7d1c9073"
+            "metaBytes": 4128,
+            "metaSha256": "e868270ecad58d548dd04474ddbed9f69f304c8d6981a5e21af3aac90dd0543a"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemaleHair2.png",
             "guid": "1daa9b20b431b164ca35fc614c9fca1d",
             "bytes": 45662,
             "sha256": "b1affdf3fc2996a678ec44035e7c41095490efbb5ab6cc8895ab7eccfe87ca57",
-            "metaBytes": 2051,
-            "metaSha256": "e1ec99adbcf6a4e585832785a04b84486de217d774f77e37aae69dcdb01a2eed"
+            "metaBytes": 4128,
+            "metaSha256": "982e3115fdd1668173ebedfd27eb4535faa7f8aeee50f8fbeba58ad1ce648c09"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemaleHair3.png",
             "guid": "03c6257f7fe1aa149852f48c96f60e17",
             "bytes": 63182,
             "sha256": "7f8b76f4a797f92f2c42cfff1add44508db04b69062a3e46e309d4e6586b3efe",
-            "metaBytes": 2051,
-            "metaSha256": "06fe3f9ee1ad528d14c13367c3a70689b4d470a3849e934382922ae775ca8261"
+            "metaBytes": 4126,
+            "metaSha256": "4b1c331030240ca84a557195a4aa4bde10d1e8cb2b3acb62b9ad92740aee0bdc"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemalePants1.png",
             "guid": "2a792eb9072696d43a9352984c5225f6",
             "bytes": 28220,
             "sha256": "a53a41a92b13b1d0d35517020fe83b1e61d3661ba9cb85de6c5072db63645e6b",
-            "metaBytes": 2051,
-            "metaSha256": "13cae6decb59ab7ec7ac34114e8ad54d29e5ffcdf039cc04839e8229c59981a6"
+            "metaBytes": 4128,
+            "metaSha256": "eb1868e32a4bd5c7f0d9ea14bf0f498bf2050d7895af7cad1486beda27f410ef"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemalePants2.png",
             "guid": "4d03d3c3c1a8a1b42a7fc3b1e7257673",
             "bytes": 28919,
             "sha256": "67588b179aba77b1444ffccd54304289ccac90b6c29361d5d5ff02e8bb953b3f",
-            "metaBytes": 2051,
-            "metaSha256": "7ad097d7987e104b88b276a89e2f191e1d3dd5300ce5f79c9432d991cc78de60"
+            "metaBytes": 4128,
+            "metaSha256": "75dff49f45a5ff895c9a7cb5fd699abdb15e76245c9b718de182449e6e647f91"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemaleShirt1.png",
             "guid": "d191bf2ff62503541b1db787c52002e5",
             "bytes": 72380,
             "sha256": "cbfb83ac61bbcb73b6057e7f4fe0c048246f638190aeb18a06be140b0a169543",
-            "metaBytes": 2051,
-            "metaSha256": "d451a96a9c5826fda253e21bb9c37f5536b49d58766ee2713130375caa780380"
+            "metaBytes": 4128,
+            "metaSha256": "971f753737c9c1583d3a0aad6aac0388231ca8bf5b4124f16279759baff2c674"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemaleShirt2.png",
             "guid": "7d62e9fe46bc2694fb5c5d5d3371180f",
             "bytes": 59792,
             "sha256": "1a2bdcb2dedd598dfe0d7287f531294d5dc7e3aee5c20f9b2bff60ee66618c2e",
-            "metaBytes": 2051,
-            "metaSha256": "a11717e6d9c9019c0a01d2e00b7597d5d8469c4c096d615bef53d4b00e824ab2"
+            "metaBytes": 4126,
+            "metaSha256": "b103f4ecf0e3cb1eeb89a8f2703137cd29664724d04fa344793c611c635c0790"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemaleShirt3.png",
             "guid": "80812688103605b4685bdcf1ada34910",
             "bytes": 65222,
             "sha256": "0386e25e445b63ac28d78a931215b05ed16fed74cbf98d4fb23492e1047b637c",
-            "metaBytes": 2051,
-            "metaSha256": "5c6ca5be241eb41689200a40b7a1b12e590b229a501929abd302d6c337f7a4f0"
+            "metaBytes": 4128,
+            "metaSha256": "9c6e63d323a9c39581e0939c4f64b6286c8e9fbf8c1d04e47adba24da3d2351e"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemaleShirt4.png",
             "guid": "a2d8033d2ee207e4f8d529dfa3835eed",
             "bytes": 68890,
             "sha256": "71c87c58d4613c72953fbccbec52c7edeb181d258b05544c04c969ac6d68ed2d",
-            "metaBytes": 2051,
-            "metaSha256": "ae0bc250ec350ee8b6ea04d7304c0fc93c296ac5737f0f4a5ae8ca179ea3a0c8"
+            "metaBytes": 4130,
+            "metaSha256": "9b4f4a0dc1010ad28bb68b835fa975ea5193aea44d3c59ee6750c3f955939eea"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemaleSwappedFace.png",
             "guid": "28a455e10b4569f45b780b004fa33b90",
             "bytes": 60138,
             "sha256": "11caa52907ee2011d75726fde44d50513c5045f224908d8541b1602acfe51933",
-            "metaBytes": 2051,
-            "metaSha256": "191b53c1b33a95cc46c74a55c1cd7ab259ff9ab3aa32d19929228e4bd0d3fd7e"
+            "metaBytes": 4138,
+            "metaSha256": "b138b2c8333c83531fdc7befb3261bd9bd9f3b1601ffa7b1a0948900aec6a53e"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanFemale/Thumbs/FemaleUndies.png",
             "guid": "450b02d22ce9235439792daf9fcedabd",
             "bytes": 55807,
             "sha256": "494d7509eba119193f3dafb7163d02321ac4f21fac5de4cc136be9737c8236f4",
-            "metaBytes": 2051,
-            "metaSha256": "00cc0cc79ea3f02c2542d0202f297849d7cfe9647dd1d14c961f7ad4e2cdd060"
+            "metaBytes": 4130,
+            "metaSha256": "0f455d19257c2c163f740d77f74f123c8915a310ecba0cc939c900e387928545"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanGirl",
@@ -1648,16 +1648,16 @@
             "guid": "25657247638d7fc47b8cf3271c22e405",
             "bytes": 79016,
             "sha256": "59f986bfeb7bb134bbf44b508f7e3d9d9bbec936df4a046d15f85e2143d32c83",
-            "metaBytes": 2051,
-            "metaSha256": "68dee9733b0e65ae2ccadc2634f7f584543008c8e2703a2d6a4d8475e2219116"
+            "metaBytes": 4126,
+            "metaSha256": "a676dd31d1b0ae2fc911eea26c1a08c188f9c3fa3340b1a4a6dd650fff14dd04"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Recipes/WardrobeRecipes/HumanGirl/Thumbs/HumanGirl.png",
             "guid": "c7f7fc07f4dae68429b35214720a39aa",
             "bytes": 28297,
             "sha256": "d8f7de04472fc51ec19cdefcc5840e35606c738e56fccbebe76c6b8ecf571182",
-            "metaBytes": 2051,
-            "metaSha256": "e22d1f1d0cede2e5fcdd3bbcb64986e3a3bde2d048f5261297172c038092da6f"
+            "metaBytes": 4122,
+            "metaSha256": "976854f7ff69b18f439c669cb998183916375f9f977019d2eb383b3c2ba2efe9"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanFemale/Slots",
@@ -2464,16 +2464,16 @@
             "guid": "3c724e350bc24dc40978991ccddcc915",
             "bytes": 14277,
             "sha256": "447f3287075dcc91253adbe2ed6fa452982e91f4772498f496f3bbd7d71eb237",
-            "metaBytes": 3539,
-            "metaSha256": "375d8fb9de5131d588e967a6f1d0ec0898c11c26d413d9d4f9f3c2e08f7bf263"
+            "metaBytes": 4136,
+            "metaSha256": "c183fcfac343feef120d23eb44ef70b1ff09b237f87320bfac22f09ca45c73ba"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/1_MaleRobe Shoes.png",
             "guid": "782dcc94792dddc4a90a561e0b675435",
             "bytes": 18433,
             "sha256": "827209e05b82460497d3c056699d49795ac1e201b10703ba8143593c82785481",
-            "metaBytes": 3539,
-            "metaSha256": "cfa8069e4c53d40d59917a62805b60e38af5d5be3ee3c934ed8d5f6fe54454c1"
+            "metaBytes": 4142,
+            "metaSha256": "3e083535b66211f7e3c56189adfded29650d01f7dfd50bfa7de2b379eb26f815"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/MaleBeard1.asset",
@@ -2712,208 +2712,208 @@
             "guid": "c13828597679d0b48bdf3f20d5462564",
             "bytes": 3382,
             "sha256": "c9d1a5876baf43a1f854d0dd71f1696c387690c92d046a02adb01815e9e6d91b",
-            "metaBytes": 2053,
-            "metaSha256": "05d973ea8760dbb98aed8d4fb357fc2edc605e973770bc0a20e63723a7d4eb52"
+            "metaBytes": 4146,
+            "metaSha256": "7ade51d07a9ac890fef47783e4121082a2d1e8e4d460445861f886638676aa9c"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/BorisPhoto.png",
             "guid": "59faad2aea1dc8b4dbaf25e9f6d164fb",
             "bytes": 129008,
             "sha256": "b1481c91a58e1ad048356be575fbbda47b9c4f82a16b1c33fb59632a6cfc555e",
-            "metaBytes": 2051,
-            "metaSha256": "a48189257e4a5d3deb86f8747d3715fb3277556471a26bedd39b22a0ce2f146c"
+            "metaBytes": 4124,
+            "metaSha256": "db4611dceee3d544a6198715cfb3b9d8d255ecb20b126b3f76e490f9028ed87f"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/Brow01.png",
             "guid": "abd6de799032c4c4b91b7c66f7cdf4e4",
             "bytes": 58643,
             "sha256": "15ab73ad35cf798ecb39b0129040a5792caa69554103514b6e515c9a34793479",
-            "metaBytes": 2050,
-            "metaSha256": "dd3f383e5c3eb33af6f8b9abc94f8ac638feb254985dde1f435b8a1e0fbbf7ae"
+            "metaBytes": 4116,
+            "metaSha256": "77d70741156b82afe3c4e547c2d1646b511c0dd66e6c30a2ec5984546cf18e83"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/Brow02.png",
             "guid": "c439086b4f215394782a817f4e256b21",
             "bytes": 58711,
             "sha256": "8e9a5f1860bd793ca9a40f5c2d9f8f688c7264f28fd242f938d8690644cac8c6",
-            "metaBytes": 2050,
-            "metaSha256": "cc823d565da8f5db0f0ea07421e06cb49f4db65ea0aac18a2851d9036212e02e"
+            "metaBytes": 4114,
+            "metaSha256": "30bc5bdd974fd34c3d3884eb748b55426c69596a39a3a0ed9044c6012738093c"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/BrowHR.png",
             "guid": "70589163d929c814a8189ec083de2f51",
             "bytes": 58839,
             "sha256": "855a55083475447e6c42fe5800a0a1dd8722d96b18a946d179ad77bf4ea4dbc6",
-            "metaBytes": 2050,
-            "metaSha256": "8b1e3f94dbe99a8165804b321ca39140d4867e4d3dcae22d53890bd8d9b03b81"
+            "metaBytes": 4118,
+            "metaSha256": "029c2a5f98f0900b79d1b910cf3433274f4cfaedabbf30b4dba921b365b82548"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/Cat_Eye_Thumb.png",
             "guid": "7ec448af0ff92cf42b02cf82bd332291",
             "bytes": 2492,
             "sha256": "2c9386f4570f6848e693ce9d7fdf7e0f46edf84f1d657876214e810c88b13989",
-            "metaBytes": 2050,
-            "metaSha256": "91e4b75f0831d3fb1aa1400c8ba828a94970d4deaf1b49c3bb6272fde5386134"
+            "metaBytes": 4128,
+            "metaSha256": "74afca1c80720720b52679cfedf1198197ecd067a2f582697995c97957b96130"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/DefaultMaleUnderwear.png",
             "guid": "53da3b94c18aa7a4db7402c751df6d86",
             "bytes": 15911,
             "sha256": "9c386fb27ba208bdb9f7a5664b3849bf405f8a1a8a54e30e594c8ed394277084",
-            "metaBytes": 2051,
-            "metaSha256": "9d5d032f811d3bee9b74359c25e9a95af0cedf5cf19dc7e70b73859cfccf1777"
+            "metaBytes": 4144,
+            "metaSha256": "3f6e9f89ece533c3564f870726d498412e731389f40c4b987f1081bfff1eb53a"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/Eye_Large_Thumb.png",
             "guid": "0bc9cedffe822aa4d8e9778f22f0436e",
             "bytes": 6548,
             "sha256": "f0f10e288570f269a9ed7269aac582be8c3fa19789785f166948280866dbc75e",
-            "metaBytes": 2050,
-            "metaSha256": "af656773718c23485ba6bf3c58eb7ad7ee32a011c4ec858c37a1f51849d1460b"
+            "metaBytes": 4132,
+            "metaSha256": "bb2df39088f98bd565a32764450c2bc51507893355022e41808f90a9e9688542"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/GlovesOfHammer.png",
             "guid": "acd2947ccc12f0b41aaef2fc727dece4",
             "bytes": 83100,
             "sha256": "803df6feda5e9697196d89c58e96b220cbf0f7abe8cf6cc5b425c5f19401a3b8",
-            "metaBytes": 2052,
-            "metaSha256": "7bb5ba45b95816977b1c595768c54bd416df5d73238e000fff1d7f133216bbbd"
+            "metaBytes": 4135,
+            "metaSha256": "a0d4164b661af516d9f2a72cfa21ec08aac48e0c962876c34a5b6642cdf94584"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/HumanMaleTroll.png",
             "guid": "a223005d1da2e6e42b1fb1249bb91219",
             "bytes": 69610,
             "sha256": "6384ddd64575e3737bc975e5c678f29536578b6ab20215cab6d51fb6f643124b",
-            "metaBytes": 2050,
-            "metaSha256": "764347bead6ff716f22a9572db6aafcc71acf7ec203c057e55d8801fd47e78c5"
+            "metaBytes": 4132,
+            "metaSha256": "2ad65f38ad91a4f4d1283440b6bcaf4fdb249e18ac0dd02c02fc0cc6a1bc183f"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/Jeans.png",
             "guid": "02809001082aed0479c656673c5c5c11",
             "bytes": 42279,
             "sha256": "06c80a9a35ba1b2fa053dfc844808e720b883a79bf60b933b391cfbf8d58a255",
-            "metaBytes": 2050,
-            "metaSha256": "a7c29764dd5f4fbf2b04fb3d0db1c7794e79ef13c5d9f648fb235f955aebabff"
+            "metaBytes": 4116,
+            "metaSha256": "167bc1cc789a7071f74549f6938af42271b57c05adb663946401a170d9c1708a"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/MaleBeard1.png",
             "guid": "202cec08c39591848ba805b12ad3016e",
             "bytes": 37857,
             "sha256": "f25c38d8dd7b63d483963f8b0a0bd757449d7c9b8386c2fa5c2ab28b98385156",
-            "metaBytes": 2050,
-            "metaSha256": "e07784075290b3172098315535ee36f9695ef41cff90bef738f9533bc46cbc60"
+            "metaBytes": 4126,
+            "metaSha256": "141aed58090b55427c42bfd9605a7c0626a324dcd053d61d574f6f8e21c58cad"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/MaleBeard2.png",
             "guid": "3919e5d423ea5eb41a1725838d71d53b",
             "bytes": 56818,
             "sha256": "1813ab04155615bd2e481ab7a732d54bbeb9fc8bae13d56346762d87de972fd2",
-            "metaBytes": 2050,
-            "metaSha256": "d80da11a3af6c6b016d1f6debef0b3f7d2fe0f2148e82c0870480ad4b2f82669"
+            "metaBytes": 4124,
+            "metaSha256": "a6920ce7853cffd7a1626ee0b2b8e6edceb4976c9bd1b1e5ad4ccd1812751d4c"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/MaleBeard3.png",
             "guid": "80aac4e4cdab6764ea5ff0b29c6b0a4b",
             "bytes": 38333,
             "sha256": "453b6187b71350a73465e7c18cce176b9f0de89bcd4fe318fb2f3738bfc4c95b",
-            "metaBytes": 2050,
-            "metaSha256": "be5b239012baa8d3244db27670f54f4909611b250f922db3008f803247189e71"
+            "metaBytes": 4124,
+            "metaSha256": "9913bf97479aa3ad650bab7fccfe3c87af0e2bddb638e9bcb019c498d53ca880"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/MaleHair 1.png",
             "guid": "8d0701719b363e045ae6d13f06b27cd6",
             "bytes": 72250,
             "sha256": "12842ec34e527c6008db211728a23c634a3840d585421ce39181c0e5f295d391",
-            "metaBytes": 2050,
-            "metaSha256": "6d0e13c4c035975578c6394c6c13a5783a3f7370d39e56589170b682e74e2d0d"
+            "metaBytes": 4126,
+            "metaSha256": "9baaba7147a4ed6032c5fdc6cf306def6844083d0038967afc94e28ed70c8631"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/MaleHair 2.png",
             "guid": "d0b91ee4351721246b7b64d07bf3c91c",
             "bytes": 75331,
             "sha256": "e2933693654731ffab93936610f71ddf2bb37f50386c08c0e1f1ca4f23679df4",
-            "metaBytes": 2050,
-            "metaSha256": "3446761d8f6b8efa71302b13f2edd01f65ee6b3e0e21adc5e863232a00948aff"
+            "metaBytes": 4126,
+            "metaSha256": "c5a21e0781c2bfb9214c07ae3473580a1f0c97a2bf126ff5569bf295532e5fa2"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/MaleHair 3.png",
             "guid": "0676cfe89e9a6ef46a8511c5149d93c8",
             "bytes": 63526,
             "sha256": "05bf581c66aae82bf9a853575e9d5e85f90c5b0366979441060840ac5da830a7",
-            "metaBytes": 2050,
-            "metaSha256": "3723da0f2ea495662285c64f397eb3b10ba2ffea2989e111c439d13ec618d594"
+            "metaBytes": 4122,
+            "metaSha256": "c40127647a3c099a3d4a706b548dfbb4d7852296fd71b2fb0d7480f1694e7240"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/MaleShirt1.png",
             "guid": "1642edf09249dce43846da29cc2f3b55",
             "bytes": 73986,
             "sha256": "e36411913b50d0a8f6b6c3a22b31909657260d591acd48c940ee138b1e5a34e1",
-            "metaBytes": 2050,
-            "metaSha256": "b954943986e23b8c1ef8e86eaf201af2437bc11c692c8834e4cee610dcb04c2f"
+            "metaBytes": 4122,
+            "metaSha256": "4ca404098ee53c027671dfae9454d19895293b7935a4fd97e7e5913044e20b9d"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/MysticHood.png",
             "guid": "9f540207166d6874f9e8b31f2aa88076",
             "bytes": 94307,
             "sha256": "93dbc516e673fea9f5853853ac2fbc7188fa3f56194f32eb3e955f778cc4a188",
-            "metaBytes": 2052,
-            "metaSha256": "38eb8a5b0f38463d5f171db27870b54a8ed855589f442b4e56bfdf43eb00fc5a"
+            "metaBytes": 4131,
+            "metaSha256": "1a0371f8498034bfc86e08a181f9f08f2782d3107ccaa3ba663186649ae68778"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/MysticRobe.png",
             "guid": "50f0c9e3f781e814781bc106cd94c672",
             "bytes": 108884,
             "sha256": "a6ceeb87935c9321bd4b86688352086ac0fcfcc74cc43537a280a6e2de2812a0",
-            "metaBytes": 2052,
-            "metaSha256": "fe74e00922d09cd553c69a88aa85fe2a0104bec25c91fbfac21bb1912ef1873c"
+            "metaBytes": 4129,
+            "metaSha256": "ab50b71708531110bbe3045a735a4ba01b53f0551f944697fe7149016e0ea376"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/MysticShoes.png",
             "guid": "5ba8be9f4723c964e9937c9ea7d657ea",
             "bytes": 40131,
             "sha256": "efd01b8f8e72293126a5753860544cb3d3bd1c1ba9158fd8bd4d5ee2651e42af",
-            "metaBytes": 2052,
-            "metaSha256": "ffa65bd9d3b894de44c1b9b252b35c8b8416ce9f216bde633ba2a567e3eddedc"
+            "metaBytes": 4131,
+            "metaSha256": "a89012e421f82321981399735f3282570a99c2553eba4340c0e2a93b14383cc2"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/ShirtPlain.png",
             "guid": "8029b025237f8b24aa5dd4e4e0b3566e",
             "bytes": 61043,
             "sha256": "e1b3997bfbd47eebebfe66021d2c81d527a51fb3d617885c2868f931736c67c0",
-            "metaBytes": 2050,
-            "metaSha256": "290cb78596a913b93e4c60ad82201007ddd201750392fd1bc00b8d148261d7b7"
+            "metaBytes": 4124,
+            "metaSha256": "e7328ddf57590a54f765fb6d95e4f8241bf7a6ebfeee8966ea540b4ce955d69b"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/Shorts 2.png",
             "guid": "7b068e4f853e4df46bd28f2ddd54b2dd",
             "bytes": 33853,
             "sha256": "8d7819819f8c031aef176f1d9d9a96184674f6e598202cbf8419dc35aa300f02",
-            "metaBytes": 2050,
-            "metaSha256": "b8464e2502cf4603cbd46969f12e2e374943705e2c2423b4f9cf48ec3bc923e0"
+            "metaBytes": 4120,
+            "metaSha256": "40119e679ff8f4bb2c76a54744f74b0554017e955e1e2c28aa01a36539e4df19"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/Shorts.png",
             "guid": "d61a27a2b3536134d810ba1fb4d2771c",
             "bytes": 33931,
             "sha256": "25dafd5407214ce14b0a45576c9e3d6775f8d74a21f17b6a44ef934e58b9df99",
-            "metaBytes": 2050,
-            "metaSha256": "5161902df1d2fbc1dc59b82c3ab656b128798aa22ab3d8370706c90be36d6d4f"
+            "metaBytes": 4116,
+            "metaSha256": "53e9e5cc4b54794fda9a8ece92130b88c51749fca917413ff48d67ac7e29be86"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/ShortsHearts.png",
             "guid": "14d6e9ed3622d554b890ab3e4914e8ec",
             "bytes": 33873,
             "sha256": "dbebd7d8a891009bf46caa8ffe8039fb27541c34581f43467c25b0ae4ebef008",
-            "metaBytes": 2050,
-            "metaSha256": "3bc0deadb53720bf541185de81a4325bba9230d5fc2febf49a46e5303043c7ff"
+            "metaBytes": 4130,
+            "metaSha256": "2e21f1a78f17485e33b293fd6a19db949b9e286c2aea8b61ca3f9d6255416137"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Recipes/WardrobeRecipes/Thumbs/WrappedPants.png",
             "guid": "3bf66d8c0065b514ebe9298633431da9",
             "bytes": 48938,
             "sha256": "c33a7b2801605e6ce9d40b6f982821ed444ea88b704148360e6e96ef8525fa16",
-            "metaBytes": 2052,
-            "metaSha256": "639558944fef184ac2a3b9860b0ca0c4994fdc2c29226d4a2e0ecd5cf0c872f6"
+            "metaBytes": 4135,
+            "metaSha256": "6c533a963ccc3a243df40014747f29bea1b049b9378f51fae6e27097f1fd9156"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Example/HumanMale/Slots",
@@ -4936,8 +4936,8 @@
             "guid": "3404c6e948b0b2140bed04a6dba90038",
             "bytes": 15219,
             "sha256": "5c0c3f4eb1a1bee35ddaff20feaf5e6c76517e8fba0942c26dc46b3acfb41c15",
-            "metaBytes": 3539,
-            "metaSha256": "53dcfe5f5b4fe6ec5a439d3aff7e0710cbaab21c7a69b2608334617764c028c8"
+            "metaBytes": 4144,
+            "metaSha256": "dcdebbd46eab5d70b8475493ef9bf4f99bdbd7a45c48377aed8c8ddbe2cea610"
         },
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/Tattoos/WoldTattooRecipe.asset",

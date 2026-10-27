@@ -235,6 +235,10 @@ Repair the index. Also check references stored by logical UMA name; renaming the
 
 Use `Repair and Remove Invalid Items`, then inspect the affected recipes.
 
+### An AssetItem type cannot be resolved
+
+The `AssetItem._Type` error includes an **AssetItem JSON** dump of the current index entry. Use its stored type and asset-identification fields to find the affected item and check whether its defining scripts or optional plugin are installed. Repair the index after correcting the missing type or asset.
+
 ### Duplicate names return the wrong content
 
 UMA name lookups should be unique within an indexed type. Rename one asset and rebuild the index.

@@ -2096,8 +2096,6 @@ namespace UMA
 					raceData.DNACollection = collection;
 				}
 
-				collection.LoadDictionary();
-
 				if (dnaInstanceCollection == null)
 				{
 					dnaInstanceCollection = new DNAInstanceCollection();
@@ -2159,6 +2157,7 @@ namespace UMA
             // AddMissingDNAForRace: ensure all DNA from Race DNACollection exists, using overrides where provided
             public void AddMissingDNAForRace()
             {
+                using var profile = UMACharacterBuildProfiler.EnsureDNA.Auto();
                 if (raceData == null || !raceData.useNewDNA)
                 {
                     return;
@@ -2170,8 +2169,6 @@ namespace UMA
                     collection = new DNACollection();
                     raceData.DNACollection = collection;
                 }
-                collection.LoadDictionary();
-
                 if (dnaInstanceCollection == null)
                 {
                     dnaInstanceCollection = new DNAInstanceCollection();
@@ -2199,7 +2196,7 @@ namespace UMA
                 }
 
                 Dictionary<string, float> overrides = null;
-                try { overrides = raceData.GetDefaultDNA(); } catch { overrides = null; }
+                bool defaultsLoaded = false;
 
                 // Iterate groups to preserve parentGroup association
                 var groups = collection.DNAGroups;
@@ -2219,6 +2216,13 @@ namespace UMA
                         if (string.IsNullOrEmpty(name) || assigned.Contains(name))
                         {
                             continue;
+                        }
+                        // Most rebuilds already have every value. Resolve defaults only
+                        // when adding DNA, keeping the lookup local to this validation pass.
+                        if (!defaultsLoaded)
+                        {
+                            try { overrides = raceData.GetDefaultDNA(); } catch { overrides = null; }
+                            defaultsLoaded = true;
                         }
                         float value = dnaDef.defaultValue;
                         if (overrides != null && overrides.TryGetValue(name, out var ov))
@@ -2277,6 +2281,7 @@ namespace UMA
 
             public UMADnaBase[] GetDefinedDna()
             {
+                using var profile = UMACharacterBuildProfiler.GetDefinedDNA.Auto();
                 if (raceData != null && raceData.useNewDNA)
                 {
                     AddMissingDNAForRace();
@@ -2570,6 +2575,7 @@ namespace UMA
 			/// <param name="dontSerialize">If set to <c>true</c> slot will not be serialized.</param>
 			public SlotData MergeSlot(SlotData slot, bool dontSerialize, bool mergeMatchingOverlays = true, string recipeName = "")
 			{
+                using var profile = UMACharacterBuildProfiler.MergeSlot.Auto();
 				if ((slot == null) || (slot.asset == null && !slot.isPlaceholderSlot))
 				{
 					if (slot == null)
@@ -2893,22 +2899,9 @@ namespace UMA
                         continue;
                     }
 
-                    bool found = false;
-					for (int j = 0; j < list2.Count; j++)
-					{
-						OverlayData overlay2 = list2[i];
-						if (!(overlay2))
-                        {
-                            continue;
-                        }
-
-                        if (OverlayData.Equivalent(overlay1, overlay2))
-						{
-							found = true;
-							break;
-						}
-					}
-					if (!found)
+                    // Overlay order matters. Compare this pair once, including on a mismatch.
+                    OverlayData overlay2 = list2[i];
+                    if (!overlay2 || !OverlayData.Equivalent(overlay1, overlay2))
                     {
                         return false;
                     }
@@ -2942,6 +2935,7 @@ namespace UMA
 			/// </summary>
 			public void MergeMatchingOverlays()
 			{
+                using var profile = UMACharacterBuildProfiler.MergeMatchingOverlays.Auto();
 				for (int i = 0; i < slotDataList.Length; i++)
 				{
 					if (slotDataList[i] == null)
@@ -3287,6 +3281,7 @@ namespace UMA
 			/// <param name="dontSerialize">If set to <c>true</c> recipe will not be serialized.</param>
 			public void Merge(UMARecipe recipe, bool dontSerialize, bool mergeMatchingOverlays = true, bool mergeDNA = true, string raceName = null)
 			{
+                using var profile = UMACharacterBuildProfiler.Merge.Auto();
 				if (recipe == null)
                 {
                     return;

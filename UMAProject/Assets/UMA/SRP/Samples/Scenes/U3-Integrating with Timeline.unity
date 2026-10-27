@@ -1346,7 +1346,7 @@ MonoBehaviour:
       Suppressed: 0
       dontSerialize: 0
       rendererAsset: {fileID: 0}
-    - asset: {fileID: 11400000, guid: 5825e0da17b206845bc4d3fcc2a5e44c, type: 2}
+    - asset: {fileID: 11400000, guid: ecf0fec5d38188f4bac942bd95d36cca, type: 2}
       isPlaceholderSlot: 0
       placeholderSlotName: 
       overlayScale: 1

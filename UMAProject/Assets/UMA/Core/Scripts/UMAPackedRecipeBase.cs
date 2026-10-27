@@ -39,12 +39,14 @@ namespace UMA
 		/// <param name="context">Context.</param>
 		public override void Load(UMA.UMAData.UMARecipe umaRecipe, bool loadSlots = true)
 		{
+            using var profile = UMACharacterBuildProfiler.LoadRecipe.Auto();
             var packedRecipe = PackedLoadForUnpack();
 			UnpackRecipe(umaRecipe, packedRecipe, loadSlots);
 		}
 
 		public override void Load(UMAData.UMARecipe umaRecipe, RaceData raceData)
 		{
+            using var profile = UMACharacterBuildProfiler.LoadRecipe.Auto();
             var packed = PackedLoadForUnpack();
 			UnpackRecipeWithRaceDefaults(umaRecipe, packed, raceData);
 		}
@@ -60,6 +62,7 @@ namespace UMA
 
 		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, bool loadSlots = true, RaceData race = null)
 		{
+            using var profile = UMACharacterBuildProfiler.UnpackRecipe.Auto();
 			switch (umaPackRecipe.version)
 			{
 				case 3:
@@ -936,6 +939,7 @@ namespace UMA
 
 		public static List<UMADnaBase> UnPackDNA(List<UMAPackedRecipeBase.UMAPackedDna> DNA)
 		{
+            using var profile = UMACharacterBuildProfiler.UnpackDNA.Auto();
 
 			List<UMADnaBase> UnpackedDNA = new List<UMADnaBase>();
 
@@ -953,6 +957,7 @@ namespace UMA
 
         public static List<UMADnaBase> UnPackDNA(List<UMAPackedRecipeBase.UMAPackedDna> DNA, RaceData race)
         {
+            using var profile = UMACharacterBuildProfiler.UnpackDNA.Auto();
 
             List<UMADnaBase> UnpackedDNA = new List<UMADnaBase>();
 
@@ -1075,6 +1080,7 @@ namespace UMA
 
 			if (race.PrebakedBlendshapes != null && race.PrebakedBlendshapes.Count > 0)
 			{
+                using var profile = UMACharacterBuildProfiler.BakeRaceSlots.Auto();
 				SlotDataAsset.BakeSlotParams options = new SlotDataAsset.BakeSlotParams();
 				options.burnOptions = race.PrebakedBlendshapes;
 				options.ShapesToInclude = race.UnbakedShapesToInclude;
@@ -1094,6 +1100,8 @@ namespace UMA
 						SlotDataAsset original = slot.asset;
 						options.newSlotName = original.slotName + "_baked_" + race.raceName;
 						slot.asset = original.BakeNewSlotData(options);
+                        if (Application.isPlaying && options.forceRebuildRaceSlots && slot.asset != original)
+                            UMARuntimeBakedSlotCleanup.Register(slot);
 					}
 				}
 
@@ -1596,6 +1604,7 @@ namespace UMA
 
 		public static OverlayColorData[] UnpackColors(UMAPackRecipe umaPackRecipe)
 		{
+            using var profile = UMACharacterBuildProfiler.UnpackColors.Auto();
 			OverlayColorData[] colorData;
 			if (UMAPackRecipe.ArrayHasData(umaPackRecipe.fColors))
 			{

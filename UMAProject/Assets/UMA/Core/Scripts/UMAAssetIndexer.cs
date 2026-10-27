@@ -1466,8 +1466,17 @@ namespace UMA
 
             foreach (var item in SerializedItems)
             {
-                if (item != null && item._Type != null)
+                if (item != null)
                 {
+                    // Need to skip invalid items. Must do before checking _Type.
+                    if (item.isInvalid)
+                    {
+                        continue;
+                    }
+                    if (item._Type == null)
+                    {
+                        continue;
+                    }
                     if (!TypeLookup.ContainsKey(item._Type))
                     {
 #if UNITY_EDITOR
@@ -3156,6 +3165,7 @@ namespace UMA
 		/// <returns></returns>
 		public T GetAsset<T>(string name, bool recursionGuard = false, bool inStartup = false) where T : UnityEngine.Object
         {
+            using var profile = UMACharacterBuildProfiler.GetAsset.Auto();
 #if UNITY_EDITOR
             bool indexUpdated = false;
             UMASettings settings = UMASettings.GetOrCreateSettings();

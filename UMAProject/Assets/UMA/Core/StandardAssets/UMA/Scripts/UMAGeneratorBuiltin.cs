@@ -2760,6 +2760,9 @@ namespace UMA
             UMAAssetIndexer.bareInstance?.dirtyList.Clear();
             cleanUmas.Clear();
             dirtyUmas.Clear();
+#if UMA_DEBUG
+            umaDatasGenerated.Clear();
+#endif
             umaData = null;
             FreezeTime = false;
         }
@@ -2810,6 +2813,9 @@ namespace UMA
             }
 
             // Remove from the various lists if it exists
+#if UMA_DEBUG
+            umaDatasGenerated.Remove(umaToRemove);
+#endif
             umaDirtyList.Remove(umaToRemove);
             cleanUmas.Remove(umaToRemove);
             dirtyUmas.Remove(umaToRemove);

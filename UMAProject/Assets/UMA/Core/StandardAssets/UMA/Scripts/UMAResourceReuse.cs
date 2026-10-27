@@ -49,12 +49,22 @@ namespace UMA
             internal float[] Values;
             internal bool CopyUnbaked;
             internal float SmoothingAngle;
+            internal BakedPreparation Preparation;
 #if UNITY_EDITOR
             internal WeakReference<SlotDataAsset> SourceAsset;
             internal int DirtyCount;
 #endif
         }
         private static ConditionalWeakTable<UMAMeshData, BakedMeshOrigin> bakedMeshOrigins = new ConditionalWeakTable<UMAMeshData, BakedMeshOrigin>();
+        // Weak source keys and weak metadata values never keep a slot, avatar, or mesh
+        // alive. Bound the parameter history as runtime bake values may vary continuously.
+        private const int MaxBakedPreparationsPerSource = 32;
+        private sealed class BakedPreparation
+        {
+            internal BakedMeshOrigin Settings;
+            internal WeakReference<UMAMeshPreparation> Data;
+        }
+        private static ConditionalWeakTable<UMAMeshData, List<BakedPreparation>> bakedPreparations = new();
         private static int meshInputsInvalidated;
         private static int meshInputRevision;
         internal static int MeshInputRevision => meshInputRevision;
@@ -89,6 +99,7 @@ namespace UMA
             MeshDetailedKeyCount = MeshAdmissionCount = MeshFirstStageRejectCount = 0;
             modifierOrigins = new ConditionalWeakTable<VertexAdjustmentCollection, ModifierOrigin>();
             bakedMeshOrigins = new ConditionalWeakTable<UMAMeshData, BakedMeshOrigin>();
+            bakedPreparations = new ConditionalWeakTable<UMAMeshData, List<BakedPreparation>>();
             InvalidateMeshInputs();
         }
 
@@ -129,6 +140,59 @@ namespace UMA
             origin.SourceAsset = new WeakReference<SlotDataAsset>(source);
             origin.DirtyCount = UnityEditor.EditorUtility.GetDirtyCount(source);
 #endif
+            // The optional surface-frame recalculator uses parallel accumulation.
+            // Equal inputs do not promise bit-identical normals/tangents, so those
+            // outputs must still be fingerprinted and validated independently.
+            if (origin.SmoothingAngle > 0.1f)
+            {
+                origin.Preparation = null;
+                return;
+            }
+            var entries = bakedPreparations.GetOrCreateValue(source.meshData);
+            entries.RemoveAll(entry => entry.Settings.Revision != meshInputRevision);
+            origin.Preparation = entries.Find(entry => SameBakeSettings(entry.Settings, origin));
+            if (origin.Preparation == null)
+            {
+                if (entries.Count == MaxBakedPreparationsPerSource) entries.RemoveAt(0);
+                origin.Preparation = new BakedPreparation { Settings = origin };
+                entries.Add(origin.Preparation);
+            }
+        }
+
+        private static bool SameBakeSettings(BakedMeshOrigin a, BakedMeshOrigin b) =>
+            a.CopyUnbaked == b.CopyUnbaked && a.SmoothingAngle.Equals(b.SmoothingAngle) &&
+            SameBakeArray(a.Names, b.Names) && SameBakeArray(a.Values, b.Values) &&
+            SameBakeArray(a.IncludedShapes, b.IncludedShapes);
+
+        private static bool SameBakeArray<T>(T[] a, T[] b) =>
+            ReferenceEquals(a, b) || a != null && b != null && a.SequenceEqual(b);
+
+        private static bool TryGetBakedOrigin(UMAMeshData mesh, out BakedMeshOrigin origin)
+        {
+            if (!bakedMeshOrigins.TryGetValue(mesh, out origin) || origin.Revision != meshInputRevision ||
+                !origin.Source.TryGetTarget(out var source)) return false;
+#if UNITY_EDITOR
+            if (!origin.SourceAsset.TryGetTarget(out var asset) || asset == null) return false;
+            CheckEditorSourceRevision(asset);
+            if (origin.Revision != meshInputRevision || origin.DirtyCount != UnityEditor.EditorUtility.GetDirtyCount(asset) ||
+                !ReferenceEquals(source, asset.meshData)) return false;
+#endif
+            return true;
+        }
+
+        // Only our deterministic bake pipeline registers equivalence. Ordinary copies,
+        // loaded metadata and invalidated outputs still take full content validation.
+        internal static bool TryGetBakedPreparation(UMAMeshData mesh, out UMAMeshPreparation data)
+        {
+            data = null;
+            return TryGetBakedOrigin(mesh, out var origin) && origin.Preparation?.Data != null &&
+                origin.Preparation.Data.TryGetTarget(out data);
+        }
+
+        internal static void RememberBakedPreparation(UMAMeshData mesh, UMAMeshPreparation data)
+        {
+            if (TryGetBakedOrigin(mesh, out var origin) && origin.Preparation != null)
+                origin.Preparation.Data = new WeakReference<UMAMeshPreparation>(data);
         }
 
         private static UMAGeneratedResourceKey ModifierFingerprint(VertexAdjustmentCollection adjustments)

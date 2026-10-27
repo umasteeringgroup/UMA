@@ -1,0 +1,31 @@
+.resize-root {
+    flex-grow: 1;
+    padding: 10px;
+}
+.resize-title {
+    -unity-font-style: bold;
+    margin-bottom: 6px;
+}
+.resize-description {
+    white-space: normal;
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+.resize-list {
+    flex-grow: 1;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+.resize-entry {
+    white-space: normal;
+    margin-bottom: 8px;
+}
+.resize-buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+.resize-buttons > Button {
+    min-width: 100px;
+    margin-left: 6px;
+}

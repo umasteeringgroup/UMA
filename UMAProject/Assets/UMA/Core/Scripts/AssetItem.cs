@@ -56,6 +56,34 @@ namespace UMA
 
         #endregion
         #region Properties
+
+        public bool isInvalid
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_Name))
+                {
+                    return false;
+                }
+                if (!string.IsNullOrEmpty(_Path))
+                {
+                    return false;
+                }
+                if (!string.IsNullOrEmpty(_BaseTypeName))
+                {
+                    return false;
+                }
+                if (!string.IsNullOrEmpty(_Address))
+                {
+                    return false;
+                }
+                if (_SerializedItem != null)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
         public System.Type _Type
         {
             get
@@ -105,7 +133,11 @@ namespace UMA
                     }
                     else
                     {
-                        Debug.LogError("The type " + _BaseTypeName + " is not a valid type. Please check the AssetItem.");
+                        string name = string.IsNullOrEmpty(_Name) ? "Unknown" : _Name;
+                        string path = string.IsNullOrEmpty(_Path) ? "Unknown" : _Path;
+
+                        Debug.LogError("The type " + _BaseTypeName + " is not a valid type. Please check the AssetItem : " + name + " at path: " + path
+                            + "\nAssetItem JSON:\n" + JsonUtility.ToJson(this, true));
                     }
                     return typeof(UnityEngine.Object);
                 }
@@ -176,6 +208,7 @@ namespace UMA
 
 		private Object GetItem()
 		{
+            using var profile = UMACharacterBuildProfiler.LoadAsset.Auto();
 #if UNITY_EDITOR
             bool attemptedEditorSearch = false;
 			Object itemObject = AssetDatabase.LoadAssetAtPath(_Path, _Type);

@@ -75,7 +75,8 @@ Converts selected legacy expression-set assets into the newer expression-group f
 ## Texture Commands
 
 - `Open in Texture Utilities`: loads selected textures into [Texture Utilities](TextureUtilities.md).
-- `Convert selected textures to PNG`: see [Asset Consolidation and Repair](AssetConsolidationAndRepair.md).
+- `Texture Utilities > Resize Selected`: lowers importer Maximum Size, including enabled platform overrides, then reimports. Original image files and smaller limits are preserved. See [Texture Utilities](TextureUtilities.md).
+- `Texture Utilities > Convert selected textures to PNG`: see [Asset Consolidation and Repair](AssetConsolidationAndRepair.md).
 
 ## Slot and Pose Commands
 

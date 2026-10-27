@@ -1,0 +1,4442 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3022e3cc0dfedfb46969c949a86882f3, type: 3}
+  m_Name: EyelidNormals
+  m_EditorClassIdentifier: UMA_Core::UMA.MeshModifier
+  splitDiagnostics: 
+  runtimeModifiers:
+  - ModifierName: Rotate Normal (1)
+    isTemporary: 0
+    manuallyModified: 0
+    keepAsIs: 0
+    SlotName: UMA30_Body_UDIM1001
+    DNAName: 
+    Scale: 1
+    adjustments:
+      rid: 3901258040789434555
+  editorModifiers:
+  - ModifierName: Rotate Normal (1)
+    isTemporary: 0
+    manuallyModified: 0
+    keepAsIs: 0
+    SlotName: 
+    DNAName: 
+    Scale: 1
+    adjustments:
+      rid: 3901258040789434556
+  references:
+    version: 2
+    RefIds:
+    - rid: 3901258040789434555
+      type: {class: VertexNormalAdjustmentCollection, ns: UMA, asm: UMA_Core}
+      data:
+        vertexAdjustments:
+        - rid: 3901258040789434557
+        - rid: 3901258040789434558
+        - rid: 3901258040789434559
+        - rid: 3901258040789434560
+        - rid: 3901258040789434561
+        - rid: 3901258040789434562
+        - rid: 3901258040789434563
+        - rid: 3901258040789434564
+        - rid: 3901258040789434565
+        - rid: 3901258040789434566
+        - rid: 3901258040789434567
+        - rid: 3901258040789434568
+        - rid: 3901258040789434569
+        - rid: 3901258040789434570
+        - rid: 3901258040789434571
+        - rid: 3901258040789434572
+        - rid: 3901258040789434573
+        - rid: 3901258040789434574
+        - rid: 3901258040789434575
+        - rid: 3901258040789434576
+        - rid: 3901258040789434577
+        - rid: 3901258040789434578
+        - rid: 3901258040789434579
+        - rid: 3901258040789434580
+        - rid: 3901258040789434581
+        - rid: 3901258040789434582
+        - rid: 3901258040789434583
+        - rid: 3901258040789434584
+        - rid: 3901258040789434585
+        - rid: 3901258040789434586
+        - rid: 3901258040789434587
+        - rid: 3901258040789434588
+        - rid: 3901258040789434589
+        - rid: 3901258040789434590
+        - rid: 3901258040789434591
+        - rid: 3901258040789434592
+        - rid: 3901258040789434593
+        - rid: 3901258040789434594
+        - rid: 3901258040789434595
+        - rid: 3901258040789434596
+        - rid: 3901258040789434597
+        - rid: 3901258040789434598
+        - rid: 3901258040789434599
+        - rid: 3901258040789434600
+        - rid: 3901258040789434601
+        - rid: 3901258040789434602
+        - rid: 3901258040789434603
+        - rid: 3901258040789434604
+        - rid: 3901258040789434605
+        - rid: 3901258040789434606
+        - rid: 3901258040789434607
+        - rid: 3901258040789434608
+        - rid: 3901258040789434609
+        - rid: 3901258040789434610
+        - rid: 3901258040789434611
+        - rid: 3901258040789434612
+        - rid: 3901258040789434613
+        - rid: 3901258040789434614
+        - rid: 3901258040789434615
+        - rid: 3901258040789434616
+        - rid: 3901258040789434617
+        - rid: 3901258040789434618
+        - rid: 3901258040789434619
+        - rid: 3901258040789434620
+        - rid: 3901258040789434621
+        - rid: 3901258040789434622
+        - rid: 3901258040789434623
+        - rid: 3901258040789434624
+        - rid: 3901258040789434625
+        - rid: 3901258040789434626
+        - rid: 3901258040789434627
+        - rid: 3901258040789434628
+        - rid: 3901258040789434629
+        - rid: 3901258040789434630
+        - rid: 3901258040789434631
+        - rid: 3901258040789434632
+        - rid: 3901258040789434633
+        - rid: 3901258040789434634
+        - rid: 3901258040789434635
+        - rid: 3901258040789434636
+        - rid: 3901258040789434637
+        - rid: 3901258040789434638
+        - rid: 3901258040789434639
+        - rid: 3901258040789434640
+        - rid: 3901258040789434641
+        - rid: 3901258040789434642
+        - rid: 3901258040789434643
+        - rid: 3901258040789434644
+        - rid: 3901258040789434645
+        - rid: 3901258040789434646
+        - rid: 3901258040789434647
+        - rid: 3901258040789434648
+        - rid: 3901258040789434649
+        - rid: 3901258040789434650
+        - rid: 3901258040789434651
+        - rid: 3901258040789434652
+        - rid: 3901258040789434653
+        - rid: 3901258040789434654
+        - rid: 3901258040789434655
+        - rid: 3901258040789434656
+        - rid: 3901258040789434657
+        - rid: 3901258040789434658
+        - rid: 3901258040789434659
+        - rid: 3901258040789434660
+        - rid: 3901258040789434661
+        - rid: 3901258040789434662
+        - rid: 3901258040789434663
+        - rid: 3901258040789434664
+        - rid: 3901258040789434665
+        - rid: 3901258040789434666
+        - rid: 3901258040789434667
+        - rid: 3901258040789434668
+        - rid: 3901258040789434669
+        - rid: 3901258040789434670
+        - rid: 3901258040789434671
+        - rid: 3901258040789434672
+        - rid: 3901258040789434673
+        - rid: 3901258040789434674
+        - rid: 3901258040789434675
+        - rid: 3901258040789434676
+        - rid: 3901258040789434677
+        - rid: 3901258040789434678
+        - rid: 3901258040789434679
+        - rid: 3901258040789434680
+        - rid: 3901258040789434681
+        - rid: 3901258040789434682
+        - rid: 3901258040789434683
+        - rid: 3901258040789434684
+        - rid: 3901258040789434685
+        - rid: 3901258040789434686
+        - rid: 3901258040789434687
+        - rid: 3901258040789434688
+        - rid: 3901258040789434689
+        - rid: 3901258040789434690
+        - rid: 3901258040789434691
+        - rid: 3901258040789434692
+        - rid: 3901258040789434693
+        - rid: 3901258040789434694
+        - rid: 3901258040789434695
+        - rid: 3901258040789434696
+        - rid: 3901258040789434697
+        - rid: 3901258040789434698
+        - rid: 3901258040789434699
+        - rid: 3901258040789434700
+        - rid: 3901258040789434701
+        - rid: 3901258040789434702
+        - rid: 3901258040789434703
+        - rid: 3901258040789434704
+        - rid: 3901258040789434705
+        - rid: 3901258040789434706
+        - rid: 3901258040789434707
+        - rid: 3901258040789434708
+        - rid: 3901258040789434709
+        - rid: 3901258040789434710
+        - rid: 3901258040789434711
+        - rid: 3901258040789434712
+        - rid: 3901258040789434713
+    - rid: 3901258040789434556
+      type: {class: VertexNormalAdjustmentCollection, ns: UMA, asm: UMA_Core}
+      data:
+        vertexAdjustments:
+        - rid: 3901258040789434714
+        - rid: 3901258040789434715
+        - rid: 3901258040789434716
+        - rid: 3901258040789434717
+        - rid: 3901258040789434718
+        - rid: 3901258040789434719
+        - rid: 3901258040789434720
+        - rid: 3901258040789434721
+        - rid: 3901258040789434722
+        - rid: 3901258040789434723
+        - rid: 3901258040789434724
+        - rid: 3901258040789434725
+        - rid: 3901258040789434726
+        - rid: 3901258040789434727
+        - rid: 3901258040789434728
+        - rid: 3901258040789434729
+        - rid: 3901258040789434730
+        - rid: 3901258040789434731
+        - rid: 3901258040789434732
+        - rid: 3901258040789434733
+        - rid: 3901258040789434734
+        - rid: 3901258040789434735
+        - rid: 3901258040789434736
+        - rid: 3901258040789434737
+        - rid: 3901258040789434738
+        - rid: 3901258040789434739
+        - rid: 3901258040789434740
+        - rid: 3901258040789434741
+        - rid: 3901258040789434742
+        - rid: 3901258040789434743
+        - rid: 3901258040789434744
+        - rid: 3901258040789434745
+        - rid: 3901258040789434746
+        - rid: 3901258040789434747
+        - rid: 3901258040789434748
+        - rid: 3901258040789434749
+        - rid: 3901258040789434750
+        - rid: 3901258040789434751
+        - rid: 3901258040789434752
+        - rid: 3901258040789434753
+        - rid: 3901258040789434754
+        - rid: 3901258040789434755
+        - rid: 3901258040789434756
+        - rid: 3901258040789434757
+        - rid: 3901258040789434758
+        - rid: 3901258040789434759
+        - rid: 3901258040789434760
+        - rid: 3901258040789434761
+        - rid: 3901258040789434762
+        - rid: 3901258040789434763
+        - rid: 3901258040789434764
+        - rid: 3901258040789434765
+        - rid: 3901258040789434766
+        - rid: 3901258040789434767
+        - rid: 3901258040789434768
+        - rid: 3901258040789434769
+        - rid: 3901258040789434770
+        - rid: 3901258040789434771
+        - rid: 3901258040789434772
+        - rid: 3901258040789434773
+        - rid: 3901258040789434774
+        - rid: 3901258040789434775
+        - rid: 3901258040789434776
+        - rid: 3901258040789434777
+        - rid: 3901258040789434778
+        - rid: 3901258040789434779
+        - rid: 3901258040789434780
+        - rid: 3901258040789434781
+        - rid: 3901258040789434782
+        - rid: 3901258040789434783
+        - rid: 3901258040789434784
+        - rid: 3901258040789434785
+        - rid: 3901258040789434786
+        - rid: 3901258040789434787
+        - rid: 3901258040789434788
+        - rid: 3901258040789434789
+        - rid: 3901258040789434790
+        - rid: 3901258040789434791
+        - rid: 3901258040789434792
+        - rid: 3901258040789434793
+        - rid: 3901258040789434794
+        - rid: 3901258040789434795
+        - rid: 3901258040789434796
+        - rid: 3901258040789434797
+        - rid: 3901258040789434798
+        - rid: 3901258040789434799
+        - rid: 3901258040789434800
+        - rid: 3901258040789434801
+        - rid: 3901258040789434802
+        - rid: 3901258040789434803
+        - rid: 3901258040789434804
+        - rid: 3901258040789434805
+        - rid: 3901258040789434806
+        - rid: 3901258040789434807
+        - rid: 3901258040789434808
+        - rid: 3901258040789434809
+        - rid: 3901258040789434810
+        - rid: 3901258040789434811
+        - rid: 3901258040789434812
+        - rid: 3901258040789434813
+        - rid: 3901258040789434814
+        - rid: 3901258040789434815
+        - rid: 3901258040789434816
+        - rid: 3901258040789434817
+        - rid: 3901258040789434818
+        - rid: 3901258040789434819
+        - rid: 3901258040789434820
+        - rid: 3901258040789434821
+        - rid: 3901258040789434822
+        - rid: 3901258040789434823
+        - rid: 3901258040789434824
+        - rid: 3901258040789434825
+        - rid: 3901258040789434826
+        - rid: 3901258040789434827
+        - rid: 3901258040789434828
+        - rid: 3901258040789434829
+        - rid: 3901258040789434830
+        - rid: 3901258040789434831
+        - rid: 3901258040789434832
+        - rid: 3901258040789434833
+        - rid: 3901258040789434834
+        - rid: 3901258040789434835
+        - rid: 3901258040789434836
+        - rid: 3901258040789434837
+        - rid: 3901258040789434838
+        - rid: 3901258040789434839
+        - rid: 3901258040789434840
+        - rid: 3901258040789434841
+        - rid: 3901258040789434842
+        - rid: 3901258040789434843
+        - rid: 3901258040789434844
+        - rid: 3901258040789434845
+        - rid: 3901258040789434846
+        - rid: 3901258040789434847
+        - rid: 3901258040789434848
+        - rid: 3901258040789434849
+        - rid: 3901258040789434850
+        - rid: 3901258040789434851
+        - rid: 3901258040789434852
+        - rid: 3901258040789434853
+        - rid: 3901258040789434854
+        - rid: 3901258040789434855
+        - rid: 3901258040789434856
+        - rid: 3901258040789434857
+        - rid: 3901258040789434858
+        - rid: 3901258040789434859
+        - rid: 3901258040789434860
+        - rid: 3901258040789434861
+        - rid: 3901258040789434862
+        - rid: 3901258040789434863
+        - rid: 3901258040789434864
+        - rid: 3901258040789434865
+        - rid: 3901258040789434866
+        - rid: 3901258040789434867
+        - rid: 3901258040789434868
+        - rid: 3901258040789434869
+        - rid: 3901258040789434870
+    - rid: 3901258040789434557
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2051
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2700974, y: -0.7474382, z: -0.60694605}
+        tangent: {x: -0.8695475, y: -0.46004385, z: 0.17957418}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434558
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2054
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.59934056, y: -0.59754956, z: -0.5326587}
+        tangent: {x: -0.74448615, y: -0.6606133, z: -0.09659376}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434559
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2055
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.50283813, y: -0.5663888, z: -0.6529606}
+        tangent: {x: -0.77760303, y: -0.62629545, z: -0.055564992}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434560
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2056
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.47376573, y: -0.6667217, z: -0.5753504}
+        tangent: {x: -0.7813887, y: -0.6195762, z: 0.07454536}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434561
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2057
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.4076303, y: -0.66284275, z: -0.62807405}
+        tangent: {x: -0.7733317, y: -0.6163496, z: 0.14856426}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434562
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2058
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.22024441, y: -0.69285595, z: -0.686617}
+        tangent: {x: -0.8687809, y: -0.45938778, z: 0.18488538}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434563
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2084
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.31115517, y: -0.5279289, z: -0.7902365}
+        tangent: {x: -0.8647954, y: -0.50209874, z: -0.005078338}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434564
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2085
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2697366, y: -0.5341107, z: -0.801229}
+        tangent: {x: -0.9235033, y: -0.37915742, z: -0.058148906}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434565
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2089
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.4623787, y: -0.62476796, z: -0.62918276}
+        tangent: {x: -0.8721729, y: -0.44831175, z: -0.1957831}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434566
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2090
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.43941933, y: -0.648465, z: -0.6216138}
+        tangent: {x: -0.88590014, y: -0.42734292, z: -0.18044117}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434567
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2093
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.26199996, y: -0.5132808, z: -0.8172507}
+        tangent: {x: -0.925476, y: -0.37369952, z: -0.061990634}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434568
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2094
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.26199996, y: -0.5132808, z: -0.8172507}
+        tangent: {x: -0.91046494, y: -0.41227153, z: -0.032952785}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434569
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2077
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2207031, y: -0.48943657, z: -0.843648}
+        tangent: {x: -0.9177832, y: -0.39696074, z: -0.00980323}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434570
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2091
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.24351223, y: -0.48891738, z: -0.8376524}
+        tangent: {x: -0.94551945, y: -0.31208518, z: -0.09271349}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434571
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2092
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.24385113, y: -0.53377736, z: -0.8097026}
+        tangent: {x: -0.9179004, y: -0.396526, z: -0.01503567}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434572
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2076
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.11565952, y: -0.70491034, z: -0.69980305}
+        tangent: {x: -0.9368174, y: -0.3115831, z: 0.15902516}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434573
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2102
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2862213, y: -0.6709129, z: -0.6840712}
+        tangent: {x: -0.90541166, y: -0.42300272, z: 0.036034077}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434574
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2060
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.06497924, y: -0.9291552, z: -0.36393458}
+        tangent: {x: -0.96767724, y: -0.03038647, z: 0.25035456}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434575
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2086
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.20276716, y: -0.56397396, z: -0.8005116}
+        tangent: {x: -0.96934533, y: -0.23144712, z: -0.082473814}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434576
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2078
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.17054226, y: -0.5234011, z: -0.8348453}
+        tangent: {x: -0.95901483, y: -0.28274187, z: -0.018644365}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434577
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2099
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2241111, y: -0.5939107, z: -0.7726863}
+        tangent: {x: -0.9570967, y: -0.28356463, z: -0.059641205}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434578
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2075
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.10868014, y: -0.75934285, z: -0.64155054}
+        tangent: {x: -0.9705869, y: -0.22052386, z: 0.0965936}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434579
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2074
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.011426801, y: -0.9807382, z: -0.1949924}
+        tangent: {x: -0.97954535, y: -0.02819996, z: 0.19923776}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434580
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2079
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.15428959, y: -0.5636924, z: -0.81144667}
+        tangent: {x: -0.9817846, y: -0.17963462, z: -0.06189003}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434581
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2100
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.18510084, y: -0.633965, z: -0.75088346}
+        tangent: {x: -0.97384155, y: -0.22080675, z: -0.053636994}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434582
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2080
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.1689445, y: -0.79771537, z: -0.578885}
+        tangent: {x: -0.98511213, y: -0.15561834, z: -0.07305446}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434583
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2103
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.20626625, y: -0.6782615, z: -0.7052769}
+        tangent: {x: -0.96985215, y: -0.23730692, z: -0.055427324}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434584
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2072
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.15168938, y: -0.98630005, z: -0.06482702}
+        tangent: {x: -0.9878699, y: -0.14907333, z: -0.043474905}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434585
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2071
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.119472735, y: -0.987811, z: 0.09977739}
+        tangent: {x: -0.99233365, y: -0.12200881, z: -0.019692142}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434586
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2081
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.20430794, y: -0.81476504, z: -0.54260135}
+        tangent: {x: -0.9678698, y: -0.085132495, z: -0.2366019}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434587
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2107
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.14007394, y: -0.63511276, z: -0.7596125}
+        tangent: {x: -0.99006546, y: -0.09931913, z: -0.099529065}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434588
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2082
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.3408102, y: -0.9398176, z: -0.02431596}
+        tangent: {x: -0.8976563, y: -0.31761676, z: -0.30550426}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434589
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2104
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.23092164, y: -0.695272, z: -0.6806408}
+        tangent: {x: -0.959267, y: -0.2796908, z: -0.039748315}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434590
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2073
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.3311894, y: -0.9288586, z: 0.16593796}
+        tangent: {x: -0.8575302, y: -0.36966842, z: -0.35775304}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434591
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2105
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.28564978, y: -0.7450146, z: -0.6027914}
+        tangent: {x: -0.9523951, y: -0.29060772, z: -0.09214536}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434592
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2108
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.18859896, y: -0.7050882, z: -0.6835795}
+        tangent: {x: -0.9688653, y: -0.019895215, z: -0.24678783}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434593
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2109
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.30000147, y: -0.8083565, z: -0.5065165}
+        tangent: {x: -0.8967366, y: -0.057871647, z: -0.43876445}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434594
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2083
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.51071036, y: -0.8578012, z: -0.0578967}
+        tangent: {x: -0.7618221, y: -0.42029735, z: -0.4929272}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434595
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2111
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.36479068, y: -0.7615383, z: -0.5357118}
+        tangent: {x: -0.9230513, y: -0.37122655, z: -0.10083273}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434596
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2087
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.55911976, y: -0.8195919, z: 0.12511666}
+        tangent: {x: -0.62319404, y: -0.5149883, z: -0.58857137}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434597
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 866
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.4227987, y: -0.763923, z: -0.48750678}
+        tangent: {x: -0.9021521, y: -0.40574387, z: -0.14660658}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434598
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2068
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.473588, y: -0.8596203, z: -0.19174834}
+        tangent: {x: -0.75735956, y: -0.28634194, z: -0.58686864}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434599
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1981
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.32749546, y: -0.7798093, z: -0.53352064}
+        tangent: {x: -0.815356, y: 0.05207617, z: -0.5766129}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434600
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1985
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.27699298, y: -0.7355608, z: -0.61824363}
+        tangent: {x: -0.8989976, y: 0.028768752, z: -0.43700758}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434601
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2113
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.62732977, y: -0.76968765, z: -0.11848344}
+        tangent: {x: -0.66907734, y: -0.45485198, z: -0.5877458}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434602
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2088
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.6330257, y: -0.76952183, z: -0.084347755}
+        tangent: {x: -0.6080968, y: -0.42686823, z: -0.66932935}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434603
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 871
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.5043534, y: -0.76401395, z: -0.40238085}
+        tangent: {x: -0.86342984, y: -0.4520376, z: -0.22394393}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434604
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2096
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.56362057, y: -0.7813076, z: -0.2681236}
+        tangent: {x: -0.6901106, y: -0.26699716, z: -0.6726513}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434605
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 870
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.49471477, y: -0.7574508, z: -0.42605817}
+        tangent: {x: -0.86202973, y: -0.48990986, z: -0.12997343}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434606
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 880
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.17260662, y: -0.7936675, z: -0.58335143}
+        tangent: {x: -0.728246, y: 0.2959451, z: -0.61812156}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434607
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1979
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2317379, y: -0.8395872, z: -0.49131548}
+        tangent: {x: -0.7311988, y: 0.18277672, z: -0.6572222}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434608
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1980
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.6479742, y: -0.75011337, z: -0.13213398}
+        tangent: {x: -0.65894914, y: -0.46508792, z: -0.5911676}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434609
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 876
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.54199755, y: -0.7634702, z: -0.35121486}
+        tangent: {x: -0.8386352, y: -0.5182897, z: -0.1675314}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434610
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2114
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.64682007, y: -0.74631345, z: -0.1569711}
+        tangent: {x: -0.6711623, y: -0.45930177, z: -0.58187884}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434611
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2097
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.5638677, y: -0.6998828, z: -0.43842572}
+        tangent: {x: -0.7770537, y: -0.26980746, z: -0.5686752}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434612
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 863
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.53783053, y: -0.7779978, z: -0.32474253}
+        tangent: {x: -0.79420954, y: -0.59678143, z: 0.11438132}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434613
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 864
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.5826045, y: -0.7146775, z: -0.38705042}
+        tangent: {x: -0.81172615, y: -0.48768732, z: -0.32134354}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434614
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 865
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.5096779, y: -0.7532705, z: -0.41570655}
+        tangent: {x: -0.8569399, y: -0.40138632, z: -0.32333106}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434615
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2101
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.30745965, y: -0.73395354, z: -0.6056243}
+        tangent: {x: -0.9325266, y: -0.3590679, z: -0.03826654}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434616
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 3280
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.37465528, y: -0.67708224, z: -0.63339806}
+        tangent: {x: -0.9155756, y: -0.37785462, z: -0.13764906}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434617
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 3281
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.6821136, y: -0.6333517, z: -0.36549494}
+        tangent: {x: -0.72941023, y: -0.6247099, z: -0.27874416}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434618
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2095
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2435305, y: -0.6091835, z: -0.7547108}
+        tangent: {x: -0.9157411, y: -0.40079093, z: 0.028016455}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434619
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2106
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.32662356, y: -0.7891766, z: -0.5201128}
+        tangent: {x: -0.94293773, y: -0.3097489, z: -0.122164056}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434620
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 867
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.41029143, y: -0.79539245, z: -0.44610736}
+        tangent: {x: -0.9110744, y: -0.33601883, z: -0.23881963}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434621
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1709
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.43939605, y: -0.64847946, z: -0.6216153}
+        tangent: {x: -0.8859108, y: 0.4273307, z: 0.18041794}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434622
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1713
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.67806286, y: -0.60696906, z: -0.41451082}
+        tangent: {x: -0.71567225, y: 0.67371154, z: 0.1841899}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434623
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1715
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.27760133, y: -0.5206865, z: -0.8073557}
+        tangent: {x: -0.9261022, y: 0.3685282, z: 0.08075689}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434624
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1721
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.4623628, y: -0.62478155, z: -0.62918085}
+        tangent: {x: -0.87217873, y: 0.44831225, z: 0.19575572}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434625
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1722
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5028677, y: -0.56637716, z: -0.6529479}
+        tangent: {x: -0.77758753, y: 0.62631303, z: 0.055585213}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434626
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1726
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.31117338, y: -0.52793485, z: -0.7902252}
+        tangent: {x: -0.8647927, y: 0.5021032, z: 0.00509052}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434627
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1727
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2203137, y: -0.69283265, z: -0.6866183}
+        tangent: {x: -0.8687752, y: 0.45942464, z: -0.18482073}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434628
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1796
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.59931606, y: -0.5975637, z: -0.5326705}
+        tangent: {x: -0.74450314, y: 0.6605965, z: 0.09657802}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434629
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1797
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.46623847, y: -0.66706765, z: -0.58107007}
+        tangent: {x: -0.77448714, y: 0.62521464, z: -0.096313275}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434630
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1798
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.47370225, y: -0.6667478, z: -0.5753725}
+        tangent: {x: -0.78141934, y: 0.61953306, z: -0.07458171}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434631
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1799
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2700876, y: -0.74744594, z: -0.6069408}
+        tangent: {x: -0.8695438, y: 0.46004236, z: -0.17959541}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434632
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1800
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.4076246, y: -0.66284364, z: -0.62807685}
+        tangent: {x: -0.7733369, y: 0.61634356, z: -0.14856195}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434633
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1802
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.42758328, y: -0.6106753, z: -0.6665195}
+        tangent: {x: -0.7197368, y: 0.67609334, z: -0.15772389}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434634
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1804
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.032500688, y: -0.8554634, z: -0.51684254}
+        tangent: {x: -0.9430797, y: 0.19749121, z: -0.26757812}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434635
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1817
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.18190563, y: -0.72256726, z: -0.6669384}
+        tangent: {x: -0.83428025, y: 0.4724089, z: -0.28426453}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434636
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1714
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2626578, y: -0.51388407, z: -0.8166603}
+        tangent: {x: -0.914696, y: 0.4020365, z: 0.041206736}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434637
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1625
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.24300347, y: -0.53292006, z: -0.8105217}
+        tangent: {x: -0.918001, y: 0.39630717, z: 0.01465402}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434638
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1723
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2434995, y: -0.48893353, z: -0.8376467}
+        tangent: {x: -0.9455221, y: 0.31208235, z: 0.092696145}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434639
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1729
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.22068927, y: -0.4894322, z: -0.8436542}
+        tangent: {x: -0.9177877, y: 0.39695072, z: 0.009797224}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434640
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1730
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.11565083, y: -0.7048975, z: -0.6998175}
+        tangent: {x: -0.9368196, y: 0.31157812, z: -0.15902244}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434641
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1628
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.28621605, y: -0.6709143, z: -0.6840719}
+        tangent: {x: -0.90541214, y: 0.42300117, z: -0.0360401}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434642
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1621
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.20277335, y: -0.5639776, z: -0.80050755}
+        tangent: {x: -0.9693442, y: 0.23145014, z: 0.08247824}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434643
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1624
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2241142, y: -0.59391797, z: -0.77268}
+        tangent: {x: -0.95709574, y: 0.28356817, z: 0.059639845}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434644
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1728
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.17052877, y: -0.5233982, z: -0.83484983}
+        tangent: {x: -0.9590168, y: 0.28273603, z: 0.018633788}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434645
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1732
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.10866513, y: -0.75933444, z: -0.64156306}
+        tangent: {x: -0.97058827, y: 0.2205147, z: -0.096600465}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434646
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1623
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.30745515, y: -0.73395467, z: -0.60562515}
+        tangent: {x: -0.93252677, y: 0.35906836, z: 0.038258385}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434647
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1615
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.15428363, y: -0.5636921, z: -0.811448}
+        tangent: {x: -0.9817855, y: 0.17963152, z: 0.061885126}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434648
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1617
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.18508705, y: -0.6339669, z: -0.7508853}
+        tangent: {x: -0.9738442, y: 0.22079787, z: 0.053626586}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434649
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1618
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.20627047, y: -0.67822504, z: -0.70531076}
+        tangent: {x: -0.9698499, y: 0.23731431, z: 0.055434972}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434650
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1735
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.16895388, y: -0.7977101, z: -0.5788896}
+        tangent: {x: -0.9851105, y: 0.15562764, z: 0.07305796}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434651
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1736
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.15168653, y: -0.98630047, z: -0.06482613}
+        tangent: {x: -0.9878704, y: 0.1490705, z: 0.04347539}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434652
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1743
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.1194584, y: -0.9878126, z: 0.09977958}
+        tangent: {x: -0.992335, y: 0.12199561, z: 0.019703982}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434653
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1614
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.14006299, y: -0.6351129, z: -0.75961435}
+        tangent: {x: -0.990067, y: 0.09931146, z: 0.0995212}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434654
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1616
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.20432793, y: -0.81475914, z: -0.5426026}
+        tangent: {x: -0.9678668, y: 0.08515198, z: 0.23660752}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434655
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1608
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.23088494, y: -0.6952787, z: -0.6806465}
+        tangent: {x: -0.9592756, y: 0.27966467, z: 0.039723136}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434656
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1741
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.34081152, y: -0.9398171, z: -0.024317753}
+        tangent: {x: -0.8976598, y: 0.3176192, z: 0.3054915}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434657
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1609
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2873776, y: -0.74495006, z: -0.60204947}
+        tangent: {x: -0.95189923, y: 0.29189548, z: 0.09319321}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434658
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1742
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.33117932, y: -0.9288623, z: 0.1659369}
+        tangent: {x: -0.8575356, y: 0.3696587, z: 0.35775006}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434659
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1605
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.18859302, y: -0.70508707, z: -0.6835824}
+        tangent: {x: -0.9688664, y: 0.01989003, z: 0.24678405}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434660
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1612
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5107284, y: -0.8577906, z: -0.057893734}
+        tangent: {x: -0.7618237, y: 0.42032284, z: 0.49290296}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434661
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1613
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.30002266, y: -0.8083462, z: -0.5065202}
+        tangent: {x: -0.89673215, y: 0.05788764, z: 0.43877164}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434662
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1586
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.41929996, y: -0.7652165, z: -0.48849896}
+        tangent: {x: -0.9037627, y: 0.40282184, z: 0.14473264}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434663
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1594
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.36478582, y: -0.7615401, z: -0.53571254}
+        tangent: {x: -0.9230533, y: 0.3712221, z: 0.10083061}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434664
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1882
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.55945694, y: -0.8193835, z: 0.124974884}
+        tangent: {x: -0.6230648, y: 0.5151807, z: 0.58853966}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434665
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1604
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.27697685, y: -0.7355629, z: -0.61824834}
+        tangent: {x: -0.89900136, y: -0.028782371, z: 0.43699884}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434666
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1606
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.32748416, y: -0.7798071, z: -0.5335307}
+        tangent: {x: -0.8153597, y: -0.052089818, z: 0.57660675}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434667
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1611
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.62735134, y: -0.76967007, z: -0.11848296}
+        tangent: {x: -0.6690743, y: 0.45488212, z: 0.58772594}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434668
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1592
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5043684, y: -0.76400673, z: -0.40237585}
+        tangent: {x: -0.86342114, y: 0.4520506, z: 0.22395135}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434669
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1881
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.63344234, y: -0.7691463, z: -0.084645346}
+        tangent: {x: -0.6079871, y: 0.42705923, z: 0.6693072}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434670
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1888
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.4735899, y: -0.8596195, z: -0.19174732}
+        tangent: {x: -0.7573635, y: 0.28634852, z: 0.5868604}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434671
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1589
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.4947727, y: -0.7574442, z: -0.4260028}
+        tangent: {x: -0.86199987, y: 0.4899556, z: 0.1299992}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434672
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1883
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5636112, y: -0.7813162, z: -0.26811808}
+        tangent: {x: -0.6901032, y: 0.26698038, z: 0.67266566}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434673
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1591
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.17256497, y: -0.79367226, z: -0.5833572}
+        tangent: {x: -0.72824967, y: -0.29597253, z: 0.6181042}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434674
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1607
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.23179932, y: -0.8395702, z: -0.49131554}
+        tangent: {x: -0.7311783, y: -0.18275025, z: 0.6572523}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434675
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1610
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.6479688, y: -0.7501184, z: -0.13213201}
+        tangent: {x: -0.658963, y: 0.46509778, z: 0.59114444}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434676
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1590
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5420067, y: -0.763463, z: -0.35121647}
+        tangent: {x: -0.83862907, y: 0.518299, z: 0.16753326}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434677
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1880
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.6232718, y: -0.77599293, z: -0.096784264}
+        tangent: {x: -0.66368085, y: 0.4594408, z: 0.59028965}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434678
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1869
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.56382436, y: -0.69993466, z: -0.4383989}
+        tangent: {x: -0.77706474, y: 0.26976773, z: 0.56867903}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434679
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1867
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5812576, y: -0.81358415, z: -0.014848638}
+        tangent: {x: -0.7798165, y: 0.5517347, z: 0.29576176}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434680
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1585
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.54437864, y: -0.7705026, z: -0.33162862}
+        tangent: {x: -0.78867334, y: 0.60479367, z: -0.11053985}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434681
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1600
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.36970994, y: -0.69540465, z: -0.6162199}
+        tangent: {x: -0.9090705, y: 0.13360097, z: 0.39464107}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434682
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1619
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.56751233, y: -0.763297, z: -0.30871925}
+        tangent: {x: -0.8229303, y: 0.53801394, z: 0.18255636}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434683
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1620
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.68996614, y: -0.6766184, z: -0.25716564}
+        tangent: {x: -0.7233201, y: 0.6310043, z: 0.28043115}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434684
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1863
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.24720211, y: -0.92428994, z: -0.29082507}
+        tangent: {x: -0.9153883, y: -0.3211864, z: 0.2427005}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434685
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1870
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.24720211, y: -0.92428994, z: -0.29082507}
+        tangent: {x: -0.9153883, y: -0.3211864, z: 0.2427005}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434686
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1884
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.02631367, y: -0.42589414, z: -0.9043903}
+        tangent: {x: -0.92166626, y: -0.33998728, z: 0.18692262}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434687
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1595
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.17633441, y: -0.81329, z: -0.5544958}
+        tangent: {x: -0.9353449, y: -0.037051074, z: 0.3517912}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434688
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1588
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.4617203, y: -0.77199066, z: -0.43685776}
+        tangent: {x: -0.886303, y: 0.42138818, z: 0.19209081}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434689
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1748
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.39237475, y: -0.84729475, z: 0.35795757}
+        tangent: {x: -0.9107985, y: 0.4122316, z: -0.022607869}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434690
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1737
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.011428993, y: -0.980738, z: -0.19499326}
+        tangent: {x: -0.97954285, y: 0.028200412, z: -0.19925001}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434691
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1738
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.0800381, y: -0.99575967, z: -0.04534917}
+        tangent: {x: -0.9549112, y: -0.06354699, z: -0.29001102}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434692
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1824
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.08849123, y: -0.99115646, z: -0.09888448}
+        tangent: {x: -0.9548981, y: -0.056164693, z: -0.29157358}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434693
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1731
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.06299697, y: -0.9291671, z: -0.36425257}
+        tangent: {x: -0.9678065, y: 0.03224037, z: -0.24962229}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434694
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1822
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.23296602, y: -0.96359897, z: -0.13116364}
+        tangent: {x: -0.9145396, y: -0.17122172, z: -0.3664703}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434695
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1819
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.20188858, y: -0.9562827, z: -0.21157615}
+        tangent: {x: -0.91945356, y: -0.11063321, z: -0.37731352}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434696
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1825
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.034690313, y: -0.5012184, z: -0.8646253}
+        tangent: {x: -0.97435546, y: 0.2094205, z: -0.082306996}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434697
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1745
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.11814454, y: -0.9924821, z: 0.03195514}
+        tangent: {x: -0.9929941, y: 0.11815102, z: -0.0016919705}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434698
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1891
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.013123075, y: -0.5594277, z: -0.82877517}
+        tangent: {x: -0.99734735, y: 0.06667122, z: -0.02921114}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434699
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1901
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.013123075, y: -0.5594277, z: -0.82877517}
+        tangent: {x: -0.99734735, y: 0.06667122, z: -0.02921114}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434700
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1904
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.10787404, y: -0.01594631, z: -0.9940367}
+        tangent: {x: -0.93950754, y: 0.3285996, z: 0.096685104}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434701
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1905
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.08659861, y: -0.17124419, z: -0.9814154}
+        tangent: {x: -0.98103714, y: 0.18611948, z: 0.054089807}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434702
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1909
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.24819663, y: -0.22004367, z: -0.94338715}
+        tangent: {x: -0.91892254, y: 0.36167148, z: 0.15740088}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434703
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1854
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.10282636, y: -0.78361636, z: -0.6126762}
+        tangent: {x: -0.9921389, y: -0.12496279, z: -0.0066840365}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434704
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1889
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.030351346, y: -0.58047545, z: -0.813712}
+        tangent: {x: -0.99672985, y: -0.043417353, z: 0.0681504}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434705
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1890
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.24752285, y: -0.9671135, z: 0.05851511}
+        tangent: {x: -0.9067571, y: 0.25250688, z: 0.337686}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434706
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1895
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.030351346, y: -0.58047545, z: -0.813712}
+        tangent: {x: -0.99672985, y: -0.043417353, z: 0.0681504}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434707
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1897
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.16150004, y: -0.16458285, z: -0.97305197}
+        tangent: {x: -0.9647836, y: -0.23377672, z: -0.120586514}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434708
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1898
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.10282636, y: -0.78361636, z: -0.6126762}
+        tangent: {x: -0.9921389, y: -0.12496279, z: -0.0066840365}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434709
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1899
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.22059168, y: -0.021296859, z: -0.97513366}
+        tangent: {x: -0.9420925, y: -0.26355845, z: -0.20736109}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434710
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1900
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.07778473, y: -0.007883407, z: -0.99693906}
+        tangent: {x: -0.9969453, y: 0.0064385016, z: -0.07783613}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434711
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1902
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.023810042, y: -0.38617873, z: -0.9221166}
+        tangent: {x: -0.99964416, y: -0.020291507, z: -0.017313885}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434712
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1906
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.0682257, y: -0.16003983, z: -0.9847499}
+        tangent: {x: -0.99720794, y: -0.040974487, z: -0.062429715}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434713
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2165
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.10282636, y: -0.78361636, z: -0.6126762}
+        tangent: {x: -0.9921389, y: -0.12496279, z: -0.0066840365}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434714
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2051
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2700974, y: -0.7474382, z: -0.60694605}
+        tangent: {x: -0.8695475, y: -0.46004385, z: 0.17957418}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434715
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2054
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.59934056, y: -0.59754956, z: -0.5326587}
+        tangent: {x: -0.74448615, y: -0.6606133, z: -0.09659376}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434716
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2055
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.50283813, y: -0.5663888, z: -0.6529606}
+        tangent: {x: -0.77760303, y: -0.62629545, z: -0.055564992}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434717
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2056
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.47376573, y: -0.6667217, z: -0.5753504}
+        tangent: {x: -0.7813887, y: -0.6195762, z: 0.07454536}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434718
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2057
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.4076303, y: -0.66284275, z: -0.62807405}
+        tangent: {x: -0.7733317, y: -0.6163496, z: 0.14856426}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434719
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2058
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.22024441, y: -0.69285595, z: -0.686617}
+        tangent: {x: -0.8687809, y: -0.45938778, z: 0.18488538}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434720
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2084
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.31115517, y: -0.5279289, z: -0.7902365}
+        tangent: {x: -0.8647954, y: -0.50209874, z: -0.005078338}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434721
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2085
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2697366, y: -0.5341107, z: -0.801229}
+        tangent: {x: -0.9235033, y: -0.37915742, z: -0.058148906}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434722
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2089
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.4623787, y: -0.62476796, z: -0.62918276}
+        tangent: {x: -0.8721729, y: -0.44831175, z: -0.1957831}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434723
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2090
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.43941933, y: -0.648465, z: -0.6216138}
+        tangent: {x: -0.88590014, y: -0.42734292, z: -0.18044117}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434724
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2093
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.26199996, y: -0.5132808, z: -0.8172507}
+        tangent: {x: -0.925476, y: -0.37369952, z: -0.061990634}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434725
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2094
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.26199996, y: -0.5132808, z: -0.8172507}
+        tangent: {x: -0.91046494, y: -0.41227153, z: -0.032952785}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434726
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2077
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2207031, y: -0.48943657, z: -0.843648}
+        tangent: {x: -0.9177832, y: -0.39696074, z: -0.00980323}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434727
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2091
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.24351223, y: -0.48891738, z: -0.8376524}
+        tangent: {x: -0.94551945, y: -0.31208518, z: -0.09271349}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434728
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2092
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.24385113, y: -0.53377736, z: -0.8097026}
+        tangent: {x: -0.9179004, y: -0.396526, z: -0.01503567}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434729
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2076
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.11565952, y: -0.70491034, z: -0.69980305}
+        tangent: {x: -0.9368174, y: -0.3115831, z: 0.15902516}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434730
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2102
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2862213, y: -0.6709129, z: -0.6840712}
+        tangent: {x: -0.90541166, y: -0.42300272, z: 0.036034077}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434731
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2060
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.06497924, y: -0.9291552, z: -0.36393458}
+        tangent: {x: -0.96767724, y: -0.03038647, z: 0.25035456}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434732
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2086
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.20276716, y: -0.56397396, z: -0.8005116}
+        tangent: {x: -0.96934533, y: -0.23144712, z: -0.082473814}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434733
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2078
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.17054226, y: -0.5234011, z: -0.8348453}
+        tangent: {x: -0.95901483, y: -0.28274187, z: -0.018644365}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434734
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2099
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2241111, y: -0.5939107, z: -0.7726863}
+        tangent: {x: -0.9570967, y: -0.28356463, z: -0.059641205}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434735
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2075
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.10868014, y: -0.75934285, z: -0.64155054}
+        tangent: {x: -0.9705869, y: -0.22052386, z: 0.0965936}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434736
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2074
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.011426801, y: -0.9807382, z: -0.1949924}
+        tangent: {x: -0.97954535, y: -0.02819996, z: 0.19923776}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434737
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2079
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.15428959, y: -0.5636924, z: -0.81144667}
+        tangent: {x: -0.9817846, y: -0.17963462, z: -0.06189003}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434738
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2100
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.18510084, y: -0.633965, z: -0.75088346}
+        tangent: {x: -0.97384155, y: -0.22080675, z: -0.053636994}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434739
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2080
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.1689445, y: -0.79771537, z: -0.578885}
+        tangent: {x: -0.98511213, y: -0.15561834, z: -0.07305446}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434740
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2103
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.20626625, y: -0.6782615, z: -0.7052769}
+        tangent: {x: -0.96985215, y: -0.23730692, z: -0.055427324}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434741
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2072
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.15168938, y: -0.98630005, z: -0.06482702}
+        tangent: {x: -0.9878699, y: -0.14907333, z: -0.043474905}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434742
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2071
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.119472735, y: -0.987811, z: 0.09977739}
+        tangent: {x: -0.99233365, y: -0.12200881, z: -0.019692142}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434743
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2081
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.20430794, y: -0.81476504, z: -0.54260135}
+        tangent: {x: -0.9678698, y: -0.085132495, z: -0.2366019}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434744
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2107
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.14007394, y: -0.63511276, z: -0.7596125}
+        tangent: {x: -0.99006546, y: -0.09931913, z: -0.099529065}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434745
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2082
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.3408102, y: -0.9398176, z: -0.02431596}
+        tangent: {x: -0.8976563, y: -0.31761676, z: -0.30550426}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434746
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2104
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.23092164, y: -0.695272, z: -0.6806408}
+        tangent: {x: -0.959267, y: -0.2796908, z: -0.039748315}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434747
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2073
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.3311894, y: -0.9288586, z: 0.16593796}
+        tangent: {x: -0.8575302, y: -0.36966842, z: -0.35775304}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434748
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2105
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.28564978, y: -0.7450146, z: -0.6027914}
+        tangent: {x: -0.9523951, y: -0.29060772, z: -0.09214536}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434749
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2108
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.18859896, y: -0.7050882, z: -0.6835795}
+        tangent: {x: -0.9688653, y: -0.019895215, z: -0.24678783}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434750
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2109
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.30000147, y: -0.8083565, z: -0.5065165}
+        tangent: {x: -0.8967366, y: -0.057871647, z: -0.43876445}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434751
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2083
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.51071036, y: -0.8578012, z: -0.0578967}
+        tangent: {x: -0.7618221, y: -0.42029735, z: -0.4929272}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434752
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2111
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.36479068, y: -0.7615383, z: -0.5357118}
+        tangent: {x: -0.9230513, y: -0.37122655, z: -0.10083273}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434753
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2087
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.55911976, y: -0.8195919, z: 0.12511666}
+        tangent: {x: -0.62319404, y: -0.5149883, z: -0.58857137}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434754
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 866
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.4227987, y: -0.763923, z: -0.48750678}
+        tangent: {x: -0.9021521, y: -0.40574387, z: -0.14660658}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434755
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2068
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.473588, y: -0.8596203, z: -0.19174834}
+        tangent: {x: -0.75735956, y: -0.28634194, z: -0.58686864}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434756
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1981
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.32749546, y: -0.7798093, z: -0.53352064}
+        tangent: {x: -0.815356, y: 0.05207617, z: -0.5766129}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434757
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1985
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.27699298, y: -0.7355608, z: -0.61824363}
+        tangent: {x: -0.8989976, y: 0.028768752, z: -0.43700758}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434758
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2113
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.62732977, y: -0.76968765, z: -0.11848344}
+        tangent: {x: -0.66907734, y: -0.45485198, z: -0.5877458}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434759
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2088
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.6330257, y: -0.76952183, z: -0.084347755}
+        tangent: {x: -0.6080968, y: -0.42686823, z: -0.66932935}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434760
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 871
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.5043534, y: -0.76401395, z: -0.40238085}
+        tangent: {x: -0.86342984, y: -0.4520376, z: -0.22394393}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434761
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2096
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.56362057, y: -0.7813076, z: -0.2681236}
+        tangent: {x: -0.6901106, y: -0.26699716, z: -0.6726513}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434762
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 870
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.49471477, y: -0.7574508, z: -0.42605817}
+        tangent: {x: -0.86202973, y: -0.48990986, z: -0.12997343}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434763
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 880
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.17260662, y: -0.7936675, z: -0.58335143}
+        tangent: {x: -0.728246, y: 0.2959451, z: -0.61812156}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434764
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1979
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2317379, y: -0.8395872, z: -0.49131548}
+        tangent: {x: -0.7311988, y: 0.18277672, z: -0.6572222}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434765
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1980
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.6479742, y: -0.75011337, z: -0.13213398}
+        tangent: {x: -0.65894914, y: -0.46508792, z: -0.5911676}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434766
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 876
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.54199755, y: -0.7634702, z: -0.35121486}
+        tangent: {x: -0.8386352, y: -0.5182897, z: -0.1675314}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434767
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2114
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.64682007, y: -0.74631345, z: -0.1569711}
+        tangent: {x: -0.6711623, y: -0.45930177, z: -0.58187884}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434768
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2097
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.5638677, y: -0.6998828, z: -0.43842572}
+        tangent: {x: -0.7770537, y: -0.26980746, z: -0.5686752}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434769
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 863
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.53783053, y: -0.7779978, z: -0.32474253}
+        tangent: {x: -0.79420954, y: -0.59678143, z: 0.11438132}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434770
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 864
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.5826045, y: -0.7146775, z: -0.38705042}
+        tangent: {x: -0.81172615, y: -0.48768732, z: -0.32134354}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434771
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 865
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.5096779, y: -0.7532705, z: -0.41570655}
+        tangent: {x: -0.8569399, y: -0.40138632, z: -0.32333106}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434772
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2101
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.30745965, y: -0.73395354, z: -0.6056243}
+        tangent: {x: -0.9325266, y: -0.3590679, z: -0.03826654}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434773
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 3280
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.37465528, y: -0.67708224, z: -0.63339806}
+        tangent: {x: -0.9155756, y: -0.37785462, z: -0.13764906}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434774
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 3281
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.6821136, y: -0.6333517, z: -0.36549494}
+        tangent: {x: -0.72941023, y: -0.6247099, z: -0.27874416}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434775
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2095
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.2435305, y: -0.6091835, z: -0.7547108}
+        tangent: {x: -0.9157411, y: -0.40079093, z: 0.028016455}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434776
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2106
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.32662356, y: -0.7891766, z: -0.5201128}
+        tangent: {x: -0.94293773, y: -0.3097489, z: -0.122164056}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434777
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 867
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.41029143, y: -0.79539245, z: -0.44610736}
+        tangent: {x: -0.9110744, y: -0.33601883, z: -0.23881963}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434778
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1709
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.43939605, y: -0.64847946, z: -0.6216153}
+        tangent: {x: -0.8859108, y: 0.4273307, z: 0.18041794}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434779
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1713
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.67806286, y: -0.60696906, z: -0.41451082}
+        tangent: {x: -0.71567225, y: 0.67371154, z: 0.1841899}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434780
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1715
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.27760133, y: -0.5206865, z: -0.8073557}
+        tangent: {x: -0.9261022, y: 0.3685282, z: 0.08075689}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434781
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1721
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.4623628, y: -0.62478155, z: -0.62918085}
+        tangent: {x: -0.87217873, y: 0.44831225, z: 0.19575572}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434782
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1722
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5028677, y: -0.56637716, z: -0.6529479}
+        tangent: {x: -0.77758753, y: 0.62631303, z: 0.055585213}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434783
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1726
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.31117338, y: -0.52793485, z: -0.7902252}
+        tangent: {x: -0.8647927, y: 0.5021032, z: 0.00509052}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434784
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1727
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2203137, y: -0.69283265, z: -0.6866183}
+        tangent: {x: -0.8687752, y: 0.45942464, z: -0.18482073}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434785
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1796
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.59931606, y: -0.5975637, z: -0.5326705}
+        tangent: {x: -0.74450314, y: 0.6605965, z: 0.09657802}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434786
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1797
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.46623847, y: -0.66706765, z: -0.58107007}
+        tangent: {x: -0.77448714, y: 0.62521464, z: -0.096313275}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434787
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1798
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.47370225, y: -0.6667478, z: -0.5753725}
+        tangent: {x: -0.78141934, y: 0.61953306, z: -0.07458171}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434788
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1799
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2700876, y: -0.74744594, z: -0.6069408}
+        tangent: {x: -0.8695438, y: 0.46004236, z: -0.17959541}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434789
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1800
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.4076246, y: -0.66284364, z: -0.62807685}
+        tangent: {x: -0.7733369, y: 0.61634356, z: -0.14856195}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434790
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1802
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.42758328, y: -0.6106753, z: -0.6665195}
+        tangent: {x: -0.7197368, y: 0.67609334, z: -0.15772389}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434791
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1804
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.032500688, y: -0.8554634, z: -0.51684254}
+        tangent: {x: -0.9430797, y: 0.19749121, z: -0.26757812}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434792
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1817
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.18190563, y: -0.72256726, z: -0.6669384}
+        tangent: {x: -0.83428025, y: 0.4724089, z: -0.28426453}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434793
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1714
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2626578, y: -0.51388407, z: -0.8166603}
+        tangent: {x: -0.914696, y: 0.4020365, z: 0.041206736}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434794
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1625
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.24300347, y: -0.53292006, z: -0.8105217}
+        tangent: {x: -0.918001, y: 0.39630717, z: 0.01465402}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434795
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1723
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2434995, y: -0.48893353, z: -0.8376467}
+        tangent: {x: -0.9455221, y: 0.31208235, z: 0.092696145}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434796
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1729
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.22068927, y: -0.4894322, z: -0.8436542}
+        tangent: {x: -0.9177877, y: 0.39695072, z: 0.009797224}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434797
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1730
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.11565083, y: -0.7048975, z: -0.6998175}
+        tangent: {x: -0.9368196, y: 0.31157812, z: -0.15902244}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434798
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1628
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.28621605, y: -0.6709143, z: -0.6840719}
+        tangent: {x: -0.90541214, y: 0.42300117, z: -0.0360401}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434799
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1621
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.20277335, y: -0.5639776, z: -0.80050755}
+        tangent: {x: -0.9693442, y: 0.23145014, z: 0.08247824}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434800
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1624
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2241142, y: -0.59391797, z: -0.77268}
+        tangent: {x: -0.95709574, y: 0.28356817, z: 0.059639845}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434801
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1728
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.17052877, y: -0.5233982, z: -0.83484983}
+        tangent: {x: -0.9590168, y: 0.28273603, z: 0.018633788}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434802
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1732
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.10866513, y: -0.75933444, z: -0.64156306}
+        tangent: {x: -0.97058827, y: 0.2205147, z: -0.096600465}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434803
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1623
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.30745515, y: -0.73395467, z: -0.60562515}
+        tangent: {x: -0.93252677, y: 0.35906836, z: 0.038258385}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434804
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1615
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.15428363, y: -0.5636921, z: -0.811448}
+        tangent: {x: -0.9817855, y: 0.17963152, z: 0.061885126}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434805
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1617
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.18508705, y: -0.6339669, z: -0.7508853}
+        tangent: {x: -0.9738442, y: 0.22079787, z: 0.053626586}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434806
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1618
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.20627047, y: -0.67822504, z: -0.70531076}
+        tangent: {x: -0.9698499, y: 0.23731431, z: 0.055434972}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434807
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1735
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.16895388, y: -0.7977101, z: -0.5788896}
+        tangent: {x: -0.9851105, y: 0.15562764, z: 0.07305796}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434808
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1736
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.15168653, y: -0.98630047, z: -0.06482613}
+        tangent: {x: -0.9878704, y: 0.1490705, z: 0.04347539}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434809
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1743
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.1194584, y: -0.9878126, z: 0.09977958}
+        tangent: {x: -0.992335, y: 0.12199561, z: 0.019703982}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434810
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1614
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.14006299, y: -0.6351129, z: -0.75961435}
+        tangent: {x: -0.990067, y: 0.09931146, z: 0.0995212}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434811
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1616
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.20432793, y: -0.81475914, z: -0.5426026}
+        tangent: {x: -0.9678668, y: 0.08515198, z: 0.23660752}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434812
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1608
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.23088494, y: -0.6952787, z: -0.6806465}
+        tangent: {x: -0.9592756, y: 0.27966467, z: 0.039723136}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434813
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1741
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.34081152, y: -0.9398171, z: -0.024317753}
+        tangent: {x: -0.8976598, y: 0.3176192, z: 0.3054915}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434814
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1609
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.2873776, y: -0.74495006, z: -0.60204947}
+        tangent: {x: -0.95189923, y: 0.29189548, z: 0.09319321}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434815
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1742
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.33117932, y: -0.9288623, z: 0.1659369}
+        tangent: {x: -0.8575356, y: 0.3696587, z: 0.35775006}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434816
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1605
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.18859302, y: -0.70508707, z: -0.6835824}
+        tangent: {x: -0.9688664, y: 0.01989003, z: 0.24678405}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434817
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1612
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5107284, y: -0.8577906, z: -0.057893734}
+        tangent: {x: -0.7618237, y: 0.42032284, z: 0.49290296}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434818
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1613
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.30002266, y: -0.8083462, z: -0.5065202}
+        tangent: {x: -0.89673215, y: 0.05788764, z: 0.43877164}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434819
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1586
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.41929996, y: -0.7652165, z: -0.48849896}
+        tangent: {x: -0.9037627, y: 0.40282184, z: 0.14473264}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434820
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1594
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.36478582, y: -0.7615401, z: -0.53571254}
+        tangent: {x: -0.9230533, y: 0.3712221, z: 0.10083061}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434821
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1882
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.55945694, y: -0.8193835, z: 0.124974884}
+        tangent: {x: -0.6230648, y: 0.5151807, z: 0.58853966}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434822
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1604
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.27697685, y: -0.7355629, z: -0.61824834}
+        tangent: {x: -0.89900136, y: -0.028782371, z: 0.43699884}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434823
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1606
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.32748416, y: -0.7798071, z: -0.5335307}
+        tangent: {x: -0.8153597, y: -0.052089818, z: 0.57660675}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434824
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1611
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.62735134, y: -0.76967007, z: -0.11848296}
+        tangent: {x: -0.6690743, y: 0.45488212, z: 0.58772594}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434825
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1592
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5043684, y: -0.76400673, z: -0.40237585}
+        tangent: {x: -0.86342114, y: 0.4520506, z: 0.22395135}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434826
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1881
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.63344234, y: -0.7691463, z: -0.084645346}
+        tangent: {x: -0.6079871, y: 0.42705923, z: 0.6693072}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434827
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1888
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.4735899, y: -0.8596195, z: -0.19174732}
+        tangent: {x: -0.7573635, y: 0.28634852, z: 0.5868604}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434828
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1589
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.4947727, y: -0.7574442, z: -0.4260028}
+        tangent: {x: -0.86199987, y: 0.4899556, z: 0.1299992}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434829
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1883
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5636112, y: -0.7813162, z: -0.26811808}
+        tangent: {x: -0.6901032, y: 0.26698038, z: 0.67266566}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434830
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1591
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.17256497, y: -0.79367226, z: -0.5833572}
+        tangent: {x: -0.72824967, y: -0.29597253, z: 0.6181042}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434831
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1607
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.23179932, y: -0.8395702, z: -0.49131554}
+        tangent: {x: -0.7311783, y: -0.18275025, z: 0.6572523}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434832
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1610
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.6479688, y: -0.7501184, z: -0.13213201}
+        tangent: {x: -0.658963, y: 0.46509778, z: 0.59114444}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434833
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1590
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5420067, y: -0.763463, z: -0.35121647}
+        tangent: {x: -0.83862907, y: 0.518299, z: 0.16753326}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434834
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1880
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.6232718, y: -0.77599293, z: -0.096784264}
+        tangent: {x: -0.66368085, y: 0.4594408, z: 0.59028965}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434835
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1869
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.56382436, y: -0.69993466, z: -0.4383989}
+        tangent: {x: -0.77706474, y: 0.26976773, z: 0.56867903}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434836
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1867
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.5812576, y: -0.81358415, z: -0.014848638}
+        tangent: {x: -0.7798165, y: 0.5517347, z: 0.29576176}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434837
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1585
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.54437864, y: -0.7705026, z: -0.33162862}
+        tangent: {x: -0.78867334, y: 0.60479367, z: -0.11053985}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434838
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1600
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.36970994, y: -0.69540465, z: -0.6162199}
+        tangent: {x: -0.9090705, y: 0.13360097, z: 0.39464107}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434839
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1619
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.56751233, y: -0.763297, z: -0.30871925}
+        tangent: {x: -0.8229303, y: 0.53801394, z: 0.18255636}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434840
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1620
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.68996614, y: -0.6766184, z: -0.25716564}
+        tangent: {x: -0.7233201, y: 0.6310043, z: 0.28043115}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434841
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1863
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.24720211, y: -0.92428994, z: -0.29082507}
+        tangent: {x: -0.9153883, y: -0.3211864, z: 0.2427005}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434842
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1870
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.24720211, y: -0.92428994, z: -0.29082507}
+        tangent: {x: -0.9153883, y: -0.3211864, z: 0.2427005}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434843
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1884
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.02631367, y: -0.42589414, z: -0.9043903}
+        tangent: {x: -0.92166626, y: -0.33998728, z: 0.18692262}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434844
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1595
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.17633441, y: -0.81329, z: -0.5544958}
+        tangent: {x: -0.9353449, y: -0.037051074, z: 0.3517912}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434845
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1588
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.4617203, y: -0.77199066, z: -0.43685776}
+        tangent: {x: -0.886303, y: 0.42138818, z: 0.19209081}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434846
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1748
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.39237475, y: -0.84729475, z: 0.35795757}
+        tangent: {x: -0.9107985, y: 0.4122316, z: -0.022607869}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434847
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1737
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.011428993, y: -0.980738, z: -0.19499326}
+        tangent: {x: -0.97954285, y: 0.028200412, z: -0.19925001}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434848
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1738
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.0800381, y: -0.99575967, z: -0.04534917}
+        tangent: {x: -0.9549112, y: -0.06354699, z: -0.29001102}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434849
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1824
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.08849123, y: -0.99115646, z: -0.09888448}
+        tangent: {x: -0.9548981, y: -0.056164693, z: -0.29157358}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434850
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1731
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.06299697, y: -0.9291671, z: -0.36425257}
+        tangent: {x: -0.9678065, y: 0.03224037, z: -0.24962229}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434851
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1822
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.23296602, y: -0.96359897, z: -0.13116364}
+        tangent: {x: -0.9145396, y: -0.17122172, z: -0.3664703}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434852
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1819
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.20188858, y: -0.9562827, z: -0.21157615}
+        tangent: {x: -0.91945356, y: -0.11063321, z: -0.37731352}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434853
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1825
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.034690313, y: -0.5012184, z: -0.8646253}
+        tangent: {x: -0.97435546, y: 0.2094205, z: -0.082306996}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434854
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1745
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.11814454, y: -0.9924821, z: 0.03195514}
+        tangent: {x: -0.9929941, y: 0.11815102, z: -0.0016919705}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434855
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1891
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.013123075, y: -0.5594277, z: -0.82877517}
+        tangent: {x: -0.99734735, y: 0.06667122, z: -0.02921114}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434856
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1901
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.013123075, y: -0.5594277, z: -0.82877517}
+        tangent: {x: -0.99734735, y: 0.06667122, z: -0.02921114}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434857
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1904
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.10787404, y: -0.01594631, z: -0.9940367}
+        tangent: {x: -0.93950754, y: 0.3285996, z: 0.096685104}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434858
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1905
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.08659861, y: -0.17124419, z: -0.9814154}
+        tangent: {x: -0.98103714, y: 0.18611948, z: 0.054089807}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434859
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1909
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.24819663, y: -0.22004367, z: -0.94338715}
+        tangent: {x: -0.91892254, y: 0.36167148, z: 0.15740088}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434860
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1854
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.10282636, y: -0.78361636, z: -0.6126762}
+        tangent: {x: -0.9921389, y: -0.12496279, z: -0.0066840365}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434861
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1889
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.030351346, y: -0.58047545, z: -0.813712}
+        tangent: {x: -0.99672985, y: -0.043417353, z: 0.0681504}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434862
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1890
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.24752285, y: -0.9671135, z: 0.05851511}
+        tangent: {x: -0.9067571, y: 0.25250688, z: 0.337686}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434863
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1895
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: -0.030351346, y: -0.58047545, z: -0.813712}
+        tangent: {x: -0.99672985, y: -0.043417353, z: 0.0681504}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434864
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1897
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.16150004, y: -0.16458285, z: -0.97305197}
+        tangent: {x: -0.9647836, y: -0.23377672, z: -0.120586514}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434865
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1898
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.10282636, y: -0.78361636, z: -0.6126762}
+        tangent: {x: -0.9921389, y: -0.12496279, z: -0.0066840365}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434866
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1899
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.22059168, y: -0.021296859, z: -0.97513366}
+        tangent: {x: -0.9420925, y: -0.26355845, z: -0.20736109}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434867
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1900
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.07778473, y: -0.007883407, z: -0.99693906}
+        tangent: {x: -0.9969453, y: 0.0064385016, z: -0.07783613}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434868
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1902
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.023810042, y: -0.38617873, z: -0.9221166}
+        tangent: {x: -0.99964416, y: -0.020291507, z: -0.017313885}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434869
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1906
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.0682257, y: -0.16003983, z: -0.9847499}
+        tangent: {x: -0.99720794, y: -0.040974487, z: -0.062429715}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}
+    - rid: 3901258040789434870
+      type: {class: VertexNormalAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 2165
+        weight: 1
+        _name: Rotate Normal
+        active: 0
+        slotName: UMA30_Body_UDIM1001
+        normal: {x: 0.10282636, y: -0.78361636, z: -0.6126762}
+        tangent: {x: -0.9921389, y: -0.12496279, z: -0.0066840365}
+        bakedNormal: {x: 0, y: 0, z: 0}
+        bakedNormalSet: 0
+        rotation: {x: 0, y: 0, z: 0, w: 0}

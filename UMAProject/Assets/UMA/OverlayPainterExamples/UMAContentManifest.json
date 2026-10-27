@@ -452,368 +452,368 @@
             "guid": "58da98643d5afc34b8c57a30a88b9025",
             "bytes": 113114,
             "sha256": "51fb2d721bd313dc320e6fe68d8939c43ed3de07d727126ebff293cf135358d0",
-            "metaBytes": 3435,
-            "metaSha256": "66868b6faed6626e4b3c11cef9b666180f4d7ad84998c0b2d7157340a105ca10"
+            "metaBytes": 4191,
+            "metaSha256": "f2e070bcd3e41990c769310350087b1225375264b77dca644e6a00e5db012b84"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Bear-Head.png",
             "guid": "b55dc2c63cac9a247a8cdd085298b5a5",
             "bytes": 163211,
             "sha256": "ce73997ad9e4780207719635638d2699fb6ee0e1c02eff7776bc527a4bdb5d46",
-            "metaBytes": 3435,
-            "metaSha256": "3d0cc698346d42d8457b12692bdeaafc01b3d9747e961ef873930255be768455"
+            "metaBytes": 4179,
+            "metaSha256": "99c8e9132b72c8d6c6852e9b51c31d805b386003dfd44bd2c07b71789486d697"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Dragon-Knot.png",
             "guid": "930972e11b026c443b61cebf530e7f30",
             "bytes": 162127,
             "sha256": "f5fc690d4a7abc6e756881ce953ed195678ad29f921cdca2e056641ffd889fcf",
-            "metaBytes": 3435,
-            "metaSha256": "7cb548890dff2c73364f0093cbe92f7e522e89af4ce3db05580a15f8d205f3bc"
+            "metaBytes": 4199,
+            "metaSha256": "87e0dc64de69cac9a584fc556bf1e18cdace20391677be203deab8a7d52f015e"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Knot-Diamond.png",
             "guid": "3ea432dfadd614c47a92ffb794793a42",
             "bytes": 97680,
             "sha256": "f5ca46aa26fb08e0c58bbdf8e905e52d8cc0fa6d98fda0536ecd004d4dbaf143",
-            "metaBytes": 3435,
-            "metaSha256": "58e8821963c43670fb79d80ec9e7846028a582d828872cf041450fe5c6d65fb3"
+            "metaBytes": 4199,
+            "metaSha256": "8ef64d8fe26612a64f5eb056b7dcc0428c2175e63a727815db13ad196c64f54c"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Knot-Round.png",
             "guid": "1365b2e8f007e834b856d9887bc4a844",
             "bytes": 132696,
             "sha256": "4be046b1aea22e28b63e59c922c93c4a359d3135be998104bd5c2f12743bd670",
-            "metaBytes": 3435,
-            "metaSha256": "5a4e4dbd5e5ff5bc28e4b5a4b6b5cde1a9278690a6af129fbe44d287cc864f91"
+            "metaBytes": 4197,
+            "metaSha256": "7815e1f3115f02c66a6efd4a9c863c28f26cc353cb32d2d7b6f7d2be3cbd17ec"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Celtic-Triquetra.png",
             "guid": "21e11cd062cf1484a91773fd89c90a51",
             "bytes": 87576,
             "sha256": "670c5af2409fe05df53c4bc04841f8b19cd605c8ea2598b039cc2dc1834aeb3b",
-            "metaBytes": 3435,
-            "metaSha256": "45d54677de2b674ac8c2cade0195057cb9555e03d99ca7e424365ea4e3ad61b8"
+            "metaBytes": 4195,
+            "metaSha256": "767f742765ecb7c27c06e95144ce98056e5e00c434a11436b618a2668cf17cd9"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Acanthus.png",
             "guid": "957441a6396d7c0479838f0864212bbd",
             "bytes": 82239,
             "sha256": "767fa58939e63dddb86853f8860ce37c5edc0e1a4cd3f6700b28ec0bc1690e8a",
-            "metaBytes": 3433,
-            "metaSha256": "f791f12cf48b2ec320ac9a44c2b5d05ee38af16fe03c35c1282cbb6f227f4d79"
+            "metaBytes": 4191,
+            "metaSha256": "4d56d082aa8590ac21a71ba79addf7201d0f2aee3a7557fa8da14f48ba94b1f4"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Braid.png",
             "guid": "2d22db8fda284f241a5e4e6b7c4366a7",
             "bytes": 68248,
             "sha256": "3a92dbce7fa515aebd82efbc12a5857a271f3531315f4e35ccdd4954d878a015",
-            "metaBytes": 3433,
-            "metaSha256": "0936204c16317ce842e7dea71b4ca92dd465c20c06bb6ca408f1d962ee9f78ce"
+            "metaBytes": 4197,
+            "metaSha256": "3134502391d4cd6772343a10750f228bf870c8c46e74fd74d6d5c7691e868469"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Curved.png",
             "guid": "2bccc42f5d9a4e246b45f510ec718a8c",
             "bytes": 59617,
             "sha256": "3343864b6ab48e574237a9713b5fd108d425f8d1b001a63deae15a14153fb710",
-            "metaBytes": 3433,
-            "metaSha256": "0215b6059f207fc35bc2d81cd9db4f5d76c6a1fd7756a7f5d9a24609892dd1ba"
+            "metaBytes": 4201,
+            "metaSha256": "da89b4f318c97ee2daba0724e3aece6aa9764108e2bef3f75545718b75d37ece"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Square.png",
             "guid": "7f7fe9eeb0018dd4d926e6c95dde5718",
             "bytes": 73781,
             "sha256": "5cbefb7330591a245ad9715215772d5658a3ac34d59c5f3a2c17c764693cba14",
-            "metaBytes": 3433,
-            "metaSha256": "35babcc8f5126e6eb98c1dd25a4e760b4e2acbf5ca9524b08b8f74179299b7bb"
+            "metaBytes": 4201,
+            "metaSha256": "ef666589c9cb9c274864d27214417a28cd282b620a426492b3687587dbb6daef"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Celtic-Triskele.png",
             "guid": "3f4470c53c2af4c438464f4ba42a216d",
             "bytes": 75491,
             "sha256": "777b93ca52547df4f81a1856586e3b9987609b2bdd4dc38115e200180013c84b",
-            "metaBytes": 3433,
-            "metaSha256": "3b57608d553c9adcddc895abd73ed5036c28baa487baf4084672def434c120c0"
+            "metaBytes": 4203,
+            "metaSha256": "8748255b2d3dfae6b1a81cf426dcffc6899e60fcbdab5a6052c174218f08ebd7"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Fern.png",
             "guid": "8c79d739a1179894fb9803f6e8172f72",
             "bytes": 81914,
             "sha256": "87bbc32946a546ce266ab8b8938011e2297f44245cd1c1efa24f1d2dc48294a3",
-            "metaBytes": 3433,
-            "metaSha256": "888b1a163702571b4f8cfe87317b7a6bbaae0173de0872877ca086ba88c93132"
+            "metaBytes": 4181,
+            "metaSha256": "f418d724923475a86e4b867d5c89f8ca7e96df07425538c13aaa8ac81cf702d4"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Acanthus-Fan.png",
             "guid": "e85ae23164265bc45b30688328e3fc92",
             "bytes": 91319,
             "sha256": "ec533b41df6824d98da2fb9935fae4b8a5a94dd80574b6820bfe82fa09e894a1",
-            "metaBytes": 3433,
-            "metaSha256": "4034b06fe8da480e4bf90dc870be5b3a0ff9227bae1c69c522970c6e308a1ed5"
+            "metaBytes": 4209,
+            "metaSha256": "3b7ddcb5fc320e8bc9441f5ce63471ed4f804caeb409489e586b41d9df86bb14"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Celtic-Knot.png",
             "guid": "7b06a9d5a3ed4c64a90ac3ccabe5c349",
             "bytes": 92569,
             "sha256": "b0bfb115544a4c66f794263da30ad11d6515744e4c27a45958034aa642267ff6",
-            "metaBytes": 3433,
-            "metaSha256": "073a801a4d46540b4ac64c704e3d5e12bfb0cd796b07178a141d368c223ae8cb"
+            "metaBytes": 4209,
+            "metaSha256": "a83d10733d4dbecbee84071b64f848969c511b16d44f7bf6b80a338af55f9ab4"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-French-Rocaille.png",
             "guid": "717a16f98d35d114db570f3da139957c",
             "bytes": 106876,
             "sha256": "63c38af7f23d3d089a29e9608846a9cd70d2a2f1ab05a8811377914fd545d1f9",
-            "metaBytes": 3433,
-            "metaSha256": "8b72e9a3ec350fa34e7fead81748f83d99254f71b923eb9900c85bd4adf4e02c"
+            "metaBytes": 4217,
+            "metaSha256": "ae49061ab23e9370399e9bd6ed4c971f19bee5f656b559df43d45bd20633fe24"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Ivy-Cluster.png",
             "guid": "cd35f7d8c2c193542b71462c4d57c2a5",
             "bytes": 83557,
             "sha256": "fd4fd9318e54be6669c34b62b30d20633f809b0ed03278810683fb0d7f78dfff",
-            "metaBytes": 3433,
-            "metaSha256": "195b829fe388624a765d6a487299b1d3f789506c2edbb5be2ab799067beb5a72"
+            "metaBytes": 4209,
+            "metaSha256": "c1ca9b51085ec708b278d23797166ae371767e4f330d47c956da0e9d19be2398"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Palmette-Rosette.png",
             "guid": "b5f14b88a697f45489be0534b0d679a2",
             "bytes": 94427,
             "sha256": "6c1ba0f35b6621344e20b2e619a89724518544673e40d122a909ad04eb5409ca",
-            "metaBytes": 3433,
-            "metaSha256": "da3c5b29d83cdd7f109aa3521b7805287b20ddb00cfde7ea11df643454b98753"
+            "metaBytes": 4221,
+            "metaSha256": "e7dbd4b4f898a913cbef4f4aedb0aae5574edf1cd039f62a8d170888be5f71de"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Filled-Scroll-Plate.png",
             "guid": "1f1b3396691b53248b027e5f7348530d",
             "bytes": 56718,
             "sha256": "f2d36136b1405ccff3bd09e3a2b53b3685f885629243cbad6228d3bdd8ef8c0e",
-            "metaBytes": 3433,
-            "metaSha256": "1496b99a80d32ca90543f727e067b1c1a7e6d3a6e439a7792b8f278abe5ff32e"
+            "metaBytes": 4213,
+            "metaSha256": "ea8602cb542bb0049aa7da691ed1841139e671546d1278ec8364d0476ceb03f2"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-French-Lily.png",
             "guid": "0d5a27932565d134ba92a64b8cbe1114",
             "bytes": 70139,
             "sha256": "2452173a8d3fb6a7fe7538246dfe2c3e5b4be0246e8d955688bee68cf0da5239",
-            "metaBytes": 3433,
-            "metaSha256": "867e9f056ab8c14ed21e7f6c31dc5e2da047b750ebff4a2c3604b2462daec00d"
+            "metaBytes": 4195,
+            "metaSha256": "d4321b888277ad596b96cb598f585c7b460852bed0cd75b8fcab7afea8e62260"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-French-Rococo.png",
             "guid": "e0bf6900dcb2acc40b40f0785f6086be",
             "bytes": 90792,
             "sha256": "3a84f06716419afa69b583129ae68f9d039b0d6e93e7aec46a23d654a3b44244",
-            "metaBytes": 3433,
-            "metaSha256": "17320200a447cc5f65240e5f31a963f22cd75c390674618db89cf9c0a9085afb"
+            "metaBytes": 4199,
+            "metaSha256": "e410294d53e399982ada5912fac5a89eabf3f6cd4ffbcf5f619c2c668f53e251"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Ivy.png",
             "guid": "f5401d3bd1a3f914dad456225abbc43b",
             "bytes": 71448,
             "sha256": "58e8345759487a683013a246f95e608f075795ea3a36a99880c2d40e6a041cce",
-            "metaBytes": 3433,
-            "metaSha256": "efc30fc190f784308d525b279a48a4d5572f8ddc34d6699685e3e6861ebf7553"
+            "metaBytes": 4181,
+            "metaSha256": "a8fce48030f6605b6b58acb9b565e3247cef06b00c94cb3fc32afc2f0db3c383"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Laurel.png",
             "guid": "e9b8f5ab7c3f1534fab82897cbd80d20",
             "bytes": 79135,
             "sha256": "2311cf01815c21397e9bfd1a4555e8d3ddd924b64a531329e16bf6be44edd912",
-            "metaBytes": 3433,
-            "metaSha256": "9e33bc95a7d9afb8526c68c7a91b9bf889fd88f058e6c7ce9388edb6d83a8c31"
+            "metaBytes": 4185,
+            "metaSha256": "f697ef822eafadfb3f1b82c74ac37e7b90a9cfba4d4022b39f73a0d83ff03eb6"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Corner-Oak.png",
             "guid": "a811ebb9262c1e44fb4c26ce670b09e7",
             "bytes": 80428,
             "sha256": "21af3188ee348171d2587ad60ba8cca03af09b98d2e8243c7f0148c67be51d60",
-            "metaBytes": 3433,
-            "metaSha256": "5ae064fa3fb85f45ec7fd447f9f14809b8bde30de897a56ab7cd3454b7f57c28"
+            "metaBytes": 4179,
+            "metaSha256": "c9678959bd2ddb332cd18f743470c466fead778326a9193b25ebdc988edb73b8"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Crossed-Swords.png",
             "guid": "827c66fc9c46ac342aa96ff96c97e316",
             "bytes": 104159,
             "sha256": "068db3c767775c6591371ad6abf1873892b42ddf06017e4413e18e756369ed8a",
-            "metaBytes": 3435,
-            "metaSha256": "7cdad9a7fb148bb8124cb1ef97e7f6a9ca47c6758c1eb80dab3432428a26704f"
+            "metaBytes": 4189,
+            "metaSha256": "49813dbdc5558bbd45f6232e42efd1ec4652aafd196237be224962fdadb5fee6"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Dragon.png",
             "guid": "4747fc3fd17732d4dac0f7a069022360",
             "bytes": 142832,
             "sha256": "ebf250f0ebefcb6e481b70d028383daac6c09d1b39fe38ea851c536ca12590cc",
-            "metaBytes": 3435,
-            "metaSha256": "2243b25be70a414e4945ae6c75a96164b75c6b5b7a85b1cb365511002b8ac4f1"
+            "metaBytes": 4173,
+            "metaSha256": "1b688b0edfacf71337a66df138a975348ed5e8d0e0007f2c81acad5cfca05b11"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Eagle.png",
             "guid": "9a56e75c70d126240be77727da2c5864",
             "bytes": 169818,
             "sha256": "0e4249596e61fe698ab981b78382f0fd1e92c3d5b246ac2ddf2859e9e9c7c3ae",
-            "metaBytes": 3435,
-            "metaSha256": "01277e32d1b920fcacc7a8c05d9e04e66e1f35fd28254e73bb54460730b28a32"
+            "metaBytes": 4171,
+            "metaSha256": "529a304d69c0f4e38689a9f92c5f329fe59c50d08271dfd5e6d58f4b0cb09fd6"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Fleur-De-Lis.png",
             "guid": "30b3f462ab2c04c4f86d9a76a28f7628",
             "bytes": 93112,
             "sha256": "49ff72de1c0ba2c86362e1814b7c4d1d605ca22753eafa5753afd6456ad14246",
-            "metaBytes": 3435,
-            "metaSha256": "5c50bbcaf96b1f00885c85b7f6e38acb7b55b51e21837d2425f2fc72ae5c9e31"
+            "metaBytes": 4187,
+            "metaSha256": "805e846d4661157c2a94aa06546c9d1e1aac7ca7ebcd902ece5c481962c79ad3"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Gothic-Trefoil.png",
             "guid": "090ffbf5b0d17c04d84f9a0f9181944e",
             "bytes": 90579,
             "sha256": "63f8d0f5aff7b42e14f25de02e669a3e9aaf8b9e0d21014c5e7669e23e3b4f38",
-            "metaBytes": 3435,
-            "metaSha256": "0b1bf7756ef92028d1382d9862b5ddf48dd03f6042aa0735049bedca58bf084c"
+            "metaBytes": 4189,
+            "metaSha256": "9bb877b323f1d4c338be1a78ea9f68880f621524bcd4fecf9a8c56d42667f212"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Griffin.png",
             "guid": "bd555bd5f3f31274898e5b5f70878024",
             "bytes": 144460,
             "sha256": "18f1fc775803b9507a2d074d4e540d37c9e6b27182a179fdf6b501733675b511",
-            "metaBytes": 3435,
-            "metaSha256": "99da51d650c4cd2b72f3c55c0bb63114cb7547a71d27dee2ba2f215aa1ffa67b"
+            "metaBytes": 4175,
+            "metaSha256": "2b703962e9123424f3a8d38628f8d5bd211f410ad9d52a3943630fd46356ce09"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Laurel-Wreath.png",
             "guid": "0ac27930f9e76294391d13b5abad8d2a",
             "bytes": 113247,
             "sha256": "b82d98e0181f7c565a65ad572db7cd4cadb1f93bbaba22960b135a4e1dd4072d",
-            "metaBytes": 3435,
-            "metaSha256": "ab6a97db234c74fa0e65f4767a76081cdfd14be0eb0ab0d6da247f1ee875011c"
+            "metaBytes": 4189,
+            "metaSha256": "6479849ef7bcfedb4d6fb8a78a1ec5775a91ea78f400d8c2ef0a7a2c5ec016e3"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Lion-Head.png",
             "guid": "0d72b2d37fb3f8b4f8d4d621722293e5",
             "bytes": 173249,
             "sha256": "b8ec7b1a09f39775a312e52023b6c68db2c3fbeea76d127a7039c957ac2b0286",
-            "metaBytes": 3435,
-            "metaSha256": "608452aeebeb9337ac492cbf99216dd2453fab19d5f3a4b7e5f734af608f0846"
+            "metaBytes": 4181,
+            "metaSha256": "11ce1fb755a6f1e5ae9bb5935055aaec14d7d34e98f76bf281547b5dd92f0c37"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Lion-Rampant.png",
             "guid": "6f3f342902f77d942a6ef4daca126bfa",
             "bytes": 141745,
             "sha256": "9e5751a75e7eef84444d4b5deccd9ee415b26a4c2f2be2a050721faa99a4774d",
-            "metaBytes": 3435,
-            "metaSha256": "75ec4be52d917056e7670d1914ad500c2d9af5cd58edb8f4ce92115a93dc5722"
+            "metaBytes": 4187,
+            "metaSha256": "5c729f10ff0a38492f326914a263fa1c18215f97fe71eac4f60a9ce38205a159"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Oak-Wreath.png",
             "guid": "48e831a25b75567439cdbf7795519db6",
             "bytes": 130220,
             "sha256": "050804a0c223d4b2f1dea32503f3573ce0a1b6ceb36b680c0d61d7ac41f8a7c3",
-            "metaBytes": 3435,
-            "metaSha256": "e4eec406430ae706db03b3e680c1d8eedcd5dc0ca53f38e964577eb03201809f"
+            "metaBytes": 4181,
+            "metaSha256": "99a7105c8dd89abfa858e69b27bcbe776d6557a33c9e9b02f131d090e8d1007a"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Owl.png",
             "guid": "ad13436e6b389f1448d9b2a0791f5bdf",
             "bytes": 163257,
             "sha256": "1c373aa929dd88184e67d0149ad199a52bbc90a3a535dd465f85d3497ff0eeb0",
-            "metaBytes": 3435,
-            "metaSha256": "32135349af548582e57cab83268e43120ce687231b3e4ec0a2ff790c60dc7057"
+            "metaBytes": 4167,
+            "metaSha256": "049e1756dfcab5d0ae928674a6ae59bbb0396cb4dbf7cdde3364b8210911c6c8"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Palmette.png",
             "guid": "cf61022335d2d1a45838b9fe5ff34f36",
             "bytes": 124277,
             "sha256": "9c76ee8b36245634be7cfaf982b3328455c7cf1dd77f758ee1513d0f7e761f0a",
-            "metaBytes": 3435,
-            "metaSha256": "cb805df21a1dd74e2b6b81dd8a1029a4387c39274488e6d7a0cbba714ed14d39"
+            "metaBytes": 4177,
+            "metaSha256": "09deb48021a4e74799fce397e8804237d024d5916fa416c1808e36337266e2bd"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Phoenix.png",
             "guid": "8bc1a6f4215803041978b20dd7e49491",
             "bytes": 134591,
             "sha256": "9e32793c8f0f8e32e35cd53149a4fb938e81e069e155e9dae98e8cfa6bd44220",
-            "metaBytes": 3435,
-            "metaSha256": "d17af76b7215628049394b71e3a4ae7644140a5205c3821234d701383aecdbd6"
+            "metaBytes": 4177,
+            "metaSha256": "5857417eebc7ea6551a9be0cf2aa737e609eac0beb9f8b1cf08646c5563fff00"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Prussian-Eagle.png",
             "guid": "c0af0f13dc1fb8d409a76a547b7335c6",
             "bytes": 216987,
             "sha256": "5282a6cf00e5d3a7254b532bb48c003efaf5bb5a389ee973505531598f06bd7d",
-            "metaBytes": 3435,
-            "metaSha256": "0967a4fb93c67c7c19425ca52ff40cd332650848d4d783f2fb4a8fe910e195eb"
+            "metaBytes": 4191,
+            "metaSha256": "53315533b66c947011dcc84ab09df1b4998e866f1996ece5945798a6542a5579"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Raven.png",
             "guid": "3eb5b3ff5bf8173439491d018171a452",
             "bytes": 141921,
             "sha256": "ff3f92ad6499a094c93394cb17cd12785e91811d82291a4c8045d05cfa70a3e6",
-            "metaBytes": 3435,
-            "metaSha256": "5b727ac0e2bd511285413b95675ca818112f58732b59a0a627177fb89012cf98"
+            "metaBytes": 4169,
+            "metaSha256": "a6a0d3da0db49453dfb13ced9162a066e4746ea28765ce03406c27f5b811b2d0"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Royal-Crown.png",
             "guid": "e5dd9e5143a21d142a56b0caf1db1b9e",
             "bytes": 108545,
             "sha256": "f9aefe6f7f0df552d9c37736fa23a2685312fc4ceb6c9c1e72e8ab5692138310",
-            "metaBytes": 3435,
-            "metaSha256": "ad304cb62837823f86fb290332e83194a1d4eddc7f7abfb2968d4ed4b1138ecf"
+            "metaBytes": 4183,
+            "metaSha256": "42df13b2ea33eca8783a8e2e61d8cc70c1e3629a14d11d29c7daee4ffb30abc4"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Scallop-Shell.png",
             "guid": "3e7c3c3aeb6afcb489a7a927fb3f7536",
             "bytes": 106064,
             "sha256": "514a89376e3ebea3c8333db4a52730cb4ec60de4d4c4a20280fa382f66266e73",
-            "metaBytes": 3435,
-            "metaSha256": "9b051176d0f362ce8924b6ac437a15b3098cfd7ecd09ddf4eafeccef8ba46bf5"
+            "metaBytes": 4187,
+            "metaSha256": "cf40a0751f3f36c4116efd015cb6dc90b82510c8a8adb6d047a7b6fd84aecf76"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Scrollwork-Divider.png",
             "guid": "41d89555edb3e9844b21b399450d5e10",
             "bytes": 52474,
             "sha256": "48b6943df653e017653013873edef0d5ea791c16d136b0d7fd7ecdf870666619",
-            "metaBytes": 3435,
-            "metaSha256": "e2ca14d0f9e3e7616470e2598fa8b8121257576d3d7b3abd8341017a536e7fb2"
+            "metaBytes": 4199,
+            "metaSha256": "8e58cf2173d6cbb9cf08aa5b5e650eee0be29a91a71c51c19d3fc7c3ba1bf62d"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Stag-Head.png",
             "guid": "46c308cd06cf2224f931af9fcbc244a0",
             "bytes": 105383,
             "sha256": "ad2acf5b49fcf48125cddca0cd276e739ca36da268b4097064bcb82daddd5588",
-            "metaBytes": 3435,
-            "metaSha256": "96c13af7948d6b4b87202c8d93c13489b5478c8e4edd94548104552650d87096"
+            "metaBytes": 4179,
+            "metaSha256": "326692cca974716552505b1ca34a40ec12849ee6b1616fe2269a509f8690e258"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Sunburst.png",
             "guid": "7b580df97156d9a4d9e9b9288c0833b3",
             "bytes": 143566,
             "sha256": "0a59e57e23c629e8da6d8c278b4c72b007406bbc344a80a6b350992cf8f019e8",
-            "metaBytes": 3435,
-            "metaSha256": "b3a41b81edb1d0450d087be33f0d47a27f4ddafa264623dee43d35bcfb10a4a2"
+            "metaBytes": 4177,
+            "metaSha256": "37839ed3f14f4007c470f4cf0cb9c12fd74f1a27fa071703359fbb41705914a9"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Tudor-Rose.png",
             "guid": "ad9367bb5f709604f8aaf9439021d142",
             "bytes": 100124,
             "sha256": "3dcc96bf6af9417e9ab42c69b6d08a07357f4726ef39763d3b356548b6deda8c",
-            "metaBytes": 3435,
-            "metaSha256": "4f059a462babd83f3ab9fac836df3889573135eeeccfb96ee82e160b5d1bd4d0"
+            "metaBytes": 4181,
+            "metaSha256": "529eacaca22c71e68995125d13518945b9d31b27c53ef288a47b6a06de97e9c6"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Winged-Skull.png",
             "guid": "2df36e6a8bc3bae48b6858cfbee0d5a6",
             "bytes": 184929,
             "sha256": "d4582621dbd8f65c57df4789fe2721c4b3b4bab4e04c00dcb4af035a58b53c6b",
-            "metaBytes": 3435,
-            "metaSha256": "a1f40958ade44878683fdb4cf5532fa22545903142b0f24c642e8eecb3d1aaba"
+            "metaBytes": 4187,
+            "metaSha256": "12c23bc8083b8848f57910a36bb4d462b90049a224620830805c3389db171d38"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/OPS-Wolf-Head.png",
             "guid": "99de56edbd70f2745acf3b9ebec3547a",
             "bytes": 162303,
             "sha256": "6d1703ebc8b628ee0ce1a9fb367849481ef38d7462ae00915004f5b6301f1687",
-            "metaBytes": 3435,
-            "metaSha256": "826cacfc8f89c6480fb6d7abb7af6389d2263001d82eb9f66ff9040f624541a5"
+            "metaBytes": 4175,
+            "metaSha256": "8120b280c1576de5d6bdc6968aa4b2bf38370eef5f4076a055283182113fae10"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Armor Stamps/Prompts.json",
@@ -1058,10 +1058,10 @@
         {
             "path": "Assets/UMA/OverlayPainterExamples/Editor/ProceduralVDMExample.cs",
             "guid": "16d6a2371bf194248ae04470c2648f3f",
-            "bytes": 5882,
-            "sha256": "359a5cf8a98eca03f02db1198ec3421b0a0704ae045001fa5a0898ff75688102",
-            "metaBytes": 59,
-            "metaSha256": "74dada491a97b6bab42754d86d7cd52165e8f1f2f140e6668d23c98ff2c4313c"
+            "bytes": 5995,
+            "sha256": "e628ff49afc2b65f5b7be30ca18162c0d24f05101521247cf26079db734065f2",
+            "metaBytes": 60,
+            "metaSha256": "2b98938c51cbfd871c423eaf0f8161a76bdb6b10d160073b1bf324609480e401"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/Editor/StubbleExamples.cs",
@@ -3556,160 +3556,160 @@
             "guid": "1cfd752a412ceaa41930f056e6f15086",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "168f095c3f34e90c8f3a31fb766c73be5e4049b5ec75f7dc77844a6952ecdf97"
+            "metaBytes": 180,
+            "metaSha256": "f43c300f8d93449dbc19d3a907490c5e3fcdd6c92ac8f7a12fa74f33c5e08936"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder",
             "guid": "65542892077efc343a2a0ea1ce98f273",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "050b2e28f6a23e5eb05373388966f16a9c7ecd1adc9d3d917a0bea4dd2893610"
+            "metaBytes": 180,
+            "metaSha256": "699ac8f62b4fbd423c3f597b75391b3e26ddad8fb64bc4288668e43d7ad06175"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen Height Map.png",
             "guid": "00d810accdcd2ff48a8776a4ac703135",
             "bytes": 1489797,
             "sha256": "4f2383efea67a668d0efe68929e38e58b4923ac3852c6a52cda64745024fb543",
-            "metaBytes": 3364,
-            "metaSha256": "4dac72797fa1f47024f7a28a3b680dcc5dd8be497fed6d22d41b4def67b2c075"
+            "metaBytes": 3507,
+            "metaSha256": "1275c4824fe943dfdd523498580076a534c3eb066796b93494b30e53d1d4d891"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen Prompts.md",
             "guid": "0e515c6a3e54381428df874807d56259",
-            "bytes": 3843,
-            "sha256": "4401dbb1070bc005f187bf6f65a8e56d4b68098e64c11afbd7ae191d80c4e6cb",
-            "metaBytes": 158,
-            "metaSha256": "23ec745381b583903ea4b0fc6d38b410b1d9fa9058a62ea4bed6ce4dad0492e3"
+            "bytes": 3860,
+            "sha256": "fdde44877030c56cedf83008420f92fdfeb6ef9565285d392d0f8ec38e47c08e",
+            "metaBytes": 165,
+            "metaSha256": "4d5c60f67a2f57791363d493a2e4a70ff6af238a26ca486f4e3ea14d5c958e50"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen VDM.asset",
             "guid": "a5de25854c9a1b04a8100abcdf213d20",
-            "bytes": 954,
-            "sha256": "53cbb8824851bade1b90b2d187aad86363427f831784f5ffcab05ed3251323c4",
-            "metaBytes": 189,
-            "metaSha256": "7360227557e7e41360dc35731ff7396c9d951e81e6716cda40cc241fe20582e1"
+            "bytes": 981,
+            "sha256": "aa11cb80469675805016050b4c7181f9d174c2202a2e1519d8fc8a5a3d345661",
+            "metaBytes": 197,
+            "metaSha256": "c786c7e08af4890f95423c679335a29a1a6a5722e19176fed047a79088f572a0"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen VDM.exr",
             "guid": "af672684c3467fe45a79b5bde79ebed1",
             "bytes": 4025789,
             "sha256": "6fcdde33bb57170439ffbff651e78ef04da4b351cbcd8ff8412fa7226d6055ce",
-            "metaBytes": 3364,
-            "metaSha256": "9c6a511d3e1bd5454ee7bd54d458eb0bd83e25661baa50ac0e98ebc83be8cf09"
+            "metaBytes": 3507,
+            "metaSha256": "a449f9835c8b3ed1995ae5b0c538958a50cb3d0017ac97ace703ee26d3fc1d28"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Muscle Map Prompts.md",
             "guid": "23b6fbc7bffbd524bbf247279f38e54d",
-            "bytes": 3511,
-            "sha256": "c67d001dbb510e59d73e62b3945539aa4e518212898533930a4ff697945bd9ad",
-            "metaBytes": 158,
-            "metaSha256": "70c4cd7cd180e7597716c32717b35898ab6905de5046265ef1cde6a3147d2780"
+            "bytes": 3527,
+            "sha256": "ba9f3e74c1bd777bbb6954d3ab5a6d581f26ecddd591854bc39581af05a72373",
+            "metaBytes": 165,
+            "metaSha256": "1ea4f1d94dc1017bc8542e86488b81d0c7baf01f447ea4f7e8ebc4f3b2e6900b"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs Height Map.png",
             "guid": "2a8c03f8936457a4eb72c72ed805dfa4",
             "bytes": 1454754,
             "sha256": "9e619d1bda08db8d258671e9f310282bfc677d185568a4173c1431cf3607887d",
-            "metaBytes": 3364,
-            "metaSha256": "d4626c8a587d32e772aea6d6c554732b1307ed3cf339d0dc101882d623486f27"
+            "metaBytes": 3507,
+            "metaSha256": "07ceeb0a6aff19ad0f7b14ec0bdd993ff1e4581815e610cc1690be52a1c9582d"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs VDM.asset",
             "guid": "b6a77c91be9e08f4f8e2b85ca7139fd6",
-            "bytes": 948,
-            "sha256": "77165c6f3635ee3533ad253329fd797c19e67a95bccf956cdd138c598ced80e5",
-            "metaBytes": 189,
-            "metaSha256": "922ba99df3146b8bbe4f33d0ea22025bf393d5c53d32cb57e8a8c80045ce55a6"
+            "bytes": 975,
+            "sha256": "be17e329b58730ee1c415c1812764559b7c3079d24c931877b6376188d445f92",
+            "metaBytes": 197,
+            "metaSha256": "3cf9c57b9e0c3229924ba82bddc144867fd4e9433c035854237e96e46f15c738"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs VDM.exr",
             "guid": "36d963283aa2f9549926af5dc417b372",
             "bytes": 3406531,
             "sha256": "84a871d8afac2b1b1a5d5bf896e4af62e8ec2d715371d03e649718292b129ce4",
-            "metaBytes": 3364,
-            "metaSha256": "eec6917f0109355fd7035c4e19922be03e0260662671901c3062f0ca0d022ef1"
+            "metaBytes": 3507,
+            "metaSha256": "d6e35f1af51144f452652f52a740c7a28697d82b121446a997dc715d76dd008e"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine Height Map.png",
             "guid": "a9b58c999e113314c8be592765d58679",
             "bytes": 1522095,
             "sha256": "1592d747493277eab8a8153d5d00874b587709f702553b54687bc68cce101b1d",
-            "metaBytes": 3364,
-            "metaSha256": "8c6f7c2c5cde43a15d5fc8bd6a48016b2dcc507705e8435fe64abcc90db95e34"
+            "metaBytes": 3507,
+            "metaSha256": "d3c84e91f6d78917c9c1455d3bf2c77fb0b7c289e5e8a4fa9bc0191f52feb0c3"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine VDM.asset",
             "guid": "08bc78809af60134cbbce82ce7cdc731",
-            "bytes": 950,
-            "sha256": "ba7bc4aafbe80d9a07ff73891a6c75cfac3eaf7dad63a1bcf0602f6f5c0dea83",
-            "metaBytes": 189,
-            "metaSha256": "d334730ec3ae38500231ea0b017b565a6aab983a7b6a46a2c4abe0ac31519e1b"
+            "bytes": 977,
+            "sha256": "40e15825f0251678641effe23ae4684b4e1fd2b71333d3feb070b6d22479d75a",
+            "metaBytes": 197,
+            "metaSha256": "9d4e6d80ad0d36e36a86648cfedb3a33430f650072b7004f1ef67e365c94f7a2"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine VDM.exr",
             "guid": "4c374bce966be94429bb3a5c6771cb3c",
             "bytes": 3892511,
             "sha256": "f60fbd6ce3d3073f63b90d2e30451ea707a7b1e3c46093a8763dc6ccb95e1dfb",
-            "metaBytes": 3364,
-            "metaSha256": "4b6368bbcc88556e2b9afe39aefe122362959a6f0b7b3a93078177608e40f5c8"
+            "metaBytes": 3507,
+            "metaSha256": "0fc553bde333726b3394c2a59bf8a42cd9b1d079ab695dcc99e80d8d7dd17dd5"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Encoding.json",
             "guid": "b0f69a2dbb2c6664dbaebab9a6d3e348",
             "bytes": 1503,
             "sha256": "58468fb8b034a11ed5eb2a115b6f01a51732853bd00eb99843521ce3e991a44a",
-            "metaBytes": 158,
-            "metaSha256": "2480c9b33c4d7cf1b5d775b3992e092541f870fd546a3d9f9427526bf5ff0687"
+            "metaBytes": 165,
+            "metaSha256": "35eba4dae9dceaf86b0f836ff91aad6ce5499c07bae5b21176eeefc6a609bf42"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/README.md",
             "guid": "6ae06ed662856824bac4ace254c9a53f",
             "bytes": 2955,
             "sha256": "d70c63ebd45966df9fedf0b32e45a542390be60e458084ebb628232dd46a317e",
-            "metaBytes": 158,
-            "metaSha256": "e3d912c0fa498b4b4b484c9b53342977b26ef330e9d8158ab8b33f37126a485b"
+            "metaBytes": 165,
+            "metaSha256": "2e58b83949477431bae58d49e2e1aeb8b0fb6314d33661c05df2cc550de0900b"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/README.md",
             "guid": "a6ce6f756917bdb48bdee731a109904a",
             "bytes": 1672,
             "sha256": "13f83056ff3d679f9f890b1674b03d1bb8984900eb0edef2a02fa5a43f425453",
-            "metaBytes": 158,
-            "metaSha256": "e2c5cd3949327a9c473c258bb5a5c928d888bd1819c3d0b391d12ca30db48d02"
+            "metaBytes": 165,
+            "metaSha256": "6566efb438b4a251c661ec831abb5028f126551709a66b3ad1a249988b9fda28"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM Height.png",
             "guid": "73518185f916f79439a4f81ec5bb717e",
             "bytes": 48114,
             "sha256": "3fcc0e83e67b71c4760cabf50bc6814150e87b7ae116dcc02bbf1c5a6f23fc9d",
-            "metaBytes": 3364,
-            "metaSha256": "79ae491444c731fe388aa5954f5c15b0b31671065188ca8bdd96b21041716513"
+            "metaBytes": 3507,
+            "metaSha256": "dddfd28a0534e5e59ecc2c1c62206a3daf4f10b718c70d024847f8309b880379"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM Preview.png",
             "guid": "0f7cc4075bcd2bb4fa4fd8212749474e",
             "bytes": 145608,
             "sha256": "588235ca8f314d7f226009d64e952a8155c23c00ee11b38b563550b3e3d2d28a",
-            "metaBytes": 3364,
-            "metaSha256": "a6365b1db5c060ee6856485905db071871e3a2a75f713e4f62b5aa9028db5f23"
+            "metaBytes": 3507,
+            "metaSha256": "29713ba0aa170925cf0c21a2e0be0e8ba08a72c5815d1ec8dd4b4a1a977365a4"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM.asset",
             "guid": "69657e83479f99244b82522e891d9a5a",
-            "bytes": 959,
-            "sha256": "a558803df0f707c80ba422da3bd22dad08b4c04f1c1b7581a01346dfc2934350",
-            "metaBytes": 189,
-            "metaSha256": "a0c2342eb2af72a720c3b19b6c918082a2c7126af9e2230e78fd5aff7c49ba43"
+            "bytes": 986,
+            "sha256": "3e6b5a6ebc5f25f6c5d8286a8e1279e7fb95bae0bacea437c39de9db68d32a15",
+            "metaBytes": 197,
+            "metaSha256": "009fc3dccdcf993a97fd04370eac97e85f0a2bf4c4a07fdb4e04ab35916ad2af"
         },
         {
             "path": "Assets/UMA/OverlayPainterExamples/VDM/Sculpted Core VDM.exr",
             "guid": "4a03030fc6e36094687fcf248fae21ef",
             "bytes": 2744531,
             "sha256": "de83fe5ce60550276ce41a03986bcd0ebab2a8d232607c74a6a3812da7888f97",
-            "metaBytes": 3364,
-            "metaSha256": "760aca1cecae4ea112a563f66dd2fa21f77e6a2f5b20fb89db3d34faadbecd66"
+            "metaBytes": 3507,
+            "metaSha256": "d47bdaa24544c90c2b898ab80fd815f83f364a11e457df0c28db4172a90bf747"
         }
     ]
 }
