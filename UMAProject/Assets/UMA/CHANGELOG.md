@@ -2,6 +2,7 @@
 
 ## 3.1f5 (package version 3.1.5)
 
+- Fixed plugin installation throwing `ArgumentException: Invalid path` when no package location has been saved. Empty or invalid remembered paths no longer prevent normal local package discovery.
 - The Plans browser now uses the top selector to filter by subfolder, including nested folders. **All folders** restores the complete list; switching to documentation restores the plugin selector.
 - Consolidated UMA3 eyebrows into `Wearables/eyebrows`, keeping the authoritative `eyebrows_31` assets and GUIDs. Updated overlay textures, character presets, sample scenes, export scene sources, and Global Library entries to remove duplicate eyebrow recipes.
 - Release recipe validation now includes saved Global Library entries hidden by duplicate lookup names. It reports these as recipe name collisions, showing the selected asset, instead of incorrectly claiming they are missing from the index.

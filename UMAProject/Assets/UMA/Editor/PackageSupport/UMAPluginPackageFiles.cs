@@ -27,10 +27,21 @@ namespace UMA.Editors.PackageSupport
             {
                 DefaultDirectory,
                 UMAPluginPackageDownload.CurrentCacheDirectory,
-                Path.GetDirectoryName(remembered),
+                GetRememberedDirectory(remembered),
                 Path.GetFullPath("Plugins"),
                 UMAPathUtility.ResolveAbsolutePath(UMAPathUtility.ResolveInstallAssetPath("Plugins"))
             }, out validatedArchive, remembered, progress);
+        }
+
+        private static string GetRememberedDirectory(string path)
+        {
+            // A first install has no saved path. Unity's Mono runtime throws for an empty path.
+            if (string.IsNullOrWhiteSpace(path)) return null;
+            try { return Path.GetDirectoryName(path); }
+            // A stale or malformed preference must not prevent searching the normal package folders.
+            catch (ArgumentException) { return null; }
+            catch (NotSupportedException) { return null; }
+            catch (PathTooLongException) { return null; }
         }
 
         // Only search known package locations, never recurse through user content or the whole disk.
