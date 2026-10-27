@@ -221,6 +221,8 @@ namespace UMA
         [SerializeField]
         private List<SlotSelectionEntry> slotSelectionEntries = new List<SlotSelectionEntry>();
         private bool paintMode;
+        [SerializeField]
+        private bool paintMirrorX;
         private bool paintAddMode = true;
         private PaintBrushMode paintBrushMode = PaintBrushMode.Point;
         private int paintBrushRadiusPixels = 24;
@@ -322,6 +324,7 @@ namespace UMA
         private int paintScreenTriangleCacheSlotSelectionVersion = -1;
         private int paintScreenTriangleCacheTriangleCount = -1;
         private bool paintScreenTriangleCacheCullBackfaces;
+        private bool paintScreenTriangleCacheMirrorX;
         private Vector3 paintScreenTriangleCacheCameraPosition;
         private Quaternion paintScreenTriangleCacheCameraRotation;
         private bool paintScreenTriangleCacheCameraOrthographic;
@@ -793,7 +796,8 @@ namespace UMA
                 Material mat = UMAUtils.GetDefaultDiffuseMaterial();
                 if (mat != null)
                 {
-                    mat.SetColor("_Color", color);
+                    mat.SetColor("_BaseColor", color);
+                    mat.SetFloat("_Smoothness", 0.1f);
                     newMaterials.Add(mat);
                 }
             }
@@ -1237,7 +1241,7 @@ namespace UMA
 
             if (overlayHiddenFillMesh != null && overlayHiddenFillMesh.vertexCount > 0)
             {
-                overlayMaterial.SetColor("_Color", OverlayFillRed);
+                overlayMaterial.SetColor("_BaseColor", OverlayFillRed);
                 overlayMaterial.SetPass(0);
                 Graphics.DrawMesh(
                     overlayHiddenFillMesh,
@@ -1255,7 +1259,7 @@ namespace UMA
 
             if (overlayHiddenLineMesh != null && overlayHiddenLineMesh.vertexCount > 0)
             {
-                overlayLineMaterial.SetColor("_Color", OverlayLineBlack);
+                overlayLineMaterial.SetColor("_BaseColor", OverlayLineBlack);
                 overlayLineMaterial.SetPass(0);
                 Graphics.DrawMesh(
                     overlayHiddenLineMesh,
@@ -1518,6 +1522,10 @@ namespace UMA
                 {
                     overlayMaterial.SetFloat("_ColorModulation", 1f);
                 }
+                if (overlayMaterial.HasProperty("_Smoothness"))
+                {
+                    overlayMaterial.SetFloat("_Smoothness", 0.1f);
+                }
             }
             if (overlayLineMaterial == null)
             {
@@ -1530,6 +1538,10 @@ namespace UMA
                 if (overlayLineMaterial.HasProperty("_ColorModulation"))
                 {
                     overlayLineMaterial.SetFloat("_ColorModulation", 1f);
+                }
+                if (overlayLineMaterial.HasProperty("_Smoothness"))
+                {
+                    overlayLineMaterial.SetFloat("_Smoothness", 0.1f);
                 }
             }
         }
@@ -3013,6 +3025,7 @@ namespace UMA
                 GUILayout.Label("Selection", centeredLabel);
 
                 paintMode = EditorGUILayout.ToggleLeft("Paint Mode", paintMode);
+                paintMirrorX = EditorGUILayout.ToggleLeft(new GUIContent("Mirror X", "Mirror paint strokes across the mesh's local X = 0 plane."), paintMirrorX);
                 using (new GUILayout.HorizontalScope())
                 {
                     GUILayout.Label("Operation", GUILayout.Width(70f));
@@ -4100,6 +4113,10 @@ namespace UMA
             if (!useBrush || paintBrushMode == PaintBrushMode.Point)
             {
                 ApplySelectionAtMouse(mousePosition, add);
+                if (paintMirrorX)
+                {
+                    ApplySelectionAtMouse(mousePosition, add, true);
+                }
                 return;
             }
 
@@ -4246,32 +4263,18 @@ namespace UMA
                     continue;
                 }
 
-                Vector3 world0 = localToWorld.MultiplyPoint3x4(vertices[bakedIndex0]);
-                Vector3 world1 = localToWorld.MultiplyPoint3x4(vertices[bakedIndex1]);
-                Vector3 world2 = localToWorld.MultiplyPoint3x4(vertices[bakedIndex2]);
-
-                if (rubberBandCullBackfaces)
+                var slotKey = new SlotTriangleKey(cachedTriangle.slotName, cachedTriangle.slotSubmeshIndex, cachedTriangle.slotTriangleIndex);
+                Vector3 local0 = vertices[bakedIndex0];
+                Vector3 local1 = vertices[bakedIndex1];
+                Vector3 local2 = vertices[bakedIndex2];
+                CachePaintScreenTriangle(slotKey, local0, local1, local2, localToWorld, cameraForward);
+                if (paintMirrorX)
                 {
-                    Vector3 normal = Vector3.Cross(world1 - world0, world2 - world0);
-                    if (Vector3.Dot(normal, cameraForward) >= 0f)
-                    {
-                        continue;
-                    }
+                    // Project reflected geometry under the original brush. This mirrors its
+                    // whole footprint (including texture masks) from any camera angle.
+                    // Swap winding because reflection reverses the triangle's handedness.
+                    CachePaintScreenTriangle(slotKey, MirrorX(local0), MirrorX(local2), MirrorX(local1), localToWorld, cameraForward);
                 }
-
-                Vector2 screen0 = HandleUtility.WorldToGUIPoint(world0);
-                Vector2 screen1 = HandleUtility.WorldToGUIPoint(world1);
-                Vector2 screen2 = HandleUtility.WorldToGUIPoint(world2);
-
-                paintScreenTriangleCache.Add(new PaintScreenTriangle
-                {
-                    slotKey = new SlotTriangleKey(cachedTriangle.slotName, cachedTriangle.slotSubmeshIndex, cachedTriangle.slotTriangleIndex),
-                    screen0 = screen0,
-                    screen1 = screen1,
-                    screen2 = screen2,
-                    screenCenter = (screen0 + screen1 + screen2) / 3f,
-                    screenBounds = GetTriangleScreenBounds(screen0, screen1, screen2)
-                });
             }
 
             paintScreenTriangleCacheValid = true;
@@ -4279,6 +4282,7 @@ namespace UMA
             paintScreenTriangleCacheSlotSelectionVersion = slotSelectionVersion;
             paintScreenTriangleCacheTriangleCount = slotTriangleCache.Count;
             paintScreenTriangleCacheCullBackfaces = rubberBandCullBackfaces;
+            paintScreenTriangleCacheMirrorX = paintMirrorX;
             paintScreenTriangleCacheCameraPosition = cameraTransform.position;
             paintScreenTriangleCacheCameraRotation = cameraTransform.rotation;
             paintScreenTriangleCacheCameraOrthographic = camera.orthographic;
@@ -4290,6 +4294,35 @@ namespace UMA
             paintScreenTriangleCacheFaceRotation = faceTransform.rotation;
             paintScreenTriangleCacheFaceScale = faceTransform.lossyScale;
             return paintScreenTriangleCache.Count > 0;
+        }
+
+        private void CachePaintScreenTriangle(SlotTriangleKey slotKey, Vector3 local0, Vector3 local1, Vector3 local2, Matrix4x4 localToWorld, Vector3 cameraForward)
+        {
+            Vector3 world0 = localToWorld.MultiplyPoint3x4(local0);
+            Vector3 world1 = localToWorld.MultiplyPoint3x4(local1);
+            Vector3 world2 = localToWorld.MultiplyPoint3x4(local2);
+            if (rubberBandCullBackfaces && Vector3.Dot(Vector3.Cross(world1 - world0, world2 - world0), cameraForward) >= 0f)
+            {
+                return;
+            }
+
+            Vector2 screen0 = HandleUtility.WorldToGUIPoint(world0);
+            Vector2 screen1 = HandleUtility.WorldToGUIPoint(world1);
+            Vector2 screen2 = HandleUtility.WorldToGUIPoint(world2);
+            paintScreenTriangleCache.Add(new PaintScreenTriangle
+            {
+                slotKey = slotKey,
+                screen0 = screen0,
+                screen1 = screen1,
+                screen2 = screen2,
+                screenCenter = (screen0 + screen1 + screen2) / 3f,
+                screenBounds = GetTriangleScreenBounds(screen0, screen1, screen2)
+            });
+        }
+
+        private static Vector3 MirrorX(Vector3 point)
+        {
+            return new Vector3(-point.x, point.y, point.z);
         }
 
         private bool IsPaintScreenTriangleCacheValid(SceneView sceneView, Camera camera)
@@ -4307,6 +4340,7 @@ namespace UMA
                    paintScreenTriangleCacheSlotSelectionVersion == slotSelectionVersion &&
                    paintScreenTriangleCacheTriangleCount == slotTriangleCache.Count &&
                    paintScreenTriangleCacheCullBackfaces == rubberBandCullBackfaces &&
+                   paintScreenTriangleCacheMirrorX == paintMirrorX &&
                    paintScreenTriangleCacheCameraPosition == cameraTransform.position &&
                    paintScreenTriangleCacheCameraRotation == cameraTransform.rotation &&
                    paintScreenTriangleCacheCameraOrthographic == camera.orthographic &&
@@ -4516,9 +4550,9 @@ namespace UMA
                    point.y <= Mathf.Max(segmentStart.y, segmentEnd.y) + 1e-5f;
         }
 
-        private void ApplySelectionAtMouse(Vector2 mousePosition, bool add)
+        private void ApplySelectionAtMouse(Vector2 mousePosition, bool add, bool mirrorX = false)
         {
-            if (!TryPickSlotTriangleAtMouse(mousePosition, out var slotKey))
+            if (!TryPickSlotTriangleAtMouse(mousePosition, out var slotKey, mirrorX))
             {
                 return;
             }
@@ -4526,7 +4560,7 @@ namespace UMA
             SetSlotTriangleSelection(slotKey, add);
         }
 
-        private bool TryPickSlotTriangleAtMouse(Vector2 mousePosition, out SlotTriangleKey slotKey)
+        private bool TryPickSlotTriangleAtMouse(Vector2 mousePosition, out SlotTriangleKey slotKey, bool mirrorX = false)
         {
             slotKey = default;
             if (FaceObject == null || BakedMesh == null)
@@ -4543,7 +4577,11 @@ namespace UMA
             }
 
             Ray worldRay = HandleUtility.GUIPointToWorldRay(mousePosition);
-            Ray localRay = new Ray(FaceObject.transform.InverseTransformPoint(worldRay.origin), FaceObject.transform.InverseTransformDirection(worldRay.direction));
+            Ray localRay = new Ray(FaceObject.transform.InverseTransformPoint(worldRay.origin), FaceObject.transform.InverseTransformVector(worldRay.direction));
+            if (mirrorX)
+            {
+                localRay = new Ray(MirrorX(localRay.origin), MirrorX(localRay.direction));
+            }
             RefreshBakedMeshCaches();
             Vector3[] bakedVertices = this.bakedVertices;
             if (bakedVertices == null)

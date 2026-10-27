@@ -300,14 +300,14 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
     propertiesExpanded: 1
     showSelected: 1
-    isSelected: 1
+    isSelected: 0
     showDisplayColor: 1
     showSelectFromFoldout: 0
     displayColor: {r: 1, g: 0.8411773, b: 0.51257855, a: 1}
@@ -594,14 +594,14 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
     propertiesExpanded: 1
     showSelected: 1
-    isSelected: 1
+    isSelected: 0
     showDisplayColor: 1
     showSelectFromFoldout: 0
     displayColor: {r: 0.68235296, g: 0.2901961, b: 0.121568635, a: 1}
@@ -888,14 +888,14 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
     showSelected: 1
-    isSelected: 1
+    isSelected: 0
     showDisplayColor: 1
     showSelectFromFoldout: 0
     displayColor: {r: 0.34117648, g: 0.227451, b: 0.1764706, a: 1}
@@ -1182,14 +1182,14 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
     propertiesExpanded: 0
     showSelected: 1
-    isSelected: 1
+    isSelected: 0
     showDisplayColor: 1
     showSelectFromFoldout: 0
     displayColor: {r: 0.37106913, g: 0.12016188, b: 0.010501893, a: 1}
@@ -1476,14 +1476,14 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
     propertiesExpanded: 1
     showSelected: 1
-    isSelected: 1
+    isSelected: 0
     showDisplayColor: 1
     showSelectFromFoldout: 0
     displayColor: {r: 0.2264151, g: 0.15808031, b: 0.12744749, a: 1}
@@ -1770,14 +1770,14 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
     propertiesExpanded: 1
     showSelected: 1
-    isSelected: 1
+    isSelected: 0
     showDisplayColor: 1
     showSelectFromFoldout: 0
     displayColor: {r: 0, g: 0, b: 0, a: 1}
@@ -2064,14 +2064,14 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 0
     propertiesExpanded: 1
     showSelected: 1
-    isSelected: 1
+    isSelected: 0
     showDisplayColor: 1
     showSelectFromFoldout: 0
     displayColor: {r: 0.91194963, g: 0.91194963, b: 0.91194963, a: 1}
@@ -2358,14 +2358,14 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
     colorsExpanded: 1
     propertiesExpanded: 1
     showSelected: 1
-    isSelected: 1
+    isSelected: 0
     showDisplayColor: 0
     showSelectFromFoldout: 0
     displayColor: {r: 1, g: 1, b: 1, a: 1}
@@ -2652,7 +2652,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -2946,7 +2946,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -3240,7 +3240,7 @@ MonoBehaviour:
         propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
-    isBaseColor: 1
+    isBaseColor: 0
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
@@ -3250,4 +3250,298 @@ MonoBehaviour:
     isSelected: 0
     showDisplayColor: 1
     showSelectFromFoldout: 1
+    displayColor: {r: 0.3584906, g: 0.10709622, b: 0.34810242, a: 1}
+  - name: Night Elf Blue
+    channelMask:
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    - {r: 1, g: 1, b: 1, a: 1}
+    channelAdditiveMask:
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    - {r: 0, g: 0, b: 0, a: 0}
+    PropertyBlock:
+      alwaysUpdate: 0
+      alwaysUpdateParms: 0
+      serializedProperties:
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#2E3795FF;_BaseColor
+          name: _BaseColor
+          Value: {r: 0.1820932, g: 0.21549146, b: 0.5849056, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#05042FFF;_RootColor
+          name: _RootColor
+          Value: {r: 0.02112837, g: 0.016633024, b: 0.18238991, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#2B3DC7FF;_Tip_Color
+          name: _Tip_Color
+          Value: {r: 0.16921788, g: 0.2387256, b: 0.7798742, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#878787FF;_SpecularTint
+          name: _SpecularTint
+          Value: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 1}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
+    foldout: 0
+    showAdvanced: 0
+    isBaseColor: 0
+    deleteThis: 0
+    moveUpThis: 0
+    moveDownThis: 0
+    colorsExpanded: 1
+    propertiesExpanded: 1
+    showSelected: 1
+    isSelected: 1
+    showDisplayColor: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.3584906, g: 0.10709622, b: 0.34810242, a: 1}
