@@ -60,7 +60,7 @@ namespace UMA.PoseTools
 		private void OnEnable()
 		{
 			LoadState();
-			if (poses == null || poses.Count == 0)
+			if (poses == null)
 			{
 				poses = new List<AnimationPose> { new AnimationPose() };
 			}
@@ -571,6 +571,12 @@ namespace UMA.PoseTools
 					stateChanged = true; // Persist after building
 				}
 				GUI.enabled = true;
+				if (GUILayout.Button("Clear poses"))
+				{
+					poses.Clear();
+					scrollPosition = Vector2.zero;
+					stateChanged = true;
+				}
 				EditorGUI.indentLevel--;
 			}
 

@@ -48,6 +48,8 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 
 - [Content Creation](ContentCreation.md)
 - [UMA Tools for Blender](UMAToolsForBlender.md)
+- [Bone Pose Builder: An Artist's Guide](BonePoseBuilder.md) - turn posed rigs and supported animation samples into reusable poses.
+- [Bone Pose Editor: An Artist's Guide](BonePoseEditor.md) - shape poses on a built character with direct controls, symmetry, groups, and IK.
 - [Creating a New Race](CreatingANewRace.md)
 - [RaceData](RaceData.md)
 - [SlotDataAsset](SlotDataAsset.md)

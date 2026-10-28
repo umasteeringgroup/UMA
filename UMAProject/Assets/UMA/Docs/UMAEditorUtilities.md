@@ -33,6 +33,8 @@ Select a Shared Color Table asset to paste color settings copied from an avatar.
 
 - [Race Utilities](RaceUtilities.md): race duplication, compatible-race batches, T-pose generation, and base-overlay material migration.
 - [Pose Tools](PoseTools.md): bone-pose building, conversion, mixing, DNA extraction, expression extraction, and T-pose extraction.
+- [Bone Pose Builder: An Artist's Guide](BonePoseBuilder.md): complete posed-rig and animation-sampling walkthroughs, frame-list management, and extraction troubleshooting.
+- [Bone Pose Editor: An Artist's Guide](BonePoseEditor.md): hands-on pose authoring, mirroring, bone groups, IK, previewing, merging, and export.
 - [Animation Utilities](AnimationUtilities.md): curve stripping and binding-path migration.
 - [Prefab and Scene-Building Tools](PrefabAndSceneBuildingTools.md): non-UMA prefab conversion, generated prefab saving, scene-mesh slot creation, and Bone Builder.
 

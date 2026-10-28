@@ -1,14 +1,61 @@
 # Pose Tools
 
-UMA's Pose Tools create, combine, convert, or extract T-poses and `UMABonePose` data. These tools operate on asset-space transforms; commit source assets before conversion.
+UMA's Pose Tools help you author reusable expressions, hand shapes, body adjustments, and rig reference poses. Start with the character and the visual change you want, then choose the tool that fits your source material.
+
+The two main authoring tools have their own detailed artist guides:
+
+- [Bone Pose Builder: An Artist's Guide](BonePoseBuilder.md) walks from neutral and posed rigs to a finished pose asset, then through animation-frame extraction, pose-set XML, Clear poses, validation, and troubleshooting.
+- [Bone Pose Editor: An Artist's Guide](BonePoseEditor.md) walks through a facial pose, grouped finger posing, IK, symmetry, previewing, merging, animation export, and using the result in a character setup.
+
+## Choose Your Workflow
+
+| Your starting point or goal | Tool to use |
+|---|---|
+| You already posed a rig in Blender, Maya, or Unity and have a matching neutral rig. | **Bone Pose Builder > Pose Source**. |
+| You have an animation containing named key poses at known frames. | **Bone Pose Builder > Animation Source**. Read its current extraction limitations before batching. |
+| You want to shape a pose directly while looking at a built UMA. | **Bone Pose Editor**, shown when a bone-pose asset is selected. |
+| Several bones need coordinated local adjustments. | **Bone Groups** in the Bone Pose Editor. |
+| A hand or foot needs to reach a position before you refine its joints. | **Use IK Editor** in the Bone Pose Editor. |
+| You want to combine existing poses at chosen strengths. | **Bone Pose Mixer**. |
+| You need to correct the race's underlying reference T-pose. | **Edit Selected Character Race T-Pose**, or the Editor's **TPose Tools**. |
+
+A `UMABonePose` stores changes to named bones; an `UmaTPose` stores a rig reference pose; an `AnimationClip` stores animation curves. Keep their purposes separate when choosing what to save. A bone pose also needs an expression, DNA, or other consumer to apply it outside the authoring preview.
 
 ## Bone Pose Builder
 
 Open `UMA > Tools > Pose Tools > Bone Pose Builder`.
 
-The builder compares a Base Prefab with a posed rig and creates `UMABonePose` assets containing their transform differences. It can build one pose or sample named frames from an animation clip. Pose-set XML files store the frame/name list for repeatable batch extraction.
+Use the Builder to bring poses you have already authored into UMA. For a first attempt, make one small, recognizable change on a copy of your neutral rig, such as lifting a brow or curling a finger.
 
-Use rigs with matching hierarchies and stable bone names. Build output into a dedicated Pose Folder and inspect the resulting bone list before runtime use.
+1. Assign the neutral rig root to **Base Prefab** and a dedicated destination to **Pose Folder**.
+2. Expand **Pose Source** and assign the corresponding posed asset to **Pose Rig**.
+3. Give the result a descriptive **ID**, then press **Build Pose**.
+4. Select the generated asset to open the Bone Pose Editor in the Inspector.
+5. Assign a built **Source UMA** and compare the shape at zero, partial, and full preview strength.
+
+The two rigs need matching bone names and compatible parent relationships, local orientations, and import settings. The pose records differences from the reference you supplied; it cannot decide which differences were intentional. Keep generated outputs distinguishable from versions you refine by hand, because rebuilding the same ID in the same folder targets the same asset path.
+
+For a pose library, **Animation Source** supplies the clip and an **ID / Frame** list. **Save Pose Set** writes that list to XML, and **Load Pose Set** replaces it with a saved list. **Clear poses**, beneath **Build Poses**, empties the rows while leaving source assignments and generated assets in place. The empty list survives reopening the window; use **+** to begin again.
+
+Animation extraction reads stored transform curves relative to the clip's time-zero reference. It does not capture an evaluated Animator/IK performance. The current implementation also has rotation-only and reference-conversion limitations, so validate one sample before building a library. Follow the [complete Builder walkthrough and current limitations](BonePoseBuilder.md) for source preparation, supported inputs, frame numbering, output naming, and troubleshooting.
+
+## Bone Pose Editor
+
+Select a `UMABonePose` asset to display its editor in the Inspector. To start a new one, choose **Assets > Create > UMA > DNA > Bone Pose** in your pose folder.
+
+Use a built review character of the intended race. **Source UMA** supplies its skeleton for editing and preview; an unbuilt avatar cannot supply an editable bone list. A separate **Preview Target** is optional and supports rebuild-based review of an already configured character setup.
+
+1. Select or create your pose asset, then assign **Source UMA**.
+2. In the lower **Bone List**, find the bones that drive the area you want to shape. Choose **Add Selected**, **Add + Mirror**, or the individual **Add Bone** control.
+3. In the upper **Pose Bones** list, expand a row and choose **Move**, **Rotate**, or **Scale** under **Scene handles**. You can also enter numeric values directly.
+4. Begin with small changes. Position zero, no rotation change, and Scale one are the neutral pose values.
+5. Check **Disable Mirroring** and **Mirror Axis** before a paired edit. Evaluate both sides after a small test move.
+6. End the active bone/group edit and leave IK mode before adjusting **Preview Weight**. Review the silhouette and deformation at several strengths and camera angles.
+7. Save the pose asset, leave scene editing, and connect it to its intended expression or DNA setup.
+
+The upper row checkboxes choose group members and linked Scene view translation; they do not enable or disable the bones. **Disable / Enable** on a row controls whether its stored contribution is applied. The lower tree's selection chooses bones to add. Learning these three different controls prevents accidental multi-bone edits.
+
+The Editor also supports named groups, an IK posing mode, donor-rig comparison, and static animation export. **Merge Pose** copies source entries in list order, with later values winning on overlapping bones; use the Mixer for weighted combinations. The visible **Mirror to opposite** command is currently a placeholder. The [complete Editor guide](BonePoseEditor.md) explains the working alternatives and includes separate walkthroughs for a facial pose, a relaxed hand, and a reach toward a prop.
 
 ## Bone Pose Converter
 
@@ -43,6 +90,8 @@ The window manages a GameObject, animation clip, expression folder, and named fr
 The current `Build Expressions` implementation samples and logs configured frames but does not yet create final `UMABonePose` expression assets. Treat it as a diagnostic and setup utility, not a complete production extractor.
 
 ## Bone Groups
+
+For a step-by-step hand example and a reference covering membership, pivots, local axes, and linked translation, see [Shape a relaxed hand with Bone Groups](BonePoseEditor.md#walkthrough-2-shape-a-relaxed-hand-with-bone-groups).
 
 In the Bone Pose editor, check bones in the upper pose list, then choose **Create bone group** and enter a name. Groups are saved in the bone-pose asset. Entering an existing name (case-insensitive) replaces its membership without changing the bones' current transforms. **Select members** restores a group's checkboxes for editing its membership; create it again with the same name to replace it.
 
