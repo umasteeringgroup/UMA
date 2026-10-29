@@ -165,6 +165,95 @@ namespace UMA.Editors.Tests
 
         private IList Selection => (IList)GetField("selectedSlotTrianglesSerialized");
 
+        [Test]
+        public void SharedSubmeshKeepsFacesFromEverySlotEditable()
+        {
+            InvokeStage("RebuildTriangleSlotOwnership");
+            Assert.That(((IDictionary)GetField("triangleSlotOwnership")).Count, Is.EqualTo(2));
+            Assert.That(((IDictionary)GetField("slotLocalToBaked")).Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void LODSelectionUsesTheChosenTopology()
+        {
+            rightSlot.asset.meshData.submeshes[0] = new SubMeshTriangles(new[] { 0, 2, 1, 0, 1, 2 })
+            {
+                lodRanges = new List<UMALodRange> { new UMALodRange(0, 3), new UMALodRange(3, 3) }
+            };
+            stage.BakedMesh.subMeshCount = 2;
+            stage.BakedMesh.SetTriangles(new[] { 0, 1, 2 }, 0);
+            stage.BakedMesh.SetTriangles(new[] { 3, 4, 5 }, 1);
+            SetField("selectedLOD", 1);
+            InvokeStage("RebuildTriangleSlotOwnership");
+            InvokeStage("EnsureSlotTriangleCacheBuilt");
+            var cache = (IList)GetField("slotTriangleCache");
+            object right = cache[1];
+            Assert.That((int)right.GetType().GetField("v1Slot").GetValue(right), Is.EqualTo(1), "Painting must use LOD1's winding, not LOD0's.");
+            Assert.That((int)InvokeStage("GetAvailableLODCount"), Is.EqualTo(2));
+            Assert.That(((IDictionary)GetField("triangleSlotOwnership")).Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void SavingAndClearingOneLODLeavesOtherMasksUnchanged()
+        {
+            rightSlot.asset.meshData.submeshes[0] = new SubMeshTriangles(new[] { 0, 2, 1, 0, 1, 2 })
+            {
+                lodRanges = new List<UMALodRange> { new UMALodRange(0, 3), new UMALodRange(3, 3) }
+            };
+            var mask = Track(ScriptableObject.CreateInstance<MeshHideAsset>());
+            mask.SaveSelectionForLOD(new[] { new BitArray(new[] { true }) }, 0);
+            mask.SaveSelectionForLOD(new[] { new BitArray(new[] { true }) }, 2);
+            SetField("selectedLOD", 1);
+            Type keyType = typeof(FaceEditorStage).GetNestedType("SlotTriangleKey", BindingFlags.NonPublic);
+            object key = Activator.CreateInstance(keyType, "Right", 0, 0);
+            InvokeStage("AddSelectedSlotTriangle", key);
+            InvokeStage("WriteSelectionToAsset", mask, rightSlot);
+            Assert.That(GetLODMask(mask, 1)[0][0], Is.True);
+
+            ((IList)GetField("selectedSlotTrianglesSerialized")).Clear();
+            InvokeStage("RebuildSelectedSlotTrianglesFromSerialized");
+            InvokeStage("WriteSelectionToAsset", mask, rightSlot);
+            Assert.That(GetLODMask(mask, 1)[0][0], Is.False, "Clearing a LOD must save an explicit empty mask.");
+            Assert.That(mask.triangleFlags[0][0], Is.True, "LOD0 must remain untouched.");
+            Assert.That(GetLODMask(mask, 2)[0][0], Is.True, "Other LOD overrides must remain untouched.");
+        }
+
+        [Test]
+        public void LODMasksSurviveUnitySerialization()
+        {
+            var mask = Track(ScriptableObject.CreateInstance<MeshHideAsset>());
+            var restored = Track(ScriptableObject.CreateInstance<MeshHideAsset>());
+            mask.SaveSelectionForLOD(new[] { new BitArray(new[] { true, false }) }, 0);
+            mask.SaveSelectionForLOD(new[] { new BitArray(new[] { false, true }), new BitArray(new[] { true }) }, 1);
+            mask.SaveSelectionForLOD(new[] { new BitArray(new[] { false }) }, 3);
+            EditorJsonUtility.FromJsonOverwrite(EditorJsonUtility.ToJson(mask), restored);
+
+            Assert.That(restored.triangleFlags[0][0], Is.True);
+            Assert.That(restored.HasStoredLODMask(1), Is.True);
+            Assert.That(GetLODMask(restored, 1)[0][0], Is.False);
+            Assert.That(GetLODMask(restored, 1)[0][1], Is.True);
+            Assert.That(GetLODMask(restored, 1)[1][0], Is.True);
+            Assert.That(restored.HasStoredLODMask(2), Is.False, "Gaps must not become empty overrides.");
+            Assert.That(GetLODMask(restored, 3)[0][0], Is.False);
+        }
+
+        [Test]
+        public void DeserializingLegacyMaskRemovesStaleLODOverrides()
+        {
+            var legacy = Track(ScriptableObject.CreateInstance<MeshHideAsset>());
+            var restored = Track(ScriptableObject.CreateInstance<MeshHideAsset>());
+            legacy.SaveSelectionForLOD(new[] { new BitArray(new[] { true }) }, 0);
+            restored.SaveSelectionForLOD(new[] { new BitArray(new[] { true }) }, 1);
+            EditorJsonUtility.FromJsonOverwrite(EditorJsonUtility.ToJson(legacy), restored);
+            Assert.That(restored.HasStoredLODMask(1), Is.False);
+            Assert.That(restored.triangleFlags[0][0], Is.True);
+        }
+
+        private object InvokeStage(string method, params object[] args) => typeof(FaceEditorStage).GetMethod(method, PrivateInstance).Invoke(stage, args);
+
+        private static BitArray[] GetLODMask(MeshHideAsset mask, int lod) =>
+            ((Dictionary<int, BitArray[]>)typeof(MeshHideAsset).GetField("_triangleFlagsPerLOD", PrivateInstance).GetValue(mask))[lod];
+
         private void Paint(bool add, bool useBrush = true)
         {
             Vector3 target = stage.FaceObject.transform.TransformPoint(new Vector3(-1f, -0.05f, 0f));

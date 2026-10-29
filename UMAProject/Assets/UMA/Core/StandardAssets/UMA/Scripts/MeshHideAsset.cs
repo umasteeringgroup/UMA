@@ -68,6 +68,7 @@ namespace UMA
 
         public void UpdateEditorHashAndUVMaskFromFlags()
         {
+            InvalidateGeneratedLODMasks();
             var sda = asset;
             if (sda == null || UMAMeshData.IsNullOrEmptyMeshData(sda.meshData))
             {
@@ -156,6 +157,7 @@ namespace UMA
 
         public void RebuildFlagsFromEditorUVMask()
         {
+            InvalidateGeneratedLODMasks();
             var sda = asset;
             if (sda == null || UMAMeshData.IsNullOrEmptyMeshData(sda.meshData))
             {
@@ -343,6 +345,29 @@ namespace UMA
 
         private BitArray[] _triangleFlags;
 
+        [SerializeField, HideInInspector]
+        private TriangleHideStrategy lodGenerationStrategy = TriangleHideStrategy.Strict;
+
+        /// <summary>The rule used to generate missing LOD masks directly from LOD 0.</summary>
+        public TriangleHideStrategy LODGenerationStrategy
+        {
+            get => lodGenerationStrategy;
+            set
+            {
+                if (lodGenerationStrategy == value) return;
+                lodGenerationStrategy = value;
+                InvalidateGeneratedLODMasks();
+            }
+        }
+
+        // Looking at a LOD must not create a saved override or make the bulk "Missing" policy skip it.
+        private readonly Dictionary<int, BitArray[]> generatedLODFlags = new Dictionary<int, BitArray[]>();
+
+        public void InvalidateGeneratedLODMasks()
+        {
+            generatedLODFlags.Clear();
+        }
+
         [System.Serializable]
         public class serializedFlags
         {
@@ -359,10 +384,17 @@ namespace UMA
         [FormerlySerializedAs("_serializedFlags")]
         private serializedFlags[] _serializedFlags;
 
-        // Per-LOD storage (Unity 6000.2 or newer). Backward compatible when not present.
+        // Unity cannot serialize a List of arrays directly; each LOD needs a serializable wrapper.
+        [Serializable]
+        private class SerializedLODFlags
+        {
+            public serializedFlags[] submeshes;
+        }
+
+        // Backward compatible when no per-LOD data is present.
 #if UNITY_6000_2_OR_NEWER
         [SerializeField]
-        private List<serializedFlags[]> _serializedFlagsPerLOD = new List<serializedFlags[]>(); // index = LOD level
+        private List<SerializedLODFlags> _serializedFlagsPerLOD = new List<SerializedLODFlags>(); // index = LOD level
 
         // runtime cache of per LOD bitarrays, not serialized
         private readonly Dictionary<int, BitArray[]> _triangleFlagsPerLOD = new Dictionary<int, BitArray[]>();
@@ -626,7 +658,7 @@ namespace UMA
                         ser[i].flags.Initialize();
                         lodFlags[i].CopyTo(ser[i].flags, 0);
                     }
-                    _serializedFlagsPerLOD[lod] = ser;
+                    _serializedFlagsPerLOD[lod] = new SerializedLODFlags { submeshes = ser };
                 }
             }
 #endif
@@ -656,6 +688,7 @@ namespace UMA
         /// </summary>
         public void OnAfterDeserialize()
         {
+            InvalidateGeneratedLODMasks();
             /*  Moved these to OnEnable because we need to access the asset name and you cant during deserialization.  
             //We're not logging an error here because we'll get spammed by it for empty/not-set assets.
             if (_asset == null && string.IsNullOrEmpty(_assetSlotName))
@@ -709,14 +742,14 @@ namespace UMA
 #endif
 
 #if UNITY_6000_2_OR_NEWER
-            // rebuild cache from serialized LODs if present
+            // Clear stale masks too, including when Undo restores an asset without any LOD overrides.
+            _triangleFlagsPerLOD.Clear();
             if (_serializedFlagsPerLOD != null && _serializedFlagsPerLOD.Count > 0)
             {
-                _triangleFlagsPerLOD.Clear();
                 for (int lod = 0; lod < _serializedFlagsPerLOD.Count; lod++)
                 {
-                    var ser = _serializedFlagsPerLOD[lod];
-                    if (ser == null) continue;
+                    var ser = _serializedFlagsPerLOD[lod]?.submeshes;
+                    if (ser == null || ser.Length == 0) continue;
                     var arr = new BitArray[ser.Length];
                     for (int i = 0; i < ser.Length; i++)
                     {
@@ -735,6 +768,7 @@ namespace UMA
         [ExecuteInEditMode]
         public void Initialize()
         {
+            InvalidateGeneratedLODMasks();
             SlotDataAsset slot = asset;
 
             if (slot == null)
@@ -783,6 +817,7 @@ namespace UMA
             if (triangleIndex >= 0 && (_triangleFlags[submesh].Length - 3) > triangleIndex)
             {
                 _triangleFlags[submesh][triangleIndex] = flag;
+                InvalidateGeneratedLODMasks();
             }
         }
 
@@ -812,6 +847,7 @@ namespace UMA
             if (selection.Length == _triangleFlags[submesh].Length)
             {
                 _triangleFlags[submesh] = new BitArray(selection);
+                InvalidateGeneratedLODMasks();
             }
 #if UNITY_EDITOR
             else
@@ -852,7 +888,7 @@ namespace UMA
             // If we have serialized data for this LOD, it exists even if not yet cached.
             if (_serializedFlagsPerLOD != null && lod >= 0 && lod < _serializedFlagsPerLOD.Count)
             {
-                return _serializedFlagsPerLOD[lod] != null;
+                return _serializedFlagsPerLOD[lod]?.submeshes?.Length > 0;
             }
 
             return false;
@@ -881,7 +917,7 @@ namespace UMA
 #else
             var tris = meshData.submeshes[submesh].GetTriangles();
 #endif
-            if (mask[submesh] == null) return set;
+            if (submesh < 0 || submesh >= mask.Length || mask[submesh] == null) return set;
             int triCount = tris.Length / 3;
             int mcount = Mathf.Min(mask[submesh].Length, triCount);
             for (int i = 0; i < mcount; i++)
@@ -899,42 +935,68 @@ namespace UMA
 
         public BitArray[] GetTriangleFlagsForLOD(int lod)
         {
+            if (lod <= 0) return _triangleFlags;
+            if (_triangleFlagsPerLOD.TryGetValue(lod, out var savedFlags) && savedFlags != null) return savedFlags;
+            if (generatedLODFlags.TryGetValue(lod, out var cachedFlags)) return cachedFlags;
+
+            var generated = CalculateLODMask(lod, LODGenerationStrategy);
+            if (generated == null) return _triangleFlags;
+            generatedLODFlags[lod] = generated;
+            return generated;
+        }
+
+        /// <summary>Calculate a fresh mask from LOD 0 without modifying any saved mask or preview cache.</summary>
+        public BitArray[] CalculateLODMask(int lod, TriangleHideStrategy mode)
+        {
+            var slot = asset;
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)) return null;
+            return CalculateLODMask(_triangleFlags, slot.meshData, 0, Mathf.Max(0, lod), mode);
+        }
+
+        private static BitArray[] CalculateLODMask(BitArray[] source, UMAMeshData meshData, int fromLOD, int toLOD, TriangleHideStrategy mode)
+        {
+            var result = new BitArray[meshData.subMeshCount];
+            for (int sm = 0; sm < result.Length; sm++)
+            {
+                var hiddenVerts = BuildHiddenVertexSet(source, meshData, sm, fromLOD);
+                var triangles = meshData.submeshes[sm].GetTriangles(toLOD);
+                var flags = new BitArray(triangles.Length / 3);
+                for (int t = 0; t < flags.Length; t++)
+                {
+                    int index = t * 3;
+                    int hidden = (hiddenVerts.Contains(triangles[index]) ? 1 : 0)
+                        + (hiddenVerts.Contains(triangles[index + 1]) ? 1 : 0)
+                        + (hiddenVerts.Contains(triangles[index + 2]) ? 1 : 0);
+                    flags[t] = mode == TriangleHideStrategy.Strict ? hidden == 3
+                        : mode == TriangleHideStrategy.Weighted ? hidden >= 2 : hidden >= 1;
+                }
+                result[sm] = flags;
+            }
+            return result;
+        }
+
+        /// <summary>Replace one LOD's complete mask without changing any other LOD.</summary>
+        public void SaveSelectionForLOD(BitArray[] selection, int lod)
+        {
+            if (selection == null) return;
+            var copy = new BitArray[selection.Length];
+            for (int sm = 0; sm < selection.Length; sm++)
+            {
+                copy[sm] = selection[sm] != null ? new BitArray(selection[sm]) : new BitArray(0);
+            }
             if (lod <= 0)
             {
-                return _triangleFlags;
+                _triangleFlags = copy;
+                InvalidateGeneratedLODMasks();
             }
-
-            if (asset == null || UMAMeshData.IsNullOrEmptyMeshData(asset.meshData))
+            else
             {
-                return _triangleFlags;
+                _triangleFlagsPerLOD[lod] = copy;
+                generatedLODFlags.Remove(lod);
             }
-
-            BitArray[] lodFlags;
-            if (_triangleFlagsPerLOD.TryGetValue(lod, out lodFlags) && lodFlags != null)
-            {
-                return lodFlags;
-            }
-
-            // Generate from base selection by vertex mapping.
-            EnsureLODAllocated(lod);
-            lodFlags = _triangleFlagsPerLOD[lod];
-
-            for (int sm = 0; sm < asset.meshData.subMeshCount; sm++)
-            {
-                // Build set of hidden vertices from base (LOD0)
-                var hiddenVerts = BuildHiddenVertexSet(_triangleFlags, asset.meshData, sm, 0);
-                var tris = asset.meshData.submeshes[sm].GetTriangles(lod);
-                var dest = lodFlags[sm];
-                int triCount = tris.Length / 3;
-                for (int i = 0; i < triCount; i++)
-                {
-                    int t = i * 3;
-                    bool hide = hiddenVerts.Contains(tris[t]) || hiddenVerts.Contains(tris[t + 1]) || hiddenVerts.Contains(tris[t + 2]);
-                    if (i < dest.Length) dest[i] = hide;
-                }
-            }
-
-            return lodFlags;
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
         }
 
         public void SaveSelectionForLOD(BitArray selection, int lod)
@@ -964,64 +1026,32 @@ namespace UMA
 
         public void CopyLODMask(int fromLOD, int toLOD, bool replaceDestination)
         {
-            CopyLODMask(fromLOD, toLOD, replaceDestination, TriangleHideStrategy.Conservative);
+            CopyLODMask(fromLOD, toLOD, replaceDestination, LODGenerationStrategy);
         }
 
         public void CopyLODMask(int fromLOD, int toLOD, bool replaceDestination, TriangleHideStrategy mode)
         {
-            if (asset == null || UMAMeshData.IsNullOrEmptyMeshData(asset.meshData)) return;
-            if (fromLOD == toLOD) return;
-
-            EnsureLODAllocated(toLOD);
-
-            // Build hidden vertex set from source LOD mask (or base flags when fromLOD == 0)
-            BitArray[] srcMask = (fromLOD <= 0) ? _triangleFlags : GetTriangleFlagsForLOD(fromLOD);
-            int submesh = asset.subMeshIndex;
-            var hiddenVerts = BuildHiddenVertexSet(srcMask, asset.meshData, submesh, Mathf.Max(0, fromLOD));
-
-            // Apply to destination LOD triangles
-            var tris = asset.meshData.submeshes[submesh].GetTriangles(toLOD);
-            var dest = _triangleFlagsPerLOD[toLOD][submesh];
-            if (replaceDestination)
+            var slot = asset;
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || fromLOD == toLOD) return;
+            fromLOD = Mathf.Max(0, fromLOD);
+            toLOD = Mathf.Max(0, toLOD);
+            LODGenerationStrategy = mode;
+            var source = fromLOD == 0 ? _triangleFlags : GetTriangleFlagsForLOD(fromLOD);
+            var result = CalculateLODMask(source, slot.meshData, fromLOD, toLOD, mode);
+            if (!replaceDestination)
             {
-                dest.SetAll(false);
-            }
-
-            int triCount = tris.Length / 3;
-            for (int i = 0; i < triCount && i < dest.Length; i++)
-            {
-                int t = i * 3;
-                bool v0 = hiddenVerts.Contains(tris[t]);
-                bool v1 = hiddenVerts.Contains(tris[t + 1]);
-                bool v2 = hiddenVerts.Contains(tris[t + 2]);
-
-                bool hide = false;
-                if (mode == TriangleHideStrategy.Strict)
+                // Merge only an explicitly saved destination; a previous preview is not an override.
+                BitArray[] previous = toLOD == 0 ? _triangleFlags
+                    : _triangleFlagsPerLOD.TryGetValue(toLOD, out var saved) ? saved : null;
+                if (previous != null)
                 {
-                    hide = v0 && v1 && v2;
-                }
-                else if (mode == TriangleHideStrategy.Weighted)
-                {
-                    int count = 0;
-                    if (v0) count++;
-                    if (v1) count++;
-                    if (v2) count++;
-                    hide = count >= 2;
-                }
-                else
-                {
-                    // Conservative
-                    hide = v0 || v1 || v2;
-                }
-
-                if (hide)
-                {
-                    dest[i] = true;
+                    for (int sm = 0; sm < result.Length && sm < previous.Length; sm++)
+                    {
+                        if (previous[sm] != null && previous[sm].Length == result[sm].Length) result[sm].Or(previous[sm]);
+                    }
                 }
             }
-#if UNITY_EDITOR
-            UnityEditor.EditorUtility.SetDirty(this);
-#endif
+            SaveSelectionForLOD(result, toLOD);
         }
 #endif
 

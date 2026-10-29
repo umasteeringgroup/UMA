@@ -5236,20 +5236,7 @@ namespace UMA
         /// </summary>
         public void AddReferences()
         {
-            // Rebuild the tables
-            for (int i = 0; i < SerializedItems.Count; i++)
-            {
-                AssetItem ai = SerializedItems[i];
-                if (ai.IsAddressable || ai.Ignore)
-                {
-                    ai.FreeReference();
-                }
-                else
-                {
-                    ai.CacheSerializedItem();
-                }
-            }
-            ForceSave();
+            UpdateReferences();
         }
 
         public void UpdateReferences()
@@ -5259,6 +5246,13 @@ namespace UMA
             for (int i = 0; i < SerializedItems.Count; i++)
             {
                 AssetItem ai = SerializedItems[i];
+                // Match DoInitialDictionaryLoad: removed entries can be null or
+                // deserialize as empty inline AssetItems. Neither is an asset to load.
+                if (ai == null || ai.isInvalid)
+                {
+                    continue;
+                }
+
                 if (ai.IsAddressable || ai.Ignore)
                 {
                     ai.FreeReference();

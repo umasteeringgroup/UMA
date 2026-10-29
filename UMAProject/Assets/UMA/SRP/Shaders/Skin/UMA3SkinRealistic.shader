@@ -9,7 +9,7 @@ Shader "UMA/URP/Realistic Skin"
         _BumpScale("Skin Normal Strength", Range(0,2)) = 1
         [NoScaleOffset] _MaskMap("Packed Mask - R Scattering G AO B Detail A Smoothness", 2D) = "white" {}
         [NoScaleOffset] _Skinmask("Tint Protection - White Preserves Albedo", 2D) = "white" {}
-        _Skinmask_Amount("Tint Protection Strength", Range(0,1)) = 1
+        _Skinmask_Amount("Tint Protection Strength", Range(0,2)) = 1
         _Smoothness_Remap("Smoothness Range - X Min Y Max", Vector) = (0.15,0.6,0,0)
         _Ambient_Occlusion_Remap("Occlusion Range - X Min Y Max", Vector) = (0,1,0,0)
         [Header(Pore Detail)]

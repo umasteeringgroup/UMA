@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   channelCount: 3
   sharedColorName: Skin
-  AlsoAppliesTo: []
   colors:
   - name: Ebony
     channelMask:
@@ -40,9 +39,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#000000FF;_Base_Color
+          stringRepresentation: Color;#262626FF;_Base_Color
           name: _Base_Color
-          Value: {r: 0, g: 0, b: 0, a: 1}
+          Value: {r: 0.1509434, g: 0.14995578, b: 0.1495194, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -107,9 +106,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#2F110E00;_SubsurfaceColor
+          stringRepresentation: Color;#6A1C1400;_SubsurfaceColor
           name: _SubsurfaceColor
-          Value: {r: 0.18238991, g: 0.065072194, b: 0.05334042, a: 0}
+          Value: {r: 0.41509432, g: 0.110159434, b: 0.077014334, a: 0}
         p9:
           stringRepresentation: 
           name: 
@@ -170,9 +169,9 @@ MonoBehaviour:
           Rotate: 0
           Scale: {x: 1, y: 1}
         p11:
-          stringRepresentation: Float;0.8500;_SSSBlend
+          stringRepresentation: Float;1.0000;_SSSBlend
           name: _SSSBlend
-          Value: 0.85
+          Value: 1
         p10:
           stringRepresentation: 
           name: 
@@ -303,8 +302,8 @@ MonoBehaviour:
     deleteThis: 0
     moveUpThis: 0
     moveDownThis: 0
-    colorsExpanded: 1
-    propertiesExpanded: 1
+    colorsExpanded: 0
+    propertiesExpanded: 0
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
@@ -1164,8 +1163,8 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
-    showSelectFromFoldout: 1
-    displayColor: {r: 0.37254903, g: 0.27450982, b: 0.24705884, a: 1}
+    showSelectFromFoldout: 0
+    displayColor: {r: 0.2509804, g: 0.15294118, b: 0.13725491, a: 1}
   - name: Medium Brown
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
@@ -1458,8 +1457,8 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
-    showSelectFromFoldout: 1
-    displayColor: {r: 0.5254902, g: 0.35686275, b: 0.3372549, a: 1}
+    showSelectFromFoldout: 0
+    displayColor: {r: 0.34117648, g: 0.227451, b: 0.20784315, a: 1}
   - name: Light Brown
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
@@ -1752,8 +1751,8 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
-    showSelectFromFoldout: 1
-    displayColor: {r: 0.7686275, g: 0.5882353, b: 0.5647059, a: 1}
+    showSelectFromFoldout: 0
+    displayColor: {r: 0.41960788, g: 0.27450982, b: 0.23529413, a: 1}
   - name: Tan
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
@@ -1778,9 +1777,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#D5CDC6FF;_Base_Color
+          stringRepresentation: Color;#D7CDC6FF;_Base_Color
           name: _Base_Color
-          Value: {r: 0.8352941, g: 0.80234057, b: 0.7780546, a: 1}
+          Value: {r: 0.84313726, g: 0.80234057, b: 0.7780546, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1845,9 +1844,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#E27A5800;_SubsurfaceColor
+          stringRepresentation: Color;#F7796A00;_SubsurfaceColor
           name: _SubsurfaceColor
-          Value: {r: 0.8862745, g: 0.47843137, b: 0.34509805, a: 0}
+          Value: {r: 0.9685534, g: 0.47270614, b: 0.4172698, a: 0}
         p9:
           stringRepresentation: 
           name: 
@@ -2046,8 +2045,8 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
-    showSelectFromFoldout: 1
-    displayColor: {r: 0.8745099, g: 0.7137255, b: 0.6784314, a: 1}
+    showSelectFromFoldout: 0
+    displayColor: {r: 0.68235296, g: 0.48627454, b: 0.41960788, a: 1}
   - name: Light
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
@@ -2340,8 +2339,8 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
-    showSelectFromFoldout: 1
-    displayColor: {r: 0.9725491, g: 0.85098046, b: 0.8352942, a: 1}
+    showSelectFromFoldout: 0
+    displayColor: {r: 0.68235296, g: 0.454902, b: 0.40000004, a: 1}
   - name: Fair
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
@@ -2634,8 +2633,8 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
-    showSelectFromFoldout: 1
-    displayColor: {r: 0.9803922, g: 0.9176471, b: 0.9215687, a: 1}
+    showSelectFromFoldout: 0
+    displayColor: {r: 1, g: 1, b: 1, a: 1}
   - name: Ork Green
     channelMask:
     - {r: 1, g: 1, b: 1, a: 1}
@@ -2660,9 +2659,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#458F45FF;_Base_Color
+          stringRepresentation: Color;#49C048FF;_Base_Color
           name: _Base_Color
-          Value: {r: 0.2717332, g: 0.5597484, b: 0.26931286, a: 1}
+          Value: {r: 0.28525358, g: 0.75471693, b: 0.28242546, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -2727,9 +2726,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#A6C52D00;_SubsurfaceColor
+          stringRepresentation: Color;#B8930200;_SubsurfaceColor
           name: _SubsurfaceColor
-          Value: {r: 0.65065473, g: 0.7735849, b: 0.17758384, a: 0}
+          Value: {r: 0.72327036, g: 0.5779364, b: 0.006823192, a: 0}
         p9:
           stringRepresentation: 
           name: 
@@ -2887,9 +2886,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#A65BB4FF;_Base_Color
+          stringRepresentation: Color;#AD48C0FF;_Base_Color
           name: _Base_Color
-          Value: {r: 0.6493387, g: 0.35663137, b: 0.70440245, a: 1}
+          Value: {r: 0.67663604, g: 0.28235292, b: 0.7529412, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -3114,9 +3113,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#AD2523FF;_Base_Color
+          stringRepresentation: Color;#D70300FF;_Base_Color
           name: _Base_Color
-          Value: {r: 0.6792453, g: 0.14637995, b: 0.1388394, a: 1}
+          Value: {r: 0.84276724, g: 0.0132330675, b: 0, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -3181,9 +3180,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#E15A5B00;_SubsurfaceColor
+          stringRepresentation: Color;#FF0A0C00;_SubsurfaceColor
           name: _SubsurfaceColor
-          Value: {r: 0.8805031, g: 0.35164738, b: 0.35596466, a: 0}
+          Value: {r: 1, g: 0.0408803, b: 0.04763481, a: 0}
         p9:
           stringRepresentation: 
           name: 

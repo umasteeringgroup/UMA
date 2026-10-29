@@ -93,6 +93,19 @@ namespace UMA
                     return _TheType;
                 }
 
+                if (string.IsNullOrEmpty(_BaseTypeName))
+                {
+                    if (_SerializedItem != null)
+                    {
+                        _TheType = _SerializedItem.GetType();
+                        return _TheType;
+                    }
+
+                    // The type cache is not serialized. Allow an editor lookup by
+                    // path or GUID to recover the asset before its type is known.
+                    return typeof(UnityEngine.Object);
+                }
+
                 if (!UMAAssetIndexer.TypeFromString.ContainsKey(_BaseTypeName))
                 {
                     if (this._SerializedItem != null)
