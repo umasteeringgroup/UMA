@@ -1147,8 +1147,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "UnityEditor.MainToolbarWindow\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 1.3333334
-    y: 94.66667
+    x: 0
+    y: 0
     width: 2293.3333
     height: 36
   m_SerializedDataModeController:
@@ -1441,8 +1441,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "Hierarchy\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 1.3333334
-    y: 130.66667
+    x: 0
+    y: 24
     width: 325
     height: 696.6667
   m_SerializedDataModeController:
@@ -1461,10 +1461,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs:
-      - m_Data: -33074
+      m_SelectedIDs: []
       m_LastClickedID:
-        m_Data: -33074
+        m_Data: 0
       m_ExpandedIDs:
       - m_Data: -1376
       - m_Data: 95920
@@ -1618,8 +1617,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "Scene\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 327.33334
-    y: 130.66667
+    x: 327
+    y: 24
     width: 1054.6666
     height: 696.6667
   m_SerializedDataModeController:
@@ -2354,11 +2353,11 @@ MonoBehaviour:
   m_Rotation:
     m_Target: {x: 0.021933468, y: 0.12885875, z: 0.002059202, w: -0.99224335}
     speed: 2
-    m_Value: {x: 0.02092798, y: 0.12677224, z: 0.0018865056, w: -0.9917093}
+    m_Value: {x: 0.02193347, y: 0.12885876, z: 0.002059202, w: -0.99224335}
   m_Size:
     m_Target: 30.011158
     speed: 2
-    m_Value: 28.718811
+    m_Value: 30.011158
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -9780,8 +9779,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "Project\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 1.3333334
-    y: 853.3334
+    x: 0
+    y: 24
     width: 659
     height: 491.3333
   m_SerializedDataModeController:
@@ -9833,16 +9832,6 @@ MonoBehaviour:
     m_ExpandedIDs:
     - m_Data: 0
     - m_Data: 82866
-    - m_Data: 97826
-    - m_Data: 97828
-    - m_Data: 97830
-    - m_Data: 97832
-    - m_Data: 97834
-    - m_Data: 97836
-    - m_Data: 97838
-    - m_Data: 97840
-    - m_Data: 97842
-    - m_Data: 97844
     - m_Data: 97846
     - m_Data: 97848
     - m_Data: 97850
@@ -9992,9 +9981,16 @@ MonoBehaviour:
     - m_Data: 98138
     - m_Data: 98140
     - m_Data: 98142
-    - m_Data: 98668
-    - m_Data: 98970
-    - m_Data: 1000000000
+    - m_Data: 98144
+    - m_Data: 98146
+    - m_Data: 98148
+    - m_Data: 98150
+    - m_Data: 98152
+    - m_Data: 98154
+    - m_Data: 98156
+    - m_Data: 98158
+    - m_Data: 98160
+    - m_Data: 98162
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -10028,16 +10024,6 @@ MonoBehaviour:
     m_ExpandedIDs:
     - m_Data: 0
     - m_Data: 82866
-    - m_Data: 97826
-    - m_Data: 97828
-    - m_Data: 97830
-    - m_Data: 97832
-    - m_Data: 97834
-    - m_Data: 97836
-    - m_Data: 97838
-    - m_Data: 97840
-    - m_Data: 97842
-    - m_Data: 97844
     - m_Data: 97846
     - m_Data: 97848
     - m_Data: 97850
@@ -10187,6 +10173,16 @@ MonoBehaviour:
     - m_Data: 98138
     - m_Data: 98140
     - m_Data: 98142
+    - m_Data: 98144
+    - m_Data: 98146
+    - m_Data: 98148
+    - m_Data: 98150
+    - m_Data: 98152
+    - m_Data: 98154
+    - m_Data: 98156
+    - m_Data: 98158
+    - m_Data: 98160
+    - m_Data: 98162
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -10270,8 +10266,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "Console\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 661.3334
-    y: 853.3334
+    x: 661
+    y: 24
     width: 720.6666
     height: 491.3333
   m_SerializedDataModeController:
@@ -10359,8 +10355,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "UMA Documentation\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 1384
-    y: 130.66667
+    x: 1383.6666
+    y: 24
     width: 179.33337
     height: 1214
   m_SerializedDataModeController:
@@ -10399,8 +10395,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "Inspector\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 1565.3334
-    y: 130.66667
+    x: 1565
+    y: 24
     width: 728.33325
     height: 1214
   m_SerializedDataModeController:

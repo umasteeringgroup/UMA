@@ -5277,6 +5277,11 @@ namespace UMA
             for (int i = 0; i < SerializedItems.Count; i++)
             {
                 AssetItem ai = SerializedItems[i];
+                // Removed entries remain null until the index is rebuilt.
+                if (ai == null)
+                {
+                    continue;
+                }
                 ai.FreeReference();
             }
             ForceSave();
@@ -5295,6 +5300,11 @@ namespace UMA
             for (int i = 0; i < SerializedItems.Count; i++)
             {
                 AssetItem ai = SerializedItems[i];
+                // Removed entries remain null until the index is rebuilt.
+                if (ai == null)
+                {
+                    continue;
+                }
                 ai.FreeReference();
             }
             //UpdateSerializedDictionaryItems();

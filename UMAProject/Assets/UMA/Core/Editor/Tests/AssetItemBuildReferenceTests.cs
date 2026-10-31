@@ -74,6 +74,58 @@ namespace UMA.Editors.Tests
             Assert.That(item._Type, Is.EqualTo(typeof(SlotDataAsset)));
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ReferenceCleanupSkipsNullRecordsAndReleasesRemainingAssets(bool removeReferences)
+        {
+            var valid = CreateSlotItem();
+            valid._SerializedItem = slot;
+            valid.ReferenceCount = 2;
+            var kept = CreateSlotItem();
+            kept._SerializedItem = slot;
+            kept.ReferenceCount = 3;
+            kept.IsAlwaysLoaded = true;
+            var empty = new AssetItem(null, null, null, null);
+            indexer.SerializedItems.Add(valid);
+            indexer.SerializedItems.Add(null);
+            indexer.SerializedItems.Add(empty);
+            indexer.SerializedItems.Add(kept);
+
+            if (removeReferences) indexer.RemoveReferences();
+            else indexer.ClearReferences();
+
+            Assert.That(valid._SerializedItem, Is.Null);
+            Assert.That(valid.ReferenceCount, Is.Zero);
+            Assert.That(kept._SerializedItem, Is.Null);
+            Assert.That(kept.ReferenceCount, Is.Zero);
+            Assert.That(kept.IsAlwaysLoaded, Is.True);
+            CollectionAssert.AreEqual(
+                new AssetItem[] { valid, null, empty, kept },
+                indexer.SerializedItems,
+                "Releasing references must preserve index entries and positions.");
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ClearHandlesNullRecordsBeforeRebuildingTheLibrary(bool forceSave)
+        {
+            var valid = CreateSlotItem();
+            valid._SerializedItem = slot;
+            valid.ReferenceCount = 2;
+            indexer.SerializedItems.Add(valid);
+            indexer.DoInitialDictionaryLoad();
+            Assert.That(indexer.GetAssetItem<SlotDataAsset>(slot.name), Is.SameAs(valid));
+            indexer.SerializedItems.Insert(0, null);
+            indexer.SerializedItems.Add(new AssetItem(null, null, null, null));
+
+            indexer.Clear(forceSave);
+
+            Assert.That(indexer.SerializedItems, Is.Empty);
+            Assert.That(indexer.GetAssetDictionary(typeof(SlotDataAsset)), Is.Empty);
+            Assert.That(valid._SerializedItem, Is.Null);
+            Assert.That(valid.ReferenceCount, Is.Zero);
+        }
+
         [Test]
         public void PreprocessBuildHandlesDeserializedIndex()
         {
