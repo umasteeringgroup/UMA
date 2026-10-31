@@ -352,6 +352,114 @@ namespace UMA.Editors.Tests
             });
         }
 
+        private SlotDataAsset CreateBakedSlot(string race = "TestRace")
+        {
+            string logicalName = slot.slotName;
+            slot.name = logicalName + "_slot";
+            slot._oldSlotName = logicalName;
+            var baked = Track(ScriptableObject.CreateInstance<SlotDataAsset>());
+            baked.name = logicalName + "_baked_" + race;
+            baked.isBaked = true;
+            typeof(SlotDataAsset).GetField("_sourceSlotName", PrivateInstance).SetValue(baked, logicalName);
+            baked.meshData = slot.meshData;
+            return baked;
+        }
+
+        [Test]
+        public void LegacyBakedNameMatchesOnlyItsSourceAndRace()
+        {
+            var baked = CreateBakedSlot();
+            var wrongRace = CreateBakedSlot("OtherRace");
+            var target = new SlotData(baked);
+            mask.AssetSlotName = slot.name + "_baked_TestRace";
+            Assert.That(mask.asset, Is.Null, "Generated baked slots are not in the asset index.");
+            Assert.That(mask.FindMatchingSlot(new[] { new SlotData(slot), new SlotData(wrongRace), target }), Is.SameAs(target));
+            Assert.That(mask.FindMatchingSlot(new[] { new SlotData(slot), new SlotData(wrongRace) }), Is.Null);
+            var exact = Track(ScriptableObject.CreateInstance<SlotDataAsset>());
+            exact.name = mask.AssetSlotName;
+            var exactSlot = new SlotData(exact);
+            Assert.That(mask.FindMatchingSlot(new[] { target, exactSlot }), Is.SameAs(exactSlot));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void LegacyBakedMaskLoadsDraftsAndSavesCanonicalSlotWithoutLosingFaces(bool useCollection)
+        {
+            WithDraftStage((stage, slotData) =>
+            {
+                var baked = CreateBakedSlot();
+                slotData.asset = baked;
+                string legacyName = slot.name + "_baked_TestRace";
+                mask.AssetSlotName = legacyName;
+                if (useCollection)
+                {
+                    var collection = Track(ScriptableObject.CreateInstance<MeshHideAssetCollection>());
+                    collection.AddOrUpdate(mask);
+                    stage.CurrentHideAsset = null;
+                    stage.CurrentHideCollection = collection;
+                }
+                InvokeStage(stage, "RefreshSlotSelectionEntries");
+                InvokeStage(stage, "LoadSelections");
+                InvokeStage(stage, "CaptureSavedSelectionSnapshot");
+                AssertStageTriangles(stage, 0);
+                Assert.That(((IDictionary)typeof(FaceEditorStage).GetField("meshHideLoadWarnings", PrivateInstance).GetValue(stage)).Count, Is.Zero);
+                Assert.That(mask.AssetSlotName, Is.EqualTo(legacyName), "Loading must not rewrite the asset.");
+                SetStageSelection(stage, baked.slotName, 1);
+                SwitchDraftLevel(stage, 1);
+                InvokeStage(stage, "RecalculateLOD");
+                AssertStageTriangles(stage, 3);
+                SwitchDraftLevel(stage, 0);
+                AssertStageTriangles(stage, 1);
+                InvokeStage(stage, "SaveSelections", false);
+                Assert.That(stage.hasSaved, Is.True);
+                Assert.That(mask.AssetSlotName, Is.EqualTo(baked.slotName));
+                AssertMask(mask.triangleFlags[0], false, true);
+                AssertMask(mask.GetTriangleFlagsForLOD(1, baked)[0], false, false, false, true);
+                AssertMask(mask.GetTriangleFlagsForLOD(2, baked)[0], true);
+                Assert.That(mask.AssetHash, Is.EqualTo(baked.meshData.CalculateHashCode()));
+            });
+        }
+
+        [Test]
+        public void GeneratedBakedSlotSuppliesLODTopologyAtRuntime()
+        {
+            var baked = CreateBakedSlot();
+            mask.AssetSlotName = slot.name + "_baked_TestRace";
+            var recipe = Track(ScriptableObject.CreateInstance<UMAWardrobeRecipe>());
+            recipe.MeshHideAssets.Add(mask);
+            var target = new SlotData(baked);
+            var build = new UMAData.UMARecipe { slotDataList = new[] { target } };
+            var hides = new Dictionary<string, List<MeshHideAsset>>();
+            typeof(DynamicCharacterAvatar).GetMethod("ProcessMeshHides", BindingFlags.NonPublic | BindingFlags.Static)
+                .Invoke(null, new object[] { hides, new List<UMATextRecipe> { recipe }, build });
+            Assert.That(hides.ContainsKey(baked.slotName), Is.True);
+            build.MeshHideDictionary = hides;
+            build.UpdateMeshHideMasks(1);
+            AssertMask(target.meshHideMask[0], true, false, false, false);
+            build.UpdateMeshHideMasks(2);
+            AssertMask(target.meshHideMask[0], false);
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void UnmatchedOrIncompatibleMasksShowWarningAndAreNotOverwritten(bool incompatible)
+        {
+            WithDraftStage((stage, slotData) =>
+            {
+                if (incompatible) mask.SaveSelectionForLOD(new[] { new BitArray(new[] { true }) }, 0);
+                else mask.AssetSlotName = "MissingSlot_" + Guid.NewGuid().ToString("N");
+                var original = new BitArray(mask.triangleFlags[0]);
+                InvokeStage(stage, "LoadSelections");
+                InvokeStage(stage, "CaptureSavedSelectionSnapshot");
+                AssertStageTriangles(stage);
+                var warnings = (IDictionary)typeof(FaceEditorStage).GetField("meshHideLoadWarnings", PrivateInstance).GetValue(stage);
+                Assert.That(warnings.Contains(mask), Is.True);
+                Assert.That((string)warnings[mask], Does.Contain(incompatible ? "triangle count mismatch" : "could not be matched"));
+                InvokeStage(stage, "SaveSelections", false);
+                CollectionAssert.AreEqual(original, mask.triangleFlags[0]);
+            });
+        }
+
         private void WithDraftStage(Action<FaceEditorStage, SlotData> test)
         {
             var preview = EditorSceneManager.NewPreviewScene();

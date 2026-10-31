@@ -5326,6 +5326,11 @@ namespace UMA.CharacterSystem
                         if (buildSlots != null && !string.IsNullOrEmpty(assetSlotName))
                         {
                             bool slotIsInBuild = buildSlots.TryGetValue(assetSlotName, out referencedSlot);
+                            if (!slotIsInBuild)
+                            {
+                                referencedSlot = meshHide.FindMatchingSlot(buildRecipe.slotDataList)?.asset;
+                                slotIsInBuild = referencedSlot != null;
+                            }
                             if (!slotIsInBuild && (buildRecipe.raceData == null || !buildRecipe.raceData.UsesFbxRoute))
                             {
                                 continue;

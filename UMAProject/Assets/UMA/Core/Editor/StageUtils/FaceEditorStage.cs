@@ -82,6 +82,7 @@ namespace UMA
         public Mesh BakedMesh;
         public MeshHideAsset CurrentHideAsset;
         public MeshHideAssetCollection CurrentHideCollection;
+        private readonly Dictionary<MeshHideAsset, string> meshHideLoadWarnings = new Dictionary<MeshHideAsset, string>();
 
         private int selectedLOD;
         private int originalLOD;
@@ -224,6 +225,7 @@ namespace UMA
         {
             public readonly HashSet<SlotTriangleKey> selection = new HashSet<SlotTriangleKey>();
             public readonly HashSet<SlotTriangleKey> savedSelection = new HashSet<SlotTriangleKey>();
+            public readonly Dictionary<MeshHideAsset, string> loadWarnings = new Dictionary<MeshHideAsset, string>();
         }
 
         // Keep each topology's working selection separate until the user explicitly saves.
@@ -231,7 +233,7 @@ namespace UMA
 
         [SerializeField]
         private List<SlotSelectionEntry> slotSelectionEntries = new List<SlotSelectionEntry>();
-        private bool paintMode;
+        private bool paintMode = true;
         [SerializeField]
         private bool paintMirrorX;
         private bool paintAddMode = true;
@@ -1567,28 +1569,12 @@ namespace UMA
 
         private SlotData GetCurrentHideSlot()
         {
-            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
-            {
-                return null;
-            }
+            return ResolveHideSlot(CurrentHideAsset);
+        }
 
-            string slotName = CurrentHideAsset != null ? CurrentHideAsset.AssetSlotName : null;
-            if (string.IsNullOrEmpty(slotName))
-            {
-                return null;
-            }
-
-            var slots = thisDCA.umaData.umaRecipe.slotDataList;
-            for (int i = 0; i < slots.Length; i++)
-            {
-                var slot = slots[i];
-                if (slot == null) continue;
-                if (slot.slotName == slotName)
-                {
-                    return slot;
-                }
-            }
-            return null;
+        private SlotData ResolveHideSlot(MeshHideAsset mha)
+        {
+            return mha != null ? mha.FindMatchingSlot(thisDCA?.umaData?.umaRecipe?.slotDataList) : null;
         }
 
         private bool TryGetSlotSubmeshRange(SlotData slot, out int startSubmesh, out int submeshCount)
@@ -1756,12 +1742,16 @@ namespace UMA
             }
             draft.selection.Clear();
             draft.selection.UnionWith(selectedSlotTriangles);
+            draft.loadWarnings.Clear();
+            foreach (var warning in meshHideLoadWarnings) draft.loadWarnings.Add(warning.Key, warning.Value);
         }
 
         private void RestoreOrLoadLODDraft()
         {
             if (lodSelectionDrafts.TryGetValue(selectedLOD, out var draft))
             {
+                meshHideLoadWarnings.Clear();
+                foreach (var warning in draft.loadWarnings) meshHideLoadWarnings.Add(warning.Key, warning.Value);
                 selectedSlotTriangles.Clear();
                 selectedSlotTrianglesSerialized.Clear();
                 foreach (var key in draft.selection) AddSelectedSlotTriangle(key);
@@ -2960,6 +2950,8 @@ namespace UMA
                     RecalculateFromUV(mha);
                 }
             }
+            if (mha != null && meshHideLoadWarnings.TryGetValue(mha, out var warning))
+                EditorGUILayout.HelpBox(warning, MessageType.Warning);
 #endif
         }
 
@@ -2968,6 +2960,13 @@ namespace UMA
 #if UNITY_EDITOR
             if (mha == null)
             {
+                return;
+            }
+
+            var slot = ResolveHideSlot(mha);
+            if (slot?.asset == null)
+            {
+                EditorUtility.DisplayDialog("Recalculate From UV", $"The slot '{mha.AssetSlotName}' is not present on this avatar.", "OK");
                 return;
             }
 
@@ -3003,7 +3002,7 @@ namespace UMA
             MeshHideAsset.HideStrategy = strategy;
             try
             {
-                mha.RebuildFlagsFromEditorUVMask();
+                mha.RebuildFlagsFromEditorUVMask(slot.asset);
             }
             finally
             {
@@ -4892,23 +4891,23 @@ namespace UMA
             LoadSelectionsFromAssets(false);
         }
 
-        private BitArray[] GetLODDraftFlags(MeshHideAsset mha, bool recalculate)
+        private BitArray[] GetLODDraftFlags(MeshHideAsset mha, SlotData slot, bool recalculate)
         {
             lodSelectionDrafts.TryGetValue(0, out var baseDraft);
-            bool baseChanged = baseDraft != null && HasSlotDraftChanges(baseDraft, mha.AssetSlotName);
+            bool baseChanged = baseDraft != null && HasSlotDraftChanges(baseDraft, slot.slotName);
             bool generate = recalculate || (selectedLOD > 0 && !mha.HasStoredLODMask(selectedLOD)
                 && (baseChanged || mha.LODGenerationStrategy != lodGenerationStrategy));
-            if (!generate) return mha.GetTriangleFlagsForLOD(selectedLOD);
-            if (!baseChanged) return mha.CalculateLODMask(selectedLOD, lodGenerationStrategy);
+            if (!generate) return mha.GetTriangleFlagsForLOD(selectedLOD, slot.asset);
+            if (!baseChanged) return mha.CalculateLODMask(selectedLOD, lodGenerationStrategy, slot.asset);
 
             // Calculate against the base draft on a temporary copy; switching/recalculating never saves assets.
-            var asset = mha.asset;
+            var asset = slot.asset;
             if (asset == null) return null;
             var workingCopy = Instantiate(mha);
             try
             {
                 workingCopy.SaveSelectionForLOD(BuildSelectionFlags(asset, 0, baseDraft.selection), 0);
-                return workingCopy.CalculateLODMask(selectedLOD, lodGenerationStrategy);
+                return workingCopy.CalculateLODMask(selectedLOD, lodGenerationStrategy, asset);
             }
             finally
             {
@@ -4918,6 +4917,7 @@ namespace UMA
 
         private void LoadSelectionsFromAssets(bool recalculate)
         {
+            meshHideLoadWarnings.Clear();
             selectedSlotTriangles.Clear();
             if (selectedSlotTrianglesSerialized == null)
             {
@@ -4965,33 +4965,39 @@ namespace UMA
                     string slotName = mha.AssetSlotName;
                     if (string.IsNullOrEmpty(slotName))
                     {
+                        meshHideLoadWarnings[mha] = $"'{mha.name}' has no target slot. No faces were loaded.";
                         continue;
                     }
 
-                    SlotData slot = null;
-                    for (int si = 0; si < slots.Length; si++)
-                    {
-                        var s = slots[si];
-                        if (s == null) continue;
-                        if (string.Equals(s.slotName, slotName, StringComparison.Ordinal))
-                        {
-                            slot = s;
-                            break;
-                        }
-                    }
+                    SlotData slot = mha.FindMatchingSlot(slots);
 
-                    // Slot missing or not visible in this UMA: leave as-is.
                     if (slot == null)
                     {
+                        meshHideLoadWarnings[mha] = $"'{mha.name}' targets '{slotName}', which could not be matched to a slot on this avatar. No faces were loaded.";
+                        continue;
+                    }
+                    if (!mha.IsCompatibleWithSlot(slot.asset, out var reason))
+                    {
+                        meshHideLoadWarnings[mha] = $"'{mha.name}' could not be loaded: {reason}. Use Recalculate From UV if the slot's topology has changed.";
                         continue;
                     }
 
                     if (!TryGetSlotSubmeshRange(slot, out int startSubmesh, out int submeshCount))
                     {
+                        meshHideLoadWarnings[mha] = $"'{mha.name}' targets '{slot.slotName}', which is hidden or has no mesh in this preview.";
                         continue;
                     }
 
-                    var lodFlags = GetLODDraftFlags(mha, recalculate);
+                    slotName = slot.slotName;
+                    var lodFlags = GetLODDraftFlags(mha, slot, recalculate);
+                    bool validLOD = lodFlags != null && lodFlags.Length == submeshCount;
+                    for (int sm = 0; validLOD && sm < submeshCount; sm++)
+                        validLOD = lodFlags[sm] != null && lodFlags[sm].Length == SlotToMesh.GetTriangles(slot.asset.meshData, sm, selectedLOD).Length / 3;
+                    if (!validLOD)
+                    {
+                        meshHideLoadWarnings[mha] = $"'{mha.name}' has a mask that does not match LOD {selectedLOD}. Use Recalculate LOD to regenerate it from LOD 0.";
+                        continue;
+                    }
                     for (int localSm = 0; localSm < submeshCount; localSm++)
                     {
                         var flags = lodFlags != null && localSm < lodFlags.Length ? lodFlags[localSm] : null;
@@ -5047,7 +5053,7 @@ namespace UMA
                 var targetSlots = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var mha in assets)
                 {
-                    if (mha != null) targetSlots.Add(mha.AssetSlotName);
+                    if (mha != null) targetSlots.Add(ResolveHideSlot(mha)?.slotName ?? mha.AssetSlotName);
                 }
                 foreach (var slotName in draftSlots)
                 {
@@ -5060,7 +5066,8 @@ namespace UMA
                 }
                 foreach (var mha in assets)
                 {
-                    if (mha == null || !slotLookupByName.TryGetValue(mha.AssetSlotName, out var slot) || slot?.asset == null || slot.Suppressed) continue;
+                    var slot = ResolveHideSlot(mha);
+                    if (slot?.asset == null || slot.Suppressed || meshHideLoadWarnings.ContainsKey(mha)) continue;
                     WriteLODDraftsToAsset(mha, slot, false);
                     AssetDatabase.SaveAssetIfDirty(mha);
                     CommitSavedSlotDrafts(slot.slotName);
@@ -5068,6 +5075,7 @@ namespace UMA
                 }
                 if (hasSaved)
                 {
+                    CurrentHideCollection?.ClearCache();
                     savedLODGenerationStrategy = lodGenerationStrategy;
                     hasSaved = !HasUnsavedSelectionChanges();
                 }
@@ -5260,7 +5268,7 @@ namespace UMA
             int submeshCount = slot.asset.meshData.subMeshCount;
             EnsureTriangleFlagsAllocated(mha, slot, submeshCount);
             mha.SaveSelectionForLOD(BuildSelectionFlags(slot.asset, lod, selection), lod);
-            if (lod == 0) mha.UpdateEditorHashAndUVMaskFromFlags();
+            if (lod == 0) mha.UpdateEditorHashAndUVMaskFromFlags(slot.asset);
             EditorUtility.SetDirty(mha);
         }
 

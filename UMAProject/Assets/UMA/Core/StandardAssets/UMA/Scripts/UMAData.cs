@@ -1960,7 +1960,7 @@ namespace UMA
                     if (MeshHideDictionary.ContainsKey(sd.slotName))
                     {   //If this slotDataAsset is found in the MeshHideDictionary then we need to supply the SlotData with the bitArray.
 #if UNITY_6000_2_OR_NEWER
-                        sd.meshHideMask = MeshHideAsset.GenerateMask(MeshHideDictionary[sd.slotName], Mathf.Max(0, LODNumber));
+                        sd.meshHideMask = MeshHideAsset.GenerateMask(MeshHideDictionary[sd.slotName], Mathf.Max(0, LODNumber), sd.asset);
 #else
                         sd.meshHideMask = MeshHideAsset.GenerateMask(MeshHideDictionary[sd.slotName]);
 #endif

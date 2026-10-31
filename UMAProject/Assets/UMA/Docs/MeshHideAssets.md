@@ -57,6 +57,8 @@ If the generated character is missing slots, fix the DCA recipe first. The Face 
 
 To edit an existing Mesh Hide Asset or Mesh Hide Asset Collection, drag it onto the DCA inspector drop area labeled `Drag & Drop a MeshModifier, Mesh Hide Asset, or Mesh Hide Collection here to edit`. Dropping a collection opens the same Face Editor Stage with the existing selections loaded.
 
+Older race-baked masks using an asset filename such as `Body_slot_baked_Race` also load onto the corresponding generated `Body_baked_Race` slot. The editor uses that generated slot's mesh for LOD calculations and records its current name when you save. If a target slot is missing, hidden, or incompatible, the **Mesh Hide Assets** panel shows a warning instead of silently loading an empty selection.
+
 The stage creates a temporary baked mesh for editing and disables the character renderer while the stage is open. When you close the stage, the DCA is restored and rebuilt.
 
 Use the `LOD Level` slider at the top of **Face Tools** to edit a specific mesh LOD. The preview, paint tools, and raycast selection use that level's triangles. The slider is disabled when the character has only one LOD. Slots with fewer levels use their last available geometry.

@@ -66,10 +66,10 @@ namespace UMA
             return current != AssetHash;
         }
 
-        public void UpdateEditorHashAndUVMaskFromFlags()
+        public void UpdateEditorHashAndUVMaskFromFlags(SlotDataAsset sourceSlot = null)
         {
             InvalidateGeneratedLODMasks();
-            var sda = asset;
+            var sda = sourceSlot != null ? sourceSlot : asset;
             if (sda == null || UMAMeshData.IsNullOrEmptyMeshData(sda.meshData))
             {
                 return;
@@ -155,10 +155,10 @@ namespace UMA
             }
         }
 
-        public void RebuildFlagsFromEditorUVMask()
+        public void RebuildFlagsFromEditorUVMask(SlotDataAsset sourceSlot = null)
         {
             InvalidateGeneratedLODMasks();
-            var sda = asset;
+            var sda = sourceSlot != null ? sourceSlot : asset;
             if (sda == null || UMAMeshData.IsNullOrEmptyMeshData(sda.meshData))
             {
                 return;
@@ -334,6 +334,32 @@ namespace UMA
         [SerializeField]
         private string _assetSlotName = "";
 
+        /// <summary>Find the target in a generated recipe, including the legacy Object.name baked-slot spelling.</summary>
+        public SlotData FindMatchingSlot(SlotData[] slots)
+        {
+            if (slots == null || string.IsNullOrEmpty(AssetSlotName)) return null;
+            // Exact identity takes priority over any legacy alias.
+            foreach (var slot in slots)
+                if (slot?.asset != null && string.Equals(AssetSlotName, slot.slotName, StringComparison.Ordinal)) return slot;
+
+            SlotData match = null;
+            foreach (var slot in slots)
+            {
+                var candidate = slot?.asset;
+                if (candidate == null || !candidate.isBaked) continue;
+                var source = UMAAssetIndexer.Instance.GetAsset<SlotDataAsset>(candidate.sourceSlot, false, true);
+                if (source == null) continue;
+                string prefix = source.slotName + "_baked_";
+                if (!candidate.slotName.StartsWith(prefix, StringComparison.Ordinal)) continue;
+                string suffix = candidate.slotName.Substring(source.slotName.Length);
+                if (!string.Equals(AssetSlotName, source.name + suffix, StringComparison.Ordinal)) continue;
+                // Do not guess when multiple generated slots claim the same legacy identity.
+                if (match != null) return null;
+                match = slot;
+            }
+            return match;
+        }
+
         /// <summary>
         /// BitArray of the triangle flags list. The list stores only the first index of the triangle vertex in the asset's triangle list.
         /// </summary>
@@ -362,10 +388,12 @@ namespace UMA
 
         // Looking at a LOD must not create a saved override or make the bulk "Missing" policy skip it.
         private readonly Dictionary<int, BitArray[]> generatedLODFlags = new Dictionary<int, BitArray[]>();
+        private UMAMeshData generatedLODMeshData;
 
         public void InvalidateGeneratedLODMasks()
         {
             generatedLODFlags.Clear();
+            generatedLODMeshData = null;
         }
 
         [System.Serializable]
@@ -933,22 +961,29 @@ namespace UMA
             return set;
         }
 
-        public BitArray[] GetTriangleFlagsForLOD(int lod)
+        public BitArray[] GetTriangleFlagsForLOD(int lod, SlotDataAsset sourceSlot = null)
         {
             if (lod <= 0) return _triangleFlags;
             if (_triangleFlagsPerLOD.TryGetValue(lod, out var savedFlags) && savedFlags != null) return savedFlags;
+            var slot = sourceSlot != null ? sourceSlot : asset;
+            if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)) return _triangleFlags;
+            if (!ReferenceEquals(generatedLODMeshData, slot.meshData))
+            {
+                InvalidateGeneratedLODMasks();
+                generatedLODMeshData = slot.meshData;
+            }
             if (generatedLODFlags.TryGetValue(lod, out var cachedFlags)) return cachedFlags;
 
-            var generated = CalculateLODMask(lod, LODGenerationStrategy);
+            var generated = CalculateLODMask(lod, LODGenerationStrategy, slot);
             if (generated == null) return _triangleFlags;
             generatedLODFlags[lod] = generated;
             return generated;
         }
 
         /// <summary>Calculate a fresh mask from LOD 0 without modifying any saved mask or preview cache.</summary>
-        public BitArray[] CalculateLODMask(int lod, TriangleHideStrategy mode)
+        public BitArray[] CalculateLODMask(int lod, TriangleHideStrategy mode, SlotDataAsset sourceSlot = null)
         {
-            var slot = asset;
+            var slot = sourceSlot != null ? sourceSlot : asset;
             if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)) return null;
             return CalculateLODMask(_triangleFlags, slot.meshData, 0, Mathf.Max(0, lod), mode);
         }
@@ -1075,7 +1110,7 @@ namespace UMA
         /// <summary>
         /// Generates a final BitArray mask for a specific LOD from a list of MeshHideAssets.
         /// </summary>
-        public static BitArray[] GenerateMask(List<MeshHideAsset> assets, int lod)
+        public static BitArray[] GenerateMask(List<MeshHideAsset> assets, int lod, SlotDataAsset sourceSlot = null)
         {
             if (assets == null || assets.Count == 0) return null;
             var flags = new List<BitArray[]>();
@@ -1083,7 +1118,7 @@ namespace UMA
             {
                 var a = assets[i];
 #if UNITY_6000_2_OR_NEWER
-                flags.Add(a.GetTriangleFlagsForLOD(Mathf.Max(0, lod)) ?? a.triangleFlags);
+                flags.Add(a.GetTriangleFlagsForLOD(Mathf.Max(0, lod), sourceSlot) ?? a.triangleFlags);
 #else
                 flags.Add(a.triangleFlags);
 #endif
