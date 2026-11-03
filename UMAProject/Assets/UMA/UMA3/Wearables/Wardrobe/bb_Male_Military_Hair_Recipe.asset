@@ -15,7 +15,7 @@ MonoBehaviour:
   label: 
   resourcesOnly: 0
   recipeType: Wardrobe
-  DisplayValue: 
+  DisplayValue: Military
   compatibleRaces:
   - Human Male 3.0
   - Human Female 3.0

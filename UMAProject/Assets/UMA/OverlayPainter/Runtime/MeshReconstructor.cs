@@ -1284,6 +1284,8 @@ namespace UMA.TexturePaint
     {
         public GameObject root;
         public readonly List<ReconstructedSurface> surfaces = new List<ReconstructedSurface>();
+        /// <summary>Visible material-only geometry with no paint targets, colliders, or texture allocations.</summary>
+        public readonly List<ReconstructedSurface> previewOnlySurfaces = new List<ReconstructedSurface>();
         public readonly TexturePaintLogicalTargetCatalog logicalTargets = new TexturePaintLogicalTargetCatalog();
         /// <summary>Structured, target-scoped import diagnostics for editor presentation.</summary>
         public readonly List<MeshReconstructionWarning> importWarnings = new List<MeshReconstructionWarning>();
@@ -1391,6 +1393,15 @@ namespace UMA.TexturePaint
 
         public void Dispose()
         {
+            DisposeSurfaces(surfaces);
+            DisposeSurfaces(previewOnlySurfaces);
+            logicalTargets.Clear();
+            Destroy(root);
+            root = null;
+        }
+
+        private static void DisposeSurfaces(List<ReconstructedSurface> surfaces)
+        {
             for (int i = 0; i < surfaces.Count; i++)
             {
                 ReconstructedSurface surface = surfaces[i];
@@ -1408,9 +1419,6 @@ namespace UMA.TexturePaint
                 Destroy(surface.mesh);
             }
             surfaces.Clear();
-            logicalTargets.Clear();
-            Destroy(root);
-            root = null;
         }
 
         private static void Destroy(UnityEngine.Object value)
@@ -1483,6 +1491,40 @@ namespace UMA.TexturePaint
                                 $"Overlay Painter skipped duplicate second-pass geometry for '{sourceMaterial.name}'. " +
                                 "The matching first-pass slot geometry remains paintable; the second pass is a render-only duplicate and is not imported.",
                                 slotNames, sourceMaterial.name);
+                            continue;
+                        }
+                        if (IsPreviewOnlyMaterial(umaMaterial))
+                        {
+                            // Material-only surfaces (for example transparent corneas) have no UMA
+                            // texture contract. Preserve their appearance without inventing paint channels.
+                            var surface = new ReconstructedSurface
+                            {
+                                index = -1,
+                                rendererIndex = rendererIndex,
+                                sourceSubmeshIndex = submesh,
+                                sourceMaterial = sourceMaterial,
+                                umaMaterial = umaMaterial,
+                                slotName = slotNames[0],
+                                slotNames = slotNames,
+                                slots = slots
+                            };
+                            result.previewOnlySurfaces.Add(surface);
+                            surface.mesh = ExtractTriangles(baked, baked.GetTriangles(submesh), toAvatar,
+                                $"Preview Material {submesh}");
+                            surface.previewMaterial = new Material(sourceMaterial)
+                            {
+                                name = sourceMaterial.name + " (Overlay Painter Preview Only)",
+                                hideFlags = HideFlags.HideAndDontSave
+                            };
+                            surface.gameObject = new GameObject($"{rendererIndex:D2}_{submesh:D2}_{sourceMaterial.name}");
+                            surface.gameObject.transform.SetParent(result.root.transform, false);
+                            surface.gameObject.AddComponent<MeshFilter>().sharedMesh = surface.mesh;
+                            surface.gameObject.AddComponent<MeshRenderer>().sharedMaterial = surface.previewMaterial;
+                            result.AddWarning("OP_IMPORT_PREVIEW_ONLY_MATERIAL",
+                                MeshReconstructionWarningSeverity.Information,
+                                $"Material '{umaMaterial.name}' has no UMA texture channels. " +
+                                "Its geometry is visible in the preview but cannot be painted or exported as an overlay.",
+                                slotNames, umaMaterial.name);
                             continue;
                         }
                         bool usesMaterialSources = UsesReadOnlyMaterialSources(umaMaterial);
@@ -1865,6 +1907,13 @@ namespace UMA.TexturePaint
         {
             return umaMaterial != null &&
                    umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingTextures;
+        }
+
+        internal static bool IsPreviewOnlyMaterial(UMAMaterial umaMaterial)
+        {
+            return umaMaterial != null &&
+                   umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingMaterial &&
+                   (umaMaterial.channels == null || umaMaterial.channels.Length == 0);
         }
 
         internal static Texture[] BuildReadOnlyMaterialSources(UMAMaterial umaMaterial,

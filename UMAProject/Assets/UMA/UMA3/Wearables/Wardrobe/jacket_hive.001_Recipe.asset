@@ -15,7 +15,7 @@ MonoBehaviour:
   label: 
   resourcesOnly: 0
   recipeType: Wardrobe
-  DisplayValue: 
+  DisplayValue: Jacket Hive.001
   compatibleRaces:
   - Human Female 3.0
   wardrobeRecipeThumbs:

@@ -9,7 +9,7 @@
     "calcTangents": false,
     "clearNormals": false,
     "clearTangents": false,
-    "udimAdjustment": true,
+    "udimAdjustment": false,
     "udimTilesU": 10,
     "udimTilesV": 10,
     "nameAfterMaterial": false,
@@ -46,7 +46,7 @@
     "filterIgnoreMeshesContaining": "UMA30",
     "filterOnlyIncludeMeshesEnabled": false,
     "filterOnlyIncludeMeshesContaining": "robe",
-    "lastDroppedFbxPath": "Assets/temp/browfit.fbx",
+    "lastDroppedFbxPath": "Assets/temp/Infant/Infant.fbx",
     "pendingSmrsCompactView": true,
     "pendingSmrsFilterEnabled": false
 }

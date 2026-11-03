@@ -465,11 +465,9 @@ namespace UMA
                 if (boneWeightRemap.IsCreated)
                 {
                     int[] bones = source.boneNameHashes;
-                    Matrix4x4[] sourceBindPoses =
-                        source.bindPoses;
                     for (int i = 0; i < bones.Length; i++)
                         boneWeightRemap[boneMapOffset + i] = TranslateBoneIndex(
-                            i, bones, sourceBindPoses, bonesCollection, bindPoses, bonesList);
+                            i, source, bonesCollection, bindPoses, bonesList);
                     NativeArray<byte>.Copy(source.ManagedBonesPerVertex, 0, nativeBonesPerVertex,
                         vertexOffset, source.ManagedBonesPerVertex.Length);
                     NativeArray<BoneWeight1>.Copy(source.ManagedBoneWeights, 0, nativeBoneWeights,

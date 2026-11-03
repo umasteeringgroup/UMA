@@ -15,7 +15,7 @@ MonoBehaviour:
   label: 
   resourcesOnly: 0
   recipeType: Wardrobe
-  DisplayValue: 
+  DisplayValue: Poofy
   compatibleRaces:
   - Human Female 3.0
   - Human Male 3.0

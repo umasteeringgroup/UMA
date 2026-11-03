@@ -12,6 +12,27 @@ Adds checked indexed race names to every selected `UMAWardrobeRecipe`. Existing 
 
 Sets `thumbnailFromTexture` on every selected wardrobe recipe. It does not generate the thumbnail immediately; runtime or editor consumers use the flag when resolving recipe imagery.
 
+### Update blank display names
+
+Select one or more `UMAWardrobeRecipe` assets and right-click **UMA > Update blank display names**.
+This fills empty or whitespace-only display names from each object's name, preserving existing display names.
+Changes are saved and can be undone together. Asset filenames and recipe identifiers are unchanged.
+
+Cleanup ignores case when removing `bb`, gender/race markers ending in `male` (including `female`),
+standalone `Hair`, a leading `Hair` prefix, and trailing `_Recipe` markers. Remaining underscores become
+word separators, and Unity's name formatting splits CamelCase. Gender is retained as a fallback if no
+descriptive words remain; otherwise a hair-only name falls back to `Hair`.
+
+| Object name | Display name |
+| --- | --- |
+| `ShortHair_Recipe` | Short Hair |
+| `Hair_Straight_Recipe` | Straight |
+| `bb_female_hair_recipe` | Female |
+| `bb_Male_Military_Hair_Recipe` | Military |
+| `female_Long_SleeveShirt_Recipe` | Long Sleeve Shirt |
+
+Read-only assets and names with no usable words after cleanup are skipped.
+
 ### Examine Wearables and Consolidate Textures
 
 See [Examine Wearables](ExamineWearables.md) and [Asset Consolidation and Repair](AssetConsolidationAndRepair.md).

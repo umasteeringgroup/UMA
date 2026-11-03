@@ -1861,9 +1861,9 @@ namespace UMA
                     sw.Restart();
                     if (UseParallelBoneWeights)
                     {
-                        var bones = src.boneNameHashes; var bindPosesSrc = src.bindPoses;
+                        var bones = src.boneNameHashes;
                         for (int iMap = 0; iMap < bones.Length; iMap++)
-                            bwRemap[boneMapOffset + iMap] = TranslateBoneIndex(iMap, bones, bindPosesSrc, bonesCollection, bindPoses, bonesList);
+                            bwRemap[boneMapOffset + iMap] = TranslateBoneIndex(iMap, src, bonesCollection, bindPoses, bonesList);
                         NativeArray<byte>.Copy(src.ManagedBonesPerVertex, 0, nativeBonesPerVertex, vertexOffset, src.ManagedBonesPerVertex.Length);
                         NativeArray<BoneWeight1>.Copy(src.ManagedBoneWeights, 0, nativeBoneWeights, boneWeightOffset, src.ManagedBoneWeights.Length);
                         for (int start = 0; start < src.ManagedBoneWeights.Length;)
@@ -4208,10 +4208,10 @@ namespace UMA
         }
         private static void BuildBoneWeights(UMAMeshData data, NativeArray<BoneWeight1> dest, NativeArray<byte> destBonesPerVertex, int destIndex, int destBoneWeightIndex, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
         {
-            var bones = data.boneNameHashes; var bindPoses = data.bindPoses; var pool = ArrayPool<int>.Shared; var boneMapping = pool.Rent(bones.Length);
+            var bones = data.boneNameHashes; var pool = ArrayPool<int>.Shared; var boneMapping = pool.Rent(bones.Length);
             try
             {
-                for (int i = 0; i < bones.Length; i++) boneMapping[i] = TranslateBoneIndex(i, bones, bindPoses, bonesCollection, bindPosesList, bonesList);
+                for (int i = 0; i < bones.Length; i++) boneMapping[i] = TranslateBoneIndex(i, data, bonesCollection, bindPosesList, bonesList);
                 NativeArray<byte>.Copy(data.ManagedBonesPerVertex, 0, destBonesPerVertex, destIndex, data.ManagedBonesPerVertex.Length);
                 NativeArray<BoneWeight1>.Copy(data.ManagedBoneWeights, 0, dest, destBoneWeightIndex, data.ManagedBoneWeights.Length);
                 for (int i = 0; i < data.ManagedBoneWeights.Length; i++) { var bw = dest[destBoneWeightIndex + i]; bw.boneIndex = boneMapping[bw.boneIndex]; dest[destBoneWeightIndex + i] = bw; }
@@ -4401,9 +4401,23 @@ namespace UMA
             Mathf.Abs(m1.m00 - m2.m00) <= 0.0001f && Mathf.Abs(m1.m01 - m2.m01) <= 0.0001f && Mathf.Abs(m1.m02 - m2.m02) <= 0.0001f && Mathf.Abs(m1.m03 - m2.m03) <= 0.0001f &&
             Mathf.Abs(m1.m10 - m2.m10) <= 0.0001f && Mathf.Abs(m1.m11 - m2.m11) <= 0.0001f && Mathf.Abs(m1.m12 - m2.m12) <= 0.0001f && Mathf.Abs(m1.m13 - m2.m13) <= 0.0001f &&
             Mathf.Abs(m1.m20 - m2.m20) <= 0.0001f && Mathf.Abs(m1.m21 - m2.m21) <= 0.0001f && Mathf.Abs(m1.m22 - m2.m22) <= 0.0001f && Mathf.Abs(m1.m23 - m2.m23) <= 0.0001f;
-        private static int TranslateBoneIndex(int index, int[] bonesHashes, Matrix4x4[] bindPoses, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
+        private static int TranslateBoneIndex(int index, UMAMeshData source, Dictionary<int, BoneIndexEntry> bonesCollection, List<Matrix4x4> bindPosesList, List<int> bonesList)
         {
-            int boneHash = bonesHashes[index]; if (bonesCollection.TryGetValue(boneHash, out var entry)) { for (int i = 0; i < entry.Count; i++) { int res = entry[i]; if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index])) return res; } int idx = bindPosesList.Count; entry.AddIndex(idx); bindPosesList.Add(bindPoses[index]); bonesList.Add(boneHash); return idx; } else { int idx = bindPosesList.Count; bonesCollection.Add(boneHash, new BoneIndexEntry { index = idx }); bindPosesList.Add(bindPoses[index]); bonesList.Add(boneHash); return idx; }
+            int boneHash = source.boneNameHashes[index];
+            // Imported slots can retain null, unused bones as zero-hash placeholders.
+            // Do not bind these to the skeleton. Referenced entries, including zero-weight
+            // records, must retain a valid remap and the existing missing-bone diagnostic.
+            // Only placeholder entries need this scan; normal bones take the usual path.
+            if (boneHash == 0 && !IsBoneReferenced(source.ManagedBoneWeights, index)) return -1;
+            var bindPoses = source.bindPoses;
+            if (bonesCollection.TryGetValue(boneHash, out var entry)) { for (int i = 0; i < entry.Count; i++) { int res = entry[i]; if (CompareSkinningMatrices(bindPosesList[res], ref bindPoses[index])) return res; } int idx = bindPosesList.Count; entry.AddIndex(idx); bindPosesList.Add(bindPoses[index]); bonesList.Add(boneHash); return idx; } else { int idx = bindPosesList.Count; bonesCollection.Add(boneHash, new BoneIndexEntry { index = idx }); bindPosesList.Add(bindPoses[index]); bonesList.Add(boneHash); return idx; }
+        }
+
+        private static bool IsBoneReferenced(BoneWeight1[] weights, int index)
+        {
+            for (int i = 0; i < weights.Length; i++)
+                if (weights[i].boneIndex == index) return true;
+            return false;
         }
     #if UMA_BURSTCOMPILE
         [BurstCompile]

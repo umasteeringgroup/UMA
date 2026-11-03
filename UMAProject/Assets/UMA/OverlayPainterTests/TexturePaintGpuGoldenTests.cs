@@ -403,6 +403,107 @@ namespace UMA.TexturePaint.Editor.Tests
             finally { Object.DestroyImmediate(brush); }
         }
 
+        [TestCase(TexturePaintChannel.Normal)]
+        [TestCase(TexturePaintChannel.NormalControl)]
+        [TestCase(TexturePaintChannel.Albedo)]
+        [TestCase(TexturePaintChannel.Metallic)]
+        [TestCase(TexturePaintChannel.Roughness)]
+        [TestCase(TexturePaintChannel.AmbientOcclusion)]
+        [TestCase(TexturePaintChannel.Emission)]
+        [TestCase(TexturePaintChannel.Custom)]
+        [TestCase(TexturePaintChannel.SkinColorMask)]
+        [TestCase(TexturePaintChannel.Thickness)]
+        [TestCase(TexturePaintChannel.DetailMask)]
+        public void BatchedPreviewRefreshesEveryDirtyTile(TexturePaintChannel paintedChannel)
+        {
+            const int size = 256;
+            bool normalChannel = paintedChannel == TexturePaintChannel.Normal ||
+                paintedChannel == TexturePaintChannel.NormalControl;
+            TexturePaintChannel visibleChannel = normalChannel ? TexturePaintChannel.Normal : paintedChannel;
+            Color neutral = normalChannel ? new Color(0.5f, 0.5f, 1f, 1f) : Color.black;
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(
+                neutral, visibleChannel, size: size);
+            fixture.set.channelPackShader = TexturePaintGpuTestFixture.LoadShader("ChannelPack.compute");
+            if (normalChannel)
+                fixture.set.channels.Add(TexturePaintChannel.NormalControl, new TextureChannelTarget
+                {
+                    channel = TexturePaintChannel.NormalControl,
+                    format = RenderTextureFormat.ARGBHalf,
+                    editable = new EditableTextureTarget("Batched Height", size, size,
+                        RenderTextureFormat.ARGBHalf, null, new Color(0.5f, 0.5f, 0.5f, 1f))
+                });
+            var physical = new TexturePhysicalChannelGroup
+            {
+                materialProperty = "_TestPacked",
+                source = Texture2D.whiteTexture,
+                packed = EditableTextureTarget.Create("Batched Packed Preview", size, size,
+                    RenderTextureFormat.ARGBHalf)
+            };
+            for (int component = 0; component < 4; component++)
+            {
+                physical.componentTargets[component] = fixture.set.GetChannel(visibleChannel);
+                physical.sourceComponents[component] = component;
+            }
+            // Exercise the roughness-to-smoothness conversion used by packed material maps.
+            if (paintedChannel == TexturePaintChannel.Roughness)
+            {
+                physical.sourceComponents[3] = 0;
+                physical.inverted[3] = true;
+            }
+            fixture.set.physicalChannelGroups.Add(physical.materialProperty, physical);
+            // Warm the cache: the first stroke in a fresh preview takes the full-update path.
+            fixture.set.BindPreviewTextures(false);
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = fixture.CreateBrush(1f, 1f);
+            try
+            {
+                Color paint = paintedChannel == TexturePaintChannel.Normal
+                    ? new Color(0.8f, 0.5f, 0.9f, 1f) : Color.white;
+                StrokeContext context = fixture.CreateContext(brush, TexturePaintTool.Paint,
+                    paint, paintedChannel, 1f);
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceTexture), Is.True);
+                engine.BeginSampleBatch();
+                Assert.That(engine.ApplySample(TexturePaintGpuTestFixture.CenterSample(), 0.2f), Is.True);
+                Assert.That(engine.EndSampleBatch(), Is.True);
+
+                Color[] tiled = TexturePaintGpuTestFixture.ReadPixels(
+                    fixture.set.GetVisibleTexture(visibleChannel));
+                Color[] packed = TexturePaintGpuTestFixture.ReadPixels(physical.packed);
+                // Compare the interactive four-tile refresh against a full recomputation
+                // of the same authored data, before EndStroke can hide a preview defect.
+                fixture.set.CompositeChannel(paintedChannel);
+                fixture.set.BindPreviewTextures(false);
+                Color[] full = TexturePaintGpuTestFixture.ReadPixels(
+                    fixture.set.GetVisibleTexture(visibleChannel));
+                for (int tileY = 0; tileY < 2; tileY++)
+                for (int tileX = 0; tileX < 2; tileX++)
+                {
+                    float maximumError = 0f;
+                    float maximumPackedError = 0f;
+                    float maximumChange = 0f;
+                    for (int y = tileY * 128; y < (tileY + 1) * 128; y++)
+                    for (int x = tileX * 128; x < (tileX + 1) * 128; x++)
+                    {
+                        int index = y * size + x;
+                        maximumError = Mathf.Max(maximumError, ColorDistance(tiled[index], full[index]));
+                        Color expectedPacked = full[index];
+                        if (paintedChannel == TexturePaintChannel.Roughness)
+                            expectedPacked.a = 1f - expectedPacked.r;
+                        maximumPackedError = Mathf.Max(maximumPackedError,
+                            ColorDistance(packed[index], expectedPacked));
+                        maximumChange = Mathf.Max(maximumChange, ColorDistance(full[index], neutral));
+                    }
+                    Assert.That(maximumChange, Is.GreaterThan(0.01f), "Each tile must contain painted detail.");
+                    Assert.That(maximumError, Is.LessThan(0.004f),
+                        $"Preview skipped dirty tile ({tileX}, {tileY}) for {paintedChannel}.");
+                    Assert.That(maximumPackedError, Is.LessThan(0.004f),
+                        $"Packed preview skipped dirty tile ({tileX}, {tileY}) for {paintedChannel}.");
+                }
+                engine.EndStroke();
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
         [Test]
         public void RewindingProvisionalFirstStampLeavesOnlyCorrectedStamp()
         {

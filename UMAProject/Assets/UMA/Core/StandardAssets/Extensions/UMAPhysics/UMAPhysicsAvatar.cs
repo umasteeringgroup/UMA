@@ -31,6 +31,18 @@ namespace UMA.Dynamics
 		public bool UpdateTransformAfterRagdoll = true;
 		[Tooltip("Move each skinned renderer's existing bounds with the ragdoll root bone. Keep this enabled when ragdoll bones can move away from the avatar root.")]
 		public bool UpdateRendererBoundsWhileRagdolled = true;
+		[Tooltip("Freeze the ragdoll pose once all bodies stay within the rest tolerances. Call WakeRagdoll before applying a new force.")]
+		public bool freezeWhenRagdollRests = true;
+		[Min(0.1f), Tooltip("Seconds all ragdoll bodies must remain near the same world-space pose before freezing.")]
+		public float ragdollRestTime = 1f;
+		[Min(0f), Tooltip("Allowed world-space movement in meters over the entire rest window. Small joint vibrations within this distance are ignored.")]
+		public float ragdollRestPositionThreshold = 0.03f;
+		[Range(0f, 180f), Tooltip("Allowed rotation in degrees over the entire rest window.")]
+		public float ragdollRestRotationThreshold = 5f;
+
+		/// <summary>True while resting ragdoll bodies are held kinematic. The avatar remains ragdolled.</summary>
+		public bool IsRagdollFrozen { get; private set; }
+
 		[Tooltip("Check this to set the player layer to the current layer, and read the 'ragdoll' layer from the settings")]
 		public bool AutoSetLayers = false;
 		[Tooltip("Layer to set the ragdoll colliders on. See layer based collision")]
@@ -48,6 +60,14 @@ namespace UMA.Dynamics
 		private UMAData _umaData;
 		private GameObject _rootBone;
 		private List<Rigidbody> _rigidbodies = new List<Rigidbody> ();
+		private struct RagdollRestPose
+		{
+			public Rigidbody body;
+			public Vector3 position;
+			public Quaternion rotation;
+		}
+		private readonly List<RagdollRestPose> _ragdollRestPoses = new List<RagdollRestPose>();
+		private float _ragdollRestElapsed;
 
 		private sealed class RagdollRendererState
 		{
@@ -157,20 +177,136 @@ namespace UMA.Dynamics
 			_ragdollRendererStates.Clear();
 		}
 
+		void OnEnable()
+		{
+			ResetRagdollRestDetection();
+		}
+
 		void FixedUpdate()
 		{
+			if (IsRagdollFrozen)
+			{
+				if (freezeWhenRagdollRests)
+					return;
+				WakeRagdoll();
+			}
+
 			if (ragdollBlendAmount > 0) 
 			{
                 for (int i = 0; i < _rigidbodies.Count; i++) 
 				{
                     Rigidbody rigidbody = _rigidbodies[i];
-                    if (_rootBone && rigidbody.gameObject.name != _rootBone.name)
+                    if (rigidbody != null && _rootBone && rigidbody.gameObject.name != _rootBone.name)
 					{ //this if is to prevent us from modifying the root of the character, only the actual body parts
 						//rotation is interpolated for all body parts
 						rigidbody.transform.rotation = Quaternion.Slerp (rigidbody.transform.rotation, Quaternion.identity, ragdollBlendAmount);
 					}
 				}
 			}
+			UpdateRagdollRest(Time.fixedDeltaTime);
+		}
+
+		private void ResetRagdollRestDetection()
+		{
+			_ragdollRestElapsed = 0f;
+			_ragdollRestPoses.Clear();
+		}
+
+		private void CaptureRagdollRestPose()
+		{
+			ResetRagdollRestDetection();
+			for (int i = 0; i < _rigidbodies.Count; i++)
+			{
+				Rigidbody body = _rigidbodies[i];
+				_ragdollRestPoses.Add(new RagdollRestPose
+				{
+					body = body,
+					position = body != null ? body.position : Vector3.zero,
+					rotation = body != null ? body.rotation : Quaternion.identity
+				});
+			}
+		}
+
+		private void UpdateRagdollRest(float deltaTime)
+		{
+			if (!_ragdolled || IsRagdollFrozen)
+				return;
+			if (!freezeWhenRagdollRests)
+			{
+				ResetRagdollRestDetection();
+				return;
+			}
+			if (_ragdollRestPoses.Count != _rigidbodies.Count || _ragdollRestPoses.Count == 0)
+			{
+				CaptureRagdollRestPose();
+				return;
+			}
+
+			float positionTolerance = Mathf.Max(0f, ragdollRestPositionThreshold);
+			float rotationTolerance = Mathf.Clamp(ragdollRestRotationThreshold, 0f, 180f);
+			bool hasBody = false;
+			for (int i = 0; i < _rigidbodies.Count; i++)
+			{
+				Rigidbody body = _rigidbodies[i];
+				RagdollRestPose pose = _ragdollRestPoses[i];
+				if (body != pose.body)
+				{
+					CaptureRagdollRestPose();
+					return;
+				}
+				if (body == null)
+					continue;
+				hasBody = true;
+				// Compare against one fixed pose for the WHOLE window. Comparing only
+				// consecutive frames would incorrectly freeze slow sliding or falling.
+				if ((body.position - pose.position).sqrMagnitude > positionTolerance * positionTolerance ||
+					Quaternion.Angle(body.rotation, pose.rotation) > rotationTolerance)
+				{
+					CaptureRagdollRestPose();
+					return;
+				}
+			}
+			if (!hasBody)
+				return;
+
+			_ragdollRestElapsed += deltaTime;
+			if (_ragdollRestElapsed < Mathf.Max(0.1f, ragdollRestTime))
+				return;
+
+			for (int i = 0; i < _rigidbodies.Count; i++)
+			{
+				Rigidbody body = _rigidbodies[i];
+				if (body == null || body.isKinematic)
+					continue;
+				body.linearVelocity = Vector3.zero;
+				body.angularVelocity = Vector3.zero;
+			}
+			SetAllKinematic(true);
+			IsRagdollFrozen = true;
+			ResetRagdollRestDetection();
+		}
+
+		/// <summary>
+		/// Resume physics without leaving ragdoll or firing animation/recovery events.
+		/// Call before AddForce/AddTorque on a ragdoll body, or before removing its support.
+		/// Also restarts the rest window when the ragdoll is already simulating.
+		/// </summary>
+		public void WakeRagdoll()
+		{
+			if (!_ragdolled)
+				return;
+			if (IsRagdollFrozen)
+			{
+				SetAllKinematic(false);
+				IsRagdollFrozen = false;
+			}
+			for (int i = 0; i < _rigidbodies.Count; i++)
+			{
+				Rigidbody body = _rigidbodies[i];
+				if (body != null && !body.isKinematic)
+					body.WakeUp();
+			}
+			ResetRagdollRestDetection();
 		}
 
 		void LateUpdate()
@@ -215,6 +351,7 @@ namespace UMA.Dynamics
 					cachedbone.boneTransform.localScale = cachedbone.localScale;
 				}
 				cachedBones.Clear();
+				ResetRagdollRestDetection();
 			}
 		}
 
@@ -417,6 +554,8 @@ namespace UMA.Dynamics
                 _ragdolled = false;
                 return;
             }
+			IsRagdollFrozen = false;
+			ResetRagdollRestDetection();
             
 			// Capture the generated/manual renderer settings immediately before
 			// entering ragdoll. UMA assigns localBounds during generation, which
@@ -485,7 +624,7 @@ namespace UMA.Dynamics
 			if (_ragdolled && !ragdollState) 
 			{
 				//We were ragdolled and now we're not
-				if (UpdateTransformAfterRagdoll) 
+				if (UpdateTransformAfterRagdoll && _rootBone != null)
 				{
 					gameObject.transform.position = _rootBone.transform.position;
 				}

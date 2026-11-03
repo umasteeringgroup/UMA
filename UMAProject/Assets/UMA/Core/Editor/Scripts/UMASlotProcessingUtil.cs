@@ -676,6 +676,9 @@ namespace UMA.Editors
                     if (transformList[i].name == rootBone)
                     {
                         transformList[i].parent = newObject.transform;
+                        // The imported renderer may use an armature above the extracted skeleton.
+                        // Keep its root reference inside the hierarchy retained for the slot.
+                        resultingSkinnedMesh.rootBone = transformList[i];
                     }
                     else if (transformList[i].name == mesh.name)
                     {
@@ -1018,6 +1021,9 @@ namespace UMA.Editors
                 if (transformList[i].name == sbp.rootBone)
                 {
                     transformList[i].parent = newObject.transform;
+                    // The imported renderer may use an armature above the extracted skeleton.
+                    // Keep its root reference inside the hierarchy retained for the slot.
+                    resultingSkinnedMesh.rootBone = transformList[i];
                 }
                 else if (transformList[i].name == sbp.slotMesh.name)
                 {

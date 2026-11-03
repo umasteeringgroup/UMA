@@ -12,6 +12,7 @@
   <Project Path="UMA3.Samples.Editor.Tests.csproj" />
   <Project Path="UMA3.Samples.csproj" />
   <Project Path="UMA.TempTools.csproj" />
+  <Project Path="UMA_Core_Runtime_Tests.csproj" />
   <Project Path="UMA_Editor.csproj" />
   <Project Path="UMA.HairCards.Editor.Tests.csproj" />
   <Project Path="UMA.TexturePaint.Tests.csproj" />
@@ -22,7 +23,6 @@
   <Project Path="UMA_Utilities_Editor.csproj" />
   <Project Path="UMA.TestRunner.Editor.csproj" />
   <Project Path="Shaderpackager-editor.csproj" />
-  <Project Path="UMA_Core_Runtime_Tests.csproj" />
   <Project Path="UMA.TexturePaint.CompanionExamples.Editor.csproj" />
   <Project Path="UMA.Dismemberment.Editor.Tests.csproj" />
   <Project Path="UMA.HairCards.Runtime.csproj" />
@@ -38,8 +38,8 @@
   <Project Path="UMA.HairCards.Core.Player.csproj" />
   <Project Path="UMA3.Samples.Player.csproj" />
   <Project Path="UMA.TempTools.Player.csproj" />
-  <Project Path="UMA2.Content.Player.csproj" />
   <Project Path="UMA_Core_Runtime_Tests.Player.csproj" />
+  <Project Path="UMA2.Content.Player.csproj" />
   <Project Path="UMA.HairCards.Runtime.Player.csproj" />
   <Project Path="UMA.SRP.SkyCar.Samples.Player.csproj" />
   <Project Path="Assembly-CSharp.Player.csproj" />

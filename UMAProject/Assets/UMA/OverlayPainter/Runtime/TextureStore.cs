@@ -2066,8 +2066,13 @@ namespace UMA.TexturePaint
             float referenceStrength = NormalControlReferenceStrength;
             bool settingsChanged = !Mathf.Approximately(effectiveNormalStrength, referenceStrength) ||
                 effectiveNormalRadius != normalControlRadius || effectiveNormalInvert != normalControlInvert;
-            if (effectiveNormal != null && effectiveNormalRevision == normalInputRevision &&
-                !settingsChanged) return dirtyRect;
+            // A deferred stroke composites every dirty tile before binding previews.
+            // All subsequent tile binds therefore share one input revision; updating
+            // the first tile does not make the remaining tiles current. Only reuse
+            // the revision cache when the caller has not supplied a dirty region.
+            bool hasDirtyRegion = dirtyRect.width > 0 && dirtyRect.height > 0;
+            if (!hasDirtyRegion && effectiveNormal != null &&
+                effectiveNormalRevision == normalInputRevision && !settingsChanged) return dirtyRect;
             bool fullUpdate = settingsChanged;
             if (effectiveNormal == null || effectiveNormal.width != normal.PreviewTexture.width ||
                 effectiveNormal.height != normal.PreviewTexture.height || effectiveNormal.format != normal.format)

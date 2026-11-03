@@ -32,6 +32,7 @@ namespace UMA.Dynamics.Editors
                 inspectorView.Field(serializedObject,
                     "UpdateTransformAfterRagdoll", "Follow Hips On Recovery");
             }
+            UMAPhysicsAvatarEditor.DrawRagdollRestSettings(serializedObject, inspectorView);
             using (inspectorView.Section("Physics elements",
                 "Physics Elements define the bones, masses, colliders and joint constraints installed by this slot. Keep the root element and its descendants consistent with the target race's skeleton names."))
             {

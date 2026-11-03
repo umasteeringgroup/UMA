@@ -24,6 +24,7 @@ namespace UMA.Dynamics.Examples
         float impactEndTime = 0;
         int hits = 0;
         Rigidbody impactTarget = null;
+        UMAPhysicsAvatar impactAvatar;
         Vector3 impact;
 
         public Camera currentCamera;
@@ -118,6 +119,7 @@ namespace UMA.Dynamics.Examples
                     }
 
                     impactTarget = hit.rigidbody;
+                    impactAvatar = player;
                     impact = ray.direction * 2.0f;
                     impactEndTime = Time.time + 0.1f;
                 }
@@ -154,7 +156,12 @@ namespace UMA.Dynamics.Examples
         private void Update()
         {
             if (Time.time < impactEndTime && impactTarget != null)
-                impactTarget.AddForce(impact, ForceMode.VelocityChange);
+            {
+                if (impactAvatar != null)
+                    impactAvatar.WakeRagdoll();
+                if (!impactTarget.isKinematic)
+                    impactTarget.AddForce(impact, ForceMode.VelocityChange);
+            }
         }
 
         // -------------------------------
