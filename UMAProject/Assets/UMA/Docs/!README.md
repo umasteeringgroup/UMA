@@ -4,6 +4,10 @@ UMA 3 is an open-source character creation and customization system for Unity. I
 
 UMA can be used for player characters, crowds, character creators, modular NPCs, and runtime customization. Its authoring tools support artists and technical artists while its runtime systems handle mesh generation, texture compositing, wardrobe changes, DNA-driven shapes, LOD, and asset loading.
 
+## Current release
+
+**UMA 3.1f5 (package version 3.1.5)** supports **Unity 6.3 and newer**. For the update from 3.1f3 / 3.1.3, use the [What's New overview](!WhatsNewInUMA3.md#uma-31f5--changes-since-31f3) and [complete release changelog](../CHANGELOG.md#31f5-package-version-315). Feature guides below describe the current workflows; the changelog owns the version-by-version history.
+
 ## Start Here
 
 New and returning users should begin with these two guides:
@@ -60,6 +64,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Overlay Painter Generators and Filters](../OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md)
 - [Texture Utilities](TextureUtilities.md)
 - [Weight Touchup](WeightTouchup.md)
+- [Normal Viewer Repair](NormalViewerRepair.md) — scan, preview, and repair normals across slot boundaries.
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md)
 - [Examine Wearables](ExamineWearables.md)
 - [UMA Materials](UMAMaterial.md)
@@ -87,6 +92,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Random Avatars](RandomAvatar.md)
 - [Bone Animators](BoneAnimators.md)
 - [Dynamic Expression Player](DynamicExpressionPlayer.md)
+- [Ragdoll rest](../Core/StandardAssets/Extensions/UMAPhysics/README.md) — freeze settled ragdolls and wake them before new forces.
 
 ### Editor workflow
 

@@ -2,6 +2,10 @@
 
 UMA 3 is an open-source runtime character generation, customization, authoring, and texture-painting system for Unity 6.3 and newer.
 
+## Current release: UMA 3.1f5 / 3.1.5
+
+Updating from **3.1f3 / 3.1.3**? Read [What's New](Docs/!WhatsNewInUMA3.md#uma-31f5--changes-since-31f3) for the workflow overview and the [complete changelog](CHANGELOG.md#31f5-package-version-315) for features, fixes, and optional plugin changes. The documentation covers recipe and mesh authoring, pose tools, generation/animation, ragdoll rest, installation, shading, and sample content in one release record.
+
 ## Installation
 
 Install UMA Core through Package Manager using the published package or staged Core folder. Then use **UMA > Welcome to UMA > Install / Update UMA Packages** to install the matching UMA URP or HDRP support and import the matching `UMA3Content` archive. Legacy UMA 2 content is available from **Welcome > Plugins > UMA2Compatibility**.

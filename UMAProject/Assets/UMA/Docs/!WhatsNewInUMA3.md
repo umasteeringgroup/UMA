@@ -1,11 +1,26 @@
 # What's New in UMA 3
 
-## UMA 3.1f5 additions
+## UMA 3.1f5 — changes since 3.1f3
 
-- **Configure UMA:** open it from **UMA > Welcome to UMA** to choose Maximum Speed or Maximum Fidelity. Speed keeps compatible Alpha Clip hair passes and backs up the original assignments; Fidelity restores them. Both presets automatically request editor-avatar rebuilds. The active Welcome page stays highlighted. See [UMA Generator Setup](UMAGeneratorSetup.md) for the settings changed, separate runtime/editor atlas sizes, and override behavior.
-- **Faster atlas fitting:** Best Fit Square uses direct layouts for single regions, pairs, and equal tiles. Multiple Heuristics retains its winning layout and avoids redundant packing work. Atlas edges stay within bounds, with shared regions aligned. The [fitting guide](UMAGeneratorSetup.md) explains the quality and CPU tradeoffs.
-- **Shared-color clipboard:** copy all channels and material parameters from the avatar's Edit Shared Color dialog without copying its name. Paste into an existing Shared Color Table entry or create a new one. Advanced View can copy checked colors by name and update matching entries or add missing ones. See [Dynamic Character Avatar](DynamicCharacterAvatar.md).
-- **Editor fixes:** color checkboxes can be selected in the standard Shared Color Table view; UMAMaterial Inspect buttons no longer repeatedly open windows; unresolved AssetItem type errors include JSON diagnostic data.
+Package version **3.1.5**, for **Unity 6.3 and newer**. This overview covers the update from the `v3.1f3` release (package version 3.1.3). The [3.1.5 changelog](../CHANGELOG.md#31f5-package-version-315) is the complete change list; earlier additions remain in their original sections below.
+
+### Authoring and character customization
+
+- **Recipe editing:** indexed slot/overlay lookup, shaded overlay previews, readable JSON inspection, wardrobe display-name cleanup, race color palettes, and improved DNA/wardrobe controls. **Convert slot to placeholder** is now near the top of the slot editor and works for shared-overlay slots. The [recipe and character changes](../CHANGELOG.md#recipe-and-character-editing) also cover logical asset-name fixes and shared-color copy/paste.
+- **Mesh Hide LODs:** paint and retain drafts at each level, recalculate masks from LOD 0 with a chosen matching policy, and save all edited levels together. Read the [Mesh Hide workflow](MeshHideAssets.md).
+- **Pose authoring:** named bone groups, direct race T-pose editing with a temporary preview, and a clear-pose-list action. Start with [Pose Tools](PoseTools.md), then follow the [Builder](BonePoseBuilder.md) or [Editor](BonePoseEditor.md) artist guide.
+- **Mesh and texture repair:** compare/fix normals along slot boundaries, including race-baked slots; preserve imported skeleton roots; and batch-limit texture import sizes without changing source images. See [Normal Viewer Repair](NormalViewerRepair.md) and [Texture Utilities](TextureUtilities.md).
+
+### Runtime, setup, and shipped content
+
+- **Generation and animation:** faster atlas fitting, less repeated preparation and bone-remapping work, corrected renderer/Animator handoffs, balanced wardrobe DNA overrides, and transient-resource cleanup. The random-character sample adds interactive timing/combiner controls alongside expanded Profiler markers. See [generation changes](../CHANGELOG.md#generation-animation-and-physics).
+- **Ragdoll rest:** settled ragdolls can freeze their simulation and be explicitly woken before another impact. The [physics README](../Core/StandardAssets/Extensions/UMAPhysics/README.md) documents tolerances and custom-force handling.
+- **Setup and release tooling:** Configure UMA presets, Reinstall All Plugins, safer package discovery/recovery, pipeline-specific exports, reviewable scan repairs, and broader recipe validation. See [installation and validation changes](../CHANGELOG.md#installation-configuration-and-validation).
+- **Skin and character content:** material-wide metallic control for URP Realistic Skin, Detailed/Teen Face recipes, and consolidated eyebrow assets. See [shading and content changes](../CHANGELOG.md#shading-content-and-documentation).
+
+### Optional Overlay Painter
+
+The matching plugin adds signed **VDM Relief** for Projection/Path Normal Control, inverted mask paste, grouped-UDIM material editing, and tile-update fixes. VDM changes shading, not mesh geometry. See [optional painter changes](../CHANGELOG.md#optional-overlay-painter-updates); install its separate Examples and Tests companions for sample content and validation.
 
 ## UMA 3.1f3 additions
 

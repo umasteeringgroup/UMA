@@ -1,5 +1,7 @@
 # Ragdoll rest
 
+Introduced in **UMA 3.1f5 / 3.1.5**. This guide covers the physics changes since 3.1f3; the [complete release changelog](../../../../CHANGELOG.md#31f5-package-version-315) covers the other systems.
+
 `UMAPhysicsAvatar` automatically freezes settled ragdolls. Configure **Ragdoll rest**
 on the Physics Avatar, or on the Physics Slot Definition that creates it.
 

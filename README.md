@@ -2,6 +2,12 @@
 
 Unity Multipurpose Avatar System, or UMA for short, is a free character creation and modification system with lots of cool features. UMA was designed with flexibility in mind, so although it's primary purpose is for working with humanoid characters, its systems can be adapted to work with any model you like. So if you want to create modifiable, optimised models for use in your games. UMA is the place to start. As a community project UMA is always being improved. Although the best efforts are made to keep this wiki up to date, it relies on the spare time of helpful individuals to maintain. If you want more help or feel like chipping in then get involved with one of the community links below.
 
+## Current release: UMA 3.1f5 / 3.1.5
+
+UMA supports **Unity 6.3 and newer**. For everything changed since **3.1f3 / 3.1.3**, start with [What's New](UMAProject/Assets/UMA/Docs/!WhatsNewInUMA3.md#uma-31f5--changes-since-31f3) and the [complete changelog](UMAProject/Assets/UMA/CHANGELOG.md#31f5-package-version-315).
+
+Use the [installation README](UMAProject/Assets/UMA/README.md) to set up Core and matching content/plugin packages, and the [documentation index](UMAProject/Assets/UMA/Docs/!README.md) for current authoring and runtime guides.
+
 License:  MIT
 
 <table>

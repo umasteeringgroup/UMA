@@ -17,6 +17,10 @@ Alternatively, start with a matching Material/UMAMaterial pair in `Examples`:
 
 The example materials are **atlas templates**. UMA supplies the actual character textures when building its atlas; they are not pre-baked face textures. The sample pore detail uses the existing `SkinDetail_HDRPStyle` texture.
 
+## Release notes
+
+For **3.1f5 / 3.1.5**, the changes since 3.1f3 are the material-wide Metallic control described below and the expanded 0–2 Tint Protection Strength range. The existing realistic-skin lighting model predates this update. See the [release changelog](../../../CHANGELOG.md#shading-content-and-documentation) for versioned details.
+
 ## What changed
 
 The previous graph mixes a main-light-dependent effect into its base color. This shader keeps the albedo independent of lighting and evaluates its diffusion approximation and reflections for each pixel light.

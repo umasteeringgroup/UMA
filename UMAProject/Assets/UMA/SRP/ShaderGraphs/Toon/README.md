@@ -5,6 +5,10 @@ Two editable graphs support **Unity 6.3 / Shader Graph 17.3**, with both **URP a
 - **UMA/Toon/UMA3_Toon**: toon surface, normal mapping, color grading and ink patterns.
 - **UMA/Toon/UMA3_ToonOutline**: outline drawn as an expanded backface shell.
 
+## Package exports in UMA 3.1f5
+
+The source graphs retain both render-pipeline targets. Starting with this release, the SRP package builder writes pipeline-specific copies containing only the selected target, preserving the source graphs. See the [installation/export release notes](../../../CHANGELOG.md#installation-configuration-and-validation) for the changes since 3.1f3. Existing toon controls below are unchanged.
+
 ## Use with UMA
 
 Duplicate `UMA3_Toon_UMAMaterial.asset` and the two example Materials before making character-specific changes. Assign the toon Material as the main Material and the outline Material as the second pass. The supplied UMAMaterial has both its default and HDRP references configured.
@@ -41,7 +45,7 @@ The shell follows mesh normals. Smooth normals produce continuous outlines; spli
 
 ## Ink patterns
 
-**Crosshatch Strength** and **Halftone Strength** are independent 0–1 controls. Both default to zero and can be combined. Pattern coverage increases in darker lighting. **Ink Color** sets their color.
+**Crosshatch Strength** and **Halftone Strength** are independent 0â€“1 controls. Both default to zero and can be combined. Pattern coverage increases in darker lighting. **Ink Color** sets their color.
 
 - **Pattern Scale**: repetition density.
 - **Pattern Angle (Degrees)**: rotates the pattern.
@@ -57,7 +61,7 @@ Grading is applied after toon lighting and before ink:
 1. **Hue Shift (Turns)**: -0.5 to 0.5; zero preserves the original hue.
 2. **Saturation**: 0 is grayscale; 1 preserves saturation; larger values increase it.
 3. **Contrast**: centered on 0.5; 1 preserves contrast.
-4. **Posterization**: 0 or 1 disables it; 2 and above selects the number of steps per RGB channel. Enabled posterization clamps to 0–1 before quantization.
+4. **Posterization**: 0 or 1 disables it; 2 and above selects the number of steps per RGB channel. Enabled posterization clamps to 0â€“1 before quantization.
 
 The neutral defaults are hue 0, saturation 1, contrast 1 and posterization 0.
 
