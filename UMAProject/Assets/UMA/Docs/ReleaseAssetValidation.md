@@ -1,6 +1,6 @@
 # Release Asset Validation
 
-UMA Release Asset Validation checks whether the optional UMA3 and UMA2 content folders can be exported as independent packages without missing or forbidden project references. It writes a structured JSON report and provides controlled repair actions.
+UMA Release Asset Validation checks package dependencies and recipe slot/overlay availability. It verifies whether the optional UMA3 and UMA2 content folders can be exported without missing or forbidden project references, and includes recipe failures in the same JSON report and window verdict.
 
 Open it from `UMA > Testing > Release Asset Validation...`.
 
@@ -13,6 +13,18 @@ The validator applies these boundaries:
 - Unity built-in resources and Package Manager assets are treated as external prerequisites rather than exportable project content.
 
 The release scan includes T-poses, races, slots, overlays, textures, expression sets and groups, bone poses, and UMA DNA-related assets. It checks Unity dependency closure, serialized GUIDs, meta-file references, and loaded serialized object references. Missing scripts and unresolved GUIDs are also reported when their folder context identifies them as release data.
+
+## Recipe Checks
+
+The recipe pass checks all packed recipes in the Global Library and recursively discovers recipes under `Assets/UMA/Content`, `Assets/UMA/UMA3`, and `Assets/UMA2`. Recipes found on disk but absent from the library are reported and still checked. Indexed recipes found by the folder scan are checked once.
+
+The scan includes both saved library entries and the active name lookup. When two indexed recipes share a lookup name, the library can display both while name lookup selects only one. The other recipe is reported as `Recipe name collision`, with its own path and the selected recipe's path; it is not reported as missing from the index. Both recipes' contents are checked. Use `Highlight Source` and `Highlight Referenced` to inspect the pair. Moving or copying the assets does not resolve the shared name, so those repair actions are disabled for this issue.
+
+Each recipe is loaded and unpacked to its stored recipe data. For recipe versions 1, 2, and 3, named slots and overlays must have index entries whose assets can actually load. Stale entries do not pass just because their names are present. Version 3 placeholder slots intentionally need no backing slot asset; their overlays are still checked. Validation does not repair the library or substitute similar names.
+
+Recipe load errors, missing index entries, and unavailable slots/overlays appear in the issue grid and JSON with the owning recipe and missing name. For example, a recipe referencing an unavailable `M_Ranger 2 Scarf` fails the overall release verdict. Restore the intended asset, correct the recipe, or index an existing asset as appropriate. Moving an unrelated asset does not repair a name reference.
+
+The standalone `UMA Release Tests/Validate Recipes` test runs the same recipe checks under the `Recipe Validation` category. The release window runs them as part of `Asset Validation`, before writing its report, so its success status includes recipe failures.
 
 ## Run and Review
 
@@ -103,6 +115,7 @@ After any repair, rerun validation. A successful move can reveal a deeper depend
 - Copy can retarget only references the repair utility knows how to write safely.
 - Moving a dependency is project-wide because the GUID is preserved.
 - Validation proves package-boundary consistency, not that every asset generates a visually correct character.
+- Recipe checks validate stored slot/overlay availability; they do not build characters or comprehensively validate race compatibility, DNA, materials, textures, or shared colors.
 - Auto deliberately favors doing nothing when ownership is ambiguous.
 
 ## Troubleshooting

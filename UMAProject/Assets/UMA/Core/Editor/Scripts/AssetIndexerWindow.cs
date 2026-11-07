@@ -431,7 +431,7 @@ namespace UMA.Controls
         private bool _slotLodOptionsFoldout = true;
 
 #if UNITY_6000_2_OR_NEWER
-		private MeshHideAsset.TriangleHideStrategy _fixMhaCopyLodMode = MeshHideAsset.TriangleHideStrategy.Conservative;
+		private MeshHideAsset.TriangleHideStrategy _fixMhaCopyLodMode = MeshHideAsset.TriangleHideStrategy.Strict;
 		private int _fixMhaCopyPolicy = 0; // 0=Replace, 1=Missing
 		private static readonly GUIContent[] _fixMhaCopyPolicyOptions =
 		{
@@ -3586,6 +3586,13 @@ namespace UMA.Controls
                 bool replace = (_fixMhaCopyPolicy == 0);
                 bool onlyMissing = (_fixMhaCopyPolicy != 0);
 
+                Undo.RecordObject(mha, "Generate Mesh Hide LODs");
+                if (mha.LODGenerationStrategy != _fixMhaCopyLodMode)
+                {
+                    mha.LODGenerationStrategy = _fixMhaCopyLodMode;
+                    modified = true;
+                }
+
                 // Ensure base selection exists (legacy assets might have never been initialized)
                 if (mha.triangleFlags == null || mha.triangleFlags.Length == 0)
                 {
@@ -3612,9 +3619,9 @@ namespace UMA.Controls
                 if (modified)
                 {
                     EditorUtility.SetDirty(mha);
+                    AssetDatabase.SaveAssetIfDirty(mha);
                 }
             }
-            AssetDatabase.SaveAssets();
         }
 
         private DynamicCharacterAvatar _fromCharacter;

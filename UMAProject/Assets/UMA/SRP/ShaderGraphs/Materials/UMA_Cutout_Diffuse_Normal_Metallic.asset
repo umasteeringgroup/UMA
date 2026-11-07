@@ -17,6 +17,11 @@ MonoBehaviour:
   _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
+  _hasSpeedMaterialBackup: 0
+  _speedBackupMaterial: {fileID: 0}
+  _speedBackupSecondPass: {fileID: 0}
+  _speedBackupHDRPMaterial: {fileID: 0}
+  _speedBackupHDRPSecondPass: {fileID: 0}
   materialType: 1
   channels:
   - channelType: 4
@@ -116,5 +121,5 @@ MonoBehaviour:
   shaderKeywords: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
-  MaterialName: UMA_Mat_Cutout_Diffuse_Normal_Metallic
-  ShaderName: Shader Graphs/UMA3_Lit(Metal)
+  MaterialName: 
+  ShaderName: 

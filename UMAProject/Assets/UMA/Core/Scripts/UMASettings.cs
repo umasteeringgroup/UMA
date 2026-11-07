@@ -37,13 +37,8 @@ namespace UMA
         [SerializeField]
         public string KeepTag = "UMAKeepChain";
 
-        // Runtime toggle for MeshAPI combiner (Unity 2022.2+)
-        [Tooltip("Enable the MeshData API based combiner on Unity 2022.2+. Falls back to legacy combiner when disabled or on older Unity.")]
+        [Tooltip("Use the MeshData API based combiner. When disabled, UMA uses the managed combiner.")]
         public bool useMeshAPICombiner = false;
-		[Tooltip("Enable detailed UMA memory usage debug logs.")]
-		public bool DebugMemoryUsage = false;
-		[Tooltip("Enable decal callbacks on UMA characters.")]
-		public bool DisableDecalCallbacks = false;
 
 #if UNITY_EDITOR
         //public const string customSettingsPath = "Assets/UMA/InternalDataStore/InGame/Resources/UMASettings.asset";
@@ -60,19 +55,11 @@ namespace UMA
         public bool autoRepairIndex = false;
         public bool showIndexedTypes = true;
         public bool showUnindexedTypes = false;
-        public bool postProcessAllAssets = false;
-
-        public bool useBurstCompiler = false;
-        public bool useAddressables = false;
-        public bool enableGLTFExport = false;
-        public bool alwaysGetAddressables = true;
         public bool ignoreBackupFolders = false;
 
-        public bool addDNAOnRaceChange = true;
         public bool addrUseSharedGroup = true;
-        public string addrSharedGroupName = "UMAShared";
         public string addrDefaultLabel = "UMA_Default";
-        public bool addrStripMaterials = true; //VES fixed missing r in addStripMaterials
+        public bool addrStripMaterials = true;
         public bool addrStripTextures = false;
         public bool addrIncludeRecipes = false;
         public bool addrIncludeOther = false;
@@ -103,12 +90,6 @@ namespace UMA
         public string AssetStoreURL;
         public string GithubURL;
         public string YoutubeURL;
-        [Header("Shader Folder")]
-        [Tooltip("The UMA-relative folder containing the shader packages used to refresh UMA shaders.")]
-        public string ShaderFolder = UMAPathUtility.ShaderPackagesRelativePath;
-        [Header("Default UMA Folder")]
-        [Tooltip("Resolved UMA installation asset path. UMA may be below Assets or installed as a UPM package.")]
-        public string UMAFolder = "Assets/UMA";
         // Serialized compatibility fields. Overlay Painter migrates these once into its own settings asset.
         [HideInInspector]
         [Tooltip("Open Overlay Painter in a dedicated floating workspace with Layers and Brush " +
@@ -150,7 +131,6 @@ namespace UMA
             settings.WikiURL = "https://github.com/umasteeringgroup/UMA/wiki";
             settings.ForumURL = "https://discussions.unity.com/t/uma-unity-multipurpose-avatar-on-the-asset-store-part-2/1487160";
             settings.AssetStoreURL = "https://assetstore.unity.com/packages/3d/characters/uma-2-35611";
-            settings.ShaderFolder = UMAPathUtility.ShaderPackagesRelativePath;
             // Default to legacy combiner to avoid surprises
             settings.useMeshAPICombiner = false;
             UpdateAlwaysOverrides(settings); //VES added
@@ -297,26 +277,6 @@ namespace UMA
             if (string.Equals(target, source, StringComparison.Ordinal))
                 return false;
             target = source;
-            return true;
-        }
-
-        private static bool UpgradeLegacyShaderFolder(UMASettings settings)
-        {
-            if (settings == null) return false;
-
-            string shaderFolder = UMAPathUtility.Normalize(
-                settings.ShaderFolder).Trim('/');
-            bool usesLegacyPath = string.IsNullOrEmpty(shaderFolder) ||
-                shaderFolder.Equals("Core/ShaderPackages",
-                    StringComparison.OrdinalIgnoreCase) ||
-                shaderFolder.Equals("UMA/Core/ShaderPackages",
-                    StringComparison.OrdinalIgnoreCase) ||
-                shaderFolder.Equals(
-                    UMAPathUtility.LegacyInstallRoot + "/Core/ShaderPackages",
-                    StringComparison.OrdinalIgnoreCase);
-            if (!usesLegacyPath) return false;
-
-            settings.ShaderFolder = UMAPathUtility.ShaderPackagesRelativePath;
             return true;
         }
 
@@ -516,7 +476,6 @@ namespace UMA
 
                 settings = Instantiate(installDefault);
                 settings.name = "UMAProjectSettings";
-                settings.UMAFolder = installRoot;
                 settings.texturePaintRecoveryFolder =
                     UMAPathUtility.OverlayPainterRecoveryRoot;
                 UpdateAlwaysOverrides(settings); //VES added
@@ -537,16 +496,8 @@ namespace UMA
             changed |= SynchronizeInstallMetadata(settings, installDefault);
             changed |= RestoreMissingDefaultReferences(
                 settings, installDefault);
-            changed |= UpgradeLegacyShaderFolder(settings);
             if (packageInstallation)
             {
-                if (!string.Equals(settings.UMAFolder,
-                    installRoot,
-                    StringComparison.OrdinalIgnoreCase))
-                {
-                    settings.UMAFolder = installRoot;
-                    changed = true;
-                }
                 if (string.IsNullOrWhiteSpace(
                         settings.texturePaintRecoveryFolder) ||
                     settings.texturePaintRecoveryFolder.StartsWith(
@@ -555,15 +506,6 @@ namespace UMA
                 {
                     settings.texturePaintRecoveryFolder =
                         UMAPathUtility.OverlayPainterRecoveryRoot;
-                    changed = true;
-                }
-                if (!string.IsNullOrEmpty(settings.ShaderFolder) &&
-                    settings.ShaderFolder.StartsWith(
-                        UMAPathUtility.LegacyInstallRoot + "/",
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    settings.ShaderFolder = settings.ShaderFolder.Substring(
-                        UMAPathUtility.LegacyInstallRoot.Length + 1);
                     changed = true;
                 }
             }
@@ -630,13 +572,6 @@ namespace UMA
 #endif
 #endif
         }
-
-		public static bool DisplayDebugMemoryUsage {
-			get {
-				var settings = GetOrCreateSettings();
-				return settings.DebugMemoryUsage;
-			}
-		}
 
 #if UNITY_EDITOR
         public static SerializedObject GetSerializedSettings()
@@ -737,15 +672,25 @@ namespace UMA
         public static bool AutoRepairIndex { get { var settings = GetOrCreateSettings(); return settings.autoRepairIndex; } }
         public static bool ShowIndexedTypes { get { var settings = GetOrCreateSettings(); return settings.showIndexedTypes; } }
         public static bool ShowUnindexedTypes { get { var settings = GetOrCreateSettings(); return settings.showUnindexedTypes; } }
-        public static bool PostProcessAllAssets { get { var settings = GetOrCreateSettings(); return settings.postProcessAllAssets; } }
-        public static bool UseBurstCompiler { get { var settings = GetOrCreateSettings(); return settings.useBurstCompiler; } }
-        public static bool UseAddressables { get { var settings = GetOrCreateSettings(); return settings.useAddressables; } }
-        public static bool EnableGLTFExport { get { var settings = GetOrCreateSettings(); return settings.enableGLTFExport; } }
-        public static bool AlwaysGetAddressables { get { var settings = GetOrCreateSettings(); return settings.alwaysGetAddressables; } }
+        // Build options come from the compiled project symbols, never serialized copies.
+#if UMA_BURSTCOMPILE
+        public static bool UseBurstCompiler => true;
+#else
+        public static bool UseBurstCompiler => false;
+#endif
+#if UMA_ADDRESSABLES
+        public static bool UseAddressables => true;
+#else
+        public static bool UseAddressables => false;
+#endif
+#if UMA_ALWAYSGETADDR_NO_PROD
+        public static bool AlwaysGetAddressables => true;
+#else
+        public static bool AlwaysGetAddressables => false;
+#endif
         public static bool AddrUseSharedGroup { get { var settings = GetOrCreateSettings(); return settings.addrUseSharedGroup; } }
-        public static string AddrSharedGroupName { get { var settings = GetOrCreateSettings(); return settings.addrSharedGroupName; } }
         public static string AddrDefaultLabel { get { var settings = GetOrCreateSettings(); return settings.addrDefaultLabel; } }
-        public static bool AddrStripMaterials { get { var settings = GetOrCreateSettings(); return settings.addrStripMaterials; } } //VES fixed missing r in AddStripMaterials
+        public static bool AddrStripMaterials { get { var settings = GetOrCreateSettings(); return settings.addrStripMaterials; } }
         public static bool AddrStripTextures { get { var settings = GetOrCreateSettings(); return settings.addrStripTextures; } }
         public static bool AddrStripUVAttachedShaders { get { var settings = GetOrCreateSettings(); return settings.addrStripUVAttachedShaders; } }
         public static bool AddrIncludeRecipes { get { var settings = GetOrCreateSettings(); return settings.addrIncludeRecipes; } }

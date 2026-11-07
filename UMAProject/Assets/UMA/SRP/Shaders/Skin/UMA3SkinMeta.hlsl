@@ -34,7 +34,10 @@ half4 SkinMetaFragment(SkinMetaVaryings v) : SV_Target
 {
     SkinData skin = SampleSkin(v.uv);
     MetaInput meta = (MetaInput)0;
-    meta.Albedo = skin.surface.albedo * v.color.rgb * (1 - skin.surface.specular.r);
+    skin.surface.albedo *= v.color.rgb;
+    BRDFData brdf;
+    InitializeSkinBRDFData(skin.surface, brdf);
+    meta.Albedo = brdf.diffuse;
     #ifdef EDITOR_VISUALIZATION
     meta.VizUV = v.vizUV;
     meta.LightCoord = v.lightCoord;

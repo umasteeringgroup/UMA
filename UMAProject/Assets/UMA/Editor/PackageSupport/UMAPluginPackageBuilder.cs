@@ -41,6 +41,15 @@ namespace UMA.Editors.PackageSupport
             !File.Exists("Library/UMA/ContentInstaller/pending.json") &&
             !File.Exists("Library/UMA/PluginRemoval/pending.json");
 
+        [MenuItem("UMA/Build/Open plugin folder", priority = 101)]
+        private static void OpenPluginFolder()
+        {
+            EditorUtility.RevealInFinder(UMAPluginPackageFiles.DefaultDirectory);
+        }
+
+        [MenuItem("UMA/Build/Open plugin folder", true)]
+        private static bool CanOpenPluginFolder() => Directory.Exists(UMAPluginPackageFiles.DefaultDirectory);
+
         public static string[] BuildAll(string destination)
         {
             var results = BuildAllWithResults(destination);
@@ -198,7 +207,7 @@ namespace UMA.Editors.PackageSupport
             }
         }
 
-        private static void PublishValidatedArchive(string temporary, string target)
+        internal static void PublishValidatedArchive(string temporary, string target)
         {
             string previous = target + "." + Guid.NewGuid().ToString("N") + ".previous";
             bool movedPrevious = false;
@@ -307,13 +316,13 @@ namespace UMA.Editors.PackageSupport
             return BitConverter.ToString(sha.ComputeHash(file)).Replace("-", "").ToLowerInvariant();
         }
 
-        private static void WriteText(Stream target, string name, string value)
+        internal static void WriteText(Stream target, string name, string value)
         {
             using var source = new MemoryStream(Encoding.UTF8.GetBytes(value));
             WriteEntry(target, name, source);
         }
 
-        private static void WriteFile(Stream target, string name, string path)
+        internal static void WriteFile(Stream target, string name, string path)
         {
             using var source = File.OpenRead(path);
             WriteEntry(target, name, source);

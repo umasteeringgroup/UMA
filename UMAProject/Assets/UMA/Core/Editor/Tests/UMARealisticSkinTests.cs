@@ -75,6 +75,28 @@ namespace UMA.Editors.Tests
         }
 
         [Test]
+        public void MetallicIsAScalarWithSkinDefaultAndSurvivesMaterialCopy()
+        {
+            var shader = Shader.Find(UMARealisticSkinUtility.ShaderName);
+            Assert.That(shader, Is.Not.Null);
+            int property = shader.FindPropertyIndex("_Metallic");
+            Assert.That(property, Is.GreaterThanOrEqualTo(0));
+            Assert.That(shader.GetPropertyType(property), Is.EqualTo(ShaderPropertyType.Range));
+            Assert.That(shader.GetPropertyRangeLimits(property), Is.EqualTo(new Vector2(0, 1)));
+            var source = new Material(shader);
+            Material copy = null;
+            try
+            {
+                Assert.That(source.GetFloat("_Metallic"), Is.Zero);
+                source.SetFloat("_Metallic", .73f);
+                copy = UMARealisticSkinUtility.CreateMaterialCopy(source);
+                Assert.That(copy.GetFloat("_Metallic"), Is.EqualTo(.73f));
+                Assert.That(source.GetFloat("_Metallic"), Is.EqualTo(.73f));
+            }
+            finally { Object.DestroyImmediate(source); Object.DestroyImmediate(copy); }
+        }
+
+        [Test]
         public void CopyRejectsUnrelatedShaders()
         {
             var source=new Material(Shader.Find("Hidden/InternalErrorShader"));

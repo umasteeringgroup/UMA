@@ -14,6 +14,28 @@ namespace UMA.Editors.Tests
             .GetNestedType("PluginInstallBatch", BindingFlags.NonPublic);
 
         [Test]
+        public void ReinstallProcessesEveryInstalledPackageWithOneApprovalAcrossReloads()
+        {
+            UMAContentKind[] kinds = UMAContentCatalog.PluginDisplayOrder.ToArray();
+            object batch = CreateBatch(kinds);
+            BatchType.GetField("reinstall").SetValue(batch, true);
+            BatchType.GetField("confirmed").SetValue(batch, true);
+            for (int i = 0; i < kinds.Length; i++)
+            {
+                // The batch resumes after every script import, including its approval.
+                batch = JsonUtility.FromJson(JsonUtility.ToJson(batch), BatchType);
+                Assert.That(Advance(batch, false, _ => UMAContentInstallationState.Installed), Is.EqualTo("Install"));
+                Assert.That(Index(batch), Is.EqualTo(i));
+                Assert.That(Approved(batch, kinds[i]), Is.True);
+                Assert.That(Advance(batch, true, _ => throw new AssertionException("Wait for imports.")), Is.EqualTo("Wait"));
+            }
+            Assert.That(Advance(batch, false, _ => UMAContentInstallationState.Installed), Is.EqualTo("Complete"));
+            Assert.That(Report(batch), Does.Contain("Reinstall all plugins"));
+            Assert.That(Report(batch), Does.Not.Contain("Already installed"));
+            Assert.That(Report(batch), Does.Not.Contain("Not attempted"));
+        }
+
+        [Test]
         public void BatchSkipsInstalledPackagesAndStartsTheMissingParentBeforeItsCompanions()
         {
             UMAContentKind[] kinds = UMAContentCatalog.PluginDisplayOrder.ToArray();

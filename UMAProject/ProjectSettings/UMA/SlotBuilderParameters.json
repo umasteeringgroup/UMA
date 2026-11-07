@@ -9,7 +9,7 @@
     "calcTangents": false,
     "clearNormals": false,
     "clearTangents": false,
-    "udimAdjustment": true,
+    "udimAdjustment": false,
     "udimTilesU": 10,
     "udimTilesV": 10,
     "nameAfterMaterial": false,
@@ -30,7 +30,7 @@
     "findAndUpdateExistingSlot": true,
     "Tags": [],
     "slotMaterialPath": "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_URP_HAIR.asset",
-    "slotFolderPath": "Assets/temp",
+    "slotFolderPath": "",
     "generateSlotLods": true,
     "useUnityLodGenerator": true,
     "slotLodMaxLevels": 4,
@@ -46,7 +46,7 @@
     "filterIgnoreMeshesContaining": "UMA30",
     "filterOnlyIncludeMeshesEnabled": false,
     "filterOnlyIncludeMeshesContaining": "robe",
-    "lastDroppedFbxPath": "Assets/temp/UMA_3_Clothing_Hair_selected.fbx",
+    "lastDroppedFbxPath": "Assets/temp/Infant/Infant.fbx",
     "pendingSmrsCompactView": true,
     "pendingSmrsFilterEnabled": false
 }

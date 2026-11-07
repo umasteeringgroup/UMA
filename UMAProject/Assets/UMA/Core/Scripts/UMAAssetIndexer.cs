@@ -1466,8 +1466,17 @@ namespace UMA
 
             foreach (var item in SerializedItems)
             {
-                if (item != null && item._Type != null)
+                if (item != null)
                 {
+                    // Need to skip invalid items. Must do before checking _Type.
+                    if (item.isInvalid)
+                    {
+                        continue;
+                    }
+                    if (item._Type == null)
+                    {
+                        continue;
+                    }
                     if (!TypeLookup.ContainsKey(item._Type))
                     {
 #if UNITY_EDITOR
@@ -1599,7 +1608,8 @@ namespace UMA
                 return;
             }
 
-            GameObject go = GameObject.Instantiate(settings.generatorPrefab);
+            GameObject go = InstantiateGeneratorInLoadedScene(settings.generatorPrefab);
+            if (go == null) return;
             go.name = generatorName;
             generator = go.GetComponent<UMAGenerator>();
             /*
@@ -1640,6 +1650,34 @@ namespace UMA
 #endif
             go.SetActive(true);
             ConsolidateInternalGenerators();
+        }
+
+        private static GameObject InstantiateGeneratorInLoadedScene(GameObject prefab)
+        {
+            // Editor utility/preview windows can leave the implicit creation target pointing
+            // at a closed preview scene. Moving the clone afterwards is too late: Unity can
+            // crash in AwakeFromLoad while adding its Transform to that scene.
+            Scene destination = SceneManager.GetActiveScene();
+#if UNITY_EDITOR
+            if (!Application.isPlaying && (!destination.IsValid() || !destination.isLoaded ||
+                EditorSceneManager.IsPreviewScene(destination)))
+            {
+                destination = default;
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    Scene candidate = SceneManager.GetSceneAt(i);
+                    if (!candidate.IsValid() || !candidate.isLoaded || EditorSceneManager.IsPreviewScene(candidate)) continue;
+                    destination = candidate;
+                    break;
+                }
+            }
+#endif
+            if (!destination.IsValid() || !destination.isLoaded)
+            {
+                Debug.LogError("Cannot create the UMA generator without a loaded scene.");
+                return null;
+            }
+            return GameObject.Instantiate(prefab, new InstantiateParameters { scene = destination });
         }
 
 #if UNITY_EDITOR
@@ -3156,6 +3194,7 @@ namespace UMA
 		/// <returns></returns>
 		public T GetAsset<T>(string name, bool recursionGuard = false, bool inStartup = false) where T : UnityEngine.Object
         {
+            using var profile = UMACharacterBuildProfiler.GetAsset.Auto();
 #if UNITY_EDITOR
             bool indexUpdated = false;
             UMASettings settings = UMASettings.GetOrCreateSettings();
@@ -3179,15 +3218,7 @@ namespace UMA
 			}
             if (thisAssetItem != null)
             {
-#if UNITY_EDITOR
-                if (thisAssetItem.Item == null)
-                {
-                    if (settings.alwaysGetAddressables)
-                    {
-                        return thisAssetItem.GetItem<T>();
-                    }
-                }
-#endif
+                // AssetItem.Item applies the UMA_ALWAYSGETADDR_NO_PROD policy in the editor.
                 return (thisAssetItem.Item as T);
             }
             else
@@ -5234,20 +5265,7 @@ namespace UMA
         /// </summary>
         public void AddReferences()
         {
-            // Rebuild the tables
-            for (int i = 0; i < SerializedItems.Count; i++)
-            {
-                AssetItem ai = SerializedItems[i];
-                if (ai.IsAddressable || ai.Ignore)
-                {
-                    ai.FreeReference();
-                }
-                else
-                {
-                    ai.CacheSerializedItem();
-                }
-            }
-            ForceSave();
+            UpdateReferences();
         }
 
         public void UpdateReferences()
@@ -5257,6 +5275,13 @@ namespace UMA
             for (int i = 0; i < SerializedItems.Count; i++)
             {
                 AssetItem ai = SerializedItems[i];
+                // Match DoInitialDictionaryLoad: removed entries can be null or
+                // deserialize as empty inline AssetItems. Neither is an asset to load.
+                if (ai == null || ai.isInvalid)
+                {
+                    continue;
+                }
+
                 if (ai.IsAddressable || ai.Ignore)
                 {
                     ai.FreeReference();
@@ -5281,6 +5306,11 @@ namespace UMA
             for (int i = 0; i < SerializedItems.Count; i++)
             {
                 AssetItem ai = SerializedItems[i];
+                // Removed entries remain null until the index is rebuilt.
+                if (ai == null)
+                {
+                    continue;
+                }
                 ai.FreeReference();
             }
             ForceSave();
@@ -5299,6 +5329,11 @@ namespace UMA
             for (int i = 0; i < SerializedItems.Count; i++)
             {
                 AssetItem ai = SerializedItems[i];
+                // Removed entries remain null until the index is rebuilt.
+                if (ai == null)
+                {
+                    continue;
+                }
                 ai.FreeReference();
             }
             //UpdateSerializedDictionaryItems();

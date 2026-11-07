@@ -58,6 +58,12 @@ namespace UMA
 	            }
 	            sourceIndex++;
 	        }
+			// A normal reference may have no compatible bones, or already use the
+			// same bind poses. In either case there is no geometry to convert.
+			if (boneTransforms.Count == 0)
+			{
+				return;
+			}
 	        dataMesh.bindposes = destDataBindPoses;
 	        var dataWeights = dataMesh.GetAllBoneWeights();
 	        var dataVertices = dataMesh.vertices;
@@ -77,6 +83,7 @@ namespace UMA
 				Vector3 oldN = dataNormals[sourceIndex];
 				Vector3 newN = Vector3.zero;
 				var numberOfBonesForThisVertex = bonesPerVertex[vertIndex];
+				bool vertexNeedsAlignment = false;
 
 				Matrix4x4 temp;
 				// For each vertex, iterate over the array of bones the correct number of times
@@ -87,6 +94,7 @@ namespace UMA
 					{
 						newV += temp.MultiplyPoint(oldV) * boneweight.weight;
 						newN += temp.MultiplyVector(oldN) * boneweight.weight;
+						vertexNeedsAlignment |= boneweight.weight > 0;
 					}
 					else
 					{
@@ -95,8 +103,14 @@ namespace UMA
 					}
 					bonesIndex++;
 				}
-				dataVertices[sourceIndex] = newV;
-				dataNormals[sourceIndex] = newN;
+				// Preserve vertices influenced only by unchanged/unmatched bones.
+				// Re-summing their weights introduces rounding drift even though
+				// no alignment applies.
+				if (vertexNeedsAlignment)
+				{
+					dataVertices[sourceIndex] = newV;
+					dataNormals[sourceIndex] = newN;
+				}
 				sourceIndex++;
 			}
 	        dataMesh.vertices = dataVertices;

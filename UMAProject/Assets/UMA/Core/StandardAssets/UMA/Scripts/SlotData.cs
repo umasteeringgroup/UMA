@@ -15,6 +15,7 @@ namespace UMA
         /// The asset contains the immutable portions of the slot.
         /// </summary>
         public SlotDataAsset asset;
+        [NonSerialized] internal UMARuntimeBakedSlotReference runtimeBakedSlotReference;
 
         /// <summary>
         /// When true, this slot has no backing SlotDataAsset. It exists solely as a wildcard
@@ -241,6 +242,7 @@ namespace UMA
         public SlotData(SlotDataAsset asset)
         {
             this.asset = asset;
+            runtimeBakedSlotReference = UMARuntimeBakedSlotCleanup.Retain(asset);
             if (asset)
             {
                 if (asset.tags == null)

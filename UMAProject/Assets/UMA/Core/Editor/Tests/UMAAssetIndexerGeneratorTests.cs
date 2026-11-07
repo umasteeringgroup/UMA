@@ -4,12 +4,85 @@ using System.Reflection;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace UMA.Editors.Tests
 {
     public sealed class UMAAssetIndexerGeneratorTests
     {
+        [Test]
+        [Category("GeneratorBootstrap")]
+        public void GeneratorPreviewCreationTargetCleanupFollowsActiveScene()
+        {
+            const BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
+            var get = typeof(EditorSceneManager).GetMethod("GetTargetSceneForNewGameObjects", flags);
+            var clear = typeof(EditorSceneManager).GetMethod("ClearTargetSceneForNewGameObjects", flags);
+            Scene original = SceneManager.GetActiveScene();
+            Scene next = default;
+            string path = "Assets/__GeneratorCreationTarget_" + System.Guid.NewGuid().ToString("N") + ".unity";
+            try
+            {
+                clear.Invoke(null, null);
+                GeneratorInstantiationIgnoresEditorPreviewCreationTarget();
+                // Create the disposable scene through Unity serialization. NewScene(Additive)
+                // refuses to run while the Test Runner's untitled scene is open.
+                typeof(EditorSceneManager).GetMethod("CreateSceneAssetInternal", flags)
+                    .Invoke(null, new object[] { path, false });
+                next = EditorSceneManager.OpenScene(path, OpenSceneMode.Additive);
+                Assert.That(SceneManager.SetActiveScene(next), Is.True);
+                Assert.That((Scene)get.Invoke(null, null), Is.EqualTo(next),
+                    "Preview cleanup must restore the active-scene fallback, not install an override to the old scene.");
+            }
+            finally
+            {
+                clear.Invoke(null, null);
+                SceneManager.SetActiveScene(original);
+                if (next.IsValid()) EditorSceneManager.CloseScene(next, true);
+                AssetDatabase.DeleteAsset(path);
+            }
+        }
+
+        [Test]
+        [Category("GeneratorBootstrap")]
+        public void GeneratorInstantiationIgnoresEditorPreviewCreationTarget()
+        {
+            const BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
+            MethodInfo get = typeof(EditorSceneManager).GetMethod("GetTargetSceneForNewGameObjects", flags);
+            MethodInfo set = typeof(EditorSceneManager).GetMethod("SetTargetSceneForNewGameObjects", flags,
+                null, new[] { typeof(Scene) }, null);
+            MethodInfo clear = typeof(EditorSceneManager).GetMethod("ClearTargetSceneForNewGameObjects", flags);
+            Scene previousTarget = (Scene)get.Invoke(null, null);
+            Scene destination = SceneManager.GetActiveScene();
+            GameObject source = CreateGeneratorFixture("Generator Creation Target Test");
+            Scene preview = EditorSceneManager.NewPreviewScene();
+            GameObject clone = null;
+            try
+            {
+                set.Invoke(null, new object[] { preview });
+                clone = (GameObject)typeof(UMAAssetIndexer).GetMethod("InstantiateGeneratorInLoadedScene", flags)
+                    .Invoke(null, new object[] { source });
+                Assert.That(clone, Is.Not.Null);
+                Assert.That(clone.scene, Is.EqualTo(destination),
+                    "The generator must bypass Unity's implicit preview creation target.");
+                clear.Invoke(null, null);
+                EditorSceneManager.ClosePreviewScene(preview);
+                Assert.That(clone != null && clone.scene.IsValid() && clone.scene.isLoaded, Is.True);
+            }
+            finally
+            {
+                clear.Invoke(null, null);
+                if (clone != null) Object.DestroyImmediate(clone);
+                Object.DestroyImmediate(source);
+                if (preview.IsValid()) EditorSceneManager.ClosePreviewScene(preview);
+                // The getter falls back to the active scene when no override exists.
+                // Setting that fallback would pin subsequent tests to this scene.
+                if (previousTarget != destination && previousTarget.IsValid() && previousTarget.isLoaded)
+                    set.Invoke(null, new object[] { previousTarget });
+            }
+        }
+
         [Test]
         [Category("UMA")]
         [Category("Toolbar")]

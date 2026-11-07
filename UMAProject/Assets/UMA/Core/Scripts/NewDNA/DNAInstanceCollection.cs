@@ -175,6 +175,38 @@ namespace UMA
             return dnaGroupInstances;
         }
 
+        // Matches GetDNAByGroup/GetDNA value selection without constructing groups or setters.
+        // Instances use exact names; membership in the current definitions ignores case.
+        // Read both live lists because callers can edit them between builds.
+        internal bool TryGetDefinedValue(string name, out float value)
+        {
+            value = 0f;
+            if (string.IsNullOrEmpty(name) || dnaInstances == null || _DNACollection?.DNAGroups == null)
+                return false;
+
+            foreach (var instance in dnaInstances)
+            {
+                if (instance == null || !string.Equals(instance.Name, name, StringComparison.Ordinal))
+                    continue;
+
+                foreach (var group in _DNACollection.DNAGroups)
+                {
+                    if (group == null || group.dnaList == null)
+                        continue;
+                    foreach (var definition in group.dnaList)
+                    {
+                        if (definition != null && string.Equals(definition.name, name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            value = instance.Value;
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            return false;
+        }
+
         public void ClearAll()
         {
             dnaInstances.Clear();

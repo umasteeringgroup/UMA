@@ -537,14 +537,7 @@ namespace UMA.CharacterSystem
             }
 
 #else
-               List<GameObject> Cleaners = GetRenderers(gameObject);
-               HideAndCleanup(false);
-                for (int i=0;i<Cleaners.Count;i++)
-                {
-                    GameObject go = Cleaners[i];
-                    DestroyImmediate(go);
-                }
-               //ud.umaRoot = null;
+                HideAndCleanup(false);
 #endif
 
                 cacheStates = new Dictionary<string, string>();
@@ -607,6 +600,7 @@ namespace UMA.CharacterSystem
 
         public void InitialStartup()
         {
+            using var profile = UMACharacterBuildProfiler.Startup.Auto();
             if (StartGuard)
             {
                 return;
@@ -693,35 +687,24 @@ namespace UMA.CharacterSystem
            // umaData.markDynamic = markDynamic;
         }
 
-        List<GameObject> GetRenderers(GameObject parent)
+        protected override bool IsRendererObjectProtected(GameObject rendererObject, string ignoreTag)
         {
-            List<GameObject> objs = new List<GameObject>();
-            int transformcount = parent.transform.childCount;
-            for(int i=0;i<transformcount;i++)
-            {
-                Transform t = parent.transform.GetChild(i);
-                if (t.GetComponent<SkinnedMeshRenderer>() != null && !IsFbxRouteRendererObject(t.gameObject))
-                {
-                    objs.Add(t.gameObject);
-                }
-            }
-            return objs;
+            return base.IsRendererObjectProtected(rendererObject, ignoreTag) ||
+                IsFbxRouteRendererObject(rendererObject);
+        }
+
+        public override void HideAndCleanup(bool DestroyRoot = true)
+        {
+            // Reconcile before clearing the tracked renderer array. Orphaned UMA
+            // output must release its meshes too, while authored attachments survive.
+            ReconcileGeneratedRendererObjects();
+            base.HideAndCleanup(DestroyRoot);
         }
 
 #if UNITY_EDITOR
         internal void CleanupEditorGeneratedDataForPlayMode()
         {
-            List<GameObject> cleaners = GetRenderers(gameObject);
             HideAndCleanup(false);
-
-            for (int i = 0; i < cleaners.Count; i++)
-            {
-                GameObject rendererObject = cleaners[i];
-                if (rendererObject != null)
-                {
-                    DestroyImmediate(rendererObject);
-                }
-            }
         }
 
         internal void PrepareForPlayMode()
@@ -1108,13 +1091,7 @@ namespace UMA.CharacterSystem
 
         public void CleanupGeneratedData()
         {
-            List<GameObject> Cleaners = GetRenderers(gameObject);
             HideAndCleanup(false);
-            for (int i=0;i<Cleaners.Count;i++)
-            {
-                var go = Cleaners[i];
-                DestroyImmediate(go);
-            }
             ClearSlots();
         }
 #endif
@@ -3361,6 +3338,7 @@ namespace UMA.CharacterSystem
         //NOTE needs to be public for the editor
         public void UpdateColors(bool triggerDirty = false)
         {
+            using var profile = UMACharacterBuildProfiler.UpdateColors.Auto();
             if (umaRecipe == null)
             {
                 return;
@@ -3766,7 +3744,7 @@ namespace UMA.CharacterSystem
                 return dna;
             }
 
-            UMADnaBase[] dnaBase = GetAllDna();
+            UMADnaBase[] dnaBase;
 
             if (recipe == null)
             {
@@ -4082,6 +4060,7 @@ namespace UMA.CharacterSystem
 
             if (RecreateAnimatorOnRaceChange)
             {
+                //Debug.Log("Recreating Animator on race change.");
                 GameObject.DestroyImmediate(thisAnimator);
                 // todo.. this sometimes blows up with the component already exists!!!
                 thisAnimator = gameObject.AddComponent<Animator>();
@@ -4548,6 +4527,10 @@ namespace UMA.CharacterSystem
             umaData.OnCharacterBegun += this.SetAndSaveOverrideDNA;
             umaData.OnCharacterDnaUpdated -= this.RestoreOverrideDna;
             umaData.OnCharacterDnaUpdated += this.RestoreOverrideDna;
+            // Texture-only generations run CharacterBegun and DNA pre-apply, but
+            // skip the body/DNA-updated event. Restore before public update callbacks.
+            umaData.OnCharacterBeforeUpdated -= this.RestoreOverrideDna;
+            umaData.OnCharacterBeforeUpdated += this.RestoreOverrideDna;
         }
 
         /// <summary>
@@ -5034,6 +5017,10 @@ namespace UMA.CharacterSystem
         // Find: public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true)
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true, bool forceBuild=false)
         {
+            using var profile = UMACharacterBuildProfiler.BuildCharacter.Auto();
+            // A cancelled/incomplete generation may still hold a wardrobe override.
+            // Recover personal DNA before this build captures it or replaces the recipe.
+            RestoreOverrideDna(umaData);
             if (!npcNormalBuild) CancelNPCBuild();
 #if UMA_DCA_TIMING
             Stopwatch sw = new Stopwatch();
@@ -5090,6 +5077,7 @@ namespace UMA.CharacterSystem
 
             if (BuildCharacterBegun != null)
             {
+                using var eventProfile = UMACharacterBuildProfiler.BuildBegun.Auto();
                 BuildCharacterBegun.Invoke(umaData);
             }
 
@@ -5097,7 +5085,6 @@ namespace UMA.CharacterSystem
             List<UMATextRecipe> WardrobeRecipes =new();
             List<string> SuppressSlotsStrings = new List<string>(forceSuppressedWardrobeSlots);
             
-            SuppressSlotsStrings.AddRange(forceSuppressedWardrobeSlots);
             tm.Stop();
             Ticks_Phase1 += tm.ElapsedTicks;
 
@@ -5345,7 +5332,16 @@ namespace UMA.CharacterSystem
                         SlotDataAsset referencedSlot = null;
                         if (buildSlots != null && !string.IsNullOrEmpty(assetSlotName))
                         {
-                            buildSlots.TryGetValue(assetSlotName, out referencedSlot);
+                            bool slotIsInBuild = buildSlots.TryGetValue(assetSlotName, out referencedSlot);
+                            if (!slotIsInBuild)
+                            {
+                                referencedSlot = meshHide.FindMatchingSlot(buildRecipe.slotDataList)?.asset;
+                                slotIsInBuild = referencedSlot != null;
+                            }
+                            if (!slotIsInBuild && (buildRecipe.raceData == null || !buildRecipe.raceData.UsesFbxRoute))
+                            {
+                                continue;
+                            }
                         }
 
                         // A collection may contain masks for slots that are not part of this
@@ -5390,8 +5386,8 @@ namespace UMA.CharacterSystem
 
         public void SetAndSaveOverrideDNA(UMAData udata)
         {
-            //Debug.Log("Setting and saving override DNA");
-            savedDNA.Clear();
+            // Never capture an unfinished generation's override as the original DNA.
+            RestoreOverrideDna(udata);
             if (overrideDNA.Count > 0)
             {
                 // save the override DNA.
@@ -5428,6 +5424,9 @@ namespace UMA.CharacterSystem
                         currentDNA[d.Name].Set(d.Value);
                     }
                 }
+                // DNA-updated and generation completion may both reach here. Once
+                // restored, later callbacks must not overwrite subsequent user edits.
+                savedDNA.Clear();
             }
         }
 
@@ -5624,6 +5623,7 @@ namespace UMA.CharacterSystem
         /// <returns>Returns true if the final recipe load caused more assets to download</returns>
         private void LoadCharacter(UMARecipeBase baseRaceRecipe, List<UMAWardrobeRecipe> Replaces, List<UMATextRecipe> wardrobeRecipes, UMARecipeBase[] AdditionalRecipes, Dictionary<string, List<MeshHideAsset>> MeshHideDictionary, List<string> hiddenSlots, List<string> HideTags, UMADnaBase[] CurrentDNA, bool restoreDNA, bool skipBundleCheck)
         {
+            using var profile = UMACharacterBuildProfiler.LoadCharacter.Auto();
 #if UMA_DCA_TIMING
             Stopwatch sw = Stopwatch.StartNew();
 #endif
@@ -5642,6 +5642,7 @@ namespace UMA.CharacterSystem
 #endif
             if (!skipBundleCheck)
             {
+                using var preloadProfile = UMACharacterBuildProfiler.Preload.Auto();
                 /* Load every recipe into a class and save it         */
                 /* Stick it in a dictionary, keyed on the AsyncOp     */
                 /* So we can look it up when LoadWhenReady is called. */
@@ -5704,7 +5705,8 @@ namespace UMA.CharacterSystem
             {
                 ClearFbxRouteRuntime();
                 serializedRecipe = baseRaceRecipe;
-                baseRaceRecipe.Load(umaRecipe, activeRace.data);
+                using (UMACharacterBuildProfiler.BaseRecipe.Auto())
+                    baseRaceRecipe.Load(umaRecipe, activeRace.data);
             }
 
             tm.Stop();
@@ -5716,7 +5718,8 @@ namespace UMA.CharacterSystem
             tm.Restart();
             umaRecipe.MeshHideDictionary = MeshHideDictionary;
 
-            AddAdditionalRecipes(AdditionalRecipes, false);
+            using (UMACharacterBuildProfiler.AdditionalRecipes.Auto())
+                AddAdditionalRecipes(AdditionalRecipes, false);
             if (wardrobeRecipes != null)
             {
                 AddWardrobeRecipes(wardrobeRecipes);
@@ -5748,146 +5751,159 @@ namespace UMA.CharacterSystem
                 WardrobeSuppressed.Invoke(SuppressedRecipes);
             }
 
-            // Rebuild MeshHide masks based on the current wardrobe and MeshHideDictionary.
-            // This clears stale masks when recipes are removed and applies current masks per slot.
-            if (ignoreMeshHideAssets)
+            using (UMACharacterBuildProfiler.MeshHides.Auto())
             {
-                MeshHideDictionary.Clear();
-            }
-            else
-            {
-                ProcessMeshHides(MeshHideDictionary, wardrobeRecipes, umaRecipe);
-            }
-            umaRecipe.UpdateMeshHideMasks();
-            if (usingFbxRoute && fbxRouteRuntime != null)
-            {
-                fbxRouteRuntime.ApplyBaseMeshHides(currentRaceData, MeshHideDictionary, currentLODLevel);
-            }
-
-            List<SlotData> smooshSlots = new List<SlotData>();
-            List<SlotData> clippingPlanes = new List<SlotData>();
-
-            // DumpDNA("chinPosition", "before overlay sorting");
-            for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
-            {
-                SlotData sd = umaRecipe.slotDataList[i];
-                if (sd.OverlayCount > 1)
+                // Rebuild MeshHide masks based on the current wardrobe and MeshHideDictionary.
+                // This clears stale masks when recipes are removed and applies current masks per slot.
+                if (ignoreMeshHideAssets)
                 {
-                    List<OverlayData> Overlays = sd.GetOverlayList();
-                    List<OverlayData> SortedOverlays = new List<OverlayData>(Overlays.Count);
-
-                    for (int i1 = 0; i1 < Overlays.Count; i1++)
-                    {
-                        OverlayData od = Overlays[i1];
-                        if (od.asset.overlayType == OverlayDataAsset.OverlayType.Cutout)
-                        {
-                            continue;
-                        }
-                        SortedOverlays.Add(od);
-                    }
-
-                    for (int i1 = 0; i1 < Overlays.Count; i1++)
-                    {
-                        OverlayData od = Overlays[i1];
-                        if (od.asset.overlayType == OverlayDataAsset.OverlayType.Cutout)
-                        {
-                            SortedOverlays.Add(od);
-                        }
-                    }
-                    sd.altMaterial = SortedOverlays[0].asset.material;
-                    sd.UpdateOverlayList(SortedOverlays);
-                }
-                if (sd.asset.isClippingPlane)
-                {
-                    clippingPlanes.Add(sd);
-                }
-                if (sd.asset.isSmooshable)
-                {
-                    smooshSlots.Add(sd);
-                    if (VertexOverrides.ContainsKey(sd.slotName))
-                    {
-                        VertexOverrides.Remove(sd.slotName);
-                    }
-                }
-            }
-
-            // Loop through all planes, and then smoosh the smooshables that are targeted by the plane.
-            for (int i = 0; i < clippingPlanes.Count; i++)
-            {
-                SlotData clipSlot = clippingPlanes[i];
-                List<SlotDataAsset> SmooshThese = new List<SlotDataAsset>();
-                SlotDataAsset SmooshTarget = null;
-
-                string smooshTargetTag = clipSlot.smooshTargetTag;
-                string smooshableTag = clipSlot.smooshableTag;
-
-                if (string.IsNullOrEmpty(smooshTargetTag))
-                {
-                    smooshTargetTag = "Smooshtarget";
-                }
-
-                if (string.IsNullOrEmpty(smooshableTag))
-                {
-                    smooshableTag = "Smooshable";
-                }
-
-                List<SlotData> Smooshables = new List<SlotData>();
-
-                for (int i1 = 0; i1 < umaRecipe.slotDataList.Length; i1++)
-                {
-                    SlotData lookSloot = umaRecipe.slotDataList[i1];
-                    if (lookSloot.HasTag(smooshTargetTag))
-                    {
-                        SmooshTarget = lookSloot.asset;
-                    }
-                }
-
-                for (int i1 = 0; i1 < smooshSlots.Count; i1++)
-                {
-                    SlotData lookSloot = smooshSlots[i1];
-                    if (lookSloot.HasTag(smooshableTag))
-                    {
-                        SmooshThese.Add(lookSloot.asset);
-                    }
-                }
-
-                if (SmooshTarget != null && SmooshThese.Count > 0)
-                {
-                    for (int i1 = 0; i1 < SmooshThese.Count; i1++)
-                    {
-                        SlotDataAsset smooshslot = SmooshThese[i1];
-                        SmooshSlotPhysics(umaData, smooshslot, clipSlot.asset, SmooshTarget, clipSlot.smooshInvertX, clipSlot.smooshInvertY, clipSlot.smooshInvertZ, clipSlot.smooshInvertDist, clipSlot.smooshDistance, clipSlot.overSmoosh);
-                    }
-                }
-            }
-            // DumpDNA("chinPosition", "before dnaInstanceCollection");
-            if (currentRaceData != null && currentRaceData.useNewDNA)
-            {
-                bool needsInitialDNA = dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances == null || dnaInstanceCollection.dnaInstances.Count == 0;
-                if (resetNewDNAOnNextBuild || (!restoreDNA && needsInitialDNA))
-                {
-                    // DumpDNA("chinPosition", "before initialize dna");
-                    umaRecipe.InitializeDNA();
-                    // DumpDNA("chinPosition", "after initialize dna");
+                    MeshHideDictionary.Clear();
                 }
                 else
                 {
-                    // DumpDNA("chinPosition", "before add missing dna");
-                    umaRecipe.AddMissingDNAForRace();
-                    // DumpDNA("chinPosition", "after add missing dna");
+                    ProcessMeshHides(MeshHideDictionary, wardrobeRecipes, umaRecipe);
                 }
-            }
-            else
-            {
-                if (dnaInstanceCollection == null)
+                umaRecipe.UpdateMeshHideMasks();
+                if (usingFbxRoute && fbxRouteRuntime != null)
                 {
-                    dnaInstanceCollection = new DNAInstanceCollection();
+                    fbxRouteRuntime.ApplyBaseMeshHides(currentRaceData, MeshHideDictionary, currentLODLevel);
                 }
-                dnaInstanceCollection.Initialize(activeRace.data.DNACollection);
             }
-            resetNewDNAOnNextBuild = false;
-            dnaInstanceCollection?.AfterRecipeGenerated(this);
-            RuntimeDNAsAfterRecipeGenerated(this);
+            List<SlotData> smooshSlots = new List<SlotData>();
+            List<SlotData> clippingPlanes = new List<SlotData>();
+
+            using (UMACharacterBuildProfiler.SortOverlays.Auto())
+            {
+                // DumpDNA("chinPosition", "before overlay sorting");
+                for (int i = 0; i < umaRecipe.slotDataList.Length; i++)
+                {
+                    SlotData sd = umaRecipe.slotDataList[i];
+                    if (sd.OverlayCount > 1)
+                    {
+                        List<OverlayData> Overlays = sd.GetOverlayList();
+                        List<OverlayData> SortedOverlays = new List<OverlayData>(Overlays.Count);
+
+                        for (int i1 = 0; i1 < Overlays.Count; i1++)
+                        {
+                            OverlayData od = Overlays[i1];
+                            if (od.asset.overlayType == OverlayDataAsset.OverlayType.Cutout)
+                            {
+                                continue;
+                            }
+                            SortedOverlays.Add(od);
+                        }
+
+                        for (int i1 = 0; i1 < Overlays.Count; i1++)
+                        {
+                            OverlayData od = Overlays[i1];
+                            if (od.asset.overlayType == OverlayDataAsset.OverlayType.Cutout)
+                            {
+                                SortedOverlays.Add(od);
+                            }
+                        }
+                        sd.altMaterial = SortedOverlays[0].asset.material;
+                        sd.UpdateOverlayList(SortedOverlays);
+                    }
+                    if (sd.asset.isClippingPlane)
+                    {
+                        clippingPlanes.Add(sd);
+                    }
+                    if (sd.asset.isSmooshable)
+                    {
+                        smooshSlots.Add(sd);
+                        if (VertexOverrides.ContainsKey(sd.slotName))
+                        {
+                            VertexOverrides.Remove(sd.slotName);
+                        }
+                    }
+                }
+            }
+            using (UMACharacterBuildProfiler.Smoosh.Auto())
+            {
+                // Loop through all planes, and then smoosh the smooshables that are targeted by the plane.
+                for (int i = 0; i < clippingPlanes.Count; i++)
+                {
+                    SlotData clipSlot = clippingPlanes[i];
+                    List<SlotDataAsset> SmooshThese = new List<SlotDataAsset>();
+                    SlotDataAsset SmooshTarget = null;
+
+                    string smooshTargetTag = clipSlot.smooshTargetTag;
+                    string smooshableTag = clipSlot.smooshableTag;
+
+                    if (string.IsNullOrEmpty(smooshTargetTag))
+                    {
+                        smooshTargetTag = "Smooshtarget";
+                    }
+
+                    if (string.IsNullOrEmpty(smooshableTag))
+                    {
+                        smooshableTag = "Smooshable";
+                    }
+
+                    List<SlotData> Smooshables = new List<SlotData>();
+
+                    for (int i1 = 0; i1 < umaRecipe.slotDataList.Length; i1++)
+                    {
+                        SlotData lookSloot = umaRecipe.slotDataList[i1];
+                        if (lookSloot.HasTag(smooshTargetTag))
+                        {
+                            SmooshTarget = lookSloot.asset;
+                        }
+                    }
+
+                    for (int i1 = 0; i1 < smooshSlots.Count; i1++)
+                    {
+                        SlotData lookSloot = smooshSlots[i1];
+                        if (lookSloot.HasTag(smooshableTag))
+                        {
+                            SmooshThese.Add(lookSloot.asset);
+                        }
+                    }
+
+                    if (SmooshTarget != null && SmooshThese.Count > 0)
+                    {
+                        for (int i1 = 0; i1 < SmooshThese.Count; i1++)
+                        {
+                            SlotDataAsset smooshslot = SmooshThese[i1];
+                            SmooshSlotPhysics(umaData, smooshslot, clipSlot.asset, SmooshTarget, clipSlot.smooshInvertX, clipSlot.smooshInvertY, clipSlot.smooshInvertZ, clipSlot.smooshInvertDist, clipSlot.smooshDistance, clipSlot.overSmoosh);
+                        }
+                    }
+                }
+            }
+            using (UMACharacterBuildProfiler.InitializeDNA.Auto())
+            {
+                // DumpDNA("chinPosition", "before dnaInstanceCollection");
+                if (currentRaceData != null && currentRaceData.useNewDNA)
+                {
+                    bool needsInitialDNA = dnaInstanceCollection == null || dnaInstanceCollection.dnaInstances == null || dnaInstanceCollection.dnaInstances.Count == 0;
+                    if (resetNewDNAOnNextBuild || (!restoreDNA && needsInitialDNA))
+                    {
+                        // DumpDNA("chinPosition", "before initialize dna");
+                        umaRecipe.InitializeDNA();
+                        // DumpDNA("chinPosition", "after initialize dna");
+                    }
+                    else
+                    {
+                        // DumpDNA("chinPosition", "before add missing dna");
+                        umaRecipe.AddMissingDNAForRace();
+                        // DumpDNA("chinPosition", "after add missing dna");
+                    }
+                }
+                else
+                {
+                    if (dnaInstanceCollection == null)
+                    {
+                        dnaInstanceCollection = new DNAInstanceCollection();
+                    }
+                    dnaInstanceCollection.Initialize(activeRace.data.DNACollection);
+                }
+                resetNewDNAOnNextBuild = false;
+            }
+            using (UMACharacterBuildProfiler.DNARecipeCallbacks.Auto())
+            {
+                dnaInstanceCollection?.AfterRecipeGenerated(this);
+                RuntimeDNAsAfterRecipeGenerated(this);
+            }
             // AfterRecipeGenerated
 
             //      DumpDNA("chinPosition", "before UpdateColors");
@@ -5896,28 +5912,31 @@ namespace UMA.CharacterSystem
             //New event that allows for tweaking the resulting recipe before the character is actually generated
             if (RecipeUpdated != null)
             {
+                using var eventProfile = UMACharacterBuildProfiler.RecipeUpdated.Auto();
                 RecipeUpdated.Invoke(umaData);
             }
 
-            if (umaRace != umaRecipe.raceData)
+            using (UMACharacterBuildProfiler.QueueBuild.Auto())
             {
-                RebuildSkeletonThisBuild = rebuildSkeleton;
-                raceChanged = true;
-                UpdateNewRace();
-            }
-            else
-            {
+                if (umaRace != umaRecipe.raceData)
+                {
+                    RebuildSkeletonThisBuild = rebuildSkeleton;
+                    raceChanged = true;
+                    UpdateNewRace();
+                }
+                else
+                {
+                    RebuildSkeletonThisBuild = false;
+                    raceChanged = false;
+                    UpdateSameRace();
+                }
+
                 RebuildSkeletonThisBuild = false;
-                raceChanged = false;
-                UpdateSameRace();
+                if (alwaysRebuildSkeleton)
+                {
+                   RebuildSkeletonThisBuild = true;
+                }
             }
-
-			RebuildSkeletonThisBuild = false;
-            if (alwaysRebuildSkeleton)
-            {
-               RebuildSkeletonThisBuild = true;
-            }
-
    // DumpDNA("chinPosition", "before ApplyPredefinedDNA");
             ApplyPredefinedDNA();
             // DumpDNA("chinPosition", "after ApplyPredefinedDNA");
@@ -5945,18 +5964,22 @@ namespace UMA.CharacterSystem
                 // DumpDNA("chinPosition", "after restore DNA");
             }
             
-            umaData.FireRecipePreparedEvents();
-            AddMeshModifiers(baseRaceRecipe as UMATextRecipe);
-            for(int i=0;i<wardrobeRecipes.Count;i++)
+            using (UMACharacterBuildProfiler.RecipePrepared.Auto())
+                umaData.FireRecipePreparedEvents();
+            using (UMACharacterBuildProfiler.Modifiers.Auto())
             {
-                // DumpDNA("chinPosition", $"before AddMeshModifiers for wardrobeRecipes[{i}]");
-                AddMeshModifiers(wardrobeRecipes[i] as UMATextRecipe);
-                //  DumpDNA("chinPosition", $"after AddMeshModifiers for wardrobeRecipes[{i}]");
+                AddMeshModifiers(baseRaceRecipe as UMATextRecipe);
+                for(int i=0;i<wardrobeRecipes.Count;i++)
+                {
+                    // DumpDNA("chinPosition", $"before AddMeshModifiers for wardrobeRecipes[{i}]");
+                    AddMeshModifiers(wardrobeRecipes[i] as UMATextRecipe);
+                    //  DumpDNA("chinPosition", $"after AddMeshModifiers for wardrobeRecipes[{i}]");
+                }
+
+
+                //AddMeshModifiers(baseRaceRecipe, List < UMAWardrobeRecipe > Replaces, List < UMARecipeBase > wardrobeRecipes, UMARecipeBase[] AdditionalRecipes);
+                ApplyDNAToModifiers();
             }
-
-
-            //AddMeshModifiers(baseRaceRecipe, List < UMAWardrobeRecipe > Replaces, List < UMARecipeBase > wardrobeRecipes, UMARecipeBase[] AdditionalRecipes);
-            ApplyDNAToModifiers();
             tm.Stop();
             Ticks_LoadPhase4 += tm.ElapsedTicks;
 #if UMA_DCA_TIMING
@@ -5978,23 +6001,37 @@ namespace UMA.CharacterSystem
             {
                 return;
             }
-            var DNA = GetDNA();
+            if (activeRace == null)
+                return;
+            if (activeRace.racedata == null)
+                activeRace.SetRaceData();
+
+            bool useNewDNA = activeRace.racedata.useNewDNA;
+            var instances = umaRecipe.dnaInstanceCollection;
+            var legacyDNA = useNewDNA ? null : GetAllDna();
+            // Recipe callbacks can edit definitions after the earlier DNA validation.
+            // Preserve GetDNA's refresh for subsequent DNA effects, without building setters.
+            if (useNewDNA && instances?.dnaCollection?.DNAGroups != null)
+                instances.dnaCollection.LoadDictionary();
 
             foreach (var slot in umaRecipe.slotDataList)
             {
-                if (slot.asset != null && !UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData) && modifiers.ContainsKey(slot.slotName))
+                if (slot != null && slot.asset != null && !UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData)
+                    && modifiers.TryGetValue(slot.slotName, out var slotModifiers))
                 {
-                    var slotModifiers = modifiers[slot.slotName];
-
                     foreach (var modifier in slotModifiers)
                     {
-                        if (string.IsNullOrEmpty(modifier.DNAName))
+                        if (modifier == null || string.IsNullOrEmpty(modifier.DNAName))
                         {
                             continue;
                         }
-                        if (modifier != null && DNA.ContainsKey(modifier.DNAName))
+                        float value = 0f;
+                        bool found = useNewDNA
+                            ? instances != null && instances.TryGetDefinedValue(modifier.DNAName, out value)
+                            : TryGetLegacyDNAValue(legacyDNA, modifier.DNAName, out value);
+                        if (found)
                         {
-                            modifier.Scale = DNA[modifier.DNAName].Value;
+                            modifier.Scale = value;
                         }
                     }
                 }
@@ -6002,6 +6039,30 @@ namespace UMA.CharacterSystem
         }
 
 
+
+        private static bool TryGetLegacyDNAValue(UMADnaBase[] dna, string name, out float value)
+        {
+            // GetDNA keeps the last exact-name entry across legacy blocks and within a block.
+            for (int block = dna.Length - 1; block >= 0; block--)
+            {
+                var entry = dna[block];
+                if (entry == null)
+                    continue;
+                var names = entry.Names;
+                if (names == null)
+                    continue;
+                for (int index = entry.Count - 1; index >= 0; index--)
+                {
+                    if (string.Equals(names[index], name, StringComparison.Ordinal))
+                    {
+                        value = entry.Values[index];
+                        return true;
+                    }
+                }
+            }
+            value = 0f;
+            return false;
+        }
 
         public Vector3 GetDestVertPhys(Vector3 originVertex, Vector3 center, float PlaneDist, SlotDataAsset SmooshTarget, PhysicsScene ps, int vertindex, float smooshDistance, float overSmoosh)
         {
@@ -6549,6 +6610,7 @@ namespace UMA.CharacterSystem
 
         public void AddWardrobeRecipes(List<UMATextRecipe> wardrobeRecipes)
         {
+            using var profile = UMACharacterBuildProfiler.WardrobeRecipes.Auto();
             if (wardrobeRecipes != null)
             {
                 for (int i = 0; i < wardrobeRecipes.Count; i++)
@@ -6637,6 +6699,7 @@ namespace UMA.CharacterSystem
         /// </summary>
         void FixCrossCompatibleSlots(List<string> hiddenSlots)
         {
+            using var profile = UMACharacterBuildProfiler.CrossCompatible.Auto();
             var recipeSlots = umaRecipe.slotDataList;
             string equivalentSlot = "";
             for (int i = 0; i < recipeSlots.Length; i++)
@@ -6750,6 +6813,7 @@ namespace UMA.CharacterSystem
 
         bool ReplaceSlot(UMAWardrobeRecipe Replacer)
         {
+            using var profile = UMACharacterBuildProfiler.ReplaceSlot.Auto();
             bool replaced = false;
             //we need to check if *this* recipe is directly or only cross compatible with this race
             bool isCrossCompatibleRecipe = (activeRace.racedata.IsCrossCompatibleWith(Replacer.compatibleRaces) && activeRace.racedata.wardrobeSlots.Contains(Replacer.wardrobeSlot));
@@ -6824,6 +6888,7 @@ namespace UMA.CharacterSystem
         /// <param name="hideTags"></param>
         void PostProcessSlots(List<string> hiddenSlots, List<string> hideTags = null)
         {
+            using var profile = UMACharacterBuildProfiler.PostProcessSlots.Auto();
             if (hideTags == null)
             {
                 hideTags = new List<string>();

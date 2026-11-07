@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using UMA.Editors;
+using UMA.PoseTools;
 
 
 namespace UMA.CharacterSystem.Editors
@@ -91,6 +92,8 @@ namespace UMA.CharacterSystem.Editors
 
         public List<Object> DoGUI(Rect position, SerializedProperty property, GUIContent label, bool showAdvancedTools = true)
 		{
+            bool changedBefore = GUI.changed;
+            bool raceChanged = false;
             CheckRaceDataLists();
 
             var RaceName = property.FindPropertyRelative("name");
@@ -118,6 +121,7 @@ namespace UMA.CharacterSystem.Editors
 			{
 				if (rIndex != newrIndex)
 				{
+                    raceChanged = true;
                     RaceName.stringValue = newrIndex == 0 ? string.Empty : foundRaces[newrIndex] != null
                         ? foundRaces[newrIndex].raceName : rn;
 					//somehow if the app is playing this already works- and doing it here makes it not work
@@ -172,11 +176,20 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
             }
-			if (showAdvancedTools && GUILayout.Button("BonePose"))
+			bool useNewDNA = theRace != null && theRace.useNewDNA;
+			if (showAdvancedTools && GUILayout.Button(useNewDNA ? "Edit TPose" : "BonePose"))
 			{
-				//UMABonePose firstPose = null;
-
-                if (theRace != null)
+                if (useNewDNA)
+                {
+                    // Finish the inspector event before copying the built character, just as
+                    // the menu command does outside the avatar inspector's change checks.
+                    var avatar = thisDCA;
+                    EditorApplication.delayCall += () =>
+                    {
+                        if (avatar != null) UMARaceTPoseEditorWindow.Open(avatar);
+                    };
+                }
+                else if (theRace != null)
                 {
                     if (theRace.dnaConverterList != null)
                     {
@@ -208,7 +221,9 @@ namespace UMA.CharacterSystem.Editors
             EditorGUILayout.EndHorizontal();
             GUIHelper.EndVerticalPadded(5);
 
-			 
+            // Tool buttons also set GUI.changed. Only a new race should make the
+            // parent inspector rebuild and release the character's generated atlases.
+            GUI.changed = changedBefore || raceChanged;
 			return InspectMe;
 /*			if (Event.current.type == EventType.Used && InspectMe.Count > 0)
 			{

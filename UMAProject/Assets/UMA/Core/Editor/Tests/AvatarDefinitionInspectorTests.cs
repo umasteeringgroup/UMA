@@ -70,6 +70,54 @@ namespace UMA.Tests
             Assert.That(count.GetValue(drawer), Is.EqualTo(2));
         }
 
+        [UnityTest]
+        public IEnumerator RaceToolClickDoesNotReportARaceChange()
+        {
+            var drawer = new RaceSetterPropertyDrawer { thisDCA = avatar };
+            using var serialized = new SerializedObject(avatar);
+            var window = NewWindow(null);
+            window.Unscrolled = true;
+            Rect drawerBounds = default;
+            Vector2 guiOffset = default;
+            bool pendingChange = false, reportedChange = false, retainedChange = false;
+            window.DrawExtra = () =>
+            {
+                bool mouseUp = Event.current.rawType == EventType.MouseUp;
+                GUI.changed = pendingChange;
+                EditorGUI.BeginChangeCheck();
+                drawer.DoGUI(default, serialized.FindProperty("activeRace"), GUIContent.none);
+                bool changed = EditorGUI.EndChangeCheck();
+                if (mouseUp)
+                {
+                    reportedChange = changed;
+                    retainedChange = GUI.changed;
+                }
+                if (Event.current.type == EventType.Repaint)
+                {
+                    drawerBounds = GUILayoutUtility.GetLastRect();
+                    guiOffset = GUIUtility.GUIToScreenPoint(Vector2.zero) - window.position.position;
+                }
+            };
+            window.Focus();
+            yield return WaitFor(() => window.Repaints >= 2, window);
+            foreach (bool previousChange in new[] { false, true })
+            {
+                pendingChange = previousChange;
+                drawer.InspectMe.Clear();
+                // The first button in the drawer's final row opens the race asset.
+                var point = new Vector2(drawerBounds.xMin + 35,
+                    drawerBounds.yMax - 5 - EditorStyles.textField.padding.bottom - EditorGUIUtility.singleLineHeight / 2) + guiOffset;
+                window.SendEvent(new Event { type = EventType.MouseDown, button = 0, mousePosition = point });
+                yield return null;
+                window.SendEvent(new Event { type = EventType.MouseUp, button = 0, mousePosition = point });
+                yield return null;
+                CollectionAssert.Contains(drawer.InspectMe, race, "The real drawer tool button must have been clicked.");
+                Assert.That(reportedChange, Is.False, "Tool clicks must not trigger the inspector's race rebuild.");
+                Assert.That(retainedChange, Is.EqualTo(previousChange), "Preserve changes made before the drawer.");
+            }
+            LogAssert.NoUnexpectedReceived();
+        }
+
         [Test]
         public void DnaViewTracksSameCountReplacementAndKeepsValuesLive()
         {
@@ -247,6 +295,12 @@ namespace UMA.Tests
         [SetUp]
         public void SetUp()
         {
+            // Project-window asset decoration is unrelated to these isolated
+            // inspectors and must not deserialize whatever assets the user has visible.
+            EditorApplication.projectWindowItemOnGUI -=
+                (EditorApplication.ProjectWindowItemCallback)Delegate.CreateDelegate(
+                    typeof(EditorApplication.ProjectWindowItemCallback),
+                    typeof(UMAEditorUtilities).GetMethod("DrawItems", BindingFlags.Static | BindingFlags.NonPublic));
             string viewKey = UMAInspectorView.PreferenceKey(typeof(DynamicCharacterAvatar));
             hadViewPreference = EditorPrefs.HasKey(viewKey);
             originalAdvancedView = EditorPrefs.GetBool(viewKey);
@@ -295,6 +349,8 @@ namespace UMA.Tests
             objects.Clear();
             IndexerField.SetValue(null, originalIndexer);
             UMASettings.instance = originalSettings;
+            typeof(UMAEditorUtilities).GetMethod("RefreshProjectWindowTypeDisplay",
+                BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
             Selection.activeObject = originalSelection;
             DynamicCharacterAvatarEditor.showEditorCustomization = originalCustomization;
             DynamicCharacterAvatarEditor.showPrefinedDNA = originalDna;
@@ -662,6 +718,10 @@ namespace UMA.Tests
         {
             var testIndexer = IndexerField.GetValue(null);
             var testSettings = UMASettings.instance;
+            // During the transition, project-window repaint callbacks can initialize
+            // the real indexer before this coroutine restores our isolated services.
+            UMASettings.instance = originalSettings;
+            IndexerField.SetValue(null, originalIndexer);
             EditorSettings.enterPlayModeOptionsEnabled = true;
             EditorSettings.enterPlayModeOptions = EnterPlayModeOptions.DisableDomainReload |
                 EnterPlayModeOptions.DisableSceneReload;

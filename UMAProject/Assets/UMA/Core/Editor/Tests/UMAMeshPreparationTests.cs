@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace UMA.Tests
 {
@@ -44,6 +46,235 @@ namespace UMA.Tests
             m.blendShapes[0].frames[0].deltaTangents[2] = Vector3.up * .2f;
             m.blendShapes[0].frames[1].deltaVertices[3] = Vector3.up * .4f;
             return m;
+        }
+
+        [Test]
+        public void IdenticalBakesShareOnlyPreparedMetadataAndInvalidationRevokesEquivalence()
+        {
+            var source = ScriptableObject.CreateInstance<SlotDataAsset>();
+            var outputs = new List<SlotDataAsset>();
+            try
+            {
+                source.name = "PreparationBakeSource";
+                source.meshData = Mesh();
+                var options = new List<SlotBurnOptions> { new SlotBurnOptions { BlendShape = "TestShape", value = .5f } };
+                var settings = new SlotDataAsset.BakeSlotParams { burnOptions = options, smoothingAngleDegrees = -1,
+                    newSlotName = "PreparationBakeOutput", forceRebuildRaceSlots = true };
+                SlotDataAsset Bake()
+                {
+                    var slot = source.BakeNewSlotData(settings);
+                    outputs.Add(slot);
+                    Assert.That(UMAMeshPreparation.TryGet(slot.meshData, out _), Is.True);
+                    return slot;
+                }
+                var first = Bake();
+                var second = Bake();
+                Assert.AreSame(first.meshData.PreparedData, second.meshData.PreparedData);
+                Assert.AreNotSame(first.meshData.vertices, second.meshData.vertices);
+                Assert.AreNotSame(first.meshData.ManagedBoneWeights, second.meshData.ManagedBoneWeights);
+                Assert.AreNotSame(source.meshData.vertices, first.meshData.vertices);
+                var originalFingerprint = first.meshData.PreparedData.SourceFingerprint;
+
+                options[0].value = .25f;
+                var changedSettings = Bake();
+                Assert.AreNotEqual(originalFingerprint, changedSettings.meshData.PreparedData.SourceFingerprint);
+                options[0].value = .5f;
+                Assert.AreSame(first.meshData.PreparedData, Bake().meshData.PreparedData, "Bake settings are captured by value.");
+
+                second.meshData.ShallowCopy(second.meshData.vertices).MirrorU(0);
+                Assert.IsTrue(UMAMeshPreparation.TryGet(second.meshData, out var mirrored));
+                Assert.AreNotEqual(originalFingerprint, mirrored.SourceFingerprint, "Cached bakes must track mutation through UV aliases.");
+
+                second.meshData.vertices[0] += Vector3.forward;
+                second.meshData.InvalidateBuildData();
+                Assert.IsTrue(UMAMeshPreparation.TryGet(second.meshData, out var edited));
+                Assert.AreNotEqual(originalFingerprint, edited.SourceFingerprint);
+                Assert.AreEqual(originalFingerprint, first.meshData.PreparedData.SourceFingerprint);
+                Assert.AreEqual(originalFingerprint, Bake().meshData.PreparedData.SourceFingerprint);
+
+                source.meshData.vertices[0] += Vector3.left;
+                EditorUtility.SetDirty(source);
+                Assert.AreNotEqual(originalFingerprint, Bake().meshData.PreparedData.SourceFingerprint);
+
+                var stale = Bake();
+                stale.meshData.ManagedBoneWeights[0].boneIndex = 999;
+                stale.meshData.InvalidateBuildData();
+                Assert.IsFalse(UMAMeshPreparation.TryGet(stale.meshData, out _), "Invalidated baked data must be validated again.");
+            }
+            finally
+            {
+                foreach (var output in outputs) UnityEngine.Object.DestroyImmediate(output);
+                UnityEngine.Object.DestroyImmediate(source);
+            }
+        }
+
+        [Test]
+        public void BakedPreparationCacheIsBoundedAndDoesNotOwnOutputMeshes()
+        {
+            var source = ScriptableObject.CreateInstance<SlotDataAsset>();
+            try
+            {
+                source.meshData = Mesh();
+                var register = typeof(UMAResourceReuse).GetMethod("RegisterBakedMesh", BindingFlags.Static | BindingFlags.NonPublic);
+                var settings = new SlotDataAsset.BakeSlotParams { burnOptions = new List<SlotBurnOptions> { new SlotBurnOptions { BlendShape = "TestShape" } } };
+                var references = new List<WeakReference>();
+                for (int i = 0; i < 96; i++)
+                {
+                    settings.burnOptions[0].value = i / 100f;
+                    references.Add(RegisterTransientBake(register, source, settings));
+                }
+                var cache = typeof(UMAResourceReuse).GetField("bakedPreparations", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+                object[] args = { source.meshData, null };
+                Assert.IsTrue((bool)cache.GetType().GetMethod("TryGetValue").Invoke(cache, args));
+                Assert.LessOrEqual(((System.Collections.ICollection)args[1]).Count, 32);
+                GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+                Assert.IsFalse(references.Any(reference => reference.IsAlive), "The metadata cache must not retain generated mesh data.");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(source); }
+        }
+
+        [Test]
+        public void RecalculatedBakesKeepIndependentContentVerification()
+        {
+            var source = ScriptableObject.CreateInstance<SlotDataAsset>();
+            try
+            {
+                source.meshData = Mesh();
+                var register = typeof(UMAResourceReuse).GetMethod("RegisterBakedMesh", BindingFlags.Static | BindingFlags.NonPublic);
+                var settings = new SlotDataAsset.BakeSlotParams { smoothingAngleDegrees = 60 };
+                var first = source.meshData.DeepCopy(); var second = source.meshData.DeepCopy();
+                register.Invoke(null, new object[] { source, first, settings });
+                register.Invoke(null, new object[] { source, second, settings });
+                // Simulate independent floating-point accumulation in the surface-frame jobs.
+                second.normals[0].x += .000001f;
+                Assert.IsTrue(UMAMeshPreparation.TryGet(first, out var a));
+                Assert.IsTrue(UMAMeshPreparation.TryGet(second, out var b));
+                Assert.AreNotEqual(a.SourceFingerprint, b.SourceFingerprint);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(source); }
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static WeakReference RegisterTransientBake(MethodInfo register, SlotDataAsset source, SlotDataAsset.BakeSlotParams settings)
+        {
+            var mesh = source.meshData.DeepCopy();
+            register.Invoke(null, new object[] { source, mesh, settings });
+            Assert.IsTrue(UMAMeshPreparation.TryGet(mesh, out _));
+            return new WeakReference(mesh);
+        }
+
+        [Test]
+        public void FailedSlotBakeDoesNotOrphanItsTransientAsset()
+        {
+            var source = ScriptableObject.CreateInstance<SlotDataAsset>();
+            try
+            {
+                source.meshData = Mesh();
+                source.meshData.blendShapes[0].frames = null;
+                int before = Resources.FindObjectsOfTypeAll<SlotDataAsset>().Length;
+                Assert.Catch(() => source.BakeNewSlotData(new SlotDataAsset.BakeSlotParams
+                {
+                    burnOptions = new List<SlotBurnOptions> { new SlotBurnOptions { BlendShape = "TestShape", value = .5f } },
+                    newSlotName = "FailedBake"
+                }));
+                Assert.AreEqual(before, Resources.FindObjectsOfTypeAll<SlotDataAsset>().Length);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(source); }
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeBakeSurvivesSlotCopiesAndIsReleasedAfterTheLastOwner()
+        {
+            var asset = ScriptableObject.CreateInstance<SlotDataAsset>();
+            try
+            {
+                VerifyLiveRuntimeBakeCopy(asset);
+                // Also unwind the frame that checked the weak reference while alive.
+                // Mono can conservatively retain that temporary through another GC.
+                yield return null;
+                CollectRuntimeBakes();
+                Assert.IsTrue(asset == null, "The native ScriptableObject must be destroyed, not just its managed wrapper collected.");
+            }
+            finally { if (asset) UnityEngine.Object.DestroyImmediate(asset); }
+        }
+
+        [Test]
+        public void RuntimeBakeCleanupPreservesNewerIndexedReplacement()
+        {
+            var first = ScriptableObject.CreateInstance<SlotDataAsset>();
+            var second = ScriptableObject.CreateInstance<SlotDataAsset>();
+            var owners = new SlotData[2];
+            var singleton = typeof(UMAAssetIndexer).GetField("theIndexer", BindingFlags.Static | BindingFlags.NonPublic);
+            object previousIndexer = singleton.GetValue(null);
+            var indexer = ScriptableObject.CreateInstance<UMAAssetIndexer>();
+            string name = "RuntimeBakeLifetime_" + Guid.NewGuid().ToString("N");
+            try
+            {
+                singleton.SetValue(null, indexer);
+                first.name = second.name = name;
+                indexer.ProcessNewItem(first, false, false);
+                StoreOwnedRuntimeBake(first, owners, 0);
+                var entry = indexer.GetAssetItemForObject(first);
+                int index = entry.Index;
+                indexer.ProcessNewItem(second, false, false);
+                StoreOwnedRuntimeBake(second, owners, 1);
+
+                owners[0] = null;
+                CollectRuntimeBakes();
+                Assert.IsTrue(first == null);
+                Assert.AreSame(second, indexer.GetAssetItemForObject(second)._SerializedItem);
+                Assert.AreSame(entry, indexer.SerializedItems[index]);
+
+                owners[1] = null;
+                CollectRuntimeBakes();
+                Assert.IsTrue(second == null);
+                Assert.IsFalse(indexer.GetAssetDictionary(typeof(SlotDataAsset)).ContainsKey(name));
+                Assert.IsNull(indexer.SerializedItems[index]);
+                Assert.IsNull(entry._SerializedItem);
+            }
+            finally
+            {
+                owners[0] = owners[1] = null;
+                CollectRuntimeBakes();
+                if (first) UnityEngine.Object.DestroyImmediate(first);
+                if (second) UnityEngine.Object.DestroyImmediate(second);
+                UnityEngine.Object.DestroyImmediate(indexer);
+                singleton.SetValue(null, previousIndexer);
+            }
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static SlotData MakeOwnedRuntimeBake(SlotDataAsset asset)
+        {
+            var slot = new SlotData(asset);
+            typeof(SlotData).Assembly.GetType("UMA.UMARuntimeBakedSlotCleanup")
+                .GetMethod("Register", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { slot });
+            return slot.Copy();
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void VerifyLiveRuntimeBakeCopy(SlotDataAsset asset)
+        {
+            var copy = MakeOwnedRuntimeBake(asset);
+            CollectRuntimeBakes();
+            Assert.IsTrue(asset != null, "A copied slot must retain the baked source.");
+            Assert.AreSame(asset, copy.asset);
+            GC.KeepAlive(copy);
+            // The caller collects only after this frame exits. Assigning null to a
+            // local does not remove Mono's conservative stack roots reliably.
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void StoreOwnedRuntimeBake(SlotDataAsset asset, SlotData[] owners, int index)
+        {
+            owners[index] = MakeOwnedRuntimeBake(asset);
+        }
+
+        private static void CollectRuntimeBakes()
+        {
+            GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+            typeof(SlotData).Assembly.GetType("UMA.UMARuntimeBakedSlotCleanup")
+                .GetMethod("CollectReleased", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
         }
 
         [Test]

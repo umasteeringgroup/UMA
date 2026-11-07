@@ -366,6 +366,11 @@ namespace UMA.EditorTools
             ReorderableList list = GetOrCreateList(listProp, label);
             list.DoLayoutList();
 
+            if (elementType == typeof(UMAWardrobeRecipe))
+            {
+                DrawWardrobeRecipeDropArea(listProp, label, list);
+            }
+
             EditorGUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
 
@@ -382,6 +387,40 @@ namespace UMA.EditorTools
 
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space(2);
+        }
+
+        private void DrawWardrobeRecipeDropArea(SerializedProperty listProp, string label, ReorderableList list)
+        {
+            Rect dropArea = GUILayoutUtility.GetRect(0, 44, GUILayout.ExpandWidth(true));
+            GUI.Box(dropArea, new GUIContent($"Drop wardrobe recipes here to add to {label}",
+                "Drag one or more UMAWardrobeRecipe assets from the Project window. Existing entries are skipped."), EditorStyles.helpBox);
+
+            Event evt = Event.current;
+            if (!GUI.enabled || !dropArea.Contains(evt.mousePosition) ||
+                (evt.type != EventType.DragUpdated && evt.type != EventType.DragPerform)) return;
+
+            var existing = new HashSet<UnityEngine.Object>();
+            for (int i = 0; i < listProp.arraySize; i++)
+                existing.Add(listProp.GetArrayElementAtIndex(i).objectReferenceValue);
+
+            var recipes = DragAndDrop.objectReferences.OfType<UMAWardrobeRecipe>()
+                .Where(recipe => recipe != null && existing.Add(recipe)).ToArray();
+            DragAndDrop.visualMode = recipes.Length > 0
+                ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.Rejected;
+
+            if (evt.type == EventType.DragPerform && recipes.Length > 0)
+            {
+                DragAndDrop.AcceptDrag();
+                foreach (var recipe in recipes)
+                {
+                    int index = listProp.arraySize++;
+                    listProp.GetArrayElementAtIndex(index).objectReferenceValue = recipe;
+                }
+                list.index = listProp.arraySize - 1;
+                serializedObject.ApplyModifiedProperties();
+                Repaint();
+            }
+            evt.Use();
         }
 
         private ReorderableList GetOrCreateList(SerializedProperty listProp, string label)

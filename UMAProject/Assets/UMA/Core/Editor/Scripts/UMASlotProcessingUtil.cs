@@ -676,6 +676,9 @@ namespace UMA.Editors
                     if (transformList[i].name == rootBone)
                     {
                         transformList[i].parent = newObject.transform;
+                        // The imported renderer may use an armature above the extracted skeleton.
+                        // Keep its root reference inside the hierarchy retained for the slot.
+                        resultingSkinnedMesh.rootBone = transformList[i];
                     }
                     else if (transformList[i].name == mesh.name)
                     {
@@ -1018,6 +1021,9 @@ namespace UMA.Editors
                 if (transformList[i].name == sbp.rootBone)
                 {
                     transformList[i].parent = newObject.transform;
+                    // The imported renderer may use an armature above the extracted skeleton.
+                    // Keep its root reference inside the hierarchy retained for the slot.
+                    resultingSkinnedMesh.rootBone = transformList[i];
                 }
                 else if (transformList[i].name == sbp.slotMesh.name)
                 {
@@ -1274,13 +1280,10 @@ namespace UMA.Editors
 
                 if (sourceSubmeshIndex < sbp.slotMesh.sharedMaterials.Length && sbp.nameByMaterial)
                 {
-                    if (!string.IsNullOrEmpty(sbp.slotMesh.sharedMaterials[sourceSubmeshIndex].name))
+                    var sourceMaterial = sbp.slotMesh.sharedMaterials[sourceSubmeshIndex];
+                    if (sourceMaterial != null && !string.IsNullOrWhiteSpace(sourceMaterial.name))
                     {
-                        string titlecase = sbp.slotMesh.sharedMaterials[sourceSubmeshIndex].name.ToTitleCase();
-                        if (!string.IsNullOrWhiteSpace(titlecase))
-                        {
-                            theSlotName = titlecase;
-                        }
+                        theSlotName = sourceMaterial.name;
                     }
                 }
 
@@ -2031,13 +2034,9 @@ namespace UMA.Editors
                     if (sub < sbp.slotMesh.sharedMaterials.Length && sbp.nameByMaterial)
                     {
                         var mat = sbp.slotMesh.sharedMaterials[sub];
-                        if (mat != null && !string.IsNullOrEmpty(mat.name))
+                        if (mat != null && !string.IsNullOrWhiteSpace(mat.name))
                         {
-                            string titlecase = mat.name.ToTitleCase();
-                            if (!string.IsNullOrWhiteSpace(titlecase))
-                            {
-                                baseName = titlecase;
-                            }
+                            baseName = mat.name;
                         }
                     }
                     string theSlotName = baseName;

@@ -16,7 +16,9 @@ namespace UMA.Tests
         private string folder;
         private Shader sourceShader, targetShader;
         private Material source;
+        private Texture2D sourceTexture;
         private UMAMaterial owner, other;
+        private UMATestProjectGenerationScope projectGeneration;
 
         [Serializable] private sealed class Pack { public Entry[] entries; }
         [Serializable] private sealed class Entry { public int srpTarget; public int UnityVersionMin; public int UnityVersionMax = 30000; public string shaderSrc; }
@@ -24,29 +26,45 @@ namespace UMA.Tests
         [SetUp]
         public void SetUp()
         {
-            string id = Guid.NewGuid().ToString("N");
-            folder = "Assets/UMA_ShaderPackageTests_" + id;
-            AssetDatabase.CreateFolder("Assets", "UMA_ShaderPackageTests_" + id);
-            string src = ShaderSource("Hidden/UMA/PackageTest/" + id, "_OldTex");
-            var pack = new Pack { entries = Enumerable.Range(0, 3).Select(i => new Entry { srpTarget = i, UnityVersionMin = 0, shaderSrc = src }).ToArray() };
-            string packagePath = folder + "/Source.umaShaderPack";
-            File.WriteAllText(packagePath, "{\"MonoBehaviour\":" + JsonUtility.ToJson(pack) + "}");
-            AssetDatabase.ImportAsset(packagePath, ImportAssetOptions.ForceSynchronousImport);
-            sourceShader = AssetDatabase.LoadAssetAtPath<Shader>(packagePath);
-            Assert.NotNull(sourceShader, "Test package must import as a Shader.");
-            string shaderPath = folder + "/Replacement.shader";
-            File.WriteAllText(shaderPath, ShaderSource("Hidden/UMA/ReplacementTest/" + id, "_NewTex"));
-            AssetDatabase.ImportAsset(shaderPath, ImportAssetOptions.ForceSynchronousImport);
-            targetShader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
-            Assert.NotNull(targetShader);
-            source = new Material(sourceShader) { name = "Shared source" };
-            source.SetTexture("_OldTex", Texture2D.whiteTexture);
-            source.SetTextureScale("_OldTex", new Vector2(2, 3));
-            source.SetTextureOffset("_OldTex", new Vector2(.1f, .2f));
-            source.SetColor("_Tint", Color.red);
-            AssetDatabase.CreateAsset(source, folder + "/Source.mat");
-            owner = MakeOwner("Owner");
-            other = MakeOwner("Other");
+            projectGeneration = new UMATestProjectGenerationScope();
+            try
+            {
+                string id = Guid.NewGuid().ToString("N");
+                folder = "Assets/UMA_ShaderPackageTests_" + id;
+                AssetDatabase.CreateFolder("Assets", "UMA_ShaderPackageTests_" + id);
+                string src = ShaderSource("Hidden/UMA/PackageTest/" + id, "_OldTex");
+                var pack = new Pack { entries = Enumerable.Range(0, 3).Select(i => new Entry { srpTarget = i, UnityVersionMin = 0, shaderSrc = src }).ToArray() };
+                string packagePath = folder + "/Source.umaShaderPack";
+                File.WriteAllText(packagePath, "{\"MonoBehaviour\":" + JsonUtility.ToJson(pack) + "}");
+                AssetDatabase.ImportAsset(packagePath, ImportAssetOptions.ForceSynchronousImport);
+                sourceShader = AssetDatabase.LoadAssetAtPath<Shader>(packagePath);
+                Assert.NotNull(sourceShader, "Test package must import as a Shader.");
+                string shaderPath = folder + "/Replacement.shader";
+                File.WriteAllText(shaderPath, ShaderSource("Hidden/UMA/ReplacementTest/" + id, "_NewTex"));
+                AssetDatabase.ImportAsset(shaderPath, ImportAssetOptions.ForceSynchronousImport);
+                targetShader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
+                Assert.NotNull(targetShader);
+                // Exercise a serialized texture reference. Unity's transient whiteTexture
+                // is not a project asset and is not guaranteed to survive material import.
+                sourceTexture = new Texture2D(2, 2);
+                sourceTexture.SetPixels(new[] { Color.white, Color.red, Color.green, Color.blue });
+                sourceTexture.Apply();
+                AssetDatabase.CreateAsset(sourceTexture, folder + "/SourceTexture.asset");
+                source = new Material(sourceShader) { name = "Shared source" };
+                source.SetTexture("_OldTex", sourceTexture);
+                source.SetTextureScale("_OldTex", new Vector2(2, 3));
+                source.SetTextureOffset("_OldTex", new Vector2(.1f, .2f));
+                source.SetColor("_Tint", Color.red);
+                AssetDatabase.CreateAsset(source, folder + "/Source.mat");
+                owner = MakeOwner("Owner");
+                other = MakeOwner("Other");
+            }
+            catch
+            {
+                projectGeneration.Dispose();
+                projectGeneration = null;
+                throw;
+            }
         }
 
         private static string ShaderSource(string name, string property) =>
@@ -83,10 +101,14 @@ namespace UMA.Tests
         [TearDown]
         public void TearDown()
         {
-            if (owner != null) Undo.ClearUndo(owner);
-            if (other != null) Undo.ClearUndo(other);
-            if (source != null) Undo.ClearUndo(source);
-            if (!string.IsNullOrEmpty(folder)) AssetDatabase.DeleteAsset(folder);
+            try
+            {
+                if (owner != null) Undo.ClearUndo(owner);
+                if (other != null) Undo.ClearUndo(other);
+                if (source != null) Undo.ClearUndo(source);
+                if (!string.IsNullOrEmpty(folder)) AssetDatabase.DeleteAsset(folder);
+            }
+            finally { projectGeneration?.Dispose(); projectGeneration = null; }
         }
 
         [Test]
@@ -110,7 +132,7 @@ namespace UMA.Tests
             Assert.AreEqual(1, copies.Count);
             Assert.AreNotSame(source, owner.material);
             Assert.AreSame(targetShader, owner.material.shader);
-            Assert.AreSame(Texture2D.whiteTexture, owner.material.GetTexture("_NewTex"));
+            Assert.AreEqual(sourceTexture, owner.material.GetTexture("_NewTex"));
             Assert.AreEqual(new Vector2(2, 3), owner.material.GetTextureScale("_NewTex"));
             Assert.AreEqual(new Vector2(.1f, .2f), owner.material.GetTextureOffset("_NewTex"));
             Assert.AreEqual(Color.red, owner.material.GetColor("_Tint"));
@@ -130,8 +152,9 @@ namespace UMA.Tests
             var request = Request(); request.Slots.AddRange(new[] { 1, 2, 3 });
             var copies = UMAShaderPackageUtility.Replace(request, folder);
             Assert.AreEqual(1, copies.Count);
-            for (int i = 0; i < 4; i++) Assert.AreSame(copies[0], UMAShaderPackageUtility.GetMaterial(owner, i));
-            Assert.AreSame(source, other.material);
+            // Asset import/undo may recreate managed wrappers for the same native asset.
+            for (int i = 0; i < 4; i++) Assert.AreEqual(copies[0], UMAShaderPackageUtility.GetMaterial(owner, i));
+            Assert.AreEqual(source, other.material);
         }
 
         [Test]
@@ -169,11 +192,11 @@ namespace UMA.Tests
             string copyPath = AssetDatabase.GetAssetPath(copy);
             Undo.FlushUndoRecordObjects();
             Undo.PerformUndo();
-            Assert.AreSame(source, owner.material);
+            Assert.AreEqual(source, owner.material);
             Assert.AreEqual("_OldTex", owner.channels[0].materialPropertyName);
             Assert.NotNull(AssetDatabase.LoadAssetAtPath<Material>(copyPath));
             Undo.PerformRedo();
-            Assert.AreSame(copy, owner.material);
+            Assert.AreEqual(copy, owner.material);
             Assert.AreEqual("_NewTex", owner.channels[0].materialPropertyName);
         }
 
@@ -194,9 +217,9 @@ namespace UMA.Tests
             Assert.AreEqual("_Tint", shared.Channels[1].Property);
             int before = AssetDatabase.FindAssets("t:Material", new[] { folder }).Length;
             var updated = UMAShaderPackageUtility.Update(request);
-            Assert.AreSame(source, updated.Single());
-            Assert.AreSame(source, owner.material);
-            Assert.AreSame(source, other.material);
+            Assert.AreEqual(source, updated.Single());
+            Assert.AreEqual(source, owner.material);
+            Assert.AreEqual(source, other.material);
             Assert.AreSame(targetShader, source.shader);
             Assert.AreEqual("_NewTex", owner.channels[0].materialPropertyName);
             Assert.AreEqual("_NewTex", other.channels[0].materialPropertyName);

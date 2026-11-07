@@ -372,7 +372,7 @@ namespace UMA.Editors
 			RefreshSharedColorTableCacheIfNeeded(false);
 			string sharedColorName = property.FindPropertyRelative("name")?.stringValue ??
 				currentOverlayColorData?.name ?? string.Empty;
-			GetVisibleSharedColorTables(sharedColorName, dca != null,
+			GetVisibleSharedColorTables(sharedColorName, dca != null, dca?.activeRace?.data,
 				out SharedColorTable[] visibleSharedColorTables,
 				out GUIContent[] visibleSharedColorTableOptions);
 
@@ -496,6 +496,17 @@ namespace UMA.Editors
 			return true;
 		}
 
+        internal static SharedColorTable FindAvatarColorTable(string sharedColorName, RaceData race)
+        {
+            var raceTable = FindRaceColorTable(sharedColorName, race);
+            return raceTable != null ? raceTable : FindStandardColorTable(sharedColorName);
+        }
+
+        internal static SharedColorTable FindRaceColorTable(string sharedColorName, RaceData race)
+        {
+            return race != null ? race.GetColorTable(sharedColorName) : null;
+        }
+
         internal static SharedColorTable FindStandardColorTable(string sharedColorName)
         {
             RefreshSharedColorTableCacheIfNeeded(false);
@@ -505,13 +516,22 @@ namespace UMA.Editors
         internal static SharedColorTable FindStandardColorTable(string sharedColorName, IEnumerable<SharedColorTable> tables)
         {
             SharedColorTable fallback = null;
+            SharedColorTable additionalMatch = null;
             foreach (var table in tables)
             {
                 if (table == null) continue;
                 if (table.name == sharedColorName + "Colors") return table;
+                if (additionalMatch == null && MatchesAdditionalSharedColor(table, sharedColorName)) additionalMatch = table;
                 if (table.name == "DefaultColors" && fallback == null) fallback = table;
             }
-            return fallback;
+            return additionalMatch != null ? additionalMatch : fallback;
+        }
+
+        private static bool MatchesAdditionalSharedColor(SharedColorTable table, string sharedColorName)
+        {
+            if (string.IsNullOrWhiteSpace(sharedColorName) || table.AlsoAppliesTo == null) return false;
+            return Array.Exists(table.AlsoAppliesTo, name =>
+                string.Equals(name, sharedColorName, StringComparison.Ordinal));
         }
 
 		private static void RefreshSharedColorTableCacheIfNeeded(bool force)
@@ -546,9 +566,16 @@ namespace UMA.Editors
 			nextSharedColorTableRefreshTime = EditorApplication.timeSinceStartup + SharedColorTableCacheSeconds;
 		}
 
-		private static void GetVisibleSharedColorTables(string sharedColorName, bool filterBySharedColorName,
+		private static void GetVisibleSharedColorTables(string sharedColorName, bool filterBySharedColorName, RaceData race,
 			out SharedColorTable[] visibleTables, out GUIContent[] visibleOptions)
 		{
+            var raceTable = FindRaceColorTable(sharedColorName, race);
+            if (raceTable != null)
+            {
+                visibleTables = new[] { raceTable };
+                visibleOptions = new[] { new GUIContent(GetSharedColorTableMenuName(raceTable), AssetDatabase.GetAssetPath(raceTable)) };
+                return;
+            }
 			if (!filterBySharedColorName)
 			{
 				visibleTables = cachedSharedColorTables;
@@ -575,7 +602,7 @@ namespace UMA.Editors
 			string tableSharedColorName = table.sharedColorName;
 			if (string.IsNullOrWhiteSpace(tableSharedColorName)) return true;
 			return string.Equals(tableSharedColorName, sharedColorName ?? string.Empty,
-				StringComparison.Ordinal);
+				StringComparison.Ordinal) || MatchesAdditionalSharedColor(table, sharedColorName);
 		}
 
 		private static int CompareSharedColorTables(SharedColorTable leftTable, SharedColorTable rightTable)

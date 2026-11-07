@@ -20,6 +20,8 @@ the queue and keeps successful earlier installations. The report is also saved t
 
 Open **UMA > Welcome to UMA**, then select **Plugins**, the second navigation button. The table lists one row for every plugin in UMA's package catalog, its installation status and version, and **Install** or **Reinstall** and **Remove** actions. Click **?** for a description and dependencies. Installation searches `Build/Plugins`, the current release's download cache, the last used package location, the project `Plugins` folder, and the UMA install root's `Plugins` folder. It chooses the highest compatible validated local version; if none is found, it downloads the package from the matching UMA GitHub release. Status refreshes automatically after package operations. If removal is unavailable, hover over its status or Remove button to see why; dependent packages must be removed first, and unmanaged source files require adoption before managed removal.
 
+Installing again after removal requires no local package build or saved package-location preference. Missing folders and empty or invalid saved paths are skipped; UMA uses the installed UMASettings version to select the published download when no compatible local archive is available. This applies on macOS and Windows.
+
 The download rule is `https://github.com/umasteeringgroup/UMA/releases/download/V{UMAVersion}/{unitypackagename}`.
 For UMA **3.1f2**, Dismemberment downloads from release **V3.1f2** using the filename
 **Dismemberment-3.1.2.unitypackage**. The release comes from the installed UMASettings asset;

@@ -52,6 +52,7 @@ namespace UMA.Editors
         public void OnDisable()
         {
             EditorApplication.update -= DoInspectors;
+            _inspectedObjects.Clear();
             if (innerEditor != null)
             {
                 DestroyImmediate(innerEditor);
@@ -63,13 +64,26 @@ namespace UMA.Editors
 
         public void DoInspectors()
         {
-            if (_inspectedObjects.Count > 0)
+            if (_inspectedObjects.Count == 0) return;
+            // Consume requests before opening windows: an exception or selection-triggered
+            // inspector rebuild must never retry the same request on every Editor update.
+            var pending = _inspectedObjects.ToArray();
+            _inspectedObjects.Clear();
+            foreach (var inspectedObject in pending)
             {
-                for(int i=0;i<_inspectedObjects.Count; i++)
-                {
-                    InspectorUtlity.InspectTarget(_inspectedObjects[i]);
-                }
-                _inspectedObjects.Clear();
+                if (inspectedObject != null) InspectorUtlity.InspectTarget(inspectedObject);
+            }
+        }
+
+        private void DrawMaterialReference(string propertyName, GUIContent label)
+        {
+            var property = serializedObject.FindProperty(propertyName);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.PropertyField(property, label, GUILayout.ExpandWidth(true));
+                using (new EditorGUI.DisabledScope(property.hasMultipleDifferentValues || property.objectReferenceValue == null))
+                    if (GUILayout.Button("Inspect", GUILayout.Width(60)))
+                        _inspectedObjects.Add(property.objectReferenceValue);
             }
         }
 
@@ -103,25 +117,8 @@ namespace UMA.Editors
             showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
             EditorGUILayout.PropertyField(_supportsSourceUVCropping);
 
-            GUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("_material"), new GUIContent( "Default Material", "The Unity Material to link to."),GUILayout.ExpandWidth(true));
-            if (GUILayout.Button("Inspect", GUILayout.Width(60)))
-            {
-                _inspectedObjects.Add(serializedObject.FindProperty("_material").objectReferenceValue);
-            }
-            GUILayout.EndHorizontal();
-            if (GUILayout.Button("Inspect", GUILayout.Width(60)))
-            {
-                _inspectedObjects.Add(serializedObject.FindProperty("_HDRPMaterial").objectReferenceValue);
-            }
-            GUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("_HDRPMaterial"), new GUIContent("HDRP Material", "The Unity Material for HDRP."), GUILayout.ExpandWidth(true));
-
-
-            GUILayout.EndHorizontal();
-
-
-
+            DrawMaterialReference("_material", new GUIContent("Default Material", "The Unity Material to link to."));
+            DrawMaterialReference("_HDRPMaterial", new GUIContent("HDRP Material", "The Unity Material for HDRP."));
             if (showHelp)
             {
                 EditorGUILayout.HelpBox("Default Material: This is the material that will be used if no other material is found.", MessageType.Info);

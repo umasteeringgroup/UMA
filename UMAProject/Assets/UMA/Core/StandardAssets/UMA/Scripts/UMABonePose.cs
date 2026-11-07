@@ -29,6 +29,19 @@ namespace UMA.PoseTools
 
 		public PoseBone[] poses;
 
+		[System.Serializable]
+		public class BoneGroup
+		{
+			public string name;
+			public string[] bones = System.Array.Empty<string>();
+			// Authoring controls only. Their changes are baked into poses, never applied at runtime again.
+			public Vector3 position;
+			public Quaternion rotation = Quaternion.identity;
+			public Vector3 scale = Vector3.one;
+		}
+
+		public BoneGroup[] boneGroups = System.Array.Empty<BoneGroup>();
+
 		public UMABonePose[] tweenPoses = null;
 		public float[] tweenWeights = null;
 

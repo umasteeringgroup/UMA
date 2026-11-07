@@ -17,6 +17,8 @@ Create one with:
 
 Assign the ordinary Unity material to `Default Material`. HDRP content can also provide the HDRP material fields shown by the inspector.
 
+Use the **Inspect** button beside an assigned material to open its Inspector. Unassigned fields have disabled Inspect buttons.
+
 ## Material Types
 
 ### Atlas
@@ -29,7 +31,7 @@ Use Atlas when:
 - Overlay layering and colorization are required.
 - Reducing material and draw-call count is important.
 
-Atlas generation costs temporary render texture memory and GPU work. Atlas resolution and fitting behavior are controlled by the generator.
+Atlas generation costs temporary render texture memory and GPU work. Atlas resolution and fitting behavior are controlled by the generator. See [UMA Generator Setup](UMAGeneratorSetup.md) for Best Fit Square, Multiple Heuristics, and the separate runtime/editor resolutions.
 
 ### No Atlas
 
@@ -62,6 +64,12 @@ Use it when:
 - Texture generation should be skipped.
 - Each slot already has final textures.
 - Layered overlays are not required.
+
+## Hair materials and Configure UMA
+
+**UMA > Welcome to UMA > Configure UMA** lists skin and hair materials separately. Maximum Speed switches selected compatible skin materials to Atlas and keeps only an existing opaque Alpha Clip pass for selected compatible hair materials. It backs up the default and HDRP material references, including both second-pass fields, on the UMAMaterial before changing assignments. Repeated Speed setup preserves the first backup.
+
+Maximum Fidelity switches compatible skin materials to No Atlas, restores the backed-up hair assignments, and clears the backup. Hair configurations without a compatible Alpha Clip pass are preserved and reported. These operations change UMAMaterial references; they do not rewrite the source Unity material, shader, or texture assets. See [Configure UMA](UMAGeneratorSetup.md) for automatic editor rebuilds and the full preset behavior.
 
 ## Generated Texture Settings
 

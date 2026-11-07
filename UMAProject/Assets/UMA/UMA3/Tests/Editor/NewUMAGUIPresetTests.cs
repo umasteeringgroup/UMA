@@ -179,6 +179,83 @@ namespace UMA.Tests
             }
         }
 
+        [Test]
+        public void ColorButtonsUseCurrentRacePaletteAndKeepTheCategorySharedColorName()
+        {
+            var root = new GameObject("UI");
+            root.SetActive(false);
+            var avatarRoot = new GameObject("Avatar");
+            avatarRoot.SetActive(false);
+            var header = new GameObject("Header", typeof(RectTransform), typeof(UnityEngine.UI.Text));
+            var grid = new GameObject("Grid", typeof(RectTransform));
+            var button = new GameObject("Color", typeof(RectTransform), typeof(UnityEngine.UI.Image), typeof(ColorEffector));
+            var container = new GameObject("Container", typeof(RectTransform));
+            container.transform.SetParent(root.transform, false);
+            var fallback = ScriptableObject.CreateInstance<SharedColorTable>();
+            var alias = ScriptableObject.CreateInstance<SharedColorTable>();
+            var exact = ScriptableObject.CreateInstance<SharedColorTable>();
+            try
+            {
+                var gui = root.AddComponent<NewUMAGUI>();
+                gui.avatar = avatarRoot.AddComponent<DynamicCharacterAvatar>();
+                gui.ColorLabel = header;
+                gui.GridContainer = grid;
+                gui.ColorSelector = button;
+                fallback.sharedColorName = "Beard";
+                fallback.colors = new[] { new OverlayColorData(3) { name = "Red", displayColor = Color.red } };
+                alias.sharedColorName = "Hair";
+                alias.AlsoAppliesTo = new[] { "Beard" };
+                alias.colors = new[] { new OverlayColorData(3) { name = "Blue", displayColor = Color.blue } };
+                exact.sharedColorName = "Beard";
+                exact.colors = new[] { new OverlayColorData(3) { name = "Green", displayColor = Color.green } };
+                var addColors = typeof(NewUMAGUI).GetMethod("AddColors",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+                void CheckButtons(SharedColorTable expected)
+                {
+                    while (container.transform.childCount > 0)
+                        Object.DestroyImmediate(container.transform.GetChild(0).gameObject);
+                    addColors.Invoke(gui, new object[] { container, fallback });
+                    Assert.That(container.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>().text, Is.EqualTo("Beard"));
+                    var choices = container.GetComponentsInChildren<ColorEffector>(true);
+                    Assert.That(choices.Length, Is.EqualTo(expected.colors.Length));
+                    Assert.That(choices[0].color, Is.SameAs(expected.colors[0]));
+                    Assert.That(choices[0].colorName, Is.EqualTo("Beard"));
+                    Assert.That(choices[0].colorEffector, Is.SameAs(gui));
+                    var label = container.transform.GetChild(0).GetComponent<UnityEngine.UI.Text>();
+                    choices[0].OnPointerEnter(null);
+                    Assert.That(label.text, Is.EqualTo(expected.colors[0].name));
+                    choices[0].OnPointerExit(null);
+                    Assert.That(label.text, Is.EqualTo("Beard"));
+                }
+
+                gui.avatar.activeRace.name = raceA.name;
+                gui.avatar.activeRace.data = raceA;
+                CheckButtons(fallback);
+                raceA.colorLists.AddRange(new[] { null, alias });
+                CheckButtons(alias);
+                raceA.colorLists.Add(exact);
+                CheckButtons(exact);
+                gui.avatar.activeRace.name = raceB.name;
+                gui.avatar.activeRace.data = raceB;
+                CheckButtons(fallback);
+                gui.avatar = null;
+                CheckButtons(fallback);
+                Assert.That(fallback.colors[0].displayColor, Is.EqualTo(Color.red));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(avatarRoot);
+                Object.DestroyImmediate(header);
+                Object.DestroyImmediate(grid);
+                Object.DestroyImmediate(button);
+                Object.DestroyImmediate(fallback);
+                Object.DestroyImmediate(alias);
+                Object.DestroyImmediate(exact);
+            }
+        }
+
         private static UMAPreset NewPreset(string name, string raceName)
         {
             var value = ScriptableObject.CreateInstance<UMAPreset>();

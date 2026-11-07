@@ -36,6 +36,16 @@ namespace UMA
         [SerializeField]
         private Material _HDRPSecondPass;
 
+#if UNITY_EDITOR
+        // Welcome-page presets keep the original assignments across Editor sessions.
+        // Editor-only references do not pull the fidelity materials into player builds.
+        [SerializeField, HideInInspector] private bool _hasSpeedMaterialBackup;
+        [SerializeField, HideInInspector] private Material _speedBackupMaterial;
+        [SerializeField, HideInInspector] private Material _speedBackupSecondPass;
+        [SerializeField, HideInInspector] private Material _speedBackupHDRPMaterial;
+        [SerializeField, HideInInspector] private Material _speedBackupHDRPSecondPass;
+#endif
+
         public void Awake()
         {
         }

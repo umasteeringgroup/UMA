@@ -21,6 +21,15 @@ namespace UMA
 		[Tooltip("Set this to snap the Avatar to the position of it's hip after ragdoll is finished")]
 		public bool UpdateTransformAfterRagdoll = true;
 
+		[Tooltip("Freeze the generated ragdoll once all bodies have settled. Call WakeRagdoll before applying new forces.")]
+		public bool freezeWhenRagdollRests = true;
+		[Min(0.1f), Tooltip("Seconds all bodies must remain within the rest tolerances.")]
+		public float ragdollRestTime = 1f;
+		[Min(0f), Tooltip("Allowed world-space movement in meters over the entire rest window.")]
+		public float ragdollRestPositionThreshold = 0.03f;
+		[Range(0f, 180f), Tooltip("Allowed rotation in degrees over the entire rest window.")]
+		public float ragdollRestRotationThreshold = 5f;
+
 		[Tooltip("List of Physics Elements, see UMAPhysicsElement class")]
 		public List<UMAPhysicsElement> PhysicsElements;
 
@@ -32,6 +41,10 @@ namespace UMA
 				physicsAvatar.simplePlayerCollider = simplePlayerCollider;
 				physicsAvatar.enableColliderTriggers = enableColliderTriggers;
 				physicsAvatar.UpdateTransformAfterRagdoll = UpdateTransformAfterRagdoll;
+				physicsAvatar.freezeWhenRagdollRests = freezeWhenRagdollRests;
+				physicsAvatar.ragdollRestTime = ragdollRestTime;
+				physicsAvatar.ragdollRestPositionThreshold = ragdollRestPositionThreshold;
+				physicsAvatar.ragdollRestRotationThreshold = ragdollRestRotationThreshold;
 				physicsAvatar.ragdollLayer = ragdollLayer;
 				physicsAvatar.playerLayer = playerLayer;
                 physicsAvatar.elements = PhysicsElements;

@@ -519,7 +519,7 @@ MonoBehaviour:
   WardrobeRecipes:
   - {fileID: 11400000, guid: 42bf1905064bcb144888292b673bbe78, type: 2}
   - {fileID: 11400000, guid: a48ff9401ee730b498a6eb44691dd2e5, type: 2}
-  - {fileID: 11400000, guid: d909b37dd7a09d042ba41fd3a33112e9, type: 2}
+  - {fileID: 11400000, guid: d83f59ac753e9e14aa828af648f03739, type: 2}
   - {fileID: 11400000, guid: c59bf9fb62806614cb33d30169679888, type: 2}
   - {fileID: 11400000, guid: b55cee5facaaacb49adbf21556a91930, type: 2}
   - {fileID: 11400000, guid: 2743f153868179a42afbb280ff3320bd, type: 2}

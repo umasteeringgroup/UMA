@@ -24,7 +24,6 @@ namespace UMA.Editors.Tests
             previousSettings = UMASettings.instance;
             settings = ScriptableObject.CreateInstance<UMASettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
-            settings.postProcessAllAssets = false;
             UMASettings.instance = settings;
             root = "Assets/__UMAUnusedAssetsTests_" + Guid.NewGuid().ToString("N");
             AssetDatabase.CreateFolder("Assets", root.Substring("Assets/".Length));
@@ -299,18 +298,26 @@ namespace UMA.Editors.Tests
             var material = CreateUma(candidates + "/TrashFixture.asset");
             string materialPath = AssetDatabase.GetAssetPath(material);
             var entry = Entry(material, "Guid");
-            string registryPath;
             SerializationMode previousMode = EditorSettings.serializationMode;
+            string registryPath = root + "/BinaryIndex.asset";
+            // Changing EditorSettings.serializationMode invalidates imports across the
+            // project (including scenes and lighting). Serialize only this fixture instead.
+            var registry = ScriptableObject.CreateInstance<UMAAssetIndexer>();
             try
             {
-                EditorSettings.serializationMode = SerializationMode.ForceBinary;
-                var registry = CreateRegistry(entry);
-                registryPath = AssetDatabase.GetAssetPath(registry);
-                // Validate the binary fixture as bytes; never decode native assets as text.
-                using (var stream = File.OpenRead(registryPath))
-                    Assert.That(stream.ReadByte(), Is.Not.EqualTo((int)'%'));
+                registry.SerializedItems.Add(entry);
+                entry.Index = 0;
+                UnityEditorInternal.InternalEditorUtility.SaveToSerializedFileAndForget(
+                    new Object[] { registry }, registryPath, false);
             }
-            finally { EditorSettings.serializationMode = previousMode; }
+            finally { Object.DestroyImmediate(registry); }
+            AssetDatabase.ImportAsset(registryPath, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+            Assert.That(EditorSettings.serializationMode, Is.EqualTo(previousMode));
+            // Validate the binary fixture as bytes; never decode native assets as text.
+            using (var stream = File.OpenRead(registryPath))
+                Assert.That(stream.ReadByte(), Is.Not.EqualTo((int)'%'));
+            Assert.That(AssetDatabase.LoadAssetAtPath<UMAAssetIndexer>(registryPath).SerializedItems,
+                Has.Count.EqualTo(1), "The binary fixture must contain a registration before cleanup.");
             material = AssetDatabase.LoadAssetAtPath<UMAMaterial>(materialPath);
             Assert.That(material, Is.Not.Null);
             var result = Find(Scan(), material);

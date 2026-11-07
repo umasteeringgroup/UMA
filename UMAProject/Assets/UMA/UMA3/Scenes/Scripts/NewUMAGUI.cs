@@ -255,24 +255,36 @@ namespace UMA
         {
             if (layoutParent != null && colorTable != null)
             {
+                // The category determines which shared color is edited, even when the
+                // race supplies a palette through an AlsoAppliesTo alias.
+                string sharedColorName = colorTable.sharedColorName;
+                var race = avatar != null ? avatar.activeRace?.data : null;
+                var raceTable = race != null ? race.GetColorTable(sharedColorName) : null;
+                if (raceTable != null) colorTable = raceTable;
+
                 GameObject label = SafeInstantiatePrefab(ColorLabel, layoutParent.transform);
+                Text labelText = null;
                 if (label != null)
                 {
-                    Text labelText = label.GetComponent<Text>();
-                    if (labelText != null) labelText.text = colorTable.sharedColorName;
+                    labelText = label.GetComponent<Text>();
+                    if (labelText != null) labelText.text = sharedColorName;
                 }
 
                 GameObject colorContainer = SafeInstantiatePrefab(GridContainer, layoutParent.transform);
 
-                if (colorContainer != null)
+                if (colorContainer != null && colorTable.colors != null)
                 {
                     foreach (OverlayColorData color in colorTable.colors)
                     {
+                        if (color == null) continue;
                         GameObject colorSelector = SafeInstantiatePrefab(ColorSelector, colorContainer.transform);
                         if (colorSelector == null) continue;
                         ColorEffector effector = colorSelector.GetComponent<ColorEffector>();
                         if (effector != null)
-                            effector.Setup(this, colorTable.sharedColorName, color);
+                        {
+                            effector.Setup(this, sharedColorName, color);
+                            effector.SetCategoryHeader(labelText);
+                        }
                     }
                 }
             }
@@ -807,7 +819,7 @@ namespace UMA
                 return;
             }
 
-            Debug.Log($"Saving DNA snapshot for race {raceName}");
+           //Debug.Log($"Saving DNA snapshot for race {raceName}");
 
             Dictionary<string, DnaSetter> currentDna = avatar.GetDNA();
             if (currentDna == null || currentDna.Count == 0)
@@ -828,12 +840,12 @@ namespace UMA
             {
                 raceDnaSnapshots[raceName] = snapshot;
             }
-            Debug.Log($"Saved {snapshot.Count} DNA values for race {raceName}");
+           // Debug.Log($"Saved {snapshot.Count} DNA values for race {raceName}");
         }
 
         private void RestoreDnaForRaceWhenRecipeUpdated(string raceName)
         {
-            Debug.Log($"Scheduling DNA Update for {raceName} after recipe update");
+            //Debug.Log($"Scheduling DNA Update for {raceName} after recipe update");
             CancelPendingDnaRestore();
 
             pendingDnaRestoreAvatar = avatar;
@@ -847,7 +859,7 @@ namespace UMA
 
         private void RestoreDnaOnRecipeUpdated(UMAData umaData)
         {
-            Debug.Log($"Recipe updated Event for race {pendingDnaRestoreRaceName}, restoring DNA snapshot");
+           //Debug.Log($"Recipe updated Event for race {pendingDnaRestoreRaceName}, restoring DNA snapshot");
             DynamicCharacterAvatar restoreAvatar = pendingDnaRestoreAvatar;
             string raceName = pendingDnaRestoreRaceName;
             CancelPendingDnaRestore();
@@ -863,11 +875,11 @@ namespace UMA
 
         private void RestoreDnaForRace(DynamicCharacterAvatar restoreAvatar, string raceName)
         {
-            Debug.Log($"Restoring DNA snapshot for race {raceName}");
+           //Debug.Log($"Restoring DNA snapshot for race {raceName}");
             Dictionary<string, float> snapshot;
             if (!raceDnaSnapshots.TryGetValue(raceName, out snapshot) || snapshot.Count == 0)
             {
-                Debug.Log($"No DNA snapshot found for race {raceName}, skipping restore");
+                //Debug.Log($"No DNA snapshot found for race {raceName}, skipping restore");
                 return;
             }
 
@@ -879,7 +891,7 @@ namespace UMA
                     restoreAvatar.SetDNA(savedDna.Key, savedDna.Value, false);
                 }
             }
-            Debug.Log($"Restored {snapshot.Count} DNA values for race {raceName}");
+            //Debug.Log($"Restored {snapshot.Count} DNA values for race {raceName}");
         }
 
         private void CancelPendingDnaRestore()

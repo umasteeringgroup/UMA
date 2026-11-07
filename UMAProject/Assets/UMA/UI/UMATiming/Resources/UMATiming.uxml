@@ -1,0 +1,55 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="UMATiming.uss" />
+    <ui:VisualElement name="timingOverlay" class="timing-overlay">
+        <ui:VisualElement class="heading">
+            <ui:Label text="Generation Metrics" class="title" />
+            <ui:VisualElement class="fps-display" tooltip="Live frame rate averaged over at least 0.5 seconds, independent of time scale.">
+                <ui:Label name="fps" text="-- FPS" class="fps-value" />
+                <ui:Label name="frameTime" text="-- ms / frame" class="fps-frame-time" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Label text="UMA build timing · fresh crowd per run" class="subtitle" />
+        <ui:VisualElement class="combiner-controls">
+            <ui:Label text="MESH COMBINER FOR NEXT RUN" class="summary-caption" />
+            <ui:VisualElement name="combinerOptions" class="combiner-options" />
+            <ui:Label name="combinerStatus" class="combiner-status" />
+        </ui:VisualElement>
+        <ui:Button name="startTiming" text="Start Timing" class="start-button" />
+        <ui:Label name="status" text="Ready. Start Timing removes the existing UMAs and rebuilds the crowd." class="status" />
+        <ui:VisualElement class="summary">
+            <ui:VisualElement class="summary-item">
+                <ui:Label text="RUN ELAPSED" class="summary-caption" />
+                <ui:Label name="wallTime" text="0.000 s" class="summary-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="summary-item">
+                <ui:Label text="GENERATOR WORK" class="summary-caption" />
+                <ui:Label name="workTime" text="0.000 ms" class="summary-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="summary-item">
+                <ui:Label text="BUILT / SPAWNED" class="summary-caption" />
+                <ui:Label name="builtCount" text="0 / 0" class="summary-value" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:ScrollView name="metricsScroll" class="metrics-scroll" mode="Vertical" horizontal-scroller-visibility="Hidden">
+            <ui:Label text="Generation phase timings" class="section-title" />
+            <ui:VisualElement name="phaseMetrics" />
+            <ui:Label text="Average build timings" class="section-title" />
+            <ui:VisualElement name="averageMetrics" />
+            <ui:Label text="Incremental compiler" class="section-title" />
+            <ui:VisualElement name="compilerMetrics" />
+            <ui:Label text="Step and phase times (ms)" class="section-title" />
+            <ui:VisualElement name="atomicSteps" />
+            <ui:Label text="Budget overrun steps (ms)" class="section-title" />
+            <ui:VisualElement name="overrunSteps" />
+            <ui:Label text="Queue and build counters" class="section-title" />
+            <ui:VisualElement name="queueMetrics" />
+            <ui:Label text="Texture metrics" class="section-title" />
+            <ui:VisualElement name="textureMetrics" />
+            <ui:Label text="RenderTextures cleaned" class="section-title" />
+            <ui:VisualElement name="cleanupMetrics" />
+            <ui:Label text="Bone cleanup" class="section-title" />
+            <ui:VisualElement name="boneMetrics" />
+            <ui:Label text="Times use the generator's Stopwatch counters. Phase totals overlap; do not add them together. Run elapsed also includes spawning and waits. Results freeze when the crowd finishes. Existing cache and generator settings are preserved." class="note" />
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

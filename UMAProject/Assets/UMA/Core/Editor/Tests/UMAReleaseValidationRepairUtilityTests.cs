@@ -18,22 +18,37 @@ namespace UMA.Editors.Tests
         private const string LegacyTexturePath = Folder + "/LegacyTexture.asset";
         private const string ShaderPath = Folder + "/MaterialCleanupTest.shader";
         private const string MaterialPath = Folder + "/MaterialCleanupTest.mat";
+        private UMA.Tests.UMATestProjectGenerationScope projectGeneration;
 
         [SetUp]
         public void SetUp()
         {
-            if (!AssetDatabase.IsValidFolder(Folder))
-                AssetDatabase.CreateFolder("Assets", "UMAReleaseValidationRepairTests");
-            var texture = new Texture2D(2, 2) { name = "CandidateTexture" };
-            AssetDatabase.CreateAsset(texture, CandidatePath);
-            AssetDatabase.SaveAssets();
+            projectGeneration = new UMA.Tests.UMATestProjectGenerationScope();
+            try
+            {
+                if (!AssetDatabase.IsValidFolder(Folder))
+                    AssetDatabase.CreateFolder("Assets", "UMAReleaseValidationRepairTests");
+                var texture = new Texture2D(2, 2) { name = "CandidateTexture" };
+                AssetDatabase.CreateAsset(texture, CandidatePath);
+                AssetDatabase.SaveAssets();
+            }
+            catch
+            {
+                projectGeneration.Dispose();
+                projectGeneration = null;
+                throw;
+            }
         }
 
         [TearDown]
         public void TearDown()
         {
-            AssetDatabase.DeleteAsset(Folder);
-            AssetDatabase.Refresh();
+            try
+            {
+                AssetDatabase.DeleteAsset(Folder);
+                AssetDatabase.Refresh();
+            }
+            finally { projectGeneration?.Dispose(); projectGeneration = null; }
         }
 
         [Test]

@@ -57,7 +57,17 @@ If the generated character is missing slots, fix the DCA recipe first. The Face 
 
 To edit an existing Mesh Hide Asset or Mesh Hide Asset Collection, drag it onto the DCA inspector drop area labeled `Drag & Drop a MeshModifier, Mesh Hide Asset, or Mesh Hide Collection here to edit`. Dropping a collection opens the same Face Editor Stage with the existing selections loaded.
 
+Older race-baked masks using an asset filename such as `Body_slot_baked_Race` also load onto the corresponding generated `Body_baked_Race` slot. The editor uses that generated slot's mesh for LOD calculations and records its current name when you save. If a target slot is missing, hidden, or incompatible, the **Mesh Hide Assets** panel shows a warning instead of silently loading an empty selection.
+
 The stage creates a temporary baked mesh for editing and disables the character renderer while the stage is open. When you close the stage, the DCA is restored and rebuilt.
+
+Use the `LOD Level` slider at the top of **Face Tools** to edit a specific mesh LOD. The preview, paint tools, and raycast selection use that level's triangles. The slider is disabled when the character has only one LOD. Slots with fewer levels use their last available geometry.
+
+Switch freely between LOD levels: the stage remembers each level's unsaved face selection, including cleared selections, without prompting or saving to disk. `Save Mesh Hide Assets (All Edited LODs)` saves those edits together. Unedited saved LOD masks are preserved. The close prompt checks every level for unsaved changes, and closing the stage restores the character's original LOD. `Create MeshHideAssets (Split by Slot)` saves the collected LOD drafts to new assets, splitting by slot when needed.
+
+To regenerate a level, select LOD 1 or higher, choose `Copy LOD Mode`, and click `Recalculate LOD`. The red face selection updates immediately using LOD 0, including its unsaved draft edits. `Strict` (the default) requires all three vertices to belong to hidden base faces; `Weighted` requires two and `Conservative` requires one. Recalculation replaces only the current level's preview selection, supports Undo, and is saved with `Save Mesh Hide Assets (All Edited LODs)`. Create the initial asset first to enable recalculation.
+
+The selected mode is stored with each asset and used for automatic generation of missing levels. Merely previewing a level does not save it as an override. Changes to the base mask or generation mode refresh automatic masks while preserving explicitly saved LOD edits. For older saved masks, use `Recalculate LOD` to replace the displayed level; the Global Library's generation controls also honor `Copy LOD Mode` and its Replace/Missing policy.
 
 ## 5. Choose What Is Visible
 

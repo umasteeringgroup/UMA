@@ -50,6 +50,7 @@ namespace UMA.CharacterSystem
         // (Optional) Backward compatibility: if older saved data lacks flag, enforce it post-load.
         public override void Load(UMA.UMAData.UMARecipe umaRecipe, bool loadSlots = true)
         {
+            using var profile = UMACharacterBuildProfiler.LoadRecipe.Auto();
             var packed = PackedLoadForUnpack();
             // Legacy safeguard: some historical wardrobe recipes won�t have isWardrobe set
             packed.isWardrobe = true;

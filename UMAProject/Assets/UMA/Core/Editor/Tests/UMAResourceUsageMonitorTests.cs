@@ -65,6 +65,26 @@ namespace UMA.Tests
             Assert.That(measurements, Is.EqualTo(2));
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void DestroyedAvatarsAreRemovedFromEveryMonitorCollection(bool reset)
+        {
+            var host = Keep(new GameObject("Monitor lifetime test")); host.SetActive(false);
+            var monitor = host.AddComponent<UMAResourceUsageMonitor>();
+            var avatar = Keep(new GameObject("Destroyed monitored avatar")); avatar.SetActive(false);
+            var data = avatar.AddComponent<UMAData>();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            var tracked = (HashSet<UMAData>)typeof(UMAResourceUsageMonitor).GetField("avatars", flags).GetValue(monitor);
+            var completed = (HashSet<UMAData>)typeof(UMAResourceUsageMonitor).GetField("completedAvatars", flags).GetValue(monitor);
+            var baselines = (System.Collections.IDictionary)typeof(UMAResourceUsageMonitor).GetField("npcBaselines", flags).GetValue(monitor);
+            var timestamps = (System.Collections.IDictionary)typeof(UMAResourceUsageMonitor).GetField("spawnTimestamps", flags).GetValue(monitor);
+            tracked.Add(data); completed.Add(data); baselines.Add(data, (1, 1d)); timestamps.Add(data, 1L);
+            Object.DestroyImmediate(avatar);
+            if (reset) monitor.ResetCapture(); else monitor.RefreshMemory();
+            Assert.IsEmpty(tracked); Assert.IsEmpty(completed);
+            Assert.IsEmpty(baselines); Assert.IsEmpty(timestamps);
+        }
+
         [Test]
         public void PrivateObjectsAndUnavailableSizesAreReportedWithoutInventingSavings()
         {

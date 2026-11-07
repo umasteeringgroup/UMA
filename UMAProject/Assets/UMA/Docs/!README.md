@@ -1,8 +1,12 @@
 # UMA — Unity Multipurpose Avatar
 
-UMA 3.1f0 is an open-source character creation and customization system for Unity. It assembles optimized characters from reusable races, meshes, textures, materials, wardrobe recipes, DNA, and animation data.
+UMA 3 is an open-source character creation and customization system for Unity. It assembles optimized characters from reusable races, meshes, textures, materials, wardrobe recipes, DNA, and animation data.
 
 UMA can be used for player characters, crowds, character creators, modular NPCs, and runtime customization. Its authoring tools support artists and technical artists while its runtime systems handle mesh generation, texture compositing, wardrobe changes, DNA-driven shapes, LOD, and asset loading.
+
+## Current release
+
+**UMA 3.1f5 (package version 3.1.5)** supports **Unity 6.3 and newer**. For the update from 3.1f3 / 3.1.3, use the [What's New overview](!WhatsNewInUMA3.md#uma-31f5--changes-since-31f3) and [complete release changelog](../CHANGELOG.md#31f5-package-version-315). Feature guides below describe the current workflows; the changelog owns the version-by-version history.
 
 ## Start Here
 
@@ -38,7 +42,8 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [What's New in UMA 3](!WhatsNewInUMA3.md)
 - [Getting Started](!GettingStarted.md)
 - [Dynamic Character Avatar](DynamicCharacterAvatar.md)
-- [UMA Generator Setup](UMAGeneratorSetup.md)
+- [Configure UMA and Generator Setup](UMAGeneratorSetup.md) — Maximum Speed/Fidelity presets, editor rebuilds, atlas sizes, and fitting methods.
+- [Generator Quality Profiles](GeneratorQuality.md)
 - [UMA Asset Indexer and Global Library](UMAAssetIndexer.md)
 - [Icon Creator and Thumbnail Sprite Atlases](IconCreator.md)
 - [Addressables](Addressables.md)
@@ -47,6 +52,8 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 
 - [Content Creation](ContentCreation.md)
 - [UMA Tools for Blender](UMAToolsForBlender.md)
+- [Bone Pose Builder: An Artist's Guide](BonePoseBuilder.md) - turn posed rigs and supported animation samples into reusable poses.
+- [Bone Pose Editor: An Artist's Guide](BonePoseEditor.md) - shape poses on a built character with direct controls, symmetry, groups, and IK.
 - [Creating a New Race](CreatingANewRace.md)
 - [RaceData](RaceData.md)
 - [SlotDataAsset](SlotDataAsset.md)
@@ -57,6 +64,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Overlay Painter Generators and Filters](../OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md)
 - [Texture Utilities](TextureUtilities.md)
 - [Weight Touchup](WeightTouchup.md)
+- [Normal Viewer Repair](NormalViewerRepair.md) — scan, preview, and repair normals across slot boundaries.
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md)
 - [Examine Wearables](ExamineWearables.md)
 - [UMA Materials](UMAMaterial.md)
@@ -84,6 +92,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Random Avatars](RandomAvatar.md)
 - [Bone Animators](BoneAnimators.md)
 - [Dynamic Expression Player](DynamicExpressionPlayer.md)
+- [Ragdoll rest](../Core/StandardAssets/Extensions/UMAPhysics/README.md) — freeze settled ragdolls and wake them before new forces.
 
 ### Editor workflow
 

@@ -25,6 +25,9 @@ namespace UMA.Editors
         [SerializeField]
         private bool showPlans;
 
+        [SerializeField]
+        private string selectedPlanFolder;
+
         private string selectedPluginId;
         private PopupField<string> documentationSelector;
         private readonly List<string> sourceIds = new();
@@ -109,7 +112,11 @@ namespace UMA.Editors
             documentationSelector.RegisterValueChangedCallback(evt =>
             {
                 int index = documentationSelector.choices.IndexOf(evt.newValue);
-                selectedPluginId = index >= 0 && index < sourceIds.Count ? sourceIds[index] : null;
+                string sourceId = index >= 0 && index < sourceIds.Count ? sourceIds[index] : null;
+                if (showPlans)
+                    selectedPlanFolder = sourceId;
+                else
+                    selectedPluginId = sourceId;
                 RefreshDocuments();
             });
             toolbar.Add(documentationSelector);
@@ -151,28 +158,51 @@ namespace UMA.Editors
 
             try
             {
-                var registrations = UMAPluginDocumentationRegistry.Registrations;
-                if (!registrations.Any(r => r.pluginId == selectedPluginId)) selectedPluginId = null;
-                sourceIds.Clear(); sourceIds.Add(null);
-                var sourceNames = new List<string> { "UMA" };
-                foreach (var registration in registrations)
-                {
-                    sourceIds.Add(registration.pluginId);
-                    sourceNames.Add(registration.displayName == "UMA" || registrations.Count(r => r.displayName == registration.displayName) > 1
-                        ? registration.displayName + " (" + registration.pluginId + ")" : registration.displayName);
-                }
-                if (documentationSelector != null)
-                {
-                    documentationSelector.style.display = showPlans ? DisplayStyle.None : DisplayStyle.Flex;
-                    documentationSelector.choices = sourceNames;
-                    documentationSelector.SetValueWithoutNotify(sourceNames[sourceIds.IndexOf(selectedPluginId)]);
-                }
                 string umaPath = UMAEditorUtilities.FindUMAFullPath();
                 string folderName = showPlans ? "Plans" : "Docs";
                 docsDirectory = string.IsNullOrEmpty(umaPath) ? null :
                     UMAPathUtility.Normalize(umaPath + "/" + folderName);
-                if (!showPlans && selectedPluginId != null)
-                    docsDirectory = registrations.First(r => r.pluginId == selectedPluginId).DocumentationPath;
+                sourceIds.Clear(); sourceIds.Add(null);
+                var sourceNames = new List<string> { showPlans ? "All folders" : "UMA" };
+                string selectedSourceId;
+                if (showPlans)
+                {
+                    if (!string.IsNullOrEmpty(docsDirectory) && AssetDatabase.IsValidFolder(docsDirectory))
+                    {
+                        foreach (string folder in GetPlanFolders(docsDirectory).OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
+                        {
+                            string relativeFolder = folder.Substring(docsDirectory.Length + 1);
+                            sourceIds.Add(relativeFolder);
+                            sourceNames.Add(relativeFolder.Replace("/", " › "));
+                        }
+                    }
+                    if (!sourceIds.Contains(selectedPlanFolder)) selectedPlanFolder = null;
+                    selectedSourceId = selectedPlanFolder;
+                    if (selectedPlanFolder != null)
+                        docsDirectory += "/" + selectedPlanFolder;
+                }
+                else
+                {
+                    var registrations = UMAPluginDocumentationRegistry.Registrations;
+                    if (!registrations.Any(r => r.pluginId == selectedPluginId)) selectedPluginId = null;
+                    foreach (var registration in registrations)
+                    {
+                        sourceIds.Add(registration.pluginId);
+                        sourceNames.Add(registration.displayName == "UMA" || registrations.Count(r => r.displayName == registration.displayName) > 1
+                            ? registration.displayName + " (" + registration.pluginId + ")" : registration.displayName);
+                    }
+                    selectedSourceId = selectedPluginId;
+                    if (selectedPluginId != null)
+                        docsDirectory = registrations.First(r => r.pluginId == selectedPluginId).DocumentationPath;
+                }
+                if (documentationSelector != null)
+                {
+                    documentationSelector.choices = sourceNames;
+                    documentationSelector.SetValueWithoutNotify(sourceNames[sourceIds.IndexOf(selectedSourceId)]);
+                    documentationSelector.tooltip = showPlans
+                        ? "Filter plans by subfolder, including its nested folders."
+                        : "Select UMA or plugin documentation.";
+                }
 
                 if (!string.IsNullOrEmpty(docsDirectory) && AssetDatabase.IsValidFolder(docsDirectory))
                 {
@@ -199,6 +229,16 @@ namespace UMA.Editors
             }
 
             RefreshView();
+        }
+
+        private static IEnumerable<string> GetPlanFolders(string directory)
+        {
+            foreach (string folder in AssetDatabase.GetSubFolders(directory))
+            {
+                yield return folder;
+                foreach (string nestedFolder in GetPlanFolders(folder))
+                    yield return nestedFolder;
+            }
         }
 
         private void RefreshView()

@@ -107,7 +107,7 @@ namespace UMA
                 umaData.CleanMesh(false);
 
                 renderers = umaData.GetRenderers();
-                if (UMAAssetIndexer.Instance.generator.alwaysRegenerateRenderers)
+                if (UMAAssetIndexer.Instance.Generator.alwaysRegenerateRenderers)
                 {
                     if (renderers != null)
                     {
@@ -247,6 +247,28 @@ namespace UMA
         /// <param name="umaData">UMA data.</param>
         /// <param name="atlasResolution">Atlas resolution.</param>
         public override void UpdateUMAMesh(bool updatedAtlas, UMAData umaData, int atlasResolution)
+        {
+            try
+            {
+                UpdateMeshInternal(updatedAtlas, umaData, atlasResolution);
+            }
+            finally
+            {
+                // Keep reusable capacity, but release the last avatar and its baked
+                // slots even if this combiner is disabled or a build throws.
+                combinedMeshList?.Clear();
+                combinedMaterialList?.Clear();
+                _materialBuffer.Clear();
+                _filteredMaterials.Clear();
+                _submeshBuffer.Clear();
+                _emptyRendererIndices.Clear();
+                this.umaData = null;
+                renderers = null;
+                clothProperties = null;
+            }
+        }
+
+        private void UpdateMeshInternal(bool updatedAtlas, UMAData umaData, int atlasResolution)
         {
             UMAResourceReuse.PrepareCallbackMaterials(umaData);
 #if UMA_COMBINER_TIMINGS

@@ -9,7 +9,7 @@ Shader "UMA/URP/Realistic Skin"
         _BumpScale("Skin Normal Strength", Range(0,2)) = 1
         [NoScaleOffset] _MaskMap("Packed Mask - R Scattering G AO B Detail A Smoothness", 2D) = "white" {}
         [NoScaleOffset] _Skinmask("Tint Protection - White Preserves Albedo", 2D) = "white" {}
-        _Skinmask_Amount("Tint Protection Strength", Range(0,1)) = 1
+        _Skinmask_Amount("Tint Protection Strength", Range(0,2)) = 1
         _Smoothness_Remap("Smoothness Range - X Min Y Max", Vector) = (0.15,0.6,0,0)
         _Ambient_Occlusion_Remap("Occlusion Range - X Min Y Max", Vector) = (0,1,0,0)
         [Header(Pore Detail)]
@@ -28,6 +28,7 @@ Shader "UMA/URP/Realistic Skin"
         _TransmissionStrength("Backlight Transmission Strength", Range(0,1)) = 0.12
         _TransmissionPower("Backlight Focus", Range(1,16)) = 4
         [Header(Surface Reflection)]
+        _Metallic("Metallic (Entire Material)", Range(0,1)) = 0
         _SkinIOR("Skin Index of Refraction", Range(1.3,1.6)) = 1.43
         _OilLobeWeight("Oil Reflection Blend", Range(0,1)) = 0.25
         _OilSmoothness("Oil Reflection Smoothness", Range(0,0.9)) = 0.72

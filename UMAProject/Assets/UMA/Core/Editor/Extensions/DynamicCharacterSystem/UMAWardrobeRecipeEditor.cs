@@ -90,7 +90,14 @@ namespace UMA.Editors
 
 
             //Set this up after the other so we can send the popup data with it
-            slotEditor = new WardrobeRecipeMasterEditor(_recipe, generatedBaseSlotOptions, generatedBaseSlotOptionsLabels, target);
+            // Keep the picker instances alive while their asynchronous popup is open.
+            // Rebuild() replaces slotEditor after recipe changes, so the rows still refresh then.
+            if (!(slotEditor is WardrobeRecipeMasterEditor wardrobeEditor) || !wardrobeEditor.IsEditing(_recipe))
+            {
+                wardrobeEditor = new WardrobeRecipeMasterEditor(_recipe, generatedBaseSlotOptions, generatedBaseSlotOptionsLabels, target);
+                slotEditor = wardrobeEditor;
+            }
+            wardrobeEditor.SetBaseSlotOptions(generatedBaseSlotOptions, generatedBaseSlotOptionsLabels);
 			return doUpdate;
 		}
 

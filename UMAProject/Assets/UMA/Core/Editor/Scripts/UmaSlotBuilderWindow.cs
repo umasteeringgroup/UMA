@@ -847,9 +847,10 @@ namespace UMA.Editors
 
         string GetSlotName(SkinnedMeshRenderer smr)
         {
-            if (nameAfterMaterial)
+            if (nameAfterMaterial && smr != null && smr.sharedMaterial != null &&
+                !string.IsNullOrWhiteSpace(smr.sharedMaterial.name))
             {
-                return smr.sharedMaterial.name.ToTitleCase();
+                return smr.sharedMaterial.name;
             }
             int index = slotName.LastIndexOf('/');
             if (index > 0)
@@ -1929,7 +1930,7 @@ namespace UMA.Editors
             sbp.seamsMesh = normalReferenceMesh;
             sbp.material = material;
             sbp.udimAdjustment = udimAdjustment;
-            sbp.useRootFolder = false;
+            sbp.useRootFolder = useRootFolder;
             sbp.keepAllBones = keepAllBones;
             sbp.rotation = rotation;
             sbp.rotationEnabled = rotationEnabled;

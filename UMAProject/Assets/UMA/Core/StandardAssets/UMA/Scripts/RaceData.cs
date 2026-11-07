@@ -47,6 +47,24 @@ namespace UMA
             }
         }
 
+		public List<SharedColorTable> colorLists = new List<SharedColorTable>();
+
+        /// <summary>Finds this race's palette for a shared color, preferring its primary name over aliases.</summary>
+        public SharedColorTable GetColorTable(string sharedColorName)
+        {
+            if (colorLists == null || string.IsNullOrWhiteSpace(sharedColorName)) return null;
+            SharedColorTable additionalMatch = null;
+            foreach (var table in colorLists)
+            {
+                if (table == null) continue;
+                if (string.Equals(table.sharedColorName, sharedColorName, StringComparison.Ordinal)) return table;
+                if (additionalMatch == null && table.AlsoAppliesTo != null &&
+                    Array.Exists(table.AlsoAppliesTo, name => string.Equals(name, sharedColorName, StringComparison.Ordinal)))
+                    additionalMatch = table;
+            }
+            return additionalMatch;
+        }
+
 		public List<string> KeepBoneNames = new List<string>();
 		public List<string> tags = new List<string>();
 		public  List<SlotBurnOptions> PrebakedBlendshapes = new List<SlotBurnOptions>();

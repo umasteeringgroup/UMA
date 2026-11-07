@@ -229,7 +229,10 @@ namespace UMA.Editors.Tests
 
                 FakeMeshCombineOperation operation = combiner.lastOperation;
                 Assert.AreEqual(1, operation.completedSteps);
+                var debugHistory = typeof(UMAGeneratorBuiltin).GetField("umaDatasGenerated")?.GetValue(generator) as System.Collections.IList;
+                Assert.IsTrue(debugHistory == null || debugHistory.Contains(data));
                 generator.removeUMA(data);
+                Assert.IsTrue(debugHistory == null || !debugHistory.Contains(data), "Debug history must not retain removed avatar recipes.");
 
                 Assert.AreEqual(0, generator.QueueSize());
                 Assert.IsFalse(

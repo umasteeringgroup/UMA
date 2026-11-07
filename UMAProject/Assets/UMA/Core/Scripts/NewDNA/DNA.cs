@@ -28,6 +28,15 @@ namespace UMA
         }
 #endif
 
+        public string GetDisplayName()
+        {
+            if (string.IsNullOrEmpty(displayName))
+            {
+                return name;
+            }
+            return displayName;
+        }
+
         public DNABuildType GetBuildType()
         {
             DNABuildType updateFlags = DNABuildType.None;

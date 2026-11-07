@@ -18,7 +18,7 @@ UMAProject\tmp\*
 UMAProject/tmp/*
 UMAProject/ProjectSettings/ClusterInputManager.asset
 UMAProject/TextureExports/*
-
+UMAProject/Assets/Content/*
 UMAProject/ProjectSettings/GraphicsSettings.asset
 
 UMAProject/ProjectSettings/GraphicsSettings.asset
@@ -78,3 +78,5 @@ UMAProject/tmp/ContentPackageValidation*/
 UMAProject/tmp/CorePackageValidation*/
 UMAProject/tmp/UMAContentInstallValidation*/
 UMAProject/tmp/UMAContentMatrix-*/
+UMAProject/Assets/UMAProjectData/OverlayPainter/Recovery*/
+UMAProject/Assets/UMA/Plans/ActionRPG/

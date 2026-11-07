@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: EyePosition
   m_EditorClassIdentifier: UMA_Core::UMA.DNA
   description: 
-  defaultValue: 1
+  defaultValue: 0.5
   effects:
   - rid: 7442055758958821640
   displayName: 

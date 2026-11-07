@@ -13,18 +13,23 @@ MonoBehaviour:
   m_Name: UMAMaterial_UMA_SRP_CutoutDiffuse
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   supportsSourceUVCropping: 0
-  _material: {fileID: 2100000, guid: a0a5f12233b75004396e49583e82ec2b, type: 2}
+  _material: {fileID: -876546973899608171, guid: 1344f856965fd9c4a969cf7c91d271b4, type: 3}
   _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
+  _hasSpeedMaterialBackup: 0
+  _speedBackupMaterial: {fileID: 0}
+  _speedBackupSecondPass: {fileID: 0}
+  _speedBackupHDRPMaterial: {fileID: 0}
+  _speedBackupHDRPSecondPass: {fileID: 0}
   materialType: 1
   channels:
   - channelType: 0
     textureFormat: 0
     materialPropertyName: _BaseMap
-    sourceTextureName: _BaseMap
+    sourceTextureName: 
     Compression: 0
-    DownSample: 1
+    DownSample: 0
     ConvertRenderTexture: 0
     UseExistingTextureForChannel: 0
     NonShaderTexture: 0

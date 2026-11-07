@@ -93,6 +93,58 @@ namespace UMA.Tests
             (List<Action>)typeof(UMAWardrobeRecipeEditor).GetField("standardEdits", Private).GetValue(editor);
 
         [UnityTest]
+        public IEnumerator AdvancedSlotPickerSelectionSurvivesRepaintAndSaves() => ConfirmAdvancedPickerSelection(false);
+
+        [UnityTest]
+        public IEnumerator AdvancedOverlayPickerSelectionSurvivesRepaintAndSaves() => ConfirmAdvancedPickerSelection(true);
+
+        private IEnumerator ConfirmAdvancedPickerSelection(bool overlay)
+        {
+            EditorPrefs.SetBool(UMAInspectorView.PreferenceKey(typeof(UMAWardrobeRecipe)), true);
+            var selectedSlot = Make<SlotDataAsset>();
+            selectedSlot.name = "PickerAddedSlot";
+            var selectedOverlay = Make<OverlayDataAsset>();
+            selectedOverlay.name = "PickerAddedOverlay"; selectedOverlay.material = umaMaterial;
+            selectedOverlay.textureList = overlayAsset.textureList;
+            var index = UMAAssetIndexer.Instance;
+            index.SerializedItems.Add(new AssetItem(typeof(SlotDataAsset), selectedSlot.slotName, "", selectedSlot));
+            index.SerializedItems.Add(new AssetItem(typeof(OverlayDataAsset), selectedOverlay.overlayName, "", selectedOverlay));
+            index.DoInitialDictionaryLoad();
+            var editor = Inspector();
+            var window = Make<AvatarInspectorTestWindow>();
+            window.DrawExtra = editor.OnInspectorGUI;
+            window.position = new Rect(80, 80, 850, 950); window.Show();
+            yield return Repaint(window);
+            var masterField = typeof(CharacterBaseEditor).GetField("slotEditor", Private);
+            var master = (SlotMasterEditor)masterField.GetValue(editor);
+            object picker;
+            if (overlay)
+            {
+                var rows = (List<SlotEditor>)typeof(SlotMasterEditor).GetField("_slotEditors", Private).GetValue(master);
+                picker = typeof(SlotEditor).GetField("overlayPicker", Private).GetValue(rows[0]);
+            }
+            else picker = typeof(SlotMasterEditor).GetField("slotPicker", Private).GetValue(master);
+
+            // A popup belongs to the editor instance that opened it. Simulate its delayed
+            // confirmation after intervening Layout/Repaint events, through the real host.
+            yield return Repaint(window);
+            Assert.That(masterField.GetValue(editor), Is.SameAs(master), "The inspector discarded the popup's owner.");
+            picker.GetType().GetField("pending", Private).SetValue(picker, overlay ? (Object)selectedOverlay : selectedSlot);
+            string command = (string)picker.GetType().GetField("command", Private).GetValue(picker);
+            window.SendEvent(EditorGUIUtility.CommandEvent(command));
+            yield return Repaint(window);
+            var packed = wardrobe.PackedLoad();
+            if (overlay)
+                Assert.That(Array.Exists(packed.slotsV3[0].overlays, o => o.id == selectedOverlay.overlayName), Is.True);
+            else
+                Assert.That(Array.Exists(packed.slotsV3, s => s.id == selectedSlot.slotName), Is.True);
+            string after = wardrobe.recipeString;
+            window.SendEvent(EditorGUIUtility.CommandEvent(command));
+            yield return Repaint(window);
+            Assert.That(wardrobe.recipeString, Is.EqualTo(after), "A confirmation must be consumed only once.");
+        }
+
+        [UnityTest]
         public IEnumerator StandardDrawDoesNotMutateRecipeOrSourceAssetsAtNarrowAndWideWidths()
         {
             var editor = Inspector();

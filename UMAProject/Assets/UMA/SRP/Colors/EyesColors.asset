@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   channelCount: 2
   sharedColorName: Eyes
+  AlsoAppliesTo: []
   colors:
   - name: Black
     channelMask:
@@ -37,7 +38,7 @@ MonoBehaviour:
     showSelected: 1
     isSelected: 0
     showDisplayColor: 1
-    showSelectFromFoldout: 1
+    showSelectFromFoldout: 0
     displayColor: {r: 0.088050246, g: 0.088050246, b: 0.088050246, a: 1}
   - name: Gray
     channelMask:
@@ -231,3 +232,4 @@ MonoBehaviour:
     showDisplayColor: 1
     showSelectFromFoldout: 1
     displayColor: {r: 0.18867922, g: 0.04875432, b: 0, a: 1}
+  defaultColorIndex: -1

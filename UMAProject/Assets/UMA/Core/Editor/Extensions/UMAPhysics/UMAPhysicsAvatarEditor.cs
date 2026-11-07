@@ -50,6 +50,15 @@ namespace UMA.Dynamics.Editors
                         "ragdollBlendAmount", "Physics Blend Amount");
             }
 
+            DrawRagdollRestSettings(serializedObject, inspectorView);
+            if (Application.isPlaying && avatar.ragdolled)
+            {
+                EditorGUILayout.LabelField("Ragdoll Physics",
+                    avatar.IsRagdollFrozen ? "Frozen at rest" : "Simulating");
+                if (avatar.IsRagdollFrozen && GUILayout.Button("Wake Ragdoll"))
+                    avatar.WakeRagdoll();
+            }
+
             using (inspectorView.Section("Bones and colliders",
                 "Physics Elements define participating bones, rigidbody masses, colliders and joint limits. Simple Player Collider uses the normal capsule/rigidbody setup; Collider Triggers makes the non-ragdolled body collider operate as a trigger."))
             {
@@ -92,6 +101,23 @@ namespace UMA.Dynamics.Editors
                 EditorGUILayout.PropertyField(onRagdollEnded);
             }
             serializedObject.ApplyModifiedProperties();
+        }
+
+        internal static void DrawRagdollRestSettings(SerializedObject serializedObject,
+            UMAInspectorView inspectorView)
+        {
+            using (inspectorView.Section("Ragdoll rest",
+                "Freeze At Rest holds the pose when every body stays within the movement and rotation tolerances for the full rest time. The avatar remains ragdolled and its colliders stay available. Call WakeRagdoll before applying forces or removing its support; the UMA shooter does this automatically."))
+            {
+                inspectorView.Field(serializedObject, "freezeWhenRagdollRests", "Freeze At Rest");
+                using (new EditorGUI.DisabledScope(
+                    !serializedObject.FindProperty("freezeWhenRagdollRests").boolValue))
+                {
+                    inspectorView.Field(serializedObject, "ragdollRestTime", "Rest Time (seconds)");
+                    inspectorView.Field(serializedObject, "ragdollRestPositionThreshold", "Movement Tolerance (meters)");
+                    inspectorView.Field(serializedObject, "ragdollRestRotationThreshold", "Rotation Tolerance (degrees)");
+                }
+            }
         }
 
         public static void AddDefaultLayers(SerializedProperty ragdoll,

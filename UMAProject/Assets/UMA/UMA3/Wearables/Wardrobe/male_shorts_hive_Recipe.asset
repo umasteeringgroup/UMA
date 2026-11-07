@@ -15,7 +15,7 @@ MonoBehaviour:
   label: 
   resourcesOnly: 0
   recipeType: Wardrobe
-  DisplayValue: 
+  DisplayValue: Shorts Hive
   compatibleRaces:
   - Human Male 3.0
   wardrobeRecipeThumbs:

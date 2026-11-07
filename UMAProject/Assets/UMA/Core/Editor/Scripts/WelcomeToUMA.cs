@@ -18,6 +18,7 @@ namespace UMA
     public partial class WelcomeToUMA : EditorWindow
     {
         private const string WhatsNewDocumentPath = "Docs/!WhatsNewInUMA3.md";
+        private const int SrpSupportPage = 13;
         private const string UrpPackageName = "com.unity.render-pipelines.universal";
         private const string HdrpPackageName = "com.unity.render-pipelines.high-definition";
         private const string UmaUrpPackagePath = "SRP/UMAURP.unitypackage";
@@ -348,6 +349,7 @@ namespace UMA
         public GUIStyle DescriptionStyle;
         public GUIStyle SceneTitleStyle;
         private GUIStyle informationButtonStyle;
+        private GUIStyle selectedNavigationStyle;
 
         public Rect HeaderRect;
         public Rect NavigationRect;
@@ -426,7 +428,8 @@ namespace UMA
         {
             if (ActiveLargeStyle != null && ErrorFound != null && Warning != null &&
                 InfoStyle != null && Hyperlink != null && DescriptionStyle != null &&
-                SceneTitleStyle != null && informationButtonStyle != null)
+                SceneTitleStyle != null && informationButtonStyle != null &&
+                selectedNavigationStyle != null)
                 return;
 
             // EditorStyles is only reliable while Unity is inside an IMGUI event.
@@ -495,6 +498,10 @@ namespace UMA
             {
                 wordWrap = true,
                 alignment = TextAnchor.MiddleCenter
+            };
+            selectedNavigationStyle = new GUIStyle(buttonStyle)
+            {
+                fontStyle = FontStyle.Bold
             };
         }
 
@@ -591,10 +598,27 @@ namespace UMA
             var version = settings != null && !string.IsNullOrEmpty(settings.UMAVersion) ? settings.UMAVersion : "UMA";
             GUIStyle headerStyle = ActiveLargeStyle ?? EditorStyles.largeLabel ??
                 EditorStyles.label ?? GUI.skin?.label ?? new GUIStyle();
-            EditorGUILayout.LabelField($"Welcome to {version}", headerStyle);
+            EditorGUILayout.LabelField($"Welcome to UMA {version}", headerStyle);
             GUIHelper.EndInsetArea();
         }
 
+
+        private bool DrawNavigationButton(string label, int page)
+        {
+            bool selected = currentButton == page;
+            bool pressed = GUILayout.Toggle(selected, label,
+                selected ? selectedNavigationStyle : GUI.skin.button,
+                GUILayout.Height(40)) != selected;
+            if (selected && Event.current.type == EventType.Repaint)
+            {
+                Rect rect = GUILayoutUtility.GetLastRect();
+                EditorGUI.DrawRect(new Rect(rect.x + 2, rect.y + 4, 3, rect.height - 8),
+                    EditorGUIUtility.isProSkin
+                        ? new Color32(80, 180, 255, 255)
+                        : new Color32(0, 90, 170, 255));
+            }
+            return pressed;
+        }
 
         public void DrawNavigation()
         {
@@ -602,15 +626,19 @@ namespace UMA
             navigationScroll = GUILayout.BeginScrollView(navigationScroll, false, false,
                 GUIStyle.none, GUI.skin.verticalScrollbar);
             GUILayout.BeginVertical();
-            if (GUILayout.Button("Welcome", GUILayout.Height(40)))
+            if (DrawNavigationButton("Welcome", 0))
             {
                 ClearLog();
                 DoWelcome();
                 currentButton = 0;
             }
-            if (GUILayout.Button("Plugins", GUILayout.Height(40)))
+            if (DrawNavigationButton("Plugins", PluginsPage))
             {
                 ShowPluginsPage();
+            }
+            if (DrawNavigationButton("Configure UMA", DefaultsPage))
+            {
+                ShowDefaultsPage();
             }
             SrpSupport installedSrp = navigationInstalledSrp;
             string srpButton = RequiresSrpSelection(installedSrp)
@@ -618,11 +646,11 @@ namespace UMA
                 : navigationSrpUpdateAvailable
                     ? "Update Render Pipeline Support"
                     : "Render Pipeline Support";
-            if (GUILayout.Button(srpButton, GUILayout.Height(40)))
+            if (DrawNavigationButton(srpButton, SrpSupportPage))
             {
                 DoSrpSupportPage();
             }
-            if (GUILayout.Button("Getting Started", GUILayout.Height(40)))
+            if (DrawNavigationButton("Getting Started", 1))
             {
                 DoGettingStarted();
                 currentButton = 1;
@@ -638,43 +666,43 @@ namespace UMA
                 UMADocumentationWindow.ShowWindow();
             }
 
-                if (GUILayout.Button("Create UMA Character", GUILayout.Height(40)))
+                if (DrawNavigationButton("Create UMA Character", 10))
                 {
                     CreateUMACharacter();
                     currentButton = 10;
                 }
-                if (GUILayout.Button("Example Scenes", GUILayout.Height(40)))
+                if (DrawNavigationButton("Example Scenes", 8))
                 {
                     ClearLog();
                     scrollPosition = Vector2.zero;
                     currentButton = 8;
                 }
-                if (GUILayout.Button("Rebuild Library", GUILayout.Height(40)))
+                if (DrawNavigationButton("Rebuild Library", 7))
                 {
                     ClearLog();
                     currentButton = 7;
                     RebuildLibrary();
                 }
-                if (GUILayout.Button("Install extra Shaders", GUILayout.Height(40)))
+                if (DrawNavigationButton("Install extra Shaders", 6))
                 {
                     ClearLog();
                     currentButton = 6;
                     DoExtraShadersPage();
                 }
-                if (GUILayout.Button("Scan UMA 3 Scene", GUILayout.Height(40)))
+                if (DrawNavigationButton("Scan UMA 3 Scene", 3))
                 {
                     ClearLog();
                     ScanScene();
                     currentButton = 3;
                 }
-                if (GUILayout.Button("Scan UMA 3 Project", GUILayout.Height(40)))
+                if (DrawNavigationButton("Scan UMA 3 Project", 4))
                 {
                     ClearLog();
                     ScanProject();
                     currentButton = 4;
                 }
            //}
-            if (GUILayout.Button("Links", GUILayout.Height(40)))
+            if (DrawNavigationButton("Links", 5))
             {
                 ClearLog();
                 currentButton = 5;
@@ -768,6 +796,7 @@ namespace UMA
             AddSeperator();
 
             AddText("<b>3. Use the current editor workflow</b>");
+            AddText("Open <b>Configure UMA</b> on the left to review skin and hair materials and apply the Maximum Speed or Maximum Fidelity preset. Both request editor UMA rebuilds after saving the configuration. Atlas resolutions and quality-profile overrides are preserved.");
             AddText("Enable the <b>UMA Toolbar</b> from the Scene view Overlays menu for character rebuild modes, mesh-combiner selection, focus and skeleton controls, editor-generation pause, diagnostics, and common tools.");
             AddText("Use <b>UMA > Content Creation</b> for slot, wardrobe, bone, and prefab authoring. Asset management, texture, animation, project setup, testing, and debug commands are grouped in their matching UMA submenus.");
             AddText("Open the <b>Documentation Browser</b> for the Markdown guides shipped with this UMA installation.");
@@ -989,189 +1018,6 @@ namespace UMA
             }
         }
 
-        private void RefreshShaderFolder()
-        {
-            ClearLog();
-
-            string path;
-            try
-            {
-                UMASettings settings = UMASettings.GetOrCreateSettings();
-                string configuredPath = settings != null
-                    ? settings.ShaderFolder
-                    : null;
-                if (string.IsNullOrWhiteSpace(configuredPath))
-                    configuredPath = UMAPathUtility.ShaderPackagesRelativePath;
-
-                configuredPath = UMAPathUtility.Normalize(configuredPath);
-                bool isAssetPath = configuredPath.StartsWith(
-                    "Assets/", StringComparison.OrdinalIgnoreCase) ||
-                    configuredPath.StartsWith(
-                        "Packages/", StringComparison.OrdinalIgnoreCase);
-                path = isAssetPath
-                    ? UMAPathUtility.ResolveLegacyInstallAssetPath(configuredPath)
-                    : configuredPath.StartsWith("SRP/",
-                        StringComparison.OrdinalIgnoreCase)
-                        ? UMAPathUtility.ResolveSrpAssetPath(
-                            configuredPath.Substring("SRP/".Length))
-                        : UMAPathUtility.ResolveInstallAssetPath(configuredPath);
-            }
-            catch (Exception ex)
-            {
-                AddText($"Error locating the UMA shader folder: {ex.Message}",
-                    LogType.Error);
-                return;
-            }
-
-            if (string.IsNullOrEmpty(path))
-            {
-                AddText("UMA shader folder path is empty.", LogType.Error);
-                return;
-            }
-
-            if (AssetDatabase.IsValidFolder(path))
-            {
-                AddText($"Refreshing UMA shaders in {path}");
-                try
-                {
-                    StartProcessing();
-                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.DontDownloadFromCacheServer | ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceSynchronousImport);
-                    StopProcessing();
-                }
-                catch (Exception ex)
-                {
-                    StopProcessing();
-                    AddText($"Error during shader reimport: {ex.Message}", LogType.Error);
-                    return;
-                }
-
-                AddText(path + " refreshed successfully!");
-
-                // After shader reimport, fix up materials via all MaterialShaderRegistry assets
-                int registryCount = 0;
-                int totalMaterials = 0;
-                int reassigned = 0;
-                var unresolvedErrorMats = new List<string>();
-
-                bool IsErrorShader(Shader s)
-                {
-                    if (s == null) return false;
-                    var n = s.name ?? string.Empty;
-                    return n.Equals("Hidden/InternalErrorShader", StringComparison.OrdinalIgnoreCase)
-                           || n.StartsWith("Hidden/Internal", StringComparison.OrdinalIgnoreCase);
-                }
-
-                try
-                {
-                    var registryGuids = AssetDatabase.FindAssets("t:MaterialShaderRegistry");
-                    foreach (var guid in registryGuids)
-                    {
-                        var regPath = AssetDatabase.GUIDToAssetPath(guid);
-                        if (string.IsNullOrEmpty(regPath)) continue;
-
-                        var registry = AssetDatabase.LoadAssetAtPath<MaterialShaderRegistry>(regPath);
-                        if (registry == null) continue;
-
-                        registryCount++;
-                        registry.BuildIndex();
-
-                        var entries = registry.Entries;
-                        if (entries == null) continue;
-
-                        foreach (var e in entries)
-                        {
-                            if (e == null) continue;
-
-                            var mat = e.material;
-                            if (mat == null) continue;
-
-                            totalMaterials++;
-
-                            // If the material is on the error shader AND we have no original shader name, notify and skip resolution.
-                            if (IsErrorShader(mat.shader) && (string.IsNullOrEmpty(e.shaderName) && e.shader == null))
-                            {
-                                unresolvedErrorMats.Add(mat.name);
-                                continue;
-                            }
-
-                            // Resolve shader: prefer by stored name after reimport
-                            Shader resolved = null;
-                            if (!string.IsNullOrEmpty(e.shaderName))
-                            {
-                                resolved = Shader.Find(e.shaderName);
-                            }
-
-                            if (resolved != null && mat.shader != resolved)
-                            {
-                                mat.shader = resolved;
-                                EditorUtility.SetDirty(mat);
-                                reassigned++;
-                            }
-
-                            // Keep registry entry synchronized if possible
-                            if (e.shader == null && resolved != null)
-                            {
-                                e.shader = resolved;
-                                EditorUtility.SetDirty(registry);
-                            }
-                            if (resolved != null && !string.IsNullOrEmpty(resolved.name) && e.shaderName != resolved.name && !IsHiddenInternalShader(resolved.name))
-                            {
-                                e.shaderName = resolved.name;
-                                EditorUtility.SetDirty(registry);
-                            }
-                        }
-                    }
-
-                    AssetDatabase.SaveAssets();
-                }
-                catch (Exception ex)
-                {
-                    AddText($"Error while resolving shaders/materials: {ex.Message}", LogType.Error);
-                }
-
-                // If any materials are stuck on the error shader without a known original name, alert the user.
-                if (unresolvedErrorMats.Count > 0)
-                {
-                    string list = string.Join("\n - ", unresolvedErrorMats);
-                    string msg = "The following materials are using the error shader and cannot be resolved because the original shader name is not available:\n - " + list + "\n\nPlease update their MaterialShaderRegistry entries with the correct shader name.";
-                    EditorUtility.DisplayDialog("UMA Shader Resolution Error", msg, "OK");
-                    AddText("Some materials could not be resolved and are using the error shader:", LogType.Error);
-                    foreach (var m in unresolvedErrorMats)
-                    {
-                        AddText($" - {m}", LogType.Error);
-                    }
-                }
-
-                // Rebuild all edit-time UMAs to pick up shader/material changes
-                try
-                {
-                    var avatars = UMAUpdateProcessor.GetSceneEditTimeAvatars();
-                    int rebuilt = 0;
-                    foreach (var dca in avatars)
-                    {
-                        if (dca != null && dca.editorTimeGeneration)
-                        {
-                            dca.GenerateSingleUMA();
-                            rebuilt++;
-                        }
-                    }
-                    AddText($"Rebuilt {rebuilt} edit-time UMA(s).");
-                }
-                catch (Exception ex)
-                {
-                    AddText($"Error rebuilding edit-time UMAs: {ex.Message}", LogType.Error);
-                }
-
-                AddText($"MaterialShaderRegistry processed: {registryCount} asset(s).");
-                AddText($"Materials scanned: {totalMaterials}, shaders reassigned: {reassigned}.");
-            }
-            else
-            {
-                AddText($"Shader folder not found: {path}", LogType.Error);
-                EditorUtility.DisplayDialog("UMA Shaders", "The UMA Shader folder is missing. Please reinstall UMA to get the shaders.", "OK");
-            }
-        }
-
         private void RebuildLibrary()
         {
             AddText("Rebuilding UMA Asset Library...");
@@ -1225,6 +1071,10 @@ namespace UMA
             GUIHelper.BeginInsetArea(PanelColor, ContentRect, 4, 10);
             switch (currentButton)
             {
+                case DefaultsPage:
+                    DrawDefaultsPage();
+                    showLog = false;
+                    break;
                 case PluginsPage:
                     DrawPluginsPage();
                     showLog = false;
@@ -1249,6 +1099,7 @@ namespace UMA
                     false, false, GUIStyle.none, GUI.skin.verticalScrollbar,
                     GUILayout.ExpandWidth(true));
                 ShowLogItems();
+                DrawScanFixes();
                 GUILayout.EndScrollView();
             }
             GUIHelper.EndInsetArea();
@@ -1380,8 +1231,22 @@ namespace UMA
                 else
                 {
                     GUIStyle style = item.Style ?? InfoStyle;
-                    GUILayout.Label(item.Message ?? string.Empty, style,
-                        GUILayout.ExpandWidth(true), GUILayout.MaxWidth(rowWidth));
+                    string message = item.Message ?? string.Empty;
+                    if (item.logType == LogType.Error || item.logType == LogType.Warning)
+                    {
+                        // SelectableLabel is read-only but supports selection and Ctrl+C.
+                        // Explicit wrapped height keeps long diagnostics fully selectable.
+                        float height = Mathf.Max(EditorGUIUtility.singleLineHeight,
+                            style.CalcHeight(new GUIContent(message), rowWidth));
+                        EditorGUILayout.SelectableLabel(message, style,
+                            GUILayout.ExpandWidth(true), GUILayout.MaxWidth(rowWidth),
+                            GUILayout.Height(height));
+                    }
+                    else
+                    {
+                        GUILayout.Label(message, style,
+                            GUILayout.ExpandWidth(true), GUILayout.MaxWidth(rowWidth));
+                    }
                 }
                 GUILayout.EndHorizontal();
             }
@@ -1425,6 +1290,7 @@ namespace UMA
         {
             if (LoggedItems == null) LoggedItems = new List<LogLine>();
             LoggedItems.Clear();
+            ClearScanFixes();
             projectScanHasRun = false;
             Repaint();
         }
@@ -2028,8 +1894,9 @@ namespace UMA
                     if (overlay.overlayBlend == null ||
                         overlay.overlayBlend.Length != overlay.textureList.Length)
                     {
-                        AddText($"Overlay '{overlay.overlayName}' blend-mode count does not match its texture count.",
+                        LogLine blendError = AddText($"Overlay '{overlay.overlayName}' blend-mode count does not match its texture count.",
                             LogType.Error);
+                        RecordBlendModeFix(overlay, blendError);
                         invalid = true;
                     }
                     if (overlay.textureNames != null &&
@@ -2285,8 +2152,9 @@ namespace UMA
                     continue;
                 }
 
-                var Slots = PackRecipe.slotsV3;
-                if (Slots == null)
+                var Slots = UMAScanRepairUtility.GetRecipeSlotsForScan(PackRecipe);
+                if (Slots == null || Slots.Length == 0 ||
+                    (PackRecipe.version != 3 && !Slots.Any(s => !UMAScanRepairUtility.IsEmptySlotEntry(s))))
                 {
                     AddText($"Wardrobe Recipe {uwr.name} has no slots assigned!", LogType.Error);
                     ReviewAssetItem(r);
@@ -2295,14 +2163,13 @@ namespace UMA
                 for (int i = 0; i < Slots.Length; i++)
                 {
                     UMAPackedRecipeBase.PackedSlotDataV3 s = Slots[i];
-                    if (s == null)
+                    if (UMAScanRepairUtility.IsEmptySlotEntry(s))
                     {
-                        continue;
-                    }
-                    if (string.IsNullOrEmpty(s.id))
-                    {
-                        AddText($"Wardrobe Recipe '{uwr.name}' has a slot entry with no slot or placeholder name.",
+                        // Older recipes keep empty positions in their indexed slot arrays.
+                        if (PackRecipe.version != 3) continue;
+                        var emptySlotError = AddText($"Wardrobe Recipe '{uwr.name}' has a slot entry with no slot or placeholder name.",
                             LogType.Error);
+                        RecordEmptySlotFix(uwr, emptySlotError);
                         invalid = true;
                         continue;
                     }
@@ -2448,21 +2315,25 @@ namespace UMA
 
                 if (string.IsNullOrWhiteSpace(PackRecipe.race))
                 {
-                    AddText($"Character recipe '{utr.name}' has no race.",
-                        LogType.Error);
-                    invalid = true;
+                    if (!UMAScanRepairUtility.IsRaceIndependentRecipe(PackRecipe,
+                            name => lib.HasAsset<SlotDataAsset>(name) ? lib.GetAsset<SlotDataAsset>(name) : null))
+                    {
+                        AddText($"Character recipe '{utr.name}' has no race.",
+                            LogType.Error);
+                        invalid = true;
+                    }
                 }
                 else if (!lib.HasAsset<RaceData>(PackRecipe.race))
                 {
-                    AddText($"Character recipe '{utr.name}' references missing race '{PackRecipe.race}'.",
+                    var missingRaceError = AddText($"Character recipe '{utr.name}' references missing race '{PackRecipe.race}'.",
                         LogType.Error);
+                    RecordMissingRecipeRaceFix(utr, PackRecipe.race, missingRaceError);
                     invalid = true;
                 }
 
-                var Slots = PackRecipe?.slotsV3;
-                var Slot2 = PackRecipe?.slotsV2;
+                var Slots = UMAScanRepairUtility.GetRecipeSlotsForScan(PackRecipe);
 
-                if (Slots == null && Slot2 == null)
+                if (Slots == null || !Slots.Any(s => !UMAScanRepairUtility.IsEmptySlotEntry(s)))
                 {
                     AddText($"Character recipe '{utr.name}' has no slot data.",
                         LogType.Error);
@@ -2541,6 +2412,9 @@ namespace UMA
                     continue;
                 }
 
+                if (UMAScanRepairUtility.HasValidManualBounds(race) && !boundsSources.Contains(race))
+                    boundsSources.Add(race);
+
                 if (string.IsNullOrWhiteSpace(race.raceName))
                 {
                     AddText($"Race asset '{race.name}' has an empty race name.",
@@ -2574,8 +2448,8 @@ namespace UMA
 
                 if (race.forceRebuildRaceSlots)
                 {
-                    AddText($"Race '{race.raceName}' has Force Rebuild Race Slots enabled. This is an authoring option and should normally be disabled for production.",
-                        LogType.Warning);
+                    AddText($"Race '{race.raceName}' has Force Rebuild Race Slots enabled. Disable this authoring option to allow cached race slots to be reused.",
+                        LogType.Error);
                     invalid = true;
                 }
 
@@ -2584,13 +2458,11 @@ namespace UMA
                     ValidateNewDnaCollection(race, ref invalid);
                 }
 
-                if (race.useManualRendererBounds &&
-                    (race.manualRendererBounds.x <= 0f ||
-                     race.manualRendererBounds.y <= 0f ||
-                     race.manualRendererBounds.z <= 0f))
+                if (UMAScanRepairUtility.NeedsBoundsFix(race))
                 {
-                    AddText($"Race '{race.raceName}' enables manual renderer bounds, but every extent must be greater than zero.",
+                    LogLine boundsError = AddText($"Race '{race.raceName}' enables manual renderer bounds, but every extent must be finite and greater than zero, and the center must be finite.",
                         LogType.Error);
+                    RecordBoundsFix(race, boundsError);
                     invalid = true;
                 }
 
@@ -2887,7 +2759,7 @@ namespace UMA
         {
             ClearLog();
             scrollPosition = Vector2.zero;
-            AddLargeText("Welcome to " + GetVersionName());
+            AddLargeText("Welcome to UMA " + GetVersionName());
 
             AddText("UMA NextGen builds customizable, runtime-ready characters from races, slots, overlays, recipes, DNA, and indexed project content.");
             AddText("This window links the most useful setup, authoring, maintenance, diagnostics, and documentation workflows in the current UMA editor.");
@@ -3212,7 +3084,7 @@ namespace UMA
         {
             ClearLog();
             scrollPosition = Vector2.zero;
-            currentButton = 0;
+            currentButton = SrpSupportPage;
             AddLargeText("UMA Render Pipeline Support");
 #if UMA_PACKAGE_MANAGER
             AddSrpSupportControls();
@@ -3296,7 +3168,7 @@ namespace UMA
         {
             ClearLog();
             scrollPosition = Vector2.zero;
-            currentButton = 0;
+            currentButton = SrpSupportPage;
             AddLargeText("UMA Editable Content Packages");
             AddText("UMA character content is installed below <b>Assets/UMA</b> so " +
                 "materials, textures, recipes, races, and wardrobe assets remain editable. " +

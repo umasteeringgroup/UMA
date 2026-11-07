@@ -93,6 +93,17 @@ The shared color name must match what the content expects. If a color control ap
 - The target color or channel is enabled in the material.
 - The avatar was rebuilt after the change.
 
+### Copying colors to a Shared Color Table
+
+In the avatar Inspector's **Edit Shared Color** dialog, **Copy** stores all channel multipliers and additive colors, material-parameter names and values, and property-block settings. It does not copy the color's name.
+
+Select a Shared Color Table asset and use:
+
+- **Paste Values...** to choose an existing color and replace its settings while keeping its name.
+- **Paste as New** to append a color with the copied settings. Give the new entry the name your content expects.
+
+For named sets, switch the Shared Color Table Inspector to **Advanced View**. Check the desired colors and choose **Copy All Checked**, then open the destination table and choose **Paste/Update**. This bulk operation includes names: exact, case-sensitive matches receive the copied settings, and missing names create new entries. It is separate from the avatar dialog's name-free single-color clipboard. Paste operations support Undo, and color checkboxes can be selected or cleared in either table view.
+
 ## Animator and Expressions
 
 The generated character can use an animator controller and the race's expression setup.

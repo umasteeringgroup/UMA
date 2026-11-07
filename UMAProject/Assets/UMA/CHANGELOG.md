@@ -1,6 +1,80 @@
 # Changelog
 
+## 3.1f5 (package version 3.1.5)
+
+Changes since **3.1f3 / 3.1.3** (`v3.1f3`). Unity 6.3 and newer are supported. Earlier release entries below retain features already documented for those releases.
+
+### Installation, configuration, and validation
+
+- Renamed the Welcome configuration page to **Configure UMA** and its customization preset to **Maximum Fidelity**. Navigation highlights the active page, including Render Pipeline Support. Maximum Speed uses compatible opaque Alpha Clip hair passes and backs up original default/HDRP materials and second passes; reapplying Speed preserves those backups, and Fidelity restores them. Both presets request editor-avatar rebuilds while preserving atlas resolutions and quality overrides. See [Configure UMA](Docs/UMAGeneratorSetup.md).
+- Added **Reinstall All Plugins**, which processes installed packages again and installs missing packages, including separate Examples and Tests companions. The batch preserves the existing confirmation, backup, reload recovery, and per-package results workflow.
+- Fixed plugin discovery when no package location is saved, or the remembered path is empty or invalid. Reinstallation after removal can find compatible local archives or download the matching installed UMASettings version without first building packages locally.
+- Hardened content replacement and rollback against loaded native-asset file handles. Imports are suspended during file replacement, unchanged backup files can be restored in place, and preservation of the previous backup includes its root metadata.
+- SRP exports now remove the other pipeline's Shader Graph target and serialized pipeline-specific components/references from exported copies. Source assets are preserved, native/binary assets are not edited as text, and exported references are validated. Builds identify broken UMA materials and offer guarded exclusion only when retained content does not depend on them.
+- Welcome scan repairs now cover invalid manual renderer bounds, overlay blend-mode counts, empty wardrobe slot entries, and missing character-recipe races. Review the affected items, copy suitable bounds from a source race, or remove/replace missing race references; repairs support Undo and save the corrected assets.
+- Release Asset Validation now checks recursively discovered Content, UMA3, and UMA2 recipes as well as the Global Library. Unindexed recipes, load failures, and unavailable slots/overlays affect its JSON report and verdict. Saved entries hidden by duplicate lookup names are reported as name collisions with the selected asset. See [Release Asset Validation](Docs/ReleaseAssetValidation.md).
+
+### Recipe and character editing
+
+- Replaced recipe slot/overlay object pickers with indexed lookup controls, including additional blendshape slots and slots sharing overlays. Recipe editors keep their slot view associated with the recipe being edited.
+- Moved **Convert slot to placeholder** directly below **Disable in recipe**, making it available for shared-overlay slots too. Conversion records Undo, clears the SlotDataAsset reference, and retains the slot name, overlays, tags, and race matching criteria.
+- Corrected logical slot/overlay-name handling in baked slots and asset lookup. Newly baked names use `slotName`, older filename-based baked assets remain resolvable, and slots without the race's requested bake shapes retain their ordinary assets. Runtime fallback names are cached without changing editor assets.
+- Added a shaded overlay-asset preview using the assigned UMA material and channel textures, with rotation/reset controls and diagnostics for missing inputs.
+- Added **View JSON string** to recipe inspection, with a separate formatted, read-only viewer and **Copy JSON** for the complete original data.
+- Added **Assets > UMA > Update blank display names** for selected wardrobe recipes. It derives readable labels without changing filenames, recipe identifiers, or existing labels. Model-to-Race DNA naming now uses short, collision-safe import prefixes while preserving full bone/blendshape targets. See [batch utilities](Docs/AssetMenuBatchUtilities.md) and [Model to Race](Docs/ModelToRace.md).
+- Added race-specific Shared Color Table assignments and palette lookup, including shared-color aliases. The sample character creator uses a race palette when available; DNA labels use their display names with a name fallback. Avatar DNA reset/inspect controls are more compact, and equipped wardrobe cards provide a separate **Inspect** button.
+- Added shared-color **Copy** in the avatar editor, preserving all channels and material parameters without the name. Shared Color Tables provide **Paste Values...**, **Paste as New**, and named **Copy All Checked** / **Paste/Update** in Advanced View. Fixed standard-view checkbox selection. See [Dynamic Character Avatar](Docs/DynamicCharacterAvatar.md).
+- Fixed UMAMaterial Inspect buttons repeatedly opening Inspector windows. Unresolved AssetItem types include JSON diagnostics; invalid/removed Global Library entries are skipped safely, editor lookups can recover references by path/GUID, and automatic generator creation avoids closed preview scenes.
+
+### Mesh, pose, and texture authoring
+
+- Mesh Hide editing now previews and paints individual LODs, retains unsaved drafts while switching levels, and saves all edited levels together. **Recalculate LOD** derives the selected level from LOD 0 using Strict, Weighted, or Conservative matching, with Undo. Automatic masks refresh after base-mask/mode changes while explicit saved LOD edits are retained. Legacy baked-slot names resolve to current geometry; missing or incompatible targets are reported. Fixed face-paint mirroring and selection feedback. See [Mesh Hide Assets](Docs/MeshHideAssets.md).
+- Added named **Bone Groups** to bone-pose assets, with membership editing, numeric transforms, Scene handles, and Undo/Redo. Group changes are stored in ordinary pose values and are not applied twice at runtime. Bone Pose Builder also provides **Clear poses**, retaining its source assignments and generated assets. See [Pose Tools](Docs/PoseTools.md).
+- Added **Edit Selected Character Race T-Pose** and **Extract and Edit Race T-Pose**. A temporary preview starts from the stored race T-pose independently of character DNA/animation. Saving preserves the existing T-pose asset, humanoid mapping and metadata, supports Undo, checks for external edits, and avoids accumulated offsets. Drafts survive script reloads; cancel disposes the preview.
+- Added **Fix Normals** to UMANormalViewer: scan shared slot boundaries, average or copy normals, optionally smooth neighbouring rings, preview temporary slot copies, and apply or cancel queued repairs. Race-baked slots resolve to their shared source asset, with bake-aware normal corrections and Undo/Redo. See [Normal Viewer Repair](Docs/NormalViewerRepair.md).
+- Fixed Slot Builder preserving the chosen root-folder setting and material-name casing, and handling missing materials. Extracted slots now retain a root bone within their saved skeleton. Bind-pose alignment preserves vertices influenced only by unchanged or unmatched bones.
+- Added **Assets > UMA > Texture Utilities > Resize Selected**, with standard maximum sizes and a preview of importer-limit changes. It only lowers default and enabled platform-override limits before reimporting, preserving source images and smaller limits. PNG conversion now shares this submenu. See [Texture Utilities](Docs/TextureUtilities.md).
+
+### Generation, animation, and physics
+
+- Accelerated Best Fit Square for single regions, pairs, and equal tiles. Multiple Heuristics retains its winning layout and avoids redundant packing attempts; bounded edge rounding prevents atlas overflow and keeps shared regions aligned.
+- Reduced repeated recipe/DNA preparation work, including default-value lookup and ordered overlay comparison. Deterministic runtime race bakes can reuse validated mesh-preparation data while retaining mutation tracking; non-deterministic recalculated surface data still requires validation.
+- Reduced bone-weight remapping storage/work in the jobified and incremental mesh paths. Unused zero-hash bone placeholders are omitted without changing skinning; referenced entries still retain their remap and missing-bone diagnostics.
+- Fixed generated-renderer retirement and Animator rebinding during wardrobe/mesh changes. Old animation paths are detached before replacements are published, authored/ignored attachments are preserved, and bone cleanup finishes before the binding refresh so blendshape bindings and the DNA pose remain valid.
+- Fixed wardrobe DNA overrides leaking into personal DNA after texture-only, cancelled, or restarted builds, including builds with public notifications disabled. Restoration happens before completion callbacks and does not overwrite later user edits.
+- Released transient baked-slot resources, temporary meshes/native arrays, and retained jobified-combiner references on completion, failure, or disable. Debug generator tracking also releases removed avatars.
+- Added configurable ragdoll **Freeze At Rest**, **Rest Time**, movement/rotation tolerances, `IsRagdollFrozen`, and `WakeRagdoll()`. Settled bodies become kinematic while remaining ragdolled; the shooter wakes them before applying force. Custom forces and moving supports should also wake frozen ragdolls. See [Ragdoll rest](Core/StandardAssets/Extensions/UMAPhysics/README.md).
+- Added `UMA.Character.*`, `UMA.Recipe.*`, and `UMA.Assets.*` CPU Profiler markers, plus a timing overlay in the random-character sample with crowd rebuild timing, combiner selection, frame statistics, and generator step/budget details. Resource monitoring captures additional build diagnostics. See [generator profiling](Docs/UMAGeneratorSetup.md).
+
+### Optional Overlay Painter updates
+
+Install the matching Overlay Painter plugin; examples and tests remain separate companion packages. Features already listed under 3.1f3 below are not repeated here.
+
+- Added **VDM Relief** sources for Projection and Path Normal Control, with signed EXR import, explicit decode profiles, source snapshots, coverage controls, and saved/recoverable authoring data. This release renders normal/height relief; it does not displace geometry or silhouettes. Supported path modes are Stamps and Ribbon.
+- Added **Mask > Paste Mask (Inverted)**, creating an independent mask copy with inversion applied to the complete effect stack and full Undo/Redo.
+- Preview-material edits now apply across same-shader materials in a grouped UDIM target while retaining each tile's textures and independent source settings. Fixed grouped tile updates; reference targets remain unchanged. Document/performance controls are available through the document menus and **Edit > Configuration Options**.
+
+### Shading, content, and documentation
+
+- Added material-wide **Metallic** to the URP Realistic Skin shader, defaulting to zero. Both reflection lobes and environment lighting use it; the packed mask's red channel remains scattering, and decals do not override the scalar. Tint Protection Strength now permits values up to two. See the [skin shader README](SRP/Shaders/Skin/README.md).
+- Added Detailed Face and two Teen Face overlays/wardrobe recipes and updated their icons. Consolidated UMA3 eyebrows into `Wearables/eyebrows`, retaining the authoritative assets/GUIDs and updating presets, sample scenes, exports, and Global Library entries to remove duplicate recipes.
+- The Plans browser filters by subfolder, including nested folders, with **All folders** restoring the full list. Switching back to documentation restores the plugin selector.
+- Expanded regression coverage for installation/recovery, recipe validation, editor tools, mesh hiding, skinning, renderer cleanup, and DNA restoration. Test Runner integration writes a durable XML event journal that remains readable during a run and across reloads.
+- Added detailed Bone Pose Builder and Bone Pose Editor artist guides, normal-repair documentation, and updated setup, profiling, texture, installation, and validation guides. Main READMEs link to this release record and the [What's New overview](Docs/!WhatsNewInUMA3.md).
+
 ## 3.1f3 (package version 3.1.3)
+
+- Added **Original Overlay (base)** visibility in the painter layer stack, allowing transparent replacement artwork without deleting the imported textures. Includes all-channel composition, undo/redo and document/recovery persistence.
+
+- Added per-target **Show** controls in Overlay Painter: other slots default to hidden and can be displayed as non-paintable references. Visibility persists separately from the active target, including shared-mesh preview filtering.
+
+- UV-authored paths now show their curve and all editable points in Scene view immediately on layer selection. Eyebrow shell examples support direct surface positioning, curve and width handles, and head/tail labels without first selecting a point in 2D.
+
+- Added **Path > Generators > Hair > Eyebrows** with deterministic tapered hairs, curve-driven shape and growth, clumping, independent hair populations, layered color variation, mirrored variation, coordinated material coverage, presets and diagnostics. Separate Examples and Tests companions include editable HDEyebrows shell projects and focused validation.
+- Corrected path-generator shader color binding so linear data values such as metallic are not decoded as sRGB a second time.
+- Painter documents now retain raster artwork when a slot's equipped mesh has the same UV triangle layout with reordered vertices; this enables the eyebrow-shell example projects to load onto equipped characters.
+
+- Added Welcome-page configuration presets for Atlas/No Atlas skin materials, reviewable skin-material selection, Jobified generator configuration, bounded generation settings, and mode-specific UV cropping/bone cleanup. See [Configure UMA](Docs/UMAGeneratorSetup.md) for the current workflow.
 
 - Fixed projection symmetry switches not rendering mirrors. Projection layers now update mirrored and radial copies automatically across all channels, including Normal Control, with live placement edits and Undo/Redo.
 

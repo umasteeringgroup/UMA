@@ -19,6 +19,9 @@ namespace UMA.Editors
             internal WeakReference<IUMAPluginHost> Adapter;
             internal bool Pending;
             internal UMAPluginAction[] Layout;
+            internal Type FoldoutType;
+            internal string FoldoutKey;
+            internal bool Expanded;
         }
 
         private sealed class Lease : IDisposable
@@ -100,6 +103,19 @@ namespace UMA.Editors
                 state.Layout = UMAPluginRegistry.Match(editor.targets);
             if (state.Layout.Length == 0 && !hasLegacyContent) return;
 
+            Type targetType = editor.target != null ? editor.target.GetType() : editor.GetType();
+            if (state.FoldoutType != targetType)
+            {
+                state.FoldoutType = targetType;
+                state.FoldoutKey = "UMA.Inspector.Plugins.Expanded." +
+                    targetType.Assembly.GetName().Name + "." + targetType.FullName;
+                state.Expanded = EditorPrefs.GetBool(state.FoldoutKey, false);
+            }
+            // Refresh other inspectors of the same type at Layout, keeping their control
+            // trees stable between Layout and Repaint. Missing preferences start collapsed.
+            else if (Event.current.type == EventType.Layout)
+                state.Expanded = EditorPrefs.GetBool(state.FoldoutKey, false);
+
             int indent = EditorGUI.indentLevel;
             bool enabled = GUI.enabled;
             Color color = GUI.color, background = GUI.backgroundColor, content = GUI.contentColor;
@@ -109,7 +125,21 @@ namespace UMA.Editors
                 EditorGUILayout.LabelField("Editors", EditorStyles.boldLabel);
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
-                    EditorGUILayout.LabelField("Plugins", EditorStyles.boldLabel);
+                    bool beforeFoldout = GUI.changed;
+                    // Reserve the foldout arrow's gutter inside the surrounding box.
+                    // EditorGUILayout.Foldout outdents it into the inspector margin.
+                    Rect foldoutRect = EditorGUILayout.GetControlRect(false,
+                        EditorGUIUtility.singleLineHeight);
+                    foldoutRect.xMin += 14f;
+                    bool expanded = EditorGUI.Foldout(foldoutRect, state.Expanded, "Plugins", true,
+                        EditorStyles.foldoutHeader);
+                    GUI.changed = beforeFoldout; // Expanding tools is not an asset edit.
+                    if (expanded != state.Expanded)
+                    {
+                        state.Expanded = expanded;
+                        EditorPrefs.SetBool(state.FoldoutKey, expanded);
+                    }
+                    if (!state.Expanded) return;
                     bool changed = GUI.changed;
                     try
                     {

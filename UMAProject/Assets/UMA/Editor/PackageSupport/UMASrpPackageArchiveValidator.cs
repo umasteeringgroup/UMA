@@ -88,6 +88,9 @@ namespace UMA.Editors.PackageSupport
                 "d0353a89b1f911e48b9e16bdc9f2e058"  // URP AssetVersion
             };
 
+        internal static bool IsOppositePipelineScript(string guid, string pipeline) =>
+            (pipeline == "URP" ? HdrpReferencesForbiddenInUrp : UrpReferencesForbiddenInHdrp).Contains(guid);
+
         #pragma warning disable 0649 // Populated by JsonUtility.
         [Serializable]
         private sealed class ContentManifest

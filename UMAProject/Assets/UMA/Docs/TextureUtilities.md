@@ -4,6 +4,16 @@ Texture Utilities is an editor-only texture workbench for inspection, alpha repa
 
 The editor works on an RGBA32 working copy. A `*` beside the dimensions indicates unsaved baked changes.
 
+## Resize Selected Imports
+
+Select textures in the Project window, then right-click **UMA > Texture Utilities > Resize Selected** (also available under **Assets > UMA**). Choose a maximum size from `32` to `16384` pixels; the default is `1024`. The dialog shows current imported dimensions and previews the Maximum Size settings that will be lowered.
+
+**This only sizes down.** Existing limits below the chosen maximum are never raised. Source images already at or below the maximum are skipped. For example, lowering Maximum Size from `4096` to `1024` imports a `4096 × 2048` image at `1024 × 512` with ordinary 2D settings; an existing `512` limit stays `512`.
+
+**Apply and Reimport** saves only lower importer Maximum Size values and reimports the textures. It preserves the original image files byte-for-byte, GUID references, and other import settings, including normal-map processing and compression. Unity performs the resizing using the existing importer settings. The results list reports updated, unchanged, skipped, and failed assets; **Stop** ends the batch between textures.
+
+Default settings and enabled platform overrides above the selected maximum are lowered together, so an override cannot keep a larger limit. Smaller limits and disabled overrides remain unchanged. The operation supports images with a TextureImporter; package assets, native `.asset` textures, and read-only import settings are skipped with a reason. **Convert selected textures to PNG** is available in the same submenu; see [PNG conversion](AssetConsolidationAndRepair.md).
+
 ## Loading, Queue, and Saving
 
 - Assign a Project `Texture2D`, load an image from disk, or drag Project textures into the preview.

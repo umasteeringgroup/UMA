@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UMA.CharacterSystem;
 using UnityEditor;
 using UnityEngine;
@@ -196,13 +197,30 @@ namespace UMA.Editors.ModelToRace
 
         private static void CreateDNA(ModelToRacePlan plan, string prefix, ModelToRaceResult result, List<Object> created)
         {
+            if (!(plan.boneDNA && plan.bones.Any(b => b.include)) &&
+                !(plan.blendshapeDNA && plan.shapes.Any(s => s.include))) return;
+            prefix = AbbreviateDnaPrefix(prefix);
+            // DNA is addressed by name, so abbreviated names must also be unique across imports.
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string guid in AssetDatabase.FindAssets("t:DNA t:DNAGroup"))
+                foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GUIDToAssetPath(guid)))
+                    if (asset is DNA || asset is DNAGroup) names.Add(asset.name);
+            if (result.race.DNACollection?.DNAGroups != null)
+                foreach (var group in result.race.DNACollection.DNAGroups)
+                {
+                    if (group == null) continue;
+                    names.Add(group.name);
+                    if (group.dnaList != null)
+                        foreach (var dna in group.dnaList)
+                            if (dna != null) names.Add(dna.name);
+                }
+
             if (plan.boneDNA && plan.bones.Any(b => b.include))
             {
-                var group = Create<DNAGroup>(prefix + "_BoneDNA", result.folder, created); group.DNAArea = "Body proportions";
-                int id = 0;
+                var group = Create<DNAGroup>(UniqueDnaName(prefix, "BDNA", names), result.folder, created); group.DNAArea = "Body proportions";
                 foreach (var bone in plan.bones.Where(b => b.include))
                 {
-                    var dna = Create<DNA>(prefix + "_Bone_" + id++ + "_" + ModelToRacePlan.SafeName(bone.bone), result.folder, created);
+                    var dna = Create<DNA>(UniqueDnaName(prefix, "B_" + ModelToRacePlan.SafeName(bone.bone), names), result.folder, created);
                     dna.displayName = bone.bone + " size";
                     dna.description = "Local-axis scale on " + bone.bone + ". 0.5 is the imported rest pose. Children inherit this scale.";
                     dna.defaultValue = 0.5f;
@@ -213,11 +231,10 @@ namespace UMA.Editors.ModelToRace
             }
             if (plan.blendshapeDNA && plan.shapes.Any(s => s.include))
             {
-                var group = Create<DNAGroup>(prefix + "_BlendshapeDNA", result.folder, created); group.DNAArea = "Blendshapes";
-                int id = 0;
+                var group = Create<DNAGroup>(UniqueDnaName(prefix, "BSDNA", names), result.folder, created); group.DNAArea = "Blendshapes";
                 foreach (var shape in plan.shapes.Where(s => s.include))
                 {
-                    var dna = Create<DNA>(prefix + "_Shape_" + id++ + "_" + ModelToRacePlan.SafeName(shape.name), result.folder, created);
+                    var dna = Create<DNA>(UniqueDnaName(prefix, "BS_" + ModelToRacePlan.SafeName(shape.name), names), result.folder, created);
                     dna.displayName = shape.name; dna.description = "Imported blendshape: " + shape.name;
                     dna.defaultValue = Mathf.InverseLerp(shape.minimum, shape.maximum, shape.defaultWeight);
                     dna.effects.Add(new DNAEffect_BlendShape { BlendShapeName = shape.name, EffectName = shape.name, minMapping = shape.minimum / 100, maxMapping = shape.maximum / 100 });
@@ -225,6 +242,30 @@ namespace UMA.Editors.ModelToRace
                 }
                 result.dnaGroups.Add(group); EditorUtility.SetDirty(group);
             }
+        }
+
+        private static string AbbreviateDnaPrefix(string name)
+        {
+            var initials = new StringBuilder();
+            for (int i = 0; i < name.Length; i++)
+            {
+                char c = name[i];
+                if (!char.IsLetterOrDigit(c)) continue;
+                bool wordStart = i == 0 || !char.IsLetterOrDigit(name[i - 1]) || char.IsDigit(name[i - 1]);
+                bool capitalStart = char.IsUpper(c) && (i > 0 && char.IsLower(name[i - 1]) ||
+                    i + 1 < name.Length && char.IsLower(name[i + 1]));
+                // Preserve numeric import suffixes; split CamelCase, acronyms and separated words.
+                if (char.IsDigit(c) || wordStart || capitalStart) initials.Append(char.ToUpperInvariant(c));
+            }
+            return initials.Length == 0 ? "D" : initials.ToString();
+        }
+
+        private static string UniqueDnaName(string prefix, string suffix, HashSet<string> names)
+        {
+            string candidate = prefix + "_" + suffix;
+            for (int number = 2; !names.Add(candidate); number++)
+                candidate = prefix + number + "_" + suffix;
+            return candidate;
         }
 
         private static UMAData.UMARecipe Recipe(RaceData race, IEnumerable<SlotData> slots)

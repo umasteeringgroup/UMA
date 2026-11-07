@@ -957,7 +957,7 @@ namespace UMA
             gstopWatch.Restart();
 #endif
 
-            if (umaData.isShapeDirty)
+            if (umaData.isShapeDirty || umaData.NeedsAnimatorBindingRefresh)
 			{
                 UpdateUMABody(umaData);
 				umaData.isShapeDirty = false;
@@ -2102,7 +2102,7 @@ namespace UMA
             var stageStopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
-                if (data.isShapeDirty)
+                if (data.isShapeDirty || data.NeedsAnimatorBindingRefresh)
                 {
                     UpdateUMABody(data);
                     data.isShapeDirty = false;
@@ -2760,6 +2760,9 @@ namespace UMA
             UMAAssetIndexer.bareInstance?.dirtyList.Clear();
             cleanUmas.Clear();
             dirtyUmas.Clear();
+#if UMA_DEBUG
+            umaDatasGenerated.Clear();
+#endif
             umaData = null;
             FreezeTime = false;
         }
@@ -2810,6 +2813,9 @@ namespace UMA
             }
 
             // Remove from the various lists if it exists
+#if UMA_DEBUG
+            umaDatasGenerated.Remove(umaToRemove);
+#endif
             umaDirtyList.Remove(umaToRemove);
             cleanUmas.Remove(umaToRemove);
             dirtyUmas.Remove(umaToRemove);
@@ -2898,9 +2904,19 @@ namespace UMA
 
         protected void CompleteBoneCleanup(UMAData data)
         {
-            if (data == null || !data.BoneCleanupPending) return;
+            if (FinishBoneCleanup(data)) UpdateAvatar(data);
+        }
+
+        private bool FinishBoneCleanup(UMAData data)
+        {
+            if (data == null || !data.BoneCleanupPending) return false;
             data.BoneCleanupPending = false;
-            if (CleanupUnusedBones && data.CleanupUnusedBones(this) > 0) UpdateAvatar(data);
+            if (CleanupUnusedBones && data.CleanupUnusedBones(this) > 0)
+            {
+                data.AnimatorBindingsDirty = true;
+                return true;
+            }
+            return false;
         }
 
 		public virtual void UMAReady(bool fireEvents = true)
@@ -2912,7 +2928,13 @@ namespace UMA
                 CompleteBoneCleanup(umaData);
 				umaData.Show();
                 UMAResourceReuse.FinalizeSurfaces(umaData);
-                if (umaData is UMA.CharacterSystem.DynamicCharacterAvatar npc) npc.CaptureNPCBuild();
+                if (umaData is UMA.CharacterSystem.DynamicCharacterAvatar npc)
+                {
+                    // Completion also balances overrides when no body update ran or
+                    // public notifications are disabled. NPC snapshots need personal DNA.
+                    npc.RestoreOverrideDna(umaData);
+                    npc.CaptureNPCBuild();
+                }
                 if (fireEvents)
                 {
                     umaData.FireUpdatedEvent(false);
@@ -2958,9 +2980,8 @@ namespace UMA
             if (umaData.skeleton is UMAImprovedSkeleton)
             {
                 // ResetAll clears the bone-baking preservation flags. Restore them and
-                // apply the post-DNA cache only during a real shape update. Mesh-only
-                // rebuilds never enter this path and therefore leave the animated pose
-                // untouched.
+                // apply the post-DNA cache during a body update, including mesh-only
+                // rebuilds that must establish fresh Animator bindings.
                 umaData.RestoreRegisteredAnimatedBones();
                 UMABoneLifecycle.PreserveBaseBonesForBaking(umaData, this);
                 umaData.skeleton.EnsureBoneHierarchy();
@@ -2975,6 +2996,9 @@ namespace UMA
             // End the batched skeleton update (begun in GenerateSingleUMA when isShapeDirty)
             umaData.skeleton.EndSkeletonUpdate();
 
+            // Finish hierarchy changes before the one Animator refresh. A second
+            // refresh in UMAReady would capture an already animated/adjusted pose.
+            FinishBoneCleanup(umaData);
             UpdateAvatar(umaData);
 
             // Blendshape DNA must be applied after the avatar is reset on the animator

@@ -253,6 +253,7 @@ namespace UMA
 
         public void ResetCapture()
         {
+            PruneDestroyedAvatars();
             ResolveSources();
             BindSpawnEvents();
             cache = UMAGeneratedResourceCache.Shared;
@@ -453,6 +454,7 @@ namespace UMA
 
         public void RefreshMemory()
         {
+            PruneDestroyedAvatars();
             long stamp = Stopwatch.GetTimestamp();
             memoryAvatars.Clear();
             if (AvatarRoot != null) AvatarRoot.GetComponentsInChildren(true, memoryAvatars);
@@ -523,6 +525,23 @@ namespace UMA
         {
             if (suspendedGenerator != null) suspendedGenerator.enabled = restoreGeneratorEnabled;
             suspendedGenerator = null;
+        }
+
+        private void PruneDestroyedAvatars()
+        {
+            avatars.RemoveWhere(RemoveDestroyedAvatar);
+        }
+
+        private bool RemoveDestroyedAvatar(UMAData data)
+        {
+            if (data != null) return false;
+            completedAvatars.Remove(data);
+            if (!ReferenceEquals(data, null))
+            {
+                npcBaselines.Remove(data);
+                spawnTimestamps.Remove(data);
+            }
+            return true;
         }
 
         private void UnregisterAvatars()

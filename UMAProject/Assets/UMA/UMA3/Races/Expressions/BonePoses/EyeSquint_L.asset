@@ -83,6 +83,7 @@ MonoBehaviour:
     scale: {x: 1.0004914, y: 1, z: 1}
     category: 
     enabled: 1
+  boneGroups: []
   tweenPoses: []
   tweenWeights: []
   mixerPose: 0

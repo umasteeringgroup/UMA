@@ -42,6 +42,7 @@ namespace UMA.Editors.PackageSupport
             public int nextIndex;
             public bool awaitingInstallation;
             public bool confirmed;
+            public bool reinstall;
             public string[] statuses;
             public string failure;
         }
@@ -146,20 +147,27 @@ namespace UMA.Editors.PackageSupport
         public static bool IsInstallingAllPlugins =>
             !string.IsNullOrEmpty(SessionState.GetString(InstallAllSessionKey, string.Empty));
 
-        public static void InstallAllPlugins()
+        public static void InstallAllPlugins() => StartPluginInstallBatch(false);
+
+        public static void ReinstallAllPlugins() => StartPluginInstallBatch(true);
+
+        private static void StartPluginInstallBatch(bool reinstall)
         {
             if (IsInstallingAllPlugins || UMAPluginPackageDownload.IsActive ||
                 File.Exists(PendingPath) || File.Exists("Library/UMA/PluginRemoval/pending.json")) return;
-            var batch = new PluginInstallBatch { kinds = UMAContentCatalog.PluginDisplayOrder.ToArray() };
-            if (!EditorUtility.DisplayDialog("Install All Plugins?",
-                    "Install all missing or unverified plugins and their Examples and Tests packages?\n\n" +
+            var batch = new PluginInstallBatch { kinds = UMAContentCatalog.PluginDisplayOrder.ToArray(), reinstall = reinstall };
+            if (!EditorUtility.DisplayDialog(reinstall ? "Reinstall All Plugins?" : "Install All Plugins?",
+                    (reinstall ? "Reinstall all plugins and their Examples and Tests packages?\n\n"
+                        : "Install all missing or unverified plugins and their Examples and Tests packages?\n\n") +
                     string.Join("\n", batch.kinds.Select(UMAContentCatalog.DisplayName)) +
-                    "\n\nAlready installed packages will be skipped. Local packages are preferred; missing packages will be downloaded." +
+                    (reinstall ? "\n\nAlready installed packages will be processed again; missing packages will also be installed."
+                        : "\n\nAlready installed packages will be skipped.") +
+                    " Local packages are preferred; missing packages will be downloaded." +
                     "\nExisting matching content will be registered automatically. Content requiring replacement will be backed up " +
                     "under Library/UMA/ContentInstaller before importing. Extra files and separately installed companions are preserved." +
                     "\nIf present, the legacy Assets/UMA/UMA2 tree will move to Assets/UMA2 with its GUIDs and edits preserved." +
                     "\n\nThis approval applies to the whole batch. A results dialog will list every package when it finishes or stops.",
-                    "Install All", "Cancel")) return;
+                    reinstall ? "Reinstall All" : "Install All", "Cancel")) return;
             batch.confirmed = true;
             UMAPluginPackageDownload.DismissFailure();
             SaveInstallBatch(batch);
@@ -220,6 +228,7 @@ namespace UMA.Editors.PackageSupport
         private static string FormatInstallBatchReport(PluginInstallBatch batch)
         {
             var report = new StringBuilder();
+            report.AppendLine(batch.reinstall ? "Reinstall all plugins" : "Install all plugins").AppendLine();
             for (int i = 0; i < batch.kinds.Length; i++)
             {
                 string status = batch.statuses != null && i < batch.statuses.Length ? batch.statuses[i] : null;
@@ -255,7 +264,7 @@ namespace UMA.Editors.PackageSupport
                 File.WriteAllText(path, report);
             }
             catch (Exception exception) { Debug.LogWarning("[UMA] Could not save plugin installation report: " + exception.Message); }
-            Debug.Log("[UMA] Install all plugins:\n" + report);
+            Debug.Log("[UMA] Plugin installation:\n" + report);
             QueueInstallBatchReport(report);
         }
 
@@ -274,7 +283,7 @@ namespace UMA.Editors.PackageSupport
             string report = SessionState.GetString(InstallAllReportKey, string.Empty);
             SessionState.EraseString(InstallAllReportKey);
             if (!string.IsNullOrEmpty(report))
-                EditorUtility.DisplayDialog("Install All Plugins — Results", report, "OK");
+                EditorUtility.DisplayDialog("Plugin Installation — Results", report, "OK");
         }
 
         // Persist the awaiting flag before starting an import: importing scripts may reload this class.
@@ -294,7 +303,7 @@ namespace UMA.Editors.PackageSupport
                 batch.awaitingInstallation = false;
                 batch.nextIndex++;
             }
-            while (batch.nextIndex < batch.kinds.Length &&
+            while (!batch.reinstall && batch.nextIndex < batch.kinds.Length &&
                    getState(batch.kinds[batch.nextIndex]) == UMAContentInstallationState.Installed)
             {
                 batch.statuses[batch.nextIndex] = "Already installed";
@@ -1124,10 +1133,14 @@ namespace UMA.Editors.PackageSupport
                 SavePending(pending);
                 progress?.Invoke("Preparing destination and preserving companion packages", 0f);
                 UMAContentPackageArchiveValidator.TryReadInstalledManifest(kind, out var previousManifest, out _);
-                DeleteContentRoot(kind);
-                RestoreRootIdentity(pending);
-                if (hadPrevious)
-                    RestoreUnownedPluginFiles(kind, previousManifest, archive.Manifest, backupRoot, destinationRoot, removeExtraFiles);
+                ChangeAssetFiles(() =>
+                {
+                    DeleteContentRoot(kind);
+                    RestoreRootIdentity(pending);
+                    if (hadPrevious)
+                        RestoreUnownedPluginFiles(kind, previousManifest, archive.Manifest, backupRoot, destinationRoot, removeExtraFiles);
+                });
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 // Hand off to Unity's own import progress UI.
                 if (progress != null) EditorUtility.ClearProgressBar();
                 AssetDatabase.ImportPackage(archiveCopy, false);
@@ -1379,7 +1392,6 @@ namespace UMA.Editors.PackageSupport
                 UMAContentCatalog.Root(ParseKind(pending.contentId)));
             Directory.CreateDirectory(destinationRoot);
             File.Copy(rootMeta, destinationRoot + ".meta", true);
-            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
         }
 
         private static bool ValidatePreservedRootIdentity(PendingImport pending,
@@ -1422,13 +1434,16 @@ namespace UMA.Editors.PackageSupport
                      !File.Exists(pending.backupRoot + ".root.meta")))
                     throw new InvalidDataException(
                         "The saved UMA content backup or its root metadata is missing.");
-                DeleteContentRoot(kind);
-                if (pending.hadPreviousContent)
+                ChangeAssetFiles(() =>
                 {
-                    CopyDirectory(pending.backupRoot, destinationRoot);
-                    string rootMeta = pending.backupRoot + ".root.meta";
-                    File.Copy(rootMeta, destinationRoot + ".meta", true);
-                }
+                    if (pending.hadPreviousContent)
+                    {
+                        RestoreDirectorySnapshot(pending.backupRoot, destinationRoot);
+                        CopyFileIfChanged(pending.backupRoot + ".root.meta", destinationRoot + ".meta");
+                    }
+                    else
+                        DeleteContentRoot(kind);
+                });
                 restored = true;
             }
             catch (Exception exception)
@@ -1459,11 +1474,70 @@ namespace UMA.Editors.PackageSupport
             ThrowIfReparsePoint(absolute, "UMA content delete target");
             ThrowIfTreeContainsReparsePoint(absolute,
                 "UMA content delete target");
-            if (AssetDatabase.IsValidFolder(assetRoot))
-                AssetDatabase.DeleteAsset(assetRoot);
+            // The caller suspends imports and releases Unity's cached handles. Deleting
+            // through AssetDatabase here can import/load the partially removed tree
+            // before the replacement files and preserved companions have been restored.
             if (Directory.Exists(absolute))
                 Directory.Delete(absolute, true);
             if (File.Exists(absolute + ".meta")) File.Delete(absolute + ".meta");
+        }
+
+        private static void ChangeAssetFiles(Action change)
+        {
+            AssetDatabase.DisallowAutoRefresh();
+            try
+            {
+                AssetDatabase.StartAssetEditing();
+                try
+                {
+                    // Loaded native assets may retain handles even after a normal refresh.
+                    AssetDatabase.ReleaseCachedFileHandles();
+                    change();
+                }
+                finally { AssetDatabase.StopAssetEditing(); }
+            }
+            finally { AssetDatabase.AllowAutoRefresh(); }
+        }
+
+        private static void RestoreDirectorySnapshot(string backup, string destination)
+        {
+            if (!Directory.Exists(backup))
+                throw new DirectoryNotFoundException("UMA content backup is missing: " + backup);
+            ThrowIfReparsePoint(backup, "UMA content backup");
+            ThrowIfTreeContainsReparsePoint(backup, "UMA content backup");
+            ThrowIfReparsePoint(destination, "UMA content restore target");
+            ThrowIfTreeContainsReparsePoint(destination, "UMA content restore target");
+            RestoreDirectorySnapshotCore(backup, destination);
+        }
+
+        private static void RestoreDirectorySnapshotCore(string backup, string destination)
+        {
+            if (File.Exists(destination)) File.Delete(destination);
+            Directory.CreateDirectory(destination);
+            foreach (string file in Directory.GetFiles(backup))
+            {
+                string target = Path.Combine(destination, Path.GetFileName(file));
+                if (Directory.Exists(target)) Directory.Delete(target, true);
+                CopyFileIfChanged(file, target);
+            }
+            foreach (string directory in Directory.GetDirectories(backup))
+                RestoreDirectorySnapshotCore(directory, Path.Combine(destination, Path.GetFileName(directory)));
+
+            // Restore in place: a failed deletion can leave unchanged files open in
+            // another process. They need neither deleting nor overwriting to roll back.
+            foreach (string file in Directory.GetFiles(destination))
+                if (!File.Exists(Path.Combine(backup, Path.GetFileName(file)))) File.Delete(file);
+            foreach (string directory in Directory.GetDirectories(destination))
+                if (!Directory.Exists(Path.Combine(backup, Path.GetFileName(directory)))) Directory.Delete(directory, true);
+        }
+
+        private static void CopyFileIfChanged(string source, string destination)
+        {
+            if (File.Exists(destination) &&
+                new FileInfo(source).Length == new FileInfo(destination).Length &&
+                string.Equals(ComputeFileHash(source), ComputeFileHash(destination), StringComparison.Ordinal))
+                return;
+            File.Copy(source, destination, true);
         }
 
         private static void RebuildGlobalLibrary()
@@ -1663,11 +1737,19 @@ namespace UMA.Editors.PackageSupport
         {
             string root = Path.Combine(InstallerRoot, UMAContentCatalog.Id(kind));
             string previous = Path.Combine(root, "PreviousBackup");
-            string previousRootMeta = previous + ".root.meta";
             if (pending.hadPreviousContent)
+                PreserveBackupPair(pending.backupRoot, previous);
+            CleanupCompletedTransaction(kind);
+        }
+
+        private static void PreserveBackupPair(string backupRoot, string previous,
+            Action<string, string> moveDirectory = null)
+        {
+            moveDirectory ??= Directory.Move;
+            string previousRootMeta = previous + ".root.meta";
             {
-                string currentRootMeta = pending.backupRoot + ".root.meta";
-                if (!Directory.Exists(pending.backupRoot) ||
+                string currentRootMeta = backupRoot + ".root.meta";
+                if (!Directory.Exists(backupRoot) ||
                     !File.Exists(currentRootMeta))
                     throw new InvalidDataException(
                         "The current content backup is incomplete; the transaction " +
@@ -1686,7 +1768,17 @@ namespace UMA.Editors.PackageSupport
                     {
                         ThrowIfTreeContainsReparsePoint(previous,
                             "Previous UMA content backup");
-                        Directory.Move(previous, retired);
+                        try { moveDirectory(previous, retired); }
+                        catch (Exception exception) when (exception is IOException || exception is UnauthorizedAccessException)
+                        {
+                            // A Windows handle or directory permission can prevent rotating an
+                            // older backup. Keep it intact and archive this complete pair beside it.
+                            string retained = previous + ".preserved-" + Guid.NewGuid().ToString("N");
+                            PreserveBackupPair(backupRoot, retained, moveDirectory);
+                            Debug.Log("[UMA] Kept the older backup in place because it could not be moved. " +
+                                "The new content backup and root metadata were saved at " + retained + ".");
+                            return;
+                        }
                         retiredDirectory = true;
                     }
                     if (File.Exists(previousRootMeta))
@@ -1697,7 +1789,7 @@ namespace UMA.Editors.PackageSupport
                         retiredMeta = true;
                     }
 
-                    Directory.Move(pending.backupRoot, previous);
+                    moveDirectory(backupRoot, previous);
                     promotedDirectory = true;
                     File.Move(currentRootMeta, previousRootMeta);
                     promotedMeta = true;
@@ -1708,14 +1800,14 @@ namespace UMA.Editors.PackageSupport
                         !File.Exists(currentRootMeta))
                         File.Move(previousRootMeta, currentRootMeta);
                     if (promotedDirectory && Directory.Exists(previous) &&
-                        !Directory.Exists(pending.backupRoot))
-                        Directory.Move(previous, pending.backupRoot);
+                        !Directory.Exists(backupRoot))
+                        moveDirectory(previous, backupRoot);
                     if (retiredMeta && File.Exists(retiredRootMeta) &&
                         !File.Exists(previousRootMeta))
                         File.Move(retiredRootMeta, previousRootMeta);
                     if (retiredDirectory && Directory.Exists(retired) &&
                         !Directory.Exists(previous))
-                        Directory.Move(retired, previous);
+                        moveDirectory(retired, previous);
                     throw;
                 }
 
@@ -1731,7 +1823,10 @@ namespace UMA.Editors.PackageSupport
                         exception.Message);
                 }
             }
+        }
 
+        private static void CleanupCompletedTransaction(UMAContentKind kind)
+        {
             string transaction = TransactionRoot(kind);
             try
             {

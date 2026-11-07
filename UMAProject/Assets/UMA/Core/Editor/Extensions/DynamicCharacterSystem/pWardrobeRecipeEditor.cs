@@ -177,44 +177,6 @@ namespace UMA.Editors
 			return candidates;
 		}
 
-		private static bool SlotHasBakeTargetsForRace(SlotDataAsset slotAsset, RaceData raceData)
-		{
-			if (slotAsset == null || raceData == null || raceData.PrebakedBlendshapes == null || raceData.PrebakedBlendshapes.Count == 0)
-			{
-				return false;
-			}
-
-			if (UMAMeshData.IsNullOrEmptyMeshData(slotAsset.meshData) || slotAsset.meshData.blendShapes == null || slotAsset.meshData.blendShapes.Length == 0)
-			{
-				return false;
-			}
-
-			for (int blendShapeIndex = 0; blendShapeIndex < slotAsset.meshData.blendShapes.Length; blendShapeIndex++)
-			{
-				UMABlendShape blendShape = slotAsset.meshData.blendShapes[blendShapeIndex];
-				if (blendShape == null || string.IsNullOrEmpty(blendShape.shapeName))
-				{
-					continue;
-				}
-
-				for (int optionIndex = 0; optionIndex < raceData.PrebakedBlendshapes.Count; optionIndex++)
-				{
-					SlotBurnOptions bakeOption = raceData.PrebakedBlendshapes[optionIndex];
-					if (bakeOption == null || string.IsNullOrEmpty(bakeOption.BlendShape))
-					{
-						continue;
-					}
-
-					if (bakeOption.BlendShape == blendShape.shapeName)
-					{
-						return true;
-					}
-				}
-			}
-
-			return false;
-		}
-
 		private static SlotDataAsset BakeSlotForRaceIfNeeded(SlotDataAsset slotAsset, RaceData raceData)
 		{
 			if (slotAsset == null || raceData == null)
@@ -227,7 +189,8 @@ namespace UMA.Editors
 				return slotAsset;
 			}
 
-			if (!SlotHasBakeTargetsForRace(slotAsset, raceData))
+			if (IsBakedSlotName(slotAsset.slotName, raceData) ||
+                !SlotMasterEditor.SlotHasBakeTargetsForRace(slotAsset, raceData))
 			{
 				return slotAsset;
 			}
@@ -244,7 +207,7 @@ namespace UMA.Editors
 						continue;
 					}
 
-					SlotDataAsset existing = indexer.GetAsset<SlotDataAsset>(candidate, false, true);
+					SlotDataAsset existing = indexer.GetAssetItem<SlotDataAsset>(candidate)?.Item as SlotDataAsset;
 					if (existing != null)
 					{
 						return existing;
@@ -1754,6 +1717,11 @@ namespace UMA.Editors
 
             public WardrobeRecipeMasterEditor(UMAData.UMARecipe recipe, List<string> baseSlotOptions, List<string> baseSlotOptionsLabels, UnityEngine.Object recipeContext = null) : base(recipe, recipeContext)
 			{
+                SetBaseSlotOptions(baseSlotOptions, baseSlotOptionsLabels);
+			}
+
+            internal void SetBaseSlotOptions(List<string> baseSlotOptions, List<string> baseSlotOptionsLabels)
+			{
 				_baseSlotOptions = baseSlotOptions;
 				_baseSlotOptionsLabels = baseSlotOptionsLabels;
 			}
@@ -1805,7 +1773,7 @@ namespace UMA.Editors
 				}
 
              GUILayout.BeginHorizontal();
-				var added = (SlotDataAsset)EditorGUILayout.ObjectField("Add Slot", null, typeof(SlotDataAsset), false);
+				var added = DrawIndexedSlotPicker("Add Slot");
 
 				if (added != null)
 				{

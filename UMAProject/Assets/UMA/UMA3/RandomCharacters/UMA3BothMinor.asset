@@ -198,7 +198,7 @@ MonoBehaviour:
       Delete: 0
       AddColorTable: 0
       PossibleColors: []
-    - WardrobeSlot: {fileID: 11400000, guid: ec43efbaab6ee6342ad64c668874c4c7, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: c7710cc3bdb9bb744b4b55f2f90fab79, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -207,7 +207,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: cdc364b6089619049a3dec0eb0406687, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 51ba741290a685f4ca66839503c42ece, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -216,7 +216,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 8863e8885a6b77f4389d5f513b13715f, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: e3805e813715d1f4ca28a9999eca393d, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -225,7 +225,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 075bd537b74a2d8439dc3cae07db9fa8, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: b4402f202641cb3438b8ddd82181a12f, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -234,7 +234,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 73d0c1e2a76066c4ba3020ea424e87a0, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 6e29fcfe1fb38be4286a570da83a48ad, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -243,7 +243,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: f3b7b720912d3f84abc6d9657c9c42ed, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: b887a943e18ab2442b2d2021dd8931ac, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -252,7 +252,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 3474db4c8aca18a4fbd38c1ee584db7f, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 47e2dd9e5ffa41548a20f9b138931408, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -261,7 +261,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 469425923fa85954494df0b9898aabf6, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 05bf652c91656824b8c26aea0eedef96, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -270,7 +270,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 847521e630faed24aabc69e112e5e765, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: a2c761c69d08dd14e9957da3600a78d2, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -279,7 +279,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 54a7833b3ca20b5488f4ad40c46a91fe, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: b6a4fefa56245084b9e40a8657a19bc0, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -288,7 +288,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: d909b37dd7a09d042ba41fd3a33112e9, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: d83f59ac753e9e14aa828af648f03739, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -297,7 +297,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: c4cb498384734114f8896ed9798464ed, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 63841460e8661874785dae5c74c5783b, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1239,7 +1239,7 @@ MonoBehaviour:
       Delete: 0
       AddColorTable: 0
       PossibleColors: []
-    - WardrobeSlot: {fileID: 11400000, guid: ec43efbaab6ee6342ad64c668874c4c7, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: c7710cc3bdb9bb744b4b55f2f90fab79, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1248,7 +1248,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: cdc364b6089619049a3dec0eb0406687, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 51ba741290a685f4ca66839503c42ece, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1257,7 +1257,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 8863e8885a6b77f4389d5f513b13715f, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: e3805e813715d1f4ca28a9999eca393d, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1266,7 +1266,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 075bd537b74a2d8439dc3cae07db9fa8, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: b4402f202641cb3438b8ddd82181a12f, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1275,7 +1275,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 73d0c1e2a76066c4ba3020ea424e87a0, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 6e29fcfe1fb38be4286a570da83a48ad, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1284,7 +1284,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: f3b7b720912d3f84abc6d9657c9c42ed, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: b887a943e18ab2442b2d2021dd8931ac, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1293,7 +1293,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 3474db4c8aca18a4fbd38c1ee584db7f, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 47e2dd9e5ffa41548a20f9b138931408, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1302,7 +1302,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 469425923fa85954494df0b9898aabf6, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 05bf652c91656824b8c26aea0eedef96, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1311,7 +1311,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 847521e630faed24aabc69e112e5e765, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: a2c761c69d08dd14e9957da3600a78d2, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1320,7 +1320,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: 54a7833b3ca20b5488f4ad40c46a91fe, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: b6a4fefa56245084b9e40a8657a19bc0, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1329,7 +1329,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: d909b37dd7a09d042ba41fd3a33112e9, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: d83f59ac753e9e14aa828af648f03739, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows
@@ -1338,7 +1338,7 @@ MonoBehaviour:
       AddColorTable: 0
       PossibleColors:
       - Hair
-    - WardrobeSlot: {fileID: 11400000, guid: c4cb498384734114f8896ed9798464ed, type: 2}
+    - WardrobeSlot: {fileID: 11400000, guid: 63841460e8661874785dae5c74c5783b, type: 2}
       Chance: 1
       Colors: []
       _slotName: Eyebrows

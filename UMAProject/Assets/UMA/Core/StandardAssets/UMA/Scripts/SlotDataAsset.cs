@@ -44,7 +44,10 @@ namespace UMA
                 {
                     return _oldSlotName;
                 }
-                return this.name;
+                string objectName = name;
+                // Cache native Object.name reads at runtime, without changing editor assets.
+                if (Application.isPlaying) _oldSlotName = objectName;
+                return objectName;
             }
         }
 
@@ -56,13 +59,19 @@ namespace UMA
             {
                 if (string.IsNullOrEmpty(_sourceSlotName))
                 {
-                    return this.name;
+                    return slotName;
                 }
                 return _sourceSlotName;
             }
         }
 
         private int _nameHash = 0;
+
+        internal void SetSlotName(string logicalName)
+        {
+            _oldSlotName = logicalName;
+            _nameHash = 0;
+        }
 
         public int nameHash
         {
@@ -1060,7 +1069,7 @@ namespace UMA
                 int after = (!UMAMeshData.IsNullOrEmptyMeshData(meshData) && meshData.submeshes != null && meshData.submeshes.Length > 0 && meshData.submeshes[0] != null)
                     ? meshData.submeshes[0].LODCount()
                     : -1;
-                Debug.Log($"[SlotLOD][UpdateMeshData] slot='{slotName}' AFTER meshDataRebuild lodCount={after} submeshIndexArg={submeshIndex} udim={udimAdjustment}");
+                //Debug.Log($"[SlotLOD][UpdateMeshData] slot='{slotName}' AFTER meshDataRebuild lodCount={after} submeshIndexArg={submeshIndex} udim={udimAdjustment}");
             }
             catch { }
             UnityEditor.EditorUtility.SetDirty(this);
@@ -1237,6 +1246,20 @@ namespace UMA
 
             // Create destination SlotDataAsset and copy metadata
             var newSlotData = ScriptableObject.CreateInstance<SlotDataAsset>();
+            try
+            {
+                return PopulateBakedSlot(p, newSlotData);
+            }
+            catch
+            {
+                // A failed bake must not orphan its transient ScriptableObject.
+                UMAUtils.DestroySceneObject(newSlotData);
+                throw;
+            }
+        }
+
+        private SlotDataAsset PopulateBakedSlot(BakeSlotParams p, SlotDataAsset newSlotData)
+        {
             newSlotData.Assign(this);
 
             if (UMAMeshData.IsNullOrEmptyMeshData(meshData))
@@ -1391,11 +1414,11 @@ namespace UMA
                     }
 #if UMA_BURSTCOMPILE
                     {
-                        Unity.Collections.NativeArray<UnityEngine.Vector3> v = new Unity.Collections.NativeArray<UnityEngine.Vector3>(md.vertices, Unity.Collections.Allocator.TempJob);
-                        Unity.Collections.NativeArray<UnityEngine.Vector3> n = new Unity.Collections.NativeArray<UnityEngine.Vector3>(md.normals, Unity.Collections.Allocator.TempJob);
-                        Unity.Collections.NativeArray<UnityEngine.Vector2> uv = new Unity.Collections.NativeArray<UnityEngine.Vector2>(md.uv, Unity.Collections.Allocator.TempJob);
-                        Unity.Collections.NativeArray<UnityEngine.Vector4> t = new Unity.Collections.NativeArray<UnityEngine.Vector4>(md.tangents, Unity.Collections.Allocator.TempJob);
-                        Unity.Collections.NativeArray<int> tri = new Unity.Collections.NativeArray<int>(allTriangles, Unity.Collections.Allocator.TempJob);
+                        using var v = new Unity.Collections.NativeArray<UnityEngine.Vector3>(md.vertices, Unity.Collections.Allocator.TempJob);
+                        using var n = new Unity.Collections.NativeArray<UnityEngine.Vector3>(md.normals, Unity.Collections.Allocator.TempJob);
+                        using var uv = new Unity.Collections.NativeArray<UnityEngine.Vector2>(md.uv, Unity.Collections.Allocator.TempJob);
+                        using var t = new Unity.Collections.NativeArray<UnityEngine.Vector4>(md.tangents, Unity.Collections.Allocator.TempJob);
+                        using var tri = new Unity.Collections.NativeArray<int>(allTriangles, Unity.Collections.Allocator.TempJob);
 
                         var handle = UMA.MeshUtilities.RecalculateNormalsTangentsJobified(v, n, uv, t, tri, (p.smoothingAngleDegrees == 0f ? 180f : p.smoothingAngleDegrees));
                         handle.Complete();
@@ -1403,35 +1426,35 @@ namespace UMA
                         md.normals = n.ToArray();
                         md.tangents = t.ToArray();
 
-                        v.Dispose();
-                        n.Dispose();
-                        uv.Dispose();
-                        t.Dispose();
-                        tri.Dispose();
                         md.normalsModified = true;
                         md.tangentsModified = true;
                     }
 #else
                     {
                         var mesh = new UnityEngine.Mesh();
-                        if (UMA.UMAAssetIndexer.Instance != null && UMA.UMAAssetIndexer.Instance.Generator.Use32BitBuffers)
+                        try
                         {
-                            mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                            if (UMA.UMAAssetIndexer.Instance != null && UMA.UMAAssetIndexer.Instance.Generator.Use32BitBuffers)
+                                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+                            mesh.vertices = md.vertices;
+                            mesh.uv = md.uv;
+                            mesh.subMeshCount = md.submeshes.Length;
+                            for (int i =0; i < md.submeshes.Length; i++)
+                            {
+                                var tris = md.submeshes[i].GetBaseTriangles();
+                                mesh.SetIndices(tris ?? System.Array.Empty<int>(), UnityEngine.MeshTopology.Triangles, i);
+                            }
+                            mesh.RecalculateNormals();
+                            mesh.RecalculateTangents();
+                            md.normals = mesh.normals;
+                            md.tangents = mesh.tangents;
+                            md.normalsModified = true;
+                            md.tangentsModified = true;
                         }
-                        mesh.vertices = md.vertices;
-                        mesh.uv = md.uv;
-                        mesh.subMeshCount = md.submeshes.Length;
-                        for (int i =0; i < md.submeshes.Length; i++)
+                        finally
                         {
-                            var tris = md.submeshes[i].GetBaseTriangles();
-                            mesh.SetIndices(tris ?? System.Array.Empty<int>(), UnityEngine.MeshTopology.Triangles, i);
+                            UMAUtils.DestroySceneObject(mesh);
                         }
-                        mesh.RecalculateNormals();
-                        mesh.RecalculateTangents();
-                        md.normals = mesh.normals;
-                        md.tangents = mesh.tangents;
-                        md.normalsModified = true;
-                        md.tangentsModified = true;
                     }
 #endif
                 }
@@ -1444,7 +1467,7 @@ namespace UMA
             {
                 //Debug.Log("Renaming slot to " + p.newSlotName);
                 newSlotData.name = p.newSlotName;
-                newSlotData._oldSlotName = "";
+                newSlotData.SetSlotName(p.newSlotName);
                 if (!UMAMeshData.IsNullOrEmptyMeshData(newSlotData.meshData))
                 {
                     newSlotData.meshData.SlotName = newSlotData.slotName;
@@ -1481,10 +1504,7 @@ namespace UMA
 
             var clone = ScriptableObject.CreateInstance<SlotDataAsset>();
             clone.name = newAssetName;
-            if (!string.IsNullOrEmpty(_oldSlotName))
-            {
-                clone._oldSlotName = (string)_oldSlotName.Clone();
-            }
+            clone.SetSlotName(newSlotName);
             clone.maxLOD = maxLOD;
             clone.useAtlasOverlay = useAtlasOverlay;
             clone.overlayScale = overlayScale;
@@ -1508,7 +1528,7 @@ namespace UMA
             clone.isBaked = isBaked;
             clone._rendererAsset = _rendererAsset;
             clone.slotDNA = slotDNA;
-            clone._sourceSlotName = (string)_sourceSlotName.Clone(); 
+            clone._sourceSlotName = _sourceSlotName;
 
             if (!UMAMeshData.IsNullOrEmptyMeshData(meshData))
             {
@@ -1547,10 +1567,7 @@ namespace UMA
 
         public void Assign(SlotDataAsset source)
         {
-            if (!string.IsNullOrEmpty(source._oldSlotName))
-            {
-                _oldSlotName = (string)source._oldSlotName.Clone();
-            }
+            SetSlotName(source._oldSlotName);
             name = (string)source.name.Clone();
             overlayScale = source.overlayScale;
             sourceUVCropping = source.sourceUVCropping;
@@ -1583,10 +1600,7 @@ namespace UMA
                 UdimSharedVertexMap = null;
             }
 #endif
-            if (source._sourceSlotName != null)
-            {
-                _sourceSlotName = (string)source._sourceSlotName.Clone();
-            }
+            _sourceSlotName = source._sourceSlotName;
             slotGroup = source.slotGroup;
             if (source.tags != null)
             {

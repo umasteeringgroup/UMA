@@ -160,7 +160,7 @@ namespace UMA
             if (slot == null) return;
             if (slot == LastCreatedDecalSlot && LastCreatedDecalOverlayAsset != null)
             {
-                string overlayTag = "DecalOverlay:" + LastCreatedDecalOverlayAsset.name;
+                string overlayTag = "DecalOverlay:" + LastCreatedDecalOverlayAsset.overlayName;
                 if (slot.tags == null)
                 {
                     slot.tags = new[] { "Decal", overlayTag };
@@ -586,7 +586,7 @@ namespace UMA
                 md.clothSkinningSerialized = BuildClothCoefficients(vertexSlot, vertexLocalIndex, includedVertex, remap, newVertexCount);
 
                 // Build RuntimeSlotData DTO and then create a SlotDataAsset via ToSlot
-                string overlayName = overlayAsset ? overlayAsset.name : null;
+                string overlayName = overlayAsset ? overlayAsset.overlayName : null;
                 var dto = RuntimeSlotData.FromMeshData(md, md.SlotName, umaMaterial, overlayName, new[] { "Decal" });
                 var ret = dto.ToSlot();
                 var slotAsset = ret.slot;
@@ -886,6 +886,7 @@ namespace UMA
             // Update slot & mesh names
             if (!UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)) slot.meshData.SlotName = finalName;
             slot.name = finalName;
+            slot.SetSlotName(finalName);
 
             // Ensure Decal tag present
             if (slot.tags == null)
@@ -935,6 +936,7 @@ namespace UMA
                 }
 
                 slot.name = finalName;
+                slot.SetSlotName(finalName);
                 if (!UMAMeshData.IsNullOrEmptyMeshData(slot.meshData)) slot.meshData.SlotName = finalName;
 
                 var json = SerializeDecalSlotToJson(slot, false);
@@ -986,8 +988,8 @@ namespace UMA
             string overlayName = null;
             if (slot == LastCreatedDecalSlot)
             {
-                if (LastDecalOverlaySent != null) overlayName = LastDecalOverlaySent.name;
-                else if (LastCreatedDecalOverlayAsset != null) overlayName = LastCreatedDecalOverlayAsset.name;
+                if (LastDecalOverlaySent != null) overlayName = LastDecalOverlaySent.overlayName;
+                else if (LastCreatedDecalOverlayAsset != null) overlayName = LastCreatedDecalOverlayAsset.overlayName;
             }
             UMAMaterial material = null;
             if (LastCreatedDecalOverlayAsset != null)

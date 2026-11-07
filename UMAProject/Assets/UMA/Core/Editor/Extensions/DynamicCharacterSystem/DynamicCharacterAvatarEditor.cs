@@ -83,6 +83,14 @@ namespace UMA.CharacterSystem.Editors
         private readonly List<int> _groupDnaCounts = new List<int>();
         private string[] _groupNamesCache;
 
+        private static GUIContent _dnaInspectButtonContent;
+        private static GUIContent _dnaResetButtonContent;
+        private static GUIContent DnaInspectButtonContent => _dnaInspectButtonContent ??=
+            new GUIContent(EditorGUIUtility.IconContent("Search Icon").image, "Inspect DNA");
+        private static GUIContent DnaResetButtonContent => _dnaResetButtonContent ??=
+            new GUIContent(EditorGUIUtility.IconContent("UndoHistory").image, "Reset DNA to its default value");
+        private const float DnaIconButtonWidth = 24f;
+
         private static bool IsEditorBusy()
         {
             return EditorApplication.isCompiling || EditorApplication.isUpdating;
@@ -772,7 +780,7 @@ namespace UMA.CharacterSystem.Editors
             // 
             //NewCharacterColors
             using (inspectorView.Section("Colors",
-                "Choose shared colors from the matching NameColors table, or DefaultColors when no matching table exists. Edit opens the full channel and shader-property editor. Advanced View also supports adding and removing shared colors.",
+                "Choose shared colors from the race's matching color table first, including its Also Applies To names. Otherwise use the project's matching NameColors table or DefaultColors. Edit opens the full channel and shader-property editor. Advanced View also supports adding and removing shared colors.",
                 standard))
             {
                 if (standard) DrawStandardColors();
@@ -1079,7 +1087,7 @@ namespace UMA.CharacterSystem.Editors
                     Undo.RecordObject(umaData, "Reset DNA Values to Default");
 
                     // Reset all expanded groups
-                    var groupedListReset = new List<KeyValuePair<DNAGroup, List<(int index, DNAInstance inst)>>>(grouped);
+                    var groupedListReset = new List<KeyValuePair<DNAGroup, List<(int index, DNAInstance inst, DNA dna)>>>(grouped);
                     groupedListReset.Sort((a, b) => string.Compare(a.Key?.DNAArea, b.Key?.DNAArea, StringComparison.OrdinalIgnoreCase));
                     for (int gi = 0; gi < groupedListReset.Count; gi++)
                     {
@@ -1176,14 +1184,15 @@ namespace UMA.CharacterSystem.Editors
                         var inst = entries[ei].inst;
                         if (inst == null) continue;
 
+                        var dna = entries[ei].dna;
                         using var dnaRow = new EditorGUILayout.HorizontalScope();
-                        bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
+                        bool newEnabled = EditorGUILayout.ToggleLeft(dna != null ? dna.GetDisplayName() : inst.Name, inst.enabled, GUILayout.Width(140));
                         float oldValue = inst.Value;
                         EditorGUI.BeginChangeCheck();
                         inst.Value = EditorGUILayout.Slider(inst.Value, 0f, 1f);
                         bool valueChanged = EditorGUI.EndChangeCheck();
 #region DNA Buttons                        
-                        if (GUILayout.Button("Reset", GUILayout.Width(50)))
+                        if (GUILayout.Button(DnaResetButtonContent, GUILayout.Width(DnaIconButtonWidth), GUILayout.Height(EditorGUIUtility.singleLineHeight)))
                         {
                             if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                             {
@@ -1214,7 +1223,7 @@ namespace UMA.CharacterSystem.Editors
                                 EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                             }
                         }
-                        if (GUILayout.Button("Inspect", GUILayout.Width(50)))
+                        if (GUILayout.Button(DnaInspectButtonContent, GUILayout.Width(DnaIconButtonWidth), GUILayout.Height(EditorGUIUtility.singleLineHeight)))
                         {
                             if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                             {
@@ -1229,32 +1238,6 @@ namespace UMA.CharacterSystem.Editors
                             {
                                 EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                             }
-                        }
-                        if (GUILayout.Button("Log", GUILayout.Width(35)))
-                        {
-                            LogHipsPosition(inst.Name, inst.Value);
-                        }
-                        if (GUILayout.Button("?", GUILayout.Width(20)))
-                        {
-                            // Evaluate the current raw value of the DNA and show it in a dialog, 
-                            // this is useful for DNAs that have non-linear curves or other complex behavior that makes the slider value not directly indicative of the actual effect on the avatar
-                            string evaluatedValueStr = "";
-                            // get this DNA.
-                            // for each DNAEffect in the DNA, call GetMappedValue, and show the results in the dialog
-                            if (_nameToDnaCache.TryGetValue(inst.Name, out var dnaAsset))
-                            {
-                                if (dnaAsset != null && dnaAsset.effects != null)
-                                {
-                                    for (int ebi = 0; ebi < dnaAsset.effects.Count; ebi++)
-                                    {
-                                        var effect = dnaAsset.effects[ebi];
-                                        if (effect == null) continue;
-                                        float evaluatedValue = effect.GetMappedValue(inst.Value);
-                                        evaluatedValueStr += $"{ebi}: {effect.GetType().Name}: {evaluatedValue:F4}\n";
-                                    }
-                                }
-                            }
-                            EditorUtility.DisplayDialog("Evaluated DNA Value", $"The evaluated value of '{inst.Name}' is:\n{evaluatedValueStr}", "OK");
                         }
                         if (GUILayout.Button("X", GUILayout.Width(20)))
                         {
@@ -1314,11 +1297,12 @@ namespace UMA.CharacterSystem.Editors
                             var inst = unknown[ui].inst;
                             if (inst == null) continue;
 
+                            var dna = unknown[ui].dna;
                             using var dnaRow = new EditorGUILayout.HorizontalScope();
-                            bool newEnabled = EditorGUILayout.ToggleLeft(inst.Name, inst.enabled, GUILayout.Width(140));
+                            bool newEnabled = EditorGUILayout.ToggleLeft(dna != null ? dna.GetDisplayName() : inst.Name, inst.enabled, GUILayout.Width(140));
                             float oldValue = inst.Value;
                             inst.Value = EditorGUILayout.Slider(inst.Value, 0f, 1f);
-                            if (GUILayout.Button("Def", GUILayout.Width(40)))
+                            if (GUILayout.Button(DnaResetButtonContent, GUILayout.Width(DnaIconButtonWidth), GUILayout.Height(EditorGUIUtility.singleLineHeight)))
                             {
                                 if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                                 {
@@ -1334,7 +1318,7 @@ namespace UMA.CharacterSystem.Editors
                                     EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                                 }
                             }
-                            if (GUILayout.Button("Edit", GUILayout.Width(40)))
+                            if (GUILayout.Button(DnaInspectButtonContent, GUILayout.Width(DnaIconButtonWidth), GUILayout.Height(EditorGUIUtility.singleLineHeight)))
                             {
                                 if (collection.dnaDictionary != null && collection.dnaDictionary.TryGetValue(inst.Name, out var dnaAsset) && dnaAsset != null)
                                 {
@@ -1344,10 +1328,6 @@ namespace UMA.CharacterSystem.Editors
                                 {
                                     EditorUtility.DisplayDialog("DNA Not Found", $"DNA asset '{inst.Name}' not found in collection.", "OK");
                                 }
-                            }
-                            if (GUILayout.Button("Log", GUILayout.Width(35)))
-                            {
-                                LogHipsPosition(inst.Name, inst.Value);
                             }
                             if (GUILayout.Button("X", GUILayout.Width(20)))
                             {
@@ -1532,30 +1512,6 @@ namespace UMA.CharacterSystem.Editors
                 }
             }
             return wasChanged;
-        }
-
-        private void LogHipsPosition(string dnaName, float dnaValue)
-        {
-            if (thisDCA == null)
-            {
-                return;
-            }
-
-            var dca = thisDCA;
-            Transform hips = dca.skeleton != null ? dca.skeleton.GetBoneTransform("Hips") : null;
-            if (hips == null && dca.animator != null && dca.animator.isHuman)
-            {
-                hips = dca.animator.GetBoneTransform(HumanBodyBones.Hips);
-            }
-
-            if (hips != null)
-            {
-                Debug.Log($"Live DNA '{dnaName}' = {dnaValue:F4}: Hips position {hips.position.ToString("F5")}", dca);
-            }
-            else
-            {
-                Debug.LogWarning($"Live DNA '{dnaName}' = {dnaValue:F4}: Hips bone was not found.", dca);
-            }
         }
 
         private void DoTargetedBuild(UMA.DNAInstanceCollection.DNABuildType buildType)
@@ -2558,23 +2514,6 @@ namespace UMA.CharacterSystem.Editors
             }
         }
 
-        List<GameObject> GetRenderers(GameObject parent)
-        {
-            List<GameObject> objs = new List<GameObject>();
-
-            var renderers = parent.GetComponentsInChildren<Renderer>();
-            for (int i =0; i < renderers.Length; i++)
-            {
-                Renderer renderer = renderers[i];
-                if (thisDCA != null && thisDCA.IsFbxRouteRendererObject(renderer.gameObject))
-                {
-                    continue;
-                }
-                objs.Add(renderer.gameObject);
-            }
-            return objs;
-        }
-
         void ShowBlendshapesGUI(DynamicCharacterAvatar thisDCA)
         {
             EditorGUI.BeginChangeCheck();
@@ -2833,13 +2772,7 @@ namespace UMA.CharacterSystem.Editors
                 return;
             }
 
-            List<GameObject> Cleaners = GetRenderers(thisDCA.gameObject);
             thisDCA.HideAndCleanup(clear);
-            for (int i =0; i < Cleaners.Count; i++)
-            {
-                GameObject go = Cleaners[i];
-                DestroyImmediate(go);
-            }
             /*if (killUMAData)
             {
                 DestroyImmediate(thisDCA.umaData);

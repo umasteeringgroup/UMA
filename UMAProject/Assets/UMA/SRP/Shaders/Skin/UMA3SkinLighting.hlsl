@@ -118,8 +118,8 @@ void SkinFragment(SkinVaryings v, out half4 color : SV_Target0
     InputData inputData = SkinInput(v, s.surface.normalTS);
     #if defined(_DBUFFER)
     ApplyDecalToSurfaceData(v.positionCS, s.surface, inputData);
-    // A decal must not turn a dielectric skin surface metallic.
-    s.surface.metallic = 0;
+    // Metallic is uniform for the material; decal maps cannot override it.
+    s.surface.metallic = saturate(_Metallic);
     #endif
     half3 dn = normalize(TransformTangentToWorld(s.diffuseNormalTS, inputData.tangentToWorld));
     // World-space derivatives: millimeter radius behaves consistently on scaled avatars.
@@ -132,10 +132,10 @@ void SkinFragment(SkinVaryings v, out half4 color : SV_Target0
         dot(ddy(inputData.normalWS), ddy(inputData.normalWS))) * _SpecularAA;
     s.surface.smoothness = 1 - sqrt(saturate(Sq(1 - s.surface.smoothness) + min(variance, 0.2)));
     BRDFData baseBRDF, oilBRDF;
-    InitializeBRDFData(s.surface, baseBRDF);
+    InitializeSkinBRDFData(s.surface, baseBRDF);
     SurfaceData oilSurface = s.surface;
     oilSurface.smoothness = 1 - sqrt(saturate(Sq(1 - _OilSmoothness) + min(variance,0.2)));
-    InitializeBRDFData(oilSurface, oilBRDF);
+    InitializeSkinBRDFData(oilSurface, oilBRDF);
     half4 shadowMask = CalculateShadowMask(inputData);
     AmbientOcclusionFactor ao = CreateAmbientOcclusionFactor(inputData, s.surface);
     Light mainLight = GetMainLight(inputData, shadowMask, ao);

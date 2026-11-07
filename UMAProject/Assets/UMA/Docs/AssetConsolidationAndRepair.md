@@ -44,7 +44,7 @@ This is destructive to the extra channel entries. It preserves only the existing
 
 ## Convert Selected Textures to PNG
 
-Select textures and choose `Assets > UMA > Convert selected textures to PNG`.
+Select textures and choose `Assets > UMA > Texture Utilities > Convert selected textures to PNG`.
 
 The tool converts readable copies to RGBA32 PNG and can:
 

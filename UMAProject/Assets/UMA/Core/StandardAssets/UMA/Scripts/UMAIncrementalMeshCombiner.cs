@@ -300,6 +300,9 @@ namespace UMA
                 renderer,
                 settings,
                 rendererIndex);
+            // A combiner can live on the avatar itself. Never expose a staging
+            // renderer at a clip's final binding path, even across sliced builds.
+            rendererObject.name = "__UMAStaging_" + Guid.NewGuid().ToString("N");
             return renderer;
         }
 
@@ -618,15 +621,19 @@ namespace UMA
             }
 
             plan.ApplyPlannedMetadata();
+
+            // Validation is complete. Retire old animation paths before publishing
+            // any replacement; Object.Destroy alone leaves duplicates until frame end.
+            DestroyPreviousRenderers(data, plan.PreviousRenderers, committedRenderers);
+            for (int i = 0; i < plan.Renderers.Length; i++)
+            {
+                PublishRenderer(data, plan.Renderers[i]);
+            }
             data.SetRendererAssets(plan.RendererAssets);
             data.SetRenderers(committedRenderers);
             plan.MarkCommitted();
 
             data.firstBake = false;
-            DestroyPreviousRenderers(
-                data,
-                plan.PreviousRenderers,
-                committedRenderers);
             plan.FinalizeCommittedMetadata();
             UMAResourceReuse.FinalizeSurfaces(data);
         }
@@ -680,7 +687,6 @@ namespace UMA
             UMAData data = plan.Data;
             SkinnedMeshRenderer renderer =
                 rendererPlan.StagingRenderer;
-            int rendererIndex = rendererPlan.RendererIndex;
             if (!rendererPlan.IsEmpty)
             {
                 SetupCloth(
@@ -689,7 +695,11 @@ namespace UMA
                     rendererPlan.PreparedCloth,
                     rendererPlan.ClothProperties);
             }
+        }
 
+        private static void PublishRenderer(UMAData data, UMAIncrementalRendererPlan rendererPlan)
+        {
+            SkinnedMeshRenderer renderer = rendererPlan.StagingRenderer;
             Transform rendererTransform = renderer.transform;
             rendererTransform.SetParent(data.transform, false);
             rendererTransform.localPosition = Vector3.zero;
@@ -702,7 +712,7 @@ namespace UMA
             renderer.gameObject.name =
                 UMARendererAsset.GetRendererGameObjectName(
                     settings,
-                    rendererIndex);
+                    rendererPlan.RendererIndex);
         }
 
         private static void AssignRendererMaterials(

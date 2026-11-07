@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: DefaultColors
   m_EditorClassIdentifier: 
   channelCount: 2
-  sharedColorName: Eyes
+  sharedColorName: Default
+  AlsoAppliesTo: []
   colors:
   - name: Gray
     channelMask:

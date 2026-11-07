@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   channelCount: 3
   sharedColorName: Tattoo
+  AlsoAppliesTo: []
   colors:
   - name: Blue Ink
     channelMask:

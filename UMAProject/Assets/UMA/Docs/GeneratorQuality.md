@@ -25,6 +25,8 @@ The first matching row wins ties. The Inspector warns about duplicate mappings. 
 
 Layers apply over the generator's captured baseline, lowest priority first. Controllers default to priority 0; scene overrides default to 100. Equal priorities use activation order, not refresh order. Disabling a layer reveals the current lower layers; disabling the last one restores the baseline. Hardware scaling is resolved afresh, never compounded on every switch. Zero/unknown memory sizes are not treated as low-memory hardware.
 
+**Welcome > Configure UMA** edits the configured generator prefab and selected skin/hair materials. It preserves quality profiles, scene overrides, and runtime/editor atlas sizes; it also leaves an existing controller's captured baseline in place. Its automatic editor-avatar rebuilds use the effective scene generator settings, so an active override can still take precedence over prefab values. See [UMA Generator Setup](UMAGeneratorSetup.md) when the generated atlas size or build behavior differs from the chosen preset.
+
 ## What profiles control
 
 - Atlas resolution, initial scale, fitting, source-UV cropping and padding.

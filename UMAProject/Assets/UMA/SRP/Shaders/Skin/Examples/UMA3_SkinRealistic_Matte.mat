@@ -49,12 +49,13 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BumpScale: 0.706
+    - _BumpScale: 0.7
     - _DetailNormalMapScale: 0.024
     - _Detail_Gloss_Scale: 0.15
     - _Detail_Normal_Scale: 0.235
     - _DiffuseNormalStrength: 0.35
     - _DiffusionWrap: 0.12
+    - _Metallic: 0
     - _OilLobeWeight: 0.1
     - _OilSmoothness: 0.72
     - _SSSBlend: 0.537

@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="UmaResizeTexturesWindow.uss" />
+    <ui:VisualElement class="resize-root">
+        <ui:Label text="Resize Selected Textures" class="resize-title" />
+        <ui:HelpBox message-type="Info" text="Only sizes down. Lowers importer Maximum Size and reimports textures. Existing smaller limits and source images already below the maximum are unchanged." />
+        <ui:DropdownField name="maximumSize" label="Maximum Size (pixels)" />
+        <ui:Label text="Original image files are preserved. Only Maximum Size changes; other import settings remain unchanged. Unity handles resizing using the existing import settings." class="resize-description" />
+        <ui:Label text="Applies to Default and enabled platform overrides above the limit. Smaller limits and disabled overrides are preserved. Package assets and read-only import settings are skipped." class="resize-description" />
+        <ui:ScrollView name="entries" class="resize-list" />
+        <ui:Label name="summary" class="resize-description" />
+        <ui:VisualElement class="resize-buttons">
+            <ui:Button name="resize" text="Apply and Reimport" />
+            <ui:Button name="close" text="Cancel" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
