@@ -819,7 +819,7 @@ namespace UMA
                 return;
             }
 
-            Debug.Log($"Saving DNA snapshot for race {raceName}");
+           //Debug.Log($"Saving DNA snapshot for race {raceName}");
 
             Dictionary<string, DnaSetter> currentDna = avatar.GetDNA();
             if (currentDna == null || currentDna.Count == 0)
@@ -840,12 +840,12 @@ namespace UMA
             {
                 raceDnaSnapshots[raceName] = snapshot;
             }
-            Debug.Log($"Saved {snapshot.Count} DNA values for race {raceName}");
+           // Debug.Log($"Saved {snapshot.Count} DNA values for race {raceName}");
         }
 
         private void RestoreDnaForRaceWhenRecipeUpdated(string raceName)
         {
-            Debug.Log($"Scheduling DNA Update for {raceName} after recipe update");
+            //Debug.Log($"Scheduling DNA Update for {raceName} after recipe update");
             CancelPendingDnaRestore();
 
             pendingDnaRestoreAvatar = avatar;
@@ -859,7 +859,7 @@ namespace UMA
 
         private void RestoreDnaOnRecipeUpdated(UMAData umaData)
         {
-            Debug.Log($"Recipe updated Event for race {pendingDnaRestoreRaceName}, restoring DNA snapshot");
+           //Debug.Log($"Recipe updated Event for race {pendingDnaRestoreRaceName}, restoring DNA snapshot");
             DynamicCharacterAvatar restoreAvatar = pendingDnaRestoreAvatar;
             string raceName = pendingDnaRestoreRaceName;
             CancelPendingDnaRestore();
@@ -875,11 +875,11 @@ namespace UMA
 
         private void RestoreDnaForRace(DynamicCharacterAvatar restoreAvatar, string raceName)
         {
-            Debug.Log($"Restoring DNA snapshot for race {raceName}");
+           //Debug.Log($"Restoring DNA snapshot for race {raceName}");
             Dictionary<string, float> snapshot;
             if (!raceDnaSnapshots.TryGetValue(raceName, out snapshot) || snapshot.Count == 0)
             {
-                Debug.Log($"No DNA snapshot found for race {raceName}, skipping restore");
+                //Debug.Log($"No DNA snapshot found for race {raceName}, skipping restore");
                 return;
             }
 
@@ -891,7 +891,7 @@ namespace UMA
                     restoreAvatar.SetDNA(savedDna.Key, savedDna.Value, false);
                 }
             }
-            Debug.Log($"Restored {snapshot.Count} DNA values for race {raceName}");
+            //Debug.Log($"Restored {snapshot.Count} DNA values for race {raceName}");
         }
 
         private void CancelPendingDnaRestore()

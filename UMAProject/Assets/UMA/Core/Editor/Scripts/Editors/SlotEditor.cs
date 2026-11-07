@@ -315,6 +315,25 @@ namespace UMA.Editors
                     changed = true;
                 }
 
+                if (!_slotData.isPlaceholderSlot)
+                {
+                    if (GUILayout.Button(new GUIContent("Convert slot to placeholder",
+                        "Remove the SlotDataAsset reference while keeping all overlays and matching criteria.")))
+                    {
+                        if (_recipeContext != null)
+                        {
+                            Undo.RecordObject(_recipeContext, "Convert slot to placeholder");
+                        }
+                        ConvertToPlaceholder();
+                        _dnaDirty = true;
+                        _textureDirty = true;
+                        _meshDirty = true;
+                        changed = true;
+                        SaveRecipeContext();
+                        GUIUtility.ExitGUI();
+                    }
+                }
+
                 // Utilities foldout
                 if (!_slotData.isPlaceholderSlot)
                 {
@@ -736,20 +755,6 @@ namespace UMA.Editors
                         }
                     }
 
-                    if (!_slotData.isPlaceholderSlot)
-                    {
-                        GUILayout.Space(8);
-                        if (GUILayout.Button("Convert to Placeholder"))
-                        {
-                            ConvertToPlaceholder();
-                            _dnaDirty = true;
-                            _textureDirty = true;
-                            _meshDirty = true;
-                            changed = true;
-                            SaveRecipeContext();
-                            GUIUtility.ExitGUI();
-                        }
-                    }
                 }
                 }
             }
