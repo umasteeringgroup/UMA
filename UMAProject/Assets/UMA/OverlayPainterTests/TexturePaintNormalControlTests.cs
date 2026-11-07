@@ -1,0 +1,400 @@
+#if UNITY_INCLUDE_TESTS
+using NUnit.Framework;
+using UnityEditor;
+using UnityEngine;
+using System.Reflection;
+
+namespace UMA.TexturePaint.Editor.Tests
+{
+    public sealed class TexturePaintNormalControlTests
+    {
+        private const int Size = 16;
+        private TextureSet set;
+
+        [SetUp]
+        public void SetUp()
+        {
+            TexturePaintGpuTestFixture.RequireComputeShaders();
+            set = new TextureSet
+            {
+                persistentId = "normal-control-test",
+                surface = new ReconstructedSurface { index = 0 },
+                channelPackShader = TexturePaintGpuTestFixture.LoadShader("ChannelPack.compute")
+            };
+            AddChannel(TexturePaintChannel.Normal, new Color(0.5f, 0.5f, 1f, 1f),
+                RenderTextureFormat.ARGBHalf);
+            AddChannel(TexturePaintChannel.NormalControl, new Color(0.5f, 0.5f, 0.5f, 1f),
+                RenderTextureFormat.ARGBHalf);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            set?.Dispose();
+            set = null;
+            TexturePaintSpriteSource.ClearCache();
+        }
+
+        [Test]
+        public void NeutralControlPreservesComposedNormal()
+        {
+            Color encoded = Encode(new Vector3(0.24f, -0.31f, 0.92f).normalized);
+            Fill(set.GetChannel(TexturePaintChannel.Normal).composite, encoded);
+            Fill(set.GetChannel(TexturePaintChannel.NormalControl).composite,
+                new Color(0.5f, 0.5f, 0.5f, 1f));
+
+            set.BindPreviewTextures(false);
+
+            Color actual = Read(set.GetVisibleTexture(TexturePaintChannel.Normal), Size / 2, Size / 2);
+            Assert.That(actual.r, Is.EqualTo(encoded.r).Within(0.003f));
+            Assert.That(actual.g, Is.EqualTo(encoded.g).Within(0.003f));
+            Assert.That(actual.b, Is.EqualTo(encoded.b).Within(0.003f));
+        }
+
+        [TestCase(0f, 1)]
+        [TestCase(1f, -1)]
+        public void LineHeightProducesExpectedRecessedOrRaisedSlopes(float lineValue,
+            int expectedLeftDirection)
+        {
+            Fill(set.GetChannel(TexturePaintChannel.Normal).composite,
+                new Color(0.5f, 0.5f, 1f, 1f));
+            Color[] control = Solid(new Color(0.5f, 0.5f, 0.5f, 1f));
+            for (int y = 0; y < Size; y++)
+                control[y * Size + Size / 2] = new Color(lineValue, lineValue, lineValue, 1f);
+            Write(set.GetChannel(TexturePaintChannel.NormalControl).composite, control);
+
+            set.normalControlStrength = 4f;
+            set.normalControlRadius = 1;
+            set.BindPreviewTextures(false);
+
+            RenderTexture normal = set.GetVisibleTexture(TexturePaintChannel.Normal);
+            Color left = Read(normal, Size / 2 - 1, Size / 2);
+            Color right = Read(normal, Size / 2 + 1, Size / 2);
+            Color center = Read(normal, Size / 2, Size / 2);
+            Assert.That(Mathf.Sign(left.r - 0.5f), Is.EqualTo(expectedLeftDirection));
+            Assert.That(Mathf.Sign(right.r - 0.5f), Is.EqualTo(-expectedLeftDirection));
+            Assert.That(center.r, Is.EqualTo(0.5f).Within(0.003f));
+        }
+
+        [Test]
+        public void DerivedNormalsRemainUnitLengthOverExistingDetail()
+        {
+            Fill(set.GetChannel(TexturePaintChannel.Normal).composite,
+                Encode(new Vector3(0.35f, 0.1f, 0.93f).normalized));
+            Color[] control = Solid(new Color(0.5f, 0.5f, 0.5f, 1f));
+            for (int y = 0; y < Size; y++)
+            for (int x = Size / 2; x < Size; x++)
+                control[y * Size + x] = Color.white;
+            Write(set.GetChannel(TexturePaintChannel.NormalControl).composite, control);
+
+            set.BindPreviewTextures(false);
+
+            Color encoded = Read(set.GetVisibleTexture(TexturePaintChannel.Normal),
+                Size / 2 - 1, Size / 2);
+            Vector3 normal = new Vector3(encoded.r * 2f - 1f, encoded.g * 2f - 1f,
+                encoded.b * 2f - 1f);
+            Assert.That(normal.magnitude, Is.EqualTo(1f).Within(0.006f));
+            Assert.That(Mathf.Abs(normal.x - 0.35f), Is.GreaterThan(0.01f));
+        }
+
+        [Test]
+        public void PathHeightStrengthDoesNotRescaleOtherNormalControlLayers()
+        {
+            TextureLayerCompositor compositor = new TextureLayerCompositor(
+                TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor = compositor;
+            TexturePaintLayer paint = set.AddLayer("Paint Height");
+            TexturePaintLayer path = set.AddSplineLayer("Path Height");
+            EditableTextureTarget paintTarget = new EditableTextureTarget("Paint Height Control",
+                Size, Size, RenderTextureFormat.ARGBHalf, null, Color.clear);
+            EditableTextureTarget pathTarget = new EditableTextureTarget("Path Height Control",
+                Size, Size, RenderTextureFormat.ARGBHalf, null, Color.clear);
+            paint.channels[TexturePaintChannel.NormalControl] = paintTarget;
+            path.channels[TexturePaintChannel.NormalControl] = pathTarget;
+            TexturePaintLayerChannelSettings paintSettings = paint.GetChannelSettings(
+                TexturePaintChannel.NormalControl);
+            paintSettings.hasNormalControlStrength = true;
+            paintSettings.normalControlStrength = 2f;
+            TexturePaintLayerChannelSettings pathSettings = path.GetChannelSettings(
+                TexturePaintChannel.NormalControl);
+            pathSettings.hasNormalControlStrength = true;
+            pathSettings.normalControlStrength = 8f;
+            Color[] paintPixels = Solid(Color.clear);
+            Color[] pathPixels = Solid(Color.clear);
+            for (int y = 0; y < Size; y++)
+            {
+                paintPixels[y * Size + 4] = new Color(0f, 0f, 0f, 1f);
+                pathPixels[y * Size + 12] = new Color(0f, 0f, 0f, 1f);
+            }
+            Write(paintTarget.Front, paintPixels);
+            Write(pathTarget.Front, pathPixels);
+
+            try
+            {
+                set.BindPreviewTextures();
+                RenderTexture normal = set.GetVisibleTexture(TexturePaintChannel.Normal);
+                float paintSlopeBefore = Read(normal, 3, Size / 2).r;
+                float pathSlopeBefore = Read(normal, 11, Size / 2).r;
+
+                pathSettings.normalControlStrength = 3f;
+                set.BindPreviewTextures();
+                normal = set.GetVisibleTexture(TexturePaintChannel.Normal);
+                float paintSlopeAfter = Read(normal, 3, Size / 2).r;
+                float pathSlopeAfter = Read(normal, 11, Size / 2).r;
+
+                Assert.That(paintSlopeAfter, Is.EqualTo(paintSlopeBefore).Within(0.003f),
+                    "Changing the path Height Strength must not alter a different layer's slope.");
+                Assert.That(Mathf.Abs(pathSlopeAfter - 0.5f),
+                    Is.LessThan(Mathf.Abs(pathSlopeBefore - 0.5f) - 0.01f),
+                    "The selected path's generated slope should respond to its own Height Strength.");
+                pathSettings.normalControlInvert = true;
+                set.BindPreviewTextures();
+                normal = set.GetVisibleTexture(TexturePaintChannel.Normal);
+                Assert.That(Read(normal,3,Size/2).r,Is.EqualTo(paintSlopeBefore).Within(.003f),
+                    "Inverting the selected layer must not invert the lower layer.");
+                Assert.That(Read(normal,11,Size/2).r,Is.EqualTo(1f-pathSlopeAfter).Within(.003f));
+                pathSettings.normalControlStrength = 64f;
+                set.BindPreviewTextures();
+                Assert.That(Mathf.Abs(Read(set.GetVisibleTexture(TexturePaintChannel.Normal),11,Size/2).r-.5f),
+                    Is.GreaterThan(Mathf.Abs(pathSlopeAfter-.5f)),"Extended strength must increase the rendered slope.");
+                pathSettings.normalControlStrength = 3f;
+                float narrowOutside = Read(set.GetVisibleTexture(TexturePaintChannel.Normal),9,Size/2).r;
+                pathSettings.normalControlRadius = 3;
+                set.BindPreviewTextures();
+                normal = set.GetVisibleTexture(TexturePaintChannel.Normal);
+                Assert.That(Read(normal,3,Size/2).r,Is.EqualTo(paintSlopeBefore).Within(.003f),
+                    "Changing one layer's radius must not resample the lower layer.");
+                Assert.That(Mathf.Abs(Read(normal,9,Size/2).r-.5f),Is.GreaterThan(Mathf.Abs(narrowOutside-.5f)+.01f),
+                    "The selected layer's sampling footprint should grow.");
+                Assert.That(set.normalControlRadius,Is.EqualTo(1),"Layer radius must not mutate the target's legacy conversion.");
+            }
+            finally
+            {
+                compositor.Dispose();
+                set.compositor = null;
+            }
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void LayerRadiusPreservesTransparentExportAndDirtyUpdates(bool invert)
+        {
+            using var compositor=new TextureLayerCompositor(TexturePaintGpuTestFixture.LoadShader("LayerComposite.compute"));
+            set.compositor=compositor;
+            var layer=set.AddLayer("Sampled height");
+            var target=new EditableTextureTarget("Layer height",Size,Size,RenderTextureFormat.ARGBHalf,null,Color.clear);
+            layer.channels[TexturePaintChannel.NormalControl]=target;
+            var options=layer.GetChannelSettings(TexturePaintChannel.NormalControl);
+            options.normalControlRadius=3;options.hasNormalControlStrength=true;options.normalControlStrength=8;options.normalControlInvert=invert;
+            var pixels=Solid(Color.clear);pixels[8*Size+8]=new Color(.8f,.8f,.8f,.5f);Write(target.Front,pixels);
+            set.BindPreviewTextures();
+            var height=EditableTextureTarget.Create("Export height",Size,Size,RenderTextureFormat.ARGBHalf);
+            var flat=EditableTextureTarget.Create("Export normal base",Size,Size,RenderTextureFormat.ARGBHalf);
+            var normal=EditableTextureTarget.Create("Export normal",Size,Size,RenderTextureFormat.ARGBHalf);
+            try
+            {
+                Fill(flat,new Color(.5f,.5f,1,0));
+                Assert.That(typeof(TextureLayerCompositor).GetMethod("ComposeAuthoredLayers",BindingFlags.Instance|BindingFlags.NonPublic)
+                    .Invoke(compositor,new object[]{set,TexturePaintChannel.NormalControl,height}),Is.True);
+                Assert.That(typeof(TextureSet).GetMethod("ApplyNormalControl",BindingFlags.Instance|BindingFlags.NonPublic)
+                    .Invoke(set,new object[]{flat,height,normal,true,default(RectInt)}),Is.True);
+                for(int y=4;y<13;y++)for(int x=4;x<13;x++)
+                {
+                    Color exported=Read(normal,x,y),preview=Read(set.GetVisibleTexture(TexturePaintChannel.Normal),x,y);
+                    Assert.That(exported.r,Is.EqualTo(preview.r).Within(.004f));Assert.That(exported.g,Is.EqualTo(preview.g).Within(.004f));
+                }
+                Color before=Read(set.GetVisibleTexture(TexturePaintChannel.Normal),5,8);
+                pixels[8*Size+8]=Color.clear;Write(target.Front,pixels);
+                set.CompositeChannel(TexturePaintChannel.NormalControl,new RectInt(8,8,1,1));
+                set.BindPreviewTextures(false,new RectInt(8,8,1,1));
+                Color cleared=Read(set.GetVisibleTexture(TexturePaintChannel.Normal),5,8);
+                Assert.That(Mathf.Abs(before.r-.5f),Is.GreaterThan(.005f));
+                Assert.That(cleared.r,Is.EqualTo(.5f).Within(.003f),"Dirty updates must clear the expanded sampling halo.");
+            }
+            finally{Object.DestroyImmediate(height);Object.DestroyImmediate(flat);Object.DestroyImmediate(normal);set.compositor=null;}
+        }
+
+        [Test]
+        public void DirtyNormalControlUpdateRepacksGeneratedSlopeHalo()
+        {
+            TextureChannelTarget normalTarget = set.GetChannel(TexturePaintChannel.Normal);
+            TexturePhysicalChannelGroup physical = new TexturePhysicalChannelGroup
+            {
+                materialProperty = "_PackedNormal",
+                packed = EditableTextureTarget.Create("Packed Normal Control Test", Size, Size,
+                    RenderTextureFormat.ARGBHalf)
+            };
+            physical.componentTargets[0] = normalTarget;
+            physical.componentTargets[1] = normalTarget;
+            physical.componentTargets[2] = normalTarget;
+            physical.sourceComponents[0] = 0;
+            physical.sourceComponents[1] = 1;
+            physical.sourceComponents[2] = 2;
+            set.physicalChannelGroups.Add(physical.materialProperty, physical);
+
+            Fill(normalTarget.composite, new Color(0.5f, 0.5f, 1f, 1f));
+            Fill(set.GetChannel(TexturePaintChannel.NormalControl).composite,
+                new Color(0.5f, 0.5f, 0.5f, 1f));
+            set.normalControlStrength = 4f;
+            set.BindPreviewTextures(false);
+            Assert.That(Read(physical.packed, Size / 2 - 1, Size / 2).r,
+                Is.EqualTo(0.5f).Within(0.003f));
+
+            Color[] control = Solid(new Color(0.5f, 0.5f, 0.5f, 1f));
+            for (int y = 0; y < Size; y++)
+                control[y * Size + Size / 2] = Color.white;
+            Write(set.GetChannel(TexturePaintChannel.NormalControl).composite, control);
+            set.CompositeChannel(TexturePaintChannel.NormalControl,
+                new RectInt(Size / 2, 0, 1, Size));
+            set.BindPreviewTextures(false, new RectInt(Size / 2, 0, 1, Size));
+
+            Assert.That(Read(physical.packed, Size / 2 - 1, Size / 2).r, Is.LessThan(0.48f),
+                "The physical map must include the generated slope just outside the painted rect.");
+        }
+
+        [Test]
+        public void NormalControlTextureSourcesAreConvertedToGrayscale()
+        {
+            Texture2D source = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
+            try
+            {
+                source.SetPixels(new[] { Color.red, Color.green, Color.blue, Color.white });
+                source.Apply(false, false);
+                Texture2D converted = TexturePaintSpriteSource.Resolve(source, null,
+                    TexturePaintChannel.NormalControl, TexturePaintNormalConvention.OpenGL);
+                Assert.That(converted, Is.Not.Null);
+                for (int i = 0; i < 4; i++)
+                {
+                    Color value = converted.GetPixel(i % 2, i / 2);
+                    Assert.That(value.r, Is.EqualTo(value.g).Within(0.004f));
+                    Assert.That(value.g, Is.EqualTo(value.b).Within(0.004f));
+                }
+            }
+            finally { Object.DestroyImmediate(source); }
+        }
+
+        [Test]
+        public void NormalControlIsClassifiedAsGrayscaleAuxiliaryData()
+        {
+            Assert.That(TexturePaintChannelUtility.DisplayName(TexturePaintChannel.NormalControl),
+                Is.EqualTo("Normal Control"));
+            Assert.That(TexturePaintChannelUtility.IsGrayscale(TexturePaintChannel.NormalControl), Is.True);
+            Assert.That(TexturePaintChannelUtility.IsAuxiliary(TexturePaintChannel.NormalControl), Is.True);
+            Assert.That(TexturePaintChannelUtility.IsColor(TexturePaintChannel.NormalControl), Is.False);
+            Assert.That(TexturePaintChannelUtility.IsVector(TexturePaintChannel.NormalControl), Is.False);
+            Assert.That(TextureSet.DefaultColor(TexturePaintChannel.NormalControl),
+                Is.EqualTo(new Color(0.5f, 0.5f, 0.5f, 1f)));
+        }
+
+        [Test]
+        public void AutomaticChannelMatchesNormalAndHasNoMaterialBinding()
+        {
+            TextureChannelTarget oldControl = set.GetChannel(TexturePaintChannel.NormalControl);
+            oldControl.Dispose();
+            set.channels.Remove(TexturePaintChannel.NormalControl);
+            TextureStore store = new TextureStore();
+            MethodInfo ensure = typeof(TextureStore).GetMethod("EnsureNormalControlChannel",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.That(ensure, Is.Not.Null);
+            ensure.Invoke(store, new object[] { set });
+
+            TextureChannelTarget normal = set.GetChannel(TexturePaintChannel.Normal);
+            TextureChannelTarget control = set.GetChannel(TexturePaintChannel.NormalControl);
+            Assert.That(control, Is.Not.Null);
+            Assert.That(control.Texture.width, Is.EqualTo(normal.Texture.width));
+            Assert.That(control.Texture.height, Is.EqualTo(normal.Texture.height));
+            Assert.That(control.materialProperty, Is.Null);
+            Assert.That(control.sourceKeyword, Is.Null);
+            Assert.That(control.umaChannelIndex, Is.EqualTo(-1));
+            Assert.That(control.sRGB, Is.False);
+            RenderTextureFormat expected = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBHalf)
+                ? RenderTextureFormat.ARGBHalf
+                : RenderTextureFormat.ARGB32;
+            Assert.That(control.format, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void PreNormalControlDocumentsMigrateToNeutralConversionSettings()
+        {
+            TexturePaintDocument document = ScriptableObject.CreateInstance<TexturePaintDocument>();
+            try
+            {
+                document.schemaVersion = 19;
+                document.surfaces.Add(new TexturePaintDocumentSurface
+                {
+                    normalControlStrength = 0f,
+                    normalControlRadius = 0,
+                    normalControlInvert = true
+                });
+
+                document.Migrate();
+
+                Assert.That(document.schemaVersion, Is.EqualTo(TexturePaintDocument.CurrentSchemaVersion));
+                Assert.That(document.surfaces[0].normalControlStrength, Is.EqualTo(2f));
+                Assert.That(document.surfaces[0].normalControlRadius, Is.EqualTo(1));
+                Assert.That(document.surfaces[0].normalControlInvert, Is.False);
+            }
+            finally { Object.DestroyImmediate(document); }
+        }
+
+        private void AddChannel(TexturePaintChannel channel, Color clear, RenderTextureFormat format)
+        {
+            EditableTextureTarget editable = new EditableTextureTarget("Normal Control " + channel,
+                Size, Size, format, null, clear);
+            TextureChannelTarget target = new TextureChannelTarget
+            {
+                channel = channel,
+                format = format,
+                editable = editable,
+                composite = EditableTextureTarget.Create("Normal Control " + channel + " Composite",
+                    Size, Size, format)
+            };
+            Fill(target.composite, clear);
+            set.channels.Add(channel, target);
+        }
+
+        private static Color Encode(Vector3 normal)
+            => new Color(normal.x * 0.5f + 0.5f, normal.y * 0.5f + 0.5f,
+                normal.z * 0.5f + 0.5f, 1f);
+
+        private static Color[] Solid(Color color)
+        {
+            Color[] values = new Color[Size * Size];
+            for (int i = 0; i < values.Length; i++) values[i] = color;
+            return values;
+        }
+
+        private static void Fill(RenderTexture target, Color color) => Write(target, Solid(color));
+
+        private static void Write(RenderTexture target, Color[] pixels)
+        {
+            Texture2D source = new Texture2D(Size, Size, TextureFormat.RGBAHalf, false, true);
+            try
+            {
+                source.SetPixels(pixels);
+                source.Apply(false, false);
+                Graphics.Blit(source, target);
+            }
+            finally { Object.DestroyImmediate(source); }
+        }
+
+        private static Color Read(RenderTexture source, int x, int y)
+        {
+            RenderTexture previous = RenderTexture.active;
+            Texture2D readable = new Texture2D(Size, Size, TextureFormat.RGBAHalf, false, true);
+            try
+            {
+                RenderTexture.active = source;
+                readable.ReadPixels(new Rect(0, 0, Size, Size), 0, 0, false);
+                readable.Apply(false, false);
+                return readable.GetPixel(x, y);
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                Object.DestroyImmediate(readable);
+            }
+        }
+    }
+}
+#endif

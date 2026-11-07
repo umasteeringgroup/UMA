@@ -1,0 +1,10 @@
+Human Female 3.0; UMAMesh; skin material 0; eye distance 0.0702 m; Unity 6000.3.18f1
+Mesh maps 4517.4 ms
+Original Skin 2048px, 0 cosmetic layers: 34.5 ms core sampling
+Natural Rose 2048px, 4 cosmetic layers: 464.7 ms core sampling
+Evening Berry 2048px, 4 cosmetic layers: 462.1 ms core sampling
+Bronze Editorial 2048px, 4 cosmetic layers: 458.3 ms core sampling
+Gothic Velvet 2048px, 4 cosmetic layers: 455.0 ms core sampling
+War Paint 2048px, 2 cosmetic layers: 268.7 ms core sampling
+Festival Color 2048px, 3 cosmetic layers: 356.8 ms core sampling
+12th Gen Intel(R) Core(TM) i7-12700K / NVIDIA GeForce RTX 5070 Ti

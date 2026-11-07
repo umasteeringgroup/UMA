@@ -1,0 +1,79 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEditor.U2D.Sprites;
+using UnityEngine;
+using UMA.TexturePaint;
+public static class MaterialLibraryImport
+{
+ const string Root="Assets/UMA/OverlayPainter/Textures/Tileable Materials";
+ [Serializable] public class Catalog { public int tileSize,padding,grid;public Family[] families; }
+ [Serializable] public class Family { public string name,wearProfile;public string[] names,channels,displayNames; public int grid; }
+ public static string Run() => Import(false);
+ public static string RunMail() => Import(true);
+ static string Import(bool mailOnly)
+ {
+  Directory.CreateDirectory("Build/Validation/TileableMaterials");
+  AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+  var catalog=Newtonsoft.Json.JsonConvert.DeserializeObject<Catalog>(File.ReadAllText(Root+"/Catalog.json"));
+  if(catalog?.families==null)throw new Exception("Could not read material catalog.");
+  var report=new List<string>();
+  foreach(var family in catalog.families)
+  {
+   if(mailOnly && family.name!="Chainmail and Scale Armor" && family.name!="Interlinked Chain Mail")continue;
+   int grid=family.grid>0?family.grid:catalog.grid;
+   var sheets=new List<OverlayPainterSpriteSheet>();
+   foreach(string channel in family.channels)
+   {
+    string path=Root+"/"+family.name+"/"+channel+".png";
+    var importer=(TextureImporter)AssetImporter.GetAtPath(path);
+    importer.textureType=TextureImporterType.Sprite;importer.spriteImportMode=SpriteImportMode.Multiple;
+    importer.sRGBTexture=channel=="Albedo";
+    importer.alphaSource=family.wearProfile!=null && channel!="Height" ? TextureImporterAlphaSource.FromInput : TextureImporterAlphaSource.None;
+    importer.alphaIsTransparency=false; // Preserve authored straight RGB and data values.
+    importer.mipmapEnabled=false;importer.npotScale=TextureImporterNPOTScale.None;
+    importer.maxTextureSize=Mathf.NextPowerOfTwo((catalog.tileSize+2*catalog.padding)*grid);importer.textureCompression=TextureImporterCompression.Uncompressed;
+    importer.wrapMode=TextureWrapMode.Clamp;importer.filterMode=FilterMode.Bilinear;
+    importer.isReadable=false;importer.SaveAndReimport();
+    var factories=new SpriteDataProviderFactories();factories.Init();
+    var provider=factories.GetSpriteEditorDataProviderFromObject(importer);
+    if(provider==null)throw new InvalidOperationException("Sprite provider unavailable: "+path);
+    provider.InitSpriteEditorDataProvider();
+    var edit=provider.GetDataProvider<ISpriteFrameEditCapability>();
+    if(edit==null)throw new InvalidOperationException("Sprite edit capabilities unavailable: "+path);
+    var capabilities=edit.GetEditCapability();
+    foreach(var required in new[]{EEditCapability.CreateAndDeleteSprite,EEditCapability.EditSpriteName,EEditCapability.EditSpriteRect,EEditCapability.EditPivot})
+     if(!capabilities.HasCapability(required))throw new InvalidOperationException("Unsupported "+required+": "+path);
+    var existing=provider.GetSpriteRects().ToDictionary(s=>s.name,s=>s.spriteID);
+    var rects=new SpriteRect[family.names.Length];var pairs=new SpriteNameFileIdPair[rects.Length];
+    int stride=catalog.tileSize+2*catalog.padding;
+    for(int i=0;i<rects.Length;i++)
+    {
+     string name=family.names[i]+"_"+i;
+     var id=existing.TryGetValue(name,out var old)?old:GUID.Generate();
+     rects[i]=new SpriteRect{name=name,spriteID=id,alignment=SpriteAlignment.Center,pivot=new Vector2(.5f,.5f),
+      rect=new Rect((i%grid)*stride+catalog.padding,(grid-1-i/grid)*stride+catalog.padding,catalog.tileSize,catalog.tileSize)};
+     pairs[i]=new SpriteNameFileIdPair(name,id);
+    }
+    var names=provider.GetDataProvider<ISpriteNameFileIdDataProvider>();
+    if(names==null)throw new InvalidOperationException("Sprite identity provider unavailable: "+path);
+    provider.SetSpriteRects(rects);names.SetNameFileIdPairs(pairs);provider.Apply();importer.SaveAndReimport();
+    if(channel!="Height")sheets.Add(new OverlayPainterSpriteSheet{channel=(TexturePaintChannel)Enum.Parse(typeof(TexturePaintChannel),channel),spriteSheet=AssetDatabase.LoadAssetAtPath<Texture2D>(path)});
+   }
+   string setPath=Root+"/"+family.name+" Sprite Set.asset";
+   var set=AssetDatabase.LoadAssetAtPath<OverlayPainterSpriteSet>(setPath);
+   if(set==null){set=ScriptableObject.CreateInstance<OverlayPainterSpriteSet>();AssetDatabase.CreateAsset(set,setPath);}
+   set.setName=family.name+" — Tileable PBR";set.spriteNames=(family.displayNames??family.names).ToList();set.spriteSheets=sheets;EditorUtility.SetDirty(set);
+   var resolved=TexturePaintSpriteSetSource.Resolve(set);
+   foreach(var sheet in resolved)
+   {
+    if(sheet.Value.Count!=family.names.Length)throw new Exception("Missing tiles: "+setPath);
+    for(int i=0;i<family.names.Length;i++)if(sheet.Value[i].rect!=resolved[TexturePaintChannel.Albedo][i].rect)throw new Exception("Channel misalignment: "+setPath);
+   }
+   report.Add("PASS "+family.name+": "+resolved.Count+" channels x "+family.names.Length+" aligned "+catalog.tileSize+"px sprites; separate Height alternative.");
+  }
+  AssetDatabase.SaveAssets();File.WriteAllLines("Build/Validation/TileableMaterials/Import.txt",report);return string.Join("\n",report);
+ }
+}

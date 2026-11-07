@@ -1,0 +1,27 @@
+{
+    "name": "UMA.TexturePaint.Sprite.Editor",
+    "rootNamespace": "UMA.TexturePaint.Editor",
+    "references": [
+        "UMA.TexturePaint.Editor",
+        "Unity.2D.Sprite.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UMA_2D_SPRITE"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.2d.sprite",
+            "expression": "1.0.0",
+            "define": "UMA_2D_SPRITE"
+        }
+    ],
+    "noEngineReferences": false
+}

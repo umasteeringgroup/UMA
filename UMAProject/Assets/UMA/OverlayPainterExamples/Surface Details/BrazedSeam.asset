@@ -1,0 +1,143 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a054d4d2009c5b94e84187aa7b4a8fe6, type: 3}
+  m_Name: BrazedSeam
+  m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintGarmentPresetAsset
+  settings:
+    enabled: 1
+    preset: 40
+    kind: 7
+    variant: 3
+    seed: 17
+    detailSize: 0.003
+    relief: 0.001
+    normalStrength: 1
+    amount: 1
+    wrapOverlap: 0.25
+    wrapAngle: 25
+    wrapWrinkles: 0.2
+    wrapLift: 0.2
+    wrapFray: 0.15
+    wrapStain: 0.1
+    wrapResidue: 0.1
+    wrapWeave: 0.001
+    weldWidth: 0.22
+    weldRipple: 0.15
+    weldHeat: 0.3
+    weldHeatWidth: 0.25
+    weldSoot: 0.1
+    weldSpatter: 0.02
+    laceThread: 0.012
+    laceScallop: 0.14
+    laceNet: 0.5
+    laceTwist: 0.3
+    angle: 0
+    irregularity: 0.35
+    falloff: 0.001
+    taper: 0.4
+    focus: {x: 0.5, y: 0.05}
+    spread: 0.65
+    wear: 0.3
+    recess: 0.3
+    dirt: 0.2
+    protection: 0.85
+    edgeWidth: 0.035
+    openStart: 0
+    openEnd: 0
+    stitchSize: 0.00035
+    stitchSpacing: 0.0035
+    stitchRows: 2
+    threadColor: {r: 0.7, g: 0.38, b: 0.1, a: 1}
+    surfaceColor: {r: 0.64, g: 0.4, b: 0.14, a: 1}
+    accentColor: {r: 0.55, g: 0.31, b: 0.13, a: 1}
+    colorAmount: 1
+    roughness: 0.27
+    metalRoughness: 0.32
+    opening: 0.08
+    slider: 0.82
+    zipperWidth: 1
+    zipperStyle:
+      preset: 0
+      toothShape: 0
+      toothWidth: 1
+      toothLength: 1
+      toothRoundness: 1
+      bankOffset: 0.5
+      tapeWidth: 0.72
+      tapeHeight: 0.12
+      weaveScale: 0
+      weaveContrast: 0.075
+      weaveHeight: 0.025
+      weave: 0
+      cordWidth: 0.018
+      cordHeight: 0
+      cordInset: 0.018
+      cordColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+      stitchStyle: 0
+      stitchLength: 0.64
+      stitchSpread: 0.025
+      stitchHeight: 1
+      stitchRoughness: 0.66
+    zipperTeeth:
+      height: 1
+      metallic: -1
+      smoothness: -1
+    zipperStops:
+      height: 2.5
+      metallic: -1
+      smoothness: -1
+    zipperSlider:
+      height: 1.5
+      metallic: -1
+      smoothness: -1
+    zipperPull:
+      height: 2
+      metallic: -1
+      smoothness: -1
+    zipperTang:
+      height: 2
+      metallic: -1
+      smoothness: -1
+    zipperDepth: 1
+    zipperDepthVersion: 1
+    shadingStrength: 1
+    shadingStrengthVersion: 1
+    repeat: 1
+    damage: 0.45
+    fray: 0.55
+    motif: {fileID: 0}
+    motifSprite: {fileID: 0}
+    motifScale: 0.75
+    motifColor: 1
+    albedo: 1
+    normal: 0
+    ao: 1
+    roughnessOutput: 1
+    metallic: 1
+    height: 1
+    masks: 0
+    foldInput:
+      surfaceId: 
+      layerId: 
+      logicalLayerId: 
+      paintTargetId: 
+      channel: 0
+      component: 1
+      invert: 0
+    protectionInput:
+      surfaceId: 
+      layerId: 
+      logicalLayerId: 
+      paintTargetId: 
+      channel: 0
+      component: 1
+      invert: 0

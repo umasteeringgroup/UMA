@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d79e0ce9bdf7dc9e09634a124ac29ec5, type: 3}
+  m_Name: BraidedBun_HairGroom_CoverageAtlas
+  m_EditorClassIdentifier: UMA.HairCards.Core::UMA.HairCards.HairAtlasProfileAsset
+  atlasId: 2fdc82c3ed6d27fbb3fddf07a4956e52
+  albedo: {fileID: 2800000, guid: f060cc168182fd042b3496de78796eea, type: 3}
+  normal: {fileID: 2800000, guid: a5fbb2922e669994f83edd6c6328b61e, type: 3}
+  mask: {fileID: 2800000, guid: 793d3486a6e75ba468ce50f451cb035f, type: 3}
+  material: {fileID: 2100000, guid: fe813e4188173844c908ad096a8dad65, type: 2}
+  secondPassMaterial: {fileID: 0}
+  sharedColorTable: {fileID: 0}
+  sharedColorIndex: -1
+  regions:
+  - id: fcc857d3527f49ea968697cfa269257e
+    name: Dense long strands
+    uvRect:
+      serializedVersion: 2
+      x: 0.46608
+      y: 0.03607
+      width: 0.15093
+      height: 0.94754
+    weight: 1
+    tags: []
+    flipU: 0
+    flipV: 1
+  - id: b5110f2d04f8467980805207811eef91
+    name: Fine long strands
+    uvRect:
+      serializedVersion: 2
+      x: 0.63557
+      y: 0.03959
+      width: 0.14935
+      height: 0.94601
+    weight: 1
+    tags: []
+    flipU: 0
+    flipV: 1

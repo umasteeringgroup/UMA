@@ -1,0 +1,20 @@
+{
+    "name": "UMA.Dismemberment.Editor",
+    "rootNamespace": "UMA.Dismemberment.Editor",
+    "references": [
+        "UMA.Dismemberment.Runtime",
+        "UMA_Core",
+        "UMA_Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

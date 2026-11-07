@@ -1,0 +1,192 @@
+{
+  "tool": "Built-in image_gen",
+  "format": "White RGBA stamp; transparent black; 1024 square; non-tileable",
+  "productionPrompt": "Create a pristine white heraldic armor stamp: SUBJECT. One emblem centered in a square canvas with a 10% clear margin. Flat solid white shapes, with large clean transparent negative-space cutouts defining every detail. Graphic stencil style, NOT a shaded drawing or engraving illustration. Use strong smooth outlines and generously wide gaps (at least 8 pixels at 1024 resolution). Avoid tiny lines, shading, texture, grunge, distress, speckling, scratches, or paper. White foreground, transparent black background (RGBA 0,0,0,0), including the internal holes. Actual transparent PNG alpha. No text, labels, sheet, border, or watermark. The stencil should be elegant and detailed but every detail must be a bold deliberate cutout, not a thin black line. Square 1024x1024.",
+  "notes": "Prompts were refined during generation. Alpha cleanup and corner symmetry were applied after generation.",
+  "subjects": [
+    {
+      "file": "OPS-Lion-Head.png",
+      "subject": "front-facing heraldic lion head, proud broad muzzle, swept layered mane, clear eye and muzzle cutouts"
+    },
+    {
+      "file": "OPS-Eagle.png",
+      "subject": "heraldic eagle with spread wings, one head turned left, elegant symmetric separated flight feathers and fanned tail"
+    },
+    {
+      "file": "OPS-Prussian-Eagle.png",
+      "subject": "historical Prussian-style crowned eagle, single head turned left, wings spread upward, curled feather ends, small royal crown, scepter in one claw and orb in the other; no lettering, no initials"
+    },
+    {
+      "file": "OPS-Lion-Rampant.png",
+      "subject": "classic rampant lion in profile, one lifted forepaw, curling forked tail, articulated mane"
+    },
+    {
+      "file": "OPS-Griffin.png",
+      "subject": "rampant griffin in profile with eagle head, lion body and raised feathered wing"
+    },
+    {
+      "file": "OPS-Dragon.png",
+      "subject": "coiled heraldic dragon with hooked wing and curling tail, fierce readable head"
+    },
+    {
+      "file": "OPS-Wolf-Head.png",
+      "subject": "front-facing heraldic wolf head, pointed ears, layered cheek fur and narrow eyes"
+    },
+    {
+      "file": "OPS-Stag-Head.png",
+      "subject": "front-facing noble stag head with balanced branching antlers"
+    },
+    {
+      "file": "OPS-Bear-Head.png",
+      "subject": "front-facing bear head with strong muzzle, round ears, ornate cheek fur"
+    },
+    {
+      "file": "OPS-Phoenix.png",
+      "subject": "ascending phoenix with swept upward flame-shaped wings and flowing tail feathers"
+    },
+    {
+      "file": "OPS-Owl.png",
+      "subject": "front-facing owl with outstretched wings, large distinct eyes and feather divisions"
+    },
+    {
+      "file": "OPS-Raven.png",
+      "subject": "raven in side profile with a raised wing, curling ornamental tail"
+    },
+    {
+      "file": "OPS-Corner-Celtic-Square.png",
+      "subject": "single L-shaped Celtic interlaced ribbon corner for an armor plate, clean convincing over-under crossings, generous open negative spaces"
+    },
+    {
+      "file": "OPS-Corner-Celtic-Curved.png",
+      "subject": "single gracefully curved right-angle Celtic interlace corner, three broad braided loops, convincing over-under crossings"
+    },
+    {
+      "file": "OPS-Celtic-Triquetra.png",
+      "subject": "balanced three-loop Celtic triquetra knot with an interwoven circle, clear over-under crossings"
+    },
+    {
+      "file": "OPS-Celtic-Knot-Diamond.png",
+      "subject": "diamond-shaped Celtic interlace medallion, four lobes, broad continuous ribbons and clean over-under gaps"
+    },
+    {
+      "file": "OPS-Celtic-Knot-Round.png",
+      "subject": "circular Celtic interlace medallion with six lobes and open center, convincing interweaving"
+    },
+    {
+      "file": "OPS-Celtic-Dragon-Knot.png",
+      "subject": "two intertwined Celtic serpent dragons in an oval knot, visible heads and clean over-under ribbon gaps"
+    },
+    {
+      "file": "OPS-Fleur-De-Lis.png",
+      "subject": "ornate heraldic fleur-de-lis with elegant curled side petals and a restrained engraved internal filigree"
+    },
+    {
+      "file": "OPS-Tudor-Rose.png",
+      "subject": "front-facing Tudor-style double heraldic rose with five broad outer petals and five smaller inner petals, open petal separations"
+    },
+    {
+      "file": "OPS-Laurel-Wreath.png",
+      "subject": "symmetric open-top laurel wreath with individually separated pointed leaves and small crossed stems at base, empty center"
+    },
+    {
+      "file": "OPS-Oak-Wreath.png",
+      "subject": "open-top oak-leaf wreath with distinct lobed leaves and acorns, empty center"
+    },
+    {
+      "file": "OPS-Corner-Acanthus.png",
+      "subject": "single L-shaped baroque acanthus leaf corner ornament, deeply separated curling lobes"
+    },
+    {
+      "file": "OPS-Acanthus-Crest.png",
+      "subject": "symmetric baroque acanthus crest flourish, compact vertical central bud with curling side leaves"
+    },
+    {
+      "file": "OPS-Scrollwork-Divider.png",
+      "subject": "short horizontal symmetric ornamental scrollwork divider, central diamond and curled acanthus ends"
+    },
+    {
+      "file": "OPS-Gothic-Trefoil.png",
+      "subject": "gothic pointed trefoil tracery ornament, slender but sturdy arches, open negative space"
+    },
+    {
+      "file": "OPS-Sunburst.png",
+      "subject": "heraldic sunburst with alternating straight and flame-shaped rays around a detailed central rosette"
+    },
+    {
+      "file": "OPS-Winged-Skull.png",
+      "subject": "decorative front-facing skull with balanced swept feathered wings, no bones crossed behind"
+    },
+    {
+      "file": "OPS-Crossed-Swords.png",
+      "subject": "two crossed medieval swords with detailed hilts and a small central ornamental diamond"
+    },
+    {
+      "file": "OPS-Royal-Crown.png",
+      "subject": "ornate medieval royal crown with five fleur-shaped points, jewel cutouts and distinct curved base"
+    },
+    {
+      "file": "OPS-Scallop-Shell.png",
+      "subject": "front-facing decorative scallop shell with radiating ribs separated by transparent grooves"
+    },
+    {
+      "file": "OPS-Palmette.png",
+      "subject": "classical fan-shaped palmette with seven curling leaves and a scrolling base"
+    },
+    {
+      "file": "OPS-Corner-Laurel.png",
+      "subject": "right-angle corner formed by TWO IDENTICAL laurel sprigs, one horizontal to the right and one vertical upward, joined at the lower-left elbow by a small rosette, open upper-right center. CRITICAL: exact mirror symmetry about the bottom-left to top-right 45-degree diagonal: the X arm and Y arm must be identical length, thickness, and decorative shape when swapped. This must look balanced when rotated 45 degrees to frame another icon. Both arms occupy the left and bottom sides of the square; center and top-right are empty. No rectangular frame."
+    },
+    {
+      "file": "OPS-Corner-Ivy.png",
+      "subject": "right-angle corner formed by TWO IDENTICAL curling ivy vines with three lobed leaves per arm, one horizontal right and one vertical up, joined at the lower-left elbow, open upper-right center. CRITICAL: exact mirror symmetry about the bottom-left to top-right 45-degree diagonal: the X arm and Y arm must be identical length, thickness, and decorative shape when swapped. This must look balanced when rotated 45 degrees to frame another icon. Both arms occupy the left and bottom sides of the square; center and top-right are empty. No rectangular frame."
+    },
+    {
+      "file": "OPS-Corner-Oak.png",
+      "subject": "right-angle corner formed by TWO IDENTICAL oak-leaf-and-acorn branches, one horizontal right and one vertical up, joined at the lower-left elbow by a paired acorn, open upper-right center. CRITICAL: exact mirror symmetry about the bottom-left to top-right 45-degree diagonal: the X arm and Y arm must be identical length, thickness, and decorative shape when swapped. This must look balanced when rotated 45 degrees to frame another icon. Both arms occupy the left and bottom sides of the square; center and top-right are empty. No rectangular frame."
+    },
+    {
+      "file": "OPS-Corner-Fern.png",
+      "subject": "right-angle corner of TWO IDENTICAL graceful fern fronds, one horizontal right and one vertical up, curving slightly inward, joined at the lower-left elbow, open upper-right center. CRITICAL: exact mirror symmetry about the bottom-left to top-right 45-degree diagonal: the X arm and Y arm must be identical length, thickness, and decorative shape when swapped. This must look balanced when rotated 45 degrees to frame another icon. Both arms occupy the left and bottom sides of the square; center and top-right are empty. No rectangular frame."
+    },
+    {
+      "file": "OPS-Corner-Celtic-Braid.png",
+      "subject": "right-angle L-shaped Celtic braided ribbon corner, two IDENTICAL arm patterns one horizontal right one vertical up, clean over-under knot at lower-left elbow, open upper-right center. CRITICAL: exact mirror symmetry about the bottom-left to top-right 45-degree diagonal: the X arm and Y arm must be identical length, thickness, and decorative shape when swapped. This must look balanced when rotated 45 degrees to frame another icon. Both arms occupy the left and bottom sides of the square; center and top-right are empty. No rectangular frame."
+    },
+    {
+      "file": "OPS-Corner-Celtic-Triskele.png",
+      "subject": "right-angle L-shaped Celtic corner with matching triple spiral ornaments on BOTH identical arms, one horizontal right and one vertical up, broad flowing ribbon joined at lower-left elbow, open upper-right center. CRITICAL: exact mirror symmetry about the bottom-left to top-right 45-degree diagonal: the X arm and Y arm must be identical length, thickness, and decorative shape when swapped. This must look balanced when rotated 45 degrees to frame another icon. Both arms occupy the left and bottom sides of the square; center and top-right are empty. No rectangular frame."
+    },
+    {
+      "file": "OPS-Corner-French-Lily.png",
+      "subject": "right-angle French royal fleur-de-lis corner, two IDENTICAL lily and scroll ornaments one horizontal right one vertical up, joined by a small diamond rosette at lower-left elbow, open upper-right center. CRITICAL: exact mirror symmetry about the bottom-left to top-right 45-degree diagonal: the X arm and Y arm must be identical length, thickness, and decorative shape when swapped. This must look balanced when rotated 45 degrees to frame another icon. Both arms occupy the left and bottom sides of the square; center and top-right are empty. No rectangular frame."
+    },
+    {
+      "file": "OPS-Corner-French-Rococo.png",
+      "subject": "right-angle French rococo corner with TWO IDENTICAL acanthus C-scroll arms one horizontal right one vertical up, joined at lower-left elbow by a shell rosette facing diagonally inward, open upper-right center. CRITICAL: exact mirror symmetry about the bottom-left to top-right 45-degree diagonal: the X arm and Y arm must be identical length, thickness, and decorative shape when swapped. This must look balanced when rotated 45 degrees to frame another icon. Both arms occupy the left and bottom sides of the square; center and top-right are empty. No rectangular frame."
+    },
+    {
+      "file": "OPS-Corner-Filled-Scroll-Plate.png",
+      "subject": "a single pierced ornamental triangular CORNER PLATE, straight equal outer legs along the left and bottom of a square, scalloped convex diagonal inner edge, broad solid white body punctured by five generous curling scroll cutouts. The lower-left elbow is solid and rich, with the inner plate extending well toward the center of the square. One corner only, no screws, no material shading. The outer corner is at LOWER LEFT; decoration extends UP and RIGHT into a roughly triangular footprint. The design must fill substantial interior space, not only hug two edge strips. Exact bilateral symmetry about the diagonal from bottom-left to top-right: matching X/Y arms and matching decorative mass. Original design inspired by traditional pierced book-corner metalwork and ornamental openwork; do not copy a reference. Flat white stamp only, no gold or black visible paint."
+    },
+    {
+      "file": "OPS-Corner-Filled-Celtic-Knot.png",
+      "subject": "a single dense triangular Celtic interlace corner medallion occupying the lower-left triangular half of a square, two short equal outer legs along left and bottom, central large four-loop knot with nested braided ribbons filling the interior toward the diagonal, broad clean over-under gaps; not a thin L-border. The outer corner is at LOWER LEFT; decoration extends UP and RIGHT into a roughly triangular footprint. The design must fill substantial interior space, not only hug two edge strips. Exact bilateral symmetry about the diagonal from bottom-left to top-right: matching X/Y arms and matching decorative mass. Original design inspired by traditional pierced book-corner metalwork and ornamental openwork; do not copy a reference. Flat white stamp only, no gold or black visible paint."
+    },
+    {
+      "file": "OPS-Corner-Filled-Ivy-Cluster.png",
+      "subject": "a single triangular ornamental ivy cluster for a corner, short equal left and bottom boundary stems, five large ivy leaves fanning inward from the lower-left elbow toward the diagonal, curled tendrils and berry rosette filling the center. A compact leafy triangular mass with intentional open cutouts; not a narrow L-shaped vine. The outer corner is at LOWER LEFT; decoration extends UP and RIGHT into a roughly triangular footprint. The design must fill substantial interior space, not only hug two edge strips. Exact bilateral symmetry about the diagonal from bottom-left to top-right: matching X/Y arms and matching decorative mass. Original design inspired by traditional pierced book-corner metalwork and ornamental openwork; do not copy a reference. Flat white stamp only, no gold or black visible paint."
+    },
+    {
+      "file": "OPS-Corner-Filled-Acanthus-Fan.png",
+      "subject": "a single opulent triangular acanthus corner ornament, equal left and bottom outside legs, large curling acanthus leaves fanning from a lower-left rosette deeply into the interior, broad central leaf on the inward diagonal, secondary leaves fill the triangular area with flowing openwork; not a thin L-border. The outer corner is at LOWER LEFT; decoration extends UP and RIGHT into a roughly triangular footprint. The design must fill substantial interior space, not only hug two edge strips. Exact bilateral symmetry about the diagonal from bottom-left to top-right: matching X/Y arms and matching decorative mass. Original design inspired by traditional pierced book-corner metalwork and ornamental openwork; do not copy a reference. Flat white stamp only, no gold or black visible paint."
+    },
+    {
+      "file": "OPS-Corner-Filled-French-Rocaille.png",
+      "subject": "a single French rococo triangular corner ornament, an elaborate scallop-shell rosette at the lower-left elbow, mirrored voluptuous C-scrolls along equal left and bottom legs, a broad ornate fleur-de-lis extending toward the center on the diagonal, surrounded by interior leaf curls. Fill most of the triangular corner region with ornate pierced white artwork; not just two narrow arms. The outer corner is at LOWER LEFT; decoration extends UP and RIGHT into a roughly triangular footprint. The design must fill substantial interior space, not only hug two edge strips. Exact bilateral symmetry about the diagonal from bottom-left to top-right: matching X/Y arms and matching decorative mass. Original design inspired by traditional pierced book-corner metalwork and ornamental openwork; do not copy a reference. Flat white stamp only, no gold or black visible paint."
+    },
+    {
+      "file": "OPS-Corner-Filled-Palmette-Rosette.png",
+      "subject": "a single classical triangular corner decoration with equal straight left and bottom outside legs, a large seven-leaf palmette fan radiating into the center from a lower-left floral rosette, two short matching scroll arms, thick openwork leaves and teardrop cutouts occupying the entire triangular region toward its diagonal edge. The outer corner is at LOWER LEFT; decoration extends UP and RIGHT into a roughly triangular footprint. The design must fill substantial interior space, not only hug two edge strips. Exact bilateral symmetry about the diagonal from bottom-left to top-right: matching X/Y arms and matching decorative mass. Original design inspired by traditional pierced book-corner metalwork and ornamental openwork; do not copy a reference. Flat white stamp only, no gold or black visible paint."
+    }
+  ]
+}

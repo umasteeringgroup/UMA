@@ -1,0 +1,17 @@
+Project: C:/GitHub/UMA/UMAProject/Assets
+UMA: 3.1f3
+Unity: 6000.3.18f1
+CPU: 12th Gen Intel(R) Core(TM) i7-12700K
+GPU: NVIDIA GeForce RTX 5070 Ti
+1024 Draft cold total=605.83ms; 682 strands; 172 x 36 local raster; destination 1024; groom 75.35 ms, raster 508.55 ms, shading/upload 16.66 ms
+1024 Draft warm total=36.48ms; 682 strands; 172 x 36 local raster; destination 1024; groom 5.85 ms, raster 5.69 ms, shading/upload 23.44 ms
+1024 Final cold total=701.10ms; 682 strands; 344 x 72 local raster; destination 1024; groom 85.29 ms, raster 583.35 ms, shading/upload 30.69 ms
+1024 Final warm total=46.90ms; 682 strands; 344 x 72 local raster; destination 1024; groom 6.14 ms, raster 3.81 ms, shading/upload 35.09 ms
+2048 Draft cold total=734.14ms; 682 strands; 344 x 72 local raster; destination 2048; groom 70.22 ms, raster 632.72 ms, shading/upload 29.53 ms
+2048 Draft warm total=43.28ms; 682 strands; 344 x 72 local raster; destination 2048; groom 7.17 ms, raster 3.76 ms, shading/upload 30.37 ms
+2048 Final cold total=975.12ms; 682 strands; 687 x 143 local raster; destination 2048; groom 63.62 ms, raster 828.74 ms, shading/upload 81.28 ms
+2048 Final warm total=105.29ms; 682 strands; 687 x 143 local raster; destination 2048; groom 7.41 ms, raster 5.82 ms, shading/upload 90.23 ms
+4096 Draft cold total=675.00ms; 682 strands; 384 x 80 local raster; destination 4096; groom 79.37 ms, raster 563.34 ms, shading/upload 30.76 ms
+4096 Draft warm total=43.93ms; 682 strands; 384 x 80 local raster; destination 4096; groom 5.68 ms, raster 3.41 ms, shading/upload 33.29 ms
+4096 Final cold total=1396.53ms; 682 strands; 1374 x 286 local raster; destination 4096; groom 62.47 ms, raster 1100.72 ms, shading/upload 231.82 ms
+4096 Final warm total=284.50ms; 682 strands; 1374 x 286 local raster; destination 4096; groom 8.27 ms, raster 3.59 ms, shading/upload 270.62 ms

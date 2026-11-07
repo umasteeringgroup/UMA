@@ -1,0 +1,898 @@
+{
+  "version": 3,
+  "wearProfile": "Original sets: very minor aging. Expansion sets 1\u20136: no wear. Expansion sets 7\u20138: minor micro wear only.",
+  "tileSize": 1024,
+  "padding": 8,
+  "grid": 3,
+  "normalEncoding": "tangent +Y / OpenGL",
+  "families": [
+    {
+      "name": "Aged Metals",
+      "names": [
+        "Flaking Iron Rust",
+        "Blackened Forged Steel",
+        "Pitted Steel",
+        "Tarnished Brass",
+        "Verdigris Copper",
+        "Oxidized Bronze",
+        "Weathered Zinc",
+        "Chipped Industrial Paint",
+        "Oiled Brushed Steel"
+      ],
+      "seedBase": 41000,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "seconds": 29.91
+    },
+    {
+      "name": "Woven Fabrics",
+      "names": [
+        "Natural Slub Linen",
+        "Heavy Duck Canvas",
+        "Navy Cotton Twill",
+        "Olive Herringbone",
+        "Charcoal Wool Tweed",
+        "Taupe Basket Weave",
+        "Red Heritage Tartan",
+        "Black Ripstop",
+        "Cream Rib Knit"
+      ],
+      "seedBase": 41100,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "seconds": 22.73
+    },
+    {
+      "name": "Aged Leather",
+      "names": [
+        "Saddle Pebble Leather",
+        "Black Fine Grain",
+        "Worn Cognac Hide",
+        "Cracked Oxblood",
+        "Sand Suede",
+        "Black Patent",
+        "Distressed Buffalo Hide",
+        "Peeling Coated Leather",
+        "Embossed Reptile Leather"
+      ],
+      "seedBase": 41200,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "seconds": 27.91
+    },
+    {
+      "name": "Denim",
+      "names": [
+        "Raw Indigo Twill",
+        "Washed Mid Blue",
+        "Light Stonewash",
+        "Acid Wash Indigo",
+        "Black Denim",
+        "Faded Charcoal",
+        "Ecru Denim",
+        "Heavy Slub Indigo",
+        "Abraded Denim"
+      ],
+      "seedBase": 41300,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "seconds": 30.89
+    },
+    {
+      "name": "Rubber and Elastomers",
+      "names": [
+        "Smooth Vulcanized Rubber",
+        "Fine Pebble Rubber",
+        "Stipple Grip Rubber",
+        "Rounded Rib Rubber",
+        "Diamond Grip Rubber",
+        "Smooth Silicone",
+        "Neoprene Foam",
+        "Closed Cell EVA",
+        "Crosshatch Elastomer"
+      ],
+      "seedBase": 52000,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "wearProfile": "none",
+      "materials": [
+        {
+          "name": "Smooth Vulcanized Rubber",
+          "normalStrength": 0.003,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Fine Pebble Rubber",
+          "normalStrength": 0.007,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Stipple Grip Rubber",
+          "normalStrength": 0.007,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Rounded Rib Rubber",
+          "normalStrength": 0.007,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Diamond Grip Rubber",
+          "normalStrength": 0.007,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Smooth Silicone",
+          "normalStrength": 0.003,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Neoprene Foam",
+          "normalStrength": 0.003,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Closed Cell EVA",
+          "normalStrength": 0.003,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Crosshatch Elastomer",
+          "normalStrength": 0.007,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        }
+      ],
+      "seconds": 13.17
+    },
+    {
+      "name": "Plastics and Coatings",
+      "names": [
+        "Smooth ABS",
+        "Molded PBT Grain",
+        "Gloss Polycarbonate",
+        "Satin Polypropylene",
+        "Soft Touch Polymer",
+        "Fine Powder Coat",
+        "Gloss Enamel",
+        "Satin Ceramic Coating",
+        "Textured Molded Nylon"
+      ],
+      "seedBase": 52100,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "wearProfile": "none",
+      "materials": [
+        {
+          "name": "Smooth ABS",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Molded PBT Grain",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Gloss Polycarbonate",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Satin Polypropylene",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Soft Touch Polymer",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Fine Powder Coat",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Gloss Enamel",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Satin Ceramic Coating",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Textured Molded Nylon",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        }
+      ],
+      "seconds": 14.0
+    },
+    {
+      "name": "Knits and Soft Clothing",
+      "names": [
+        "Fine Cotton Jersey",
+        "Classic Stockinette",
+        "Chunky Wool Knit",
+        "Braided Cable Knit",
+        "Double Rib Knit",
+        "Waffle Knit",
+        "Interlock Cotton",
+        "Moss Stitch",
+        "Fisherman Rib"
+      ],
+      "seedBase": 52200,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "wearProfile": "none",
+      "materials": [
+        {
+          "name": "Fine Cotton Jersey",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Classic Stockinette",
+          "normalStrength": 0.01,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Chunky Wool Knit",
+          "normalStrength": 0.01,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Braided Cable Knit",
+          "normalStrength": 0.01,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Double Rib Knit",
+          "normalStrength": 0.01,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Waffle Knit",
+          "normalStrength": 0.01,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Interlock Cotton",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Moss Stitch",
+          "normalStrength": 0.01,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Fisherman Rib",
+          "normalStrength": 0.01,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        }
+      ],
+      "seconds": 13.36
+    },
+    {
+      "name": "Technical Weaves and Composites",
+      "names": [
+        "Carbon Twill",
+        "Plain Carbon Weave",
+        "Forged Carbon Composite",
+        "Aramid Plain Weave",
+        "Carbon Aramid Hybrid",
+        "Ballistic Nylon",
+        "Seatbelt Webbing",
+        "Spacer Sports Mesh",
+        "Coated Glass Fiber"
+      ],
+      "seedBase": 52400,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "wearProfile": "none",
+      "materials": [
+        {
+          "name": "Carbon Twill",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Plain Carbon Weave",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Forged Carbon Composite",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Aramid Plain Weave",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Carbon Aramid Hybrid",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Ballistic Nylon",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Seatbelt Webbing",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Spacer Sports Mesh",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": true,
+          "dielectric": true
+        },
+        {
+          "name": "Coated Glass Fiber",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        }
+      ],
+      "seconds": 10.25
+    },
+    {
+      "name": "Brocade and Decorative Fabrics",
+      "names": [
+        "Burgundy Damask",
+        "Navy Floral Jacquard",
+        "Olive Diamond Brocade",
+        "Ivory Paisley",
+        "Teal Rosette Brocade",
+        "Climbing Vine Jacquard",
+        "Gold Thread Arabesque",
+        "Silver Geometric Brocade",
+        "Indigo Wave Brocade"
+      ],
+      "seedBase": 52500,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "wearProfile": "none",
+      "materials": [
+        {
+          "name": "Burgundy Damask",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Navy Floral Jacquard",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Olive Diamond Brocade",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Ivory Paisley",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Teal Rosette Brocade",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Climbing Vine Jacquard",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Gold Thread Arabesque",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false
+        },
+        {
+          "name": "Silver Geometric Brocade",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false
+        },
+        {
+          "name": "Indigo Wave Brocade",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": true
+        }
+      ],
+      "seconds": 13.29
+    },
+    {
+      "name": "Wood and Natural Materials",
+      "names": [
+        "Straight Grain Oak",
+        "Oiled Walnut",
+        "Open Grain Ash",
+        "Pale Maple",
+        "Ribbon Mahogany",
+        "Natural Bamboo",
+        "Dark Stained Oak",
+        "Natural Cork",
+        "Satin Beech"
+      ],
+      "seedBase": 52600,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "wearProfile": "minor micro wear",
+      "materials": [
+        {
+          "name": "Straight Grain Oak",
+          "normalStrength": 0.0045,
+          "wearArea": 0.00030612945556640625,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Oiled Walnut",
+          "normalStrength": 0.0045,
+          "wearArea": 0.00028133392333984375,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Open Grain Ash",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0001773834228515625,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Pale Maple",
+          "normalStrength": 0.0045,
+          "wearArea": 0.000278472900390625,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Ribbon Mahogany",
+          "normalStrength": 0.0045,
+          "wearArea": 0.00023365020751953125,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Natural Bamboo",
+          "normalStrength": 0.0045,
+          "wearArea": 0.00029850006103515625,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Dark Stained Oak",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0002460479736328125,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Natural Cork",
+          "normalStrength": 0.0045,
+          "wearArea": 0.00024890899658203125,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Satin Beech",
+          "normalStrength": 0.0045,
+          "wearArea": 0.0003108978271484375,
+          "transparent": false,
+          "dielectric": true
+        }
+      ],
+      "seconds": 17.94
+    },
+    {
+      "name": "Bone Horn and Keratin",
+      "names": [
+        "Clean Ivory Bone",
+        "Porous Bone",
+        "Warm Aged Bone",
+        "Amber Polished Horn",
+        "Black Horn",
+        "Striated Ivory",
+        "Dark Claw Keratin",
+        "Hoof Keratin",
+        "Pearly Enamel"
+      ],
+      "seedBase": 52700,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "wearProfile": "minor micro wear",
+      "materials": [
+        {
+          "name": "Clean Ivory Bone",
+          "normalStrength": 0.0035,
+          "wearArea": 0.00025177001953125,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Porous Bone",
+          "normalStrength": 0.0035,
+          "wearArea": 0.00025081634521484375,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Warm Aged Bone",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0002231597900390625,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Amber Polished Horn",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0002918243408203125,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Black Horn",
+          "normalStrength": 0.0035,
+          "wearArea": 0.000263214111328125,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Striated Ivory",
+          "normalStrength": 0.0035,
+          "wearArea": 0.0002765655517578125,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Dark Claw Keratin",
+          "normalStrength": 0.0035,
+          "wearArea": 0.00019359588623046875,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Hoof Keratin",
+          "normalStrength": 0.0035,
+          "wearArea": 0.00023365020751953125,
+          "transparent": false,
+          "dielectric": true
+        },
+        {
+          "name": "Pearly Enamel",
+          "normalStrength": 0.0035,
+          "wearArea": 0.00026988983154296875,
+          "transparent": false,
+          "dielectric": true
+        }
+      ],
+      "seconds": 18.3
+    },
+    {
+      "name": "Chainmail and Scale Armor",
+      "names": [
+        "European Round Mail",
+        "Riveted Round Mail",
+        "Dense Six Ring Mail",
+        "Flat Link Mail",
+        "Fine Fish Scale",
+        "Pointed Scale Armor",
+        "Scalloped Scale Armor",
+        "Laced Lamellar",
+        "Riveted Brigandine"
+      ],
+      "seedBase": 52300,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "wearProfile": "none",
+      "materials": [
+        {
+          "name": "European Round Mail",
+          "normalStrength": 1.0,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false,
+          "normalMode": "analyticSurface"
+        },
+        {
+          "name": "Riveted Round Mail",
+          "normalStrength": 1.0,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false,
+          "normalMode": "analyticSurface"
+        },
+        {
+          "name": "Dense Six Ring Mail",
+          "normalStrength": 1.0,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false,
+          "normalMode": "analyticSurface"
+        },
+        {
+          "name": "Flat Link Mail",
+          "normalStrength": 1.0,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false,
+          "normalMode": "analyticSurface"
+        },
+        {
+          "name": "Fine Fish Scale",
+          "normalStrength": 0.007,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false
+        },
+        {
+          "name": "Pointed Scale Armor",
+          "normalStrength": 0.007,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false
+        },
+        {
+          "name": "Scalloped Scale Armor",
+          "normalStrength": 0.007,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false
+        },
+        {
+          "name": "Laced Lamellar",
+          "normalStrength": 0.007,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false
+        },
+        {
+          "name": "Riveted Brigandine",
+          "normalStrength": 0.007,
+          "wearArea": 0.0,
+          "transparent": false,
+          "dielectric": false
+        }
+      ],
+      "seconds": 43.89,
+      "displayNames": [
+        "Steel Rings on Chestnut Leather",
+        "Brass Rings on Oxblood Leather",
+        "Steel Rings on Black Leather",
+        "Flat Rings on Brown Leather",
+        "Fine Fish Scale",
+        "Pointed Scale Armor",
+        "Scalloped Scale Armor",
+        "Laced Lamellar",
+        "Riveted Brigandine"
+      ],
+      "construction": "First four tiles: rings stitched to opaque leather. Remaining scale and lamellar tiles unchanged."
+    },
+    {
+      "name": "Interlinked Chain Mail",
+      "names": [
+        "Interlinked Round Steel",
+        "Riveted Flat Steel Chain",
+        "Fine Polished Steel Chain",
+        "Dark Oiled Steel Chain"
+      ],
+      "grid": 2,
+      "tileSize": 1024,
+      "padding": 8,
+      "channels": [
+        "Albedo",
+        "Normal",
+        "Roughness",
+        "Metallic",
+        "AmbientOcclusion",
+        "Height"
+      ],
+      "wearProfile": "none",
+      "construction": "Alternating tilted interlinked rings; transparent openings; four-in-one arrangement",
+      "materials": [
+        {
+          "name": "Interlinked Round Steel",
+          "normalStrength": 1.0,
+          "normalMode": "analyticSurface",
+          "wearArea": 0.0,
+          "transparent": true,
+          "dielectric": false
+        },
+        {
+          "name": "Riveted Flat Steel Chain",
+          "normalStrength": 1.0,
+          "normalMode": "analyticSurface",
+          "wearArea": 0.0,
+          "transparent": true,
+          "dielectric": false
+        },
+        {
+          "name": "Fine Polished Steel Chain",
+          "normalStrength": 1.0,
+          "normalMode": "analyticSurface",
+          "wearArea": 0.0,
+          "transparent": true,
+          "dielectric": false
+        },
+        {
+          "name": "Dark Oiled Steel Chain",
+          "normalStrength": 1.0,
+          "normalMode": "analyticSurface",
+          "wearArea": 0.0,
+          "transparent": true,
+          "dielectric": false
+        }
+      ]
+    }
+  ]
+}

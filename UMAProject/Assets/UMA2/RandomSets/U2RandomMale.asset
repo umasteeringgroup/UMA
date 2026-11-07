@@ -1,0 +1,279 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a834b471b2a70f46be58ea3025b119f, type: 3}
+  m_Name: U2RandomMale
+  m_EditorClassIdentifier: UMA_Core::UMA.UMARandomizer
+  useDefinition: 1
+  useGlobalColors: 1
+  definition:
+    Icon: {fileID: 0}
+    Name: 
+    Note: 
+  global:
+    SharedColors:
+    - ColorName: Skin
+      ColorTable: {fileID: 11400000, guid: 1142620b746698b42a5bb3392ee7c732, type: 2}
+      GuiFoldout: 1
+      Delete: 0
+      CurrentColor: 0
+    - ColorName: Hair
+      ColorTable: {fileID: 11400000, guid: b3b6cfa4c2da1004cb1e49feb8144d30, type: 2}
+      GuiFoldout: 1
+      Delete: 0
+      CurrentColor: 0
+    - ColorName: Eyes
+      ColorTable: {fileID: 11400000, guid: 40e5f112cad2f64438393fe518da506d, type: 2}
+      GuiFoldout: 1
+      Delete: 0
+      CurrentColor: 0
+    ColorsFoldout: 1
+    UtilityFoldout: 0
+  GlobalSharedColors: []
+  RandomAvatars:
+  - RaceName: HumanMale
+    Chance: 1
+    SharedColors:
+    - ColorName: Skin
+      ColorTable: {fileID: 0}
+      GuiFoldout: 1
+      Delete: 0
+      CurrentColor: 0
+    - ColorName: Hair
+      ColorTable: {fileID: 0}
+      GuiFoldout: 1
+      Delete: 0
+      CurrentColor: 0
+    - ColorName: Eyes
+      ColorTable: {fileID: 0}
+      GuiFoldout: 1
+      Delete: 0
+      CurrentColor: 0
+    RandomWardrobeSlots: []
+    RandomDna:
+    - DnaName: earsSize
+      MinValue: 0
+      MaxValue: 1
+    - DnaName: feetSize
+      MinValue: 0
+      MaxValue: 1
+    - DnaName: skinGreenness
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: skinBlueness
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: skinRedness
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: height
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: headSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: headWidth
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: neckThickness
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: armLength
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: forearmLength
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: armWidth
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: forearmWidth
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: handsSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: legSeparation
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: upperMuscle
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: lowerMuscle
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: upperWeight
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: lowerWeight
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: legsSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: belly
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: waist
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: gluteusSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: earsPosition
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: earsRotation
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: noseSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: noseCurve
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: noseWidth
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: noseInclination
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: nosePosition
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: nosePronounced
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: noseFlatten
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: chinSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: chinPronounced
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: chinPosition
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: mandibleSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: jawsSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: jawsPosition
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: cheekSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: cheekPosition
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: lowCheekPronounced
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: lowCheekPosition
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: foreheadSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: foreheadPosition
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: lipsSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: mouthSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: eyeRotation
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: eyeSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: breastSize
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: eyeSpacing
+      MinValue: 0.25
+      MaxValue: 0.75
+    - DnaName: bodyFitness
+      MinValue: 0.25
+      MaxValue: 0.75
+    raceData: {fileID: 11400000, guid: a88284a0175502f459c5496bda675fb1, type: 2}
+    GuiFoldout: 1
+    ColorsFoldout: 0
+    WardrobeFoldout: 0
+    DnaFoldout: 1
+    Delete: 0
+    AddColorTable: 0
+    DnaChanged: 1
+    PossibleColors: []
+    PossibleDNA:
+    - skinGreenness
+    - skinBlueness
+    - skinRedness
+    - height
+    - headSize
+    - headWidth
+    - neckThickness
+    - armLength
+    - forearmLength
+    - armWidth
+    - forearmWidth
+    - handsSize
+    - feetSize
+    - legSeparation
+    - upperMuscle
+    - lowerMuscle
+    - upperWeight
+    - lowerWeight
+    - legsSize
+    - belly
+    - waist
+    - gluteusSize
+    - earsSize
+    - earsPosition
+    - earsRotation
+    - noseSize
+    - noseCurve
+    - noseWidth
+    - noseInclination
+    - nosePosition
+    - nosePronounced
+    - noseFlatten
+    - chinSize
+    - chinPronounced
+    - chinPosition
+    - mandibleSize
+    - jawsSize
+    - jawsPosition
+    - cheekSize
+    - cheekPosition
+    - lowCheekPronounced
+    - lowCheekPosition
+    - foreheadSize
+    - foreheadPosition
+    - lipsSize
+    - mouthSize
+    - eyeRotation
+    - eyeSize
+    - breastSize
+    - eyeSpacing
+    - bodyFitness
+    SelectedDNA: 37
+    DNAAdd: 
+    DNADel: 0
+    currentWardrobeSlot: 0

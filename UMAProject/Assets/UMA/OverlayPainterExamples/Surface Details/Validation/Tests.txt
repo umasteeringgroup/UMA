@@ -1,0 +1,21 @@
+Project: C:/GitHub/UMA/UMAProject/Assets; UMA 3.1f3; Unity 6000.3.18f1
+12th Gen Intel(R) Core(TM) i7-12700K; NVIDIA GeForce RTX 5070 Ti; RAM 130813 MB
+Direct NUnit method invocation in the live editor; preserves the open unsaved scene.
+PASS SurfaceDetailPathsAndProjectionsHaveMatchingCoverageAndRaisedRelief(TigWeld)
+PASS SurfaceDetailPathsAndProjectionsHaveMatchingCoverageAndRaisedRelief(MigWeld)
+PASS SurfaceDetailPathsAndProjectionsHaveMatchingCoverageAndRaisedRelief(SolderSeam)
+PASS SurfaceDetailPathsAndProjectionsHaveMatchingCoverageAndRaisedRelief(BrazedSeam)
+PASS SurfaceDetailPathsAndProjectionsHaveMatchingCoverageAndRaisedRelief(FloralLace)
+PASS SurfaceDetailPathsAndProjectionsHaveMatchingCoverageAndRaisedRelief(GothicLace)
+PASS SurfaceDetailPathsAndProjectionsHaveMatchingCoverageAndRaisedRelief(ScallopedLace)
+PASS DeterministicAndColorIndependentWithAlignedChannels(False)
+PASS DeterministicAndColorIndependentWithAlignedChannels(True)
+PASS DryingChangesMaterialWithoutMovingTheDeposit()
+PASS ResidueDefaultsToRoughnessAndOptionalRelief()
+PASS SpatialIndexDoesNotClipExtremeStretchedMarks(False)
+PASS SpatialIndexDoesNotClipExtremeStretchedMarks(True)
+PASS SeedAndRunoffChangeGeometryAndZeroCoverageClears()
+PASS WorldMappedDepositFollowsWorldPositionWhenUVsAreMirrored()
+PASS SurfaceDetailPluginHistoryAndCancellation(False)
+PASS SurfaceDetailPluginHistoryAndCancellation(True)
+RESULT: 17 passed, 0 failed

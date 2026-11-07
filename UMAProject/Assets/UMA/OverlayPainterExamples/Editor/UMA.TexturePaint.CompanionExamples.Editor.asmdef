@@ -1,0 +1,11 @@
+{
+    "name": "UMA.TexturePaint.CompanionExamples.Editor",
+    "references": [
+        "UMA_Core",
+        "UMA.TexturePaint.Runtime",
+        "UMA.TexturePaint.Editor",
+        "UMA.TexturePaint.Examples"
+    ],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": true
+}

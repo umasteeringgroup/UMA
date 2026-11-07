@@ -1,0 +1,113 @@
+PASS Aged Metals / Flaking Iron Rust: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003946
+PASS Aged Metals / Blackened Forged Steel: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003951
+PASS Aged Metals / Pitted Steel: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003948
+PASS Aged Metals / Tarnished Brass: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003940
+PASS Aged Metals / Verdigris Copper: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003948
+PASS Aged Metals / Oxidized Bronze: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003952
+PASS Aged Metals / Weathered Zinc: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003948
+PASS Aged Metals / Chipped Industrial Paint: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003934
+PASS Aged Metals / Oiled Brushed Steel: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003933
+PASS Woven Fabrics / Natural Slub Linen: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Woven Fabrics / Heavy Duck Canvas: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003948
+PASS Woven Fabrics / Navy Cotton Twill: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003948
+PASS Woven Fabrics / Olive Herringbone: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Woven Fabrics / Charcoal Wool Tweed: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003946
+PASS Woven Fabrics / Taupe Basket Weave: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Woven Fabrics / Red Heritage Tartan: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003946
+PASS Woven Fabrics / Black Ripstop: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Woven Fabrics / Cream Rib Knit: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Aged Leather / Saddle Pebble Leather: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Aged Leather / Black Fine Grain: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Aged Leather / Worn Cognac Hide: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Aged Leather / Cracked Oxblood: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003946
+PASS Aged Leather / Sand Suede: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Aged Leather / Black Patent: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003926
+PASS Aged Leather / Distressed Buffalo Hide: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Aged Leather / Peeling Coated Leather: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003946
+PASS Aged Leather / Embossed Reptile Leather: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Denim / Raw Indigo Twill: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003940
+PASS Denim / Washed Mid Blue: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003942
+PASS Denim / Light Stonewash: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003942
+PASS Denim / Acid Wash Indigo: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003941
+PASS Denim / Black Denim: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003943
+PASS Denim / Faded Charcoal: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003941
+PASS Denim / Ecru Denim: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003941
+PASS Denim / Heavy Slub Indigo: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003941
+PASS Denim / Abraded Denim: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003943
+PASS Rubber and Elastomers / Smooth Vulcanized Rubber: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003937
+PASS Rubber and Elastomers / Fine Pebble Rubber: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003971
+PASS Rubber and Elastomers / Stipple Grip Rubber: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003972
+PASS Rubber and Elastomers / Rounded Rib Rubber: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003972
+PASS Rubber and Elastomers / Diamond Grip Rubber: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003970
+PASS Rubber and Elastomers / Smooth Silicone: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003937
+PASS Rubber and Elastomers / Neoprene Foam: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003942
+PASS Rubber and Elastomers / Closed Cell EVA: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003943
+PASS Rubber and Elastomers / Crosshatch Elastomer: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003970
+PASS Plastics and Coatings / Smooth ABS: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Plastics and Coatings / Molded PBT Grain: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Plastics and Coatings / Gloss Polycarbonate: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Plastics and Coatings / Satin Polypropylene: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Plastics and Coatings / Soft Touch Polymer: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Plastics and Coatings / Fine Powder Coat: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Plastics and Coatings / Gloss Enamel: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Plastics and Coatings / Satin Ceramic Coating: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Plastics and Coatings / Textured Molded Nylon: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003948
+PASS Knits and Soft Clothing / Fine Cotton Jersey: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Knits and Soft Clothing / Classic Stockinette: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003994
+PASS Knits and Soft Clothing / Chunky Wool Knit: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003994
+PASS Knits and Soft Clothing / Braided Cable Knit: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003991
+PASS Knits and Soft Clothing / Double Rib Knit: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003993
+PASS Knits and Soft Clothing / Waffle Knit: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003993
+PASS Knits and Soft Clothing / Interlock Cotton: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Knits and Soft Clothing / Moss Stitch: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003995
+PASS Knits and Soft Clothing / Fisherman Rib: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003991
+PASS Technical Weaves and Composites / Carbon Twill: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003922
+PASS Technical Weaves and Composites / Plain Carbon Weave: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003939
+PASS Technical Weaves and Composites / Forged Carbon Composite: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Technical Weaves and Composites / Aramid Plain Weave: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003936
+PASS Technical Weaves and Composites / Carbon Aramid Hybrid: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003939
+PASS Technical Weaves and Composites / Ballistic Nylon: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003922
+PASS Technical Weaves and Composites / Seatbelt Webbing: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Technical Weaves and Composites / Spacer Sports Mesh: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003942
+PASS Technical Weaves and Composites / Coated Glass Fiber: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003922
+PASS Brocade and Decorative Fabrics / Burgundy Damask: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003946
+PASS Brocade and Decorative Fabrics / Navy Floral Jacquard: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003951
+PASS Brocade and Decorative Fabrics / Olive Diamond Brocade: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003944
+PASS Brocade and Decorative Fabrics / Ivory Paisley: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003943
+PASS Brocade and Decorative Fabrics / Teal Rosette Brocade: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003944
+PASS Brocade and Decorative Fabrics / Climbing Vine Jacquard: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003952
+PASS Brocade and Decorative Fabrics / Gold Thread Arabesque: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003942
+PASS Brocade and Decorative Fabrics / Silver Geometric Brocade: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003923
+PASS Brocade and Decorative Fabrics / Indigo Wave Brocade: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003950
+PASS Wood and Natural Materials / Straight Grain Oak: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Wood and Natural Materials / Oiled Walnut: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Wood and Natural Materials / Open Grain Ash: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Wood and Natural Materials / Pale Maple: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Wood and Natural Materials / Ribbon Mahogany: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Wood and Natural Materials / Natural Bamboo: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Wood and Natural Materials / Dark Stained Oak: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Wood and Natural Materials / Natural Cork: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003953
+PASS Wood and Natural Materials / Satin Beech: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003954
+PASS Bone Horn and Keratin / Clean Ivory Bone: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Bone Horn and Keratin / Porous Bone: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003947
+PASS Bone Horn and Keratin / Warm Aged Bone: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Bone Horn and Keratin / Amber Polished Horn: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003946
+PASS Bone Horn and Keratin / Black Horn: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003946
+PASS Bone Horn and Keratin / Striated Ivory: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Bone Horn and Keratin / Dark Claw Keratin: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003946
+PASS Bone Horn and Keratin / Hoof Keratin: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003946
+PASS Bone Horn and Keratin / Pearly Enamel: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003945
+PASS Chainmail and Scale Armor / European Round Mail: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.006515
+PASS Chainmail and Scale Armor / Riveted Round Mail: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.006393
+PASS Chainmail and Scale Armor / Dense Six Ring Mail: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.006393
+PASS Chainmail and Scale Armor / Flat Link Mail: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.006279
+PASS Chainmail and Scale Armor / Fine Fish Scale: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003973
+PASS Chainmail and Scale Armor / Pointed Scale Armor: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003971
+PASS Chainmail and Scale Armor / Scalloped Scale Armor: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003969
+PASS Chainmail and Scale Armor / Laced Lamellar: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003971
+PASS Chainmail and Scale Armor / Riveted Brigandine: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.003972
+PASS Interlinked Chain Mail / Interlinked Round Steel: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.006526
+PASS Interlinked Chain Mail / Riveted Flat Steel Chain: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.006588
+PASS Interlinked Chain Mail / Fine Polished Steel Chain: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.006637
+PASS Interlinked Chain Mail / Dark Oiled Steel Chain: six aligned maps; full wrapped gutters; seam transitions within interior range; +Y normal validation error 0.006637
+RESULT: 112 materials validated; 672 source tiles. No source maps modified by validation.

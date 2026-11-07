@@ -1,0 +1,6 @@
+Blistered Naval Paint full preset + host + GPU compositing, 768px: 6367.2 ms
+Chipped Ivory Enamel full preset + host + GPU compositing, 768px: 6928.8 ms
+Peeling Oxblood Leather full preset + host + GPU compositing, 768px: 6649.9 ms
+Weathered Teal Enamel full preset + host + GPU compositing, 768px: 6780.5 ms
+Aged Black Coated Canvas full preset + host + GPU compositing, 768px: 6421.2 ms
+Salt-worn Brown Leather full preset + host + GPU compositing, 768px: 6539.2 ms
