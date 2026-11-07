@@ -1069,7 +1069,7 @@ namespace UMA
                 int after = (!UMAMeshData.IsNullOrEmptyMeshData(meshData) && meshData.submeshes != null && meshData.submeshes.Length > 0 && meshData.submeshes[0] != null)
                     ? meshData.submeshes[0].LODCount()
                     : -1;
-                Debug.Log($"[SlotLOD][UpdateMeshData] slot='{slotName}' AFTER meshDataRebuild lodCount={after} submeshIndexArg={submeshIndex} udim={udimAdjustment}");
+                //Debug.Log($"[SlotLOD][UpdateMeshData] slot='{slotName}' AFTER meshDataRebuild lodCount={after} submeshIndexArg={submeshIndex} udim={udimAdjustment}");
             }
             catch { }
             UnityEditor.EditorUtility.SetDirty(this);

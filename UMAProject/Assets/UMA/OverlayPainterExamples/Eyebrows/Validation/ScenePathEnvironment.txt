@@ -1,4 +1,0 @@
-C:/GitHub/UMA/UMAProject/Assets
-UMA 3.1f3
-Settings Assets/UMA/InternalDataStore/InGame/Resources/UMASettings.asset
-Unity 6000.3.18f1

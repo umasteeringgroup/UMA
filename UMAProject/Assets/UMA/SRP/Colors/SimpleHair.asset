@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UMA_Core::UMA.SharedColorTable
   channelCount: 1
   sharedColorName: SimpleHair
+  AlsoAppliesTo: []
   colors:
   - name: Brown
     channelMask:

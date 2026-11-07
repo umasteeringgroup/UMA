@@ -13,10 +13,15 @@ MonoBehaviour:
   m_Name: UMAMaterial_UMA_SRP_CutoutDiffuse
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   supportsSourceUVCropping: 0
-  _material: {fileID: 2100000, guid: a0a5f12233b75004396e49583e82ec2b, type: 2}
+  _material: {fileID: 2100000, guid: d23d8ad0e27961843a8a88477beeaa4c, type: 2}
   _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
+  _hasSpeedMaterialBackup: 0
+  _speedBackupMaterial: {fileID: 0}
+  _speedBackupSecondPass: {fileID: 0}
+  _speedBackupHDRPMaterial: {fileID: 0}
+  _speedBackupHDRPSecondPass: {fileID: 0}
   materialType: 1
   channels:
   - channelType: 0

@@ -30,7 +30,7 @@ namespace UMA.CharacterSystem.Editors
                 var current = colors[index];
                 if (current == null || (!showAllStandardColors && !current.isBaseColor)) continue;
                 visibleCount++;
-                var table = OverlayColorDataPropertyDrawer.FindStandardColorTable(current.name);
+                var table = OverlayColorDataPropertyDrawer.FindAvatarColorTable(current.name, thisDCA.activeRace?.data);
                 var choices = new List<OverlayColorData>();
                 string selectedLabel = "Custom";
                 if (table != null && table.colors != null)

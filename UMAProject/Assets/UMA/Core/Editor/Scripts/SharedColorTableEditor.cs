@@ -20,6 +20,40 @@ namespace UMA.Editors
         private Material donorMaterial;
         private SkinnedMeshRenderer donorRenderer;
         private int donorRendererMaterialIndex;
+        private static void DeleteColor(SharedColorTable table, int index)
+        {
+            Undo.RecordObject(table, "Delete Shared Color");
+            if (table.defaultColorIndex == index)
+                table.defaultColorIndex = -1;
+            else if (table.defaultColorIndex > index)
+                table.defaultColorIndex--;
+            table.colors = RemoveColorAt(table.colors, index);
+            EditorUtility.SetDirty(table);
+        }
+
+        private void DrawDefaultColor()
+        {
+            var colors = serializedObject.FindProperty("colors");
+            var defaultIndex = serializedObject.FindProperty("defaultColorIndex");
+            var labels = new GUIContent[colors.arraySize + 1];
+            labels[0] = new GUIContent("None");
+            for (int i = 0; i < colors.arraySize; i++)
+            {
+                string name = colors.GetArrayElementAtIndex(i).FindPropertyRelative("name").stringValue;
+                labels[i + 1] = new GUIContent($"{i + 1}: {(string.IsNullOrEmpty(name) ? "Unnamed Color" : name.Replace('/', '\u2215'))}");
+            }
+            int selected = defaultIndex.intValue >= 0 && defaultIndex.intValue < colors.arraySize
+                ? defaultIndex.intValue + 1 : 0;
+            using (new EditorGUI.DisabledScope(colors.arraySize == 0))
+            {
+                EditorGUI.BeginChangeCheck();
+                int choice = EditorGUILayout.Popup(new GUIContent("Default Color",
+                    "Choose the palette entry to use when initializing this color. None leaves the default unset."), selected, labels);
+                if (EditorGUI.EndChangeCheck()) defaultIndex.intValue = choice - 1;
+            }
+            if (colors.arraySize == 0)
+                EditorGUILayout.HelpBox("Add a color below to choose a default.", MessageType.Info);
+        }
             private static OverlayColorData[] RemoveColorAt(OverlayColorData[] colors, int indexToRemove)
             {
                 OverlayColorData[] result = new OverlayColorData[colors.Length - 1];
@@ -78,6 +112,7 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("AlsoAppliesTo"), true);
                 inspectorView.Field(serializedObject, "channelCount",
                     "Channel Count");
+                DrawDefaultColor();
             }
             using (inspectorView.Section("Shared colors",
                 "Each color is a named value that overlays can share. Expand an entry to edit its tint and property channels. Base Color identifies the entry used as the principal tint. Names should be unique so recipes can resolve them predictably."))
@@ -120,9 +155,7 @@ namespace UMA.Editors
                 if (color == null) continue;
                 if (color.deleteThis)
                 {
-                    Undo.RecordObject(table, "Delete Shared Color");
-                    table.colors = RemoveColorAt(table.colors, i);
-                    EditorUtility.SetDirty(table);
+                    DeleteColor(table, i);
                     serializedObject.Update();
                     return;
                 }
@@ -161,6 +194,7 @@ namespace UMA.Editors
             EditorGUILayout.PropertyField(serializedObject.FindProperty("sharedColorName"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("AlsoAppliesTo"), true);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("channelCount"));
+            DrawDefaultColor();
             }
             using (inspectorView.Section("Donor material and shader properties",
                 "The donor material discovers compatible color, float, integer and range shader properties and previews the selected palette entry. Donor selections are editor-only authoring state and are not serialized into the color table."))
@@ -285,20 +319,14 @@ namespace UMA.Editors
 
             if (hasDeletes)
             {
-                serializedObject.Update();
-                for (int i = 0; i < sct.colors.Length; i++)
+                for (int i = sct.colors.Length - 1; i >= 0; i--)
                 {
-                    var c = colorsProperty.GetArrayElementAtIndex(i);
-                    var deleteThis = c.FindPropertyRelative("deleteThis");
-                    if (deleteThis.boolValue == true)
+                    if (sct.colors[i] != null && sct.colors[i].deleteThis)
                     {
-                        sct.colors = RemoveColorAt(sct.colors, i);
-                        colorsProperty.DeleteArrayElementAtIndex(i);
-                        i--;
+                        DeleteColor(sct, i);
                     }
                 }
-
-                serializedObject.ApplyModifiedProperties();
+                serializedObject.Update();
             }
             }
         }
@@ -433,6 +461,10 @@ namespace UMA.Editors
             OverlayColorData targetColor = sharedColorTable.colors[toIndex];
             sharedColorTable.colors[fromIndex] = targetColor;
             sharedColorTable.colors[toIndex] = movingColor;
+            if (sharedColorTable.defaultColorIndex == fromIndex)
+                sharedColorTable.defaultColorIndex = toIndex;
+            else if (sharedColorTable.defaultColorIndex == toIndex)
+                sharedColorTable.defaultColorIndex = fromIndex;
 
 #if UNITY_EDITOR
             if (movingColor != null)
@@ -458,6 +490,7 @@ namespace UMA.Editors
                 return;
             }
 
+            serializedObject.ApplyModifiedProperties();
             Undo.RecordObject(sharedColorTable, isBaseColor ? "Set Shared Colors As Base Color" : "Clear Shared Color Base Flags");
 
             for (int colorIndex = 0; colorIndex < sharedColorTable.colors.Length; colorIndex++)
@@ -475,6 +508,7 @@ namespace UMA.Editors
 
         private void AddNewColor(SharedColorTable sharedColorTable)
         {
+            serializedObject.ApplyModifiedProperties();
             Undo.RecordObject(sharedColorTable, "Add Shared Color");
 
             OverlayColorData newColor = new OverlayColorData(sharedColorTable.channelCount);
@@ -487,6 +521,7 @@ namespace UMA.Editors
 
         private void DuplicateSelectedColor(SharedColorTable sharedColorTable)
         {
+            serializedObject.ApplyModifiedProperties();
             OverlayColorData selectedColor = GetSelectedOverlayColorData(sharedColorTable);
             if (selectedColor == null)
             {

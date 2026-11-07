@@ -4060,7 +4060,7 @@ namespace UMA.CharacterSystem
 
             if (RecreateAnimatorOnRaceChange)
             {
-                Debug.Log("Recreating Animator on race change.");
+                //Debug.Log("Recreating Animator on race change.");
                 GameObject.DestroyImmediate(thisAnimator);
                 // todo.. this sometimes blows up with the component already exists!!!
                 thisAnimator = gameObject.AddComponent<Animator>();
@@ -4527,6 +4527,10 @@ namespace UMA.CharacterSystem
             umaData.OnCharacterBegun += this.SetAndSaveOverrideDNA;
             umaData.OnCharacterDnaUpdated -= this.RestoreOverrideDna;
             umaData.OnCharacterDnaUpdated += this.RestoreOverrideDna;
+            // Texture-only generations run CharacterBegun and DNA pre-apply, but
+            // skip the body/DNA-updated event. Restore before public update callbacks.
+            umaData.OnCharacterBeforeUpdated -= this.RestoreOverrideDna;
+            umaData.OnCharacterBeforeUpdated += this.RestoreOverrideDna;
         }
 
         /// <summary>
@@ -5014,6 +5018,9 @@ namespace UMA.CharacterSystem
         public void BuildCharacter(bool RestoreDNA = true, bool skipBundleCheck = false, bool useBundleParameter = true, bool forceBuild=false)
         {
             using var profile = UMACharacterBuildProfiler.BuildCharacter.Auto();
+            // A cancelled/incomplete generation may still hold a wardrobe override.
+            // Recover personal DNA before this build captures it or replaces the recipe.
+            RestoreOverrideDna(umaData);
             if (!npcNormalBuild) CancelNPCBuild();
 #if UMA_DCA_TIMING
             Stopwatch sw = new Stopwatch();
@@ -5379,8 +5386,8 @@ namespace UMA.CharacterSystem
 
         public void SetAndSaveOverrideDNA(UMAData udata)
         {
-            //Debug.Log("Setting and saving override DNA");
-            savedDNA.Clear();
+            // Never capture an unfinished generation's override as the original DNA.
+            RestoreOverrideDna(udata);
             if (overrideDNA.Count > 0)
             {
                 // save the override DNA.
@@ -5417,6 +5424,9 @@ namespace UMA.CharacterSystem
                         currentDNA[d.Name].Set(d.Value);
                     }
                 }
+                // DNA-updated and generation completion may both reach here. Once
+                // restored, later callbacks must not overwrite subsequent user edits.
+                savedDNA.Clear();
             }
         }
 

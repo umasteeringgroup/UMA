@@ -255,24 +255,36 @@ namespace UMA
         {
             if (layoutParent != null && colorTable != null)
             {
+                // The category determines which shared color is edited, even when the
+                // race supplies a palette through an AlsoAppliesTo alias.
+                string sharedColorName = colorTable.sharedColorName;
+                var race = avatar != null ? avatar.activeRace?.data : null;
+                var raceTable = race != null ? race.GetColorTable(sharedColorName) : null;
+                if (raceTable != null) colorTable = raceTable;
+
                 GameObject label = SafeInstantiatePrefab(ColorLabel, layoutParent.transform);
+                Text labelText = null;
                 if (label != null)
                 {
-                    Text labelText = label.GetComponent<Text>();
-                    if (labelText != null) labelText.text = colorTable.sharedColorName;
+                    labelText = label.GetComponent<Text>();
+                    if (labelText != null) labelText.text = sharedColorName;
                 }
 
                 GameObject colorContainer = SafeInstantiatePrefab(GridContainer, layoutParent.transform);
 
-                if (colorContainer != null)
+                if (colorContainer != null && colorTable.colors != null)
                 {
                     foreach (OverlayColorData color in colorTable.colors)
                     {
+                        if (color == null) continue;
                         GameObject colorSelector = SafeInstantiatePrefab(ColorSelector, colorContainer.transform);
                         if (colorSelector == null) continue;
                         ColorEffector effector = colorSelector.GetComponent<ColorEffector>();
                         if (effector != null)
-                            effector.Setup(this, colorTable.sharedColorName, color);
+                        {
+                            effector.Setup(this, sharedColorName, color);
+                            effector.SetCategoryHeader(labelText);
+                        }
                     }
                 }
             }

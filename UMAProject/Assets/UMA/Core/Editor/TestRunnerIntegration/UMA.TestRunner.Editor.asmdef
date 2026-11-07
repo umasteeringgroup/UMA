@@ -2,6 +2,7 @@
     "name": "UMA.TestRunner.Editor",
     "rootNamespace": "UMA.Editors",
     "references": [
+        "UMA_Core",
         "UMA_Core_Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"

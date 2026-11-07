@@ -372,7 +372,7 @@ namespace UMA.Editors
 			RefreshSharedColorTableCacheIfNeeded(false);
 			string sharedColorName = property.FindPropertyRelative("name")?.stringValue ??
 				currentOverlayColorData?.name ?? string.Empty;
-			GetVisibleSharedColorTables(sharedColorName, dca != null,
+			GetVisibleSharedColorTables(sharedColorName, dca != null, dca?.activeRace?.data,
 				out SharedColorTable[] visibleSharedColorTables,
 				out GUIContent[] visibleSharedColorTableOptions);
 
@@ -496,6 +496,17 @@ namespace UMA.Editors
 			return true;
 		}
 
+        internal static SharedColorTable FindAvatarColorTable(string sharedColorName, RaceData race)
+        {
+            var raceTable = FindRaceColorTable(sharedColorName, race);
+            return raceTable != null ? raceTable : FindStandardColorTable(sharedColorName);
+        }
+
+        internal static SharedColorTable FindRaceColorTable(string sharedColorName, RaceData race)
+        {
+            return race != null ? race.GetColorTable(sharedColorName) : null;
+        }
+
         internal static SharedColorTable FindStandardColorTable(string sharedColorName)
         {
             RefreshSharedColorTableCacheIfNeeded(false);
@@ -555,9 +566,16 @@ namespace UMA.Editors
 			nextSharedColorTableRefreshTime = EditorApplication.timeSinceStartup + SharedColorTableCacheSeconds;
 		}
 
-		private static void GetVisibleSharedColorTables(string sharedColorName, bool filterBySharedColorName,
+		private static void GetVisibleSharedColorTables(string sharedColorName, bool filterBySharedColorName, RaceData race,
 			out SharedColorTable[] visibleTables, out GUIContent[] visibleOptions)
 		{
+            var raceTable = FindRaceColorTable(sharedColorName, race);
+            if (raceTable != null)
+            {
+                visibleTables = new[] { raceTable };
+                visibleOptions = new[] { new GUIContent(GetSharedColorTableMenuName(raceTable), AssetDatabase.GetAssetPath(raceTable)) };
+                return;
+            }
 			if (!filterBySharedColorName)
 			{
 				visibleTables = cachedSharedColorTables;

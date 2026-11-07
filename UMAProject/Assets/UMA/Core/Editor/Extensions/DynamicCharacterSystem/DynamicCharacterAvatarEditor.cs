@@ -780,7 +780,7 @@ namespace UMA.CharacterSystem.Editors
             // 
             //NewCharacterColors
             using (inspectorView.Section("Colors",
-                "Choose shared colors from the matching NameColors table, or DefaultColors when no matching table exists. Edit opens the full channel and shader-property editor. Advanced View also supports adding and removing shared colors.",
+                "Choose shared colors from the race's matching color table first, including its Also Applies To names. Otherwise use the project's matching NameColors table or DefaultColors. Edit opens the full channel and shader-property editor. Advanced View also supports adding and removing shared colors.",
                 standard))
             {
                 if (standard) DrawStandardColors();

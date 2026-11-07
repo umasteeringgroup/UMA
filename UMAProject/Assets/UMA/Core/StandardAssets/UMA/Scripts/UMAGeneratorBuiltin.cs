@@ -2928,7 +2928,13 @@ namespace UMA
                 CompleteBoneCleanup(umaData);
 				umaData.Show();
                 UMAResourceReuse.FinalizeSurfaces(umaData);
-                if (umaData is UMA.CharacterSystem.DynamicCharacterAvatar npc) npc.CaptureNPCBuild();
+                if (umaData is UMA.CharacterSystem.DynamicCharacterAvatar npc)
+                {
+                    // Completion also balances overrides when no body update ran or
+                    // public notifications are disabled. NPC snapshots need personal DNA.
+                    npc.RestoreOverrideDna(umaData);
+                    npc.CaptureNPCBuild();
+                }
                 if (fireEvents)
                 {
                     umaData.FireUpdatedEvent(false);

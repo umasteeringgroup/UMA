@@ -47,7 +47,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: 7c38cb845f3bfe847b0f9d0074929d09, type: 3}
+        m_Texture: {fileID: 2800000, guid: ce84ac6354b628f4389fb7327538e10b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailNormalMap:
@@ -76,35 +76,19 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BUILTIN_QueueControl: -1
-    - _BUILTIN_QueueOffset: 0
-    - _BumpScale: 1
+    - _BumpScale: 0.941
     - _DetailNormalMapScale: 0.024
-    - _Detail_Gloss_Scale: 0.25
-    - _Detail_Normal_Scale: 0.15
-    - _InvertDetailMap: 0
+    - _Detail_Gloss_Scale: 0.595
+    - _Detail_Normal_Scale: 0.235
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _SSSBlend: 0.2
+    - _SSSBlend: 0.619
     - _Skinmask_Amount: 1
     m_Colors:
-    - _Ambient_Occlusion_Remap: {r: 0.9, g: 1, b: 0, a: 0}
+    - _Ambient_Occlusion_Remap: {r: 0, g: 1, b: 0, a: 0}
     - _Base_Color: {r: 1, g: 1, b: 1, a: 1}
     - _Detail_Tiling: {r: 12, g: 12, b: 0, a: 0}
     - _Smoothness_Remap: {r: 0, g: 0.38, b: 0, a: 0}
     - _SubsurfaceColor: {r: 1, g: 0.36862746, b: 0.29803923, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!114 &4705241214016862380
-MonoBehaviour:
-  m_ObjectHideFlags: 11
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.ShaderGraph.Editor::UnityEditor.Rendering.BuiltIn.AssetVersion
-  version: 0

@@ -49,6 +49,10 @@ MonoBehaviour:
   simplePlayerCollider: 1
   enableColliderTriggers: 0
   UpdateTransformAfterRagdoll: 1
+  freezeWhenRagdollRests: 1
+  ragdollRestTime: 1
+  ragdollRestPositionThreshold: 0.03
+  ragdollRestRotationThreshold: 5
   PhysicsElements:
   - {fileID: 11400000, guid: 156c58ad1f9e61e469717d890becc363, type: 2}
   - {fileID: 11400000, guid: 7a38b4d52b09c184bb3c3190de2e4466, type: 2}

@@ -305,6 +305,44 @@ namespace UMA.Editors
             return candidates;
         }
 
+        internal static bool SlotHasBakeTargetsForRace(SlotDataAsset slotAsset, RaceData raceData)
+        {
+            if (slotAsset == null || raceData == null || raceData.PrebakedBlendshapes == null || raceData.PrebakedBlendshapes.Count == 0)
+            {
+                return false;
+            }
+
+            if (UMAMeshData.IsNullOrEmptyMeshData(slotAsset.meshData) || slotAsset.meshData.blendShapes == null || slotAsset.meshData.blendShapes.Length == 0)
+            {
+                return false;
+            }
+
+            for (int blendShapeIndex = 0; blendShapeIndex < slotAsset.meshData.blendShapes.Length; blendShapeIndex++)
+            {
+                UMABlendShape blendShape = slotAsset.meshData.blendShapes[blendShapeIndex];
+                if (blendShape == null || string.IsNullOrEmpty(blendShape.shapeName))
+                {
+                    continue;
+                }
+
+                for (int optionIndex = 0; optionIndex < raceData.PrebakedBlendshapes.Count; optionIndex++)
+                {
+                    SlotBurnOptions bakeOption = raceData.PrebakedBlendshapes[optionIndex];
+                    if (bakeOption == null || string.IsNullOrEmpty(bakeOption.BlendShape))
+                    {
+                        continue;
+                    }
+
+                    if (bakeOption.BlendShape == blendShape.shapeName)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         private static SlotDataAsset ResolveBaseSlotAssetForRace(SlotData slot, RaceData raceData, out string displayName)
         {
             displayName = slot != null ? slot.slotName : string.Empty;
@@ -313,7 +351,10 @@ namespace UMA.Editors
                 return null;
             }
 
-            if (!IsBakedRace(raceData))
+            // Baked races can still use ordinary eyes, lashes, mouth and utility slots.
+            // Only resolve a baked counterpart when this slot contains a requested shape.
+            if (IsBakedSlotName(slot.asset.slotName, raceData) ||
+                !SlotHasBakeTargetsForRace(slot.asset, raceData))
             {
                 return slot.asset;
             }
@@ -332,7 +373,7 @@ namespace UMA.Editors
                             continue;
                         }
 
-                        var bakedSlotAsset = indexer.GetAsset<SlotDataAsset>(candidate, false, true);
+                        var bakedSlotAsset = indexer.GetAssetItem<SlotDataAsset>(candidate)?.Item as SlotDataAsset;
                         if (bakedSlotAsset != null)
                         {
                             displayName = bakedSlotAsset.slotName;
@@ -340,8 +381,6 @@ namespace UMA.Editors
                         }
                     }
                 }
-
-                displayName = bakedSlotNameCandidates[0];
 
                 var bakedOnDemand = BakeBaseSlotAssetForRace(slot.asset, raceData, GetBakedSlotAssetName(slot.asset, raceData));
                 if (bakedOnDemand != null)

@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace UMA.Editors
@@ -6,6 +7,46 @@ namespace UMA.Editors
     public partial class RaceInspector
     {
         private readonly UMAInspectorView inspectorView = new UMAInspectorView(typeof(RaceData));
+        private ReorderableList colorListControls;
+
+        private void DrawColorLists()
+        {
+            using (inspectorView.Section("Color choices",
+                "Assign the shared color tables available to this race, such as Hair, Skin or Eyes palettes. Configure names and default colors on the tables. Use + / - to add or remove tables, and drag the handles to reorder them."))
+            {
+                if (colorListControls == null)
+                {
+                    colorListControls = new ReorderableList(serializedObject,
+                        serializedObject.FindProperty("colorLists"), true, true, true, true);
+                    colorListControls.drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Race Color Lists");
+                    colorListControls.elementHeight = EditorGUIUtility.singleLineHeight + 4;
+                    colorListControls.drawElementCallback = (rect, index, active, focused) =>
+                    {
+                        var entry = colorListControls.serializedProperty.GetArrayElementAtIndex(index);
+                        rect.y += 2;
+                        rect.height = EditorGUIUtility.singleLineHeight;
+                        EditorGUI.PropertyField(rect, entry, new GUIContent("Color Table"));
+                    };
+                    colorListControls.onAddCallback = list =>
+                    {
+                        var entries = list.serializedProperty;
+                        int index = entries.arraySize++;
+                        var entry = entries.GetArrayElementAtIndex(index);
+                        entry.objectReferenceValue = null;
+                        list.index = index;
+                    };
+                    colorListControls.onRemoveCallback = list =>
+                    {
+                        var entries = list.serializedProperty;
+                        if (list.index < 0 || list.index >= entries.arraySize) return;
+                        entries.GetArrayElementAtIndex(list.index).objectReferenceValue = null;
+                        entries.DeleteArrayElementAtIndex(list.index);
+                        list.index = Mathf.Min(list.index, entries.arraySize - 1);
+                    };
+                }
+                colorListControls.DoLayoutList();
+            }
+        }
 
         private void DrawStandardInspector()
         {
@@ -24,6 +65,7 @@ namespace UMA.Editors
                 else inspectorView.Field(serializedObject, "baseRaceRecipe", "Base Race Recipe");
                 inspectorView.Field(serializedObject, "tags", "Tags");
             }
+            DrawColorLists();
             using (inspectorView.Section("Rig & expressions",
                 "Animation Rig selects Humanoid or Generic avatar generation. Generic rigs require a Root Motion Bone; Humanoid rigs use the T-Pose asset for Mecanim mapping. Expression Group (UMA 3) supplies the facial poses and expression controls available to generated avatars."))
             {

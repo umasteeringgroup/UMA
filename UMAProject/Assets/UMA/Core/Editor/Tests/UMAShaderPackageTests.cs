@@ -18,6 +18,7 @@ namespace UMA.Tests
         private Material source;
         private Texture2D sourceTexture;
         private UMAMaterial owner, other;
+        private UMATestProjectGenerationScope projectGeneration;
 
         [Serializable] private sealed class Pack { public Entry[] entries; }
         [Serializable] private sealed class Entry { public int srpTarget; public int UnityVersionMin; public int UnityVersionMax = 30000; public string shaderSrc; }
@@ -25,35 +26,45 @@ namespace UMA.Tests
         [SetUp]
         public void SetUp()
         {
-            string id = Guid.NewGuid().ToString("N");
-            folder = "Assets/UMA_ShaderPackageTests_" + id;
-            AssetDatabase.CreateFolder("Assets", "UMA_ShaderPackageTests_" + id);
-            string src = ShaderSource("Hidden/UMA/PackageTest/" + id, "_OldTex");
-            var pack = new Pack { entries = Enumerable.Range(0, 3).Select(i => new Entry { srpTarget = i, UnityVersionMin = 0, shaderSrc = src }).ToArray() };
-            string packagePath = folder + "/Source.umaShaderPack";
-            File.WriteAllText(packagePath, "{\"MonoBehaviour\":" + JsonUtility.ToJson(pack) + "}");
-            AssetDatabase.ImportAsset(packagePath, ImportAssetOptions.ForceSynchronousImport);
-            sourceShader = AssetDatabase.LoadAssetAtPath<Shader>(packagePath);
-            Assert.NotNull(sourceShader, "Test package must import as a Shader.");
-            string shaderPath = folder + "/Replacement.shader";
-            File.WriteAllText(shaderPath, ShaderSource("Hidden/UMA/ReplacementTest/" + id, "_NewTex"));
-            AssetDatabase.ImportAsset(shaderPath, ImportAssetOptions.ForceSynchronousImport);
-            targetShader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
-            Assert.NotNull(targetShader);
-            // Exercise a serialized texture reference. Unity's transient whiteTexture
-            // is not a project asset and is not guaranteed to survive material import.
-            sourceTexture = new Texture2D(2, 2);
-            sourceTexture.SetPixels(new[] { Color.white, Color.red, Color.green, Color.blue });
-            sourceTexture.Apply();
-            AssetDatabase.CreateAsset(sourceTexture, folder + "/SourceTexture.asset");
-            source = new Material(sourceShader) { name = "Shared source" };
-            source.SetTexture("_OldTex", sourceTexture);
-            source.SetTextureScale("_OldTex", new Vector2(2, 3));
-            source.SetTextureOffset("_OldTex", new Vector2(.1f, .2f));
-            source.SetColor("_Tint", Color.red);
-            AssetDatabase.CreateAsset(source, folder + "/Source.mat");
-            owner = MakeOwner("Owner");
-            other = MakeOwner("Other");
+            projectGeneration = new UMATestProjectGenerationScope();
+            try
+            {
+                string id = Guid.NewGuid().ToString("N");
+                folder = "Assets/UMA_ShaderPackageTests_" + id;
+                AssetDatabase.CreateFolder("Assets", "UMA_ShaderPackageTests_" + id);
+                string src = ShaderSource("Hidden/UMA/PackageTest/" + id, "_OldTex");
+                var pack = new Pack { entries = Enumerable.Range(0, 3).Select(i => new Entry { srpTarget = i, UnityVersionMin = 0, shaderSrc = src }).ToArray() };
+                string packagePath = folder + "/Source.umaShaderPack";
+                File.WriteAllText(packagePath, "{\"MonoBehaviour\":" + JsonUtility.ToJson(pack) + "}");
+                AssetDatabase.ImportAsset(packagePath, ImportAssetOptions.ForceSynchronousImport);
+                sourceShader = AssetDatabase.LoadAssetAtPath<Shader>(packagePath);
+                Assert.NotNull(sourceShader, "Test package must import as a Shader.");
+                string shaderPath = folder + "/Replacement.shader";
+                File.WriteAllText(shaderPath, ShaderSource("Hidden/UMA/ReplacementTest/" + id, "_NewTex"));
+                AssetDatabase.ImportAsset(shaderPath, ImportAssetOptions.ForceSynchronousImport);
+                targetShader = AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
+                Assert.NotNull(targetShader);
+                // Exercise a serialized texture reference. Unity's transient whiteTexture
+                // is not a project asset and is not guaranteed to survive material import.
+                sourceTexture = new Texture2D(2, 2);
+                sourceTexture.SetPixels(new[] { Color.white, Color.red, Color.green, Color.blue });
+                sourceTexture.Apply();
+                AssetDatabase.CreateAsset(sourceTexture, folder + "/SourceTexture.asset");
+                source = new Material(sourceShader) { name = "Shared source" };
+                source.SetTexture("_OldTex", sourceTexture);
+                source.SetTextureScale("_OldTex", new Vector2(2, 3));
+                source.SetTextureOffset("_OldTex", new Vector2(.1f, .2f));
+                source.SetColor("_Tint", Color.red);
+                AssetDatabase.CreateAsset(source, folder + "/Source.mat");
+                owner = MakeOwner("Owner");
+                other = MakeOwner("Other");
+            }
+            catch
+            {
+                projectGeneration.Dispose();
+                projectGeneration = null;
+                throw;
+            }
         }
 
         private static string ShaderSource(string name, string property) =>
@@ -90,10 +101,14 @@ namespace UMA.Tests
         [TearDown]
         public void TearDown()
         {
-            if (owner != null) Undo.ClearUndo(owner);
-            if (other != null) Undo.ClearUndo(other);
-            if (source != null) Undo.ClearUndo(source);
-            if (!string.IsNullOrEmpty(folder)) AssetDatabase.DeleteAsset(folder);
+            try
+            {
+                if (owner != null) Undo.ClearUndo(owner);
+                if (other != null) Undo.ClearUndo(other);
+                if (source != null) Undo.ClearUndo(source);
+                if (!string.IsNullOrEmpty(folder)) AssetDatabase.DeleteAsset(folder);
+            }
+            finally { projectGeneration?.Dispose(); projectGeneration = null; }
         }
 
         [Test]

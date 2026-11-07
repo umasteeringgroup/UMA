@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace UMA.Tests
 {
@@ -180,17 +182,16 @@ namespace UMA.Tests
             finally { UnityEngine.Object.DestroyImmediate(source); }
         }
 
-        [Test]
-        public void RuntimeBakeSurvivesSlotCopiesAndIsReleasedAfterTheLastOwner()
+        [UnityTest]
+        public IEnumerator RuntimeBakeSurvivesSlotCopiesAndIsReleasedAfterTheLastOwner()
         {
             var asset = ScriptableObject.CreateInstance<SlotDataAsset>();
             try
             {
-                var copy = MakeOwnedRuntimeBake(asset);
-                CollectRuntimeBakes();
-                Assert.IsTrue(asset != null, "A copied slot must retain the baked source.");
-                Assert.AreSame(asset, copy.asset);
-                DropOwnedSlot(ref copy);
+                VerifyLiveRuntimeBakeCopy(asset);
+                // Also unwind the frame that checked the weak reference while alive.
+                // Mono can conservatively retain that temporary through another GC.
+                yield return null;
                 CollectRuntimeBakes();
                 Assert.IsTrue(asset == null, "The native ScriptableObject must be destroyed, not just its managed wrapper collected.");
             }
@@ -202,26 +203,29 @@ namespace UMA.Tests
         {
             var first = ScriptableObject.CreateInstance<SlotDataAsset>();
             var second = ScriptableObject.CreateInstance<SlotDataAsset>();
-            SlotData firstOwner = null, secondOwner = null;
-            var indexer = UMAAssetIndexer.Instance;
+            var owners = new SlotData[2];
+            var singleton = typeof(UMAAssetIndexer).GetField("theIndexer", BindingFlags.Static | BindingFlags.NonPublic);
+            object previousIndexer = singleton.GetValue(null);
+            var indexer = ScriptableObject.CreateInstance<UMAAssetIndexer>();
             string name = "RuntimeBakeLifetime_" + Guid.NewGuid().ToString("N");
             try
             {
+                singleton.SetValue(null, indexer);
                 first.name = second.name = name;
                 indexer.ProcessNewItem(first, false, false);
-                firstOwner = MakeOwnedRuntimeBake(first);
+                StoreOwnedRuntimeBake(first, owners, 0);
                 var entry = indexer.GetAssetItemForObject(first);
                 int index = entry.Index;
                 indexer.ProcessNewItem(second, false, false);
-                secondOwner = MakeOwnedRuntimeBake(second);
+                StoreOwnedRuntimeBake(second, owners, 1);
 
-                DropOwnedSlot(ref firstOwner);
+                owners[0] = null;
                 CollectRuntimeBakes();
                 Assert.IsTrue(first == null);
                 Assert.AreSame(second, indexer.GetAssetItemForObject(second)._SerializedItem);
                 Assert.AreSame(entry, indexer.SerializedItems[index]);
 
-                DropOwnedSlot(ref secondOwner);
+                owners[1] = null;
                 CollectRuntimeBakes();
                 Assert.IsTrue(second == null);
                 Assert.IsFalse(indexer.GetAssetDictionary(typeof(SlotDataAsset)).ContainsKey(name));
@@ -230,10 +234,12 @@ namespace UMA.Tests
             }
             finally
             {
-                DropOwnedSlot(ref firstOwner); DropOwnedSlot(ref secondOwner);
+                owners[0] = owners[1] = null;
                 CollectRuntimeBakes();
                 if (first) UnityEngine.Object.DestroyImmediate(first);
                 if (second) UnityEngine.Object.DestroyImmediate(second);
+                UnityEngine.Object.DestroyImmediate(indexer);
+                singleton.SetValue(null, previousIndexer);
             }
         }
 
@@ -247,7 +253,22 @@ namespace UMA.Tests
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        private static void DropOwnedSlot(ref SlotData slot) => slot = null;
+        private static void VerifyLiveRuntimeBakeCopy(SlotDataAsset asset)
+        {
+            var copy = MakeOwnedRuntimeBake(asset);
+            CollectRuntimeBakes();
+            Assert.IsTrue(asset != null, "A copied slot must retain the baked source.");
+            Assert.AreSame(asset, copy.asset);
+            GC.KeepAlive(copy);
+            // The caller collects only after this frame exits. Assigning null to a
+            // local does not remove Mono's conservative stack roots reliably.
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        private static void StoreOwnedRuntimeBake(SlotDataAsset asset, SlotData[] owners, int index)
+        {
+            owners[index] = MakeOwnedRuntimeBake(asset);
+        }
 
         private static void CollectRuntimeBakes()
         {

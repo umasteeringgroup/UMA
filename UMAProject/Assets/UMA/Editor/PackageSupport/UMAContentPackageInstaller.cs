@@ -1133,10 +1133,14 @@ namespace UMA.Editors.PackageSupport
                 SavePending(pending);
                 progress?.Invoke("Preparing destination and preserving companion packages", 0f);
                 UMAContentPackageArchiveValidator.TryReadInstalledManifest(kind, out var previousManifest, out _);
-                DeleteContentRoot(kind);
-                RestoreRootIdentity(pending);
-                if (hadPrevious)
-                    RestoreUnownedPluginFiles(kind, previousManifest, archive.Manifest, backupRoot, destinationRoot, removeExtraFiles);
+                ChangeAssetFiles(() =>
+                {
+                    DeleteContentRoot(kind);
+                    RestoreRootIdentity(pending);
+                    if (hadPrevious)
+                        RestoreUnownedPluginFiles(kind, previousManifest, archive.Manifest, backupRoot, destinationRoot, removeExtraFiles);
+                });
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
                 // Hand off to Unity's own import progress UI.
                 if (progress != null) EditorUtility.ClearProgressBar();
                 AssetDatabase.ImportPackage(archiveCopy, false);
@@ -1388,7 +1392,6 @@ namespace UMA.Editors.PackageSupport
                 UMAContentCatalog.Root(ParseKind(pending.contentId)));
             Directory.CreateDirectory(destinationRoot);
             File.Copy(rootMeta, destinationRoot + ".meta", true);
-            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
         }
 
         private static bool ValidatePreservedRootIdentity(PendingImport pending,
@@ -1431,13 +1434,16 @@ namespace UMA.Editors.PackageSupport
                      !File.Exists(pending.backupRoot + ".root.meta")))
                     throw new InvalidDataException(
                         "The saved UMA content backup or its root metadata is missing.");
-                DeleteContentRoot(kind);
-                if (pending.hadPreviousContent)
+                ChangeAssetFiles(() =>
                 {
-                    CopyDirectory(pending.backupRoot, destinationRoot);
-                    string rootMeta = pending.backupRoot + ".root.meta";
-                    File.Copy(rootMeta, destinationRoot + ".meta", true);
-                }
+                    if (pending.hadPreviousContent)
+                    {
+                        RestoreDirectorySnapshot(pending.backupRoot, destinationRoot);
+                        CopyFileIfChanged(pending.backupRoot + ".root.meta", destinationRoot + ".meta");
+                    }
+                    else
+                        DeleteContentRoot(kind);
+                });
                 restored = true;
             }
             catch (Exception exception)
@@ -1468,11 +1474,70 @@ namespace UMA.Editors.PackageSupport
             ThrowIfReparsePoint(absolute, "UMA content delete target");
             ThrowIfTreeContainsReparsePoint(absolute,
                 "UMA content delete target");
-            if (AssetDatabase.IsValidFolder(assetRoot))
-                AssetDatabase.DeleteAsset(assetRoot);
+            // The caller suspends imports and releases Unity's cached handles. Deleting
+            // through AssetDatabase here can import/load the partially removed tree
+            // before the replacement files and preserved companions have been restored.
             if (Directory.Exists(absolute))
                 Directory.Delete(absolute, true);
             if (File.Exists(absolute + ".meta")) File.Delete(absolute + ".meta");
+        }
+
+        private static void ChangeAssetFiles(Action change)
+        {
+            AssetDatabase.DisallowAutoRefresh();
+            try
+            {
+                AssetDatabase.StartAssetEditing();
+                try
+                {
+                    // Loaded native assets may retain handles even after a normal refresh.
+                    AssetDatabase.ReleaseCachedFileHandles();
+                    change();
+                }
+                finally { AssetDatabase.StopAssetEditing(); }
+            }
+            finally { AssetDatabase.AllowAutoRefresh(); }
+        }
+
+        private static void RestoreDirectorySnapshot(string backup, string destination)
+        {
+            if (!Directory.Exists(backup))
+                throw new DirectoryNotFoundException("UMA content backup is missing: " + backup);
+            ThrowIfReparsePoint(backup, "UMA content backup");
+            ThrowIfTreeContainsReparsePoint(backup, "UMA content backup");
+            ThrowIfReparsePoint(destination, "UMA content restore target");
+            ThrowIfTreeContainsReparsePoint(destination, "UMA content restore target");
+            RestoreDirectorySnapshotCore(backup, destination);
+        }
+
+        private static void RestoreDirectorySnapshotCore(string backup, string destination)
+        {
+            if (File.Exists(destination)) File.Delete(destination);
+            Directory.CreateDirectory(destination);
+            foreach (string file in Directory.GetFiles(backup))
+            {
+                string target = Path.Combine(destination, Path.GetFileName(file));
+                if (Directory.Exists(target)) Directory.Delete(target, true);
+                CopyFileIfChanged(file, target);
+            }
+            foreach (string directory in Directory.GetDirectories(backup))
+                RestoreDirectorySnapshotCore(directory, Path.Combine(destination, Path.GetFileName(directory)));
+
+            // Restore in place: a failed deletion can leave unchanged files open in
+            // another process. They need neither deleting nor overwriting to roll back.
+            foreach (string file in Directory.GetFiles(destination))
+                if (!File.Exists(Path.Combine(backup, Path.GetFileName(file)))) File.Delete(file);
+            foreach (string directory in Directory.GetDirectories(destination))
+                if (!Directory.Exists(Path.Combine(backup, Path.GetFileName(directory)))) Directory.Delete(directory, true);
+        }
+
+        private static void CopyFileIfChanged(string source, string destination)
+        {
+            if (File.Exists(destination) &&
+                new FileInfo(source).Length == new FileInfo(destination).Length &&
+                string.Equals(ComputeFileHash(source), ComputeFileHash(destination), StringComparison.Ordinal))
+                return;
+            File.Copy(source, destination, true);
         }
 
         private static void RebuildGlobalLibrary()

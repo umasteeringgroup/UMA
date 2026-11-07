@@ -1608,7 +1608,8 @@ namespace UMA
                 return;
             }
 
-            GameObject go = GameObject.Instantiate(settings.generatorPrefab);
+            GameObject go = InstantiateGeneratorInLoadedScene(settings.generatorPrefab);
+            if (go == null) return;
             go.name = generatorName;
             generator = go.GetComponent<UMAGenerator>();
             /*
@@ -1649,6 +1650,34 @@ namespace UMA
 #endif
             go.SetActive(true);
             ConsolidateInternalGenerators();
+        }
+
+        private static GameObject InstantiateGeneratorInLoadedScene(GameObject prefab)
+        {
+            // Editor utility/preview windows can leave the implicit creation target pointing
+            // at a closed preview scene. Moving the clone afterwards is too late: Unity can
+            // crash in AwakeFromLoad while adding its Transform to that scene.
+            Scene destination = SceneManager.GetActiveScene();
+#if UNITY_EDITOR
+            if (!Application.isPlaying && (!destination.IsValid() || !destination.isLoaded ||
+                EditorSceneManager.IsPreviewScene(destination)))
+            {
+                destination = default;
+                for (int i = 0; i < SceneManager.sceneCount; i++)
+                {
+                    Scene candidate = SceneManager.GetSceneAt(i);
+                    if (!candidate.IsValid() || !candidate.isLoaded || EditorSceneManager.IsPreviewScene(candidate)) continue;
+                    destination = candidate;
+                    break;
+                }
+            }
+#endif
+            if (!destination.IsValid() || !destination.isLoaded)
+            {
+                Debug.LogError("Cannot create the UMA generator without a loaded scene.");
+                return null;
+            }
+            return GameObject.Instantiate(prefab, new InstantiateParameters { scene = destination });
         }
 
 #if UNITY_EDITOR
