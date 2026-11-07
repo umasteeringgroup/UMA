@@ -1,0 +1,511 @@
+fileFormatVersion: 2
+guid: 2c5e171e389629544a0bd36b82c50a81
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Decorations_0
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 769
+        width: 246
+        height: 254
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9226b1ff68f01cb4cbbc1bb3c187a66e
+      internalID: 2127590099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_1
+      rect:
+        serializedVersion: 2
+        x: 270
+        y: 769
+        width: 168
+        height: 255
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 81e3a12560ef58649baf4d81854584bb
+      internalID: -686476853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_2
+      rect:
+        serializedVersion: 2
+        x: 533
+        y: 769
+        width: 222
+        height: 254
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a8ea3ec2779fc5448948235435bab65
+      internalID: -1080172062
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_3
+      rect:
+        serializedVersion: 2
+        x: 895
+        y: 769
+        width: 117
+        height: 254
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 813f511ba39c71d4aabc513aa69e77df
+      internalID: 50490010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_4
+      rect:
+        serializedVersion: 2
+        x: 142
+        y: 513
+        width: 106
+        height: 255
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 47c432175e287974088cb4c29798532e
+      internalID: -1711143088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_5
+      rect:
+        serializedVersion: 2
+        x: 418
+        y: 537
+        width: 86
+        height: 217
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: be9b3c7c2f452a940877efcf1ea98f03
+      internalID: -408783932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_6
+      rect:
+        serializedVersion: 2
+        x: 557
+        y: 537
+        width: 203
+        height: 211
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0e7bd88ff8490c144a8aa03f639fd406
+      internalID: 1062221805
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_7
+      rect:
+        serializedVersion: 2
+        x: 834
+        y: 531
+        width: 129
+        height: 212
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 725586c4e963d6f4289a17ba1b8993c0
+      internalID: -1850420362
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_8
+      rect:
+        serializedVersion: 2
+        x: 25
+        y: 284
+        width: 116
+        height: 206
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4c2238a5479e81644ba8ef0ec645e4f9
+      internalID: -1053394744
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_9
+      rect:
+        serializedVersion: 2
+        x: 266
+        y: 282
+        width: 175
+        height: 204
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8345b4ce3cd9f274586256d94ab291b5
+      internalID: 1101033014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_10
+      rect:
+        serializedVersion: 2
+        x: 660
+        y: 287
+        width: 101
+        height: 198
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 469e8c259a043ff47953adbd92ddd36a
+      internalID: 1445830943
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_11
+      rect:
+        serializedVersion: 2
+        x: 836
+        y: 282
+        width: 181
+        height: 205
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d64670ba059a84a47b5586b8eacc3ade
+      internalID: 1270775716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_12
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 78
+        width: 163
+        height: 105
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f4e03c166af17094d8f41607f381c072
+      internalID: -187155261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_13
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 24
+        width: 197
+        height: 201
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2d847752962da544ea5a5a934e0513ec
+      internalID: 1144912721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_14
+      rect:
+        serializedVersion: 2
+        x: 562
+        y: 30
+        width: 179
+        height: 205
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c1a36a31ee890b74d935fbb6b958c807
+      internalID: -1483830720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Decorations_15
+      rect:
+        serializedVersion: 2
+        x: 861
+        y: 49
+        width: 147
+        height: 151
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3ea30fcc5ed443c4abc3c32b3c929a9b
+      internalID: 1331280643
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 87a1cda8212c64a46b6751738c9333d6
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Decorations_0: 2127590099
+      Decorations_1: -686476853
+      Decorations_10: 1445830943
+      Decorations_11: 1270775716
+      Decorations_12: -187155261
+      Decorations_13: 1144912721
+      Decorations_14: -1483830720
+      Decorations_15: 1331280643
+      Decorations_2: -1080172062
+      Decorations_3: 50490010
+      Decorations_4: -1711143088
+      Decorations_5: -408783932
+      Decorations_6: 1062221805
+      Decorations_7: -1850420362
+      Decorations_8: -1053394744
+      Decorations_9: 1101033014
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: UMA.OverlayPainter.SpriteGridOptions:{"version":1,"sourceWidth":1024,"sourceHeight":1024,"columns":4,"rows":4,"inset":1,"editSpritesIndividually":true,"globalSettings":{"insetX1":1,"insetY1":1,"insetX2":1,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},"spriteSettings":[{"insetX1":3,"insetY1":1,"insetX2":7,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.009999999776482582,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":14,"insetY1":1,"insetX2":74,"insetY2":0,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":21,"insetY1":1,"insetX2":13,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":127,"insetY1":1,"insetX2":12,"insetY2":1,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":142,"insetY1":1,"insetX2":8,"insetY2":0,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":162,"insetY1":25,"insetX2":8,"insetY2":14,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":45,"insetY1":25,"insetX2":8,"insetY2":20,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":66,"insetY1":19,"insetX2":61,"insetY2":25,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":25,"insetY1":28,"insetX2":115,"insetY2":22,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":10,"insetY1":26,"insetX2":71,"insetY2":26,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":148,"insetY1":31,"insetX2":7,"insetY2":27,"horizontalOffset":0,"verticalOffset":0,"makeTileable":true,"seamBlendFraction":0.032999999821186069,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":68,"insetY1":26,"insetX2":7,"insetY2":25,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":2,"insetY1":78,"insetX2":91,"insetY2":73,"horizontalOffset":0,"verticalOffset":0,"makeTileable":true,"seamBlendFraction":0.009999999776482582,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":7,"insetY1":24,"insetX2":52,"insetY2":31,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.009999999776482582,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":50,"insetY1":30,"insetX2":27,"insetY2":21,"horizontalOffset":0,"verticalOffset":0,"makeTileable":false,"seamBlendFraction":0.25,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":false,"bilateralStrength":0.5,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25},{"insetX1":93,"insetY1":49,"insetX2":16,"insetY2":56,"horizontalOffset":0,"verticalOffset":0,"makeTileable":true,"seamBlendFraction":0.009999999776482582,"fixBrightnessGradient":false,"removePolynomialGradient":false,"applyClahe":false,"claheStrength":0.5,"applyBilateralFilter":true,"bilateralStrength":0.9309999942779541,"processInLinearSpace":false,"normalizationStrength":0.0,"poissonSeamlessBlend":false,"applyBlueNoiseDithering":false,"blueNoiseStrength":0.25,"applyMultiOctaveNoise":false,"noiseStrength":0.25,"noiseFrequency":0.5,"applyMicroWarping":false,"warpStrength":0.25,"warpFrequency":0.5,"applyFrequencyScrambling":false,"scrambleStrength":0.25}]}
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ef58c7a271c6504a898e3386baf0438, type: 3}
+  m_Name: Sculpted Core VDM
+  m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintVDMBrush
+  vectorTexture: {fileID: 2800000, guid: 4a03030fc6e36094687fcf248fae21ef, type: 3}
+  coverageMask: {fileID: 0}
+  coverage: 1
+  uAxis: {x: 1, y: 0, z: 0}
+  vAxis: {x: 0, y: 1, z: 0}
+  nAxis: {x: 0, y: 0, z: 1}
+  neutral: {x: 0, y: 0, z: 0}
+  componentScale: {x: 1, y: 1, z: 1}
+  flipImageY: 0
+  sourceGuid: 4a03030fc6e36094687fcf248fae21ef
+  sourceRevision: f0c5b03a420b85db61c1d7c59379ba3f
+  decoderVersion: 1
+  tags: original;procedural;abdominal;relief;eight-pad;no external source data

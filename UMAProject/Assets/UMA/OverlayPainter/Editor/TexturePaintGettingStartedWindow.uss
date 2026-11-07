@@ -1,0 +1,41 @@
+.painter-help {
+    flex-grow: 1;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+.painter-help-content {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+}
+.painter-help-text {
+    white-space: normal;
+    margin-bottom: 7px;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+.painter-help-title {
+    font-size: 18px;
+    -unity-font-style: bold;
+}
+.painter-help-heading {
+    -unity-font-style: bold;
+    margin-top: 9px;
+}
+.painter-help-note {
+    margin-top: 8px;
+}
+.painter-help-footer {
+    flex-direction: row;
+    flex-shrink: 0;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+.painter-help-footer Button {
+    min-height: 28px;
+    margin-left: 6px;
+    padding-left: 10px;
+    padding-right: 10px;
+}

@@ -1,0 +1,73 @@
+PASS Rubber and Elastomers / Smooth Vulcanized Rubber: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Rubber and Elastomers / Fine Pebble Rubber: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Rubber and Elastomers / Stipple Grip Rubber: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Rubber and Elastomers / Rounded Rib Rubber: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Rubber and Elastomers / Diamond Grip Rubber: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Rubber and Elastomers / Smooth Silicone: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Rubber and Elastomers / Neoprene Foam: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Rubber and Elastomers / Closed Cell EVA: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Rubber and Elastomers / Crosshatch Elastomer: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Plastics and Coatings / Smooth ABS: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Plastics and Coatings / Molded PBT Grain: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Plastics and Coatings / Gloss Polycarbonate: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Plastics and Coatings / Satin Polypropylene: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Plastics and Coatings / Soft Touch Polymer: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Plastics and Coatings / Fine Powder Coat: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Plastics and Coatings / Gloss Enamel: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Plastics and Coatings / Satin Ceramic Coating: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Plastics and Coatings / Textured Molded Nylon: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Knits and Soft Clothing / Fine Cotton Jersey: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Knits and Soft Clothing / Classic Stockinette: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Knits and Soft Clothing / Chunky Wool Knit: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Knits and Soft Clothing / Braided Cable Knit: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Knits and Soft Clothing / Double Rib Knit: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Knits and Soft Clothing / Waffle Knit: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Knits and Soft Clothing / Interlock Cotton: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Knits and Soft Clothing / Moss Stitch: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Knits and Soft Clothing / Fisherman Rib: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Chainmail and Scale Armor / European Round Mail: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Chainmail and Scale Armor / Riveted Round Mail: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Chainmail and Scale Armor / Dense Six Ring Mail: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Chainmail and Scale Armor / Flat Link Mail: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Chainmail and Scale Armor / Fine Fish Scale: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Chainmail and Scale Armor / Pointed Scale Armor: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Chainmail and Scale Armor / Scalloped Scale Armor: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Chainmail and Scale Armor / Laced Lamellar: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Chainmail and Scale Armor / Riveted Brigandine: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Technical Weaves and Composites / Carbon Twill: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Technical Weaves and Composites / Plain Carbon Weave: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Technical Weaves and Composites / Forged Carbon Composite: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Technical Weaves and Composites / Aramid Plain Weave: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Technical Weaves and Composites / Carbon Aramid Hybrid: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Technical Weaves and Composites / Ballistic Nylon: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Technical Weaves and Composites / Seatbelt Webbing: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Technical Weaves and Composites / Spacer Sports Mesh: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Technical Weaves and Composites / Coated Glass Fiber: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Brocade and Decorative Fabrics / Burgundy Damask: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Brocade and Decorative Fabrics / Navy Floral Jacquard: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Brocade and Decorative Fabrics / Olive Diamond Brocade: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Brocade and Decorative Fabrics / Ivory Paisley: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Brocade and Decorative Fabrics / Teal Rosette Brocade: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Brocade and Decorative Fabrics / Climbing Vine Jacquard: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Brocade and Decorative Fabrics / Gold Thread Arabesque: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Brocade and Decorative Fabrics / Silver Geometric Brocade: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Brocade and Decorative Fabrics / Indigo Wave Brocade: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Wood and Natural Materials / Straight Grain Oak: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Wood and Natural Materials / Oiled Walnut: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Wood and Natural Materials / Open Grain Ash: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Wood and Natural Materials / Pale Maple: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Wood and Natural Materials / Ribbon Mahogany: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Wood and Natural Materials / Natural Bamboo: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Wood and Natural Materials / Dark Stained Oak: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Wood and Natural Materials / Natural Cork: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Wood and Natural Materials / Satin Beech: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Bone Horn and Keratin / Clean Ivory Bone: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Bone Horn and Keratin / Porous Bone: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Bone Horn and Keratin / Warm Aged Bone: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Bone Horn and Keratin / Amber Polished Horn: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Bone Horn and Keratin / Black Horn: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Bone Horn and Keratin / Striated Ivory: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Bone Horn and Keratin / Dark Claw Keratin: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Bone Horn and Keratin / Hoof Keratin: identical fields after a full repeat along X and Y; valid wear policy.
+PASS Bone Horn and Keratin / Pearly Enamel: identical fields after a full repeat along X and Y; valid wear policy.
+RESULT: 72 periodic material fields validated before image encoding.

@@ -1,0 +1,1 @@
+36 Unity URP PBR previews at 512px from full 1024px source tiles: 9.20s including PNG encoding.

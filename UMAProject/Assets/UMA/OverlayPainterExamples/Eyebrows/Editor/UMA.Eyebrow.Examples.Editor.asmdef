@@ -1,0 +1,6 @@
+{
+  "name": "UMA.Eyebrow.Examples.Editor",
+  "references": ["UMA_Core", "UMA.TexturePaint.Runtime", "UMA.TexturePaint.Editor"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}

@@ -1,0 +1,866 @@
+[
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.45751953125,
+    "interiorMean": 3.557070732116699
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.35302734375,
+    "interiorMean": 3.5564029216766357
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.2392578125,
+    "interiorMean": 5.872005939483643
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.106201171875,
+    "interiorMean": 5.870269775390625
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 1.569580078125,
+    "interiorMean": 3.634803533554077
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.663330078125,
+    "interiorMean": 3.6329779624938965
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 5.72145938873291
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 5.72145938873291
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 8.54150390625,
+    "interiorMean": 8.306514739990234
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 9.65625,
+    "interiorMean": 8.29735279083252
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1493.18359375,
+    "interiorMean": 1590.2720947265625
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1752.6513671875,
+    "interiorMean": 1589.2958984375
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.200439453125,
+    "interiorMean": 2.3927135467529297
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.212646484375,
+    "interiorMean": 2.4170353412628174
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.130126953125,
+    "interiorMean": 6.086508274078369
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.619384765625,
+    "interiorMean": 6.184133052825928
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 1.5234375,
+    "interiorMean": 3.5230679512023926
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.392333984375,
+    "interiorMean": 3.5537302494049072
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 6.005595684051514
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 6.005595684051514
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 9.52001953125,
+    "interiorMean": 7.65782356262207
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 8.05224609375,
+    "interiorMean": 7.662093639373779
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1772.7333984375,
+    "interiorMean": 1543.478271484375
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1472.181640625,
+    "interiorMean": 1547.216796875
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.103515625,
+    "interiorMean": 3.7318339347839355
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.130126953125,
+    "interiorMean": 3.7338016033172607
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.46630859375,
+    "interiorMean": 6.136377811431885
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.83544921875,
+    "interiorMean": 6.139676094055176
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 1.730712890625,
+    "interiorMean": 3.4608938694000244
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.4794921875,
+    "interiorMean": 3.4629149436950684
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 6.589886665344238
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 6.591738224029541
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.154052734375,
+    "interiorMean": 9.375691413879395
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 9.12451171875,
+    "interiorMean": 9.38212776184082
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 2014.7216796875,
+    "interiorMean": 1753.28173828125
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1704.0185546875,
+    "interiorMean": 1755.12939453125
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.637939453125,
+    "interiorMean": 3.7976317405700684
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.322509765625,
+    "interiorMean": 3.794004201889038
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 5.509033203125,
+    "interiorMean": 5.545338153839111
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.50537109375,
+    "interiorMean": 5.567502021789551
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 2.314453125,
+    "interiorMean": 3.970170497894287
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.470703125,
+    "interiorMean": 3.9711599349975586
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 7.319368839263916
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 7.32047700881958
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 9.60498046875,
+    "interiorMean": 8.518092155456543
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 8.84326171875,
+    "interiorMean": 8.522948265075684
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1780.0771484375,
+    "interiorMean": 1595.983154296875
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1689.7548828125,
+    "interiorMean": 1598.844970703125
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 2.640625,
+    "interiorMean": 0.049043867737054825
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.14076246321201324
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.869384765625,
+    "interiorMean": 2.6583690643310547
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.1064453125,
+    "interiorMean": 1.339215636253357
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.4599609375,
+    "interiorMean": 0.4914429187774658
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.4130859375,
+    "interiorMean": 0.49148300290107727
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 35.19140625,
+    "interiorMean": 1.3416078090667725
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 1.1162109375,
+    "interiorMean": 1.102097988128662
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 17129.70703125,
+    "interiorMean": 670.5991821289062
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1161.076171875,
+    "interiorMean": 401.2819519042969
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.84375,
+    "interiorMean": 0.019825268536806107
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.04692082107067108
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.380859375,
+    "interiorMean": 1.4736156463623047
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 1.535400390625,
+    "interiorMean": 0.5781357288360596
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.416015625,
+    "interiorMean": 0.49396735429763794
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.43505859375,
+    "interiorMean": 0.49243664741516113
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 35.197265625,
+    "interiorMean": 0.7913363575935364
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.32666015625,
+    "interiorMean": 0.5512752532958984
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 17137.314453125,
+    "interiorMean": 403.5151672363281
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 404.7783203125,
+    "interiorMean": 206.85569763183594
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 2.109375,
+    "interiorMean": 0.026805352419614792
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.05865102633833885
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.45654296875,
+    "interiorMean": 1.7202917337417603
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.037841796875,
+    "interiorMean": 0.6949299573898315
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.47314453125,
+    "interiorMean": 0.49300941824913025
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.443115234375,
+    "interiorMean": 0.49193334579467773
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 35.18994140625,
+    "interiorMean": 0.9287667870521545
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.42919921875,
+    "interiorMean": 0.6883004307746887
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 17139.5859375,
+    "interiorMean": 470.3523864746094
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 888.0849609375,
+    "interiorMean": 238.88259887695312
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.15625,
+    "interiorMean": 0.275262713432312
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.2060546875,
+    "interiorMean": 0.3246397376060486
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.129638671875,
+    "interiorMean": 0.981563925743103
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.29296875,
+    "interiorMean": 0.5859646797180176
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.375,
+    "interiorMean": 0.5995234847068787
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.4541015625,
+    "interiorMean": 0.7076756358146667
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.9609375,
+    "interiorMean": 1.6956332921981812
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 1.2890625,
+    "interiorMean": 1.998098373413086
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.8602455854415894
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.5734054446220398
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 39.4189453125,
+    "interiorMean": 377.01641845703125
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 55.2294921875,
+    "interiorMean": 286.5943908691406
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.46875,
+    "interiorMean": 0.6148887872695923
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.375,
+    "interiorMean": 0.4935239553451538
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.166259765625,
+    "interiorMean": 3.3553659915924072
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.70849609375,
+    "interiorMean": 3.3074424266815186
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.5859375,
+    "interiorMean": 0.33657899498939514
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.2607421875,
+    "interiorMean": 0.2701813280582428
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 3.28125,
+    "interiorMean": 1.3719757795333862
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.837890625,
+    "interiorMean": 1.1016370058059692
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 692.0625,
+    "interiorMean": 559.1030883789062
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 606.228515625,
+    "interiorMean": 546.63037109375
+  }
+]

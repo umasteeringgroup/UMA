@@ -1,0 +1,18 @@
+Project C:/GitHub/UMA/UMAProject/Assets; UMA 3.1f3; Unity 6000.3.18f1
+12th Gen Intel(R) Core(TM) i7-12700K / NVIDIA GeForce RTX 5070 Ti
+Residue-0 768 square, 4 shared CPU outputs: 124.6 ms
+Residue-1 768 square, 4 shared CPU outputs: 91.6 ms
+Residue-2 768 square, 4 shared CPU outputs: 116.0 ms
+Residue-3 768 square, 4 shared CPU outputs: 120.5 ms
+Residue-4 768 square, 4 shared CPU outputs: 100.6 ms
+Splash-0 768 square, 4 shared CPU outputs: 278.2 ms
+Splash-1 768 square, 4 shared CPU outputs: 284.3 ms
+Splash-2 768 square, 4 shared CPU outputs: 285.4 ms
+Splash-3 768 square, 4 shared CPU outputs: 274.9 ms
+TigWeld native path 768 square: 187.6 ms including GPU readback
+MigWeld native path 768 square: 120.8 ms including GPU readback
+SolderSeam native path 768 square: 174.3 ms including GPU readback
+BrazedSeam native path 768 square: 103.7 ms including GPU readback
+FloralLace native path 768 square: 368.6 ms including GPU readback
+GothicLace native path 768 square: 127.6 ms including GPU readback
+ScallopedLace native path 768 square: 48.5 ms including GPU readback

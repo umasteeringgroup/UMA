@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d79e0ce9bdf7dc9e09634a124ac29ec5, type: 3}
+  m_Name: Curly_HairGroom Curl Atlas
+  m_EditorClassIdentifier: UMA.HairCards.Core::UMA.HairCards.HairAtlasProfileAsset
+  atlasId: 7f630c624fd0400aa968abe3a1ac1765
+  albedo: {fileID: 2800000, guid: 57b22c97aef562e46abf43248b421378, type: 3}
+  normal: {fileID: 2800000, guid: dc6191f9f5bc7834baa0f4df1ee3aa09, type: 3}
+  mask: {fileID: 2800000, guid: 50302f02f1b57eb4c97de4baec0f9038, type: 3}
+  material: {fileID: 2100000, guid: e19951c3072950044ae4d8f77c64b576, type: 2}
+  secondPassMaterial: {fileID: 0}
+  sharedColorTable: {fileID: 0}
+  sharedColorIndex: -1
+  regions:
+  - id: b2ce05a13b47414bb6714cf63ed3b2f0
+    name: Curl strip 1
+    uvRect:
+      serializedVersion: 2
+      x: 0.46608
+      y: 0.03607
+      width: 0.15093
+      height: 0.94754
+    weight: 1
+    tags: []
+    flipU: 0
+    flipV: 1
+  - id: 4eba0d1dfd8f4cbab32be7e923a708e2
+    name: Curl strip 2
+    uvRect:
+      serializedVersion: 2
+      x: 0.63557
+      y: 0.03959
+      width: 0.14935
+      height: 0.94601
+    weight: 1
+    tags: []
+    flipU: 0
+    flipV: 1
+  - id: 86301307bcf8450590a0daf05af9af49
+    name: Curl strip 3
+    uvRect:
+      serializedVersion: 2
+      x: 0.7983
+      y: 0.0292
+      width: 0.1918
+      height: 0.9569
+    weight: 1
+    tags: []
+    flipU: 0
+    flipV: 1

@@ -1,0 +1,41 @@
+[
+  {
+    "part": "Abdomen",
+    "width": 1254,
+    "height": 1254,
+    "neutralGray": 0.4636999,
+    "minimumN": -0.0744553655,
+    "maximumN": 0.08799661,
+    "format": "RGBAFloat",
+    "linear": true,
+    "png": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen Height Map.png",
+    "brush": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen VDM.asset",
+    "exr": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Abdomen VDM.exr"
+  },
+  {
+    "part": "Pecs",
+    "width": 1254,
+    "height": 1254,
+    "neutralGray": 0.460532665,
+    "minimumN": -0.0742390454,
+    "maximumN": 0.08614038,
+    "format": "RGBAFloat",
+    "linear": true,
+    "png": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs Height Map.png",
+    "brush": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs VDM.asset",
+    "exr": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Pecs VDM.exr"
+  },
+  {
+    "part": "Spine",
+    "width": 1254,
+    "height": 1254,
+    "neutralGray": 0.4676626,
+    "minimumN": -0.07671957,
+    "maximumN": 0.10759417,
+    "format": "RGBAFloat",
+    "linear": true,
+    "png": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine Height Map.png",
+    "brush": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine VDM.asset",
+    "exr": "Assets/UMA/OverlayPainterExamples/VDM/Bodybuilder/Bodybuilder Spine VDM.exr"
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "name": "UMA2Compatibility.Editor.Tests",
+  "rootNamespace": "UMA.Editors.Tests",
+  "references": ["UMA_Core", "UMA_Editor", "UMA_Core_Editor", "UMA.PackageSupport.Editor", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
+  "includePlatforms": ["Editor"],
+  "overrideReferences": true,
+  "precompiledReferences": ["nunit.framework.dll"],
+  "autoReferenced": false,
+  "defineConstraints": ["UNITY_INCLUDE_TESTS", "UMA_TEST_FRAMEWORK"],
+  "versionDefines": [{ "name": "com.unity.test-framework", "expression": "1.0.0", "define": "UMA_TEST_FRAMEWORK" }]
+}

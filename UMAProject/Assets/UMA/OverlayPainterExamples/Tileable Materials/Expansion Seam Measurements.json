@@ -1,0 +1,6914 @@
+[
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.181884765625,
+    "interiorMean": 0.1621434986591339
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.19287109375,
+    "interiorMean": 0.16157574951648712
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.42041015625,
+    "interiorMean": 0.48861202597618103
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.466552734375,
+    "interiorMean": 0.4869488477706909
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 69.193359375,
+    "interiorMean": 80.70708465576172
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Vulcanized Rubber",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 77.5546875,
+    "interiorMean": 80.4573745727539
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 12.66015625,
+    "interiorMean": 11.194722175598145
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 12.69970703125,
+    "interiorMean": 11.175008773803711
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 1.77685546875,
+    "interiorMean": 1.509251594543457
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.7490234375,
+    "interiorMean": 1.5050933361053467
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 2.785400390625,
+    "interiorMean": 2.363638401031494
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 2.75390625,
+    "interiorMean": 2.3568248748779297
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 2112.9716796875,
+    "interiorMean": 1810.197021484375
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Fine Pebble Rubber",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 2092.615234375,
+    "interiorMean": 1805.007568359375
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.98828125,
+    "interiorMean": 2.3756659030914307
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.71923828125,
+    "interiorMean": 2.374871015548706
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.0703125,
+    "interiorMean": 0.3245280385017395
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.03515625,
+    "interiorMean": 0.3245624005794525
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.10546875,
+    "interiorMean": 0.7778477668762207
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.052734375,
+    "interiorMean": 0.7778993248939514
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 124.888671875,
+    "interiorMean": 652.746826171875
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Stipple Grip Rubber",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 105.501953125,
+    "interiorMean": 652.5245361328125
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.4267578125,
+    "interiorMean": 0.3742539882659912
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 1.79833984375,
+    "interiorMean": 2.8774056434631348
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.5278592109680176
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 1.6363636255264282
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 73.74609375,
+    "interiorMean": 80.46370697021484
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Rounded Rib Rubber",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 240.666015625,
+    "interiorMean": 1282.1939697265625
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.158203125,
+    "interiorMean": 5.056049823760986
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.185302734375,
+    "interiorMean": 5.056028842926025
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.31640625,
+    "interiorMean": 0.5237009525299072
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.31640625,
+    "interiorMean": 0.5237009525299072
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 1.08984375,
+    "interiorMean": 1.8231648206710815
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 1.08984375,
+    "interiorMean": 1.8231648206710815
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 728.7333984375,
+    "interiorMean": 1175.794189453125
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Diamond Grip Rubber",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 732.9111328125,
+    "interiorMean": 1175.8919677734375
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.21728515625,
+    "interiorMean": 0.2507312297821045
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.233642578125,
+    "interiorMean": 0.2510412335395813
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.11376953125,
+    "interiorMean": 0.10863088071346283
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.117431640625,
+    "interiorMean": 0.10870558023452759
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.014107175171375275
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.00146484375,
+    "interiorMean": 0.013444201089441776
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 35.91015625,
+    "interiorMean": 40.31851577758789
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Smooth Silicone",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 36.3251953125,
+    "interiorMean": 40.34038162231445
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 1.65185546875,
+    "interiorMean": 1.4927167892456055
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 1.5439453125,
+    "interiorMean": 1.4961214065551758
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.2255859375,
+    "interiorMean": 0.28495147824287415
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.191162109375,
+    "interiorMean": 0.28566673398017883
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.62548828125,
+    "interiorMean": 0.7816652655601501
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.517822265625,
+    "interiorMean": 0.78341144323349
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 653.6396484375,
+    "interiorMean": 593.7264404296875
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Neoprene Foam",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 614.2158203125,
+    "interiorMean": 595.1985473632812
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.135986328125,
+    "interiorMean": 0.10438169538974762
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.11572265625,
+    "interiorMean": 0.10463251173496246
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 1.339599609375,
+    "interiorMean": 1.150331735610962
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 1.29736328125,
+    "interiorMean": 1.1503089666366577
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.09375,
+    "interiorMean": 0.19577071070671082
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.093017578125,
+    "interiorMean": 0.19702434539794922
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.262939453125,
+    "interiorMean": 0.5387997627258301
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.258544921875,
+    "interiorMean": 0.5426644682884216
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 537.291015625,
+    "interiorMean": 469.7879943847656
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Closed Cell EVA",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 514.5673828125,
+    "interiorMean": 469.92626953125
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.017578125,
+    "interiorMean": 0.008111769333481789
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.012451171875,
+    "interiorMean": 0.00809339340776205
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 5.190185546875,
+    "interiorMean": 5.856209754943848
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 5.1923828125,
+    "interiorMean": 5.855794429779053
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 1.03125,
+    "interiorMean": 1.4535373449325562
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 1.03125,
+    "interiorMean": 1.4535373449325562
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 913.1552734375,
+    "interiorMean": 1241.2459716796875
+  },
+  {
+    "family": "Rubber and Elastomers",
+    "material": "Crosshatch Elastomer",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 909.763671875,
+    "interiorMean": 1241.09765625
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.1416015625,
+    "interiorMean": 0.1397314816713333
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.156005859375,
+    "interiorMean": 0.14062190055847168
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.16552734375,
+    "interiorMean": 0.14429450035095215
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.158447265625,
+    "interiorMean": 0.14469186961650848
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.2724609375,
+    "interiorMean": 0.34932729601860046
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.27978515625,
+    "interiorMean": 0.3510899841785431
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 48.70703125,
+    "interiorMean": 60.27983093261719
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Smooth ABS",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 49.5009765625,
+    "interiorMean": 60.5843620300293
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 3.2060546875,
+    "interiorMean": 2.8635923862457275
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.40283203125,
+    "interiorMean": 2.8604578971862793
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.2783203125,
+    "interiorMean": 0.35168421268463135
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.303955078125,
+    "interiorMean": 0.35075274109840393
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 1.746826171875,
+    "interiorMean": 1.590236783027649
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 1.95263671875,
+    "interiorMean": 1.587246298789978
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1007.8466796875,
+    "interiorMean": 927.275390625
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Molded PBT Grain",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1125.0869140625,
+    "interiorMean": 925.7932739257812
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.042724609375,
+    "interiorMean": 0.03748668357729912
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.042724609375,
+    "interiorMean": 0.03714016079902649
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.16162109375,
+    "interiorMean": 0.1453288197517395
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.155029296875,
+    "interiorMean": 0.14439688622951508
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.31494140625,
+    "interiorMean": 0.35055872797966003
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.290771484375,
+    "interiorMean": 0.34838151931762695
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 53.806640625,
+    "interiorMean": 60.6608772277832
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Polycarbonate",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 50.9462890625,
+    "interiorMean": 60.24187469482422
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0029296875,
+    "interiorMean": 0.0013913389993831515
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0029296875,
+    "interiorMean": 0.0014342963695526123
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.157470703125,
+    "interiorMean": 0.14040473103523254
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.20751953125,
+    "interiorMean": 0.19831140339374542
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.298828125,
+    "interiorMean": 0.3499387204647064
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.287841796875,
+    "interiorMean": 0.3500496745109558
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 51.1748046875,
+    "interiorMean": 60.466732025146484
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Polypropylene",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 68.4658203125,
+    "interiorMean": 100.10477447509766
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.163818359375,
+    "interiorMean": 0.1453753560781479
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.16552734375,
+    "interiorMean": 0.14481620490550995
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.3369140625,
+    "interiorMean": 0.3503553867340088
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.2958984375,
+    "interiorMean": 0.34975114464759827
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 54.083984375,
+    "interiorMean": 60.72425842285156
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Soft Touch Polymer",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 52.130859375,
+    "interiorMean": 60.534854888916016
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.262939453125,
+    "interiorMean": 0.25158822536468506
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.27099609375,
+    "interiorMean": 0.2519979774951935
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.33251953125,
+    "interiorMean": 0.35523247718811035
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.321533203125,
+    "interiorMean": 0.3542967438697815
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 83.0771484375,
+    "interiorMean": 153.3746337890625
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Fine Powder Coat",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 88.66796875,
+    "interiorMean": 153.65626525878906
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.16162109375,
+    "interiorMean": 0.15062592923641205
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.180419921875,
+    "interiorMean": 0.14959901571273804
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.157470703125,
+    "interiorMean": 0.14499829709529877
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.162841796875,
+    "interiorMean": 0.14446991682052612
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.315673828125,
+    "interiorMean": 0.3515302836894989
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.3076171875,
+    "interiorMean": 0.3502250909805298
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 53.3984375,
+    "interiorMean": 65.70897674560547
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Gloss Enamel",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 55.5888671875,
+    "interiorMean": 65.54481506347656
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.15234375,
+    "interiorMean": 0.1543770581483841
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.148193359375,
+    "interiorMean": 0.15539062023162842
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.176025390625,
+    "interiorMean": 0.16950400173664093
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.19580078125,
+    "interiorMean": 0.17012615501880646
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.293701171875,
+    "interiorMean": 0.35083866119384766
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.311279296875,
+    "interiorMean": 0.3524051904678345
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 61.4697265625,
+    "interiorMean": 79.7475814819336
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Satin Ceramic Coating",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 59.0888671875,
+    "interiorMean": 80.1805648803711
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 2.8759765625,
+    "interiorMean": 2.4385104179382324
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.051025390625,
+    "interiorMean": 2.43746018409729
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.289306640625,
+    "interiorMean": 0.35727939009666443
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.2900390625,
+    "interiorMean": 0.3562648892402649
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 1.6171875,
+    "interiorMean": 1.3473670482635498
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 1.82080078125,
+    "interiorMean": 1.347103476524353
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 930.828125,
+    "interiorMean": 794.0390625
+  },
+  {
+    "family": "Plastics and Coatings",
+    "material": "Textured Molded Nylon",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1043.9580078125,
+    "interiorMean": 793.8572998046875
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.541015625,
+    "interiorMean": 1.7966134548187256
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.572021484375,
+    "interiorMean": 1.1379780769348145
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 17.965087890625,
+    "interiorMean": 11.531105995178223
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 11.847900390625,
+    "interiorMean": 15.041585922241211
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 7.998046875,
+    "interiorMean": 2.515423059463501
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.98193359375,
+    "interiorMean": 3.131563901901245
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 45.84375,
+    "interiorMean": 13.31662368774414
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 8.8125,
+    "interiorMean": 16.984054565429688
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 10829.15234375,
+    "interiorMean": 3198.06201171875
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fine Cotton Jersey",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 2140.369140625,
+    "interiorMean": 4032.10986328125
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.848876953125,
+    "interiorMean": 0.8406491875648499
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.20361328125,
+    "interiorMean": 0.41727426648139954
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 18.322265625,
+    "interiorMean": 11.767377853393555
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 6.22216796875,
+    "interiorMean": 12.74940013885498
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 7.51025390625,
+    "interiorMean": 1.6399247646331787
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.689208984375,
+    "interiorMean": 1.775179386138916
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 43.201171875,
+    "interiorMean": 7.910299301147461
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.755859375,
+    "interiorMean": 8.745503425598145
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 10128.80078125,
+    "interiorMean": 1928.4775390625
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Classic Stockinette",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 250.78125,
+    "interiorMean": 2093.343994140625
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.6611328125,
+    "interiorMean": 1.0675526857376099
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.417724609375,
+    "interiorMean": 0.5646886825561523
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 9.622802734375,
+    "interiorMean": 5.331418514251709
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.691162109375,
+    "interiorMean": 5.466935157775879
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 8.408203125,
+    "interiorMean": 1.021354079246521
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.71923828125,
+    "interiorMean": 1.099464774131775
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 48.64306640625,
+    "interiorMean": 3.981398105621338
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 1.1337890625,
+    "interiorMean": 4.662415981292725
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 11403.896484375,
+    "interiorMean": 995.6965942382812
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Chunky Wool Knit",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 346.2890625,
+    "interiorMean": 1127.6578369140625
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.281982421875,
+    "interiorMean": 1.1335835456848145
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.546630859375,
+    "interiorMean": 0.5404369235038757
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 17.32177734375,
+    "interiorMean": 12.757306098937988
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 10.24755859375,
+    "interiorMean": 10.240693092346191
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 7.47802734375,
+    "interiorMean": 1.767291784286499
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.54541015625,
+    "interiorMean": 1.4973623752593994
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 42.796875,
+    "interiorMean": 8.624220848083496
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 7.6318359375,
+    "interiorMean": 7.032862186431885
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 10018.212890625,
+    "interiorMean": 2091.49951171875
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Braided Cable Knit",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1849.5029296875,
+    "interiorMean": 1704.7236328125
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.654541015625,
+    "interiorMean": 0.6411125659942627
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.16845703125,
+    "interiorMean": 0.31771692633628845
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 18.3173828125,
+    "interiorMean": 11.767461776733398
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 6.205810546875,
+    "interiorMean": 12.748658180236816
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 7.560791015625,
+    "interiorMean": 1.640764594078064
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.652587890625,
+    "interiorMean": 1.7751407623291016
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 43.201171875,
+    "interiorMean": 7.910299301147461
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.755859375,
+    "interiorMean": 8.745503425598145
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 10122.599609375,
+    "interiorMean": 1928.3792724609375
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Double Rib Knit",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 247.52734375,
+    "interiorMean": 2126.9404296875
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.3974609375,
+    "interiorMean": 1.5017235279083252
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.499267578125,
+    "interiorMean": 0.9330684542655945
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 22.045654296875,
+    "interiorMean": 13.947969436645508
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 16.970703125,
+    "interiorMean": 21.010610580444336
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 7.950439453125,
+    "interiorMean": 1.8346810340881348
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.595947265625,
+    "interiorMean": 2.6677260398864746
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 45.515625,
+    "interiorMean": 9.1402587890625
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 6.84375,
+    "interiorMean": 14.198588371276855
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 10695.953125,
+    "interiorMean": 2270.7587890625
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Waffle Knit",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1680.291015625,
+    "interiorMean": 3410.98876953125
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.73193359375,
+    "interiorMean": 2.0139739513397217
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.702880859375,
+    "interiorMean": 1.436108946800232
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 20.1650390625,
+    "interiorMean": 12.89720630645752
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 14.7236328125,
+    "interiorMean": 17.646669387817383
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 8.138671875,
+    "interiorMean": 2.8245136737823486
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 2.485107421875,
+    "interiorMean": 3.6387884616851807
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 47.1328125,
+    "interiorMean": 15.191463470458984
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 12.046875,
+    "interiorMean": 20.010217666625977
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 11173.7255859375,
+    "interiorMean": 3632.0908203125
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Interlock Cotton",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 2894.2333984375,
+    "interiorMean": 4743.9375
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.922607421875,
+    "interiorMean": 0.8724862933158875
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.3359375,
+    "interiorMean": 0.47509336471557617
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 17.380126953125,
+    "interiorMean": 9.376423835754395
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 9.35107421875,
+    "interiorMean": 12.315386772155762
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 4.4677734375,
+    "interiorMean": 1.3387411832809448
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.078125,
+    "interiorMean": 1.7733443975448608
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 24.6796875,
+    "interiorMean": 6.039841651916504
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 3.779296875,
+    "interiorMean": 8.745756149291992
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 5764.0625,
+    "interiorMean": 1493.1243896484375
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Moss Stitch",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1019.1025390625,
+    "interiorMean": 2095.39111328125
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.68115234375,
+    "interiorMean": 0.6463956236839294
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.197265625,
+    "interiorMean": 0.28746163845062256
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 13.630126953125,
+    "interiorMean": 9.564523696899414
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 8.18408203125,
+    "interiorMean": 9.30488395690918
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 8.50341796875,
+    "interiorMean": 1.450911283493042
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.95068359375,
+    "interiorMean": 1.446047067642212
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 49.21875,
+    "interiorMean": 6.804527282714844
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 2.51953125,
+    "interiorMean": 6.8861002922058105
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 11554.3671875,
+    "interiorMean": 1671.3746337890625
+  },
+  {
+    "family": "Knits and Soft Clothing",
+    "material": "Fisherman Rib",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 672.28515625,
+    "interiorMean": 1696.3431396484375
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 1.441211462020874
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.689208984375,
+    "interiorMean": 1.752885103225708
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.86962890625,
+    "interiorMean": 3.634737014770508
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.9794921875,
+    "interiorMean": 4.2819976806640625
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.457763671875,
+    "interiorMean": 1.9351108074188232
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.143310546875,
+    "interiorMean": 2.245877265930176
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 1.441211462020874
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.689208984375,
+    "interiorMean": 1.752885103225708
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 1.201171875,
+    "interiorMean": 2.6892812252044678
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 1.420166015625,
+    "interiorMean": 3.2521705627441406
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 334.8876953125,
+    "interiorMean": 508.1300048828125
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "European Round Mail",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 376.2080078125,
+    "interiorMean": 597.3930053710938
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 1.441211462020874
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.689208984375,
+    "interiorMean": 1.752885103225708
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.8623046875,
+    "interiorMean": 3.6598222255706787
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.982666015625,
+    "interiorMean": 4.298741340637207
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.459228515625,
+    "interiorMean": 1.9349533319473267
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.154296875,
+    "interiorMean": 2.2456202507019043
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 1.441211462020874
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.689208984375,
+    "interiorMean": 1.752885103225708
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 1.201171875,
+    "interiorMean": 2.6899800300598145
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 1.420166015625,
+    "interiorMean": 3.2522735595703125
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 334.384765625,
+    "interiorMean": 512.4540405273438
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Round Mail",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 376.9970703125,
+    "interiorMean": 600.4307250976562
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 1.7043774127960205
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 1.6689453125,
+    "interiorMean": 2.167188882827759
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 1.12109375,
+    "interiorMean": 4.3452324867248535
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 6.9755859375,
+    "interiorMean": 5.321525573730469
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.425537109375,
+    "interiorMean": 2.195908308029175
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 2.09521484375,
+    "interiorMean": 2.6602582931518555
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 1.7043774127960205
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 1.6689453125,
+    "interiorMean": 2.167188882827759
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 1.330078125,
+    "interiorMean": 3.1728696823120117
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 3.0107421875,
+    "interiorMean": 4.018195629119873
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 371.6005859375,
+    "interiorMean": 598.2844848632812
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Dense Six Ring Mail",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 825.49609375,
+    "interiorMean": 737.2268676757812
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 1.3648658990859985
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 3.278076171875,
+    "interiorMean": 1.6837916374206543
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.2138671875,
+    "interiorMean": 3.806583881378174
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 8.181396484375,
+    "interiorMean": 4.513016223907471
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.4482421875,
+    "interiorMean": 1.8564391136169434
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 3.70654296875,
+    "interiorMean": 2.175868034362793
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 1.3648658990859985
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 3.278076171875,
+    "interiorMean": 1.6837916374206543
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.4453125,
+    "interiorMean": 2.5113790035247803
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 8.03662109375,
+    "interiorMean": 3.055354356765747
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 95.2158203125,
+    "interiorMean": 457.177978515625
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Flat Link Mail",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1733.212890625,
+    "interiorMean": 508.4804992675781
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 2.640625,
+    "interiorMean": 0.049043867737054825
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.14076246321201324
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.869384765625,
+    "interiorMean": 2.6583690643310547
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.1064453125,
+    "interiorMean": 1.339215636253357
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.4599609375,
+    "interiorMean": 0.4914429187774658
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.4130859375,
+    "interiorMean": 0.49148300290107727
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 35.19140625,
+    "interiorMean": 1.3416078090667725
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 1.1162109375,
+    "interiorMean": 1.102097988128662
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 17129.70703125,
+    "interiorMean": 670.5991821289062
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Fine Fish Scale",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1161.076171875,
+    "interiorMean": 401.2819519042969
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.84375,
+    "interiorMean": 0.019825268536806107
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.04692082107067108
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.380859375,
+    "interiorMean": 1.4736156463623047
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 1.535400390625,
+    "interiorMean": 0.5781357288360596
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.416015625,
+    "interiorMean": 0.49396735429763794
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.43505859375,
+    "interiorMean": 0.49243664741516113
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 35.197265625,
+    "interiorMean": 0.7913363575935364
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.32666015625,
+    "interiorMean": 0.5512752532958984
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 17137.314453125,
+    "interiorMean": 403.5151672363281
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Pointed Scale Armor",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 404.7783203125,
+    "interiorMean": 206.85569763183594
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 2.109375,
+    "interiorMean": 0.026805352419614792
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.05865102633833885
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.45654296875,
+    "interiorMean": 1.7202917337417603
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.037841796875,
+    "interiorMean": 0.6949299573898315
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.47314453125,
+    "interiorMean": 0.49300941824913025
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.443115234375,
+    "interiorMean": 0.49193334579467773
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 35.18994140625,
+    "interiorMean": 0.9287667870521545
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.42919921875,
+    "interiorMean": 0.6883004307746887
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 17139.5859375,
+    "interiorMean": 470.3523864746094
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Scalloped Scale Armor",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 888.0849609375,
+    "interiorMean": 238.88259887695312
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.15625,
+    "interiorMean": 0.275262713432312
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.2060546875,
+    "interiorMean": 0.3246397376060486
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.129638671875,
+    "interiorMean": 0.981563925743103
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.29296875,
+    "interiorMean": 0.5859646797180176
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.375,
+    "interiorMean": 0.5995234847068787
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.4541015625,
+    "interiorMean": 0.7076756358146667
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.9609375,
+    "interiorMean": 1.6956332921981812
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 1.2890625,
+    "interiorMean": 1.998098373413086
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.8602455854415894
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.5734054446220398
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 39.4189453125,
+    "interiorMean": 377.01641845703125
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Laced Lamellar",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 55.2294921875,
+    "interiorMean": 286.5943908691406
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.46875,
+    "interiorMean": 0.6148887872695923
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.375,
+    "interiorMean": 0.4935239553451538
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.166259765625,
+    "interiorMean": 3.3553659915924072
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.70849609375,
+    "interiorMean": 3.3074424266815186
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.5859375,
+    "interiorMean": 0.33657899498939514
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.2607421875,
+    "interiorMean": 0.2701813280582428
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 3.28125,
+    "interiorMean": 1.3719757795333862
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.837890625,
+    "interiorMean": 1.1016370058059692
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 692.0625,
+    "interiorMean": 559.1030883789062
+  },
+  {
+    "family": "Chainmail and Scale Armor",
+    "material": "Riveted Brigandine",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 606.228515625,
+    "interiorMean": 546.63037109375
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.244384765625,
+    "interiorMean": 0.42298734188079834
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 1.245849609375,
+    "interiorMean": 0.42322075366973877
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 3.091064453125,
+    "interiorMean": 0.7407467365264893
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.09814453125,
+    "interiorMean": 0.7408835291862488
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 2.296875,
+    "interiorMean": 0.23382514715194702
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 2.296875,
+    "interiorMean": 0.23382514715194702
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.953125,
+    "interiorMean": 1.2419812679290771
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 11.953125,
+    "interiorMean": 1.2419812679290771
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 3650.037109375,
+    "interiorMean": 424.1467590332031
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Twill",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 3650.037109375,
+    "interiorMean": 424.146728515625
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 2.510986328125,
+    "interiorMean": 0.5431885719299316
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 2.499755859375,
+    "interiorMean": 0.5431365370750427
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.47314453125,
+    "interiorMean": 1.1577922105789185
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.48095703125,
+    "interiorMean": 1.1580097675323486
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 4.001953125,
+    "interiorMean": 0.36389410495758057
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 4.001953125,
+    "interiorMean": 0.36389410495758057
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 19.505859375,
+    "interiorMean": 1.7333612442016602
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 19.505859375,
+    "interiorMean": 1.7333612442016602
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 5939.6484375,
+    "interiorMean": 573.136962890625
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Plain Carbon Weave",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 5939.646484375,
+    "interiorMean": 573.136962890625
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.9814453125,
+    "interiorMean": 0.8305635452270508
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 2.01171875,
+    "interiorMean": 0.995055615901947
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.2744140625,
+    "interiorMean": 0.3125677704811096
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.426025390625,
+    "interiorMean": 0.3742045760154724
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.021240234375,
+    "interiorMean": 0.11405949294567108
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.01171875,
+    "interiorMean": 0.11341298371553421
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 99.7724609375,
+    "interiorMean": 104.48710632324219
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Forged Carbon Composite",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 124.4658203125,
+    "interiorMean": 128.32000732421875
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 5.1513671875,
+    "interiorMean": 1.8491063117980957
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 5.188720703125,
+    "interiorMean": 1.8484770059585571
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 6.20849609375,
+    "interiorMean": 1.8359699249267578
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 6.2099609375,
+    "interiorMean": 1.8358362913131714
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 3.802734375,
+    "interiorMean": 0.5624942779541016
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 3.802734375,
+    "interiorMean": 0.5624942779541016
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 17.748046875,
+    "interiorMean": 2.8127005100250244
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 17.748046875,
+    "interiorMean": 2.8127005100250244
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 5427.607421875,
+    "interiorMean": 895.9520263671875
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Aramid Plain Weave",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 5427.609375,
+    "interiorMean": 895.9520874023438
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 14.2998046875,
+    "interiorMean": 0.985867977142334
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 25.484375,
+    "interiorMean": 1.0643399953842163
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 3.651123046875,
+    "interiorMean": 0.8517512679100037
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 3.650390625,
+    "interiorMean": 0.8518694043159485
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 2.4169921875,
+    "interiorMean": 0.30337873101234436
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 2.4169921875,
+    "interiorMean": 0.30337873101234436
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 12.0029296875,
+    "interiorMean": 1.4245984554290771
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 12.0029296875,
+    "interiorMean": 1.4245984554290771
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 3663.0751953125,
+    "interiorMean": 480.0369567871094
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Carbon Aramid Hybrid",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 3663.0732421875,
+    "interiorMean": 480.0369567871094
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 2.140869140625,
+    "interiorMean": 0.6986495852470398
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 2.14404296875,
+    "interiorMean": 0.7001346945762634
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 8.913330078125,
+    "interiorMean": 3.3612968921661377
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 8.917236328125,
+    "interiorMean": 3.358232021331787
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 3.375,
+    "interiorMean": 0.9351173043251038
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 3.375,
+    "interiorMean": 0.9351173043251038
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 16.03125,
+    "interiorMean": 4.459402561187744
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 16.03125,
+    "interiorMean": 4.459402561187744
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 4859.0400390625,
+    "interiorMean": 1347.2608642578125
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Ballistic Nylon",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 4859.0400390625,
+    "interiorMean": 1347.2607421875
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.864013671875,
+    "interiorMean": 0.6569179892539978
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 1.879638671875,
+    "interiorMean": 0.6748044490814209
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 7.86669921875,
+    "interiorMean": 3.113600492477417
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 7.44970703125,
+    "interiorMean": 3.1205945014953613
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 3.328125,
+    "interiorMean": 0.835456371307373
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 3.328125,
+    "interiorMean": 0.835456371307373
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 16.546875,
+    "interiorMean": 3.9035465717315674
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 16.546875,
+    "interiorMean": 3.9035465717315674
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 4987.6103515625,
+    "interiorMean": 1190.476806640625
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Seatbelt Webbing",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 4966.955078125,
+    "interiorMean": 1297.25244140625
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 52.085693359375,
+    "interiorMean": 4.800957679748535
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 3.607421875,
+    "interiorMean": 3.512542486190796
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 53.703125,
+    "interiorMean": 5.461380481719971
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 2.30615234375,
+    "interiorMean": 3.921293258666992
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 52.109375,
+    "interiorMean": 4.0988054275512695
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 3.6181640625,
+    "interiorMean": 2.8098642826080322
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 48.55859375,
+    "interiorMean": 3.4422693252563477
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0673828125,
+    "interiorMean": 2.1533279418945312
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 66.04296875,
+    "interiorMean": 6.507289409637451
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 17.5517578125,
+    "interiorMean": 5.218348026275635
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 4438.921875,
+    "interiorMean": 938.8057250976562
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Spacer Sports Mesh",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1780.921875,
+    "interiorMean": 854.511474609375
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 8.29931640625,
+    "interiorMean": 2.970079183578491
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 8.3203125,
+    "interiorMean": 2.9709360599517822
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 5.92919921875,
+    "interiorMean": 1.7444871664047241
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 5.943359375,
+    "interiorMean": 1.7448580265045166
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 3.796875,
+    "interiorMean": 0.5622708797454834
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 3.796875,
+    "interiorMean": 0.5622708797454834
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 18.140625,
+    "interiorMean": 2.7593932151794434
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 18.140625,
+    "interiorMean": 2.7593932151794434
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 5529.0810546875,
+    "interiorMean": 860.3207397460938
+  },
+  {
+    "family": "Technical Weaves and Composites",
+    "material": "Coated Glass Fiber",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 5529.0810546875,
+    "interiorMean": 860.3206787109375
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.8623046875,
+    "interiorMean": 1.0987778902053833
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.875,
+    "interiorMean": 1.180829644203186
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.339599609375,
+    "interiorMean": 2.318118095397949
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.340087890625,
+    "interiorMean": 2.318389654159546
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.005859375,
+    "interiorMean": 0.29865628480911255
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.01171875,
+    "interiorMean": 0.36101311445236206
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1878.41015625,
+    "interiorMean": 740.2135620117188
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Burgundy Damask",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1881.8642578125,
+    "interiorMean": 750.9065551757812
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.144287109375,
+    "interiorMean": 1.5946781635284424
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 1.87646484375,
+    "interiorMean": 1.7963122129440308
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.381103515625,
+    "interiorMean": 2.318519115447998
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.357421875,
+    "interiorMean": 2.3157427310943604
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.134765625,
+    "interiorMean": 0.29830119013786316
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.41015625,
+    "interiorMean": 0.36353325843811035
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1872.369140625,
+    "interiorMean": 743.2372436523438
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Navy Floral Jacquard",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1895.46484375,
+    "interiorMean": 750.5441284179688
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.625244140625,
+    "interiorMean": 1.226271152496338
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 1.28271484375,
+    "interiorMean": 1.226276159286499
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.58984375,
+    "interiorMean": 2.3104724884033203
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.39453125,
+    "interiorMean": 2.3047337532043457
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.3515625,
+    "interiorMean": 0.2865881621837616
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.17578125,
+    "interiorMean": 0.28676000237464905
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1907.6123046875,
+    "interiorMean": 739.5769653320312
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Olive Diamond Brocade",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1891.28125,
+    "interiorMean": 739.0986328125
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 3.762939453125,
+    "interiorMean": 3.0576531887054443
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 3.467041015625,
+    "interiorMean": 3.17025089263916
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.4677734375,
+    "interiorMean": 2.3454649448394775
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.36474609375,
+    "interiorMean": 2.3580691814422607
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.4921875,
+    "interiorMean": 0.3354334533214569
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.35302734375,
+    "interiorMean": 0.3800159692764282
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1933.455078125,
+    "interiorMean": 750.408935546875
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Ivory Paisley",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1890.580078125,
+    "interiorMean": 761.6760864257812
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.392578125,
+    "interiorMean": 1.5534141063690186
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 1.3154296875,
+    "interiorMean": 1.5524699687957764
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.45703125,
+    "interiorMean": 2.306871175765991
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.31689453125,
+    "interiorMean": 2.2972569465637207
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.029296875,
+    "interiorMean": 0.2555157244205475
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.041015625,
+    "interiorMean": 0.25564172863960266
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1888.5732421875,
+    "interiorMean": 737.58935546875
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Teal Rosette Brocade",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1882.22265625,
+    "interiorMean": 734.544921875
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 2.1337890625,
+    "interiorMean": 1.5306915044784546
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 1.875732421875,
+    "interiorMean": 1.5699414014816284
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.675537109375,
+    "interiorMean": 2.313631057739258
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.405517578125,
+    "interiorMean": 2.303715944290161
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.3603515625,
+    "interiorMean": 0.2151215374469757
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.29296875,
+    "interiorMean": 0.2419927567243576
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1979.419921875,
+    "interiorMean": 731.0907592773438
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Climbing Vine Jacquard",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1914.5712890625,
+    "interiorMean": 735.922607421875
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.81591796875,
+    "interiorMean": 1.5057495832443237
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 2.386962890625,
+    "interiorMean": 1.252237319946289
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.275390625,
+    "interiorMean": 2.2708332538604736
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.71044921875,
+    "interiorMean": 2.2650532722473145
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.005859375,
+    "interiorMean": 1.125040054321289
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 2.1943359375,
+    "interiorMean": 0.7720026969909668
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 2.5439882278442383
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 4.9482421875,
+    "interiorMean": 1.7439717054367065
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1873.021484375,
+    "interiorMean": 745.204345703125
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Gold Thread Arabesque",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1964.3984375,
+    "interiorMean": 728.1592407226562
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 1.88720703125,
+    "interiorMean": 3.177140712738037
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 1.82568359375,
+    "interiorMean": 3.172663927078247
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.60693359375,
+    "interiorMean": 2.340587854385376
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.596435546875,
+    "interiorMean": 2.343305826187134
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 1.171875,
+    "interiorMean": 2.095078706741333
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.171875,
+    "interiorMean": 2.095078706741333
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 2.6484375,
+    "interiorMean": 4.739713191986084
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 2.6484375,
+    "interiorMean": 4.739713191986084
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1915.041015625,
+    "interiorMean": 791.4816284179688
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Silver Geometric Brocade",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1927.6533203125,
+    "interiorMean": 789.4805908203125
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 18.23291015625,
+    "interiorMean": 2.6581788063049316
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 2.2587890625,
+    "interiorMean": 2.8858017921447754
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 4.840087890625,
+    "interiorMean": 2.4732511043548584
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 4.8408203125,
+    "interiorMean": 2.483003616333008
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 7.740234375,
+    "interiorMean": 0.8441566824913025
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.615234375,
+    "interiorMean": 0.9466126561164856
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 11.109375,
+    "interiorMean": 4.091779708862305
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 3136.9736328125,
+    "interiorMean": 838.0125122070312
+  },
+  {
+    "family": "Brocade and Decorative Fabrics",
+    "material": "Indigo Wave Brocade",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 1991.38671875,
+    "interiorMean": 866.2735595703125
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.11083984375,
+    "interiorMean": 0.09507308155298233
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 1.908203125,
+    "interiorMean": 1.5463805198669434
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.18359375,
+    "interiorMean": 0.16263344883918762
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.700927734375,
+    "interiorMean": 0.6282420754432678
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.358154296875,
+    "interiorMean": 0.4040828049182892
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.8642578125,
+    "interiorMean": 0.7325221300125122
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.095947265625,
+    "interiorMean": 0.07370541244745255
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.886962890625,
+    "interiorMean": 0.5789963006973267
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 53.4248046875,
+    "interiorMean": 59.62030029296875
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Straight Grain Oak",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 392.287109375,
+    "interiorMean": 321.18353271484375
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.07568359375,
+    "interiorMean": 0.059136442840099335
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.8212890625,
+    "interiorMean": 0.7940770387649536
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.193115234375,
+    "interiorMean": 0.1630713790655136
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.638916015625,
+    "interiorMean": 0.6176540851593018
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.37646484375,
+    "interiorMean": 0.41136908531188965
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.685546875,
+    "interiorMean": 0.6541537046432495
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.095947265625,
+    "interiorMean": 0.08248444646596909
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.59765625,
+    "interiorMean": 0.4746122360229492
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 57.6533203125,
+    "interiorMean": 61.12523651123047
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Oiled Walnut",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 312.6875,
+    "interiorMean": 305.9750671386719
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.130615234375,
+    "interiorMean": 0.1272120624780655
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 2.056640625,
+    "interiorMean": 1.8881611824035645
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.188232421875,
+    "interiorMean": 0.1627100557088852
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.54150390625,
+    "interiorMean": 0.6151599287986755
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.3779296875,
+    "interiorMean": 0.40762606263160706
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.651123046875,
+    "interiorMean": 0.6270855665206909
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.08203125,
+    "interiorMean": 0.07504495978355408
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.56396484375,
+    "interiorMean": 0.4328133463859558
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 58.1865234375,
+    "interiorMean": 60.204322814941406
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Open Grain Ash",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 326.1064453125,
+    "interiorMean": 301.42724609375
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.066162109375,
+    "interiorMean": 0.05402953922748566
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.549560546875,
+    "interiorMean": 0.6269347667694092
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.01171875,
+    "interiorMean": 0.009514085948467255
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.069091796875,
+    "interiorMean": 0.08370300382375717
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.37060546875,
+    "interiorMean": 0.40809428691864014
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.873779296875,
+    "interiorMean": 0.9400910139083862
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0908203125,
+    "interiorMean": 0.07393809407949448
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.8349609375,
+    "interiorMean": 0.8395630717277527
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 7.2265625,
+    "interiorMean": 5.435695648193359
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Pale Maple",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 60.21484375,
+    "interiorMean": 61.04180145263672
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0869140625,
+    "interiorMean": 0.06628167629241943
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 1.6513671875,
+    "interiorMean": 1.0633143186569214
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.193359375,
+    "interiorMean": 0.1645526885986328
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.772216796875,
+    "interiorMean": 0.6402825117111206
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.37646484375,
+    "interiorMean": 0.40832483768463135
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.929443359375,
+    "interiorMean": 0.8169768452644348
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.109130859375,
+    "interiorMean": 0.07754150032997131
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.8583984375,
+    "interiorMean": 0.6843870282173157
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 55.8544921875,
+    "interiorMean": 60.38505172729492
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Ribbon Mahogany",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 499.3251953125,
+    "interiorMean": 336.0446472167969
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.4619140625,
+    "interiorMean": 0.13853870332241058
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 3.100341796875,
+    "interiorMean": 2.403247117996216
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.203369140625,
+    "interiorMean": 0.16675569117069244
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.865478515625,
+    "interiorMean": 0.6936631798744202
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.388916015625,
+    "interiorMean": 0.4080377519130707
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.708251953125,
+    "interiorMean": 1.0236945152282715
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.098876953125,
+    "interiorMean": 0.0691905990242958
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.56689453125,
+    "interiorMean": 0.9424042701721191
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 92.5732421875,
+    "interiorMean": 61.72630310058594
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Bamboo",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 506.16796875,
+    "interiorMean": 378.5390625
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.046142578125,
+    "interiorMean": 0.03770719841122627
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.6083984375,
+    "interiorMean": 0.5423110127449036
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.177978515625,
+    "interiorMean": 0.16371716558933258
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.62158203125,
+    "interiorMean": 0.6313705444335938
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.357421875,
+    "interiorMean": 0.4080198407173157
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.9228515625,
+    "interiorMean": 0.7343248724937439
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.088623046875,
+    "interiorMean": 0.08109120279550552
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.901611328125,
+    "interiorMean": 0.5804167985916138
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 52.8837890625,
+    "interiorMean": 60.85814666748047
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Dark Stained Oak",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 349.5576171875,
+    "interiorMean": 321.79022216796875
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.08544921875,
+    "interiorMean": 0.40553930401802063
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.0810546875,
+    "interiorMean": 0.41470304131507874
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 3.8818359375,
+    "interiorMean": 2.5264506340026855
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 2.81494140625,
+    "interiorMean": 2.5149099826812744
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.33544921875,
+    "interiorMean": 0.3899262249469757
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.333984375,
+    "interiorMean": 0.3883110284805298
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 3.645263671875,
+    "interiorMean": 2.262502670288086
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 2.33935546875,
+    "interiorMean": 2.252169370651245
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 1014.1875,
+    "interiorMean": 649.7164916992188
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Natural Cork",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 655.2099609375,
+    "interiorMean": 647.2803344726562
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.143798828125,
+    "interiorMean": 0.12024486809968948
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 2.073974609375,
+    "interiorMean": 2.0222129821777344
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.18310546875,
+    "interiorMean": 0.16516315937042236
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.6435546875,
+    "interiorMean": 0.6481372714042664
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.352294921875,
+    "interiorMean": 0.40754514932632446
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.963134765625,
+    "interiorMean": 0.8549740314483643
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.101806640625,
+    "interiorMean": 0.07753290235996246
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.958740234375,
+    "interiorMean": 0.7358835339546204
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 54.380859375,
+    "interiorMean": 60.32655715942383
+  },
+  {
+    "family": "Wood and Natural Materials",
+    "material": "Satin Beech",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 345.5908203125,
+    "interiorMean": 343.5176696777344
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.0009765625,
+    "interiorMean": 0.012447115033864975
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.064453125,
+    "interiorMean": 0.11513414233922958
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.166748046875,
+    "interiorMean": 0.15627506375312805
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.173095703125,
+    "interiorMean": 0.16164042055606842
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.415283203125,
+    "interiorMean": 0.49128037691116333
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.3984375,
+    "interiorMean": 0.4892062544822693
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 58.857421875,
+    "interiorMean": 67.2750015258789
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Clean Ivory Bone",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 57.3701171875,
+    "interiorMean": 74.6495132446289
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.138671875,
+    "interiorMean": 0.18655303120613098
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.18896484375,
+    "interiorMean": 0.1889963448047638
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.95068359375,
+    "interiorMean": 1.1053041219711304
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 1.073974609375,
+    "interiorMean": 1.1158217191696167
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.8701171875,
+    "interiorMean": 1.143203854560852
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 1.051025390625,
+    "interiorMean": 1.151123046875
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 1.33447265625,
+    "interiorMean": 1.8668652772903442
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 1.880859375,
+    "interiorMean": 1.8913609981536865
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 289.7763671875,
+    "interiorMean": 388.88629150390625
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Porous Bone",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 383.1982421875,
+    "interiorMean": 393.2458190917969
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.000732421875,
+    "interiorMean": 0.011311848647892475
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.03466796875,
+    "interiorMean": 0.09653840214014053
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.170166015625,
+    "interiorMean": 0.15622636675834656
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.1845703125,
+    "interiorMean": 0.16255803406238556
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.429931640625,
+    "interiorMean": 0.4882332682609558
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.407958984375,
+    "interiorMean": 0.487775057554245
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 59.494140625,
+    "interiorMean": 67.25655364990234
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Warm Aged Bone",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 59.7978515625,
+    "interiorMean": 75.33074951171875
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.007568359375,
+    "interiorMean": 0.0146281523630023
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.242919921875,
+    "interiorMean": 0.363781213760376
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.1806640625,
+    "interiorMean": 0.15603235363960266
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.293701171875,
+    "interiorMean": 0.2841589152812958
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.427001953125,
+    "interiorMean": 0.48998022079467773
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.451171875,
+    "interiorMean": 0.4871758222579956
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 60.4482421875,
+    "interiorMean": 67.78890991210938
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Amber Polished Horn",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 167.3779296875,
+    "interiorMean": 170.05841064453125
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.008056640625,
+    "interiorMean": 0.006897271145135164
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.085205078125,
+    "interiorMean": 0.16162753105163574
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.179443359375,
+    "interiorMean": 0.156133770942688
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.267822265625,
+    "interiorMean": 0.2837575078010559
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.457763671875,
+    "interiorMean": 0.4915997087955475
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.44677734375,
+    "interiorMean": 0.4916849136352539
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 61.169921875,
+    "interiorMean": 67.55440521240234
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Black Horn",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 171.8984375,
+    "interiorMean": 168.26773071289062
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.003662109375,
+    "interiorMean": 0.01354896929115057
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.06884765625,
+    "interiorMean": 0.11374566704034805
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.167236328125,
+    "interiorMean": 0.1563500016927719
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.17529296875,
+    "interiorMean": 0.16239242255687714
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.42919921875,
+    "interiorMean": 0.4891289472579956
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.403564453125,
+    "interiorMean": 0.48765191435813904
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 58.9892578125,
+    "interiorMean": 67.43987274169922
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Striated Ivory",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 59.904296875,
+    "interiorMean": 74.67076110839844
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.004150390625,
+    "interiorMean": 0.007762621622532606
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.177490234375,
+    "interiorMean": 0.18395817279815674
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.1845703125,
+    "interiorMean": 0.15629105269908905
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.291015625,
+    "interiorMean": 0.2843104600906372
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.446044921875,
+    "interiorMean": 0.4888690412044525
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.453369140625,
+    "interiorMean": 0.4891955256462097
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 61.822265625,
+    "interiorMean": 67.7883529663086
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Dark Claw Keratin",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 169.654296875,
+    "interiorMean": 169.9121551513672
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.007568359375,
+    "interiorMean": 0.012934202328324318
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.103759765625,
+    "interiorMean": 0.3403785824775696
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.197998046875,
+    "interiorMean": 0.16052496433258057
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.28466796875,
+    "interiorMean": 0.28407180309295654
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.42041015625,
+    "interiorMean": 0.4922003746032715
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.40869140625,
+    "interiorMean": 0.49017995595932007
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 64.4482421875,
+    "interiorMean": 91.80231475830078
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Hoof Keratin",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 150.2451171875,
+    "interiorMean": 172.3875274658203
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "Albedo",
+    "axis": 0,
+    "seamMean": 0.003662109375,
+    "interiorMean": 0.015220485627651215
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "Albedo",
+    "axis": 1,
+    "seamMean": 0.040283203125,
+    "interiorMean": 0.12554246187210083
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "Normal",
+    "axis": 0,
+    "seamMean": 0.177490234375,
+    "interiorMean": 0.1564764827489853
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "Normal",
+    "axis": 1,
+    "seamMean": 0.169921875,
+    "interiorMean": 0.16280528903007507
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "Roughness",
+    "axis": 0,
+    "seamMean": 0.40283203125,
+    "interiorMean": 0.4888325333595276
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "Roughness",
+    "axis": 1,
+    "seamMean": 0.434326171875,
+    "interiorMean": 0.4890666604042053
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "Metallic",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "Metallic",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "AmbientOcclusion",
+    "axis": 0,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "AmbientOcclusion",
+    "axis": 1,
+    "seamMean": 0.0,
+    "interiorMean": 0.0
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "Height",
+    "axis": 0,
+    "seamMean": 56.427734375,
+    "interiorMean": 67.33741760253906
+  },
+  {
+    "family": "Bone Horn and Keratin",
+    "material": "Pearly Enamel",
+    "channel": "Height",
+    "axis": 1,
+    "seamMean": 60.0361328125,
+    "interiorMean": 74.94196319580078
+  }
+]
