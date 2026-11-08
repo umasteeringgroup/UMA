@@ -174,6 +174,161 @@ namespace UMA
 			return new Rect(r.x * w, r.y * h, r.width * w, r.height * h);
 		}
 
+		private readonly List<UMAGeneratedResourceCache.Lease<UMACachedAtlas>> retainedAtlases =
+			new List<UMAGeneratedResourceCache.Lease<UMACachedAtlas>>();
+
+		private void RetainPreviousAtlases()
+		{
+			ReleaseRetainedAtlases();
+			var materials = umaData.generatedMaterials.materials;
+			if (materials == null)
+			{
+				return;
+			}
+			for (int i = 0; i < materials.Count; i++)
+			{
+				var bindings = materials[i]?.cachedAtlasBindings;
+				if (bindings == null)
+				{
+					continue;
+				}
+				for (int c = 0; c < bindings.Length; c++)
+				{
+					if (bindings[c] != null && bindings[c].Atlas != null)
+					{
+						retainedAtlases.Add(bindings[c].RetainAtlas());
+					}
+				}
+			}
+		}
+
+		// Previous private atlas texture arrays, per material/renderer, in build order.
+		private readonly Dictionary<(UMAMaterial, UMARendererAsset), Queue<Texture[]>> previousPrivateAtlases =
+			new Dictionary<(UMAMaterial, UMARendererAsset), Queue<Texture[]>>();
+
+		/// <summary>
+		/// Moves the previous build's private atlas textures out of its generated
+		/// materials so CleanTextures does not destroy them. A multi-step build that
+		/// rebuilds both textures and mesh preserves the visible materials instead
+		/// (they stay on screen until the new mesh commits), so it starts from an
+		/// empty set and nothing is handed over: textures still on screen cannot be
+		/// redrawn in place. Cache-bound and
+		/// cache-managed textures, and render textures with a pending readback,
+		/// stay where they are and are cleaned up as before.
+		/// </summary>
+		private void DetachPreviousPrivateAtlases()
+		{
+			ReleasePreviousPrivateAtlases();
+			var materials = umaData.generatedMaterials.materials;
+			if (materials == null)
+			{
+				return;
+			}
+			for (int i = 0; i < materials.Count; i++)
+			{
+				var gm = materials[i];
+				var list = gm?.resultingAtlasList;
+				if (list == null || gm.umaMaterial == null)
+				{
+					continue;
+				}
+				Texture[] detached = null;
+				for (int c = 0; c < list.Length; c++)
+				{
+					Texture texture = list[c];
+					if (texture == null ||
+						(gm.cachedAtlasBindings != null && c < gm.cachedAtlasBindings.Length && gm.cachedAtlasBindings[c] != null) ||
+						UMAGeneratedResourceCache.IsManagedResource(texture) ||
+						(texture is RenderTexture rt && !RenderTexToCPU.SafeToFree(rt)))
+					{
+						continue;
+					}
+					if (detached == null)
+					{
+						detached = new Texture[list.Length];
+					}
+					detached[c] = texture;
+					UMAResourceLeaseOwner.DetachPrivateTexture(umaData, texture);
+					list[c] = null;
+				}
+				if (detached == null)
+				{
+					continue;
+				}
+				var key = (gm.umaMaterial, gm.rendererAsset);
+				if (!previousPrivateAtlases.TryGetValue(key, out var queue))
+				{
+					queue = new Queue<Texture[]>();
+					previousPrivateAtlases.Add(key, queue);
+				}
+				queue.Enqueue(detached);
+			}
+		}
+
+		/// <summary>
+		/// Gives each new generated material the previous textures of the
+		/// matching material, as its previous results. TextureProcessPRO reuses
+		/// the ones whose size and format still match and releases the rest.
+		/// </summary>
+		private void AssignPreviousPrivateAtlases()
+		{
+			if (previousPrivateAtlases.Count == 0)
+			{
+				return;
+			}
+			for (int i = 0; i < generatedMaterials.Count; i++)
+			{
+				var gm = generatedMaterials[i];
+				if (gm == null || gm.umaMaterial == null || gm.resultingAtlasList != null)
+				{
+					continue;
+				}
+				if (previousPrivateAtlases.TryGetValue((gm.umaMaterial, gm.rendererAsset), out var queue) && queue.Count > 0)
+				{
+					gm.resultingAtlasList = queue.Dequeue();
+				}
+			}
+		}
+
+		private void ReleasePreviousPrivateAtlases()
+		{
+			foreach (var queue in previousPrivateAtlases.Values)
+			{
+				while (queue.Count > 0)
+				{
+					Texture[] textures = queue.Dequeue();
+					for (int c = 0; c < textures.Length; c++)
+					{
+						try
+						{
+							TextureProcessPRO.ReleaseGeneratedTexture(textures[c]);
+						}
+						catch (Exception exception)
+						{
+							Debug.LogException(exception);
+						}
+					}
+				}
+			}
+			previousPrivateAtlases.Clear();
+		}
+
+		private void ReleaseRetainedAtlases()
+		{
+			for (int i = 0; i < retainedAtlases.Count; i++)
+			{
+				try
+				{
+					retainedAtlases[i].Dispose();
+				}
+				catch (Exception exception)
+				{
+					Debug.LogException(exception);
+				}
+			}
+			retainedAtlases.Clear();
+		}
+
 		protected void Start()
 		{
 			if (generatedMaterialLookup == null)
@@ -185,6 +340,14 @@ namespace UMA
 				generatedMaterialLookup.Clear();
 			}
 			//backUpTexture = umaData.backUpTextures();
+			// CleanTextures releases this avatar's atlas leases. When this avatar
+			// is the only owner, that destroys the cached atlases before the new
+			// build looks them up, so an unchanged atlas would be re-rendered into
+			// a fresh allocation. Hold them until texture processing completes.
+			RetainPreviousAtlases();
+			// Private (uncached) atlas textures are handed to the matching new
+			// generated material instead, so compatible allocations are reused.
+			DetachPreviousPrivateAtlases();
 			umaData.CleanTextures();
 			generatedMaterials = new List<UMAData.GeneratedMaterial>(20);
             // Expose partial ownership immediately so interrupted preparation can release leases.
@@ -522,19 +685,30 @@ namespace UMA
 			textureProcesser = new TextureProcessPRO();
 
 			long atlasPreparationStart = System.Diagnostics.Stopwatch.GetTimestamp();
-            Start();
-            Ticks_MaterialPreparation += System.Diagnostics.Stopwatch.GetTimestamp() - atlasPreparationStart;
-            long packingStart = System.Diagnostics.Stopwatch.GetTimestamp();
+            try
+            {
+                Start();
+                AssignPreviousPrivateAtlases();
+                Ticks_MaterialPreparation += System.Diagnostics.Stopwatch.GetTimestamp() - atlasPreparationStart;
+                long packingStart = System.Diagnostics.Stopwatch.GetTimestamp();
 
-			umaData.generatedMaterials.rendererAssets = uniqueRenderers;
-			umaData.generatedMaterials.materials = generatedMaterials;
+                umaData.generatedMaterials.rendererAssets = uniqueRenderers;
+                umaData.generatedMaterials.materials = generatedMaterials;
 
-			GenerateAtlasData();
-            OptimizeAtlas();
-            Ticks_AtlasPacking += System.Diagnostics.Stopwatch.GetTimestamp() - packingStart;
-            _umaGenerator.atlasPreparationTicks += System.Diagnostics.Stopwatch.GetTimestamp() - atlasPreparationStart;
+                GenerateAtlasData();
+                OptimizeAtlas();
+                Ticks_AtlasPacking += System.Diagnostics.Stopwatch.GetTimestamp() - packingStart;
+                _umaGenerator.atlasPreparationTicks += System.Diagnostics.Stopwatch.GetTimestamp() - atlasPreparationStart;
 
-            textureProcesser.ProcessTexture(_umaData,_umaGenerator);
+                textureProcesser.ProcessTexture(_umaData,_umaGenerator);
+            }
+            finally
+            {
+                // Atlases that the new build did not reacquire are destroyed here.
+                ReleaseRetainedAtlases();
+                // Handed-over textures that no new material claimed.
+                ReleasePreviousPrivateAtlases();
+            }
 
             atlasPreparationStart = System.Diagnostics.Stopwatch.GetTimestamp();
             UpdateUV();
@@ -609,6 +783,19 @@ namespace UMA
 Material secondPass = gm.secondPassMaterial;
                             if (secondPass == null || secondPass == firstPass || secondPass.shader != gm.umaMaterial.secondPass.shader)
                             {
+                                // Replacing the second pass must not strand the previous private instance.
+                                if (secondPass != null && secondPass != firstPass)
+                                {
+                                    if (gm.cachedSecondPass != null)
+                                    {
+                                        gm.cachedSecondPass.Dispose();
+                                        gm.cachedSecondPass = null;
+                                    }
+                                    else if (!UMAGeneratedResourceCache.IsManagedResource(secondPass))
+                                    {
+                                        UMAUtils.DestroySceneObject(secondPass);
+                                    }
+                                }
                                 secondPass = GameObject.Instantiate(gm.umaMaterial.secondPass);
                                 gm.secondPassMaterial = secondPass;
                             }

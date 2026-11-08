@@ -91,6 +91,11 @@ namespace UMA
             {
                 using var measurement = new LookupMeasurement(System.Diagnostics.Stopwatch.GetTimestamp());
                 using var marker = MeshLookupMarker.Auto();
+                if (UMARendererAsset.RequiresPrivateMesh(data, materials))
+                {
+                    // Callers treat NotSupportedException as a cache bypass and build a private mesh.
+                    throw new NotSupportedException("Recalculate Normals is enabled for this renderer; its normals depend on the avatar's blendshape weights.");
+                }
                 request = DescribeMeshRequest(data, sources, materials, atlasResolution, boundsRotation, backend);
                 var lease = UMAGeneratedResourceCache.Shared.Acquire<Mesh>(request.Key);
                 MeshAdmissionCount++;

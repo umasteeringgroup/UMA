@@ -91,6 +91,42 @@ namespace UMA
             privateResources.RemoveAll(value => value == null);
             if (!privateResources.Contains(resource)) privateResources.Add(resource);
         }
+
+        // Ownership moves to the new GeneratedMaterial (and eventually its renderer or
+        // cache lease). Retiring the previous renderer must not destroy that texture.
+        internal static void DetachPrivateTexture(UMAData data, Texture texture)
+        {
+            var renderers = data.GetRenderers();
+            if (renderers == null) return;
+            foreach (var renderer in renderers)
+                if (renderer != null && renderer.TryGetComponent<UMAResourceLeaseOwner>(out var owner))
+                    owner.privateResources.RemoveAll(resource => resource == texture);
+        }
+        /// <summary>
+        /// Called when this renderer is retired while the avatar keeps its current
+        /// generated materials (for example a mesh-only rebuild that replaces the
+        /// renderer object). Those surfaces belong to the avatar again: stop
+        /// releasing their cache references and forget the private resources they
+        /// still use, so destroying this renderer cannot destroy them.
+        /// FinalizeSurfaces adopts them into the replacement renderer.
+        /// </summary>
+        internal void ReturnSurfacesTo(UMAData data)
+        {
+            var current = data != null ? data.generatedMaterials?.materials : null;
+            if (current == null || current.Count == 0) return;
+            var inUse = new HashSet<UnityEngine.Object>();
+            foreach (var gm in current)
+            {
+                if (gm == null) continue;
+                if (gm.material != null) inUse.Add(gm.material);
+                if (gm.secondPassMaterial != null) inUse.Add(gm.secondPassMaterial);
+                if (gm.resultingAtlasList != null)
+                    foreach (var texture in gm.resultingAtlasList)
+                        if (texture != null) inUse.Add(texture);
+            }
+            privateResources.RemoveAll(resource => resource == null || inUse.Contains(resource));
+            generated.RemoveAll(gm => current.Contains(gm));
+        }
         internal void AdoptPrivateStaticResources(UMAData.GeneratedMaterial material)
         {
             if (material.umaMaterial != null && material.umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)

@@ -166,6 +166,12 @@ namespace UMA.Editors.Tests
         public readonly List<FakeMeshCombineOperation> operations =
             new List<FakeMeshCombineOperation>();
         public int beginCalls;
+        public Action<UMAData> onPreprocess;
+
+        public override void Preprocess(UMAData umaData)
+        {
+            onPreprocess?.Invoke(umaData);
+        }
 
         public IUMAMeshCombineOperation BeginUpdateUMAMesh(
             bool updatedAtlas,

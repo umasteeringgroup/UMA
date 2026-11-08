@@ -229,6 +229,139 @@ namespace UMA.Tests
             Assert.That(evt.HasListeners, Is.False);
         }
 
+        [TestCase(false)] [TestCase(true)]
+        public void ReusedPrivateAtlasSurvivesRendererReplacement(bool convert)
+        {
+            using (var f = new Fixture(convert))
+            {
+                var data = f.Avatar(false);
+                f.Build(data);
+                f.Meshes.BuildJobified(data);
+                var previousRenderer = data.GetRenderer(0);
+                var texture = data.generatedMaterials.materials[0].resultingAtlasList[0];
+                Assert.NotNull(previousRenderer.GetComponent<UMAResourceLeaseOwner>());
+
+                f.Build(data);
+                Assert.AreSame(texture, data.generatedMaterials.materials[0].resultingAtlasList[0]);
+                f.Generator.alwaysRegenerateRenderers = true;
+                f.Meshes.BuildJobified(data);
+
+                Assert.IsTrue(previousRenderer == null, "The previous renderer must actually be retired.");
+                Assert.IsTrue(texture != null, "Retiring its old owner must not destroy the reused atlas.");
+                Assert.AreSame(texture, data.GetRenderer(0).sharedMaterial.GetTexture("_BaseMap"));
+                if (texture is RenderTexture rt) Assert.IsTrue(rt.IsCreated());
+
+                data.CleanTextures();
+                UnityEngine.Object.DestroyImmediate(data.gameObject);
+                Assert.IsTrue(texture == null, "The new owner must still release the private atlas.");
+            }
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void FailedAtlasBuildReleasesHandedOverPrivateTextures(bool convert)
+        {
+            using (var f = new Fixture(convert))
+            {
+                var data = f.Avatar(false);
+                f.Build(data);
+                f.Meshes.BuildJobified(data);
+                var texture = data.generatedMaterials.materials[0].resultingAtlasList[0];
+                Assert.IsTrue(texture != null);
+
+                // A null post-process entry throws in TextureMerge.PostProcess: after the
+                // previous texture has been handed to the new generated material and the
+                // atlas has been drawn, before the result is stored.
+                f.Generator.textureMerge.diffusePostProcesses.Add(null);
+                try
+                {
+                    var thrown = Assert.Throws<NullReferenceException>(() => f.Build(data));
+                    StringAssert.Contains("TextureMerge.PostProcess", thrown.StackTrace,
+                        "The build must fail at the injected post-process, not earlier.");
+                }
+                finally
+                {
+                    f.Generator.textureMerge.diffusePostProcesses.Clear();
+                }
+
+                // The handed-over texture was in flight when the build failed. It has no
+                // other owner, so it must have been released, not left in any list.
+                Assert.IsTrue(texture == null, "A handed-over texture must be released when its build fails.");
+                foreach (var gm in data.generatedMaterials.materials)
+                    if (gm?.resultingAtlasList != null)
+                        Assert.AreEqual(-1, Array.IndexOf(gm.resultingAtlasList, texture));
+
+                // The avatar recovers on the next build and cleanup leaves nothing behind.
+                f.Build(data);
+                var rebuilt = data.generatedMaterials.materials[0].resultingAtlasList[0];
+                Assert.IsTrue(rebuilt != null);
+                data.CleanTextures();
+                Assert.IsTrue(rebuilt == null);
+                Assert.IsTrue(texture == null);
+            }
+        }
+
+        [TestCase(false, false)] [TestCase(true, false)] [TestCase(false, true)] [TestCase(true, true)]
+        public void MeshOnlyRendererReplacementKeepsPrivateSurfaces(bool convert, bool reuseTextures)
+        {
+            using (var f = new Fixture(convert))
+            {
+                var data = f.Avatar(reuseTextures);
+                f.Build(data);
+                f.Meshes.BuildJobified(data);
+                var previousRenderer = data.GetRenderer(0);
+                Assert.NotNull(previousRenderer.GetComponent<UMAResourceLeaseOwner>());
+                var gm = data.generatedMaterials.materials[0];
+                var texture = gm.resultingAtlasList[0];
+                var material = gm.material;
+                Assert.IsTrue(texture != null && material != null);
+
+                // No texture rebuild: the current surfaces stay with the generated materials.
+                f.Generator.alwaysRegenerateRenderers = true;
+                f.Meshes.BuildJobified(data);
+
+                Assert.IsTrue(previousRenderer == null, "The previous renderer must actually be retired.");
+                Assert.IsTrue(material != null, "Retiring the old renderer must not destroy a material still in use.");
+                Assert.IsTrue(texture != null, "Retiring the old renderer must not destroy an atlas still in use.");
+                Assert.AreSame(material, data.GetRenderer(0).sharedMaterial);
+                Assert.AreSame(texture, data.GetRenderer(0).sharedMaterial.GetTexture("_BaseMap"));
+                if (texture is RenderTexture rt) Assert.IsTrue(rt.IsCreated());
+
+                UnityEngine.Object.DestroyImmediate(data.gameObject);
+                Assert.IsTrue(texture == null, "The surviving owner must still release the atlas.");
+                Assert.IsTrue(material == null, "The surviving owner must still release the material.");
+            }
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        public void PromotedPrivateAtlasSurvivesOriginalAvatarDestruction(bool convert)
+        {
+            using (var f = new Fixture(convert))
+            {
+                var original = f.Avatar(false);
+                f.Build(original);
+                f.Meshes.BuildJobified(original);
+                var texture = original.generatedMaterials.materials[0].resultingAtlasList[0];
+
+                original.reuseGeneratedTextures = true;
+                f.Build(original);
+                f.Meshes.BuildJobified(original);
+                var peer = f.Avatar();
+                f.Build(peer);
+                f.Meshes.BuildJobified(peer);
+                Assert.AreSame(texture, peer.generatedMaterials.materials[0].resultingAtlasList[0]);
+
+                original.CleanTextures();
+                UnityEngine.Object.DestroyImmediate(original.gameObject);
+                Assert.IsTrue(texture != null, "The old private owner must not destroy a now-shared atlas.");
+                Assert.AreSame(texture, peer.GetRenderer(0).sharedMaterial.GetTexture("_BaseMap"));
+                if (texture is RenderTexture rt) Assert.IsTrue(rt.IsCreated());
+
+                peer.CleanTextures();
+                UnityEngine.Object.DestroyImmediate(peer.gameObject);
+                Assert.IsTrue(texture == null, "The final cache lease must release the atlas.");
+            }
+        }
+
         internal sealed class Fixture : IDisposable
         {
             internal readonly UMAResourceReuseMeshTests.Fixture Meshes = new UMAResourceReuseMeshTests.Fixture();

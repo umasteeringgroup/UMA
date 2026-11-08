@@ -163,7 +163,15 @@ namespace UMA
 
             Texture tempTexture = previousResults[textureChannelNumber];
             previousResults[textureChannelNumber] = null;
+            ReleaseGeneratedTexture(tempTexture);
+        }
 
+        /// <summary>
+        /// Destroys a private generated atlas texture. Cache-managed textures and
+        /// render textures with a pending asynchronous readback are left alone.
+        /// </summary>
+        internal static void ReleaseGeneratedTexture(Texture tempTexture)
+        {
             if (tempTexture == null)
             {
                 return;
@@ -231,24 +239,28 @@ namespace UMA
             }
 
             var textureMerge = umaGenerator.textureMerge;
-            long lookupStart = System.Diagnostics.Stopwatch.GetTimestamp();
-            bool reuseTextures = UMAResourceReuse.TexturesEnabled(umaData);
-            bool earlyLookup = reuseTextures && UMAResourceReuse.CanUseEarlyAtlasLookup(textureMerge);
-            umaGenerator.atlasLookupTicks += System.Diagnostics.Stopwatch.GetTimestamp() - lookupStart;
-            textureMerge.RefreshMaterials();
             if (textureMerge == null)
             {
                 if (Debug.isDebugBuild)
                 {
                     Debug.LogError("TextureMerge is null!");
                 }
-                // yield return null;
+                return;
             }
+            long lookupStart = System.Diagnostics.Stopwatch.GetTimestamp();
+            bool reuseTextures = UMAResourceReuse.TexturesEnabled(umaData);
+            bool earlyLookup = reuseTextures && UMAResourceReuse.CanUseEarlyAtlasLookup(textureMerge);
+            umaGenerator.atlasLookupTicks += System.Diagnostics.Stopwatch.GetTimestamp() - lookupStart;
+            textureMerge.RefreshMaterials();
             RenderTexture pendingTemporaryTexture = null;
             RenderTexture pendingPersistentTexture = null;
             Texture2D pendingTexture2D = null;
             UMAGeneratedResourceCache.Lease<UMACachedAtlas> pendingAtlasLease = null;
             UMAAtlasBinding[] previousBindingsToRelease = null;
+            // Textures handed over from the previous build that this material
+            // has not yet reused or released. Released if processing throws.
+            Texture[] previousResultsToRelease = null;
+            Texture[] resultingTexturesInProgress = null;
             try
             {
                 for (int atlasIndex = umaData.generatedMaterials.materials.Count - 1; atlasIndex >= 0; atlasIndex--)
@@ -261,6 +273,7 @@ namespace UMA
                     var previousResults = generatedMaterial.resultingAtlasList;
                     var previousBindings = generatedMaterial.cachedAtlasBindings;
                     previousBindingsToRelease = previousBindings;
+                    previousResultsToRelease = previousResults;
 
                     //Rendering Atlas
                     int moduleCount = 0;
@@ -283,6 +296,7 @@ namespace UMA
                     // Each generated material owns its atlas array. Sharing this array between
                     // materials loses references to earlier atlases when the next material is built.
                     Texture[] resultingTextures = new Texture[channels.Length];
+                    resultingTexturesInProgress = resultingTextures;
                     generatedMaterial.resultingAtlasList = resultingTextures;
                     generatedMaterial.cachedAtlasBindings = new UMAAtlasBinding[channels.Length];
 
@@ -320,6 +334,7 @@ namespace UMA
 
                                     if (width == 0 || height == 0)
                                     {
+                                        ReleasePreviousGeneratedTexture(previousResults, textureChannelNumber);
                                         continue;
                                     }
 
@@ -330,6 +345,7 @@ namespace UMA
 
                                     if (ww == 0 || hh == 0)
                                     {
+                                        ReleasePreviousGeneratedTexture(previousResults, textureChannelNumber);
                                         continue;
                                     }
                                     umaGenerator.qualityTextures.LimitSize(ref ww, ref hh);
@@ -693,12 +709,28 @@ namespace UMA
                     generatedMaterial.resultingAtlasList = resultingTextures;
                     if (previousBindings != null) foreach (var binding in previousBindings) binding?.Dispose();
                     previousBindingsToRelease = null;
+                    previousResultsToRelease = null;
+                    resultingTexturesInProgress = null;
                 }
             }
             finally
             {
                 pendingAtlasLease?.Dispose();
                 if (previousBindingsToRelease != null) foreach (var binding in previousBindingsToRelease) binding?.Dispose();
+                if (previousResultsToRelease != null)
+                {
+                    // Processing threw part way through a material. Previous textures
+                    // that were not reused into the new atlas list have no other owner.
+                    for (int i = 0; i < previousResultsToRelease.Length; i++)
+                    {
+                        Texture previous = previousResultsToRelease[i];
+                        if (previous != null &&
+                            (resultingTexturesInProgress == null || Array.IndexOf(resultingTexturesInProgress, previous) < 0))
+                        {
+                            ReleasePreviousGeneratedTexture(previousResultsToRelease, i);
+                        }
+                    }
+                }
                 if (pendingTemporaryTexture != null)
                 {
                     UMARenderTextureTracker.ReleaseTemporary(pendingTemporaryTexture);
@@ -758,7 +790,7 @@ namespace UMA
                 }
 
                 string offsetProperty = "_UV_Offset" + ovl;
-                if (material.HasProperty(offsetProperty))
+                if (overlay != null && material.HasProperty(offsetProperty))
                 {
                     Vector4 uv = overlay.GetUV(referenceWidth, referenceHeight);
                     material.SetVector(offsetProperty, uv);

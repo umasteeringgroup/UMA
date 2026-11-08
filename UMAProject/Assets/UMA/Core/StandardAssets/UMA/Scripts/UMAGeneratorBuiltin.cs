@@ -158,6 +158,32 @@ namespace UMA
             public bool DiscardRequested;
             public bool CancellationIssued;
             public long StartTimestamp;
+            // The work this request asked for. Preparation clears the UMAData
+            // flags as each stage runs; if the build is rolled back those
+            // stages must run again, so the flags are restored from here.
+            public bool RequestedShapeDirty;
+            public bool RequestedTextureDirty;
+            public bool RequestedMeshDirty;
+            public bool RequestedAtlasDirty;
+        }
+
+        /// <summary>
+        /// Re-marks the work a rolled-back multi-step build had requested.
+        /// Rollback restores the previously visible materials and meshes, so
+        /// any stage that already ran (and cleared its dirty flag) must run
+        /// again when the avatar is rebuilt.
+        /// </summary>
+        private static void RestoreRequestedDirtyFlags(MultiStepGenerationState state)
+        {
+            if (state == null || state.Data == null)
+            {
+                return;
+            }
+            state.Data.isShapeDirty |= state.RequestedShapeDirty;
+            state.Data.isTextureDirty |= state.RequestedTextureDirty;
+            state.Data.isMeshDirty |= state.RequestedMeshDirty;
+            state.Data.isAtlasDirty |= state.RequestedAtlasDirty;
+            state.Data.dirty = true;
         }
 
         [NonSerialized]
@@ -928,6 +954,7 @@ namespace UMA
                 DNABuildType dnaUpdateFlags = umaData.NewDNAPreApply();
             }
 
+            UMARendererAsset.RequireReadableNormalsMesh(umaData);
             if (umaData.isTextureDirty)
 			{
                 UMAGeneratorPro ugp = new UMAGeneratorPro();
@@ -1013,6 +1040,7 @@ namespace UMA
 				}
             }
 
+            UMARendererAsset.FinalizeGeneratedNormals(umaData);
             // Apply manual renderer bounds if configured on RaceData
             ApplyManualRendererBounds(umaData, renderers);
             GeneratorQualityRuntime.AfterBuild(this as UMAGenerator, umaData);
@@ -1462,6 +1490,7 @@ namespace UMA
             {
                 umaData.skeleton.EndSkeletonUpdate();
             }
+            UMARendererAsset.FinalizeGeneratedNormals(umaData);
         }
 
 
@@ -1593,7 +1622,11 @@ namespace UMA
                 MeshCombiner = meshCombiner,
                 RequestVersion = requestVersion,
                 StartTimestamp =
-                    System.Diagnostics.Stopwatch.GetTimestamp()
+                    System.Diagnostics.Stopwatch.GetTimestamp(),
+                RequestedShapeDirty = data.isShapeDirty,
+                RequestedTextureDirty = data.isTextureDirty,
+                RequestedMeshDirty = data.isMeshDirty,
+                RequestedAtlasDirty = data.isAtlasDirty
             };
             activeMultiStepGeneration = state;
 
@@ -1727,7 +1760,8 @@ namespace UMA
                                 result = UMAMeshCombineStepResult.Cancelled();
                                 break;
                             default:
-                                result = operation.Step(timeSlice);
+                                using (new UMARendererAsset.DeferredMeshUpload(state.Data))
+                                    result = operation.Step(timeSlice);
                                 break;
                         }
                     }
@@ -2016,19 +2050,12 @@ namespace UMA
                     return false;
                 }
 
-                if (data.isTextureDirty &&
-                    data.isMeshDirty &&
-                    hasExistingRenderer)
-                {
-                    PreserveGeneratedMaterials(state);
-                }
-
-                if (data.isTextureDirty && data.needsMaterialClear)
-                {
-                    data.CleanTextures();
-                    data.generatedMaterials = new UMAData.GeneratedMaterials();
-                    data.needsMaterialClear = false;
-                }
+                // Recalculated normals may promote a shape update to a mesh
+                // rebuild. Decide that before choosing whether the visible
+                // materials must be preserved across the multi-frame rebuild.
+                UMARendererAsset.RequireReadableNormalsMesh(data);
+                state.RequestedMeshDirty |= data.isMeshDirty;
+                PreserveVisibleMaterialsIfRebuilding(state, hasExistingRenderer);
 
                 validationTicks += stageStopwatch.ElapsedTicks;
                 stageStopwatch.Restart();
@@ -2057,6 +2084,24 @@ namespace UMA
                     data.NewDNAPreApply();
                 }
 
+                // Build callbacks and DNA preparation can mark more work dirty.
+                // Re-check, so the visible materials are never cleaned while the
+                // mesh that would replace them is still several frames away.
+                UMARendererAsset.RequireReadableNormalsMesh(data);
+                state.RequestedMeshDirty |= data.isMeshDirty;
+                PreserveVisibleMaterialsIfRebuilding(state, hasExistingRenderer);
+
+                // Destructive cleanup only after the final preservation decision.
+                // Build callbacks, mesh-combiner preprocessing (bone baking turns a
+                // shape change into a mesh rebuild) and recalculated normals can
+                // all promote this build to a multi-frame mesh rebuild above; the
+                // visible materials must not be destroyed before that is known.
+                if (data.isTextureDirty && data.needsMaterialClear)
+                {
+                    data.CleanTextures();
+                    data.generatedMaterials = new UMAData.GeneratedMaterials();
+                    data.needsMaterialClear = false;
+                }
                 if (data.isTextureDirty)
                 {
                     var textureGenerator = new UMAGeneratorPro();
@@ -2071,10 +2116,11 @@ namespace UMA
                 if (data.isMeshDirty)
                 {
                     data.force32bit = Calculate32bitness();
-                    state.MeshOperation = multiStepCombiner.BeginUpdateUMAMesh(
-                        data.isAtlasDirty,
-                        data,
-                        atlasResolution);
+                    using (new UMARendererAsset.DeferredMeshUpload(data))
+                        state.MeshOperation = multiStepCombiner.BeginUpdateUMAMesh(
+                            data.isAtlasDirty,
+                            data,
+                            atlasResolution);
                     if (state.MeshOperation == null)
                     {
                         throw new InvalidOperationException(
@@ -2157,6 +2203,7 @@ namespace UMA
                     }
                 }
 
+                UMARendererAsset.FinalizeGeneratedNormals(data);
                 ApplyManualRendererBounds(data, renderers);
                 GeneratorQualityRuntime.AfterBuild(this as UMAGenerator, data);
                 data.SetupEmbeddedPhysics();
@@ -2375,6 +2422,7 @@ namespace UMA
             RollbackPreservedGeneratedMaterials(state);
             RestoreMultiStepRenderTexture(state);
             FreezeTime = false;
+            RestoreRequestedDirtyFlags(state);
 
             if (state.Data != null)
             {
@@ -2601,6 +2649,25 @@ namespace UMA
             state.PreviousRenderers = null;
         }
 
+        /// <summary>
+        /// A texture rebuild cleans the current generated materials. When the mesh
+        /// is also rebuilt over several frames, the renderer keeps showing those
+        /// materials until the new mesh commits, so they must be preserved (and
+        /// restored on rollback). Safe to call more than once per build.
+        /// </summary>
+        private static void PreserveVisibleMaterialsIfRebuilding(
+            MultiStepGenerationState state, bool hasExistingRenderer)
+        {
+            UMAData data = state?.Data;
+            if (data != null &&
+                data.isTextureDirty &&
+                data.isMeshDirty &&
+                hasExistingRenderer)
+            {
+                PreserveGeneratedMaterials(state);
+            }
+        }
+
         private static void PreserveGeneratedMaterials(
             MultiStepGenerationState state)
         {
@@ -2712,7 +2779,8 @@ namespace UMA
 		{
 			if (meshCombiner != null)
 			{
-				meshCombiner.UpdateUMAMesh(updatedAtlas, umaData, atlasResolution);
+                using (new UMARendererAsset.DeferredMeshUpload(umaData))
+                    meshCombiner.UpdateUMAMesh(updatedAtlas, umaData, atlasResolution);
                 umaData.BoneCleanupPending = true;
 			}
 			else
@@ -2750,14 +2818,36 @@ namespace UMA
             return false;
         }
 
+        /// <summary>
+        /// Discards every queued request, including requests owned by other
+        /// generators. Only use at play-mode boundaries, where all queued
+        /// UMAData belong to the session being torn down.
+        /// </summary>
         public void ClearAllPending()
         {
-            CancelActiveDirtyUpdate(false);
-            GenerationTimings.ClearPendingTracking();
+            ReleaseGeneratorState(false);
             // Teardown must not access UMAAssetIndexer.Instance: doing so can
             // create a replacement internal generator while an old one is
             // being destroyed at a play-mode boundary.
             UMAAssetIndexer.bareInstance?.dirtyList.Clear();
+        }
+
+        /// <summary>
+        /// Cancels and forgets only the work owned by this generator. The dirty
+        /// list lives on the asset indexer and is shared by every generator, so
+        /// enabling, disabling or destroying one generator (for example when an
+        /// additive scene loads or unloads) must not discard other avatars'
+        /// pending builds. An interrupted build can optionally be queued again
+        /// so it is not silently lost.
+        /// </summary>
+        private void ReleaseGeneratorState(bool requeueInterruptedBuild)
+        {
+            MultiStepGenerationState interruptedState = activeMultiStepGeneration;
+            UMAData interrupted = interruptedState != null
+                ? interruptedState.Data
+                : null;
+            CancelActiveDirtyUpdate(false);
+            GenerationTimings.ClearPendingTracking();
             cleanUmas.Clear();
             dirtyUmas.Clear();
 #if UMA_DEBUG
@@ -2765,6 +2855,29 @@ namespace UMA
 #endif
             umaData = null;
             FreezeTime = false;
+
+            List<UMAData> sharedDirtyList = UMAAssetIndexer.bareInstance != null
+                ? UMAAssetIndexer.bareInstance.dirtyList
+                : null;
+            if (sharedDirtyList == null)
+            {
+                return;
+            }
+
+            // Requests from a previous play session (Enter Play Mode without a
+            // scene reload) or from destroyed avatars must never run again.
+            sharedDirtyList.RemoveAll(data => data == null);
+
+            if (requeueInterruptedBuild &&
+                interrupted != null &&
+                Application.isPlaying &&
+                !sharedDirtyList.Contains(interrupted))
+            {
+                // Cancellation rolled the avatar back to its previous build,
+                // so every stage it requested must run again on resume.
+                RestoreRequestedDirtyFlags(interruptedState);
+                sharedDirtyList.Add(interrupted);
+            }
         }
 
 
@@ -2854,8 +2967,11 @@ namespace UMA
 #endif
             // Enter Play Mode without a domain/scene reload reuses this
             // component. Begin every enabled lifetime with an empty scheduler
-            // so requests from the previous play session cannot run again.
-            ClearAllPending();
+            // for this generator. Play-mode transitions clear the shared queue
+            // (see OnPlayModeStateChanged); here only this generator's state
+            // and requests from destroyed avatars are discarded, so enabling a
+            // generator never drops builds queued by live avatars.
+            ReleaseGeneratorState(false);
         }
 
         protected virtual void OnDisable()
@@ -2865,12 +2981,15 @@ namespace UMA
 #if UNITY_EDITOR
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
 #endif
-            ClearAllPending();
+            // Keep other avatars' requests, and re-queue the build this
+            // generator was in the middle of so it can be resumed by this
+            // generator when re-enabled, or by another generator.
+            ReleaseGeneratorState(true);
         }
 
         protected virtual void OnDestroy()
         {
-            ClearAllPending();
+            ReleaseGeneratorState(false);
             GeneratorQualityRuntime.Forget(this as UMAGenerator);
 #if UNITY_EDITOR
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;

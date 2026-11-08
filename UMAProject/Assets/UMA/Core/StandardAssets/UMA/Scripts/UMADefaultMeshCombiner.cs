@@ -881,6 +881,19 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
                     Material secondPass = cm.secondPassMaterial;
                     if (secondPass == null || secondPass == firstPass || secondPass.shader != cm.umaMaterial.secondPass.shader)
                     {
+                        // Replacing the second pass must not strand the previous private instance.
+                        if (secondPass != null && secondPass != firstPass)
+                        {
+                            if (cm.cachedSecondPass != null)
+                            {
+                                cm.cachedSecondPass.Dispose();
+                                cm.cachedSecondPass = null;
+                            }
+                            else if (!UMAGeneratedResourceCache.IsManagedResource(secondPass))
+                            {
+                                UMAUtils.DestroySceneObject(secondPass);
+                            }
+                        }
                         secondPass = UnityEngine.Object.Instantiate(cm.umaMaterial.secondPass);
                         cm.secondPassMaterial = secondPass;
                     }
@@ -899,7 +912,7 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
             if (!cachedMesh)
             {
                 mesh.SetSubMeshes(_submeshBuffer, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
-                mesh.UploadMeshData(umaData.markNotReadable);
+                UMARendererAsset.UploadGeneratedMesh(umaData, renderer, combinedMaterialList);
             }
         }
 

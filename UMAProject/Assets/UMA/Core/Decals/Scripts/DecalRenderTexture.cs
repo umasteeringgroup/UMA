@@ -384,6 +384,10 @@ namespace UMA {
 					LogDebugSkip("CreateDecalLayer: GetOrCreateStampMaterial returned null");
 					return null;
 				}
+				bool stampMatrixPushed = false;
+				DecalRTStampAsset stampAsset = null;
+				bool stampAssetKept = false;
+				try {
 				if(options.enableDebug) {
 					LogInfo($"StampMat created. shader={stampMat.shader?.name}, passCount={stampMat.passCount}");
 				}
@@ -414,7 +418,7 @@ namespace UMA {
 				}
 
 				// Prepare Stamp Asset cache
-				var stampAsset = ScriptableObject.CreateInstance<DecalRTStampAsset>();
+				stampAsset = ScriptableObject.CreateInstance<DecalRTStampAsset>();
 				stampAsset.sourceOverlay = overlay;
 				stampAsset.sourceOverlayName = overlay != null
 					? (string.IsNullOrEmpty(overlay.overlayName) ? overlay.name : overlay.overlayName)
@@ -436,6 +440,7 @@ namespace UMA {
 				// Shared draw state for stamping
 				var prevRTGlobal = RenderTexture.active;
 				GL.PushMatrix();
+				stampMatrixPushed = true;
 				GL.LoadOrtho();
 				if(options.enableDebug) {
 					LogRTActive("Before stamping");
@@ -529,13 +534,6 @@ namespace UMA {
 					stampAsset.slots.Add(slotStamp);
 				}
 
-
-				// Destroy temp stamp material
-				if(Application.isPlaying)
-					UnityEngine.Object.Destroy(stampMat);
-				else
-					UnityEngine.Object.DestroyImmediate(stampMat);
-				 
                if(options.enableDebug) {
 					LogInfo($"DecalRenderTexture: Stamped overlay group '{stampAsset.overlayGroup}' on {stampAsset.slots.Count} target(s). UVRect clipping per slot.");
 				}
@@ -553,7 +551,22 @@ namespace UMA {
 					LogInfo($"DecalRenderTexture: Created DecalRTStampAsset with {stampAsset.slots.Count} slot entries. lastStamp: {_lastStamp}");
 
 				GL.PopMatrix();
+				stampMatrixPushed = false;
+				stampAssetKept = result.success;
 				return result.success ? result : (DecalLayerResult?)null;
+				} finally {
+					// Balance the GL matrix stack and release the temporary stamp
+					// material on every path, including exceptions.
+					if(stampMatrixPushed)
+						GL.PopMatrix();
+					if(Application.isPlaying)
+						UnityEngine.Object.Destroy(stampMat);
+					else
+						UnityEngine.Object.DestroyImmediate(stampMat);
+					// A stamp asset that produced no slots is never referenced.
+					if(!stampAssetKept && stampAsset != null)
+						UMAUtils.DestroySceneObject(stampAsset);
+				}
 			} finally {
 				UMAUtils.DestroySceneObject(baked);
 			}
@@ -663,31 +676,33 @@ namespace UMA {
 					LogDebugSkip("ApplySlotStamps: stamp material null");
 					return false;
 				}
-				stampMat.SetFloat("_FlipY", NeedsRenderTargetYFlip() ? 1f : 0f);
-				stampMat.SetFloat("_Fudge", 0.0001f);
-				stampMat.SetFloat("_UseUVRect", 0.0f);
-
-				// Optional masking
-				Texture maskTex = null;
-				try { if(sourceOverlay.alphaMask != null) maskTex = sourceOverlay.alphaMask; } catch { }
-				if(maskTex == null && sourceOverlay.textureList != null && sourceOverlay.textureList.Length > 0) {
-					maskTex = sourceOverlay.textureList[0];
-				}
-
-				stampMat.SetFloat("_UseMask", maskTex != null ? 1f : 0f);
-				if(maskTex != null) 
-				{
-					//Debug.Log("ApplySlotStamps: Setting maskTex.");
-                    stampMat.SetTexture("_MaskTex", maskTex); 
-					//LogTextureInfo("ApplySlotStamps maskTex", maskTex); 
-				}
-
-                bool stampedAny = false;
-                var prevRTGlobal = RenderTexture.active;
-
-				GL.PushMatrix();
+				bool stampedAny = false;
+				var prevRTGlobal = RenderTexture.active;
+				bool stampMatrixPushed = false;
+				// Protect the stamp material from the moment it exists.
 				try
 				{
+					stampMat.SetFloat("_FlipY", NeedsRenderTargetYFlip() ? 1f : 0f);
+					stampMat.SetFloat("_Fudge", 0.0001f);
+					stampMat.SetFloat("_UseUVRect", 0.0f);
+
+					// Optional masking
+					Texture maskTex = null;
+					try { if(sourceOverlay.alphaMask != null) maskTex = sourceOverlay.alphaMask; } catch { }
+					if(maskTex == null && sourceOverlay.textureList != null && sourceOverlay.textureList.Length > 0) {
+						maskTex = sourceOverlay.textureList[0];
+					}
+
+					stampMat.SetFloat("_UseMask", maskTex != null ? 1f : 0f);
+					if(maskTex != null) 
+					{
+						//Debug.Log("ApplySlotStamps: Setting maskTex.");
+	                    stampMat.SetTexture("_MaskTex", maskTex); 
+						//LogTextureInfo("ApplySlotStamps maskTex", maskTex); 
+					}
+
+					GL.PushMatrix();
+					stampMatrixPushed = true;
 					GL.LoadOrtho();
 					//Debug.Log("ApplySlotStamps: Before stamping");
 
@@ -837,19 +852,28 @@ namespace UMA {
 							continue;
 						}
 
-					// Draw to provided target texture
-					if (!targetTexture.IsCreated())
-					{
-						targetTexture.Create();
-					}
-					var prevActive = RenderTexture.active;
-					RenderTexture.active = targetTexture;
-					GL.Viewport(new Rect(0, 0, targetTexture.width, targetTexture.height));
-						//SaveRenderTexturePNG(targetTexture, stamp, stamp.overlayName, Time.frameCount, "before drawing mesh");
+						// Draw to provided target texture. The expanded mesh is
+						// protected from the moment it exists.
+						var prevActive = RenderTexture.active;
+						try
+						{
+							if (!targetTexture.IsCreated())
+							{
+								targetTexture.Create();
+							}
+							RenderTexture.active = targetTexture;
+							GL.Viewport(new Rect(0, 0, targetTexture.width, targetTexture.height));
+							//SaveRenderTexturePNG(targetTexture, stamp, stamp.overlayName, Time.frameCount, "before drawing mesh");
 
-						bool SetPassReturn = stampMat.SetPass(0);
-						DrawStampMesh(expandedMesh);
-						RenderTexture.active = prevActive;
+							bool SetPassReturn = stampMat.SetPass(0);
+							DrawStampMesh(expandedMesh);
+						}
+						finally
+						{
+							RenderTexture.active = prevActive;
+							// The expanded mesh is per-slot scratch geometry.
+							UMAUtils.DestroySceneObject(expandedMesh);
+						}
 
 						// HERE: Record After
 						//SaveRenderTexturePNG(targetTexture, stamp, stamp.overlayName, currenttime, "after drawing mesh");
@@ -860,20 +884,18 @@ namespace UMA {
 						//if(stamp.bleedPixels > 0)
 						//	RunDilation(targetTexture, stamp.bleedPixels);
 						//SaveRenderTexturePNG(targetTexture, stamp, stamp.overlayName, Time.frameCount, "After Dilation");
-
-						UMAUtils.DestroySceneObject(expandedMesh);
 					}
 				}
 				finally {
-					GL.PopMatrix();
+					if(stampMatrixPushed)
+						GL.PopMatrix();
 					RenderTexture.active = prevRTGlobal;
+					// Destroy temp stamp material on every path, including exceptions.
+					if(Application.isPlaying)
+						UnityEngine.Object.Destroy(stampMat);
+					else
+						UnityEngine.Object.DestroyImmediate(stampMat);
 				}
-
-				// Destroy temp stamp material
-				if(Application.isPlaying)
-					UnityEngine.Object.Destroy(stampMat);
-				else
-					UnityEngine.Object.DestroyImmediate(stampMat);
 
 				return stampedAny;
 			}

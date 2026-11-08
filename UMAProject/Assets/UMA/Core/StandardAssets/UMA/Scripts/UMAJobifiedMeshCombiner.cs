@@ -925,7 +925,7 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
             if (!cachedMesh)
             {
                 mesh.SetSubMeshes(_submeshBuffer, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
-                mesh.UploadMeshData(umaData.markNotReadable);
+                UMARendererAsset.UploadGeneratedMesh(umaData, renderer, materials);
             }
         }
 

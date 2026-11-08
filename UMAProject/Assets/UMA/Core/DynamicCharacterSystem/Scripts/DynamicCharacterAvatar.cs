@@ -1251,6 +1251,14 @@ namespace UMA.CharacterSystem
 
         protected override void OnDestroy()
         {
+#if UNITY_EDITOR
+            // The placeholder gizmo material is a HideAndDontSave instance owned by this avatar.
+            if (mat != null)
+            {
+                DestroyImmediate(mat);
+                mat = null;
+            }
+#endif
             CancelNPCBuild();
             Cleanup();
             // Unity does not automatically invoke UMAData's teardown when this derived message exists.
@@ -5501,22 +5509,14 @@ namespace UMA.CharacterSystem
                 if (Op.IsDone)
                 {
                     //Debug.Log("LoadWhenReady - Async OP is done, loading character now: " + Op.DebugName);
-                    BuildSave bs = LoadQueue[Op];
+                    if (!LoadQueue.TryGetValue(Op, out BuildSave bs))
+                    {
+                        // Superseded or already released; nothing to build.
+                        return;
+                    }
                     LoadCharacter(bs._umaRecipe, bs._Replaces, bs._umaAdditionalSerializedRecipes,bs._AdditionalRecipes, bs._MeshHideDictionary, bs._hiddenSlots,bs._HideTags, bs._currentDNA, bs._restoreDNA, true);
                     LoadQueue.Remove(Op);
-                    if (LoadedHandles.Count > 1)
-                    {
-                        AsyncOp OldOp = LoadedHandles.Dequeue();
-                        if (gameObject.activeInHierarchy && DelayUnload > 0.0f)  
-                        {
-                            DelayedHandles.Add(OldOp);
-                            StartCoroutine(CleanupAfterDelay(OldOp));
-                        }
-                        else
-                        {
-                            UnloadOldestQueuedHandle(OldOp);
-                        }
-                    }
+                    ReleaseHandlesOlderThan(Op);
                 }
             }
             catch (Exception ex)
@@ -5525,6 +5525,51 @@ namespace UMA.CharacterSystem
                 RemoveQueuedHandle(Op);
                 LoadQueue.Remove(Op);
                 UnloadOldestQueuedHandle(Op);
+            }
+        }
+
+        /// <summary>
+        /// Releases every handle requested before <paramref name="Op"/>. The
+        /// character has just been built from Op, so older requests are
+        /// superseded. Loads can complete out of order: an older request that
+        /// is still pending is cancelled (its build must never run, or it
+        /// would replace the newer character with a stale recipe), while an
+        /// older request that already built may be released after DelayUnload.
+        /// Requests made after Op are left untouched.
+        /// </summary>
+        private void ReleaseHandlesOlderThan(AsyncOp Op)
+        {
+            bool found = false;
+            foreach (AsyncOp queuedOp in LoadedHandles)
+            {
+                if (queuedOp.Equals(Op))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                return;
+            }
+
+            while (LoadedHandles.Count > 0 && !LoadedHandles.Peek().Equals(Op))
+            {
+                AsyncOp oldOp = LoadedHandles.Dequeue();
+                if (oldOp.IsValid())
+                {
+                    oldOp.Completed -= LoadWhenReady;
+                }
+                bool wasPendingBuild = LoadQueue.Remove(oldOp);
+                if (!wasPendingBuild && gameObject.activeInHierarchy && DelayUnload > 0.0f)
+                {
+                    DelayedHandles.Add(oldOp);
+                    StartCoroutine(CleanupAfterDelay(oldOp));
+                }
+                else
+                {
+                    UnloadOldestQueuedHandle(oldOp);
+                }
             }
         }
 

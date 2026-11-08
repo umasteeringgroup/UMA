@@ -58,7 +58,9 @@ namespace UMA
         [SerializeField] private UMAClothProperties _ClothProperties = null;
 
         [Header("Build Options")]
-        [Tooltip("If true, the normals will be recalculated on the mesh when it is created. Requires BURST option in preferences.")]
+        [Tooltip("If true, normals are recalculated after DNA and race blendshape weights are applied. Requires BURST option in preferences. " +
+            "These renderers never share meshes through mesh reuse (so avatars using them cannot be NPC templates), and with Mark Not Readable " +
+            "every DNA change rebuilds the mesh.")]
         [SerializeField] private bool _RecalculateNormals = false;
         [Tooltip("The angle to use when recalculating normals.")]
         [SerializeField] private float _NormalAngle = 60f;
@@ -92,12 +94,8 @@ namespace UMA
 #endif
             smr.shadowCastingMode = _CastShadows;
             smr.receiveShadows = _ReceiveShadows;
-#if UMA_BURSTCOMPILE
-            if (_RecalculateNormals)
-            {
-                Recalculate(smr);
-            }
-#endif
+            // Normal recalculation runs after combining and applying blendshape DNA,
+            // before the final upload; see FinalizeGeneratedNormals.
         }
 
         /// <summary>
@@ -146,70 +144,200 @@ namespace UMA
                 GetRendererGameObjectName(rendererAsset, rendererIndex);
         }
 
+        /// <summary>
+        /// The renderer asset that configures a renderer built from these
+        /// generated materials. All materials of one renderer share the same
+        /// renderer asset; null means the avatar's default renderer.
+        /// </summary>
+        internal static UMARendererAsset ResolveRendererAsset(UMAData data,
+            System.Collections.Generic.IReadOnlyList<UMAData.GeneratedMaterial> materials)
+        {
+            if (materials != null)
+            {
+                for (int i = 0; i < materials.Count; i++)
+                {
+                    if (materials[i] != null)
+                    {
+                        return materials[i].rendererAsset != null
+                            ? materials[i].rendererAsset
+                            : data != null ? data.defaultRendererAsset : null;
+                    }
+                }
+            }
+            return data != null ? data.defaultRendererAsset : null;
+        }
+
+        /// <summary>
+        /// True when a renderer built from these materials must own its mesh.
+        /// Recalculated normals depend on that renderer's blendshape weights,
+        /// which are not part of the mesh cache key, so such a mesh can never
+        /// be shared through the generated-resource cache.
+        /// </summary>
+        internal static bool RequiresPrivateMesh(UMAData data,
+            System.Collections.Generic.IReadOnlyList<UMAData.GeneratedMaterial> materials)
+        {
 #if UMA_BURSTCOMPILE
+            UMARendererAsset rendererAsset = ResolveRendererAsset(data, materials);
+            return rendererAsset != null && rendererAsset._RecalculateNormals;
+#else
+            return false;
+#endif
+        }
+
+        /// <summary>
+        /// Uploads combined geometry, retaining CPU data when generator finalization
+        /// still needs to calculate normals using the final blendshape weights.
+        /// </summary>
+        internal static void UploadGeneratedMesh(UMAData data, SkinnedMeshRenderer renderer,
+            System.Collections.Generic.IReadOnlyList<UMAData.GeneratedMaterial> materials)
+        {
+            if (renderer == null || renderer.sharedMesh == null) return;
+#if UMA_BURSTCOMPILE
+            UMARendererAsset rendererAsset = ResolveRendererAsset(data, materials);
+            if (rendererAsset != null && rendererAsset._RecalculateNormals)
+            {
+                if (data.deferRendererMeshUpload)
+                {
+                    renderer.sharedMesh.UploadMeshData(false);
+                    return;
+                }
+                rendererAsset.Recalculate(renderer);
+            }
+#endif
+            renderer.sharedMesh.UploadMeshData(data.markNotReadable);
+        }
+
+        internal readonly struct DeferredMeshUpload : System.IDisposable
+        {
+            private readonly UMAData data;
+            private readonly bool previous;
+            internal DeferredMeshUpload(UMAData data)
+            {
+                this.data = data;
+                previous = data.deferRendererMeshUpload;
+                data.deferRendererMeshUpload = true;
+            }
+            public void Dispose() { if (data != null) data.deferRendererMeshUpload = previous; }
+        }
+
+        // A shape-only update cannot recalculate an already uploaded, unreadable
+        // mesh. Rebuild its geometry before applying the new blendshape weights.
+        internal static void RequireReadableNormalsMesh(UMAData data)
+        {
+#if UMA_BURSTCOMPILE
+            if (!data.isShapeDirty && !data.NeedsAnimatorBindingRefresh) return;
+            for (int i = 0; i < data.RendererCount; i++)
+            {
+                var asset = data.GetRendererAsset(i) ?? data.defaultRendererAsset;
+                var mesh = data.GetRenderer(i) != null ? data.GetRenderer(i).sharedMesh : null;
+                if (asset != null && asset._RecalculateNormals && mesh != null &&
+                    (!mesh.isReadable || UMAResourceLeaseOwner.IsSharedMesh(data.GetRenderer(i))))
+                    data.isMeshDirty = true;
+            }
+#endif
+        }
+
+        /// <summary>Run after DNA and race blendshape weights, before completion events.</summary>
+        internal static void FinalizeGeneratedNormals(UMAData data)
+        {
+#if UMA_BURSTCOMPILE
+            for (int i = 0; i < data.RendererCount; i++)
+            {
+                var renderer = data.GetRenderer(i);
+                var asset = data.GetRendererAsset(i) ?? data.defaultRendererAsset;
+                if (asset == null || !asset._RecalculateNormals || renderer == null ||
+                    renderer.sharedMesh == null || !renderer.sharedMesh.isReadable ||
+                    UMAResourceLeaseOwner.IsSharedMesh(renderer)) continue;
+                asset.Recalculate(renderer);
+                renderer.sharedMesh.UploadMeshData(data.markNotReadable);
+            }
+#endif
+        }
+
+#if UMA_BURSTCOMPILE
+        // Test hook: the recalculated normals, observed before a final upload can
+        // discard the CPU copy of the mesh. Never used by runtime code.
+        internal static System.Action<SkinnedMeshRenderer, Vector3[]> NormalsRecalculatedForTests;
+
         private void Recalculate(SkinnedMeshRenderer smr)
         {
-            if (_RecalculateNormals)
+            Mesh mesh = smr != null ? smr.sharedMesh : null;
+            if (!_RecalculateNormals || mesh == null || mesh.vertexCount == 0 || !mesh.isReadable)
             {
-                using (var meshDataArray = Mesh.AcquireReadOnlyMeshData(smr.sharedMesh))
+                return;
+            }
+
+            // A reused mesh is owned by the generated-resource cache and may be
+            // bound to other avatars with different blendshape weights. Never
+            // write per-renderer results into it.
+            if (UMAResourceLeaseOwner.IsSharedMesh(smr))
+            {
+                if (Debug.isDebugBuild)
                 {
-                    var meshData = meshDataArray[0]; // Access the first mesh's data
-                    var attributes = smr.sharedMesh.GetVertexAttributes();
+                    Debug.LogWarning($"UMARendererAsset '{name}': Recalculate Normals skipped for '{smr.name}' because its mesh is shared by the generated-resource cache. Disable mesh reuse for this renderer to recalculate normals.", smr);
+                }
+                return;
+            }
 
-                    // Get the vertex data as a NativeArray<Vector3>
-                    // GetVertexData provides a direct view into the raw vertex buffer,
-                    // so you need to know the vertex attribute format (e.g., VertexAttribute.Position)
-                    // and its format (e.g., VertexAttributeFormat.Float32) and dimension (3 for Vector3).
-                    NativeArray<Vector3> nvertices = meshData.GetVertexData<Vector3>();
+            NativeArray<Vector3> vertices = default;
+            NativeArray<Vector3> normals = default;
+            NativeArray<Vector2> uvs = default;
+            NativeArray<Vector4> tangents = default;
+            NativeArray<int> triangles = default;
+            JobHandle handle = default;
+            try
+            {
+                vertices = new NativeArray<Vector3>(mesh.vertices, Allocator.TempJob);
+                normals = new NativeArray<Vector3>(mesh.normals, Allocator.TempJob);
+                uvs = new NativeArray<Vector2>(mesh.uv, Allocator.TempJob);
+                tangents = new NativeArray<Vector4>(mesh.tangents, Allocator.TempJob);
+                triangles = new NativeArray<int>(mesh.triangles, Allocator.TempJob);
+                Vector3[] deltaVertices = new Vector3[vertices.Length];
 
-
-                    NativeArray<Vector3> vertices = new NativeArray<Vector3>(smr.sharedMesh.vertices, Allocator.TempJob);
-                    NativeArray<Vector3> normals = new NativeArray<Vector3>(smr.sharedMesh.normals, Allocator.TempJob);
-                    NativeArray<Vector2> uvs = new NativeArray<Vector2>(smr.sharedMesh.uv, Allocator.TempJob);
-                    NativeArray<Vector4> tangents = new NativeArray<Vector4>(smr.sharedMesh.tangents, Allocator.TempJob);
-                    NativeArray<int> triangles = new NativeArray<int>(smr.sharedMesh.triangles, Allocator.TempJob);
-                    Vector3[] deltaVertices = new Vector3[vertices.Length];
-                    JobHandle handle = default;
-
-                    int blendShapeCount = smr.sharedMesh.blendShapeCount;
-                    for (int shapeIndex = 0; shapeIndex < blendShapeCount; shapeIndex++)
+                int blendShapeCount = mesh.blendShapeCount;
+                for (int shapeIndex = 0; shapeIndex < blendShapeCount; shapeIndex++)
+                {
+                    float weight = smr.GetBlendShapeWeight(shapeIndex);
+                    if (weight > 0f)
                     {
-                        float weight = smr.GetBlendShapeWeight(shapeIndex);
-                        if (weight > 0f)
+                        weight /= 100f; //bring the weight into 0-1 range.
+
+                        string blendShapeName = mesh.GetBlendShapeName(shapeIndex);
+                        if (blendShapeName.StartsWith(blendShapeNameStartsWith))
                         {
-                            weight /= 100f; //bring the weight into 0-1 range.
-
-                            string blendShapeName = smr.sharedMesh.GetBlendShapeName(shapeIndex);
-                            if (blendShapeName.StartsWith(blendShapeNameStartsWith))
+                            mesh.GetBlendShapeFrameVertices(shapeIndex, 0, deltaVertices, null, null);
+                            // Deallocated by the job on completion.
+                            NativeArray<Vector3> blendShapeDeltaVertices = new NativeArray<Vector3>(deltaVertices, Allocator.TempJob);
+                            try
                             {
-                                smr.sharedMesh.GetBlendShapeFrameVertices(shapeIndex, 0, deltaVertices, null, null);
-                                NativeArray<Vector3> blendShapeDeltaVertices = new NativeArray<Vector3>(deltaVertices, Allocator.TempJob);
-
                                 handle = MeshUtilities.BakeOneFramePositionBlendShape(vertices, blendShapeDeltaVertices, weight, handle);
+                            }
+                            catch
+                            {
+                                blendShapeDeltaVertices.Dispose();
+                                throw;
                             }
                         }
                     }
-                    handle = MeshUtilities.RecalculateNormalsTangentsJobified(vertices, normals, uvs, tangents, triangles, this.NormalAngle, handle);
-
-                    handle.Complete();
-
-                    //We don't need to do this if we know our mesh is a single instance!
-                    //Mesh mesh = Instantiate<Mesh>(smr.sharedMesh);
-                    Mesh mesh = smr.sharedMesh;
-
-                    //mesh.SetVertices(vertices); //don't update the vertices if the blendshapes are going to continue...
-                    mesh.SetNormals(normals);
-                    mesh.SetUVs(0, uvs);
-                    mesh.SetTangents(tangents);
-
-                    smr.sharedMesh = mesh;
-
-                    vertices.Dispose();
-                    normals.Dispose();
-                    uvs.Dispose();
-                    tangents.Dispose();
-                    triangles.Dispose();
                 }
+                handle = MeshUtilities.RecalculateNormalsTangentsJobified(vertices, normals, uvs, tangents, triangles, this.NormalAngle, handle);
+                handle.Complete();
+
+                //mesh.SetVertices(vertices); //don't update the vertices if the blendshapes are going to continue...
+                mesh.SetNormals(normals);
+                mesh.SetUVs(0, uvs);
+                mesh.SetTangents(tangents);
+                // The arguments are only evaluated when a test observes the result.
+                NormalsRecalculatedForTests?.Invoke(smr, normals.ToArray());
+            }
+            finally
+            {
+                handle.Complete();
+                if (vertices.IsCreated) vertices.Dispose();
+                if (normals.IsCreated) normals.Dispose();
+                if (uvs.IsCreated) uvs.Dispose();
+                if (tangents.IsCreated) tangents.Dispose();
+                if (triangles.IsCreated) triangles.Dispose();
             }
         }
 #endif
