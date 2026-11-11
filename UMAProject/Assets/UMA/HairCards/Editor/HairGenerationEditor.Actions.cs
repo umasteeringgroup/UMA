@@ -6,61 +6,27 @@ namespace UMA.HairCards.Editor
 {
     internal static partial class HairGenerationEditor
     {
-        internal static void DrawTreeActions(HairCardStage stage, HairGroomNode node)
+        internal enum Preset { ShortHairPart, CurlyVolume, SweptClumps }
+
+        /// <summary>Confirm, then replace this group's generation settings with a preset.</summary>
+        internal static bool ConfirmPreset(HairCardStage stage, HairGroomNode node, Preset preset)
         {
-            HairFormEditor.DrawActions(stage, node);
-            if (node.Kind == HairGroomNodeKind.Source && GUILayout.Button("Import Authored Guide File…")) HairGuideImport.ImportDialog();
-            HairSweptAtlasSetup.DrawTreeAction(stage, node);
-            if (node.Kind == HairGroomNodeKind.Children || node.Kind == HairGroomNodeKind.Group)
-                using (new EditorGUI.DisabledScope(node.Locked))
-                {
-                    if (GUILayout.Button(new GUIContent("Short Hair Part Preset…", "Short, softly clumped ribbons: up to 2,500 cards and four segments per card. Preserve a part with separate groups or Part Regions.")))
-                        if (EditorUtility.DisplayDialog("Apply Short Hair Part Preset?", "Replace this group's generation settings and create a dedicated short-ribbon profile? Authored guides, maps, sculpt passes, textures and assigned materials are preserved.\n\nThe default ceiling is 20,000 triangles for this group, not the whole groom. Divide the card count between groups. Existing LOD density and sample overrides are preserved; review them after applying. Undo restores settings.", "Apply Preset", "Cancel"))
-                        { ApplyRegularPreset(stage.Groom, node.Group); stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Children, node.Group.Id)); }
-                    if (GUILayout.Button(new GUIContent("Curly Volume Preset…", "Set up surface-rooted ringlets with automatic curl resolution. Preserves guides, sculpt passes, assigned textures and materials.")))
-                        if (EditorUtility.DisplayDialog("Apply Curly Volume Preset?", "Replace generation settings with editable ringlets and create a dedicated curl ribbon profile? Guides, sculpt passes and assigned textures/materials are preserved. Existing material shine is not changed; choose Matte in Materials & UVs if desired. Undo restores settings.", "Apply Preset", "Cancel"))
-                        { ApplyCurlyPreset(stage.Groom, node.Group); stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Children, node.Group.Id)); }
-                    if (GUILayout.Button(new GUIContent("Swept Clumps Preset…", "Configure generated clumps, hairline, curved ribbons and LOD sampling. Existing guides/sculpting and assigned textures/materials are preserved.")))
-                        if (EditorUtility.DisplayDialog("Apply Swept Clumps Preset?", "Replace generation settings with the swept-clump preset and create a dedicated ribbon profile? Your guides, sculpt passes, textures and assigned materials are preserved. Undo restores the settings.", "Apply Preset", "Cancel"))
-                        { ApplySweptPreset(stage.Groom, node.Group); stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Children, node.Group.Id)); }
-                    if (node.Group.generation.enabled && GUILayout.Button("+ Clump Guide Stage"))
-                    {
-                        var population = AddPopulation(stage.Groom, node.Group);
-                        stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Population, population.Id));
-                    }
-                }
-            if (node.Population != null)
+            if (stage?.Groom == null || node?.Group == null || node.Locked) return false;
+            switch (preset)
             {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    if (GUILayout.Button(stage.InspectedPopulationId == node.Population.Id ? "Inspecting population" : "Inspect Population"))
-                        stage.InspectPopulation(node.Population.Id);
-                    if (GUILayout.Button("Final Hair")) stage.InspectPopulation(null);
-                }
-                EditorGUILayout.LabelField(stage.InspectedPopulationId == node.Population.Id ? "ISOLATED · colored by parent clump" : "FINAL HAIR · all downstream stages included", EditorStyles.wordWrappedMiniLabel);
-                if (node.Modifier != null && GUILayout.Button(stage.InspectedMaskId == node.Modifier.Id ? "Hide Mask" : "Show Mask"))
-                    stage.InspectPopulation(node.Population.Id, stage.InspectedMaskId == node.Modifier.Id ? null : node.Modifier.Id);
-                if (node.CanReorder)
-                    using (new EditorGUI.DisabledScope(node.Locked))
-                    using (new EditorGUILayout.HorizontalScope())
-                    {
-                        int i = Index(node), count = Count(node);
-                        using (new EditorGUI.DisabledScope(i <= 0)) if (GUILayout.Button("Earlier")) Move(stage, node, -1);
-                        using (new EditorGUI.DisabledScope(i >= count - 1)) if (GUILayout.Button("Later")) Move(stage, node, 1);
-                        if (GUILayout.Button("Duplicate")) Duplicate(stage, node);
-                        if (GUILayout.Button("Remove…")) Remove(stage, node);
-                    }
+                case Preset.ShortHairPart:
+                    if (!EditorUtility.DisplayDialog("Apply Short Hair Part Preset?", "Replace this group's generation settings and create a dedicated short-ribbon profile? Authored guides, maps, sculpt passes, textures and assigned materials are preserved.\n\nThe default ceiling is 20,000 triangles for this group, not the whole groom. Divide the card count between groups. Existing LOD density and sample overrides are preserved; review them after applying. Undo restores settings.", "Apply Preset", "Cancel")) return false;
+                    ApplyRegularPreset(stage.Groom, node.Group); break;
+                case Preset.CurlyVolume:
+                    if (!EditorUtility.DisplayDialog("Apply Curly Volume Preset?", "Replace generation settings with editable ringlets and create a dedicated curl ribbon profile? Guides, sculpt passes and assigned textures/materials are preserved. Existing material shine is not changed; choose Matte in Materials & UVs if desired. Undo restores settings.", "Apply Preset", "Cancel")) return false;
+                    ApplyCurlyPreset(stage.Groom, node.Group); break;
+                default:
+                    if (!EditorUtility.DisplayDialog("Apply Swept Clumps Preset?", "Replace generation settings with the swept-clump preset and create a dedicated ribbon profile? Your guides, sculpt passes, textures and assigned materials are preserved. Undo restores the settings.", "Apply Preset", "Cancel")) return false;
+                    ApplySweptPreset(stage.Groom, node.Group); break;
             }
-            else if (node.Modifier != null)
-            {
-                if (GUILayout.Button(stage.InspectedMaskId == node.Modifier.Id ? "Hide Mask" : "Show Mask"))
-                    stage.InspectPopulation(null, stage.InspectedMaskId == node.Modifier.Id ? null : node.Modifier.Id);
-            }
-            if (node.Population == null && (!string.IsNullOrEmpty(stage.InspectedPopulationId) || !string.IsNullOrEmpty(stage.InspectedMaskId)))
-            {
-                EditorGUILayout.HelpBox("An inspection preview is active. It is not the baked output.", MessageType.Info);
-                if (GUILayout.Button("Return to Final Hair")) stage.InspectPopulation(null);
-            }
+            stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Children, node.Group.Id));
+            GUIUtility.ExitGUI();
+            return true;
         }
 
         private static int Index(HairGroomNode node) => node.Modifier != null ? node.Population.modifiers.IndexOf(node.Modifier) : node.Group.generation.clumps.IndexOf(node.Population);
@@ -122,23 +88,6 @@ namespace UMA.HairCards.Editor
                 domain = HairModifierDomain.Children, amount = HairGroomCommands.DefaultModifierAmount(type), rootInfluence = type == HairModifierType.Gather ? 1f : 0.3f };
             modifier.EnsureIntegrity(); population.modifiers.Add(modifier); HairGroomCommands.Commit(groom); return modifier;
         }
-        internal static void ShowModifierMenu(HairCardStage stage)
-        {
-            var node = stage.SelectedNode; if (!Valid(stage, node)) return;
-            var menu = new GenericMenu();
-            foreach (HairModifierType type in Enum.GetValues(typeof(HairModifierType)))
-            {
-                if (type == HairModifierType.LodReduction) continue;
-                var captured = type;
-                menu.AddItem(new GUIContent(ObjectNames.NicifyVariableName(type.ToString())), false, () =>
-                {
-                    var modifier = AddModifier(stage.Groom, node.Group, node.Population, captured);
-                    if (modifier != null) stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Modifier, modifier.Id));
-                });
-            }
-            menu.ShowAsContext();
-        }
-
         internal static void ApplySweptPreset(HairGroomAsset groom, HairGroup group, string resourceFolder = null)
         {
             if (groom == null || group == null || group.locked || !groom.Groups.Contains(group)) return;

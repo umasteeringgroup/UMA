@@ -9,12 +9,12 @@ material, and a standalone review scene. No external add-on is required in Unity
 
 Choose **UMA → Hair Cards → Examples → Curly Volume**, or open
 `Assets/UMAProjectData/HairCards/Examples/CurlyVolume/Curly_HairGroom.asset`.
-Use **Hair Nodes** to select an item and **Hair Properties** to edit it. In
+Use **Groom Outliner** to select an item and **Hair Properties** to edit it. In
 **Hair Preview & Settings**, choose Cards / Full and hide guide splines and card
 wireframe for a clean material preview. The review scene is a static lighting
 comparison, not the editable groom; open the groom asset to change the hairstyle.
 
-The short route through the tree is:
+The short route through the Groom Outliner is:
 
 ```text
 Guides / Grooming                 Broad silhouette, sweep and hairline
@@ -31,8 +31,8 @@ Optimize & LODs                   Distance-dependent budgets
 ```
 
 To use the construction on your own character, paint Growth / Density and comb
-the broad centerlines first. Select the group or Generate Hair and apply **Curly
-Volume Preset…** in the tree. The confirmation lists the changes. It replaces
+the broad centerlines first. Select Generate Hair and apply its **Curly
+Volume…** preset in Hair Properties. The confirmation lists the changes. It replaces
 generation settings and creates a dedicated ribbon profile, preserving guides,
 sculpt passes, textures and any assigned material. Undo restores the settings.
 For an existing atlas, select Materials & UVs and **Use UMA Curly Strips…**.
@@ -74,7 +74,7 @@ waving, the original Curl and Wave modifiers remain available.
 
 Paint a modifier mask if only some areas should curl. “Where this modifier applies”
 also supports length and hairline filters. Use **Show Mask** or **Inspect Population**
-in the tree to understand the result. Seeded variation is stable across rebuilds
+in Hair Properties to understand the result. Seeded variation is stable across rebuilds
 and render LOD changes. Changing generation density can change which roots exist.
 
 For gravity, apply the existing Gravity modifier to the envelope before Ringlets

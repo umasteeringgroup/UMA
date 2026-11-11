@@ -2,7 +2,7 @@
 
 Open **View > Sprite Materials…** in Overlay Painter, or **Window > UMA > Overlay Painter Materials**.
 Choose a **Category**, then a **Sprite Set**. The grid flows to fit the dock and scrolls vertically;
-**Size** changes thumbnail size. Hover over a preview to see the material's name.
+**Size** changes thumbnail size. Hover over a preview to see the material's name. In a dock only one thumbnail wide, the header drops its labels and the help line, the button reads **Rebuild**, and the thumbnails fit the width.
 Fill Material shows spheres; Projection and Path show alpha-cutout cubes rotated 45° on
 each axis. Switching categories selects the corresponding cached preview automatically.
 

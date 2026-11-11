@@ -27,20 +27,12 @@ namespace UMA.HairCards.Editor
         internal HairGenerationStage Population;
         internal int Depth;
         internal bool HasChildren;
-        internal bool CanReorder => Kind == HairGroomNodeKind.Layer || Kind == HairGroomNodeKind.Modifier ||
-            (Kind == HairGroomNodeKind.Population && Population != Group.generation.cards);
+        internal HairGroomNodeHandler Handler => HairGroomNodeHandler.For(Kind);
+        internal bool CanReorder => Handler.CanReorder(this);
+        // Locked by itself or by an owner (group, sculpt pass or helper).
         internal bool Locked => Group?.locked == true || Layer?.locked == true || Helper?.locked == true;
-        internal bool CanToggle => Kind == HairGroomNodeKind.Group || Kind == HairGroomNodeKind.Layer ||
-            Kind == HairGroomNodeKind.Modifier || Kind == HairGroomNodeKind.Constraint || Kind == HairGroomNodeKind.Population;
-        internal bool Enabled => Kind switch
-        {
-            HairGroomNodeKind.Group => Group.enabled,
-            HairGroomNodeKind.Layer => Layer.visible,
-            HairGroomNodeKind.Modifier => Modifier.enabled,
-            HairGroomNodeKind.Constraint => Constraint.enabled,
-            HairGroomNodeKind.Population => Population.enabled,
-            _ => true
-        };
+        internal bool CanToggle => Handler.CanToggle(this);
+        internal bool Enabled => Handler.IsEnabled(this);
     }
 
     internal static class HairGroomNodes
@@ -67,13 +59,13 @@ namespace UMA.HairCards.Editor
                 HairGrowthMap primary = group.FindMap(HairMapKind.GrowthArea);
                 var rootOwner = group.generation.enabled && group.generation.cards.source == HairPopulationSource.PaintedScalp
                     ? groom.Groups.Find(g => g.Id == group.generation.cards.rootMapGroupId) : null;
-                if (primary != null) Add(HairGroomNodeKind.GrowthMap, rootOwner != null ? "1 · Growth / Density → " + rootOwner.name : "1 · Growth / Density",
+                if (primary != null) Add(HairGroomNodeKind.GrowthMap, rootOwner != null ? "Growth / Density → " + rootOwner.name : "Growth / Density",
                     rootOwner != null ? "Shared growth map: selecting this opens the source group's painting." : "Paint 0 for no growth, 1 for full density. Painting does not overwrite authored guides.", HairWorkflowStep.Growth, primary.Id, root, group).Map = primary;
                 var maps = Add(HairGroomNodeKind.OptionalMaps, "Optional Maps", "Optional density multiplier, length and styling masks. The multiplier defaults to 1.", HairWorkflowStep.Growth, group.Id, root, group);
                 foreach (HairGrowthMap map in group.maps)
                     if (map != null && map != primary) Add(HairGroomNodeKind.GrowthMap, map.DisplayName, "Paint this map; its values remain independent of the primary Growth / Density map.", HairWorkflowStep.Growth, map.Id, maps, group).Map = map;
-                Add(HairGroomNodeKind.Guides, $"2 · Guides ({group.guides.Count:N0})", "Place, generate, select and remove guides. Preview a generated layout before accepting it.", HairWorkflowStep.Guides, group.Id, root, group);
-                var grooming = Add(HairGroomNodeKind.Groom, "3 · Grooming", "Sculpt passes evaluate top to bottom, each followed by its modifiers. Select a pass to sculpt; select a modifier to edit it.", HairWorkflowStep.Groom, group.Id, root, group);
+                Add(HairGroomNodeKind.Guides, $"Guides ({group.guides.Count:N0})", "Place, generate, select and remove guides. Preview a generated layout before accepting it.", HairWorkflowStep.Guides, group.Id, root, group);
+                var grooming = Add(HairGroomNodeKind.Groom, "Grooming", "Sculpt passes evaluate top to bottom, each followed by its modifiers. Select a pass to sculpt; select a modifier to edit it.", HairWorkflowStep.Groom, group.Id, root, group);
                 void AddPass(HairSculptLayer layer)
                 {
                     var pass = Add(HairGroomNodeKind.Layer, layer.name, (layer.afterGroupOperations ? "Finishing sculpt after group modifiers and constraints. " : "") +
@@ -92,7 +84,7 @@ namespace UMA.HairCards.Editor
                 foreach (HairConstraintSettings constraint in group.constraints)
                     if (constraint != null) Add(HairGroomNodeKind.Constraint, constraint.name, "Helper constraint applied after grooming.", HairWorkflowStep.Groom, constraint.Id, constraints, group).Constraint = constraint;
                 foreach (HairSculptLayer layer in group.sculptLayers) if (layer != null && layer.afterGroupOperations) AddPass(layer);
-                var generation = Add(HairGroomNodeKind.Children, "4 · Generate Hair", "Scalp-bound roots -> clump guides -> final cards. Inspect each population independently.", HairWorkflowStep.Cards, group.Id, root, group);
+                var generation = Add(HairGroomNodeKind.Children, "Generate Hair", "Scalp-bound roots -> clump guides -> final cards. Inspect each population independently.", HairWorkflowStep.Cards, group.Id, root, group);
                 if (group.generation?.enabled == true)
                 {
                     void AddPopulation(HairGenerationStage population, bool final)
@@ -112,7 +104,7 @@ namespace UMA.HairCards.Editor
                     foreach (var population in group.generation.clumps) AddPopulation(population, false);
                     AddPopulation(group.generation.cards, true);
                 }
-                var cards = Add(HairGroomNodeKind.Cards, "5 · Hair Cards", "Assign shared card/atlas resources and preview the result.", HairWorkflowStep.Cards, group.Id, root, group);
+                var cards = Add(HairGroomNodeKind.Cards, "Hair Cards", "Assign shared card/atlas resources and preview the result.", HairWorkflowStep.Cards, group.Id, root, group);
                 Add(HairGroomNodeKind.Geometry, "Geometry & Vertex Colors", "Ribbon shape, taper, sampling, root embedding and root-to-tip RGBA.", HairWorkflowStep.Cards, group.Id, cards, group);
                 Add(HairGroomNodeKind.Atlas, "Materials & UVs", "Two material passes, shared colors, textures and inline UV-set editing.", HairWorkflowStep.Cards, group.Id, cards, group);
                 Add(HairGroomNodeKind.ScalpShading, "Scalp Vertex Shading", "Painted growth drives a vertex-color Mesh Modifier on the existing scalp/body. No extra scalp cap.", HairWorkflowStep.Cards, group.Id, root, group);
@@ -120,41 +112,71 @@ namespace UMA.HairCards.Editor
             var helpers = Add(HairGroomNodeKind.Helpers, "Shared Helpers", "Create or bind scene helpers. These resources can be referenced by multiple groups.", HairWorkflowStep.Groom);
             foreach (HairHelper helper in groom.SharedHelpers)
                 if (helper != null) Add(HairGroomNodeKind.Helper, helper.name, "Shared helper; changes can affect every referencing group.", HairWorkflowStep.Groom, helper.Id, helpers).Helper = helper;
-            Add(HairGroomNodeKind.Optimize, "6 · Optimize & LODs", "Preview quality, LOD budgets and release sampling.", HairWorkflowStep.Optimize);
-            Add(HairGroomNodeKind.Output, "7 · Validate & Bake", "Validate all output, resolve issues and bake reusable assets.", HairWorkflowStep.ValidateAndBake);
+            Add(HairGroomNodeKind.Optimize, "Optimize & LODs", "Preview quality, LOD budgets and release sampling.", HairWorkflowStep.Optimize);
+            Add(HairGroomNodeKind.Output, "Validate & Bake", "Validate all output, resolve issues and bake reusable assets.", HairWorkflowStep.ValidateAndBake);
             return nodes;
         }
 
         internal static bool Toggle(HairCardStage stage, HairGroomNode node, bool enabled)
         {
             if (stage?.Groom == null || node == null || node.Locked || !node.CanToggle || node.Enabled == enabled) return false;
-            if (!stage.Groom.Groups.Contains(node.Group) ||
-                (node.Layer != null && !node.Group.sculptLayers.Contains(node.Layer)) ||
-                (node.Constraint != null && !node.Group.constraints.Contains(node.Constraint))) return false;
+            if (!StillOwned(stage.Groom, node)) return false;
             if (node.Modifier != null && node.Population == null) return HairGroomCommands.SetModifierEnabled(stage.Groom, node.Group, node.Layer, node.Modifier, enabled);
             Undo.RecordObject(stage.Groom, "Toggle Hair Node");
-            if (node.Kind == HairGroomNodeKind.Group) node.Group.enabled = enabled;
-            else if (node.Kind == HairGroomNodeKind.Layer) node.Layer.visible = enabled;
-            else if (node.Modifier != null) node.Modifier.enabled = enabled;
-            else if (node.Population != null) node.Population.enabled = enabled;
-            else node.Constraint.enabled = enabled;
+            node.Handler.WriteEnabled(node, enabled);
             HairGroomCommands.Commit(stage.Groom, HairPreviewChange.Evaluation); return true;
         }
 
+        /// <summary>Lock or unlock a group, sculpt pass or helper (its own flag, not its owners).</summary>
+        internal static bool SetLocked(HairCardStage stage, HairGroomNode node, bool locked)
+        {
+            if (stage?.Groom == null || node == null || !node.Handler.CanLock(node) || node.Handler.IsLockedSelf(node) == locked) return false;
+            if (node.Helper != null ? !stage.Groom.SharedHelpers.Contains(node.Helper) : !StillOwned(stage.Groom, node)) return false;
+            Undo.RecordObject(stage.Groom, locked ? "Lock Hair Node" : "Unlock Hair Node");
+            node.Handler.WriteLocked(node, locked);
+            HairGroomCommands.Commit(stage.Groom, HairPreviewChange.Display); return true;
+        }
+
+        internal static bool CanDrop(HairGroomNode source, HairGroomNode target) =>
+            source != null && target != null && source.Handler.CanDropOn(source, target);
+
         internal static bool Move(HairCardStage stage, HairGroomNode source, HairGroomNode target, bool after)
         {
-            if (stage?.Groom == null || source == null || target == null || !source.CanReorder || source.Locked ||
-                target.Locked || source.Kind != target.Kind || source.ParentKey != target.ParentKey || source.Key == target.Key ||
-                source.Group != target.Group || !stage.Groom.Groups.Contains(source.Group)) return false;
-            bool pass = source.Kind == HairGroomNodeKind.Layer;
-            if (source.Population != null) return HairGenerationEditor.MoveRelative(stage, source, target, after);
-            int from = pass ? source.Group.sculptLayers.IndexOf(source.Layer) : source.Layer.modifiers.IndexOf(source.Modifier);
-            int to = pass ? source.Group.sculptLayers.IndexOf(target.Layer) : source.Layer.modifiers.IndexOf(target.Modifier);
-            if (from < 0 || to < 0) return false;
-            if (after) to++;
-            if (from < to) to--;
-            return from != to && HairGroomCommands.EditStack(stage.Groom, source.Group,
-                pass ? source.Layer.Id : source.Modifier.Id, pass, to - from);
+            if (stage?.Groom == null || !CanDrop(source, target) || !stage.Groom.Groups.Contains(source.Group)) return false;
+            return source.Handler.MoveRelative(stage, source, target, after);
+        }
+
+        private static bool StillOwned(HairGroomAsset groom, HairGroomNode node) =>
+            groom.Groups.Contains(node.Group) &&
+            (node.Layer == null || node.Group.sculptLayers.Contains(node.Layer)) &&
+            (node.Constraint == null || node.Group.constraints.Contains(node.Constraint));
+
+        /// <summary>Changes only when rows appear, move, rename or change state, so the outliner
+        /// does not rebuild for paint strokes and other edits that leave the tree as it was.</summary>
+        internal static int StructureSignature(IReadOnlyList<HairGroomNode> nodes)
+        {
+            unchecked
+            {
+                int hash = 17;
+                foreach (var node in nodes)
+                {
+                    hash = hash * 31 + StableHash(node.Key);
+                    hash = hash * 31 + StableHash(node.ParentKey);
+                    hash = hash * 31 + StableHash(node.Label);
+                    hash = hash * 31 + (node.CanToggle && node.Enabled ? 1 : 0) + (node.Locked ? 2 : 0) + (node.Handler.IsLockedSelf(node) ? 4 : 0);
+                }
+                return hash * 31 + nodes.Count;
+            }
+        }
+
+        private static int StableHash(string text)
+        {
+            unchecked
+            {
+                int hash = 23;
+                if (text != null) foreach (char c in text) hash = hash * 31 + c;
+                return hash;
+            }
         }
     }
 }

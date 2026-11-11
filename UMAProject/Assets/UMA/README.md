@@ -8,7 +8,7 @@ Updating from **3.1f3 / 3.1.3**? Read [What's New](Docs/!WhatsNewInUMA3.md#uma-3
 
 ## Installation
 
-Install UMA Core through Package Manager using the published package or staged Core folder. Then use **UMA > Welcome to UMA > Install / Update UMA Packages** to install the matching UMA URP or HDRP support and import the matching `UMA3Content` archive. Legacy UMA 2 content is available from **Welcome > Plugins > UMA2Compatibility**.
+Install UMA Core through Package Manager using the published package or staged Core folder. Then open **UMA > Welcome to UMA > Install SRP Package** (shown as **Render Pipeline Support** once a pipeline is installed) to install the matching UMA URP or HDRP support and click **Install UMA 3 Content...** to import the matching `UMA3Content` archive. Legacy UMA 2 content is available from **Welcome > Plugins > UMA2Compatibility**.
 
 Core supports both source-tree (`Assets/UMA`) and UPM (`Packages/com.umasteeringgroup.uma`) installations. A UPM Core is read-only, while character content is deliberately project-owned and editable at `Assets/UMA/UMA3` and, for UMA2Compatibility, `Assets/UMA2`. Project-specific settings, the Global Library index, generated assets, tasks, and Overlay Painter recovery/export data are stored under `Assets/UMAProjectData`.
 

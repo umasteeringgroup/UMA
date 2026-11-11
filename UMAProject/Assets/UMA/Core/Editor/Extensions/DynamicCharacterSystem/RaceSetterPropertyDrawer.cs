@@ -162,7 +162,28 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
 			}
-			if (showAdvancedTools && GUILayout.Button($"DNA Cvts ({converterCount})"))
+			bool useNewDNA = theRace != null && theRace.useNewDNA;
+			if (showAdvancedTools && useNewDNA)
+			{
+				// New-DNA races have no DNA converters to inspect; their legacy clothing is fitted by the rig profile instead.
+				bool hasProfile = theRace.legacyRigProfile != null;
+				var rigProfileContent = new GUIContent("Rig Profile", hasProfile
+					? $"Open '{theRace.legacyRigProfile.name}' in the Rig Profile Editor."
+					: $"{theRace.raceName} has no Legacy Rig Profile. Set one on the race to edit it here.");
+				using (new EditorGUI.DisabledScope(!hasProfile))
+				{
+					if (GUILayout.Button(rigProfileContent))
+					{
+						// Open after the inspector event, as Edit TPose does.
+						var race = theRace;
+						EditorApplication.delayCall += () =>
+						{
+							if (race != null && race.legacyRigProfile != null) UMARigProfileEditorWindow.Open(race, race.legacyRigProfile);
+						};
+					}
+				}
+			}
+			else if (showAdvancedTools && GUILayout.Button($"DNA Cvts ({converterCount})"))
 			{
                 if (theRace != null)
 				{
@@ -176,7 +197,6 @@ namespace UMA.CharacterSystem.Editors
                     }
                 }
             }
-			bool useNewDNA = theRace != null && theRace.useNewDNA;
 			if (showAdvancedTools && GUILayout.Button(useNewDNA ? "Edit TPose" : "BonePose"))
 			{
                 if (useNewDNA)

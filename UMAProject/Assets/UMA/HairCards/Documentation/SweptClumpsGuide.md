@@ -16,12 +16,12 @@ reference body and the review-only scalp slot binding.
 For wardrobe and scalp Mesh Modifier output, open a groom from a **built UMA
 character**, or use **Bind Character / Race** for an existing groom (see
 [Attach an existing hairstyle](#attach-an-existing-hairstyle-to-a-uma-character)).
-Open **Hair Nodes**, **Hair Properties**, and **Hair Preview
-& Settings** from the UMA > Hair Cards menu. Dock Nodes beside the Scene view and
+Open **Groom Outliner**, **Hair Properties**, and **Hair Preview
+& Settings** from the UMA > Hair Cards menu. Dock the Groom Outliner beside the Scene view and
 Properties on the right. Preview & Settings can share a tab with Properties.
 
-Use the tree as the only navigator. Properties always edits the selected item.
-The **Active** button bypasses an operation; selecting its name edits it. Collapsing
+Use the Groom Outliner as the only navigator. Properties always edits the selected item.
+The **On** column bypasses an operation; selecting its name edits it. Right-click a row or use **Add ▾** to create, reorder, duplicate or remove items. Collapsing
 a branch does not bypass it. Confirmations are modal popups; operations support Undo.
 
 ```text
@@ -70,7 +70,7 @@ editing the upstream layer, preventing downstream offsets from feeding back into
 
 ## 3. Apply the Swept Clumps preset
 
-Select the group or **Generate Hair**, then **Swept Clumps Preset…** in Hair Nodes.
+Select **Generate Hair**, then **Presets: Swept Clumps…** in Hair Properties.
 The confirmation explains what changes. The preset preserves guides, sculpt passes,
 assigned textures and materials. It replaces generation settings and creates a
 dedicated arched-ribbon profile; Undo restores the assignments/settings.
@@ -80,7 +80,7 @@ are full-density budgets for the painted footprint, not a guarantee: soft paint,
 spacing, hairline thinning and rejected influences can reduce the output. Each
 population's Properties shows its actual input/output count, timing and cache status.
 
-Select **Primary Clumps**, then **Inspect Population** in the tree. Curves are
+Select **Primary Clumps**, then **Inspect Population** in Hair Properties. Curves are
 colored by their parent clump. Start with these controls:
 
 | Control | What to use it for |
@@ -97,7 +97,7 @@ colored by their parent clump. Start with these controls:
 **Final Hair** returns to the complete result. Inspection is temporary: it does
 not change saved display preferences or the bake. Selecting Growth or a Sculpt Pass
 ends inspection. Add another clump stage only when you need a second scale of locks.
-Reorder or duplicate stages in the tree; disabled stages pass the previous population
+Reorder stages by dragging or with **Alt+↑/↓**, and duplicate them with **Ctrl/Cmd+D** or right-click; disabled stages pass the previous population
 through to the next enabled stage.
 
 ## 4. Tune coverage, the hairline and natural variation
@@ -129,7 +129,7 @@ arc length, so changing card tessellation does not reseed it.
 
 For localized effects, expand a modifier's **Where this modifier applies**. Painted
 mask, length, hairline distance and seeded variation multiply, then remap/invert.
-**Show Mask** in the tree displays dark protected curves and bright affected curves.
+**Show Mask** in Hair Properties displays dark protected curves and bright affected curves.
 A missing explicitly assigned map protects everything, even with Invert enabled.
 
 ## 5. Set up ribbons and the existing UMA atlas
@@ -262,7 +262,7 @@ never a path. Without it, the preset reuses the existing UMA hair atlas.
 
 ## Attach an existing hairstyle to a UMA character
 
-In **Hair Nodes**, select **Source & Setup**, then find **Bind Character / Race**
+In **Groom Outliner**, select **Source & Setup**, then find **Bind Character / Race**
 in Hair Properties. This does not replace the authoring surface: its vertex order,
 paint, guide roots, sculpt history, generation settings and hair materials remain intact.
 

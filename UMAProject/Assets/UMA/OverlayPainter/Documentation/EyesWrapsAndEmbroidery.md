@@ -4,7 +4,7 @@ These generators are included in Overlay Painter. Install **Overlay Painter Exam
 
 ## Eyes — Iris & Sclera
 
-Select the eye paint target, then choose **+Plugin → Generators → Eyes — Iris & Sclera**. Start with Blue, Brown, Green, Hazel or Gray, adjust the Iris Color Multiplier, then set the pupil, fiber detail, inner color ring, limbal border and sclera veins. Roughness is independent for iris and sclera. Seed changes the organic detail without changing placement.
+Select the eye paint target, then choose **Add Layer → Plugin → Generators → Eyes — Iris & Sclera**. Start with Blue, Brown, Green, Hazel or Gray, adjust the Iris Color Multiplier, then set the pupil, fiber detail, inner color ring, limbal border and sclera veins. Roughness is independent for iris and sclera. Seed changes the organic detail without changing placement.
 
 **Placement:** the supplied `UMA30_Eyes_slot` has overlapping left/right UVs centered at (0.5, 0.5). The UMA 3 placement mode uses that center; Iris Radius remains adjustable to match the desired visible iris size. Both eyes necessarily share the same texture detail. Custom centered UV exposes the center; Custom paired UV assumes one eye in each horizontal half of the texture and remaps each half to a square local UV domain. Paired Eye Variation only affects that separate-UV layout. It cannot create independent eyes on overlapping UMA eye UVs. Use separate slots/overlays or a unique eye unwrap for heterochromia.
 

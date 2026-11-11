@@ -582,7 +582,8 @@ namespace UMA.HairCards.Editor
     internal static class HairBrushInteractionUtility
     {
         internal const float MinimumRadius = 0.001f;
-        internal const float MaximumRadius = 0.5f;
+        // 250 mm, the same brush limit as the Vertex Editor, face editor and Overlay Painter.
+        internal const float MaximumRadius = 0.25f;
         internal const float DefaultHardness = 0.75f;
         internal const float RadiusKeyScale = 1.12f;
         internal const float HardnessKeyStep = 0.05f;

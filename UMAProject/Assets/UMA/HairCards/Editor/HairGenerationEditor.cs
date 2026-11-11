@@ -30,7 +30,7 @@ namespace UMA.HairCards.Editor
             Apply(serialized, stage);
             if (!group.generation.enabled)
             {
-                EditorGUILayout.HelpBox("Using children-per-guide. For the swept-clump hairstyle, choose Swept Clumps Preset in the tree. It preserves your authored guides and sculpt passes.", MessageType.Info);
+                EditorGUILayout.HelpBox("Using children-per-guide. For the swept-clump hairstyle, choose Presets: Swept Clumps above. It preserves your authored guides and sculpt passes.", MessageType.Info);
                 return;
             }
             if (group.generation.cards.source != HairPopulationSource.Scalp)
@@ -39,7 +39,7 @@ namespace UMA.HairCards.Editor
                 foreach (var population in group.generation.clumps) if (population != null) DrawCount(stage, population);
                 DrawCount(stage, group.generation.cards); return;
             }
-            EditorGUILayout.HelpBox("Shape a few guides, generate clump guides, then fill them with cards. Select a population in the tree to tune it. Use Inspect in the tree to see its output; Final Hair returns to the finished result.", MessageType.Info);
+            EditorGUILayout.HelpBox("Shape a few guides, generate clump guides, then fill them with cards. Select a population in the Groom Outliner to tune it. Use Inspect Population in its Properties to see its output; Final Hair returns to the finished result.", MessageType.Info);
             EditorGUILayout.LabelField("Generation order", EditorStyles.boldLabel);
             EditorGUILayout.LabelField($"{group.guides.Count:N0} authored guides", EditorStyles.wordWrappedLabel);
             foreach (var population in group.generation.clumps) if (population != null) DrawCount(stage, population);
@@ -278,7 +278,7 @@ namespace UMA.HairCards.Editor
                 if (mask.FindPropertyRelative("useHairline").boolValue) Field(mask, "hairlineRange", "Distance 0 → 1 (m)");
                 Field(mask, "randomVariation", "Random mask variation"); Field(mask, "parentCoherence", "Shared clump mask");
                 Field(mask, "remap", "Remap mask"); Field(mask, "invert", "Invert result");
-                EditorGUILayout.LabelField("Filters multiply together, then remap/invert. A missing assigned map is treated as zero. Use Show Mask in the tree: dark = protected, bright = affected.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Filters multiply together, then remap/invert. A missing assigned map is treated as zero. Use Show Mask above: dark = protected, bright = affected.", EditorStyles.wordWrappedMiniLabel);
             }
             Apply(serialized, stage);
         }

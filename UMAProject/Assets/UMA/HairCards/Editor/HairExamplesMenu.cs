@@ -38,7 +38,7 @@ namespace UMA.HairCards.Editor
             if (groom == null)
             {
                 EditorUtility.DisplayDialog("Hair Example Not Installed", "This optional example is not included in this project. Expected asset:\n" + path +
-                    "\n\nYou can still apply the generation preset to your own groom from Hair Nodes.", "OK");
+                    "\n\nYou can still apply the generation preset to your own groom from the Groom Outliner.", "OK");
                 return;
             }
             Selection.activeObject = groom;

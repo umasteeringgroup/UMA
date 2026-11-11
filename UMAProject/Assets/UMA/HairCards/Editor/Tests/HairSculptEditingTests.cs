@@ -129,7 +129,7 @@ namespace UMA.HairCards.Editor.Tests
             HairEvaluationResult before = HairGroomEvaluator.Evaluate(groom);
             using var scope = new TestSculptStageScope(this, CreateEditingStage());
             HairCardStage stage = scope.Stage;
-            HairSculptLayer finishing = HairGroomNodeWindow.AddFinishingSculptLayer(stage, group);
+            HairSculptLayer finishing = HairGroomNodeCommands.AddFinishingSculptLayer(stage, group);
             Assert.That(finishing.afterGroupOperations && stage.IsLayerEditing, Is.True);
             HairEvaluationResult editing = HairGroomEvaluator.Evaluate(groom, AtLayer(finishing));
             Assert.That(editing.evaluatedGuides[0].points, Is.EqualTo(before.evaluatedGuides[0].points));
@@ -209,7 +209,7 @@ namespace UMA.HairCards.Editor.Tests
             var before = HairGroomEvaluator.Evaluate(groom).evaluatedGuides[0];
             using var scope = new TestSculptStageScope(this, CreateEditingStage());
             var stage = scope.Stage;
-            var finish = HairGroomNodeWindow.AddFinishingSculptLayer(stage, group);
+            var finish = HairGroomNodeCommands.AddFinishingSculptLayer(stage, group);
             Assert.That(HairGroomEvaluator.Evaluate(groom, AtLayer(finish)).evaluatedGuides[0].points, Is.EqualTo(before.points));
             var restored = ScriptableObject.CreateInstance<HairCardStage>();
             try
@@ -322,7 +322,7 @@ namespace UMA.HairCards.Editor.Tests
                     {
                         if (state == 1) stage.BeginLayerEditing();
                         if (state == 2) stage.ReturnToFinalPreview();
-                        if (state == 3) HairGroomNodeWindow.AddFinishingSculptLayer(stage, group);
+                        if (state == 3) HairGroomNodeCommands.AddFinishingSculptLayer(stage, group);
                         nodes.Repaint(); properties.Repaint(); yield return null; yield return null;
                         LogAssert.NoUnexpectedReceived();
                     }

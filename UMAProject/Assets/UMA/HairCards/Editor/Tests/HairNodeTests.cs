@@ -70,9 +70,9 @@ namespace UMA.HairCards.Editor.Tests
                 .Select(method => method.Name).ToArray();
             foreach (string removed in new[] { "DrawNodeLink", "DrawStep", "DrawHeader", "DrawGrowthMapPicker", "DrawUnifiedLayerStack",
                 "DrawNodeActions", "DrawAddPass", "ShowAddGroupMenu", "ShowAddMapMenu", "ShowModifierMenu", "DrawHelpers" })
-                Assert.That(methods, Does.Not.Contain(removed), "Navigation and node management belong in Hair Nodes: " + removed);
-            Assert.That(typeof(HairGroomNodeWindow).GetMethod("ShowModifierMenu", BindingFlags.Static | BindingFlags.NonPublic), Is.Not.Null);
-            Assert.That(typeof(HairGroomNodeWindow).GetMethod("ShowAddMapMenu", BindingFlags.Static | BindingFlags.NonPublic), Is.Not.Null);
+                Assert.That(methods, Does.Not.Contain(removed), "Navigation and node management belong in the Groom Outliner: " + removed);
+            Assert.That(typeof(HairGroomNodeCommands).GetMethod("ShowModifierMenu", BindingFlags.Static | BindingFlags.NonPublic), Is.Not.Null);
+            Assert.That(typeof(HairGroomNodeCommands).GetMethod("ShowAddMapMenu", BindingFlags.Static | BindingFlags.NonPublic), Is.Not.Null);
         }
 
         [Test]
@@ -84,31 +84,31 @@ namespace UMA.HairCards.Editor.Tests
                 var group = groom.Groups[0];
                 stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Groom, group.Id));
                 Assert.That(stage.SceneTool, Is.EqualTo(HairSceneTool.Select), "A collection must not sculpt an invisible previous pass.");
-                var layer = HairGroomNodeWindow.AddSculptPass(stage, group);
+                var layer = HairGroomNodeCommands.AddSculptPass(stage, group);
                 Assert.That(stage.SelectedNode.Layer, Is.SameAs(layer));
                 Assert.That(stage.SceneTool, Is.EqualTo(HairSceneTool.Comb));
                 int initialCount = group.sculptLayers.Count;
-                Assert.That(HairGroomNodeWindow.DuplicateNode(stage, stage.SelectedNode), Is.True);
+                Assert.That(HairGroomNodeCommands.DuplicateNode(stage, stage.SelectedNode), Is.True);
                 string duplicateId = stage.SelectedNode.Layer.Id;
                 Assert.That(duplicateId, Is.Not.EqualTo(layer.Id));
                 Assert.That(group.sculptLayers.Count, Is.EqualTo(initialCount + 1));
-                Assert.That(HairGroomNodeWindow.MoveSelected(stage, stage.SelectedNode, -1), Is.True);
+                Assert.That(HairGroomNodeCommands.MoveSelected(stage, stage.SelectedNode, -1), Is.True);
                 Assert.That(stage.SelectedNode.Layer.Id, Is.EqualTo(duplicateId));
                 bool prompted = false;
-                Assert.That(HairGroomNodeWindow.RemoveNode(stage, stage.SelectedNode, (title, message, ok, cancel) =>
+                Assert.That(HairGroomNodeCommands.RemoveNode(stage, stage.SelectedNode, (title, message, ok, cancel) =>
                 { prompted = true; Assert.That(message, Does.Contain("modifiers")); return false; }), Is.False);
                 Assert.That(prompted, Is.True);
                 Assert.That(group.sculptLayers.Count, Is.EqualTo(initialCount + 1));
                 // Separate GUI gestures get separate Undo groups in the editor; model that here.
                 Undo.FlushUndoRecordObjects(); Undo.IncrementCurrentGroup();
-                Assert.That(HairGroomNodeWindow.RemoveNode(stage, stage.SelectedNode, (title, message, ok, cancel) => true), Is.True);
+                Assert.That(HairGroomNodeCommands.RemoveNode(stage, stage.SelectedNode, (title, message, ok, cancel) => true), Is.True);
                 Assert.That(stage.SelectedNode.Kind, Is.EqualTo(HairGroomNodeKind.Groom));
                 Undo.FlushUndoRecordObjects(); Undo.PerformUndo();
                 Assert.That(groom.Groups[0].sculptLayers.Exists(item => item.Id == duplicateId), Is.True);
                 stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Layer, duplicateId));
                 stage.SelectedNode.Layer.locked = true;
-                Assert.That(HairGroomNodeWindow.DuplicateNode(stage, stage.SelectedNode), Is.False);
-                Assert.That(HairGroomNodeWindow.RemoveNode(stage, stage.SelectedNode, (title, message, ok, cancel) =>
+                Assert.That(HairGroomNodeCommands.DuplicateNode(stage, stage.SelectedNode), Is.False);
+                Assert.That(HairGroomNodeCommands.RemoveNode(stage, stage.SelectedNode, (title, message, ok, cancel) =>
                 { Assert.Fail("Locked removal must not prompt."); return true; }), Is.False);
             }
             finally { Undo.ClearUndo(groom); DestroyEditingStage(stage); }
@@ -121,17 +121,17 @@ namespace UMA.HairCards.Editor.Tests
             try
             {
                 var group = groom.Groups[0];
-                var helper = HairGroomNodeWindow.AddHelper(stage, HairHelperType.CurveRail);
+                var helper = HairGroomNodeCommands.AddHelper(stage, HairHelperType.CurveRail);
                 Assert.That(stage.SelectedNode.Helper, Is.SameAs(helper));
-                var constraint = HairGroomNodeWindow.AddConstraint(stage, group, helper);
+                var constraint = HairGroomNodeCommands.AddConstraint(stage, group, helper);
                 Assert.That(stage.SelectedNode.Constraint, Is.SameAs(constraint));
                 Assert.That(constraint.helperId, Is.EqualTo(helper.Id));
-                Assert.That(HairGroomNodeWindow.RemoveNode(stage, stage.SelectedNode, (title, message, ok, cancel) => true), Is.True);
+                Assert.That(HairGroomNodeCommands.RemoveNode(stage, stage.SelectedNode, (title, message, ok, cancel) => true), Is.True);
                 Assert.That(stage.SelectedNode.Kind, Is.EqualTo(HairGroomNodeKind.Constraints));
                 Assert.That(group.constraints.Contains(constraint), Is.False);
                 group.locked = true;
-                Assert.That(HairGroomNodeWindow.AddConstraint(stage, group, helper), Is.Null);
-                Assert.That(HairGroomNodeWindow.AddSculptPass(stage, group), Is.Null);
+                Assert.That(HairGroomNodeCommands.AddConstraint(stage, group, helper), Is.Null);
+                Assert.That(HairGroomNodeCommands.AddSculptPass(stage, group), Is.Null);
             }
             finally { Undo.ClearUndo(groom); DestroyEditingStage(stage); }
         }
@@ -347,7 +347,7 @@ namespace UMA.HairCards.Editor.Tests
                 InvokeStageMethod(stage, "SculptAt", Vector3.zero, Vector3.forward, Vector3.right);
                 Assert.That(stage.ActiveLayer, Is.SameAs(layer));
                 Assert.That(group.sculptLayers.Count, Is.EqualTo(1));
-                HairGroomNodeWindow.AddFinishingSculptLayer(stage, group);
+                HairGroomNodeCommands.AddFinishingSculptLayer(stage, group);
                 Assert.That(stage.ActiveLayer, Is.Not.SameAs(layer));
                 Assert.That(stage.SelectedNode.Layer, Is.SameAs(stage.ActiveLayer));
             }
@@ -362,7 +362,7 @@ namespace UMA.HairCards.Editor.Tests
             HairCardStage stage = CreateEditingStage();
             try
             {
-                HairGroomNodeWindow.NavigateToIssue(stage, new HairValidationIssue { groupId = groom.Groups[0].Id, fixId = fix }, false);
+                HairGroomNodeCommands.NavigateToIssue(stage, new HairValidationIssue { groupId = groom.Groups[0].Id, fixId = fix }, false);
                 Assert.That(stage.SelectedNode.Kind, Is.EqualTo((HairGroomNodeKind)expected));
             }
             finally { DestroyEditingStage(stage); }

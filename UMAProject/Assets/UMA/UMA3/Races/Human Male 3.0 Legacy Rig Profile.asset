@@ -1,0 +1,220 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffe80c855b19dfa4690373ac280f2a6b, type: 3}
+  m_Name: Human Male 3.0 Legacy Rig Profile
+  m_EditorClassIdentifier: UMA_Core::UMA.UMASlotRigConversionProfile
+  defaultMode: 0
+  boneCorrections:
+  - boneName: Head
+    mode: 0
+    positionOffset: {x: 0, y: 0, z: -0.00494897}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1.0397329}
+    includeChildren: 1
+  - boneName: LeftGluteus
+    mode: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightGluteus
+    mode: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftUpLegAdjust
+    mode: 0
+    positionOffset: {x: -0.004341908, y: 0, z: -0.017046329}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1.0063838, y: 1, z: 1.132886}
+    includeChildren: 1
+  - boneName: RightUpLegAdjust
+    mode: 0
+    positionOffset: {x: 0.004341908, y: 0, z: -0.017046329}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1.0063838, y: 1, z: 1.132886}
+    includeChildren: 1
+  - boneName: LeftLegAdjust
+    mode: 0
+    positionOffset: {x: -0.01172778, y: 0, z: 0.013180718}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1.1746608, y: 1, z: 1.115415}
+    includeChildren: 1
+  - boneName: RightLegAdjust
+    mode: 0
+    positionOffset: {x: 0.01172778, y: 0, z: 0.013180718}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1.1746608, y: 1, z: 1.115415}
+    includeChildren: 1
+  - boneName: LeftShoulderAdjust
+    mode: 0
+    positionOffset: {x: 0, y: -0.024753928, z: 0}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1.176463, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightShoulderAdjust
+    mode: 0
+    positionOffset: {x: -0, y: -0.024753928, z: 0}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1.176463, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftArmAdjust
+    mode: 0
+    positionOffset: {x: -0.007937953, y: -0.022031426, z: 0}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightArmAdjust
+    mode: 0
+    positionOffset: {x: 0.007937953, y: -0.022031426, z: 0}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftForeArmAdjust
+    mode: 0
+    positionOffset: {x: -0.0015080571, y: -0.019626498, z: 0}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1.1811497, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightForeArmAdjust
+    mode: 0
+    positionOffset: {x: 0.0015080571, y: -0.019626498, z: 0}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1.1811497, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftUpLeg
+    mode: 0
+    positionOffset: {x: 0, y: 0.0158844, z: 0}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightUpLeg
+    mode: 0
+    positionOffset: {x: -0, y: 0.0158844, z: 0}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftFoot
+    mode: 0
+    positionOffset: {x: 0.00088329613, y: -0.0057883337, z: 0.019824974}
+    rotationOffsetEuler: {x: 5.9842606, y: -0, z: -0}
+    scaleOffset: {x: 0.99563754, y: 0.96356225, z: 0.97151166}
+    includeChildren: 1
+  - boneName: RightFoot
+    mode: 0
+    positionOffset: {x: -0.00088329613, y: -0.0057883337, z: 0.019824974}
+    rotationOffsetEuler: {x: 5.9842606, y: 0, z: 0}
+    scaleOffset: {x: 0.99563754, y: 0.96356225, z: 0.97151166}
+    includeChildren: 1
+  favoriteBones:
+  - Head
+  - NeckAdjust
+  - LeftUpLegAdjust
+  - LowerBackAdjust
+  - SpineAdjust
+  - Spine1Adjust
+  - RightLegAdjust
+  - RightUpLegAdjust
+  - LeftLegAdjust
+  - LeftFoot
+  - RightFoot
+  - LeftArmAdjust
+  - LeftForeArmAdjust
+  - LeftForeArmTwistAdjust
+  - RightForeArmAdjust
+  - RightArmAdjust
+  - RightForeArmTwistAdjust
+  - LowerBackBelly
+  - LeftGluteus
+  - RightGluteus
+  slotOverrides:
+  - slotName: M_Bard Pants
+    boneCorrections:
+    - boneName: LeftUpLeg
+      mode: 0
+      positionOffset: {x: 0, y: -0.043908834, z: 0}
+      rotationOffsetEuler: {x: 0, y: 0, z: 0}
+      scaleOffset: {x: 1, y: 1, z: 1}
+      includeChildren: 1
+    - boneName: RightUpLeg
+      mode: 0
+      positionOffset: {x: -0, y: -0.043908834, z: 0}
+      rotationOffsetEuler: {x: 0, y: -0, z: -0}
+      scaleOffset: {x: 1, y: 1, z: 1}
+      includeChildren: 1
+    - boneName: LeftGluteus
+      mode: 0
+      positionOffset: {x: 0.07675467, y: 0, z: 0}
+      rotationOffsetEuler: {x: 0, y: 0, z: 0}
+      scaleOffset: {x: 1, y: 1, z: 1}
+      includeChildren: 1
+    - boneName: RightGluteus
+      mode: 0
+      positionOffset: {x: -0.07675467, y: 0, z: 0}
+      rotationOffsetEuler: {x: 0, y: -0, z: -0}
+      scaleOffset: {x: 1, y: 1, z: 1}
+      includeChildren: 1
+    - boneName: LeftUpLegAdjust
+      mode: 0
+      positionOffset: {x: -0.026102073, y: 0, z: 0.0005034171}
+      rotationOffsetEuler: {x: 0, y: 0, z: 0}
+      scaleOffset: {x: 1.08, y: 1, z: 1}
+      includeChildren: 1
+    - boneName: RightUpLegAdjust
+      mode: 0
+      positionOffset: {x: 0.026102073, y: 0, z: 0.0005034171}
+      rotationOffsetEuler: {x: 0, y: -0, z: -0}
+      scaleOffset: {x: 1.08, y: 1, z: 1}
+      includeChildren: 1
+    effectors: []
+  effectors:
+  - name: Capsule 1
+    enabled: 1
+    shape: 1
+    boneName: LeftUpLeg
+    position: {x: 0.11840342, y: 0.0098006725, z: -0.07219439}
+    rotationEuler: {x: 90, y: 90, z: 0}
+    radius: 0.12
+    falloff: 0.299
+    length: 0.4
+    axisCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    mirror: 0
+    action: 1
+    amount: 0.01
+    move: {x: 0, y: 0, z: -0.02}
+    scale: {x: 1, y: 1, z: 1}
+    reach: 0.08
+    smoothing: 4

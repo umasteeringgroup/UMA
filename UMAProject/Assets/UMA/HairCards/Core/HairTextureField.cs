@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Profiling;
 
 namespace UMA.HairCards
 {
@@ -11,10 +12,12 @@ namespace UMA.HairCards
         private readonly Dictionary<long, Face> faces = new Dictionary<long, Face>();
         private readonly HashSet<long> emptyFaces = new HashSet<long>();
         private readonly HairSurfaceFields graph = new HairSurfaceFields();
+        private static readonly ProfilerMarker Marker = new ProfilerMarker("HairCards.TextureField");
 
         internal HairTextureField(IReadOnlyList<Vector3> source, IReadOnlyList<Vector3> sourceNormals,
             IReadOnlyList<int[]> submeshes, HairGrowthMap map)
         {
+            using var scope = Marker.Auto();
             var positions = new List<Vector3>(); var normals = new List<Vector3>();
             var values = new List<float>(); var indices = new List<int>();
             var canonical = new Dictionary<Vector3, int>(); var owners = new int[source.Count];
@@ -32,6 +35,7 @@ namespace UMA.HairCards
                 a = owners[a]; b = owners[b]; if (a > b) { (a, b) = (b, a); t = n - t; }
                 return (source[a] * (n - t) + source[b] * t) / n;
             }
+            bool smoothNormals = sourceNormals.Count == source.Count;
             for (int sub = 0; sub < submeshes.Count; sub++)
             {
                 var triangles = submeshes[sub];
@@ -44,18 +48,25 @@ namespace UMA.HairCards
                     int n = tile != null ? map.texture.resolution : 1;
                     var face = new Face { resolution = n, grid = new int[(n + 1) * (n + 1)] };
                     faces.Add(HairTextureMap.FaceKey(sub, triangle), face);
+                    // Per-face lookups, hoisted out of the texel loop (this matches
+                    // HairGrowthMap.SampleTriangle without a tile search per texel).
+                    bool sampleTile = map.texture.Valid(tile) && tile.a == a && tile.b == b && tile.c == c;
+                    float baseA = map.BaseVertex(a), baseB = map.BaseVertex(b), baseC = map.BaseVertex(c);
+                    bool borderAB = uses[Key(a, b)] == 1, borderAC = uses[Key(a, c)] == 1, borderBC = uses[Key(b, c)] == 1;
+                    Vector3 sa = source[a], sb = source[b], sc = source[c];
+                    Vector3 na = smoothNormals ? sourceNormals[a] : default, nb = smoothNormals ? sourceNormals[b] : default,
+                        nc = smoothNormals ? sourceNormals[c] : default;
+                    Vector3 flatNormal = smoothNormals ? default : Vector3.Cross(sb - sa, sc - sa);
                     for (int y = 0; y <= n; y++) for (int x = 0; x <= n - y; x++)
                     {
                         var bc = HairTextureMap.TexelBarycentric(x, y, n);
                         Vector3 p = y == 0 ? Edge(a, b, x, n) : x == 0 ? Edge(a, c, y, n) :
-                            x + y == n ? Edge(b, c, y, n) : source[a] * bc.x + source[b] * bc.y + source[c] * bc.z;
-                        Vector3 normal = sourceNormals.Count == source.Count ? sourceNormals[a] * bc.x + sourceNormals[b] * bc.y + sourceNormals[c] * bc.z :
-                            Vector3.Cross(source[b] - source[a], source[c] - source[a]);
+                            x + y == n ? Edge(b, c, y, n) : sa * bc.x + sb * bc.y + sc * bc.z;
+                        Vector3 normal = smoothNormals ? na * bc.x + nb * bc.y + nc * bc.z : flatNormal;
                         face.grid[y * (n + 1) + x] = positions.Count;
-                        if ((y == 0 && uses[Key(a, b)] == 1) || (x == 0 && uses[Key(a, c)] == 1) ||
-                            (x + y == n && uses[Key(b, c)] == 1)) borders.Add(positions.Count);
+                        if ((y == 0 && borderAB) || (x == 0 && borderAC) || (x + y == n && borderBC)) borders.Add(positions.Count);
                         positions.Add(p); normals.Add(normal.normalized);
-                        float value = map.SampleTriangle(sub, triangle, a, b, c, bc);
+                        float value = sampleTile ? map.texture.Sample(tile, bc) : baseA * bc.x + baseB * bc.y + baseC * bc.z;
                         values.Add(float.IsFinite(value) ? Mathf.Clamp01(value) : 0f);
                     }
                     for (int y = 0; y < n; y++) for (int x = 0; x < n - y; x++)

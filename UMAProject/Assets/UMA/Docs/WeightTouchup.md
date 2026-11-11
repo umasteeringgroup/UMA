@@ -7,7 +7,7 @@ The tool edits the source slot asset. Every recipe and character that uses that 
 ## Before You Begin
 
 1. Open a scene containing a built `DynamicCharacterAvatar`.
-2. Put the character in a pose that exposes the deformation problem.
+2. Put the character in a pose that exposes the deformation problem, or pose it afterwards with **Pose Mode** (see below).
 3. Select the avatar or one of its children in the Hierarchy.
 4. In the Dynamic Character Avatar inspector, open **Utilities > Skinning Weights**.
 5. Click **Touchup Weights**.
@@ -21,6 +21,18 @@ The **Touchup Weights** window lists the character's visible slots with editable
 Use the **Bones** list to choose the influence used by Paint mode or added during numeric editing. Search filters the list. Vertex colors in the Scene view visualize the selected bone's weight from 0 to 1.
 
 You cannot change slots while unsaved painted weights are pending. Save or revert those changes first.
+
+## Vertices at the Same Position
+
+A mesh splits one point of its surface into several vertices wherever UVs, normals, or materials change. Those copies sit at the same position and carry the same weights. If only one of them were painted, the surface would tear open along the split as soon as a bone moved.
+
+Touchup Weights therefore treats the vertices of the slot that are at the same position (within 0.1 mm) and have the same weights as a single vertex:
+
+- Selecting one of them selects all of them.
+- Painting or smoothing one gives all of them the same result, also the copies that face away from the camera or are hidden.
+- Smoothing uses the connected vertices of every copy, so a seam smooths across both of its sides.
+
+Vertices at the same position with different weights are left separate. They were weighted apart on purpose, as on two layers of cloth that lie on each other.
 
 ## Select Mode
 
@@ -57,8 +69,28 @@ Every painted result is normalized. **Replace** and **Add** can bind the selecte
 
 Enable **Selected Vertices Only** to use the Select mode selection as a paint mask. Enable **Auto-mask Connected Vertices** to protect co-located vertices on other visible slots; this helps prevent a correction from opening a cross-slot seam.
 
+## Pose Mode and the Skeleton
+
+Weights can only be judged in a pose that bends the joint in question. **Pose Mode** turns the bones of the character you are editing, without leaving Touchup Weights.
+
+1. Choose **Pose Mode** in the mode bar. The skeleton is drawn over the character.
+2. Click a bone in the Scene view. It turns orange, and rotation rings appear at its joint.
+3. Drag a ring, or use the **Turn X**, **Turn Y**, and **Turn Z** sliders. They show how far the bone is turned from the character's own pose, about the bone's own axes.
+4. Switch to **Select Mode** or **Paint Mode** and work on the weights. The pose stays.
+
+- **Mirror Left/Right** turns the bone of the same name on the other side by the mirrored amount, for example both thighs at once. It is off unless you turn it on; the setting is remembered.
+- **Pose Weight Bone** chooses the bone selected in the Touchup Weights window as the bone to turn. **Weight This Bone** does the opposite: it makes the bone you are turning the one that Paint mode works on.
+- **Reset Bone** gives the chosen bone its own rotation back. **Reset Pose** does that for every turned bone, and is also offered in the other modes while a pose is active.
+
+**Show Bones**, with the other preview controls, draws the skeleton in Select and Paint modes as well. The bone being weighted is cyan, the bone Pose mode turns is orange, and other turned bones are lighter orange. **Slot Bones Only** limits the drawing to the bones the current slot is weighted to and the bones above them; turn it off to see and pose every bone of the character.
+
+The mesh is skinned again each time a bone turns, with the weights you are editing, so painted and previewed weights show their effect in the pose immediately.
+
+The pose is a working aid only. It is not saved and it is not part of Undo. The character gets its own pose back when Touchup Weights closes or scripts reload. A rebuild of the character while Touchup Weights is open keeps the pose.
+
 ## Preview Controls
 
+- **Weight Colors** colors the slot being weighted by the selected bone's weight, as Blender does: red is full weight, through yellow and green, to blue for none. It is on by default and the setting is remembered. Turn it off to see the slot with its own material while judging a deformation. A slot that is blue all over means the selected bone has no weight on it; choose another bone in the Touchup Weights window.
 - **Live update** recalculates edited vertex positions from the current skeleton every editor frame. Enable it when the deformation should respond immediately in the posed character.
 - **Handle Size** changes the displayed vertex-handle size but not the edited area.
 - **Reset Camera** frames the active slot again.

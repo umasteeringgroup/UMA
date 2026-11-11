@@ -435,7 +435,7 @@ namespace UMA.HairCards.Editor
             EditorGUILayout.Space(6f);
             serializedObject.Update();
             EditorGUILayout.LabelField("Groom contents", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Groups, helpers and LODs are labeled by their editable names. Use Hair Nodes for day-to-day grooming; this Inspector also exposes the saved settings.", MessageType.None);
+            EditorGUILayout.HelpBox("Groups, helpers and LODs are labeled by their editable names. Use the Groom Outliner for day-to-day grooming; this Inspector also exposes the saved settings.", MessageType.None);
             foreach (string list in new[] { "groups", "sharedHelpers", "lods" })
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(list), true);
             sourceDetails = EditorGUILayout.Foldout(sourceDetails, "Source & symmetry", true);

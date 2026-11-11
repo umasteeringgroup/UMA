@@ -93,13 +93,13 @@ namespace UMA.TexturePaint.Editor
                 hem.enabled=enabled;if(garment!=null)garment.enabled=false;
             }
         }
-        private void AddGarmentMenu(GenericMenu menu,TextureSet set,bool path)
+        private void AddGarmentMenu(GenericMenu menu,TextureSet set,bool path,string prefix="")
         {
             foreach(TexturePaintGarmentPreset preset in Enum.GetValues(typeof(TexturePaintGarmentPreset)))
             {
                 if(path && TexturePaintPathGenerators.IsLinearGarment(preset))continue;
                 var selected=preset;
-                menu.AddItem(new GUIContent("Garments/"+TexturePaintGarmentSettings.FamilyName(TexturePaintGarmentSettings.Kind(preset))+"/"+ObjectNames.NicifyVariableName(preset.ToString())),false,
+                menu.AddItem(new GUIContent(prefix+"Garments/"+TexturePaintGarmentSettings.FamilyName(TexturePaintGarmentSettings.Kind(preset))+"/"+ObjectNames.NicifyVariableName(preset.ToString())),false,
                     ()=> { if(path)CreateGarmentPath(set,selected);else AddProjectionLayerCore(set,TexturePaintGarmentSettings.Create(selected)); });
             }
 

@@ -1489,6 +1489,15 @@ namespace UMA.Editors
 				}
 			}
 #pragma warning restore 618
+			// Automatic conversion of legacy slots built for the older rig this race replaces.
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("legacyRig"));
+			EditorGUILayout.PropertyField(serializedObject.FindProperty("legacyRigProfile"));
+			if (GUILayout.Button(new GUIContent("Open Rig Profile Editor", "Adjust how legacy slots are aligned to this race's rig, against a live preview character.")))
+			{
+				serializedObject.ApplyModifiedProperties();
+				UMARigProfileEditorWindow.Open((RaceData)target);
+				GUIUtility.ExitGUI();
+			}
 			SerializedProperty _crossCompatibilitySettings = serializedObject.FindProperty("_crossCompatibilitySettings");
 			SerializedProperty _crossCompatibilitySettingsData = _crossCompatibilitySettings.FindPropertyRelative("settingsData");
 			//draw the new version of the crossCompatibility list that allows users to define what slots in THIS races base recipe equate to in the backwards compatible races base recipe

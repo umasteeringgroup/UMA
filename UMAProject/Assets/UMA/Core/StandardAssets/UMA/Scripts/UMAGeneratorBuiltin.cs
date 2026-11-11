@@ -817,6 +817,7 @@ namespace UMA
             umaData = data;
             CacheDefaultOverlayMaterial(umaData);
 
+            UMALegacySlotConverter.ConvertLegacySlots(umaData);
 
             if (!umaData.Validate())
             {
@@ -904,6 +905,9 @@ namespace UMA
 				umaData.RebuildSkeletonThisBuild = false;
 				umaData.isShapeDirty = true;
 			}
+            // Slots built for the older rig this race replaces are swapped for converted copies
+            // before anything reads their bones or mesh data.
+            UMALegacySlotConverter.ConvertLegacySlots(umaData);
             if (!umaData.Validate())
             {
                 return true;
@@ -2045,6 +2049,7 @@ namespace UMA
                     data.isShapeDirty = true;
                 }
 
+                UMALegacySlotConverter.ConvertLegacySlots(data);
                 if (!data.Validate())
                 {
                     return false;

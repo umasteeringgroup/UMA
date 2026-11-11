@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using Unity.Profiling;
 
@@ -10,6 +11,7 @@ namespace UMA.HairCards
     public sealed class HairSurfaceFields
     {
         private static readonly ProfilerMarker Marker = new ProfilerMarker("HairCards.SurfaceFields");
+        private static readonly ProfilerMarker DistanceMarker = new ProfilerMarker("HairCards.SurfaceDistances");
         private readonly List<Vector3> vertices = new List<Vector3>(), normals = new List<Vector3>();
         private readonly List<int[]> triangles = new List<int[]>();
         private readonly List<float> growth = new List<float>(), density = new List<float>();
@@ -34,7 +36,7 @@ namespace UMA.HairCards
         {
             if (!source.IsValid)
             {
-                textureField = null; textureStamp = 0;
+                textureField = null; textureStamp = 0; CancelDeferredField();
                 if (vertices.Count > 0)
                 {
                     vertices.Clear(); normals.Clear(); growth.Clear(); density.Clear(); triangles.Clear();
@@ -95,8 +97,81 @@ namespace UMA.HairCards
                             shadingSafe[a] = shadingSafe[b] = shadingSafe[c] = false;
                     }
             }
-            textureField = g?.UsesTexture == true && g.texture.tiles.Count > 0 ? new HairTextureField(positions, ns, triangles, g) : null;
+            CancelDeferredField();
+            if (g?.UsesTexture != true || g.texture.tiles.Count == 0) textureField = null;
+            else if (!DeferTextureField) textureField = new HairTextureField(positions, ns, triangles, g);
+            else
+            {
+                // Until the texel field is ready, Distance/Inward/Region use the per-vertex
+                // field built above, which already reflects this paint.
+                textureField = null;
+                Vector3[] fieldPositions = vertices.ToArray(), fieldNormals = normals.ToArray();
+                int[][] fieldTriangles = triangles.ToArray();
+                HairGrowthMap fieldMap = SnapshotForField(g);
+                queuedField = () => new HairTextureField(fieldPositions, fieldNormals, fieldTriangles, fieldMap);
+                queuedFieldVersion = fieldVersion;
+                StartQueuedField();
+            }
             Revision++;
+        }
+
+        /// <summary>When set, a texture-resolution field (millions of graph vertices for a
+        /// detailed growth map) is built on a worker thread instead of blocking Prepare.
+        /// Interactive previews only: the owner must call <see cref="CompleteDeferredField"/>
+        /// from the main thread and re-evaluate when it returns true.</summary>
+        internal bool DeferTextureField { get; set; }
+        internal bool HasDeferredField => fieldTask != null || queuedField != null;
+        private Task<HairTextureField> fieldTask;
+        private Func<HairTextureField> queuedField;
+        private int fieldVersion, fieldTaskVersion, queuedFieldVersion;
+
+        // Stale results are dropped by version; a running build cannot be interrupted, so at
+        // most one runs and only the newest request waits behind it.
+        private void CancelDeferredField() { fieldVersion++; queuedField = null; }
+
+        private void StartQueuedField()
+        {
+            if (queuedField == null || (fieldTask != null && !fieldTask.IsCompleted)) return;
+            Func<HairTextureField> build = queuedField;
+            fieldTaskVersion = queuedFieldVersion; queuedField = null;
+            fieldTask = Task.Run(build);
+        }
+
+        /// <summary>Main thread only. Installs a finished deferred field when it still matches
+        /// the latest Prepare; returns true when results changed and callers should re-evaluate.</summary>
+        internal bool CompleteDeferredField()
+        {
+            if (fieldTask == null || !fieldTask.IsCompleted) return false;
+            Task<HairTextureField> finished = fieldTask; fieldTask = null;
+            bool applied = false;
+            if (finished.IsFaulted) Debug.LogException(finished.Exception?.GetBaseException());
+            else if (finished.Status == TaskStatus.RanToCompletion && fieldTaskVersion == fieldVersion)
+            {
+                textureField = finished.Result; Revision++; applied = true;
+            }
+            StartQueuedField();
+            return applied;
+        }
+
+        // The worker reads only this copy; painting keeps editing the live map meanwhile.
+        private static HairGrowthMap SnapshotForField(HairGrowthMap map)
+        {
+            var texture = new HairTextureMap { resolution = map.texture.resolution, topology = map.texture.topology };
+            texture.tiles.Capacity = map.texture.tiles.Count;
+            foreach (var tile in map.texture.tiles)
+            {
+                if (tile == null) continue;
+                texture.tiles.Add(new HairTextureMap.Tile
+                {
+                    submesh = tile.submesh, triangle = tile.triangle, a = tile.a, b = tile.b, c = tile.c,
+                    pixels = tile.pixels != null ? (float[])tile.pixels.Clone() : null
+                });
+            }
+            return new HairGrowthMap
+            {
+                kind = map.kind, defaultValue = map.defaultValue, storage = map.storage, texture = texture,
+                values = map.values != null ? (float[])map.values.Clone() : null
+            };
         }
 
         private static float Safe(float value) => float.IsFinite(value) ? Mathf.Clamp01(value) : 0f;
@@ -153,107 +228,239 @@ namespace UMA.HairCards
 
         private void BuildDistances(bool seedMeshBorders = true, List<int> borders = null)
         {
+            using var scope = DistanceMarker.Auto();
             int count = vertices.Count;
             distances = new float[count]; inward = new Vector3[count]; regions = new int[count];
-            var adjacency = new List<int>[count]; var canonical = new int[count];
-            var weld = new Dictionary<Vector3, int>(); var edges = new Dictionary<(int, int), int>();
+            // Plain arrays: these loops touch millions of texture-graph vertices, and the
+            // editor usually runs Debug-compiled code where every List indexer is a call.
+            Vector3[] points = vertices.ToArray();
+            var canonical = new int[count];
             var maxGrowth = new float[count];
+            // Weld exactly coincident positions (Vector3 equality) with an open-addressed
+            // table; the first vertex at a position owns it.
+            int tableSize = 16;
+            while (tableSize < count * 2) tableSize <<= 1;
+            var weld = new int[tableSize]; int mask = tableSize - 1;
+            for (int i = 0; i < tableSize; i++) weld[i] = -1;
             for (int i = 0; i < count; i++)
             {
-                adjacency[i] = new List<int>(); distances[i] = 1000f; regions[i] = -1;
-                if (!weld.TryGetValue(vertices[i], out int owner)) { owner = i; weld.Add(vertices[i], i); }
-                canonical[i] = owner; maxGrowth[owner] = Mathf.Max(maxGrowth[owner], growth[i]);
-                if (owner != i) { adjacency[i].Add(owner); adjacency[owner].Add(i); }
+                distances[i] = 1000f; regions[i] = -1;
+                Vector3 p = points[i];
+                int slot = WeldHash(p) & mask, owner;
+                while (true)
+                {
+                    owner = weld[slot];
+                    if (owner < 0) { weld[slot] = owner = i; break; }
+                    Vector3 q = points[owner];
+                    if (SameCoordinate(p.x, q.x) && SameCoordinate(p.y, q.y) && SameCoordinate(p.z, q.z)) break;
+                    slot = (slot + 1) & mask;
+                }
+                canonical[i] = owner;
+                float value = growth[i]; if (value > maxGrowth[owner]) maxGrowth[owner] = value;
             }
-            void Edge(int a, int b)
-            {
-                if ((uint)a >= count || (uint)b >= count) return;
-                a = canonical[a]; b = canonical[b]; if (a == b) return;
-                var key = a < b ? (a, b) : (b, a);
-                if (edges.TryGetValue(key, out int uses)) edges[key] = uses + 1;
-                else { edges.Add(key, 1); adjacency[a].Add(b); adjacency[b].Add(a); }
-            }
-            foreach (var indices in triangles)
-                for (int i = 0; i + 2 < indices.Length; i += 3)
-                { Edge(indices[i], indices[i + 1]); Edge(indices[i + 1], indices[i + 2]); Edge(indices[i + 2], indices[i]); }
-            var queue = new DistanceQueue();
-            void Seed(int v) { if (distances[v] == 0f) return; distances[v] = 0f; queue.Push(0f, v); }
+            weld = null;
             // Empty body/face interiors already have distance zero. Only their frontier
             // can propagate into hair; queuing every empty texel made high detail costly.
             for (int i = 0; i < count; i++) if (maxGrowth[canonical[i]] <= .001f) distances[i] = 0f;
+
+            // Compressed adjacency: count, fill, then sort and de-duplicate each vertex's
+            // neighbors. Texture-resolution graphs reach millions of vertices, where a list
+            // per vertex plus an edge dictionary cost seconds on every growth paint stroke.
+            var start = new int[count + 1];
+            for (int i = 0; i < count; i++)
+            {
+                int owner = canonical[i];
+                if (owner != i) { start[i + 1]++; start[owner + 1]++; }
+            }
+            for (int t = 0; t < triangles.Count; t++)
+            {
+                int[] indices = triangles[t];
+                for (int i = 0; i + 2 < indices.Length; i += 3)
+                {
+                    int i0 = indices[i], i1 = indices[i + 1], i2 = indices[i + 2];
+                    bool v0 = (uint)i0 < (uint)count, v1 = (uint)i1 < (uint)count, v2 = (uint)i2 < (uint)count;
+                    int c0 = v0 ? canonical[i0] : -1, c1 = v1 ? canonical[i1] : -1, c2 = v2 ? canonical[i2] : -1;
+                    if (v0 && v1 && c0 != c1) { start[c0 + 1]++; start[c1 + 1]++; }
+                    if (v1 && v2 && c1 != c2) { start[c1 + 1]++; start[c2 + 1]++; }
+                    if (v2 && v0 && c2 != c0) { start[c2 + 1]++; start[c0 + 1]++; }
+                }
+            }
+            for (int i = 0; i < count; i++) start[i + 1] += start[i];
+            var neighbors = new int[start[count]];
+            var fill = new int[count];
+            Array.Copy(start, fill, count);
+            for (int i = 0; i < count; i++)
+            {
+                int owner = canonical[i];
+                if (owner != i) { neighbors[fill[i]++] = owner; neighbors[fill[owner]++] = i; }
+            }
+            for (int t = 0; t < triangles.Count; t++)
+            {
+                int[] indices = triangles[t];
+                for (int i = 0; i + 2 < indices.Length; i += 3)
+                {
+                    int i0 = indices[i], i1 = indices[i + 1], i2 = indices[i + 2];
+                    bool v0 = (uint)i0 < (uint)count, v1 = (uint)i1 < (uint)count, v2 = (uint)i2 < (uint)count;
+                    int c0 = v0 ? canonical[i0] : -1, c1 = v1 ? canonical[i1] : -1, c2 = v2 ? canonical[i2] : -1;
+                    if (v0 && v1 && c0 != c1) { neighbors[fill[c0]++] = c1; neighbors[fill[c1]++] = c0; }
+                    if (v1 && v2 && c1 != c2) { neighbors[fill[c1]++] = c2; neighbors[fill[c2]++] = c1; }
+                    if (v2 && v0 && c2 != c0) { neighbors[fill[c2]++] = c0; neighbors[fill[c0]++] = c2; }
+                }
+            }
+            fill = null;
+
+            var queue = new DistanceQueue(count);
+            // Compact in place, keeping each neighbor's first occurrence in insertion order.
+            // That order matches the former per-vertex lists, so gradient sums and therefore
+            // every field value stay bit-identical. A face edge used by one triangle is a mesh
+            // border, which only exists between welded (canonical) vertices.
+            int write = 0;
+            int[] uses = seedMeshBorders ? new int[16] : null;
+            for (int v = 0; v < count; v++)
+            {
+                int from = start[v], to = start[v + 1], first = write;
+                start[v] = write;
+                if (uses != null && uses.Length < to - from) uses = new int[Mathf.NextPowerOfTwo(to - from)];
+                for (int k = from; k < to; k++)
+                {
+                    int other = neighbors[k], found = -1;
+                    for (int j = first; j < write; j++) if (neighbors[j] == other) { found = j; break; }
+                    if (found >= 0) { if (uses != null) uses[found - first]++; continue; }
+                    if (uses != null) uses[write - first] = 1;
+                    neighbors[write++] = other;
+                }
+                if (uses == null) continue;
+                for (int j = first; j < write; j++)
+                {
+                    int other = neighbors[j];
+                    if (uses[j - first] != 1 || v >= other || canonical[v] != v || canonical[other] != other) continue;
+                    if (distances[v] != 0f) { distances[v] = 0f; queue.Push(0f, v); }
+                    if (distances[other] != 0f) { distances[other] = 0f; queue.Push(0f, other); }
+                }
+            }
+            start[count] = write;
+
             for (int i = 0; i < count; i++)
                 if (canonical[i] == i && distances[i] == 0f)
-                    foreach (int other in adjacency[i]) if (maxGrowth[canonical[other]] > .001f) { queue.Push(0f, i); break; }
-            if (seedMeshBorders)
-                foreach (var edge in edges) if (edge.Value == 1) { Seed(edge.Key.Item1); Seed(edge.Key.Item2); }
-            if (borders != null) foreach (int vertex in borders) Seed(vertex);
+                    for (int k = start[i], end = start[i + 1]; k < end; k++)
+                        if (maxGrowth[canonical[neighbors[k]]] > .001f) { queue.Push(0f, i); break; }
+            if (borders != null)
+                for (int b = 0; b < borders.Count; b++)
+                {
+                    int vertex = borders[b];
+                    if (distances[vertex] != 0f) { distances[vertex] = 0f; queue.Push(0f, vertex); }
+                }
             while (queue.Count > 0)
             {
-                var item = queue.Pop();
-                if (item.distance != distances[item.vertex]) continue;
-                foreach (int other in adjacency[item.vertex])
+                queue.Pop(out float distance, out int vertex);
+                if (distance != distances[vertex]) continue;
+                Vector3 position = points[vertex];
+                for (int k = start[vertex], end = start[vertex + 1]; k < end; k++)
                 {
-                    float candidate = item.distance + Vector3.Distance(vertices[item.vertex], vertices[other]);
+                    int other = neighbors[k];
+                    Vector3 target = points[other];
+                    // Same arithmetic as Vector3.Distance, inlined.
+                    float dx = position.x - target.x, dy = position.y - target.y, dz = position.z - target.z;
+                    float candidate = distance + (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
                     if (candidate >= distances[other]) continue;
                     distances[other] = candidate; queue.Push(candidate, other);
                 }
             }
-            int region = 0; var flood = new Queue<int>();
+            int region = 0; var flood = new int[count];
             for (int i = 0; i < count; i++)
             {
                 if (regions[i] >= 0 || maxGrowth[canonical[i]] <= 0.001f) continue;
-                regions[i] = region; flood.Enqueue(i);
-                while (flood.Count > 0)
+                int head = 0, tail = 0;
+                regions[i] = region; flood[tail++] = i;
+                while (head < tail)
                 {
-                    int v = flood.Dequeue();
-                    foreach (int other in adjacency[v])
+                    int v = flood[head++];
+                    for (int k = start[v], end = start[v + 1]; k < end; k++)
+                    {
+                        int other = neighbors[k];
                         if (regions[other] < 0 && maxGrowth[canonical[other]] > 0.001f)
-                        { regions[other] = region; flood.Enqueue(other); }
+                        { regions[other] = region; flood[tail++] = other; }
+                    }
                 }
                 region++;
             }
+            bool projectNormals = normals.Count == count;
+            // Keep Unity's Vector3 operators here: inlining them changes float rounding in the
+            // editor's Mono, and inward directions feed card placement.
             for (int i = 0; i < count; i++)
             {
-                Vector3 gradient = Vector3.zero;
-                foreach (int other in adjacency[i])
+                Vector3 gradient = Vector3.zero, position = points[i];
+                for (int k = start[i], end = start[i + 1]; k < end; k++)
                 {
-                    Vector3 edge = vertices[other] - vertices[i];
-                    if (edge.sqrMagnitude > 1e-12f) gradient += edge * ((distances[other] - distances[i]) / edge.sqrMagnitude);
+                    Vector3 edge = points[neighbors[k]] - position;
+                    if (edge.sqrMagnitude > 1e-12f) gradient += edge * ((distances[neighbors[k]] - distances[i]) / edge.sqrMagnitude);
                 }
-                inward[i] = (normals.Count == count ? Vector3.ProjectOnPlane(gradient, normals[i]) : gradient).normalized;
+                inward[i] = (projectNormals ? Vector3.ProjectOnPlane(gradient, normals[i]) : gradient).normalized;
             }
             // Copy the gradient across zero-length seam links.
             for (int i = 0; i < count; i++) if (canonical[i] != i) inward[i] = inward[canonical[i]];
         }
 
-        // An allocation-free-per-entry binary heap. Stale entries are discarded on pop;
-        // ties retain the former distance/vertex ordering for deterministic fields.
+        // float.Equals semantics (0 == -0, NaN equals NaN), matching Vector3 dictionary welds.
+        private static bool SameCoordinate(float a, float b) => a == b || (a != a && b != b);
+        private static int CoordinateBits(float value) =>
+            value == 0f ? 0 : value != value ? int.MinValue : BitConverter.SingleToInt32Bits(value);
+        private static int WeldHash(Vector3 p)
+        {
+            unchecked
+            {
+                uint h = (uint)CoordinateBits(p.x) * 0x9E3779B1u;
+                h = (h ^ (uint)CoordinateBits(p.y)) * 0x85EBCA77u;
+                h = (h ^ (uint)CoordinateBits(p.z)) * 0xC2B2AE3Du;
+                return (int)(h ^ (h >> 15));
+            }
+        }
+
+        // Binary min-heap over parallel arrays. Stale entries are discarded on pop; ties keep
+        // the former distance/vertex ordering for deterministic fields.
         private sealed class DistanceQueue
         {
-            private readonly List<(float distance, int vertex)> items = new List<(float, int)>();
-            public int Count => items.Count;
-            private static bool Before((float distance, int vertex) a, (float distance, int vertex) b) =>
-                a.distance < b.distance || (a.distance == b.distance && a.vertex < b.vertex);
+            private float[] keys; private int[] values;
+            public int Count { get; private set; }
+            public DistanceQueue(int capacity)
+            {
+                capacity = Math.Max(16, capacity);
+                keys = new float[capacity]; values = new int[capacity];
+            }
             public void Push(float distance, int vertex)
             {
-                var value = (distance, vertex); int i = items.Count; items.Add(value);
+                if (Count == keys.Length)
+                {
+                    Array.Resize(ref keys, keys.Length * 2); Array.Resize(ref values, values.Length * 2);
+                }
+                int i = Count++;
                 while (i > 0)
-                { int parent = (i - 1) / 2; if (!Before(value, items[parent])) break; items[i] = items[parent]; i = parent; }
-                items[i] = value;
+                {
+                    int parent = (i - 1) >> 1;
+                    float pk = keys[parent];
+                    if (!(distance < pk || (distance == pk && vertex < values[parent]))) break;
+                    keys[i] = pk; values[i] = values[parent]; i = parent;
+                }
+                keys[i] = distance; values[i] = vertex;
             }
-            public (float distance, int vertex) Pop()
+            public void Pop(out float distance, out int vertex)
             {
-                var result = items[0]; int last = items.Count - 1; var value = items[last]; items.RemoveAt(last);
-                if (last == 0) return result;
+                distance = keys[0]; vertex = values[0];
+                int last = --Count;
+                if (last == 0) return;
+                float key = keys[last]; int value = values[last];
                 int i = 0;
-                while (i * 2 + 1 < last)
+                while (true)
                 {
                     int child = i * 2 + 1;
-                    if (child + 1 < last && Before(items[child + 1], items[child])) child++;
-                    if (!Before(items[child], value)) break;
-                    items[i] = items[child]; i = child;
+                    if (child >= last) break;
+                    int right = child + 1;
+                    if (right < last && (keys[right] < keys[child] || (keys[right] == keys[child] && values[right] < values[child]))) child = right;
+                    float ck = keys[child];
+                    if (!(ck < key || (ck == key && values[child] < value))) break;
+                    keys[i] = ck; values[i] = values[child]; i = child;
                 }
-                items[i] = value; return result;
+                keys[i] = key; values[i] = value;
             }
         }
     }

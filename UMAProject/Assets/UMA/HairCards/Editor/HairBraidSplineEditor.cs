@@ -56,7 +56,7 @@ namespace UMA.HairCards.Editor
                 if (coil.isExpanded)
                 {
                     Field(h, "coilRadius", "Coil radius (m)"); Field(h, "coilTurns", "Coil turns"); Field(h, "coilRise", "Coil rise (m)");
-                    EditorGUILayout.LabelField("Applied only by Form Rail into Bun in the tree. Your spline is not replaced automatically.", EditorStyles.wordWrappedMiniLabel);
+                    EditorGUILayout.LabelField("Applied only by Form Rail into Bun in this helper's actions. Your spline is not replaced automatically.", EditorStyles.wordWrappedMiniLabel);
                 }
                 if (so.ApplyModifiedProperties()) HairGroomCommands.Commit(stage.Groom);
                 EditorGUILayout.LabelField("Whole-spline movement preserves endpoint attachments. Move an attached endpoint to adjust its attachment offset. Helper targets can be embedded controls or scene objects bound under Shared Helpers.", EditorStyles.wordWrappedMiniLabel);

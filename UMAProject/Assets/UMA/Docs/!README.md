@@ -79,6 +79,8 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Mesh Modifiers](MeshModifiers.md)
 - [Mesh Modifier Sculpting](MeshModifierSculpting.md)
 - [Clothing Conformer](ClothingConformer.md)
+- [Blendshape Transfer](BlendshapeTransfer.md)
+- [Slot Rig Conversion](SlotRigConversion.md)
 - [Mesh Hide Assets](MeshHideAssets.md)
 - [Decals](Decals.md)
 

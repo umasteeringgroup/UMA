@@ -12,8 +12,8 @@ This guide uses the current DynamicCharacterAvatar workflow: build a character, 
 - Face or triangle: one triangle in a slot mesh. Mesh hiding is stored per triangle.
 - Mesh Hide Asset: a per-slot asset that records which triangles on that slot should be hidden.
 - Mesh Hide Asset Collection: an asset that groups several Mesh Hide Assets together. The Face Editor Stage creates this when you save hidden triangles for more than one slot.
-- Visible slot: a slot currently shown in the Face Editor Stage so you can see it while working.
-- Selectable slot: a slot that can receive painted hidden faces. Only selected slots are edited and saved.
+- Shown slot: a slot currently displayed in the Face Editor Stage so you can see it while working (the **Show** column).
+- Editable slot: a slot whose faces the tools may hide (the **Edit** column). Only editable slots are painted and saved.
 
 ## 1. Set Up the Character
 
@@ -59,9 +59,16 @@ To edit an existing Mesh Hide Asset or Mesh Hide Asset Collection, drag it onto 
 
 Older race-baked masks using an asset filename such as `Body_slot_baked_Race` also load onto the corresponding generated `Body_baked_Race` slot. The editor uses that generated slot's mesh for LOD calculations and records its current name when you save. If a target slot is missing, hidden, or incompatible, the **Mesh Hide Assets** panel shows a warning instead of silently loading an empty selection.
 
-The stage creates a temporary baked mesh for editing and disables the character renderer while the stage is open. When you close the stage, the DCA is restored and rebuilt.
+The stage creates a temporary baked mesh for editing and disables the character renderer while the stage is open. When you close the stage, the DCA is restored and rebuilt. The UMA Toolbar overlay is hidden while the stage is open, because its commands act on the main scene; it returns when you close the stage.
 
-Use the `LOD Level` slider at the top of **Face Tools** to edit a specific mesh LOD. The preview, paint tools, and raycast selection use that level's triangles. The slider is disabled when the character has only one LOD. Slots with fewer levels use their last available geometry.
+The stage has three collapsible panels on the left of the Scene view and a floating toolbar beside them:
+
+- **Face Tools**: the LOD selector, the active tool and its options, the hidden-face count and the save buttons.
+- **Slots**: which slots and wearables are shown, and which slots are editable.
+- **Mesh Hide Assets**: Recalculate From UV and Raycast Occlusion.
+- **Floating toolbar**: the tools (Select, Point Brush, Circle Brush, Square Brush, Texture Brush), **Hide Faces / Unhide Faces**, **Mirror X**, **Cull Backfaces**, **Frame Slots**, **Hide All** and **Clear**. Hover a button for its name and what it does. Drag the toolbar's grip to move it, or double-click the grip to dock it beside the panels again. Its position is remembered.
+
+Use the `LOD Level` slider at the top of the **Face Tools** panel to edit a specific mesh LOD. The preview, paint tools, and raycast selection use that level's triangles. The slider is disabled when the character has only one LOD. Slots with fewer levels use their last available geometry.
 
 Switch freely between LOD levels: the stage remembers each level's unsaved face selection, including cleared selections, without prompting or saving to disk. `Save Mesh Hide Assets (All Edited LODs)` saves those edits together. Unedited saved LOD masks are preserved. The close prompt checks every level for unsaved changes, and closing the stage restores the character's original LOD. `Create MeshHideAssets (Split by Slot)` saves the collected LOD drafts to new assets, splitting by slot when needed.
 
@@ -69,84 +76,77 @@ To regenerate a level, select LOD 1 or higher, choose `Copy LOD Mode`, and click
 
 The selected mode is stored with each asset and used for automatic generation of missing levels. Merely previewing a level does not save it as an override. Changes to the base mask or generation mode refresh automatic masks while preserving explicitly saved LOD edits. For older saved masks, use `Recalculate LOD` to replace the displayed level; the Global Library's generation controls also honor `Copy LOD Mode` and its Replace/Missing policy.
 
-## 5. Choose What Is Visible
+## 5. Choose What Is Shown
 
-Use the `Visibility` panel to decide what you can see while painting.
+Use the **Slots** panel to decide what you can see while painting. Its header reads `Editing N of M shown`.
 
-- `Visible Wearables` lists the active wardrobe items. Toggle a wardrobe item on when you need it as a reference shape, or off when it blocks your view.
-- `Visible Slots` lists the built slots. Toggle slots on or off to isolate the body, an inner garment, or the clothing mesh.
-- `Invert Visiblity` flips the current visible state. This is useful when you want to quickly swap between the garment and the body under it.
+- **Wearables (N)** lists the active wardrobe items. Toggle a wardrobe item on when you need it as a reference shape, or off when it blocks your view.
+- Each slot row has a **Show** checkbox. Turn slots on or off to isolate the body, an inner garment, or the clothing mesh.
+- The **Show** row of quick actions above the list has **All** (show every slot), **Editable Only** (hide every slot that is not editable) and **Invert** (swap shown and hidden slots and wearables). Invert is useful to quickly swap between the garment and the body under it.
 
-Keep the clothing item visible while deciding where the body or inner garment should be hidden. If the clothing blocks your brush completely, temporarily hide the clothing, paint the underlying body slot, then show the clothing again to check coverage.
+Keep the clothing item shown while deciding where the body or inner garment should be hidden. If the clothing blocks your brush completely, temporarily hide the clothing, paint the underlying body slot, then show the clothing again to check coverage.
 
-The stage keeps at least one slot visible. If you try to hide everything, it will leave a slot visible so the editor still has geometry to display.
+The stage keeps at least one slot shown. If you try to hide everything, it leaves a slot shown so the editor still has geometry to display.
 
 ## 6. Choose the Slots That Will Receive Mesh Hides
 
-Use the `Mesh Hide Assets` panel to decide which slots are editable and will be saved.
+Use the **Edit** column of the **Slots** panel to decide which slots are editable and will be saved.
 
-1. In `Selectable Slots`, enable only the slots whose triangles should be hidden.
-2. Use `Select Visible` to make every currently visible slot selectable.
-3. Use `Clear` to clear the selectable slot list.
+1. Tick **Edit** only on the slots whose triangles should be hidden. Clicking a slot's name toggles Edit too.
+2. Click **S** on a row to solo it: it becomes the only editable slot and is shown if it was hidden.
+3. The **Edit** quick actions above the list are **All** (every shown slot), **None** and **Invert**.
 
-Only selectable slots can be painted. The wireframe and red hidden-face overlay are drawn for selectable slots only. This separation is important: a slot can be visible as reference without being selected for output.
+A hidden slot cannot be edited; show it first. Only editable slots can be painted, and the wireframe and red hidden-face overlay are drawn for editable slots only. This separation is important: a slot can be shown as reference without being edited for output.
 
-Example: for a jacket, leave the jacket visible as reference, but make the body torso and arms selectable. Paint the body triangles hidden under the jacket. Do not make the jacket selectable unless you actually want to hide parts of the jacket mesh.
+Example: for a jacket, leave the jacket shown as reference, but make the body torso and arms editable. Paint the body triangles hidden under the jacket. Do not make the jacket editable unless you actually want to hide parts of the jacket mesh.
 
 ## 7. Seed an Initial Hidden-Face Selection with Raycast Occlusion
 
-Use the `Raycast Occlusion` tools to project an initial set of obscured faces before manual painting. This provides a fast first pass for areas that are clearly covered by the active wardrobe item and reduces the amount of hand-editing required.
+Use the `Raycast Occlusion` section of the **Mesh Hide Assets** panel to project an initial set of obscured faces before manual painting. This provides a fast first pass for areas that are clearly covered by the active wardrobe item and reduces the amount of hand-editing required.
 
-1. In `Selectable Slots`, enable the body or inner-garment slots that should receive the hides. These are the **target** slots.
-2. Keep both the target slots and the clothing that covers them visible. Leave clothing that is only acting as the cover **not selectable**, so it is used as an occluder rather than a target. Hide any other visible slot that should not influence the raycast.
-3. Go to the `Raycast Occlusion` section. The tool tests every vertex on each selected target slot both outward along its normal and inward against the other visible slots.
+1. In the **Slots** panel, make the body or inner-garment slots that should receive the hides editable. These are the **target** slots.
+2. Keep both the target slots and the clothing that covers them shown. Leave clothing that is only acting as the cover **not editable**, so it is used as an occluder rather than a target. Hide any other shown slot that should not influence the raycast.
+3. Go to the `Raycast Occlusion` section. The tool tests every vertex on each editable target slot both outward along its normal and inward against the other shown slots.
 4. Start with the default distances (`0.1` outward and `0.02` inward) unless your character scale or mesh spacing calls for a wider or narrower search range.
 5. Choose a `Triangle Strategy`:
    - `Strict`: hide a triangle only when all three of its vertices are occluded.
    - `Weighted`: hide a triangle when at least two vertices are occluded.
    - `Conservative`: hide a triangle when any vertex is occluded. This is the default and is usually the best first pass for avoiding poke-through.
-6. Leave `Add to existing hides` off for a new pass; it replaces the current raycast result for the processed target slots. Turn it on when you want to keep the current selection and add more faces.
-7. Click `Raycast Occlusion To MeshHideAssets` to generate the initial hidden-face selection. Use `Draw debug rays` only when you need to diagnose an unexpected result.
-8. Review the result, then refine it manually using the Face Tools controls. The raycast updates the stage selection; save the Mesh Hide Assets after the manual review.
+6. Leave `Add to existing hides (otherwise replace)` off for a new pass; it replaces the current raycast result for the processed target slots. Turn it on when you want to keep the current selection and add more faces.
+7. Click `Raycast Occlusion To MeshHideAssets` to generate the initial hidden-face selection. Expand **Debug** and use `Draw debug rays` only when you need to diagnose an unexpected result. The button is disabled until at least one slot is editable.
+8. Review the result, then refine it manually with the face tools. The raycast updates the stage selection; save the Mesh Hide Assets after the manual review.
 
 ## 8. Paint the Triangles to Hide
 
-Use the `Face Tools` panel to control selection.
+Pick a tool on the floating toolbar. The **Tool** row of the **Face Tools** panel shows the active tool, whether it hides or unhides, and what it does. **Hidden Faces** counts the triangles currently marked for hiding.
 
-### Basic Selection
+### Hide or unhide
 
-- `Operation`: choose `Add` to mark triangles as hidden, or `Remove` to unmark triangles.
-- Click a triangle to add or remove it, depending on the current operation.
-- Drag without Paint Mode to draw a rectangle selection.
-- `Rubber Band Cull Backfaces` makes rectangle selection ignore back-facing triangles.
-- `Clear` removes all currently selected hidden faces.
-- `Select All` marks all triangles on the currently selectable and visible slots.
-- `Selected Faces` shows how many triangles are currently marked for hiding.
-- `Reset Camera` frames the currently selectable slots in the Scene view.
+**Hide Faces** and **Unhide Faces** on the toolbar choose what every tool does: hide triangles (shown in red) or unhide them.
 
-### Modifier Painting Without Paint Mode
+### Select tool
 
-You can temporarily paint while `Paint Mode` is off:
+- Click a triangle, or drag a rectangle, to hide or unhide the faces under it.
+- **Cull Backfaces** makes the rectangle (and painting) ignore triangles that face away from the camera.
+- Hold `Shift` and drag to hide faces one at a time, or `Ctrl` and drag to unhide them. This is useful for a quick touch-up without switching tools.
 
-- `Shift` + left-drag adds hidden triangles.
-- `Ctrl` + left-drag removes hidden triangles.
+### Brushes
 
-This is useful when you normally use rectangle selection but need to touch up a small area quickly. `Paint Mode` is usually faster for a larger touch-up.
+- **Point Brush** paints the single triangle under the cursor.
+- **Circle Brush** and **Square Brush** paint every triangle inside the brush.
+- **Texture Brush** paints with a grayscale or alpha **Brush Texture** mask, chosen in the Face Tools panel.
+- For the circle, square and texture brushes, set **Radius (mm)**. The radius is measured on the model in millimeters, so the brush looks larger on screen as you zoom in.
+- **Mirror X** mirrors strokes across the mesh's local X = 0 plane.
 
-### Paint Mode
+Left-drag over the mesh to paint continuously.
 
-Enable `Paint Mode` for continuous brush painting.
+### Toolbar actions
 
-- Set `Operation` to `Add` to paint hidden triangles.
-- Set `Operation` to `Remove` to erase hidden triangles.
-- Left-drag over the mesh to paint continuously.
-- Use `Point` for single-triangle picking.
-- Use `Circle` for a circular brush.
-- Use `Square` for a square brush.
-- Use `Load` to paint with a grayscale or alpha `Brush Texture` mask.
-- For `Circle`, `Square`, and `Load`, adjust `Radius` to control brush size.
+- **Frame Slots** frames the editable slots in the Scene view. Use it if the camera is not focused on the mesh.
+- **Hide All** hides every triangle on the editable slots.
+- **Clear** unhides every triangle.
 
-Hidden triangles are shown with a red overlay. Unhidden selectable triangles show as wireframe. Orbit, pan, and zoom the Scene view as usual, then continue painting. If the camera is not focused on the mesh, press the `Reset Camera` button to focus it.
+Hidden triangles are shown with a red overlay. Unhidden editable triangles show as wireframe. Orbit, pan, and zoom the Scene view as usual, then continue painting.
 
 ## 9. Check the Result Against the Clothing
 
@@ -162,7 +162,7 @@ Prefer hiding slightly more covered geometry rather than leaving tiny poke-throu
 
 ## 10. Save the Mesh Hide Assets
 
-When the selection is ready, click `Create MeshHideAssets (Split by Slot)`. This button appears in the `Face Tools` panel and the `Mesh Hide Assets` panel.
+When the selection is ready, click `Create MeshHideAssets (Split by Slot)` at the bottom of the **Face Tools** panel. If you opened the stage from existing assets, `Save Mesh Hide Assets (All Edited LODs)` above it writes back into those assets instead. Both buttons stay visible however far the panel is scrolled.
 
 Unity opens a `Save MeshHideAssets` save dialog. Choose a folder and base name.
 
@@ -175,7 +175,7 @@ For example, saving `Jacket_BodyHides.asset` with hidden faces on `HumanMaleTors
 
 If the stage was opened by dropping an existing collection, saving updates that collection. If you save over existing generated assets, Unity asks before overwriting.
 
-Close the Face Editor stage using the `Close` button at the top right of the panel in the Scene view.
+Close the Face Editor stage using the `Close` button at the top right of the Scene view.
 
 ## 11. Add the Collection to the Wardrobe Recipe
 
@@ -198,11 +198,48 @@ You can also add individual per-slot `MeshHideAsset` assets under `Mesh Hide Ass
 
 The Face Editor Stage temporarily ignores existing mesh hides while authoring so you can see and edit the source geometry. Runtime and normal DCA builds apply the Mesh Hide Assets from active recipes.
 
+## Creating Mesh Hides Automatically
+
+The **Rig Profile Editor** (`UMA > Tools > Slot Tools > Rig Profile Editor`, or the button on a race) can create the Mesh Hide Assets for a wardrobe recipe without painting anything. It is meant for clothing brought over from an older rig, where a whole wardrobe needs hides at once, but it works for any recipe the race can wear.
+
+1. Open the editor for the race and add the wardrobe recipes under **Preview character**.
+2. Open **Mesh hides** and press **Create mesh hides for the preview recipes**.
+
+For each recipe it works out which triangles of the race's body the recipe's clothing covers, saves one Mesh Hide Asset per body slot that has something to hide in a `MeshHides` folder next to the recipe (named `<recipe>_<slot>`), and adds those assets to the recipe's **Mesh Hide Assets** list. Running it again updates the same assets; a hide that no longer hides anything is taken off the recipe and its file is left in place. Clothing built for the race's legacy rig is converted with the profile first, so run it again after changing the fit.
+
+The test is the same idea as **Raycast Occlusion** in the Face Editor: a ray outward along each body vertex's normal, then a short one inward, then a per-triangle strategy. The settings are:
+
+- **Triangle strategy.** `Strict` (the default here) hides a triangle only when all three of its vertices are covered, so nothing that can be seen is removed. `Weighted` and `Conservative` hide more and leave less to poke through, but can open gaps at collars and cuffs. Because nobody reviews the result before it is saved, the default is the cautious one.
+- **Outward distance** and **Inward distance**, in metres, as in the Face Editor (0.1 and 0.02).
+- **Only clothing lying over it.** Clothing counts only where its surface faces the same way as the body under it. This keeps, for example, the inside of a bare arm from being hidden because it faces the side of a vest.
+
+**Show in preview** applies the recipes' hides to the preview character, as a built character does; turn it off to see the whole body and look for poke-through. The result is an ordinary Mesh Hide Asset, so it can be opened and refined in the Face Editor Stage afterwards.
+
+### Checking and correcting the result
+
+The automatic test is cautious, but it does not know what you can see. It can hide skin behind an open collar or a loose cuff, and it can leave skin that pokes through when the character moves. Both are quick to put right on the preview character.
+
+- **Mark hidden in red** draws every body triangle the preview's recipes hide in red in the Scene view. **Red through clothing** draws the marks over the clothing, so you can see what is hidden under a garment without taking it off. **Show clothing**, turned off, takes the clothing off the preview character instead and leaves the body, with its hides still applied.
+- **Paint** switches on a small correction brush. **Show** makes the red triangles you drag over visible again; **Hide** hides the body triangles you drag over, in the hide of the recipe chosen under **Hide for recipe** (a hide for that body slot is created and added to the recipe if there is none yet). **Brush radius** is in metres; at zero the brush paints the single triangle under the cursor. Only triangles facing the view are painted, so the brush does not reach the far side of a thin part. Alt-drag still turns the view, and the bone handles step aside while the brush is on. A stroke is one undo step, and it is saved to the Mesh Hide Asset when you release the mouse button.
+
+What you paint is stored twice: in the hide's triangles, and as a **never hide** or **always hide** mark on each painted triangle. When the hides are created again, the generator works out its own result and then applies the marks, always-hide first and never-hide last. So corrections survive every regeneration, whatever the settings, and you can change the fit and regenerate without repainting. **Forget** drops a hide's marks; its triangles stay as they are until the next regeneration.
+
+The list under the brush shows each hide the preview's recipes apply to the body, how many triangles it hides and how many carry a mark.
+
+- **Lock** marks a hide as finished by hand. The generator then leaves it exactly as it is: not recomputed, not emptied, not taken off the recipe. The brush does not change a locked hide either. The tick is also on the Mesh Hide Asset itself (*Auto Generation Locked*).
+- **Face Editor** opens the hide in the [Face Editor Stage](#4-open-the-face-editor-stage) on the preview character, for work the brush is too small for: lasso and box selection, mirrored painting, per-LOD masks. The preview is rebuilt with every triangle present first, as the Face Editor expects. Save and leave the stage as usual, then **Lock** the hide so a later regeneration does not replace what you did there. Edits made in the Face Editor are not recorded as marks, which is what the lock is for.
+
+The brush is for corrections, a few triangles at a collar or a wrist. For a hide that needs real authoring, use the Face Editor and lock it.
+
+### Base slots and baked slots
+
+A race with prebaked blend shapes does not build its characters from the body slots in the project. It builds from copies with the blend shapes baked in, named `<slot>_baked_<race>`. A Mesh Hide Asset names one slot, and the automatic hides name the **base** slot. UMA applies a hide that names a base slot to that slot's baked copy as well (the triangles are the same), so one hide serves every race that bakes the slot and any that does not. Hides saved from the Face Editor on a baked character name the baked copy and keep working as before.
+
 ## Troubleshooting
 
 - The editor opens, but the mesh is missing: rebuild the DCA first and confirm the character has a visible generated skinned mesh.
 - The slot you want is not listed: the slot is not present in the current built recipe. Add the wardrobe or base recipe that contains it, then rebuild and reopen the stage.
-- Painting does nothing: make sure the target slot is enabled in `Selectable Slots`. Visibility alone does not make a slot editable.
-- The clothing is in the way: hide it in `Visible Wearables` or `Visible Slots`, paint the covered slot, then show the clothing again to check the result.
+- Painting does nothing: make sure the target slot has **Edit** ticked in the **Slots** panel. Showing a slot does not make it editable.
+- The clothing is in the way: untick its **Show** checkbox, or its wearable, in the **Slots** panel, paint the covered slot, then show the clothing again to check the result.
 - A saved asset hides the wrong mesh: verify the per-slot Mesh Hide Asset was created for the slot you intended. The `AssetSlotName` must match the slot that should be hidden.
 - The collection is not applied in game: make sure the collection is added to the active wardrobe recipe under `Mesh Hide Asset Collections`, then rebuild the avatar.

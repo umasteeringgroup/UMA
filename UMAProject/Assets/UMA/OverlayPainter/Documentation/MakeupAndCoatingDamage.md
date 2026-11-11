@@ -14,7 +14,7 @@ The face presets are layer stacks, not flattened textures. Applying one does not
 
 ## Makeup & Face Paint
 
-Choose **+Plugin > Generators > Face — Makeup & Face Paint** for an individual layer. The stable generator ID is `com.uma.texturepaint.makeup-face-paint`.
+Choose **Add Layer > Plugin > Generators > Face — Makeup & Face Paint** for an individual layer. The stable generator ID is `com.uma.texturepaint.makeup-face-paint`.
 
 | Construction | Placement and controls |
 | --- | --- |

@@ -7,6 +7,7 @@ Package version **3.1.5**, for **Unity 6.3 and newer**. This overview covers the
 ### Authoring and character customization
 
 - **Recipe editing:** indexed slot/overlay lookup, shaded overlay previews, readable JSON inspection, wardrobe display-name cleanup, race color palettes, and improved DNA/wardrobe controls. **Convert slot to placeholder** is now near the top of the slot editor and works for shared-overlay slots. The [recipe and character changes](../CHANGELOG.md#recipe-and-character-editing) also cover logical asset-name fixes and shared-color copy/paste.
+- **Editing stages:** the Face Editor and Mesh Modifier editor have floating icon toolbars, one **Slots** panel with Show/Edit columns for every tool, and brush sizes in millimeters. The UMA Toolbar hides while any UMA editing stage is open. See [Mesh Hide Assets](MeshHideAssets.md) and [Mesh Modifiers](MeshModifiers.md).
 - **Mesh Hide LODs:** paint and retain drafts at each level, recalculate masks from LOD 0 with a chosen matching policy, and save all edited levels together. Read the [Mesh Hide workflow](MeshHideAssets.md).
 - **Pose authoring:** named bone groups, direct race T-pose editing with a temporary preview, and a clear-pose-list action. Start with [Pose Tools](PoseTools.md), then follow the [Builder](BonePoseBuilder.md) or [Editor](BonePoseEditor.md) artist guide.
 - **Mesh and texture repair:** compare/fix normals along slot boundaries, including race-baked slots; preserve imported skeleton roots; and batch-limit texture import sizes without changing source images. See [Normal Viewer Repair](NormalViewerRepair.md) and [Texture Utilities](TextureUtilities.md).
@@ -18,9 +19,11 @@ Package version **3.1.5**, for **Unity 6.3 and newer**. This overview covers the
 - **Setup and release tooling:** Configure UMA presets, Reinstall All Plugins, safer package discovery/recovery, pipeline-specific exports, reviewable scan repairs, and broader recipe validation. See [installation and validation changes](../CHANGELOG.md#installation-configuration-and-validation).
 - **Skin and character content:** material-wide metallic control for URP Realistic Skin, Detailed/Teen Face recipes, and consolidated eyebrow assets. See [shading and content changes](../CHANGELOG.md#shading-content-and-documentation).
 
-### Optional Overlay Painter
+### Optional Overlay Painter and Hair Card Editor
 
-The matching plugin adds signed **VDM Relief** for Projection/Path Normal Control, inverted mask paste, grouped-UDIM material editing, and tile-update fixes. VDM changes shading, not mesh geometry. See [optional painter changes](../CHANGELOG.md#optional-overlay-painter-updates); install its separate Examples and Tests companions for sample content and validation.
+The Overlay Painter workspace has icon toolbar buttons, preview modes in the **View** menu, a **Paint Target** bar, an **Add Layer** menu for every layer type, and **Layer** / **Brush** tabs in Properties. The Hair Card Editor replaces Hair Nodes with the **Groom Outliner** and moves Scene tools to a floating toolbar.
+
+The matching Overlay Painter plugin also adds signed **VDM Relief** for Projection/Path Normal Control, inverted mask paste, grouped-UDIM material editing, and tile-update fixes. VDM changes shading, not mesh geometry. See [optional painter changes](../CHANGELOG.md#optional-overlay-painter-updates); install its separate Examples and Tests companions for sample content and validation.
 
 ## UMA 3.1f3 additions
 

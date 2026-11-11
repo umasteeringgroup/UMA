@@ -6,14 +6,14 @@ Pointy Swept, Curly Volume and Short Hair Part retain their existing settings an
 
 ## Start here
 
-1. Select **02 · Gathered sweep → Growth / Density** in Hair Nodes. Paint the hairline, temples, area above the ears and nape. **Expanding the painting now generates new scalp roots there.** The saved map uses Texture storage, at 32 texels per face edge.
+1. Select **02 · Gathered sweep → Growth / Density** in the Groom Outliner. Paint the hairline, temples, area above the ears and nape. **Expanding the painting now generates new scalp roots there.** The saved map uses Texture storage, at 32 texels per face edge.
 2. Select **Shared Helpers → Gather ring - scalp to bun**. Move it to the tie position. Rotate its Y arrow to set the arrival/exit direction. Keep the entire ring outside the scalp.
 3. Select the sweep population's **Gather to bun - dual bend** modifier. Adjust surface offset, tension and the two bend profiles. These samples explicitly use **Extend To Reach**, so procedural strands can reach the tie.
 4. Select **Shared Helpers → Bun volume, tuck and braid** to shape the outer bun and recessed center. It follows the gather ring.
 5. Select **Shared Helpers → Braid spline - bun surround** to move or reshape only the braid. Drag its cyan spline directly, or use the move gizmo in **Whole spline** mode. Click a dot for **Control point** editing. The spline follows the bun but remains independently editable; lowering it does not lower the bun.
-6. Check front, both sides, rear and lower LODs. **Save** stores the authoring setup; **Validate & Bake** creates output. The floating toolbar's **Exit** leaves grooming.
+6. Check front, both sides, rear and lower LODs. **Save** stores the authoring setup; **Validate & Bake** creates output. **Exit** on the Scene view's top toolbar leaves grooming.
 
-The foundation's Growth node has an arrow to **Gathered sweep**. Selecting it opens the real shared painting, not a second map that has no effect. Optional styling maps and materials remain independent per group.
+The foundation's row reads **Growth / Density → Gathered sweep**. Selecting it opens the real shared painting, not a second map that has no effect. Optional styling maps and materials remain independent per group.
 
 ## What drives the style
 
@@ -34,7 +34,7 @@ The rebuild retains the saved Classic hairline painting rather than repainting a
 
 ## Gather controls
 
-On a sculpt pass or generated population, use the tree's **+ Gather Helper & Modifier** action. It creates a ring and bound modifier as one undoable setup. Existing authored guides can use Gather too; Painted Scalp is optional.
+On a sculpt pass or generated population, right-click and choose **Add → Gather Helper and Modifier**. It creates a ring and bound modifier as one undoable setup. Existing authored guides can use Gather too; Painted Scalp is optional.
 
 - **Gather target:** the shared ring. Local X/Z contains the packed endpoints; local Y sets the arrival and tail direction.
 - **Gather mode:** *Tips* gathers strand ends. *Pass Through* places a tie partway along the strand and continues a tail beyond it.
@@ -77,7 +77,7 @@ For pigtails, use **Duplicate Mirrored Helper**, then bind a second Gather modif
 
 Create a group, enable its generated population, and choose **Generate from → Painted Scalp**. Paint Growth / Density, set count/initial length and add Gather. No authored guides are required for this source. Additional coverage populations can select the same **Growth map group**.
 
-Create a **Bun** helper under Shared Helpers. Bind a **Generate from → Bun** population to it. Add separate populations/groups sharing that helper for **Wrapped Volume**, **Center Tuck**, and **Surrounding Braid**, with independent materials and budgets. Select the Bun helper and use the tree's **Make Surrounding Braid Spline Editable** action to convert its procedural plait into a separate spline without altering the wrapped bun/tuck. This is undoable. The supplied samples have already been converted.
+Create a **Bun** helper under Shared Helpers. Bind a **Generate from → Bun** population to it. Add separate populations/groups sharing that helper for **Wrapped Volume**, **Center Tuck**, and **Surrounding Braid**, with independent materials and budgets. Right-click the Bun helper and choose **Make Surrounding Braid Spline Editable** to convert its procedural plait into a separate spline without altering the wrapped bun/tuck. This is undoable. The supplied samples have already been converted.
 
 The helper controls:
 
@@ -92,10 +92,10 @@ Grid Panels and standalone Braid Rails remain available. Their **Use painted roo
 
 ## Editable braid splines anywhere
 
-Select an unlocked group in the tree, then use **+ Braid Group** to create a braid with an editable spline and its material/geometry population. Or create **+ Braid Spline** under Shared Helpers and bind it to an existing Braid population. Standalone Curve Rails retain their previous workflow; the new attachment UI is on Braid splines.
+Use **Add ▾ → Group → Braid Group** in the Groom Outliner to create a braid with an editable spline and its material/geometry population. Or use **Add ▾ → Helper → Braid Spline** and bind it to an existing Braid population. Standalone Curve Rails retain their previous workflow; the new attachment UI is on Braid splines.
 
 - **Whole spline:** drag the cyan line directly in the camera plane, or use the translation gizmo for axis-constrained movement. One line-drag is one Undo action; Escape cancels that drag. The spline moves immediately; expensive card rebuilding waits for line-drag release.
-- **Control point:** click a dot, then move its gizmo. **Soft radius** moves nearby controls. Insert/remove points and reverse direction using the tree actions. Reversing also swaps root/tip attachment settings.
+- **Control point:** click a dot, then move its gizmo. **Soft radius** moves nearby controls. Insert/remove points and reverse direction using the form actions in Hair Properties. Reversing also swaps root/tip attachment settings.
 - **Follow helper:** optionally parent the spline to a Bun, Gather, attachment or other non-rail helper. Binding/unbinding retains the current freeform shape. It follows changes in the parent's position, rotation and scale, but can still be moved independently. It does not automatically resize when the parent's procedural radius/height parameters change.
 - **Freeform:** leave spine snapping off and both endpoints Free. All control points are unrestricted.
 - **Snap entire spine to surface:** project the interpolated path onto the scalp, not just its control points. **Spine offset (m)** follows smooth surface normals. Offset describes the center spine; allow additional room for braid thickness. This is not collision simulation for the complete braid/card volume.
@@ -104,7 +104,7 @@ Select an unlocked group in the tree, then use **+ Braid Group** to create a bra
 
 Endpoint attachments take priority over spine projection; their blend reach creates a transition to an off-scalp helper. Whole-spline moves retain attached endpoints. Moving an endpoint attached to a helper changes its attachment offset. A surface-attached endpoint slides on the surface, with its normal offset controlled numerically.
 
-For a ponytail braid, attach the root to a Gather ring and leave the tip free. For a scalp braid, enable spine snapping and choose an offset that accommodates its half-width/depth. For a braid between two controls, create **+ Attachment** helpers and bind each endpoint. **Bind Scene Object as Attachment** links a real scene object; the stage refreshes its saved source-relative transform as it moves. The saved snapshot remains usable when that scene object is absent. This authoring linkage is not a runtime animation rig.
+For a ponytail braid, attach the root to a Gather ring and leave the tip free. For a scalp braid, enable spine snapping and choose an offset that accommodates its half-width/depth. For a braid between two controls, create **Add ▾ → Helper → Attachment** helpers and bind each endpoint. **Add ▾ → Helper → Bind Selected Scene Object … as Attachment** links a real scene object; the stage refreshes its saved source-relative transform as it moves. The saved snapshot remains usable when that scene object is absent. This authoring linkage is not a runtime animation rig.
 
 **Duplicate Mirrored Form** copies the evaluated braid controls across the groom symmetry plane. The copy is freeform and detached: assign its own parent/endpoints if desired. Missing targets/surfaces produce validation messages instead of corrupting saved control points. The two spline ends are distinct, including on a wrapping bun braid; the small overlap hides its seam rather than forcing a cyclic endpoint constraint.
 
@@ -116,7 +116,7 @@ Samples use Hybrid rendering for sweep/bun/braid, cutout for foundation and Alph
 
 ### Adjust pinched card ends
 
-Select **02 · Gathered sweep → 5 · Hair Cards → Geometry & Vertex Colors**.
+Select **02 · Gathered sweep → Hair Cards → Geometry & Vertex Colors**.
 **Width along card** appears directly below Root Width and Tip Width. Click the
 curve to edit its keys. Time 0 is the root and time 1 is the tip; a value of 1 uses
 Root Width, and a value of 0 uses Tip Width. Intermediate values blend between
@@ -133,7 +133,7 @@ automatically.
 
 ### Soften roots without narrowing geometry
 
-Select **02 · Gathered sweep → 5 · Hair Cards → Materials & UVs**:
+Select **02 · Gathered sweep → Hair Cards → Materials & UVs**:
 
 1. Under **Strand rendering**, choose **Hybrid** or **Alpha Blended**. Plain Cutout
    clips at a threshold and cannot produce continuous soft transparency without

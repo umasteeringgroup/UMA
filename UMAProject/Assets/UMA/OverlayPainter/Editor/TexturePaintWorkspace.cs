@@ -219,7 +219,18 @@ namespace UMA.TexturePaint.Editor
             HandleWorkspaceShortcuts(Event.current);
 
             GUILayout.BeginArea(Shrink(new Rect(0f, 0f, windowRect.width, windowRect.height), 1f));
-            DrawPropertiesRegion(ActiveTextureSet);
+            // Painting needs both the layer and the brush settings, so they share this window.
+            GUILayout.BeginHorizontal(EditorStyles.toolbar);
+            int tab = GUILayout.Toolbar(PropertiesTab, new[]
+            {
+                new GUIContent("Layer", "Source, channels, and the active layer's settings"),
+                new GUIContent("Brush", "Brush, stroke, projection, and stencil settings")
+            }, EditorStyles.toolbarButton);
+            if (tab != PropertiesTab) PropertiesTab = tab;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            if (PropertiesTab == 0) DrawPropertiesRegion(ActiveTextureSet);
+            else DrawBrushControls(ref workspacePropertiesBrushScroll);
             GUILayout.EndArea();
 
             ApplyWorkspaceDisplay();
@@ -280,27 +291,7 @@ namespace UMA.TexturePaint.Editor
 
             GUI.Box(content, GUIContent.none, WorkspaceStyles.Region);
             GUILayout.BeginArea(Shrink(content, 1f));
-            DrawRegionHeader("BRUSH CONTROLS", "Brush behavior and stroke projection settings.");
-            workspaceBrushScroll = GUILayout.BeginScrollView(workspaceBrushScroll);
-            TextureSet set = ActiveTextureSet;
-            TexturePaintLayer activeLayer = set != null &&
-                (uint)set.activeLayerIndex < (uint)set.layers.Count
-                    ? set.layers[set.activeLayerIndex] : null;
-            bool showPaintControls = ShowsPaintingProperties(activeLayer, IsLayerMaskMode(set)) ||
-                activeLayer?.IsSplineLayer == true && activeLayer.links?.instance?.IsSet != true;
-            if (showPaintControls)
-            {
-                DrawPropertySection("BRUSH", DrawBrushProperties);
-                DrawPropertySection("STROKE & PROJECTION", DrawStrokeProperties);
-                DrawPropertySection("PAINTING STENCIL", DrawStencilProperties);
-            }
-            else
-            {
-                EditorGUILayout.HelpBox(
-                    "Select a Paint or Path layer, or enter Layer Mask mode, to edit brush and projection settings.",
-                    MessageType.Info);
-            }
-            GUILayout.EndScrollView();
+            DrawBrushControls(ref workspaceBrushScroll);
             GUILayout.EndArea();
 
             HandlePathRenderParameterChanges(hadPathRenderState, pathSetBefore, pathLayerBefore,
@@ -318,11 +309,50 @@ namespace UMA.TexturePaint.Editor
             }
         }
 
+        private const string PropertiesTabPref = "UMA.OverlayPainter.PropertiesTab";
+        private Vector2 workspacePropertiesBrushScroll;
+
+        /// <summary>The Properties window's tab: 0 Layer, 1 Brush.</summary>
+        private static int PropertiesTab
+        {
+            get => Mathf.Clamp(EditorPrefs.GetInt(PropertiesTabPref, 0), 0, 1);
+            set => EditorPrefs.SetInt(PropertiesTabPref, Mathf.Clamp(value, 0, 1));
+        }
+
+        /// <summary>
+        /// Brush, stroke, projection and stencil settings. Shown in the Brush window and in the
+        /// Properties window's Brush tab.
+        /// </summary>
+        private void DrawBrushControls(ref Vector2 scrollPosition)
+        {
+            DrawRegionHeader("Brush Controls", "Brush behavior and stroke projection settings.");
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition);
+            TextureSet set = ActiveTextureSet;
+            TexturePaintLayer activeLayer = set != null &&
+                (uint)set.activeLayerIndex < (uint)set.layers.Count
+                    ? set.layers[set.activeLayerIndex] : null;
+            bool showPaintControls = ShowsPaintingProperties(activeLayer, IsLayerMaskMode(set)) ||
+                activeLayer?.IsSplineLayer == true && activeLayer.links?.instance?.IsSet != true;
+            if (showPaintControls)
+            {
+                DrawPropertySection("Brush", DrawBrushProperties);
+                DrawPropertySection("Stroke & Projection", DrawStrokeProperties);
+                DrawPropertySection("Painting Stencil", DrawStencilProperties);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox(
+                    "Select a Paint or Path layer, or enter Layer Mask mode, to edit brush and projection settings.",
+                    MessageType.Info);
+            }
+            GUILayout.EndScrollView();
+        }
+
         private void DrawBrushWindowToolbar(Rect rect)
         {
             GUILayout.BeginArea(rect, EditorStyles.toolbar);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("BRUSH WORKSPACE", EditorStyles.miniBoldLabel);
+            GUILayout.Label("Brush", EditorStyles.miniBoldLabel);
             GUILayout.FlexibleSpace();
             workspaceShowAssetShelf = GUILayout.Toggle(workspaceShowAssetShelf,
                 new GUIContent("Asset Shelf", "Show the brush Asset Shelf in this window (Tab)"),
@@ -417,90 +447,141 @@ namespace UMA.TexturePaint.Editor
             GUILayout.EndArea();
         }
 
+        private const string TargetListOpenPref = "UMA.OverlayPainter.TargetListOpen";
+        private bool? workspaceTargetListOpen;
+
+        private bool TargetListOpen
+        {
+            get => workspaceTargetListOpen ??= EditorPrefs.GetBool(TargetListOpenPref, false);
+            set
+            {
+                workspaceTargetListOpen = value;
+                EditorPrefs.SetBool(TargetListOpenPref, value);
+            }
+        }
+
+        /// <summary>
+        /// The Dock window's body: a paint-target bar (which opens the full target list) above
+        /// the layer list, so the current target and its layers are visible together.
+        /// </summary>
         private void DrawWorkspacePanelGroup(Vector2 size, bool showTargets,
             bool showLayers)
         {
-            const float tabsHeight = 22f;
-            var panelIds = new List<int>(2);
-            var panelLabels = new List<string>(2);
+            const float pickerHeight = 22f;
+            float y = 0f;
             if (showTargets)
             {
-                panelIds.Add(0);
-                panelLabels.Add("Paint Target");
+                DrawTargetPicker(new Rect(0f, 0f, size.x, pickerHeight));
+                y = pickerHeight;
+                bool listOpen = TargetListOpen || !showLayers || ActiveLogicalTarget == null;
+                if (listOpen)
+                {
+                    float remaining = Mathf.Max(0f, size.y - y);
+                    float listHeight = showLayers
+                        ? Mathf.Max(Mathf.Min(120f, remaining), Mathf.Min(remaining * 0.4f, remaining - 140f))
+                        : remaining;
+                    GUILayout.BeginArea(new Rect(0f, y, size.x, listHeight));
+                    DrawTargetRegion(false);
+                    GUILayout.EndArea();
+                    y += listHeight;
+                }
             }
             if (showLayers)
             {
-                panelIds.Add(1);
-                panelLabels.Add("Layers / Paths");
+                Rect content = new Rect(0f, y, size.x, Mathf.Max(0f, size.y - y));
+                GUILayout.BeginArea(content);
+                DrawRightRegion(content.size, !showTargets);
+                GUILayout.EndArea();
             }
-            int selected = panelIds.IndexOf(Mathf.Clamp(workspacePanelTab, 0, 1));
-            if (selected < 0) selected = 0;
-            GUILayout.BeginArea(new Rect(0f, 0f, size.x, tabsHeight), EditorStyles.toolbar);
-            selected = GUILayout.Toolbar(selected, panelLabels.ToArray(), EditorStyles.toolbarButton);
-            GUILayout.EndArea();
-            workspacePanelTab = panelIds[Mathf.Clamp(selected, 0, panelIds.Count - 1)];
+        }
 
-            Rect content = new Rect(0f, tabsHeight, size.x, Mathf.Max(0f, size.y - tabsHeight));
-            GUILayout.BeginArea(content);
-            if (workspacePanelTab == 0) DrawTargetRegion();
-            else DrawRightRegion(content.size);
+        /// <summary>The current paint target, with a button that shows or hides the full list.</summary>
+        private void DrawTargetPicker(Rect rect)
+        {
+            GUILayout.BeginArea(rect, EditorStyles.toolbar);
+            GUILayout.BeginHorizontal();
+            TexturePaintLogicalTarget active = ActiveLogicalTarget;
+            bool open = TargetListOpen;
+            bool nextOpen = GUILayout.Toggle(open,
+                new GUIContent((open ? "\u25BE " : "\u25B8 ") + "Paint Target",
+                    "Show the list of paint targets and texture sets. Only the selected target receives paint."),
+                EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
+            if (nextOpen != open) TargetListOpen = nextOpen;
+            string detail = active == null ? "No paint target selected"
+                : active.isUdim ? $"{active.displayName}  \u00B7  {active.members.Count} UDIM tiles"
+                : active.displayName;
+            GUILayout.Label(new GUIContent(detail, detail), EditorStyles.miniBoldLabel, GUILayout.MinWidth(40f));
+            GUILayout.FlexibleSpace();
+            using (new EditorGUI.DisabledScope(active == null))
+                if (GUILayout.Button(new GUIContent("Frame", "Frame the current paint target in the Scene view"),
+                    EditorStyles.toolbarButton, GUILayout.Width(48f))) FrameActiveTarget();
+            GUILayout.EndHorizontal();
             GUILayout.EndArea();
+        }
+
+        private const string ToolbarIconPrefix = "UMAOPaint_";
+        private static readonly Dictionary<string, Texture2D> toolbarIconCache = new Dictionary<string, Texture2D>();
+
+        /// <summary>A white toolbar glyph from the Icons folder, at 2x on high-DPI displays.</summary>
+        internal static Texture2D GetToolbarIcon(string name)
+        {
+            bool large = EditorGUIUtility.pixelsPerPoint >= 1.5f;
+            string key = large ? name + "@2x" : name;
+            if (toolbarIconCache.TryGetValue(key, out Texture2D cached)) return cached;
+            Texture2D icon = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                TexturePaintAssets.ResolveInstallAssetPath("OverlayPainter/Editor/Icons/" + ToolbarIconPrefix + key + ".png"));
+            if (icon == null && large)
+                icon = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    TexturePaintAssets.ResolveInstallAssetPath("OverlayPainter/Editor/Icons/" + ToolbarIconPrefix + name + ".png"));
+            toolbarIconCache[key] = icon;
+            return icon;
+        }
+
+        private static Color ToolbarIconTint => EditorGUIUtility.isProSkin
+            ? new Color(0.86f, 0.86f, 0.86f)
+            : new Color(0.15f, 0.15f, 0.15f);
+
+        /// <summary>A toolbar button showing an icon (or a short text label if the icon is missing).</summary>
+        private static bool ToolbarIconButton(string icon, string fallback, string tooltip, float width = 26f)
+        {
+            Texture2D texture = GetToolbarIcon(icon);
+            GUIContent content = texture != null ? new GUIContent(texture, tooltip) : new GUIContent(fallback, tooltip);
+            Color oldContent = GUI.contentColor;
+            GUI.contentColor = ToolbarIconTint;
+            bool clicked = GUILayout.Button(content, EditorStyles.toolbarButton,
+                GUILayout.Width(texture != null ? width : Mathf.Max(width, 46f)));
+            GUI.contentColor = oldContent;
+            return clicked;
         }
 
         private void DrawGlobalToolbar(Rect rect)
         {
             GUILayout.BeginArea(rect, EditorStyles.toolbar);
             GUILayout.BeginHorizontal();
+            Vector2 oldIconSize = EditorGUIUtility.GetIconSize();
+            EditorGUIUtility.SetIconSize(new Vector2(14f, 14f));
             if (GUILayout.Button(new GUIContent("File", "Document commands"), EditorStyles.toolbarDropDown,
                 GUILayout.Width(42f))) ShowFileMenu(GUILayoutUtility.GetLastRect());
             if (GUILayout.Button(new GUIContent("Edit", "Undo and editing commands"), EditorStyles.toolbarDropDown,
                 GUILayout.Width(42f))) ShowEditMenu(GUILayoutUtility.GetLastRect());
-            GUILayout.Space(4f);
+            if (GUILayout.Button(new GUIContent("View", "Preview modes, Scene hints and workspace display options"),
+                EditorStyles.toolbarDropDown, GUILayout.Width(46f))) ShowViewMenu(GUILayoutUtility.GetLastRect());
+            GUILayout.Space(6f);
             using (new EditorGUI.DisabledScope(!CanUndoLightweight && !controller.Painting.History.CanUndo && !controller.Plugins.CanUndo))
-                if (GUILayout.Button(new GUIContent("Undo", "Undo the latest paint, path, or plugin edit (Ctrl/Cmd+Z)"), EditorStyles.toolbarButton, GUILayout.Width(46f))) PerformWorkspaceUndo();
+                if (ToolbarIconButton("Undo", "Undo", "Undo the latest paint, path, or plugin edit (Ctrl/Cmd+Z)")) PerformWorkspaceUndo();
             using (new EditorGUI.DisabledScope(!CanRedoLightweight && !controller.Painting.History.CanRedo && !controller.Plugins.CanRedo))
-                if (GUILayout.Button(new GUIContent("Redo", "Redo the latest paint, path, or plugin edit (Ctrl/Cmd+Shift+Z)"), EditorStyles.toolbarButton, GUILayout.Width(46f))) PerformWorkspaceRedo();
+                if (ToolbarIconButton("Redo", "Redo", "Redo the latest paint, path, or plugin edit (Ctrl/Cmd+Shift+Z)")) PerformWorkspaceRedo();
             using (new EditorGUI.DisabledScope(IsPersistenceActive))
-                if (GUILayout.Button(new GUIContent(IsDocumentTemporary ? "Save As" : "Save",
-                    IsDocumentTemporary ? "Create a project document (Ctrl/Cmd+S)" : "Save the project document (Ctrl/Cmd+S)"),
-                    EditorStyles.toolbarButton, GUILayout.Width(IsDocumentTemporary ? 54f : 44f))) SaveWorkspace();
+                if (ToolbarIconButton("Save", IsDocumentTemporary ? "Save As" : "Save",
+                    IsDocumentTemporary ? "Save As: create a project document (Ctrl/Cmd+S)" : "Save the project document (Ctrl/Cmd+S)"))
+                    SaveWorkspace();
+            GUILayout.Space(6f);
             if (GUILayout.Button(new GUIContent("Export", "Export textures and UMA assets"), EditorStyles.toolbarButton, GUILayout.Width(50f))) OpenExportWindow();
-            GUILayout.Space(8f);
+            GUILayout.Space(6f);
             if (GUILayout.Button(new GUIContent("2D", "Open or focus the dockable 2D texture canvas"),
-                EditorStyles.toolbarButton, GUILayout.Width(36f))) TexturePaintUVWindow.ShowDockable();
-            if (GUILayout.Button(new GUIContent("Brush", "Open or focus the dockable brush controls"),
+                EditorStyles.toolbarButton, GUILayout.Width(30f))) TexturePaintUVWindow.ShowDockable();
+            if (GUILayout.Button(new GUIContent("Brush", "Open or focus the dockable brush controls and Asset Shelf"),
                 EditorStyles.toolbarButton, GUILayout.Width(46f))) TexturePaintBrushWindow.ShowDockable();
-            bool compactToolbar = rect.width < 900f;
-            if (compactToolbar)
-            {
-                if (GUILayout.Button(new GUIContent("View", "Preview and workspace display options"),
-                    EditorStyles.toolbarDropDown, GUILayout.Width(46f))) ShowViewMenu(GUILayoutUtility.GetLastRect());
-            }
-            else
-            {
-                if (IsLayerMaskMode(ActiveTextureSet))
-                {
-                    bool nextSolo = GUILayout.Toggle(soloLayerMask,
-                        new GUIContent("Solo Mask", "Show the active grayscale layer mask on the 3D model"),
-                        EditorStyles.toolbarButton, GUILayout.Width(68f));
-                    if (nextSolo != soloLayerMask)
-                        SetScenePreviewMode(nextSolo ? TexturePaintScenePreviewMode.LayerMask
-                            : TexturePaintScenePreviewMode.Material);
-                }
-                else
-                {
-                    bool nextSolo = GUILayout.Toggle(channelSolo, new GUIContent("Solo", "Preview only the selected logical channel without material shading"), EditorStyles.toolbarButton, GUILayout.Width(42f));
-                    if (nextSolo != channelSolo)
-                        SetScenePreviewMode(nextSolo ? TexturePaintScenePreviewMode.SelectedChannel
-                            : TexturePaintScenePreviewMode.Material);
-                }
-                bool nextBefore = GUILayout.Toggle(previewBefore, new GUIContent("Before 3D", "Show the original source textures on the lit 3D character"), EditorStyles.toolbarButton, GUILayout.Width(66f));
-                if (nextBefore != previewBefore)
-                    SetScenePreviewMode(nextBefore ? TexturePaintScenePreviewMode.OriginalMaterial
-                        : TexturePaintScenePreviewMode.Material);
-                bool nextIsolate = GUILayout.Toggle(SceneToolbarIsolate, new GUIContent("Isolate", "Hide reference targets; turn off to show all targets for reference only"), EditorStyles.toolbarButton, GUILayout.Width(52f));
-                if (nextIsolate != SceneToolbarIsolate) SceneToolbarIsolate = nextIsolate;
-            }
             GUILayout.FlexibleSpace();
             if (IsPersistenceActive)
                 GUILayout.Label($"{persistenceStatus} {Mathf.RoundToInt(persistenceProgress * 100f)}%",
@@ -515,11 +596,13 @@ namespace UMA.TexturePaint.Editor
                 ? string.Join(", ", active.surface.slotNames) : "No slot";
             string documentName = document != null ? document.name : "No Document";
             if (rect.width >= 720f) GUILayout.Label(new GUIContent(
-                $"{(documentDirty ? "● " : string.Empty)}{documentName}  ·  {DocumentStateLabel}  ·  {target}  ·  {selectedChannel}",
+                $"{(documentDirty ? "\u25CF " : string.Empty)}{documentName}  \u00B7  {DocumentStateLabel}  \u00B7  {target}  \u00B7  {selectedChannel}",
                 IsDocumentTemporary ? "Temporary session backed by the configured recovery asset. Use Save As to create a permanent document."
                     : AssetDatabase.GetAssetPath(document)),
                 EditorStyles.miniLabel);
             if (GUILayout.Button(new GUIContent("Layout", "Show, hide, or reset workspace regions"), EditorStyles.toolbarDropDown, GUILayout.Width(58f))) ShowLayoutMenu();
+            if (ToolbarIconButton("Help", "?", "Keyboard shortcuts")) ShowShortcutHelp();
+            EditorGUIUtility.SetIconSize(oldIconSize);
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
         }
@@ -846,9 +929,10 @@ namespace UMA.TexturePaint.Editor
             return toolRailIcons[iconIndex];
         }
 
-        private void DrawTargetRegion()
+        private void DrawTargetRegion(bool withHeader = true)
         {
-            DrawRegionHeader("PAINT TARGET", "Choose one paint target. Show toggles display other targets for reference only; they cannot receive paint.");
+            if (withHeader)
+                DrawRegionHeader("Paint Target", "Choose one paint target. Show toggles display other targets for reference only; they cannot receive paint.");
             workspaceLeftTab = GUILayout.Toolbar(Mathf.Clamp(workspaceLeftTab, 0, 1), new[] { "Targets", "Texture Sets" });
             GUILayout.BeginHorizontal();
             workspaceTargetSearch = EditorGUILayout.TextField(workspaceTargetSearch ?? string.Empty,
@@ -857,9 +941,6 @@ namespace UMA.TexturePaint.Editor
                 GUILayout.Height(18f)))
                 ShowImportWarningDetails("Import warnings not associated with a reconstructed paint target",
                     globalImportWarnings);
-            using (new EditorGUI.DisabledScope(ActiveLogicalTarget == null))
-                if (GUILayout.Button(new GUIContent("Frame Target", "Frame all geometry belonging to the current logical paint target in the Scene view"),
-                    EditorStyles.miniButton, GUILayout.Width(86f))) FrameActiveTarget();
             GUILayout.EndHorizontal();
             workspaceTargetScroll = GUILayout.BeginScrollView(workspaceTargetScroll);
             if (workspaceLeftTab == 0) DrawSlotNavigator(); else DrawTextureSetNavigator();
@@ -1971,7 +2052,7 @@ namespace UMA.TexturePaint.Editor
             return uv.x >= 0f && uv.x <= 1f && uv.y >= 0f && uv.y <= 1f;
         }
 
-        private void DrawRightRegion(Vector2 size)
+        private void DrawRightRegion(Vector2 size, bool showTargetName = true)
         {
             TextureSet set = ActiveTextureSet;
             float headerHeight = 46f;
@@ -1979,7 +2060,8 @@ namespace UMA.TexturePaint.Editor
 
             GUILayout.BeginArea(new Rect(0f, 0f, size.x, headerHeight));
             TexturePaintLogicalTarget logicalTarget = ActiveLogicalTarget;
-            string stackTitle = logicalTarget != null ? "LAYER / PATH · " + logicalTarget.displayName : "LAYER / PATH";
+            // The paint target bar above already names the target.
+            string stackTitle = showTargetName && logicalTarget != null ? "Layers \u00B7 " + logicalTarget.displayName : "Layers";
             string stackSubtitle = logicalTarget?.isUdim == true
                 ? $"One logical stack backed by {logicalTarget.members.Count} UDIM tiles."
                 : "One logical stack backed by the selected slot.";
@@ -2002,24 +2084,21 @@ namespace UMA.TexturePaint.Editor
             if (set == null) return;
             List<TexturePaintLayer> mergeSelection = GetLayerMergeSelection(set);
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
-            DrawSplitLayerButton(new GUIContent("+ Paint", "Add an empty Paint layer"),
-                () => AddPaintLayer(set), () => ShowAddPaintLayerMenu(set), 72f);
-            DrawSplitLayerButton(new GUIContent("+ Fill", "Add a Fill layer using the current source"),
-                () => AddFillLayer(set), () => ShowAddFillLayerMenu(set), 66f);
-            DrawSplitLayerButton(new GUIContent("+ Path", "Add an empty spline/path layer"),
-                () => CreateSplineLayerWithUndo(set), () => ShowAddPathLayerMenu(set), 72f);
-            if (!pathsOnly) DrawSplitLayerButton(new GUIContent("+ Projection", "Project an image or generate a placed garment detail"),
-                () => AddProjectionLayer(set), () => ShowProjectionCreationMenu(set), 108f);
-            if (!pathsOnly && GUILayout.Button(new GUIContent("+ Plugin",
-                    "Add a procedural generator/filter layer"), EditorStyles.toolbarButton))
-                ShowPluginLayerMenu(set);
-            if (!pathsOnly && GUILayout.Button(new GUIContent("+ Group", "Add layer folder/group"), EditorStyles.toolbarButton))
+            if (pathsOnly)
             {
-                BeginLayerCreationUndo("Add Layer Group");
-                TexturePaintLayer created = set.AddGroup("Group " + (set.layers.Count + 1));
-                CompleteLayerCreationUndo(created);
-                SyncActiveLayerSelection(set);
+                DrawSplitLayerButton(new GUIContent("+ Path", "Add an empty spline/path layer"),
+                    () => CreateSplineLayerWithUndo(set), () => ShowAddPathLayerMenu(set), 72f);
             }
+            else
+            {
+                if (GUILayout.Button(new GUIContent("+ Paint", "Add an empty Paint layer"),
+                        EditorStyles.toolbarButton, GUILayout.Width(56f))) AddPaintLayer(set);
+                if (EditorGUILayout.DropdownButton(new GUIContent("Add Layer",
+                        "Add any kind of layer: Paint, Fill, Path, Projection, Plugin or Group"),
+                        FocusType.Passive, EditorStyles.toolbarDropDown, GUILayout.Width(84f)))
+                    ShowAddLayerMenu(set, GUILayoutUtility.GetLastRect());
+            }
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             DrawLayerStackDiagnostic(set, pathsOnly);
@@ -2077,6 +2156,41 @@ namespace UMA.TexturePaint.Editor
             if (GUI.Button(arrow, new GUIContent("▼", "Choose how to create this layer"),
                     EditorStyles.toolbarButton))
                 menuAction?.Invoke();
+        }
+
+        private void AddLayerGroup(TextureSet set)
+        {
+            BeginLayerCreationUndo("Add Layer Group");
+            TexturePaintLayer created = set.AddGroup("Group " + (set.layers.Count + 1));
+            CompleteLayerCreationUndo(created);
+            SyncActiveLayerSelection(set);
+        }
+
+        /// <summary>Every way to create a layer, grouped by kind, in one menu.</summary>
+        private void ShowAddLayerMenu(TextureSet set, Rect anchor)
+        {
+            if (set == null) return;
+            GenericMenu menu = new GenericMenu();
+            menu.AddItem(new GUIContent("Paint/Empty Paint Layer"), false, () => AddPaintLayer(set));
+            menu.AddItem(new GUIContent("Paint/From Sprite Set..."), false, () => ShowAddPaintLayerFromSpriteSet(set));
+            menu.AddItem(new GUIContent("Fill/Empty Fill Layer"), false, () => AddFillLayer(set));
+            menu.AddItem(new GUIContent("Fill/From Overlay..."), false,
+                () => OverlayPainterOverlayPickerWindow.Show(overlay => AddOverlayFillLayer(set, overlay)));
+            menu.AddItem(new GUIContent("Fill/From Sprite Set..."), false, () => ShowAddFillLayerFromSpriteSet(set));
+            menu.AddItem(new GUIContent("Path/Empty Path Layer"), false, () => CreateSplineLayerWithUndo(set));
+            menu.AddItem(new GUIContent("Path/From OverlayDataAsset..."), false,
+                () => OverlayPainterOverlayPickerWindow.Show(overlay => AddOverlayPathLayer(set, overlay)));
+            menu.AddItem(new GUIContent("Path/From Sprite Set..."), false, () => ShowAddPathLayerFromSpriteSet(set));
+            menu.AddSeparator("Path/");
+            AddGarmentMenu(menu, set, true, "Path/");
+            AddPathGeneratorMenu(menu, set, "Path/");
+            menu.AddItem(new GUIContent("Projection/Image or Overlay Projection"), false, () => AddProjectionLayer(set));
+            AddGarmentMenu(menu, set, false, "Projection/");
+            AddPluginLayerMenu(menu, set, "Plugin/");
+            menu.AddItem(new GUIContent("Group"), false, () => AddLayerGroup(set));
+            menu.AddSeparator(string.Empty);
+            menu.AddItem(new GUIContent("Apply Material Preset..."), false, () => OpenMaterialPresetPicker(set));
+            menu.DropDown(anchor);
         }
 
         private void ShowAddPaintLayerMenu(TextureSet set)
@@ -2887,7 +3001,7 @@ namespace UMA.TexturePaint.Editor
 
         private void DrawPropertiesRegion(TextureSet set)
         {
-            DrawRegionHeader("PROPERTIES", "Source, Destination, Target, and Channels are kept explicit.");
+            DrawRegionHeader("Layer Properties", "Settings for the paint source, channels, and active layer.");
             workspacePropertyScroll = GUILayout.BeginScrollView(workspacePropertyScroll);
             TexturePaintLayer activeLayer = set != null && (uint)set.activeLayerIndex < (uint)set.layers.Count
                 ? set.layers[set.activeLayerIndex] : null;
@@ -2901,19 +3015,24 @@ namespace UMA.TexturePaint.Editor
             SuspendRegionToolForNonPaintLayer(set);
             if (maskMode)
                 EditorGUILayout.HelpBox(
-                    "LAYER MASK mode is active. Paint white to reveal the layer, black to hide it. Erase restores the mask's original black or white value.",
+                    "Layer Mask mode is active. Paint white to reveal the layer, black to hide it. Erase restores the mask's original black or white value.",
                     MessageType.Info);
             else if (isPath && !instance)
+                // The Scene hints already list the path controls; repeat them only when hints are off.
                 EditorGUILayout.HelpBox(
                     activeLayer.spline?.worldSpace == true
-                        ? "3D path active: edit it only in the Scene view. Shift+Click adds a point; Ctrl+Click inserts near the path."
-                        : "2D path active: edit it only in the 2D view. Shift+Click adds a point; Ctrl+Click inserts near the path. Model geometry is not consulted.",
+                        ? SceneHintsVisible
+                            ? "3D path: edit it in the Scene view."
+                            : "3D path active: edit it only in the Scene view. Shift+Click adds a point; Ctrl+Click inserts near the path."
+                        : SceneHintsVisible
+                            ? "2D path: edit it in the 2D view."
+                            : "2D path active: edit it only in the 2D view. Shift+Click adds a point; Ctrl+Click inserts near the path. Model geometry is not consulted.",
                     MessageType.Info);
             else if (isPlugin && !instance)
                 EditorGUILayout.HelpBox(
                     "Plugin layers generate cached, multi-channel content from the composite below them. Paint their mask to art-direct the result.",
                     MessageType.Info);
-            if (showPaintControls && activeLayer == null) DrawPropertySection("DESTINATION", () =>
+            if (showPaintControls && activeLayer == null) DrawPropertySection("Destination", () =>
             {
                 int destination = GUILayout.Toolbar(sourceMode == TexturePaintSourceMode.SourceTexture ? 0 : 1,
                     new[] { "Base Texture", "Active Layer" });
@@ -2925,7 +3044,7 @@ namespace UMA.TexturePaint.Editor
             });
 
             if (CanEditRegion(set))
-                DrawPropertySection("SELECTION", () => DrawRegionProperties(set));
+                DrawPropertySection("Selection", () => DrawRegionProperties(set));
             else if (CountSelectedRegions() > 0)
             {
                 EditorGUILayout.HelpBox("A selection is stored but does not restrict this layer's generated content. Convert it to a layer mask to constrain this layer.", MessageType.Info);
@@ -2933,19 +3052,19 @@ namespace UMA.TexturePaint.Editor
                 using (new EditorGUI.DisabledScope(!CanConvertRegionToMask(set)))
                     if (GUILayout.Button("Convert Selection to Mask")) RegionToMask(set);
             }
-            if (CanEditLayerSymmetry(set)) DrawPropertySection("SYMMETRY", DrawSymmetryProperties);
+            if (CanEditLayerSymmetry(set)) DrawPropertySection("Symmetry", DrawSymmetryProperties);
             if (activeLayer != null)
-                DrawPropertySection("ACTIVE LAYER", () => DrawActiveLayerProperties(set, activeLayer));
+                DrawPropertySection("Active Layer", () => DrawActiveLayerProperties(set, activeLayer));
             if (showPaintControls)
             {
                 // Direct base-texture painting still needs a channel selector when no layer exists.
                 // Active layers own their selector and channel details in the section above.
                 if (!maskMode && activeLayer == null)
-                    DrawPropertySection("CHANNELS", () => DrawChannelProperties(set));
+                    DrawPropertySection("Channels", () => DrawChannelProperties(set));
             }
             if (pathContent && !instance)
-                DrawPropertySection("PATH", () => DrawPathProperties(set));
-            if (showPaintControls) DrawPropertySection("EXTENSIONS", () =>
+                DrawPropertySection("Path", () => DrawPathProperties(set));
+            if (showPaintControls) DrawPropertySection("Extensions", () =>
             {
                 if (GUILayout.Button("Plugins…")) PluginManagerWindow.Open(controller);
             });
@@ -3165,6 +3284,12 @@ namespace UMA.TexturePaint.Editor
             return channels;
         }
 
+        // Brush radius limits: 1 mm to 250 mm on the model (0.1% to 25% of the texture in 2D).
+        private const float MinBrushSize = 0.001f;
+        private const float MaxBrushSize = 0.25f;
+
+        private static float ClampBrushSize(float size) => Mathf.Clamp(size, MinBrushSize, MaxBrushSize);
+
         private void DrawBrushProperties()
         {
             BrushPreset selectedPreset = (BrushPreset)EditorGUILayout.ObjectField(
@@ -3172,15 +3297,25 @@ namespace UMA.TexturePaint.Editor
             if (selectedPreset != brush) SelectBrushPreset(selectedPreset);
             BrushPreset active = ActiveBrush;
             EditorGUI.BeginChangeCheck();
-            var nextPaintTool = (TexturePaintTool)EditorGUILayout.EnumPopup("Tool", tool);
+            // The Overlay Painter Toolbar in the Scene view chooses the tool; this popup is the
+            // fallback for when that toolbar is hidden.
+            var nextPaintTool = TexturePaintSceneToolPaletteOverlay.AnyDisplayed
+                ? tool
+                : (TexturePaintTool)EditorGUILayout.EnumPopup("Tool", tool);
             if(nextPaintTool!=tool)ExitRegionTool();
             tool=nextPaintTool;
             if (IsLayerMaskMode(ActiveTextureSet) && tool == TexturePaintTool.NormalTouchup)
                 tool = TexturePaintTool.Paint;
             active.shape = (BrushPreset.Shape)EditorGUILayout.EnumPopup("Shape", active.shape);
-            active.size = EditorGUILayout.Slider(new GUIContent("Brush Size",
-                "World-space radius in the 3D view; normalized-UV radius in the 2D view."),
-                active.size, 0.001f, 0.5f);
+            // Size is one value: a radius in meters on the model, and a fraction of the
+            // texture's width in the 2D view. Show both, in millimeters and percent.
+            EditorGUI.BeginChangeCheck();
+            float sizeMm = EditorGUILayout.Slider(new GUIContent("Size (mm)",
+                "Brush radius on the model, in millimeters. In the 2D view the same value is a fraction of the texture's width."),
+                ClampBrushSize(active.size) * 1000f, MinBrushSize * 1000f, MaxBrushSize * 1000f);
+            if (EditorGUI.EndChangeCheck()) active.size = ClampBrushSize(sizeMm / 1000f);
+            else active.size = ClampBrushSize(active.size);
+            EditorGUILayout.LabelField(" ", $"2D view: {active.size * 100f:0.#}% of the texture width", EditorStyles.miniLabel);
             active.hardness = EditorGUILayout.Slider("Hardness", active.hardness, 0f, 1f);
             active.flow = EditorGUILayout.Slider("Flow", active.flow, 0f, 1f);
             active.spacing = EditorGUILayout.Slider(new GUIContent("Stroke Spacing",
@@ -4676,7 +4811,7 @@ namespace UMA.TexturePaint.Editor
         private void DrawAssetShelf()
         {
             RefreshBrushShelfIfNeeded();
-            DrawRegionHeader("ASSET SHELF", "Searchable presets with folders, tags, favorites, recents, thumbnails, and drag reorder.");
+            DrawRegionHeader("Asset Shelf", "Searchable presets with folders, tags, favorites, recents, thumbnails, and drag reorder.");
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             assetShelfSearch = GUILayout.TextField(assetShelfSearch ?? string.Empty, EditorStyles.toolbarSearchField, GUILayout.MinWidth(120f));
             List<string> folders = GetBrushFolders();
@@ -6451,7 +6586,7 @@ namespace UMA.TexturePaint.Editor
             {
                 float direction = current.keyCode == KeyCode.RightBracket ? 1f : -1f;
                 if (current.shift) ActiveBrush.hardness = Mathf.Clamp01(ActiveBrush.hardness + direction * 0.05f);
-                else ActiveBrush.size = Mathf.Clamp(ActiveBrush.size * Mathf.Pow(1.12f, direction), 0.001f, 0.5f);
+                else ActiveBrush.size = ClampBrushSize(ActiveBrush.size * Mathf.Pow(1.12f, direction));
                 ShowWorkspaceStatus(current.shift ? $"Hardness {ActiveBrush.hardness:0.00}" : $"Size {ActiveBrush.size:0.000}");
                 CommitPathRenderParameterChange(hadPathRenderState, pathSetBefore, pathLayerBefore,
                     pathSettingsBefore, pathSignatureBefore, "Adjust Path Brush");
@@ -6551,7 +6686,7 @@ namespace UMA.TexturePaint.Editor
                     modifierPathUndoStarted = true;
                 }
                 Vector2 delta = current.mousePosition - modifierBrushStartMouse;
-                ActiveBrush.size = Mathf.Clamp(modifierBrushStartSize * Mathf.Exp(delta.x * 0.012f), 0.001f, 0.5f);
+                ActiveBrush.size = ClampBrushSize(modifierBrushStartSize * Mathf.Exp(delta.x * 0.012f));
                 ActiveBrush.hardness = Mathf.Clamp01(modifierBrushStartHardness - delta.y / 180f);
                 if (modifierPathEditSet != null) CompleteLightweightPathEdit(modifierPathEditSet, true);
                 ShowWorkspaceStatus($"Size {ActiveBrush.size:0.000} · Hardness {ActiveBrush.hardness:0.00}");
@@ -6668,11 +6803,35 @@ namespace UMA.TexturePaint.Editor
                     ? TexturePaintScenePreviewMode.Material
                     : TexturePaintScenePreviewMode.OriginalMaterial);
             });
+            if (IsLayerMaskMode(ActiveTextureSet))
+                menu.AddItem(new GUIContent("Solo Layer Mask"), soloLayerMask, () =>
+                {
+                    SetScenePreviewMode(soloLayerMask
+                        ? TexturePaintScenePreviewMode.Material
+                        : TexturePaintScenePreviewMode.LayerMask);
+                });
+            else menu.AddDisabledItem(new GUIContent("Solo Layer Mask"));
             menu.AddItem(new GUIContent("Isolate Selected Slots"), SceneToolbarIsolate, () =>
             {
                 SceneToolbarIsolate = !SceneToolbarIsolate;
             });
+            menu.AddSeparator(string.Empty);
+            menu.AddItem(new GUIContent("Scene Hints"), SceneHintsVisible, () =>
+            {
+                SceneHintsVisible = !SceneHintsVisible;
+                SceneView.RepaintAll();
+            });
+            menu.AddItem(new GUIContent("Keyboard Shortcuts..."), false, ShowShortcutHelp);
             menu.DropDown(anchor);
+        }
+
+        private const string SceneHintsPref = "UMA.OverlayPainter.SceneHints";
+
+        /// <summary>Whether the Scene view shows the mode hints panel. View > Scene Hints.</summary>
+        internal static bool SceneHintsVisible
+        {
+            get => EditorPrefs.GetBool(SceneHintsPref, true);
+            set => EditorPrefs.SetBool(SceneHintsPref, value);
         }
 
         internal TexturePaintScenePreviewMode SceneToolbarPreviewMode
@@ -7103,9 +7262,9 @@ namespace UMA.TexturePaint.Editor
             menu.ShowAsContext();
         }
 
-        private void ShowShortcutHelp()
-        {
-            EditorUtility.DisplayDialog("Overlay Painter Shortcuts",
+        private void ShowShortcutHelp() => TexturePaintShortcutsWindow.ShowWindow();
+
+        internal const string ShortcutHelpText =
                 "B Paint    E Erase    U Blur    K Smear    C Clone\n" +
                 "O Dodge    Shift+O Burn    N Normal Touchup    P Plugin\n" +
                 "I Sample Color in the 2D canvas    M Mirror\n" +
@@ -7115,8 +7274,7 @@ namespace UMA.TexturePaint.Editor
                 "Scene navigation always keeps its keyboard input\n" +
                 "Ctrl/Cmd+Z Undo    Ctrl/Cmd+Shift+Z Redo\n" +
                 "Ctrl/Cmd+D Duplicate Layer    F2 Rename    Delete Remove\n" +
-                "Ctrl/Cmd+S Save", "Close");
-        }
+                "Ctrl/Cmd+S Save";
 
         private void ShowWorkspaceStatus(string message)
         {
@@ -7378,9 +7536,12 @@ namespace UMA.TexturePaint.Editor
             TexturePaintSceneBurnToolToggle.Id,
             TexturePaintSceneNormalToolToggle.Id,
             TexturePaintScenePluginToolToggle.Id,
+            TexturePaintToolPaletteGapFills.Id,
             TexturePaintScenePolygonFillToggle.Id,
             TexturePaintSceneIslandFillToggle.Id,
+            TexturePaintToolPaletteGapPath.Id,
             TexturePaintScenePathToolToggle.Id,
+            TexturePaintToolPaletteGapHelp.Id,
             TexturePaintSceneToolHelpButton.Id
         };
 
@@ -7424,6 +7585,17 @@ namespace UMA.TexturePaint.Editor
                 overlay?.UpdateContextVisibility();
         }
 
+        /// <summary>True when this toolbar is showing in any Scene view.</summary>
+        internal static bool AnyDisplayed
+        {
+            get
+            {
+                foreach (TexturePaintSceneToolPaletteOverlay overlay in Instances)
+                    if (overlay != null && overlay.displayed) return true;
+                return false;
+            }
+        }
+
         internal static bool AddToolIcon(VisualElement element, int iconIndex)
         {
             Sprite sprite = TexturePaintStageWindow.GetToolRailIcon(iconIndex);
@@ -7464,7 +7636,7 @@ namespace UMA.TexturePaint.Editor
             tooltip = toolTip;
             if (TexturePaintSceneToolPaletteOverlay.AddToolIcon(this, iconIndex)) text = null;
             RegisterCallback<ChangeEvent<bool>>(OnChanged);
-            schedule.Execute(UpdateDisplay).Every(150L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -7561,7 +7733,7 @@ namespace UMA.TexturePaint.Editor
             tooltip = toolTip;
             if (TexturePaintSceneToolPaletteOverlay.AddToolIcon(this, iconIndex)) text = null;
             RegisterCallback<ChangeEvent<bool>>(OnChanged);
-            schedule.Execute(UpdateDisplay).Every(150L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -7612,7 +7784,7 @@ namespace UMA.TexturePaint.Editor
             {
                 if (change.newValue) TexturePaintStageWindow.ActiveStage?.ActivateSceneToolbarPathTool();
             });
-            schedule.Execute(UpdateDisplay).Every(150L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -7635,7 +7807,7 @@ namespace UMA.TexturePaint.Editor
             tooltip = "Shortcut and painting-workflow reference";
             if (TexturePaintSceneToolPaletteOverlay.AddToolIcon(this, 10)) text = null;
             clicked += () => TexturePaintStageWindow.ActiveStage?.SceneToolbarShowShortcutHelp();
-            schedule.Execute(() => SetEnabled(TexturePaintStageWindow.ActiveStage != null)).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, () => SetEnabled(TexturePaintStageWindow.ActiveStage != null));
         }
     }
 
@@ -7714,7 +7886,7 @@ namespace UMA.TexturePaint.Editor
         public TexturePaintPathModeDropdown()
         {
             clicked += ShowMenu;
-            schedule.Execute(UpdateDisplay).Every(150L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -7768,7 +7940,7 @@ namespace UMA.TexturePaint.Editor
                 if (stage?.SceneToolbarPathActive == true)
                     stage.SetSceneToolbarPathAutoUpdate(change.newValue);
             });
-            schedule.Execute(UpdateDisplay).Every(150L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -7790,8 +7962,8 @@ namespace UMA.TexturePaint.Editor
             text = "Update";
             tooltip = "Rebuild the path and all affected channels now.";
             clicked += () => TexturePaintStageWindow.ActiveStage?.SceneToolbarUpdatePath();
-            schedule.Execute(() => SetEnabled(
-                TexturePaintStageWindow.ActiveStage?.SceneToolbarPathActive == true)).Every(150L);
+            TexturePaintToolbarRefresher.Register(this, () => SetEnabled(
+                TexturePaintStageWindow.ActiveStage?.SceneToolbarPathActive == true));
         }
     }
 
@@ -7806,7 +7978,7 @@ namespace UMA.TexturePaint.Editor
             tooltip = "Connect the last path point to the first in any path edit mode.";
             RegisterCallback<ChangeEvent<bool>>(change =>
                 TexturePaintStageWindow.ActiveStage?.SceneToolbarSetPathClosed(change.newValue));
-            schedule.Execute(UpdateDisplay).Every(150L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -7828,8 +8000,8 @@ namespace UMA.TexturePaint.Editor
             text = "Actions";
             tooltip = "Path point and topology actions.";
             clicked += ShowMenu;
-            schedule.Execute(() => SetEnabled(
-                TexturePaintStageWindow.ActiveStage?.SceneToolbarPathActive == true)).Every(150L);
+            TexturePaintToolbarRefresher.Register(this, () => SetEnabled(
+                TexturePaintStageWindow.ActiveStage?.SceneToolbarPathActive == true));
         }
 
         private void ShowMenu()
@@ -7949,7 +8121,7 @@ namespace UMA.TexturePaint.Editor
         {
             TexturePaintToolbarIcons.Add(this, EditorGUIUtility.IconContent("d_Avatar Icon").image);
             clicked += ShowMenu;
-            schedule.Execute(UpdateDisplay).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -7989,7 +8161,7 @@ namespace UMA.TexturePaint.Editor
         {
             TexturePaintToolbarIcons.Add(this, EditorGUIUtility.IconContent("d_EditCollider").image);
             clicked += ShowMenu;
-            schedule.Execute(UpdateDisplay).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -8053,7 +8225,7 @@ namespace UMA.TexturePaint.Editor
         {
             TexturePaintToolbarIcons.Add(this, EditorGUIUtility.IconContent("d_Texture Icon").image);
             clicked += ShowMenu;
-            schedule.Execute(UpdateDisplay).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -8092,7 +8264,7 @@ namespace UMA.TexturePaint.Editor
         {
             TexturePaintToolbarIcons.Add(this, EditorGUIUtility.IconContent("d_SceneViewVisibility").image);
             clicked += ShowMenu;
-            schedule.Execute(UpdateDisplay).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -8156,7 +8328,7 @@ namespace UMA.TexturePaint.Editor
             text = label;
             tooltip = toolTip;
             RegisterCallback<ChangeEvent<bool>>(OnChanged);
-            schedule.Execute(UpdateDisplay).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 
@@ -8225,7 +8397,7 @@ namespace UMA.TexturePaint.Editor
             text = "↶";
             tooltip = "Undo the last Overlay Painter operation";
             clicked += () => TexturePaintStageWindow.ActiveStage?.SceneToolbarUndo();
-            schedule.Execute(() => SetEnabled(TexturePaintStageWindow.ActiveStage?.SceneToolbarCanUndo == true)).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, () => SetEnabled(TexturePaintStageWindow.ActiveStage?.SceneToolbarCanUndo == true));
         }
     }
 
@@ -8238,7 +8410,7 @@ namespace UMA.TexturePaint.Editor
             text = "↷";
             tooltip = "Redo the last Overlay Painter operation";
             clicked += () => TexturePaintStageWindow.ActiveStage?.SceneToolbarRedo();
-            schedule.Execute(() => SetEnabled(TexturePaintStageWindow.ActiveStage?.SceneToolbarCanRedo == true)).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, () => SetEnabled(TexturePaintStageWindow.ActiveStage?.SceneToolbarCanRedo == true));
         }
     }
 
@@ -8255,7 +8427,7 @@ namespace UMA.TexturePaint.Editor
             style.minWidth = 170f;
             style.flexShrink = 0f;
             clicked += TexturePaintStageWindow.RequestSceneToolbarShutdown;
-            schedule.Execute(() => SetEnabled(TexturePaintStageWindow.ActiveStage != null)).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, () => SetEnabled(TexturePaintStageWindow.ActiveStage != null));
         }
     }
 
@@ -8295,5 +8467,117 @@ namespace UMA.TexturePaint.Editor
             TexturePaintSelectionToolbarOverlay.HideAllInstances();
             SceneView.RepaintAll();
         }
+    }
+
+    /// <summary>The Overlay Painter keyboard shortcuts, in a small window that does not block the Editor.</summary>
+    public sealed class TexturePaintShortcutsWindow : EditorWindow
+    {
+        private Vector2 scroll;
+
+        internal static void ShowWindow()
+        {
+            TexturePaintShortcutsWindow window = GetWindow<TexturePaintShortcutsWindow>(true, "Overlay Painter Shortcuts", true);
+            window.minSize = new Vector2(360f, 220f);
+            window.ShowUtility();
+        }
+
+        private void OnGUI()
+        {
+            scroll = EditorGUILayout.BeginScrollView(scroll);
+            foreach (string line in TexturePaintStageWindow.ShortcutHelpText.Split('\n'))
+            {
+                EditorGUILayout.LabelField(line, EditorStyles.wordWrappedLabel);
+            }
+            EditorGUILayout.EndScrollView();
+        }
+    }
+
+    /// <summary>
+    /// Refreshes the Overlay Painter toolbar elements (enabled state, checked state) on one
+    /// shared timer instead of one timer per element. Elements are refreshed only while they
+    /// are in a visible toolbar and an Overlay Painter stage is open.
+    /// </summary>
+    internal static class TexturePaintToolbarRefresher
+    {
+        private const double IntervalSeconds = 0.15;
+        private static readonly Dictionary<VisualElement, Action> Updates = new Dictionary<VisualElement, Action>();
+        private static readonly List<Action> Pending = new List<Action>();
+        private static double nextUpdate;
+        private static bool hooked;
+
+        internal static void Register(VisualElement element, Action update)
+        {
+            if (element == null || update == null) return;
+            element.RegisterCallback<AttachToPanelEvent>(_ =>
+            {
+                Updates[element] = update;
+                Hook();
+                update();
+            });
+            element.RegisterCallback<DetachFromPanelEvent>(_ =>
+            {
+                Updates.Remove(element);
+                if (Updates.Count == 0) Unhook();
+            });
+            // Called from element constructors: the first refresh happens on attach, as the
+            // per-element timers it replaces did, once the element is fully built.
+        }
+
+        private static void Hook()
+        {
+            if (hooked) return;
+            hooked = true;
+            EditorApplication.update += Tick;
+        }
+
+        private static void Unhook()
+        {
+            if (!hooked) return;
+            hooked = false;
+            EditorApplication.update -= Tick;
+        }
+
+        private static void Tick()
+        {
+            if (EditorApplication.timeSinceStartup < nextUpdate) return;
+            nextUpdate = EditorApplication.timeSinceStartup + IntervalSeconds;
+            if (TexturePaintStageWindow.ActiveStage == null) return;
+            Pending.Clear();
+            Pending.AddRange(Updates.Values);
+            foreach (Action update in Pending)
+            {
+                try { update(); }
+                catch (Exception exception) { Debug.LogException(exception); }
+            }
+        }
+    }
+
+    /// <summary>A small gap that separates groups in the Overlay Painter Toolbar.</summary>
+    public abstract class TexturePaintToolPaletteGap : VisualElement
+    {
+        protected TexturePaintToolPaletteGap()
+        {
+            style.width = 6f;
+            style.height = 6f;
+            style.flexShrink = 0f;
+        }
+    }
+
+    [EditorToolbarElement(Id, typeof(SceneView))]
+    public sealed class TexturePaintToolPaletteGapFills : TexturePaintToolPaletteGap
+    {
+        public const string Id = "UMA.TexturePaint/Palette/GapFills";
+    }
+
+    [EditorToolbarElement(Id, typeof(SceneView))]
+    public sealed class TexturePaintToolPaletteGapPath : TexturePaintToolPaletteGap
+    {
+        public const string Id = "UMA.TexturePaint/Palette/GapPath";
+    }
+
+    [EditorToolbarElement(Id, typeof(SceneView))]
+    public sealed class TexturePaintToolPaletteGapHelp : TexturePaintToolPaletteGap
+    {
+        public const string Id = "UMA.TexturePaint/Palette/GapHelp";
     }
 }

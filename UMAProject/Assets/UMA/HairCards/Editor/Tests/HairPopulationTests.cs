@@ -378,13 +378,13 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(stage.SelectedNode.Layer, Is.Null);
                 Assert.That(HairGroomNodes.Toggle(stage, stage.SelectedNode, false), Is.True);
                 Assert.That(modifier.enabled, Is.False);
-                Assert.That(HairGroomNodeWindow.DuplicateNode(stage, stage.SelectedNode), Is.True);
+                Assert.That(HairGroomNodeCommands.DuplicateNode(stage, stage.SelectedNode), Is.True);
                 Assert.That(population.modifiers.Count, Is.EqualTo(2));
-                Assert.That(HairGroomNodeWindow.MoveSelected(stage, stage.SelectedNode, -1), Is.True);
+                Assert.That(HairGroomNodeCommands.MoveSelected(stage, stage.SelectedNode, -1), Is.True);
                 bool asked = false;
-                Assert.That(HairGroomNodeWindow.RemoveNode(stage, stage.SelectedNode, (_,__,___,____) => { asked = true; return false; }), Is.False);
+                Assert.That(HairGroomNodeCommands.RemoveNode(stage, stage.SelectedNode, (_,__,___,____) => { asked = true; return false; }), Is.False);
                 Assert.That(asked, Is.True); Assert.That(population.modifiers.Count, Is.EqualTo(2));
-                Assert.That(HairGroomNodeWindow.RemoveNode(stage, stage.SelectedNode, (_,__,___,____) => true), Is.True);
+                Assert.That(HairGroomNodeCommands.RemoveNode(stage, stage.SelectedNode, (_,__,___,____) => true), Is.True);
                 Assert.That(population.modifiers.Count, Is.EqualTo(1));
             }
             finally { Object.DestroyImmediate(stage); }

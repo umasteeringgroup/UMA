@@ -12,7 +12,6 @@ namespace UMA.HairCards.Editor
         private bool EffectiveChildSplines => populationInspection || showChildSplines;
         private bool EffectiveGuideSplines => populationInspection ? string.IsNullOrEmpty(populationPreviewId) : showGuideSplines;
         private bool EffectiveGuideRoots => !populationInspection && showGuideRoots;
-        private readonly System.Collections.Generic.Dictionary<string, HairSurfaceFields> scalpFields = new System.Collections.Generic.Dictionary<string, HairSurfaceFields>();
         private readonly System.Collections.Generic.List<Color32> scalpColors = new System.Collections.Generic.List<Color32>();
         private Color32[] scalpBaseline;
         private Mesh scalpColorMesh;
@@ -34,7 +33,7 @@ namespace UMA.HairCards.Editor
                     System.Array.Fill(scalpBaseline, new Color32(255,255,255,255));
                 }
             }
-            HairScalpShadingUtility.Evaluate(groom, scalpBaseline, scalpColors, scalpFields);
+            HairScalpShadingUtility.Evaluate(groom, scalpBaseline, scalpColors, evaluationWorkspace);
             var current = scalpFilter.sharedMesh;
             if (current != null && current.vertexCount == scalpColors.Count)
             {
@@ -54,7 +53,7 @@ namespace UMA.HairCards.Editor
         {
             if (populationInspection) InspectPopulation(null);
             if (scalpColorMesh != null) DestroyImmediate(scalpColorMesh);
-            scalpColorMesh = null; scalpBaseline = null; scalpColors.Clear(); scalpFields.Clear(); scalpPreviewApplied = false;
+            scalpColorMesh = null; scalpBaseline = null; scalpColors.Clear(); scalpPreviewApplied = false;
         }
         internal string InspectedPopulationId => populationPreviewId;
         internal string InspectedMaskId => maskPreviewId;

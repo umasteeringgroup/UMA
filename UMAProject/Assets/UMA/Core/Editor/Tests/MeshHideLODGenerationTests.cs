@@ -381,6 +381,28 @@ namespace UMA.Editors.Tests
             Assert.That(mask.FindMatchingSlot(new[] { target, exactSlot }), Is.SameAs(exactSlot));
         }
 
+        [Test]
+        public void BaseSlotNameMatchesItsBakedCopy()
+        {
+            // A hide is authored against the base slot. A race with prebaked blend shapes builds its
+            // characters from baked copies with another slot name, and the hide must still apply.
+            var baked = CreateBakedSlot();
+            var target = new SlotData(baked);
+            var unrelated = Track(ScriptableObject.CreateInstance<SlotDataAsset>());
+            unrelated.name = "SomethingElse";
+            mask.AssetSlotName = slot.slotName;
+            Assert.That(baked.slotName, Is.Not.EqualTo(slot.slotName), "the baked copy has its own slot name");
+            Assert.That(baked.sourceSlot, Is.EqualTo(slot.slotName));
+
+            Assert.That(mask.FindMatchingSlot(new[] { new SlotData(unrelated), target }), Is.SameAs(target));
+            // The base slot itself, when it is in the recipe, is the exact match.
+            var baseSlot = new SlotData(slot);
+            Assert.That(mask.FindMatchingSlot(new[] { target, baseSlot }), Is.SameAs(baseSlot));
+            // Two baked copies of the same slot: no guessing.
+            Assert.That(mask.FindMatchingSlot(new[] { target, new SlotData(CreateBakedSlot("OtherRace")) }), Is.Null);
+            Assert.That(mask.FindMatchingSlot(new[] { new SlotData(unrelated) }), Is.Null);
+        }
+
         [TestCase(false)]
         [TestCase(true)]
         public void LegacyBakedMaskLoadsDraftsAndSavesCanonicalSlotWithoutLosingFaces(bool useCollection)

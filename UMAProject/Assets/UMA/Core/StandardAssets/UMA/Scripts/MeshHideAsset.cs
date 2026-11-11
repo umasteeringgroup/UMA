@@ -312,6 +312,91 @@ namespace UMA
         // Editor-only because it is only used for authoring/reimport scenarios.
         [SerializeField]
         private byte[] _serializedHiddenVertexesByUVCompressed;
+
+        // Authoring data for the automatic mesh hide generator (UMA > Tools > Slot Tools > Rig Profile
+        // Editor > Mesh hides). None of it is read when a character is built.
+
+        [Tooltip("The automatic mesh hide generator leaves a locked hide exactly as it is. Tick this after finishing a hide by hand.")]
+        public bool autoGenerationLocked;
+
+        [Tooltip("Triangles the automatic generator never hides in this asset, however covered they are. Painted in the Rig Profile Editor.")]
+        [HideInInspector]
+        public List<int> autoKeepVisible = new List<int>();
+
+        [Tooltip("Triangles the automatic generator always hides in this asset. Painted in the Rig Profile Editor.")]
+        [HideInInspector]
+        public List<int> autoForceHidden = new List<int>();
+
+        /// <summary>One triangle of one submesh as a single number, for the two lists above.</summary>
+        public static int PackTriangle(int submesh, int triangle)
+        {
+            return (submesh << 24) | (triangle & 0xFFFFFF);
+        }
+
+        public static void UnpackTriangle(int packed, out int submesh, out int triangle)
+        {
+            submesh = (packed >> 24) & 0xFF;
+            triangle = packed & 0xFFFFFF;
+        }
+
+        /// <summary>
+        /// Applies the painted corrections to a set of flags: the "always hide" triangles are set, then
+        /// the "never hide" ones cleared, so a triangle marked both ways stays visible. Marks that do
+        /// not fit the flags (the slot's mesh changed) are skipped.
+        /// </summary>
+        public void ApplyAutoCorrections(BitArray[] flags)
+        {
+            if (flags == null)
+            {
+                return;
+            }
+            ApplyAutoCorrection(flags, autoForceHidden, true);
+            ApplyAutoCorrection(flags, autoKeepVisible, false);
+        }
+
+        private static void ApplyAutoCorrection(BitArray[] flags, List<int> marks, bool value)
+        {
+            if (marks == null)
+            {
+                return;
+            }
+            for (int i = 0; i < marks.Count; i++)
+            {
+                UnpackTriangle(marks[i], out int submesh, out int triangle);
+                if (submesh < flags.Length && flags[submesh] != null && triangle < flags[submesh].Count)
+                {
+                    flags[submesh][triangle] = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Records a painted correction for one triangle and sets its flag to match. Hiding marks it
+        /// "always hide"; un-hiding marks it "never hide". Either way the opposite mark is dropped.
+        /// Returns false when the triangle is not in this asset's flags.
+        /// </summary>
+        public bool SetAutoCorrection(int submesh, int triangle, bool hide)
+        {
+            if (_triangleFlags == null || submesh < 0 || submesh >= _triangleFlags.Length ||
+                _triangleFlags[submesh] == null || triangle < 0 || triangle >= _triangleFlags[submesh].Count)
+            {
+                return false;
+            }
+            int packed = PackTriangle(submesh, triangle);
+            List<int> add = hide ? autoForceHidden : autoKeepVisible;
+            List<int> drop = hide ? autoKeepVisible : autoForceHidden;
+            drop.Remove(packed);
+            if (!add.Contains(packed))
+            {
+                add.Add(packed);
+            }
+            if (_triangleFlags[submesh][triangle] != hide)
+            {
+                _triangleFlags[submesh][triangle] = hide;
+                InvalidateGeneratedLODMasks();
+            }
+            return true;
+        }
 #endif
         public string AssetSlotName
         {
@@ -334,15 +419,33 @@ namespace UMA
         [SerializeField]
         private string _assetSlotName = "";
 
-        /// <summary>Find the target in a generated recipe, including the legacy Object.name baked-slot spelling.</summary>
+        /// <summary>
+        /// Find the target in a generated recipe. A hide that names a base slot also applies to the
+        /// copy of that slot UMA bakes blend shapes into (same triangles, different slot name), and
+        /// the legacy Object.name spelling of a baked slot is still recognised.
+        /// </summary>
         public SlotData FindMatchingSlot(SlotData[] slots)
         {
             if (slots == null || string.IsNullOrEmpty(AssetSlotName)) return null;
-            // Exact identity takes priority over any legacy alias.
+            // Exact identity takes priority over any alias.
             foreach (var slot in slots)
                 if (slot?.asset != null && string.Equals(AssetSlotName, slot.slotName, StringComparison.Ordinal)) return slot;
 
+            // The hide names the base slot and the recipe holds its baked copy. A race with prebaked
+            // blend shapes swaps every base slot for "<slot>_baked_<race>" when its recipes unpack.
             SlotData match = null;
+            foreach (var slot in slots)
+            {
+                var candidate = slot?.asset;
+                if (candidate == null || !candidate.isBaked) continue;
+                if (!string.Equals(AssetSlotName, candidate.sourceSlot, StringComparison.Ordinal)) continue;
+                // Do not guess when several baked copies of the slot are present.
+                if (match != null) return null;
+                match = slot;
+            }
+            if (match != null) return match;
+
+            match = null;
             foreach (var slot in slots)
             {
                 var candidate = slot?.asset;

@@ -184,7 +184,7 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(stage.SceneTool, Is.EqualTo(HairSceneTool.Erase), "Saving must not interrupt erasing.");
                 HairPreferenceCodec.Restore(stage, saved);
                 Assert.That(stage.SceneTool, Is.EqualTo(HairSceneTool.Comb));
-                Assert.That(stage.SceneHelpText, Does.Not.Contain("ERASE GUIDES"));
+                Assert.That(stage.SceneHelpText, Does.Not.Contain("Erase Guides"));
             }
         }
 

@@ -1,36 +1,75 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace UMA.HairCards.Editor
 {
+    /// <summary>
+    /// Groom Outliner: the groom's ordered stack (maps, guides, sculpt passes and modifiers,
+    /// constraints, populations, cards resources and shared helpers) as a tree. Selecting an
+    /// item edits it in Hair Properties; right-click (or Add) creates, orders or removes items.
+    /// </summary>
     public sealed partial class HairGroomNodeWindow : EditorWindow
     {
+        internal const string WindowTitle = "Groom Outliner";
+
+        // Serialized fields double as per-groom preferences (see HairPreferenceCodec); keep names.
         [SerializeField] private Vector2 nodeScroll;
         [SerializeField] private string nodeSearch = string.Empty;
         [SerializeField] private List<string> collapsedNodeKeys = new List<string>();
         [SerializeField] private List<string> expandedOptionalMapKeys = new List<string>();
         [SerializeField] private bool initialPlacementDone;
         private HairGroomAsset preferenceGroom;
-        private string preferenceContext, lastSelectedKey, dragCandidate;
+        private string preferenceContext;
         private double nextSave;
-        private Vector2 dragStart;
-        private const string DragKey = "UMA.HairCards.NodeDrag";
-        private sealed class NodeDrag { internal HairGroomAsset Groom; internal string Key; }
+        private int savedInteraction = -1;
 
-        [MenuItem("UMA/Hair Cards/Hair Nodes", priority = 211)]
+        private MultiColumnTreeView tree;
+        private ToolbarSearchField searchField;
+        private ToolbarButton issuesButton;
+        private VisualElement content, emptyState, stepBar;
+        private Label groomLabel;
+        private readonly List<ToolbarToggle> stepToggles = new List<ToolbarToggle>();
+        // TreeView ids are window-local integers mapped from the nodes' stable string keys.
+        private readonly Dictionary<string, int> idsByKey = new Dictionary<string, int>();
+        private readonly Dictionary<int, string> keysById = new Dictionary<int, string>();
+        private int nextId = 1;
+        private HairCardStage shownStage;
+        private HairGroomAsset shownGroom;
+        private int shownStructure, shownState;
+        private string shownSearch, syncedKey, lastStageSelection;
+        private readonly HashSet<string> shownKeys = new HashSet<string>();
+        private bool rebuildRequested = true, suppressTreeEvents;
+
+        private static readonly (HairWorkflowStep step, string label, string tooltip)[] Steps =
+        {
+            (HairWorkflowStep.Setup, "Setup", "Source & Setup"),
+            (HairWorkflowStep.Growth, "Growth", "Paint growth, density and optional maps"),
+            (HairWorkflowStep.Guides, "Guides", "Place, generate and select guides"),
+            (HairWorkflowStep.Groom, "Groom", "Sculpt passes, modifiers, constraints and helpers"),
+            (HairWorkflowStep.Cards, "Cards", "Generate hair, card geometry, materials and scalp shading"),
+            (HairWorkflowStep.Optimize, "LODs", "Optimize & LODs"),
+            (HairWorkflowStep.ValidateAndBake, "Bake", "Validate & Bake")
+        };
+
+        [MenuItem("UMA/Hair Cards/Groom Outliner", priority = 211)]
         public static void Open()
         {
             var window = GetWindow<HairGroomNodeWindow>();
-            window.titleContent = new GUIContent("Hair Nodes");
-            window.minSize = new Vector2(320f, 360f);
+            window.titleContent = new GUIContent(WindowTitle);
+            window.minSize = new Vector2(240f, 300f);
             if (!window.initialPlacementDone) { window.position = new Rect(60f, 80f, 340f, 700f); window.initialPlacementDone = true; }
             window.Show();
         }
 
         internal static void RepaintOpenWindows()
-        { foreach (var window in Resources.FindObjectsOfTypeAll<HairGroomNodeWindow>()) window.Repaint(); }
+        {
+            foreach (var window in Resources.FindObjectsOfTypeAll<HairGroomNodeWindow>())
+            { window.rebuildRequested = true; window.Repaint(); }
+        }
 
         internal static void SaveOpenPreferences()
         {
@@ -39,41 +78,58 @@ namespace UMA.HairCards.Editor
                 HairEditorPreferences.instance.Remember(window, "nodes", window.preferenceContext);
         }
 
-        private void OnEnable()
-        {
-            titleContent = new GUIContent("Hair Nodes");
-            minSize = new Vector2(320f, 360f);
-            if (HairEditorPreferences.Suspended) return;
-            RestoreContext();
-            EditorApplication.update += SaveIdle;
-            Undo.undoRedoPerformed += Repaint;
-        }
         internal static void ResetOpenPreferences()
         {
             foreach (var window in Resources.FindObjectsOfTypeAll<HairGroomNodeWindow>())
-            { HairPreferenceCodec.Reset(window); window.lastSelectedKey = null; window.Repaint(); }
+            {
+                HairPreferenceCodec.Reset(window);
+                window.syncedKey = null; window.rebuildRequested = true;
+                window.searchField?.SetValueWithoutNotify(window.nodeSearch ?? string.Empty);
+                window.Repaint();
+            }
         }
+
+        private void OnEnable()
+        {
+            titleContent = new GUIContent(WindowTitle);
+            minSize = new Vector2(240f, 300f);
+            if (HairEditorPreferences.Suspended) return;
+            RestoreContext();
+            EditorApplication.update += SaveIdle;
+            Undo.undoRedoPerformed += OnUndoRedo;
+        }
+
         private void OnDisable()
         {
             EditorApplication.update -= SaveIdle;
-            Undo.undoRedoPerformed -= Repaint;
+            Undo.undoRedoPerformed -= OnUndoRedo;
             if (!HairEditorPreferences.Suspended) HairEditorPreferences.instance.Remember(this, "nodes", preferenceContext);
         }
+
+        private void OnUndoRedo() { rebuildRequested = true; Repaint(); }
+
         private void SaveIdle()
         {
-            if (HairEditorPreferences.Suspended || EditorApplication.timeSinceStartup < nextSave || HairCardStage.ActiveStage?.IsEditing == true) return;
+            if (HairEditorPreferences.Suspended || EditorApplication.timeSinceStartup < nextSave || HairCardStage.ActiveStage?.IsEditing == true ||
+                savedInteraction == HairEditorPreferences.InteractionVersion) return;
             nextSave = EditorApplication.timeSinceStartup + 2d;
+            savedInteraction = HairEditorPreferences.InteractionVersion;
             HairEditorPreferences.instance.Remember(this, "nodes", preferenceContext);
         }
+
         private void RestoreContext()
         {
             preferenceGroom = HairCardStage.ActiveStage?.Groom;
             preferenceContext = HairEditorPreferences.Context(preferenceGroom);
             collapsedNodeKeys.Clear(); expandedOptionalMapKeys.Clear(); nodeSearch = string.Empty; nodeScroll = Vector2.zero;
             HairEditorPreferences.instance.Restore(this, "nodes", preferenceContext);
-            lastSelectedKey = null;
+            nodeSearch ??= string.Empty;
+            searchField?.SetValueWithoutNotify(nodeSearch);
+            syncedKey = null; rebuildRequested = true;
         }
 
+        /// <summary>Visible rows for a search, with matching items' ancestors and descendants;
+        /// without a search, rows beneath collapsed items are omitted.</summary>
         internal static List<HairGroomNode> Filter(IReadOnlyList<HairGroomNode> nodes, string search,
             ICollection<string> collapsed, ICollection<string> optionalExpanded)
         {
@@ -107,193 +163,427 @@ namespace UMA.HairCards.Editor
             return visible;
         }
 
-        private void OnGUI()
+        // ---- Layout ----------------------------------------------------------------------
+
+        private void CreateGUI()
         {
+            VisualElement root = rootVisualElement;
+            root.Clear();
+            root.style.flexGrow = 1f;
+            root.RegisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
+            root.RegisterCallback<PointerUpEvent>(_ => HairEditorPreferences.NoteInteraction(), TrickleDown.TrickleDown);
+
+            emptyState = new VisualElement();
+            emptyState.style.paddingLeft = emptyState.style.paddingRight = emptyState.style.paddingTop = 6f;
+            emptyState.Add(new HelpBox("Open a Hair Groom asset or select a source character/mesh to begin. The Groom Outliner, Hair Properties and Hair Preview & Settings can be docked independently.", HelpBoxMessageType.Info));
+            var openSource = new Button(HairCardMenu.OpenSelectedSource) { text = "Open Selected Source" };
+            openSource.style.height = 30f; openSource.style.marginTop = 6f;
+            emptyState.Add(openSource);
+            root.Add(emptyState);
+
+            content = new VisualElement();
+            content.style.flexGrow = 1f;
+            root.Add(content);
+
+            var toolbar = new Toolbar();
+            var add = new ToolbarButton(() => ShowAddMenu()) { text = "Add ▾", tooltip = "Create an item for the selection, a group, or a shared helper." };
+            add.name = "outliner-add";
+            toolbar.Add(add);
+            issuesButton = new ToolbarButton(() => ShowIssuesMenu()) { text = "Issues (0)", tooltip = "Locate a validation setting or guide. Validate & Bake refreshes this report." };
+            toolbar.Add(issuesButton);
+            var spacer = new VisualElement(); spacer.style.flexGrow = 1f; toolbar.Add(spacer);
+            var more = new ToolbarButton(() => ShowMoreMenu()) { text = "⋮", tooltip = "Frame, expand or collapse, open windows, save or exit." };
+            toolbar.Add(more);
+            content.Add(toolbar);
+
+            groomLabel = new Label();
+            groomLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            groomLabel.style.paddingLeft = 6f; groomLabel.style.paddingTop = 3f; groomLabel.style.paddingBottom = 2f;
+            groomLabel.style.overflow = Overflow.Hidden; groomLabel.style.textOverflow = TextOverflow.Ellipsis;
+            content.Add(groomLabel);
+
+            stepBar = new Toolbar();
+            stepBar.style.flexWrap = Wrap.Wrap; stepBar.style.height = StyleKeyword.Auto;
+            stepToggles.Clear();
+            foreach (var (step, label, tooltip) in Steps)
+            {
+                var captured = step;
+                var toggle = new ToolbarToggle { text = label, tooltip = tooltip + " — selecting an item also switches to its step." };
+                toggle.RegisterValueChangedCallback(evt => OnStepToggled(captured, evt.newValue));
+                stepToggles.Add(toggle); stepBar.Add(toggle);
+            }
+            content.Add(stepBar);
+
+            var searchRow = new Toolbar();
+            searchField = new ToolbarSearchField { tooltip = "Filter by name, description or kind (Ctrl/Cmd+F)." };
+            searchField.style.flexGrow = 1f; searchField.style.width = StyleKeyword.Auto;
+            searchField.SetValueWithoutNotify(nodeSearch ?? string.Empty);
+            searchField.RegisterValueChangedCallback(evt =>
+            {
+                nodeSearch = evt.newValue ?? string.Empty;
+                HairEditorPreferences.NoteInteraction();
+                rebuildRequested = true; RefreshNow();
+            });
+            searchRow.Add(searchField);
+            content.Add(searchRow);
+
+            tree = CreateTree();
+            content.Add(tree);
+
+            var footer = new IMGUIContainer(DrawFooter);
+            footer.style.flexShrink = 0f;
+            content.Add(footer);
+
+            rebuildRequested = true;
+            RefreshNow();
+            root.schedule.Execute(RefreshNow).Every(100);
+        }
+
+        private MultiColumnTreeView CreateTree()
+        {
+            var columns = new Columns();
+            columns.Add(new Column { name = "item", title = "Item", stretchable = true, minWidth = 120f, makeCell = MakeItemCell, bindCell = BindItemCell });
+            columns.Add(new Column { name = "active", title = "On", width = 30f, minWidth = 30f, maxWidth = 30f, resizable = false, makeCell = MakeActiveCell, bindCell = BindActiveCell });
+            columns.Add(new Column { name = "lock", title = "Lock", width = 38f, minWidth = 38f, maxWidth = 38f, resizable = false, makeCell = MakeLockCell, bindCell = BindLockCell });
+            columns.reorderable = false;
+            var view = new MultiColumnTreeView(columns)
+            {
+                fixedItemHeight = 22f,
+                selectionType = SelectionType.Single,
+                reorderable = true,
+                showAlternatingRowBackgrounds = AlternatingRowBackground.None,
+                viewDataKey = null
+            };
+            view.style.flexGrow = 1f;
+            view.selectionChanged += _ => OnTreeSelectionChanged();
+            view.itemExpandedChanged += OnItemExpandedChanged;
+            view.canStartDrag += CanStartDrag;
+            view.dragAndDropUpdate += args => ValidateDrop(args, false);
+            view.handleDrop += args => ValidateDrop(args, true);
+            view.RegisterCallback<ContextClickEvent>(evt => { ShowNodeMenu(null, evt.mousePosition); evt.StopPropagation(); });
+            view.RegisterCallback<KeyDownEvent>(OnTreeKeyDown);
+            return view;
+        }
+
+        // ---- Refresh ---------------------------------------------------------------------
+
+        private void RefreshNow()
+        {
+            if (content == null) return;
             HairCardStage stage = HairCardStage.ActiveStage;
-            if (stage?.Groom != preferenceGroom && !HairEditorPreferences.Suspended)
+            if (!HairEditorPreferences.Suspended && stage?.Groom != preferenceGroom)
             {
                 HairEditorPreferences.instance.Remember(this, "nodes", preferenceContext);
                 RestoreContext();
             }
-            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+            bool hasGroom = stage?.Groom != null;
+            content.style.display = hasGroom ? DisplayStyle.Flex : DisplayStyle.None;
+            emptyState.style.display = hasGroom ? DisplayStyle.None : DisplayStyle.Flex;
+            if (!hasGroom) { shownStage = null; shownGroom = null; return; }
+
+            groomLabel.text = stage.Groom.name;
+            int issues = stage.ReleaseValidation?.issues.Count ?? 0;
+            issuesButton.text = "Issues (" + issues + ")";
+            issuesButton.SetEnabled(issues > 0);
+            for (int i = 0; i < Steps.Length; i++) stepToggles[i].SetValueWithoutNotify(stage.WorkflowStep == Steps[i].step);
+
+            IReadOnlyList<HairGroomNode> nodes = stage.Nodes;
+            int structure = HairGroomNodes.StructureSignature(nodes);
+            if (rebuildRequested || stage != shownStage || stage.Groom != shownGroom || structure != shownStructure || nodeSearch != shownSearch)
+                RebuildTree(stage, nodes, structure);
+            int state = StateSignature(stage);
+            if (state != shownState) { shownState = state; tree.RefreshItems(); }
+            SyncSelection(stage);
+        }
+
+        private void RebuildTree(HairCardStage stage, IReadOnlyList<HairGroomNode> nodes, int structure)
+        {
+            rebuildRequested = false;
+            shownStage = stage; shownGroom = stage.Groom; shownStructure = structure; shownSearch = nodeSearch;
+            bool searching = !string.IsNullOrWhiteSpace(nodeSearch);
+            IReadOnlyList<HairGroomNode> visible = searching ? Filter(nodes, nodeSearch, Array.Empty<string>(), Array.Empty<string>()) : nodes;
+            var present = shownKeys;
+            present.Clear();
+            foreach (var node in visible) present.Add(node.Key);
+            var children = new Dictionary<string, List<HairGroomNode>>();
+            var roots = new List<HairGroomNode>();
+            foreach (var node in visible)
             {
-                if (GUILayout.Button("Properties", EditorStyles.toolbarButton)) HairGroomWorkspace.OpenProperties();
-                if (GUILayout.Button("Preview & Settings", EditorStyles.toolbarButton)) HairGroomPreviewWindow.Open();
-                using (new EditorGUI.DisabledScope(stage == null))
-                    if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(44f))) stage.SaveNow();
+                if (node.ParentKey == null || !present.Contains(node.ParentKey)) { roots.Add(node); continue; }
+                if (!children.TryGetValue(node.ParentKey, out var list)) children[node.ParentKey] = list = new List<HairGroomNode>();
+                list.Add(node);
             }
-            if (stage?.Groom == null)
+            TreeViewItemData<string> Make(HairGroomNode node)
             {
-                EditorGUILayout.HelpBox("Open a Hair Groom asset or select a source character/mesh to begin. Hair Nodes, Hair Properties and Hair Preview & Settings can be docked independently.", MessageType.Info);
-                if (GUILayout.Button("Open Selected Source", GUILayout.Height(30f))) HairCardMenu.OpenSelectedSource();
-                return;
-            }
-            EditorGUILayout.LabelField(stage.Groom.name, EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Select a node → edit Hair Properties. Grooming order: top to bottom.", EditorStyles.wordWrappedMiniLabel);
-            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
-            {
-                if (GUILayout.Button("Frame", EditorStyles.toolbarButton)) stage.FrameGroom();
-                int issueCount = stage.ReleaseValidation?.issues.Count ?? 0;
-                using (new EditorGUI.DisabledScope(issueCount == 0))
-                    if (GUILayout.Button(new GUIContent("Issues (" + issueCount + ")", "Locate a validation setting or guide. Validate & Bake refreshes this report."), EditorStyles.toolbarButton))
-                        ShowIssuesMenu(stage);
-                if (GUILayout.Button("Help", EditorStyles.toolbarButton)) HairGroomWorkspace.OpenQuickStart();
-                if (GUILayout.Button("Exit Stage", EditorStyles.toolbarButton))
-                { stage.ExitGrooming(); GUIUtility.ExitGUI(); }
-            }
-            DrawTreeActions(stage);
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                GUI.SetNextControlName("HairNodeSearch");
-                nodeSearch = EditorGUILayout.TextField(nodeSearch, EditorStyles.toolbarSearchField);
-                if (GUILayout.Button(new GUIContent("×", "Clear search"), GUILayout.Width(22f))) { nodeSearch = string.Empty; GUI.FocusControl(null); }
-                if (GUILayout.Button("Expand", GUILayout.Width(56f)))
-                { collapsedNodeKeys.Clear(); foreach (var item in stage.Nodes) if (item.Kind == HairGroomNodeKind.OptionalMaps && !expandedOptionalMapKeys.Contains(item.Key)) expandedOptionalMapKeys.Add(item.Key); }
-                if (GUILayout.Button("Collapse", GUILayout.Width(62f)))
+                List<TreeViewItemData<string>> items = null;
+                if (children.TryGetValue(node.Key, out var list))
                 {
-                    collapsedNodeKeys.Clear(); expandedOptionalMapKeys.Clear();
-                    foreach (var item in stage.Nodes) if (item.HasChildren) collapsedNodeKeys.Add(item.Key);
-                    stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Source));
+                    items = new List<TreeViewItemData<string>>(list.Count);
+                    foreach (var child in list) items.Add(Make(child));
                 }
+                return new TreeViewItemData<string>(IdFor(node.Key), node.Key, items);
             }
-            HairGroomNode selected = stage.SelectedNode;
-            bool selectionChanged = selected?.Key != lastSelectedKey;
-            if (selectionChanged)
+            var rootItems = new List<TreeViewItemData<string>>(roots.Count);
+            foreach (var node in roots) rootItems.Add(Make(node));
+
+            suppressTreeEvents = true;
+            try
             {
-                lastSelectedKey = selected?.Key;
-                var parent = selected;
-                while (parent?.ParentKey != null)
+                tree.SetRootItems(rootItems);
+                tree.Rebuild();
+                foreach (var node in visible)
                 {
-                    parent = stage.FindNode(parent.ParentKey);
-                    if (parent == null) break;
-                    collapsedNodeKeys.Remove(parent.Key);
-                    if (parent.Kind == HairGroomNodeKind.OptionalMaps && !expandedOptionalMapKeys.Contains(parent.Key)) expandedOptionalMapKeys.Add(parent.Key);
+                    if (!children.ContainsKey(node.Key)) continue;
+                    if (searching || IsExpanded(node)) tree.ExpandItem(IdFor(node.Key), false, false);
+                    else tree.CollapseItem(IdFor(node.Key), false, false);
                 }
+                tree.RefreshItems();
             }
-            var visible = Filter(stage.Nodes, nodeSearch, collapsedNodeKeys, expandedOptionalMapKeys);
-            if (selectionChanged && selected != null)
+            finally { suppressTreeEvents = false; }
+            shownState = StateSignature(stage);
+            syncedKey = null;
+        }
+
+        private int IdFor(string key)
+        {
+            if (idsByKey.TryGetValue(key, out int id)) return id;
+            id = nextId++;
+            idsByKey[key] = id; keysById[id] = key;
+            return id;
+        }
+
+        private string KeyForIndex(int index) => index >= 0 ? tree.GetItemDataForIndex<string>(index) : null;
+
+        private bool IsExpanded(HairGroomNode node) =>
+            node.Kind == HairGroomNodeKind.OptionalMaps ? expandedOptionalMapKeys.Contains(node.Key) : !collapsedNodeKeys.Contains(node.Key);
+
+        private void SetExpandedPreference(HairGroomNode node, bool expanded)
+        {
+            if (node.Kind == HairGroomNodeKind.OptionalMaps)
             {
-                if (!visible.Exists(item => item.Key == selected.Key))
-                { nodeSearch = string.Empty; visible = Filter(stage.Nodes, nodeSearch, collapsedNodeKeys, expandedOptionalMapKeys); }
-                int selectedIndex = visible.FindIndex(item => item.Key == selected.Key);
-                if (selectedIndex >= 0) nodeScroll.y = Mathf.Max(0f, selectedIndex * 27f - Mathf.Max(60f, (position.height - 260f) * 0.5f));
+                if (expanded) { if (!expandedOptionalMapKeys.Contains(node.Key)) expandedOptionalMapKeys.Add(node.Key); }
+                else expandedOptionalMapKeys.Remove(node.Key);
             }
-            Event keyboard = Event.current;
-            if (keyboard.type == EventType.KeyDown)
+            else if (expanded) collapsedNodeKeys.Remove(node.Key);
+            else if (!collapsedNodeKeys.Contains(node.Key)) collapsedNodeKeys.Add(node.Key);
+        }
+
+        private static int StateSignature(HairCardStage stage)
+        {
+            unchecked
             {
-                if ((keyboard.control || keyboard.command) && keyboard.keyCode == KeyCode.F)
-                { GUI.FocusControl("HairNodeSearch"); keyboard.Use(); }
-                else if (GUI.GetNameOfFocusedControl() != "HairNodeSearch" && !EditorGUIUtility.editingTextField && HandleNodeNavigation(stage, visible, keyboard.keyCode))
-                { keyboard.Use(); Repaint(); }
+                int hash = 19;
+                hash = hash * 31 + (stage.IsLayerEditing ? 1 : 0);
+                hash = hash * 31 + (stage.ActiveLayer?.Id?.GetHashCode() ?? 0);
+                hash = hash * 31 + (stage.InspectedPopulationId?.GetHashCode() ?? 0);
+                hash = hash * 31 + (stage.InspectedMaskId?.GetHashCode() ?? 0);
+                hash = hash * 31 + (stage.SoloLayerId?.GetHashCode() ?? 0);
+                hash = hash * 31 + (stage.ActiveGroup?.Id?.GetHashCode() ?? 0);
+                return hash;
             }
-            using (var scroll = new EditorGUILayout.ScrollViewScope(nodeScroll))
+        }
+
+        private void SyncSelection(HairCardStage stage)
+        {
+            string key = stage.SelectedNode?.Key;
+            // syncedKey is cleared after a rebuild (re-apply) and when the stage's selection moves.
+            bool selectionMoved = key != lastStageSelection;
+            if (key == syncedKey && !selectionMoved) return;
+            syncedKey = key; lastStageSelection = key;
+            suppressTreeEvents = true;
+            try
             {
-                nodeScroll = scroll.scrollPosition;
-                foreach (var node in visible) DrawNodeRow(stage, node, selected?.Key == node.Key);
-                if (visible.Count == 0) EditorGUILayout.HelpBox("No matching nodes. Clear search to return to the complete groom.", MessageType.Info);
-            }
-            if (selected != null)
-            {
-                EditorGUILayout.LabelField(new GUIContent(selected.Label, selected.Description), EditorStyles.boldLabel);
-                // Keep room for the actual tree in compact docks. Properties and row tooltips
-                // already carry the selected node's explanation.
-                if (position.height >= 850f)
+                if (key == null || !shownKeys.Contains(key))
                 {
-                    EditorGUILayout.LabelField(selected.Description, EditorStyles.wordWrappedMiniLabel);
-                    if (selected.CanReorder) EditorGUILayout.LabelField("Drag above/below a sibling, or use Earlier / Later. Cross-pass drops are not allowed.", EditorStyles.wordWrappedMiniLabel);
+                    if (selectionMoved && key != null && !string.IsNullOrWhiteSpace(nodeSearch))
+                    {
+                        // The selection is outside the search results; show the whole groom again.
+                        nodeSearch = string.Empty; searchField.SetValueWithoutNotify(string.Empty);
+                        rebuildRequested = true; syncedKey = null;
+                    }
+                    else tree.ClearSelection();
+                    return;
                 }
+                int id = IdFor(key);
+                RevealAncestors(stage, key);
+                tree.SetSelectionByIdWithoutNotify(new[] { id });
+                tree.ScrollToItemById(id);
             }
+            finally { suppressTreeEvents = false; }
+        }
+
+        private void RevealAncestors(HairCardStage stage, string key)
+        {
+            bool expanded = false;
+            var node = stage.FindNode(key);
+            while (node?.ParentKey != null)
+            {
+                node = stage.FindNode(node.ParentKey);
+                if (node == null || !shownKeys.Contains(node.Key)) break;
+                SetExpandedPreference(node, true);
+                int parentId = IdFor(node.Key);
+                if (!tree.IsExpanded(parentId)) { tree.ExpandItem(parentId, false, false); expanded = true; }
+            }
+            if (expanded) tree.RefreshItems();
+        }
+
+        // ---- Tree callbacks --------------------------------------------------------------
+
+        private void OnTreeSelectionChanged()
+        {
+            if (suppressTreeEvents) return;
+            HairCardStage stage = HairCardStage.ActiveStage;
+            string key = KeyForIndex(tree.selectedIndex);
+            if (stage == null || key == null || stage.SelectedNode?.Key == key) return;
+            GUI.FocusControl(null); EditorGUIUtility.editingTextField = false;
+            stage.SelectNode(key);
+            HairEditorPreferences.NoteInteraction();
+            if (Resources.FindObjectsOfTypeAll<HairGroomWorkspace>().Length == 0 && !HairEditorPreferences.Suspended)
+                HairGroomWorkspace.OpenProperties();
+            syncedKey = null;
+        }
+
+        private void OnItemExpandedChanged(TreeViewExpansionChangedArgs args)
+        {
+            if (suppressTreeEvents || !string.IsNullOrWhiteSpace(nodeSearch)) return;
+            HairCardStage stage = HairCardStage.ActiveStage;
+            if (stage == null || !keysById.TryGetValue(args.id, out string key)) return;
+            HairGroomNode node = stage.FindNode(key);
+            if (node == null) return;
+            SetExpandedPreference(node, args.isExpanded);
+            HairEditorPreferences.NoteInteraction();
+            if (args.isExpanded) return;
+            // Collapsing an ancestor of the selection selects the collapsed item, like the Hierarchy.
+            var selected = stage.SelectedNode;
+            while (selected?.ParentKey != null)
+            {
+                if (selected.ParentKey == key) { stage.SelectNode(key); syncedKey = null; break; }
+                selected = stage.FindNode(selected.ParentKey);
+            }
+        }
+
+        private void OnStepToggled(HairWorkflowStep step, bool on)
+        {
+            HairCardStage stage = HairCardStage.ActiveStage;
+            if (stage == null) return;
+            if (on && stage.WorkflowStep != step)
+            {
+                stage.WorkflowStep = step;
+                HairEditorPreferences.NoteInteraction();
+                HairGroomWorkspace.RepaintOpenWindows();
+            }
+            syncedKey = null;
+            RefreshNow();
+        }
+
+        private void DrawFooter()
+        {
+            HairCardStage stage = HairCardStage.ActiveStage;
+            if (stage?.Groom == null) return;
+            HairEditorPreferences.NoteInteraction(Event.current);
             HairGroomWorkspace.DrawStatus(stage);
             EditorGUILayout.LabelField(stage.SaveStatus + " · " + stage.PreviewStatus, EditorStyles.wordWrappedMiniLabel);
-            EditorGUILayout.LabelField("↑ ↓ select · ← → collapse/expand · Ctrl/Cmd+F search", EditorStyles.wordWrappedMiniLabel);
         }
 
-        internal bool HandleNodeNavigation(HairCardStage stage, IReadOnlyList<HairGroomNode> visible, KeyCode key)
+        // ---- Cells -----------------------------------------------------------------------
+
+        private VisualElement MakeItemCell()
         {
-            if (stage == null || visible.Count == 0) return false;
-            var selected = stage.SelectedNode;
-            int index = 0;
-            for (int i = 0; i < visible.Count; i++) if (visible[i].Key == selected?.Key) { index = i; break; }
-            if (key == KeyCode.UpArrow || key == KeyCode.DownArrow || key == KeyCode.Home || key == KeyCode.End)
-            {
-                int next = key == KeyCode.Home ? 0 : key == KeyCode.End ? visible.Count - 1 : Mathf.Clamp(index + (key == KeyCode.UpArrow ? -1 : 1), 0, visible.Count - 1);
-                stage.SelectNode(visible[next].Key); return true;
-            }
-            if (selected == null || (key != KeyCode.LeftArrow && key != KeyCode.RightArrow)) return false;
-            bool expanded = selected.Kind == HairGroomNodeKind.OptionalMaps ? expandedOptionalMapKeys.Contains(selected.Key) : !collapsedNodeKeys.Contains(selected.Key);
-            if (key == KeyCode.LeftArrow)
-            {
-                if (selected.HasChildren && expanded)
-                { expandedOptionalMapKeys.Remove(selected.Key); if (!collapsedNodeKeys.Contains(selected.Key)) collapsedNodeKeys.Add(selected.Key); }
-                else if (selected.ParentKey != null) stage.SelectNode(selected.ParentKey);
-            }
-            else if (selected.HasChildren)
-            {
-                if (!expanded)
-                { collapsedNodeKeys.Remove(selected.Key); if (selected.Kind == HairGroomNodeKind.OptionalMaps) expandedOptionalMapKeys.Add(selected.Key); }
-                else if (index + 1 < visible.Count && visible[index + 1].ParentKey == selected.Key) stage.SelectNode(visible[index + 1].Key);
-            }
-            return true;
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row; row.style.alignItems = Align.Center; row.style.flexGrow = 1f;
+            row.style.overflow = Overflow.Hidden;
+            var label = new Label { name = "label" };
+            label.style.flexShrink = 0f; label.style.unityTextAlign = TextAnchor.MiddleLeft;
+            var badges = new Label { name = "badges" };
+            badges.style.flexShrink = 1f; badges.style.marginLeft = 6f; badges.style.fontSize = 10f;
+            badges.style.color = new Color(0.55f, 0.55f, 0.55f, 1f);
+            badges.style.overflow = Overflow.Hidden; badges.style.textOverflow = TextOverflow.Ellipsis; badges.style.whiteSpace = WhiteSpace.NoWrap;
+            row.Add(label); row.Add(badges);
+            row.RegisterCallback<ContextClickEvent>(evt => { ShowNodeMenu(row.userData as string, evt.mousePosition); evt.StopPropagation(); });
+            return row;
         }
 
-        private void DrawNodeRow(HairCardStage stage, HairGroomNode node, bool selected)
+        private void BindItemCell(VisualElement element, int index)
         {
-            Rect row = EditorGUILayout.GetControlRect(false, 25f);
-            if (selected) EditorGUI.DrawRect(row, new Color(0.2f, 0.43f, 0.66f, 0.55f));
-            float x = row.x + 6f + node.Depth * 14f;
-            Rect foldout = new Rect(x, row.y + 4f, 14f, 18f);
-            bool expanded = node.Kind == HairGroomNodeKind.OptionalMaps ? expandedOptionalMapKeys.Contains(node.Key) : !collapsedNodeKeys.Contains(node.Key);
-            if (node.HasChildren)
-            {
-                bool next = EditorGUI.Foldout(foldout, !string.IsNullOrWhiteSpace(nodeSearch) || expanded, GUIContent.none);
-                if (next != expanded && string.IsNullOrWhiteSpace(nodeSearch))
-                {
-                    if (node.Kind == HairGroomNodeKind.OptionalMaps)
-                    { if (next) expandedOptionalMapKeys.Add(node.Key); else expandedOptionalMapKeys.Remove(node.Key); }
-                    else { if (next) collapsedNodeKeys.Remove(node.Key); else collapsedNodeKeys.Add(node.Key); }
-                    if (!next)
-                    {
-                        var parent = stage.SelectedNode;
-                        while (parent?.ParentKey != null)
-                        { if (parent.ParentKey == node.Key) { stage.SelectNode(node.Key); break; } parent = stage.FindNode(parent.ParentKey); }
-                    }
-                }
-            }
-            float controls = node.CanToggle ? 65f : 0f;
-            Rect label = new Rect(x + 16f, row.y, Mathf.Max(10f, row.xMax - x - 18f - controls), row.height);
-            Event current = Event.current;
-            if (current.type == EventType.MouseDown && current.button == 0 && label.Contains(current.mousePosition))
-            { dragCandidate = node.Key; dragStart = current.mousePosition; }
-            if (current.type == EventType.MouseDrag && dragCandidate == node.Key && node.CanReorder && !node.Locked && (current.mousePosition - dragStart).sqrMagnitude > 20f)
-            {
-                DragAndDrop.PrepareStartDrag(); DragAndDrop.SetGenericData(DragKey, new NodeDrag { Groom = stage.Groom, Key = node.Key });
-                DragAndDrop.StartDrag(node.Label); GUIUtility.hotControl = 0; dragCandidate = null; current.Use();
-            }
+            string key = KeyForIndex(index);
+            element.userData = key;
+            HairCardStage stage = HairCardStage.ActiveStage;
+            HairGroomNode node = stage?.FindNode(key);
+            var label = element.Q<Label>("label");
+            var badges = element.Q<Label>("badges");
+            if (node == null) { label.text = key; badges.text = string.Empty; return; }
+            label.text = node.Label;
+            bool inactive = (node.CanToggle && !node.Enabled) || (node.Group != null && (!node.Group.enabled || !node.Group.visible) && node.Kind != HairGroomNodeKind.Group);
+            label.style.unityFontStyleAndWeight = node.Kind == HairGroomNodeKind.Group ? FontStyle.Bold : FontStyle.Normal;
+            element.style.opacity = inactive ? 0.55f : 1f;
+            element.tooltip = node.Description;
+            var parts = new List<string>();
             bool bypassed = stage.IsNodeTemporarilyBypassed(node);
-            if (GUI.Button(label, new GUIContent((node.Locked ? "[Locked] " : "") +
-                (bypassed ? "[bypassed] " : node.Layer != null && node.Layer == stage.ActiveLayer && stage.IsLayerEditing && node.Modifier == null ? "[editing] " : "") + node.Label,
-                bypassed ? "Temporarily bypassed at the sculpt edit point. The saved Active toggle is unchanged." : node.Description),
-                selected || node.Kind == HairGroomNodeKind.Group ? EditorStyles.boldLabel : EditorStyles.label))
-            { GUI.FocusControl(null); EditorGUIUtility.editingTextField = false; stage.SelectNode(node.Key); if (Resources.FindObjectsOfTypeAll<HairGroomWorkspace>().Length == 0) HairGroomWorkspace.OpenProperties(); }
-            if (node.CanToggle)
-                using (new EditorGUI.DisabledScope(node.Locked))
-                {
-                    bool enabled = GUI.Toggle(new Rect(row.xMax - 62f, row.y + 2f, 60f, 21f), node.Enabled,
-                        new GUIContent("Active", "Include this operation in evaluation. This is independent of selection."), "Button");
-                    if (enabled != node.Enabled) HairGroomNodes.Toggle(stage, node, enabled);
-                }
-            if ((current.type == EventType.DragUpdated || current.type == EventType.DragPerform) && row.Contains(current.mousePosition) && DragAndDrop.GetGenericData(DragKey) is NodeDrag drag)
+            if (bypassed) parts.Add("bypassed");
+            else if (node.Layer != null && node.Modifier == null && node.Layer == stage.ActiveLayer && stage.IsLayerEditing) parts.Add("editing");
+            if (node.Population != null && node.Modifier == null && stage.InspectedPopulationId == node.Population.Id) parts.Add("inspecting");
+            if (node.Modifier != null && stage.InspectedMaskId == node.Modifier.Id) parts.Add("mask shown");
+            if (node.Layer != null && node.Modifier == null && stage.SoloLayerId == node.Layer.Id) parts.Add("solo");
+            HairGroomNodeReferences.AppendBadges(stage.Groom, node, parts);
+            badges.text = string.Join(" · ", parts);
+            badges.tooltip = bypassed ? "Temporarily bypassed at the sculpt edit point. The saved Active toggle is unchanged." : badges.text;
+        }
+
+        private VisualElement MakeActiveCell()
+        {
+            var toggle = new Toggle { tooltip = "Include this operation in evaluation. This is independent of selection." };
+            toggle.style.alignSelf = Align.Center; toggle.style.marginLeft = 6f;
+            toggle.RegisterValueChangedCallback(evt =>
             {
-                HairGroomNode source = drag.Groom == stage.Groom ? stage.FindNode(drag.Key) : null;
-                bool allowed = source != null && source.CanReorder && !source.Locked && !node.Locked && source.Kind == node.Kind && source.ParentKey == node.ParentKey && source.Key != node.Key;
-                if (allowed && source.Modifier == null && source.Layer.afterGroupOperations != node.Layer.afterGroupOperations) allowed = false;
-                DragAndDrop.visualMode = allowed ? DragAndDropVisualMode.Move : DragAndDropVisualMode.Rejected;
-                bool after = current.mousePosition.y >= row.center.y;
-                if (allowed) EditorGUI.DrawRect(new Rect(row.x, after ? row.yMax - 2f : row.y, row.width, 2f), Color.cyan);
-                if (current.type == EventType.DragPerform && allowed)
-                { DragAndDrop.AcceptDrag(); if (HairGroomNodes.Move(stage, source, node, after)) stage.SelectNode(source.Key); DragAndDrop.SetGenericData(DragKey, null); }
-                current.Use(); Repaint();
-            }
+                if (suppressTreeEvents) return;
+                HairCardStage stage = HairCardStage.ActiveStage;
+                HairGroomNode node = stage?.FindNode(toggle.userData as string);
+                if (node == null || !HairGroomNodes.Toggle(stage, node, evt.newValue)) toggle.SetValueWithoutNotify(node?.Enabled ?? evt.previousValue);
+                HairEditorPreferences.NoteInteraction();
+            });
+            return toggle;
+        }
+
+        private void BindActiveCell(VisualElement element, int index)
+        {
+            var toggle = (Toggle)element;
+            string key = KeyForIndex(index);
+            toggle.userData = key;
+            HairGroomNode node = HairCardStage.ActiveStage?.FindNode(key);
+            bool show = node != null && node.CanToggle;
+            toggle.style.visibility = show ? Visibility.Visible : Visibility.Hidden;
+            if (!show) return;
+            toggle.SetValueWithoutNotify(node.Enabled);
+            toggle.SetEnabled(!node.Locked);
+        }
+
+        private VisualElement MakeLockCell()
+        {
+            var toggle = new Toggle { tooltip = "Lock this group, sculpt pass or helper against edits." };
+            toggle.style.alignSelf = Align.Center; toggle.style.marginLeft = 10f;
+            toggle.RegisterValueChangedCallback(evt =>
+            {
+                if (suppressTreeEvents) return;
+                HairCardStage stage = HairCardStage.ActiveStage;
+                HairGroomNode node = stage?.FindNode(toggle.userData as string);
+                if (node == null || !HairGroomNodes.SetLocked(stage, node, evt.newValue))
+                    toggle.SetValueWithoutNotify(node != null && node.Handler.IsLockedSelf(node));
+                HairEditorPreferences.NoteInteraction();
+            });
+            return toggle;
+        }
+
+        private void BindLockCell(VisualElement element, int index)
+        {
+            var toggle = (Toggle)element;
+            string key = KeyForIndex(index);
+            toggle.userData = key;
+            HairGroomNode node = HairCardStage.ActiveStage?.FindNode(key);
+            bool show = node != null && (node.Kind == HairGroomNodeKind.Group || node.Kind == HairGroomNodeKind.Layer || node.Kind == HairGroomNodeKind.Helper);
+            toggle.style.visibility = show ? Visibility.Visible : Visibility.Hidden;
+            if (!show) return;
+            toggle.SetValueWithoutNotify(node.Handler.IsLockedSelf(node));
+            toggle.SetEnabled(node.Handler.CanLock(node));
         }
     }
 }

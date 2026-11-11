@@ -112,7 +112,7 @@ namespace UMA.TexturePaint.Editor
             slider.RegisterValueChangedCallback(evt =>
                 TexturePaintStageWindow.ActiveStage?.SetSceneToolbarLightRotation(evt.newValue));
             Add(slider);
-            schedule.Execute(UpdateDisplay).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, UpdateDisplay);
             UpdateDisplay();
         }
 

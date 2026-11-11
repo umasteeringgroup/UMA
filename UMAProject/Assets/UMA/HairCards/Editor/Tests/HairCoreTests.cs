@@ -1529,7 +1529,8 @@ namespace UMA.HairCards.Editor.Tests
         [TestCase(true)]
         public void GrowthPaintingKeepsSoftFalloffAcrossOverlappingSamples(bool erase)
         {
-            sourceMesh.vertices = new[] { Vector3.zero, Vector3.right * 0.25f, Vector3.right * 0.45f };
+            // Half-scale geometry with a 0.25 radius (the 250 mm brush limit): same distance/radius ratios.
+            sourceMesh.vertices = new[] { Vector3.zero, Vector3.right * 0.125f, Vector3.right * 0.225f };
             sourceMesh.RecalculateBounds();
             groom.EnsureIntegrity();
             HairGrowthMap map = groom.Groups[0].FindMap(HairMapKind.GrowthArea);
@@ -1539,7 +1540,7 @@ namespace UMA.HairCards.Editor.Tests
                 SetStageField(stage, "sceneTool", HairSceneTool.PaintGrowth);
                 SetStageField(stage, "vertexSpatialIndex", new HairVertexSpatialIndex(sourceMesh));
                 SetStageField(stage, "mirrorPaintX", false);
-                stage.BrushRadius = 0.5f; stage.BrushStrength = 1f; stage.BrushHardness = 0f;
+                stage.BrushRadius = 0.25f; stage.BrushStrength = 1f; stage.BrushHardness = 0f;
                 stage.PaintErase = erase;
                 for (int i = 0; i < map.values.Length; i++) map.values[i] = erase ? 1f : 0f;
                 InvokeStageMethod(stage, "BeginStroke", "Test soft growth stroke");
@@ -1574,7 +1575,7 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(stage.UpdateTemporaryPaintErase(press), Is.True);
                 Assert.That(stage.EffectivePaintErase, Is.True);
                 Assert.That(stage.PaintErase, Is.EqualTo(selectedErase));
-                Assert.That(stage.SceneHelpText, Does.StartWith("ERASE"));
+                Assert.That(stage.SceneHelpText, Does.StartWith("Erase ·"));
                 Assert.That(stage.SceneHelpText, Does.Contain("Hold Shift: erase"));
                 Assert.That(stage.SceneHelpText, Does.Contain("Shift + right-drag"));
                 Assert.That(press.type, Is.EqualTo(EventType.KeyDown), "Do not consume Shift shortcuts or resize gestures.");
@@ -1582,7 +1583,7 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(EditorJsonUtility.ToJson(stage), Does.Not.Contain("shiftPaintErase"));
                 stage.UpdateTemporaryPaintErase(new Event { type = EventType.KeyUp, keyCode = key, modifiers = EventModifiers.Shift });
                 Assert.That(stage.EffectivePaintErase, Is.EqualTo(selectedErase), "Key-up must release even if its modifier flags still contain Shift.");
-                Assert.That(stage.SceneHelpText, Does.StartWith(selectedErase ? "ERASE" : "PAINT"));
+                Assert.That(stage.SceneHelpText, Does.StartWith(selectedErase ? "Erase ·" : "Paint ·"));
             }
             finally { DestroyEditingStage(stage); }
         }
@@ -1645,7 +1646,8 @@ namespace UMA.HairCards.Editor.Tests
         [Test]
         public void GrowthStrokeHonorsStrengthMirroringAndStrongerCoverageWithoutOverpainting()
         {
-            sourceMesh.vertices = new[] { Vector3.left * 0.25f, Vector3.zero, Vector3.right * 0.25f };
+            // Half-scale geometry with a 0.25 radius (the 250 mm brush limit): same distance/radius ratios.
+            sourceMesh.vertices = new[] { Vector3.left * 0.125f, Vector3.zero, Vector3.right * 0.125f };
             sourceMesh.RecalculateBounds(); groom.EnsureIntegrity();
             HairGrowthMap map = groom.Groups[0].FindMap(HairMapKind.GrowthArea);
             HairCardStage stage = CreateEditingStage();
@@ -1654,13 +1656,13 @@ namespace UMA.HairCards.Editor.Tests
                 SetStageField(stage, "sceneTool", HairSceneTool.PaintGrowth);
                 SetStageField(stage, "vertexSpatialIndex", new HairVertexSpatialIndex(sourceMesh));
                 SetStageField(stage, "mirrorPaintX", true);
-                stage.BrushRadius = 0.5f; stage.BrushStrength = 0.4f; stage.BrushHardness = 0f;
+                stage.BrushRadius = 0.25f; stage.BrushStrength = 0.4f; stage.BrushHardness = 0f;
                 InvokeStageMethod(stage, "BeginStroke", "Mirrored soft stroke");
                 for (int i = 0; i < 40; i++) InvokeStageMethod(stage, "PaintMapAt", Vector3.zero);
                 Assert.That(map.values, Is.EqualTo(new[] { 0.2f, 0.4f, 0.2f }).Within(1e-5f));
-                InvokeStageMethod(stage, "PaintMapAt", Vector3.right * 0.125f);
+                InvokeStageMethod(stage, "PaintMapAt", Vector3.right * 0.0625f);
                 Assert.That(map.values, Is.EqualTo(new[] { 0.3f, 0.4f, 0.3f }).Within(1e-5f));
-                InvokeStageMethod(stage, "PaintMapAt", Vector3.right * 0.25f);
+                InvokeStageMethod(stage, "PaintMapAt", Vector3.right * 0.125f);
                 Assert.That(map.values, Is.EqualTo(new[] { 0.4f, 0.4f, 0.4f }).Within(1e-5f));
                 map.locked = true;
                 stage.BrushStrength = 1f;
@@ -1676,7 +1678,8 @@ namespace UMA.HairCards.Editor.Tests
         [Test]
         public void GrowthStrokeRefreshesBaselineWhenItsMapStorageOrTargetChanges()
         {
-            sourceMesh.vertices = new[] { Vector3.zero, Vector3.right * 0.25f, Vector3.right * 0.45f };
+            // Half-scale geometry with a 0.25 radius (the 250 mm brush limit): same distance/radius ratios.
+            sourceMesh.vertices = new[] { Vector3.zero, Vector3.right * 0.125f, Vector3.right * 0.225f };
             sourceMesh.RecalculateBounds(); groom.EnsureIntegrity();
             HairGrowthMap map = groom.Groups[0].FindMap(HairMapKind.GrowthArea);
             HairCardStage stage = CreateEditingStage();
@@ -1685,7 +1688,7 @@ namespace UMA.HairCards.Editor.Tests
                 SetStageField(stage, "sceneTool", HairSceneTool.PaintGrowth);
                 SetStageField(stage, "vertexSpatialIndex", new HairVertexSpatialIndex(sourceMesh));
                 SetStageField(stage, "mirrorPaintX", false);
-                stage.BrushRadius = 0.5f; stage.BrushStrength = 1f; stage.BrushHardness = 0f;
+                stage.BrushRadius = 0.25f; stage.BrushStrength = 1f; stage.BrushHardness = 0f;
                 InvokeStageMethod(stage, "BeginStroke", "Refresh stroke baseline");
                 InvokeStageMethod(stage, "PaintMapAt", Vector3.zero);
                 map.values = new[] { 0.2f, 0.2f, 0.2f };
@@ -1734,11 +1737,11 @@ namespace UMA.HairCards.Editor.Tests
                 Assert.That(stage.TryGetBrushAdjustmentCursor(out Vector3 center, out Vector3 normal, out float radius), Is.True);
                 Assert.That(normal, Is.EqualTo(Vector3.back));
                 Assert.That(radius, Is.EqualTo(0.2f).Within(1e-6f));
-                stage.BrushRadius = 0.3f;
+                stage.BrushRadius = 0.2f;
                 stage.BrushHardness = 0.25f;
                 Assert.That(stage.TryGetBrushAdjustmentCursor(out Vector3 resizedCenter, out _, out radius), Is.True);
                 Assert.That(resizedCenter, Is.EqualTo(center));
-                Assert.That(radius, Is.EqualTo(0.6f).Within(1e-6f));
+                Assert.That(radius, Is.EqualTo(0.4f).Within(1e-6f));
                 Assert.That(JsonUtility.ToJson(groom), Is.EqualTo(before));
                 InvokeStageMethod(stage, "ReleaseBrushModifierCapture");
                 Assert.That(stage.TryGetBrushAdjustmentCursor(out _, out _, out _), Is.False);
@@ -1827,7 +1830,9 @@ namespace UMA.HairCards.Editor.Tests
             HairGuideDepthTestWindow window = ScriptableObject.CreateInstance<HairGuideDepthTestWindow>();
             GameObject cameraObject = new GameObject("Brush adjustment render camera");
             Camera camera = cameraObject.AddComponent<Camera>();
-            camera.enabled = false; camera.orthographic = true; camera.orthographicSize = 1f; camera.aspect = 1f;
+            // Half the view of the original test, so the radii below stay under the 0.25
+            // brush cap while drawing circles of the same pixel size.
+            camera.enabled = false; camera.orthographic = true; camera.orthographicSize = 0.5f; camera.aspect = 1f;
             camera.transform.position = Vector3.back * 3f;
             RenderTexture target = new RenderTexture(128, 128, 24, RenderTextureFormat.ARGB32);
             target.Create(); camera.targetTexture = target;
@@ -1840,7 +1845,7 @@ namespace UMA.HairCards.Editor.Tests
                 float firstInnerRadius = 0f, firstOuterRadius = 0f;
                 for (int pass = 0; pass < 2; pass++)
                 {
-                    stage.BrushRadius = pass == 0 ? 0.25f : 0.5f;
+                    stage.BrushRadius = pass == 0 ? 0.125f : 0.25f;
                     stage.BrushHardness = pass == 0 ? 0.5f : 0.75f;
                     bool rendered = false;
                     Color[] pixels = null;
@@ -2413,7 +2418,7 @@ namespace UMA.HairCards.Editor.Tests
                 Vector3 protectedDelta = existing.deltas[0].positionOffsets[2];
                 Assert.That(stage.MoveGuidePoint(guide.Id, 2, displayed + Vector3.forward * 0.1f), Is.False,
                     "Locked passes must not silently redirect sculpting to a new layer.");
-                Assert.That(HairGroomNodeWindow.AddFinishingSculptLayer(stage, groom.Groups[0]), Is.Not.Null);
+                Assert.That(HairGroomNodeCommands.AddFinishingSculptLayer(stage, groom.Groups[0]), Is.Not.Null);
                 Assert.That(stage.MoveGuidePoint(guide.Id, 2, displayed + Vector3.forward * 0.1f), Is.True);
                 InvokeStageMethod(stage, "EndStroke");
                 stage.RebuildNow();
@@ -3021,7 +3026,7 @@ namespace UMA.HairCards.Editor.Tests
             string oldPreferences = EditorJsonUtility.ToJson(preferences);
             try
             {
-                first.BrushRadius = 0.27f; first.BrushHardness = 0.17f; first.BrushStrength = 0.63f;
+                first.BrushRadius = 0.21f; first.BrushHardness = 0.17f; first.BrushStrength = 0.63f;
                 first.PaintErase = true;
                 first.BrushRootInfluence = 0.4f; first.ShowCardWireframe = false;
                 first.ShowGuideRoots = false; first.ShowGuideSplines = false; first.ShowChildSplines = false;
@@ -3044,7 +3049,7 @@ namespace UMA.HairCards.Editor.Tests
                 preferences.Remember(first, "test-stage", "groom-b");
                 preferences.Restore(second, "test-stage", "groom-a");
                 Assert.That(second.PaintErase, Is.False);
-                Assert.That(second.BrushRadius, Is.EqualTo(0.27f));
+                Assert.That(second.BrushRadius, Is.EqualTo(0.21f));
                 Assert.That(typeof(HairCardStage).GetField("activeGroupId", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(second), Is.EqualTo("groom-a-group"));
                 HairPreferenceCodec.Reset(second);
                 preferences.Restore(second, "test-stage");

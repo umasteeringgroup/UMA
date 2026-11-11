@@ -231,21 +231,20 @@ The floating **Layer Preview** panel stays visible while you scroll through Prop
 
 The global toolbar contains the most frequent document and preview actions, while the 2D canvas has its own compact view toolbar:
 
-- File commands for New Document, Load Document, Save, Save As, Revert, Export, Clear All, and Close.
-- Undo and Redo.
-- Save or Save As.
-- Export.
-- Open or focus the 2D UV and Brush windows.
-- Solo the active channel.
-- Compare against the source-before state.
-- Isolate selected slots.
-- Show the UV wireframe in the 2D canvas.
-- Arm the 2D color sampler.
-- Open layout controls.
+- **File**, **Edit** and **View** menus. File has New Document, Load Document, Save, Save As, Revert, Export, Clear All, and Close.
+- **Undo**, **Redo** and **Save** icon buttons. Save shows Save As until the document has a file. Hover an icon for its name and shortcut.
+- **Export**.
+- **2D** and **Brush** to open or focus the 2D canvas and the Brush window (with the Asset Shelf).
+- **Layout** to show, hide or reset workspace regions.
+- **?** (Help) to list the keyboard shortcuts.
 - **Shutdown Overlay Painter** in the Scene-view toolbar. This full-width button uses the normal
   close flow, including Save, Discard, and Cancel when the document has unsaved work.
 
-**Solo** is useful for inspecting raw channel values. **Before** is useful for comparing the complete shaded source with the edited result. They serve different preview purposes and are not a replacement for checking the exported material.
+The **View** menu holds the preview modes: **Solo Selected Channel**, **Before in 3D**, **Solo Layer Mask** (when the active layer has a mask), **Isolate Selected Slots**, **Scene Hints** (the Scene-view help text for the current tool), **Keyboard Shortcuts...**, **Preview Material…**, **Sprite Materials…**, and **Show initial help dialog**. The 2D canvas toolbar shows the UV wireframe and arms the 2D color sampler.
+
+**Solo Selected Channel** is useful for inspecting raw channel values. **Before in 3D** is useful for comparing the complete shaded source with the edited result. They serve different preview purposes and are not a replacement for checking the exported material.
+
+While the Overlay Painter stage is open, the UMA Toolbar overlay is hidden because its commands act on the main scene. It returns when you leave the stage.
 
 Starting compilation, an assembly reload, or Play Mode while Overlay Painter is active closes its
 custom stage and synchronously hides all Overlay Painter Scene-view toolbars. This prevents a
@@ -269,8 +268,9 @@ Tool selection does not choose a layer. Always confirm the active layer and chan
 
 ### Target region
 
-The Target region contains:
+The **Paint Target** bar at the top of the Layers window names the current target and has **Frame**, which frames it in the Scene view. Click **▸ Paint Target** to open the full target list above the layers; it opens by itself when no target is selected. The list contains:
 
+- **Targets** and **Texture Sets** tabs.
 - Searchable slot selection.
 - One active paint target, with separate reference visibility.
 - Logical UDIM grouping.
@@ -278,7 +278,7 @@ The Target region contains:
 
 Select the target that should receive paint. Only that target's slots (including its grouped UDIM members) receive the brush footprint. Geometry belonging to other targets is excluded even when it is visible under the brush.
 
-Use **Show** beside each target in **Paint Target > Targets** to display other slots for reference. Other targets start hidden; the active paint target is always visible. Showing a reference never changes paint selection. These visibility choices are saved with the painter document and recovery session. Older documents without per-target visibility start with other targets hidden. **Isolate** hides all references; turning it off shows all other targets for reference only. Slots sharing a reconstructed mesh are filtered in the preview without modifying the source mesh or paint collider.
+Use **Show** beside each target in **Paint Target > Targets** to display other slots for reference. Other targets start hidden; the active paint target is always visible. Showing a reference never changes paint selection. These visibility choices are saved with the painter document and recovery session. Older documents without per-target visibility start with other targets hidden. **View > Isolate Selected Slots** hides all references; turning it off shows all other targets for reference only. Slots sharing a reconstructed mesh are filtered in the preview without modifying the source mesh or paint collider.
 
 Every character-launched session gives startup priority to a logical target whose visible name
 contains the standalone word **Body**. A saved target is used only when no visibly named Body target
@@ -332,8 +332,22 @@ This region contains the ordered Paint, Fill, Path, Projection, Reference, Group
 The **Layers / Paths** toggle is a list filter:
 
 - **Layers** shows the complete compositing stack, including groups and their children.
-- **Paths** shows only Path layers and omits the **+ Group** button.
+- **Paths** shows only Path layers. Its toolbar offers **+ Path** instead of **+ Paint** and **Add Layer**.
 - Switching tabs does not enable, disable, reorder, or change composition. Non-Path layers continue to contribute in 2D and 3D while the Paths filter is selected.
+
+### Adding layers
+
+The layer toolbar has **+ Paint**, which adds an empty Paint layer, and **Add Layer ▾**, which lists every way to create a layer:
+
+- **Paint**: Empty Paint Layer, or From Sprite Set...
+- **Fill**: Empty Fill Layer, From Overlay..., or From Sprite Set...
+- **Path**: Empty Path Layer, From OverlayDataAsset..., From Sprite Set..., **Garments** and **Generators**.
+- **Projection**: Image or Overlay Projection, and **Garments**.
+- **Plugin**: **Fabric**, **Generators**, **Filters**, and Empty Plugin Layer.
+- **Group**.
+- **Apply Material Preset...**
+
+The **Edit > Layer** menu also has New Paint Layer, New Fill Layer and New Projection Layer.
 
 ### Properties window
 
@@ -343,7 +357,9 @@ Drag the Properties tab to another dock or float it. Open it again with **View >
 **Window > UMA > Overlay Painter Properties**. **Reset Compact View** restores the default grouping.
 The Layers window uses its full height for the stack; it no longer embeds Properties below it.
 
-Properties are contextual. The available sections can include:
+The Properties window has two tabs. **Layer** shows the source, channels, and the active layer's settings. **Brush** shows the same Brush, Stroke & Projection, and Painting Stencil settings as the Brush window, so you can paint with only Properties open. The selected tab is remembered.
+
+Properties are contextual. The available sections on the **Layer** tab can include:
 
 - Destination.
 - Channels, including the **Paint / Preview Channel**, Solo, and Before controls.
@@ -376,7 +392,7 @@ redundant type labels, and inapplicable controls are omitted; temporarily unavai
 as a running generator's parameters remain visible. Image projections offer **Convert to Garment…**
 instead of displaying unused garment settings.
 
-Brush and Stroke/Projection properties are in **Overlay Painter Brush**, above the Asset Shelf.
+Brush and Stroke/Projection properties are in **Overlay Painter Brush**, above the Asset Shelf, and in the Properties window's **Brush** tab.
 
 ### Asset Shelf
 
@@ -1221,7 +1237,7 @@ A Projection layer holds **one projection**, fixed in world space while it remai
 
 ### Create a projection with Albedo and Normal
 
-1. Select the logical paint target and click **+ Projection**, or use **Layer > New Projection Layer**.
+1. Select the logical paint target and choose **Add Layer > Projection > Image or Overlay Projection**, or **Edit > Layer > New Projection Layer**.
 2. The new projection is placed on an available target surface and aligned to its normal. If no surface is available, click the model to place it.
 3. In **Layer Channels & Settings**, add or expand **Albedo**, choose **Texture**, and assign the image or Sprite.
 4. Use **New Channel > Normal > Add Channel**, expand Normal, and assign its matching normal texture or Sprite. Set its source **Convention** correctly.
@@ -1342,9 +1358,9 @@ Enable [Layer Symmetry](#layer-symmetry) for live mirrored or radial copies with
 
 ### Size
 
-In the 3D view, brush size is evaluated in world space using the contacted triangle's UV-to-world
+**Size (mm)** is the brush radius on the model, in millimeters. In the 3D view it is evaluated using the contacted triangle's UV-to-world
 metric. This keeps a stroke's physical size more consistent across seams, rotated islands, and
-different UV densities. In the 2D view, the same control is evaluated directly on the normalized
+different UV densities. In the 2D view, the same value is a fraction of the texture's width, evaluated directly on the normalized
 texture plane; no triangle metric or model projection changes the cursor footprint.
 
 Use the UV canvas to inspect exact texture placement and texel quality. Use the 3D view when the
@@ -1426,7 +1442,7 @@ It is useful for paired details on symmetrically positioned geometry. It is not 
 
 A painting stencil is an image fixed to the current 3D view that limits brush coverage. Brush and layer-channel sources still supply the painted color and material values. Use a Projection layer when you want the image itself to remain an editable placed layer.
 
-1. Open **Overlay Painter Brush > PAINTING STENCIL**.
+1. Open **Painting Stencil** in **Overlay Painter Brush**, or on the Properties window's **Brush** tab.
 2. Assign **Image**, choose **Mask Channel** (luminance, R, G, B, or alpha), and enable **Enable Stencil**. Use **Invert** to reverse its coverage.
 3. Click **Center and Match Image Aspect** for a centered guide with the image's proportions.
 4. Enable **Edit Stencil in 3D View** to position it.
@@ -1492,7 +1508,7 @@ for every included generator and filter, see
 [Overlay Painter Generators and Filters](OverlayPainterGeneratorsAndFilters.md).
 
 Generators and filters are persistent **Plugin layers**, not commands applied to a Paint layer. Click
-**+ Plugin**, select a plugin in the layer properties, adjust its layer-specific parameters, and click
+**Add Layer > Plugin**, select a plugin in the layer properties, adjust its layer-specific parameters, and click
 **Generate**. The generated pixels are cached in that layer, so ordinary compositing, visibility,
 opacity, blend mode, layer masks, groups, effects, Save/reopen, and export continue to work even when
 the plugin is not installed. The layer is marked **Stale** when its parameters, position, or relevant
@@ -1550,7 +1566,7 @@ Both generators reject neighborhood and Normal-detail samples that cross UV-isla
 
 #### Cloth Texture generator
 
-Choose **+ Plugin > Fabric > Cloth Texture (Color and Weave)**, and click **Generate** after configuring the fabric. The
+Choose **Add Layer > Plugin > Fabric > Cloth Texture (Color and Weave)**, and click **Generate** after configuring the fabric. The
 generator is intended for shirts, sweaters, trousers, denim, canvas gear, and other cloth surfaces.
 To keep an existing garment color, use **Fabric > Surface Detail (Keep Color)** instead. It adds
 roughness and subtle weave height, with Overlay blending on Normal Control to retain underlying
@@ -1697,7 +1713,7 @@ Each Paint, Fill, Path, Projection, Reference, Plugin, or Group layer can own ze
 
 A black mask starts with a white Mask Value so the first stroke reveals content. A white mask starts with a black Mask Value so the first stroke hides content. **Erase** restores the mask's original black or white creation value.
 
-The 2D canvas shows the effective grayscale mask while Mask Mode is active. Both the 2D canvas and Scene view display a prominent **LAYER MASK** label. The Scene view remains a shaded composite by default; enable **Solo Mask** to place the grayscale mask directly on the 3D model for inspection.
+The 2D canvas shows the effective grayscale mask while Mask Mode is active. The 2D canvas displays a prominent **LAYER MASK** badge, and the Scene hints show **Layer Mask Mode**. The Scene view remains a shaded composite by default; enable **View > Solo Layer Mask** to place the grayscale mask directly on the 3D model for inspection.
 
 ### Paint a mask
 
@@ -1715,7 +1731,7 @@ Select the mask and expand **Mask Effects & Smart Masks** in Properties, or open
 2. Choose **New Effect** and click **Add**.
 3. Expand the entry and set its name, **Blend**, **Opacity**, and effect-specific controls. **Invert Result** reverses that entry's output.
 4. Use **Up** and **Down** to change evaluation order, **+** to duplicate, or **X** to remove. Each entry can be disabled independently.
-5. Inspect the effective result with **Solo Mask**.
+5. Inspect the effective result with **View > Solo Layer Mask**.
 
 Effects evaluate **top to bottom**, starting with the chosen initial mask. Source entries generate a value; filters process the accumulated result. An entry's blend combines its result with that accumulation, and its opacity controls the contribution. At full opacity, **Replace** substitutes the entry's result; **Multiply** restricts it to the existing coverage. The complete blend list is Replace, Multiply, Add, Subtract, Screen, Overlay, Min, Max, Difference, Soft Light, and Divide.
 
@@ -1876,7 +1892,7 @@ surface.
 
 ### Create a Path layer
 
-1. Click **+ Path** or **Create Spline Layer**.
+1. Choose **Add Layer > Path > Empty Path Layer**, or click **+ Path** while the **Paths** filter is selected.
 2. Select the Path tool.
 3. In Properties, choose **Spline Space: 2D Texture** or **3D Surface**.
 4. `Shift+Click` the matching UV canvas or Scene view to append points.
@@ -1948,8 +1964,8 @@ Ribbon paths hide stamp orientation, stamp caps, and stamp spacing. Generated pa
 endpoint tiles, texture mirroring, and image crossfades; use the generator's own controls instead.
 Endpoint fades are hidden for closed paths, and 3D-only controls are hidden for UV paths.
 
-Open the arrow beside **+ Projection** or **+ Path**, then choose **Garments > family > preset**.
-For path stitching, seams, trim, zippers, and linear tears, choose **+ Path > Generators**; see [Path generators](PathGenerators.md).
+Open **Add Layer ▾**, choose **Projection** or **Path**, then **Garments > family > preset**.
+For path stitching, seams, trim, zippers, and linear tears, choose **Add Layer > Path > Generators**; see [Path generators](PathGenerators.md).
 Projection is useful for a pocket, knee folds, a patch, or an individual fastener. Path is useful for
 a zipper, waistband, row of fasteners, or a curved strip of wear. To convert an existing image path,
 use **Convert to Garment…** in Path Properties, or **Actions > Convert to Garment > family > preset**
@@ -2074,7 +2090,7 @@ enough texture pixels to resolve it.
 
 ### Hem / Seam generator
 
-Use **+ Path > Generators > Seams and Trim** and choose a construction preset. For an existing Path layer,
+Use **Add Layer > Path > Generators > Seams and Trim** and choose a construction preset. For an existing Path layer,
 choose a seam in **Path Properties > Path Generator > Generator**. Legacy garment paths also retain
 their **Hems & Seams** construction choices under **Garment Generator**.
 Place and edit the path using the usual 3D surface or 2D texture path controls. The generator
@@ -2829,7 +2845,7 @@ The exported overlay is indexed and recipe-ready, but it is not automatically in
 
 - Painting edits the original mask raster. A later Replace source may replace that input in the effective result.
 - Add **White Painted Mask** after the procedural entries for hand-painted black exclusions; use **Black Painted Mask** to paint white reveals instead. Both initialize the shared paint raster and start at opacity 1.
-- Use **Solo Mask** and disable effects one at a time to find the entry controlling coverage.
+- Use **View > Solo Layer Mask** and disable effects one at a time to find the entry controlling coverage.
 - Check Live Mask Source and Layer Reference diagnostics if the mask depends on another layer.
 
 ### Painting is unexpectedly restricted
@@ -2959,7 +2975,7 @@ Before approving an exported overlay:
 - Sprite Set channels align and use the same conceptual indices.
 - Layer names, groups, masks, paths, projections, and anchor names are understandable to another artist.
 - Projection channels align, wrapped/cylindrical seams have been inspected, and fade curves produce the intended coverage.
-- Mask-effect order and painted corrections have been reviewed with Solo Mask.
+- Mask-effect order and painted corrections have been reviewed with **View > Solo Layer Mask**.
 - References resolve without missing-source or cycle diagnostics; pending linked updates have completed.
 - No important work exists only in temporary recovery.
 - The permanent document and its data folder are saved together.

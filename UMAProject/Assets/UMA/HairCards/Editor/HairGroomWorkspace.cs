@@ -31,6 +31,7 @@ namespace UMA.HairCards.Editor
         [SerializeField] private int guidePage;
         [SerializeField] private bool guideLibraryExpanded;
         [SerializeField] private bool authoredGuidesExpanded;
+        [SerializeField] private bool sourceDetailsExpanded;
         private double nextPreferencesSave;
         private string preferenceContext;
         private HairGroomAsset preferenceGroom;
@@ -39,6 +40,15 @@ namespace UMA.HairCards.Editor
         public static void OpenForActiveStage()
         {
             HairGroomNodeWindow.Open();
+            if (!HasOpenInstances<HairGroomWorkspace>() && !HasOpenInstances<HairGroomPreviewWindow>())
+            {
+                // First open: Properties and Preview share one window as tabs, beside the Groom Outliner,
+                // instead of three loose windows.
+                OpenProperties();
+                HairGroomPreviewWindow.OpenDockedWith(typeof(HairGroomWorkspace));
+                GetWindow<HairGroomWorkspace>().Focus();
+                return;
+            }
             HairGroomPreviewWindow.Open();
             OpenProperties();
         }
@@ -48,7 +58,7 @@ namespace UMA.HairCards.Editor
         {
             HairGroomWorkspace window = GetWindow<HairGroomWorkspace>();
             window.titleContent = new GUIContent("Hair Properties", EditorGUIUtility.IconContent("SettingsIcon").image);
-            window.minSize = new Vector2(480f, 400f);
+            window.minSize = new Vector2(320f, 300f);
             if (!window.initialPlacementDone) { window.position = new Rect(420f, 80f, 640f, 740f); window.initialPlacementDone = true; }
             window.Show();
         }
@@ -100,7 +110,7 @@ namespace UMA.HairCards.Editor
         private void OnEnable()
         {
             titleContent = new GUIContent("Hair Properties");
-            minSize = new Vector2(480f, 400f);
+            minSize = new Vector2(320f, 300f);
             if (HairEditorPreferences.Suspended) return;
             preferenceGroom = HairCardStage.ActiveStage?.Groom;
             preferenceContext = HairEditorPreferences.Context(preferenceGroom);
@@ -109,11 +119,15 @@ namespace UMA.HairCards.Editor
             Undo.undoRedoPerformed += OnAtlasUndoRedo;
         }
 
+        private int savedInteraction = -1;
+
         private void SaveIdlePreferences()
         {
             if (HairEditorPreferences.Suspended || HairCardStage.ActiveStage?.IsEditing == true ||
-                EditorApplication.timeSinceStartup < nextPreferencesSave) return;
+                EditorApplication.timeSinceStartup < nextPreferencesSave ||
+                savedInteraction == HairEditorPreferences.InteractionVersion) return;
             nextPreferencesSave = EditorApplication.timeSinceStartup + 2d;
+            savedInteraction = HairEditorPreferences.InteractionVersion;
             HairEditorPreferences.instance.Remember(this, "workspace", preferenceContext);
         }
 
@@ -146,6 +160,7 @@ namespace UMA.HairCards.Editor
 
         private void OnGUI()
         {
+            HairEditorPreferences.NoteInteraction(Event.current);
             HairCardStage stage = HairCardStage.ActiveStage;
             HairGroomAsset nextGroom = stage?.Groom;
             if (nextGroom != preferenceGroom)
@@ -176,7 +191,7 @@ namespace UMA.HairCards.Editor
         {
             GUILayout.FlexibleSpace();
             EditorGUILayout.LabelField("Hair Properties", CenteredTitle());
-            EditorGUILayout.LabelField("Open a groom using Hair Nodes, then select a node in its tree to edit properties here.",
+            EditorGUILayout.LabelField("Open a groom, then select an item in the Groom Outliner to edit its properties here.",
                 CenteredWrapped());
             GUILayout.FlexibleSpace();
         }
@@ -195,17 +210,25 @@ namespace UMA.HairCards.Editor
         }
 
 
-        private void DrawSetup(HairCardStage stage)
+        internal void DrawSetup(HairCardStage stage)
         {
             HairGroomAsset groom = stage.Groom;
             DrawStepTitle("1. Setup", "Bind the groom to a source scalp and establish preview behavior.");
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.ObjectField("Source Mesh", groom.SourceMesh, typeof(Mesh), false);
-            EditorGUILayout.TextField("Stable Source ID", groom.SourceMeshId);
-            EditorGUILayout.TextField("Topology Signature", groom.SourceTopologySignature);
-            EditorGUILayout.TextField("Race", groom.SourceRace);
-            EditorGUILayout.TextField("Slot", groom.SourceSlot);
             EditorGUI.EndDisabledGroup();
+            sourceDetailsExpanded = EditorGUILayout.Foldout(sourceDetailsExpanded, "Source Details", true);
+            if (sourceDetailsExpanded)
+            {
+                using (new EditorGUI.IndentLevelScope())
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUILayout.TextField("Race", groom.SourceRace);
+                    EditorGUILayout.TextField("Slot", groom.SourceSlot);
+                    EditorGUILayout.TextField("Stable Source ID", groom.SourceMeshId);
+                    EditorGUILayout.TextField("Topology Signature", groom.SourceTopologySignature);
+                }
+            }
             MessageType topologyType = groom.SourceTopologyMatches() ? MessageType.Info : MessageType.Error;
             EditorGUILayout.HelpBox(groom.SourceTopologyMatches()
                 ? "Surface binding topology matches. Roots can be evaluated exactly."
@@ -216,17 +239,15 @@ namespace UMA.HairCards.Editor
                 Debug.Log($"[UMA Hair Cards] Reprojected {repaired} guide roots for '{groom.name}'.");
             }
 
-            EditorGUILayout.Space(8f);
-            EditorGUILayout.LabelField("Symmetry", EditorStyles.boldLabel);
-            stage.MirrorPaintX = EditorGUILayout.Toggle("Mirror growth paint X", stage.MirrorPaintX);
-            stage.MirrorCutX = EditorGUILayout.Toggle("Mirror slice cut X", stage.MirrorCutX);
-            EditorGUILayout.HelpBox("These are the active, stage-only mirror controls across source-local X = 0. " +
-                "Comb/Grab do not have a global symmetry switch. Use a Mirror modifier for procedural guide mirroring.", MessageType.Info);
+            // Mirror X for growth painting and slice cuts lives on the Scene view's tool toolbar.
+            EditorGUILayout.Space(4f);
+            EditorGUILayout.LabelField("Mirror X for Paint Growth and Cut is on the Scene tool toolbar. Use a Mirror modifier to mirror guides.",
+                EditorStyles.wordWrappedMiniLabel);
             characterBindingEditor.Draw(stage);
 
         }
 
-        private void DrawGrowth(HairCardStage stage)
+        internal void DrawGrowth(HairCardStage stage)
         {
             HairGroup group = stage.ActiveGroup;
             if (group == null) return;
@@ -251,8 +272,8 @@ namespace UMA.HairCards.Editor
                 stage.MirrorPaintX = GUILayout.Toggle(stage.MirrorPaintX, "Mirror X", "Button",
                     GUILayout.Width(76f), GUILayout.Height(30f));
             }
-            stage.BrushRadius = EditorGUILayout.Slider("Brush Radius", stage.BrushRadius,
-                HairBrushInteractionUtility.MinimumRadius, HairBrushInteractionUtility.MaximumRadius);
+            stage.BrushRadius = StageBrushSize.MillimeterSlider(new GUIContent("Brush Radius (mm)", "Brush radius on the source surface, in millimeters."),
+                stage.BrushRadius, HairBrushInteractionUtility.MinimumRadius * 1000f, HairBrushInteractionUtility.MaximumRadius * 1000f);
             stage.BrushHardness = EditorGUILayout.Slider(new GUIContent("Hardness",
                 "Matches Overlay Painter: values inside this fraction of the radius receive full strength, then fall off linearly to zero at the outer ring."),
                 stage.BrushHardness, 0f, 1f);
@@ -377,7 +398,7 @@ namespace UMA.HairCards.Editor
             }
         }
 
-        private void DrawGuides(HairCardStage stage)
+        internal void DrawGuides(HairCardStage stage)
         {
             HairGroup group = stage.ActiveGroup;
             if (group == null) return;
@@ -387,7 +408,7 @@ namespace UMA.HairCards.Editor
             if (growthVertices == 0)
             {
                 EditorGUILayout.HelpBox(
-                    "No non-zero Growth / Density exists for this group. Select Growth / Density in Hair Nodes to paint or initialize the scalp region first.",
+                    "No non-zero Growth / Density exists for this group. Select Growth / Density in the Groom Outliner to paint or initialize the scalp region first.",
                     MessageType.Error);
             }
             else
@@ -582,27 +603,27 @@ namespace UMA.HairCards.Editor
                 EditorGUILayout.LabelField(mapClipboardStatus, EditorStyles.wordWrappedMiniLabel);
         }
 
-        private void DrawGroom(HairCardStage stage)
+        internal void DrawGroom(HairCardStage stage)
         {
             HairGroup group = stage.ActiveGroup;
             if (group == null) return;
             DrawStepTitle("4. Groom", "Sculpt authored guides on non-destructive layers, then refine with ordered modifiers and helpers.");
             EditorGUILayout.LabelField(
                 group.generation.enabled ?
-                "Sculpt edits authored guides at this layer's edit point. Generated clumps and cards are temporarily bypassed. Return to Final Preview in Hair Nodes to see the complete result." :
+                "Sculpt edits authored guides at this layer's edit point. Generated clumps and cards are temporarily bypassed. Use Return to Final Preview above to see the complete result." :
                 "After generating cards, Groom shows the updated card preview after each stroke or Gravity hold. " +
                 "During a stroke, guides stay visible for editing. Use Hair Preview & Settings for a guide-only view.",
                 EditorStyles.wordWrappedMiniLabel);
             if (group.guides.Count == 0)
             {
                 EditorGUILayout.HelpBox(
-                    "This group has no authored guides to style. Select Guides in Hair Nodes to generate and accept guides, or place them manually.",
+                    "This group has no authored guides to style. Select Guides in the Groom Outliner to generate and accept guides, or place them manually.",
                     MessageType.Error);
                 return;
             }
             bool sculptWritable = stage.CanEditLayer && (stage.IsLayerEditing || !stage.HasDownstreamSculptOperations);
             if (!sculptWritable && !(stage.SceneTool == HairSceneTool.Erase && stage.CanEraseGuides))
-                EditorGUILayout.HelpBox("Sculpting is paused at the final preview. In Hair Nodes, choose Edit This Layer to change its input, or Add Finishing Sculpt Layer to refine the visible result. Locked/inactive layers cannot be sculpted.", MessageType.Info);
+                EditorGUILayout.HelpBox("Sculpting is paused at the final preview. Choose Edit This Layer above to change its input, or Add Finishing Sculpt Layer to refine the visible result. Locked/inactive layers cannot be sculpted.", MessageType.Info);
             EditorGUILayout.LabelField("Essential Brush Shelf", EditorStyles.boldLabel);
             EditorGUILayout.LabelField($"Editing: {group.name} / {group.sculptLayers.Find(layer => layer != null && layer.Id == stage.ActiveLayerId)?.name ?? "New sculpt layer"}", EditorStyles.wordWrappedLabel);
             stage.BrushScope = (HairBrushScope)EditorGUILayout.EnumPopup("Edit scope", stage.BrushScope);
@@ -646,8 +667,8 @@ namespace UMA.HairCards.Editor
             }
             else if (stage.SceneTool == HairSceneTool.Erase)
             {
-                stage.BrushRadius = EditorGUILayout.Slider("Radius", stage.BrushRadius,
-                    HairBrushInteractionUtility.MinimumRadius, HairBrushInteractionUtility.MaximumRadius);
+                stage.BrushRadius = StageBrushSize.MillimeterSlider(new GUIContent("Radius (mm)", "Brush radius, in millimeters."),
+                    stage.BrushRadius, HairBrushInteractionUtility.MinimumRadius * 1000f, HairBrushInteractionUtility.MaximumRadius * 1000f);
                 EditorGUILayout.HelpBox("Erase deletes whole guides touched anywhere along their displayed curves, plus their children and sculpt data. " +
                     "This changes the group's authored guides, not just this sculpt layer. Any frozen point protects its entire guide. " +
                     "Radius and Edit scope control deletion; Hardness, Strength and Reverse do not apply. Undo restores the entire stroke.", MessageType.Warning);
@@ -655,8 +676,8 @@ namespace UMA.HairCards.Editor
             }
             else
             {
-                stage.BrushRadius = EditorGUILayout.Slider("Radius", stage.BrushRadius,
-                    HairBrushInteractionUtility.MinimumRadius, HairBrushInteractionUtility.MaximumRadius);
+                stage.BrushRadius = StageBrushSize.MillimeterSlider(new GUIContent("Radius (mm)", "Brush radius, in millimeters."),
+                    stage.BrushRadius, HairBrushInteractionUtility.MinimumRadius * 1000f, HairBrushInteractionUtility.MaximumRadius * 1000f);
                 stage.BrushHardness = EditorGUILayout.Slider(new GUIContent("Hardness",
                     "Full-strength inner radius followed by a linear falloff to the outer brush ring."),
                     stage.BrushHardness, 0f, 1f);
@@ -726,7 +747,7 @@ namespace UMA.HairCards.Editor
             EditorGUILayout.Space(8f);
         }
 
-        private void DrawCards(HairCardStage stage, HairGroomNodeKind section = HairGroomNodeKind.Cards)
+        internal void DrawCards(HairCardStage stage, HairGroomNodeKind section = HairGroomNodeKind.Cards)
         {
             HairGroup group = stage.ActiveGroup;
             if (group == null) return;
@@ -900,7 +921,7 @@ namespace UMA.HairCards.Editor
 
         }
 
-        private void DrawChildren(HairCardStage stage)
+        internal void DrawChildren(HairCardStage stage)
         {
             HairGroup group = stage.ActiveGroup;
             if (group == null) return;
@@ -1043,7 +1064,7 @@ namespace UMA.HairCards.Editor
             atlasEditor.Draw(atlas, stage.Groom, group, editorWidth, Repaint);
         }
 
-        private static void DrawOptimize(HairCardStage stage)
+        internal static void DrawOptimize(HairCardStage stage)
         {
             HairGroomAsset groom = stage.Groom;
             DrawStepTitle("6. Optimize", "Author deterministic LODs and keep card, vertex, triangle, and skinning budgets visible.");
@@ -1107,7 +1128,7 @@ namespace UMA.HairCards.Editor
                 : "Bake transfers available scalp bone weights. For an imported/unweighted groom, select Source & Setup → Bind Character / Race first.", MessageType.Info);
         }
 
-        private void DrawValidateAndBake(HairCardStage stage)
+        internal void DrawValidateAndBake(HairCardStage stage)
         {
             HairGroomAsset groom = stage.Groom;
             DrawStepTitle("7. Validate & Bake", "Review release blockers and create Unity Mesh, UMA Slot, Overlay, recipe, and every configured LOD in one transaction.");
@@ -1228,7 +1249,7 @@ namespace UMA.HairCards.Editor
                 MessageType type = issue.severity == HairValidationSeverity.Error ? MessageType.Error :
                     issue.severity == HairValidationSeverity.Warning ? MessageType.Warning : MessageType.Info;
                 EditorGUILayout.HelpBox(issue.message, type);
-                EditorGUILayout.LabelField("Use Issues in Hair Nodes to locate this setting or guide.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUILayout.LabelField("Use Issues in the Groom Outliner to locate this setting or guide.", EditorStyles.wordWrappedMiniLabel);
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     HairGroup group = stage.Groom.FindGroup(issue.groupId);
@@ -1246,7 +1267,7 @@ namespace UMA.HairCards.Editor
             }
         }
 
-        private static void DrawModifier(HairCardStage stage, HairModifierSettings modifier)
+        internal static void DrawModifier(HairCardStage stage, HairModifierSettings modifier)
         {
             if (modifier == null) return;
             using (new EditorGUI.DisabledScope(stage.ActiveGroup.locked))

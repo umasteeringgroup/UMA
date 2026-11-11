@@ -20,7 +20,7 @@ namespace UMA.HairCards.Editor
                 sourceVisibility?.Dispose();sourceVisibility=null;
                 if(authoringSurfaceMesh!=null) DestroyImmediate(authoringSurfaceMesh);authoringSurfaceMesh=null;
                 scalpFilter.sharedMesh=groom.SourceMesh;scalpCollider.sharedMesh=groom.SourceMesh;
-                authoringPose=new HairAuthoringPose(groom.SourceMesh,groom.SourceMesh);authoringBonePositions=null;
+                authoringPose=new HairAuthoringPose(groom.SourceMesh,groom.SourceMesh);authoringBonePositions=null;InvalidateSceneCurveCache();
                 var shader=Shader.Find("UMA/Hair Cards/Scalp Vertex Preview URP");
                 if(shader!=null) boundBodyMaterial=new Material(shader) { name="Bound Body Scalp Preview",hideFlags=HideFlags.HideAndDontSave };
                 avatarPreview=HairAvatarPreview.Build(displayedBinding,boundBodyMaterial!=null ? boundBodyMaterial : scalpMaterial);

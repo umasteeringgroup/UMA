@@ -155,6 +155,8 @@ The slot can contain live blendshape frames. The inspector can:
 
 Use live blendshapes when weights change at runtime. Bake or extract permanent forms when the live frame is unnecessary.
 
+**Copy blendshapes** copies vertex to vertex from one other slot, which suits parts with matching geometry. To give clothing the blendshapes of a race's body, use [Blendshape Transfer](BlendshapeTransfer.md), which follows the body's surface and works on many slots at once.
+
 See [MeshModifiers.md](MeshModifiers.md).
 
 ## LOD
