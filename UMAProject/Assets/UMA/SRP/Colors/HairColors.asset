@@ -40,9 +40,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#FDECBAFF;_BaseColor
+          stringRepresentation: Color;#D5C490FF;_BaseColor
           name: _BaseColor
-          Value: {r: 0.99215686, g: 0.92595494, b: 0.7302275, a: 1}
+          Value: {r: 0.836478, g: 0.76773334, b: 0.56554323, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -107,9 +107,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#DFCC93FF;_RootColor
+          stringRepresentation: Color;#B2A479FF;_RootColor
           name: _RootColor
-          Value: {r: 0.8745098, g: 0.7993596, b: 0.57717645, a: 1}
+          Value: {r: 0.6981132, g: 0.64268124, b: 0.47638535, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -174,9 +174,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#FFEFC2FF;_Tip_Color
+          stringRepresentation: Color;#CCBF9AFF;_Tip_Color
           name: _Tip_Color
-          Value: {r: 1, g: 0.9389014, b: 0.759, a: 1}
+          Value: {r: 0.7987421, g: 0.74801266, b: 0.60533595, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -334,9 +334,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#ED8D3FFF;_BaseColor
+          stringRepresentation: Color;#B26629FF;_BaseColor
           name: _BaseColor
-          Value: {r: 0.92941177, g: 0.5548883, b: 0.24536471, a: 1}
+          Value: {r: 0.6981132, g: 0.40136585, b: 0.16025859, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -494,9 +494,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#704B30FF;_BaseColor
+          stringRepresentation: Color;#5D412CFF;_BaseColor
           name: _BaseColor
-          Value: {r: 0.44025147, g: 0.29517686, b: 0.18966806, a: 1}
+          Value: {r: 0.36477977, g: 0.25403023, b: 0.173213, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -684,6 +684,73 @@ MonoBehaviour:
           offset: 0
           size: 0
         propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#B45C2F00;_SpecularTint
+          name: _SpecularTint
+          Value: {r: 0.70440245, g: 0.3605897, b: 0.18385343, a: 0}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
     isBaseColor: 1
@@ -721,9 +788,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#5F1F03FF;_BaseColor
+          stringRepresentation: Color;#4A2312FF;_BaseColor
           name: _BaseColor
-          Value: {r: 0.37254903, g: 0.121568635, b: 0.011764707, a: 1}
+          Value: {r: 0.28930807, g: 0.13804825, b: 0.071872085, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -788,9 +855,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#531F08FF;_RootColor
+          stringRepresentation: Color;#4B1E09FF;_RootColor
           name: _RootColor
-          Value: {r: 0.32704395, g: 0.12028275, b: 0.02982473, a: 1}
+          Value: {r: 0.29559743, g: 0.11578493, b: 0.03625248, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1365,6 +1432,73 @@ MonoBehaviour:
           offset: 0
           size: 0
         propertType: UMAColorProperty
+      - p12:
+          stringRepresentation: 
+          name: 
+          Translate: {x: 0, y: 0}
+          Rotate: 0
+          Scale: {x: 1, y: 1}
+        p11:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p10:
+          stringRepresentation: Color;#73737300;_SpecularTint
+          name: _SpecularTint
+          Value: {r: 0.4528302, g: 0.4528302, b: 0.4528302, a: 0}
+        p9:
+          stringRepresentation: 
+          name: 
+          Value: {x: 0, y: 0, z: 0, w: 0}
+        p8:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p7:
+          stringRepresentation: 
+          name: 
+          Value: {fileID: 0}
+        p6:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p5:
+          stringRepresentation: 
+          name: 
+          Value: 0
+        p4:
+          stringRepresentation: 
+          name: 
+          Value:
+            e00: 0
+            e01: 0
+            e02: 0
+            e03: 0
+            e10: 0
+            e11: 0
+            e12: 0
+            e13: 0
+            e20: 0
+            e21: 0
+            e22: 0
+            e23: 0
+            e30: 0
+            e31: 0
+            e32: 0
+            e33: 0
+        p3:
+          stringRepresentation: 
+          name: 
+          Value: []
+        p2:
+          stringRepresentation: 
+          name: 
+        p1:
+          stringRepresentation: 
+          name: 
+          offset: 0
+          size: 0
+        propertType: UMAColorProperty
     foldout: 0
     showAdvanced: 0
     isBaseColor: 1
@@ -1402,9 +1536,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#C9C9E6FF;_RootColor
+          stringRepresentation: Color;#B7B7B7FF;_RootColor
           name: _RootColor
-          Value: {r: 0.78675675, g: 0.78675675, b: 0.9019608, a: 1}
+          Value: {r: 0.7169812, g: 0.7169812, b: 0.7169812, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1469,9 +1603,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#D0D0E4FF;_BaseColor
+          stringRepresentation: Color;#AAAAAAFF;_BaseColor
           name: _BaseColor
-          Value: {r: 0.81725395, g: 0.81725395, b: 0.8930817, a: 1}
+          Value: {r: 0.66666657, g: 0.66666657, b: 0.66666657, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1629,9 +1763,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#E4E4E4FF;_RootColor
+          stringRepresentation: Color;#D7D7D7FF;_RootColor
           name: _RootColor
-          Value: {r: 0.8930817, g: 0.8930817, b: 0.8930817, a: 1}
+          Value: {r: 0.84276724, g: 0.84276724, b: 0.84276724, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1696,9 +1830,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#FFFFFFFF;_BaseColor
+          stringRepresentation: Color;#C5C5C5FF;_BaseColor
           name: _BaseColor
-          Value: {r: 1, g: 1, b: 1, a: 1}
+          Value: {r: 0.7735849, g: 0.7735849, b: 0.7735849, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -1763,9 +1897,9 @@ MonoBehaviour:
           name: 
           Value: 0
         p10:
-          stringRepresentation: Color;#D1D1D1FF;_Tip_Color
+          stringRepresentation: Color;#E7E7E7FF;_Tip_Color
           name: _Tip_Color
-          Value: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+          Value: {r: 0.9056604, g: 0.9056604, b: 0.9056604, a: 1}
         p9:
           stringRepresentation: 
           name: 
@@ -2513,3 +2647,4 @@ MonoBehaviour:
     showDisplayColor: 1
     showSelectFromFoldout: 0
     displayColor: {r: 0.3584906, g: 0.10709622, b: 0.34810242, a: 1}
+  defaultColorIndex: -1

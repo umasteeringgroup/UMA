@@ -6563,6 +6563,8 @@ namespace UMA
             {
                 if (selectionBrushing)
                 {
+                    // Constant application: the Smooth weight brush may work the same vertices again.
+                    PrepareTouchupConstantSmooth();
                     ApplySelectionBrush(currentEvent);
                 }
                 SceneView.RepaintAll();
@@ -11106,6 +11108,7 @@ namespace UMA
                             "Selected Bone Only",
                             "Smooth only the selected bone. When disabled, all influences are smoothed together."),
                         touchupSmoothSelectedBoneOnly);
+                    DrawTouchupConstantSmoothOptions();
                 }
 
                 string operationHelp;

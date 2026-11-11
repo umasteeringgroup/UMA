@@ -584,7 +584,8 @@ namespace UMA.Editors
         /// <summary>
         /// Updates an Existing SlotDataAsset.
         /// </summary>
-        public static void UpdateSlotData(SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents, bool clearNormals, bool clearTangents)
+        /// <param name="stripBlendShapePrefix">Removes the part of each blendshape name up to and including its first dot, as Slot Builder's "Strip Blendshape Prefix" does.</param>
+        public static void UpdateSlotData(SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents, bool clearNormals, bool clearTangents, bool stripBlendShapePrefix = false)
         {
 #if UNITY_EDITOR
             // If this slot was built with Slot Builder LOD settings, reuse those defaults on update.
@@ -708,6 +709,10 @@ namespace UMA.Editors
 
                 slot.UpdateMeshData(finalMeshRenderer, rootBone, false, subMesh, clearNormals, clearTangents);
                 slot.meshData.SlotName = slot.slotName;
+                if (stripBlendShapePrefix)
+                {
+                    StripBlendShapePrefixes(slot.meshData, slot.slotName);
+                }
 #if UNITY_6000_2_OR_NEWER
                 // Try to carry LOD ranges from the source mesh (if available)
                 var srcMesh = mesh != null ? mesh.sharedMesh : null;
@@ -1161,6 +1166,7 @@ namespace UMA.Editors
                 return null;
             }
             TransformMeshData(slot, sbp);
+            StripBlendShapePrefixes(slot, sbp);
 
             var cloth = sbp.slotMesh.GetComponent<Cloth>();
             if (cloth != null)
@@ -1320,6 +1326,7 @@ namespace UMA.Editors
                         sbp.clearNormals,
                         sbp.clearTangents);
                     TransformMeshData(existingAdditional, sbp);
+                    StripBlendShapePrefixes(existingAdditional, sbp);
                     if (existingAdditional.meshData != null)
                     {
                         existingAdditional.meshData.SlotName = existingAdditional.slotName;
@@ -1365,6 +1372,7 @@ namespace UMA.Editors
                 // Non-UDIM path: ensure udimAdjustment=false
                 additionalSlot.UpdateMeshData(finalMeshRenderer, sbp.rootBone, false, sourceSubmeshIndex, sbp.clearNormals, sbp.clearTangents);
                 TransformMeshData(additionalSlot, sbp);
+                StripBlendShapePrefixes(additionalSlot, sbp);
 
                 additionalSlot.sourceSubmeshIndex = sourceSubmeshIndex;
 
@@ -1442,6 +1450,101 @@ namespace UMA.Editors
                 }
             }
             slot.meshData.vertices = newVerts;
+        }
+
+        /// <summary>
+        /// Removes the part of a blendshape name up to and including its first dot: "Head.BigNose" becomes "BigNose".
+        /// Only the first part is removed, so "Head.Smile.L" becomes "Smile.L". A name without a dot, or with
+        /// nothing after the dot, is returned unchanged.
+        /// </summary>
+        public static string StripBlendShapePrefix(string shapeName)
+        {
+            if (string.IsNullOrEmpty(shapeName))
+            {
+                return shapeName;
+            }
+
+            int dot = shapeName.IndexOf('.');
+            if (dot < 0 || dot == shapeName.Length - 1)
+            {
+                return shapeName;
+            }
+
+            return shapeName.Substring(dot + 1);
+        }
+
+        /// <summary>
+        /// Applies <see cref="StripBlendShapePrefix(string)"/> to every blendshape of the mesh data. Blendshapes that
+        /// would end up sharing a name keep their full names, because a mesh cannot hold two blendshapes with one name.
+        /// </summary>
+        /// <returns>The number of blendshapes that were renamed.</returns>
+        public static int StripBlendShapePrefixes(UMAMeshData meshData, string slotName = null)
+        {
+            if (meshData == null || meshData.blendShapes == null || meshData.blendShapes.Length == 0)
+            {
+                return 0;
+            }
+
+            UMABlendShape[] shapes = meshData.blendShapes;
+            string[] newNames = new string[shapes.Length];
+            for (int i = 0; i < shapes.Length; i++)
+            {
+                newNames[i] = shapes[i] != null ? StripBlendShapePrefix(shapes[i].shapeName) : null;
+            }
+
+            // Putting a name back can make it clash with another shortened name, so repeat until nothing clashes.
+            List<string> kept = null;
+            var useCount = new Dictionary<string, int>(StringComparer.Ordinal);
+            bool changed = true;
+            while (changed)
+            {
+                changed = false;
+                useCount.Clear();
+                for (int i = 0; i < newNames.Length; i++)
+                {
+                    if (newNames[i] == null) continue;
+                    useCount.TryGetValue(newNames[i], out int count);
+                    useCount[newNames[i]] = count + 1;
+                }
+
+                for (int i = 0; i < newNames.Length; i++)
+                {
+                    if (newNames[i] == null || newNames[i] == shapes[i].shapeName) continue;
+                    if (useCount[newNames[i]] > 1)
+                    {
+                        newNames[i] = shapes[i].shapeName;
+                        (kept ?? (kept = new List<string>())).Add(newNames[i]);
+                        changed = true;
+                    }
+                }
+            }
+
+            int renamed = 0;
+            for (int i = 0; i < shapes.Length; i++)
+            {
+                if (newNames[i] != null && newNames[i] != shapes[i].shapeName)
+                {
+                    shapes[i].shapeName = newNames[i];
+                    renamed++;
+                }
+            }
+
+            if (kept != null)
+            {
+                Debug.LogWarning("Strip Blendshape Prefix: " + kept.Count + " blendshape(s)"
+                    + (string.IsNullOrEmpty(slotName) ? "" : " on slot '" + slotName + "'")
+                    + " kept their full names, because the shortened names would be the same: " + string.Join(", ", kept));
+            }
+
+            return renamed;
+        }
+
+        private static void StripBlendShapePrefixes(SlotDataAsset slot, SlotBuilderParameters sbp)
+        {
+            if (sbp.stripBlendShapePrefix && slot != null)
+            {
+                StripBlendShapePrefixes(slot.meshData, slot.slotName);
+            }
         }
 
         public static void OptimizeSlotDataMesh(SkinnedMeshRenderer smr, List<int> KeepBonesList)
@@ -2100,6 +2203,7 @@ namespace UMA.Editors
                             sda.sourceSubmeshIndex = sub;
                             sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
                             TransformMeshData(sda, sbp);
+                            StripBlendShapePrefixes(sda, sbp);
 
 #if UNITY_6000_2_OR_NEWER
                             if (!sbp.generateSlotLods)
@@ -2128,6 +2232,7 @@ namespace UMA.Editors
                             // Normalize UVs via udimAdjustment flag
                             sda.UpdateMeshData(smr, sbp.rootBone, true, 0, sbp.clearNormals, sbp.clearTangents);
                             TransformMeshData(sda, sbp);
+                            StripBlendShapePrefixes(sda, sbp);
 							if (preserved != null)
 							{
 								preserved.ApplyTo(sda);

@@ -23,6 +23,8 @@ namespace UMA.Editors
         public bool addUDIMTileNumbers; // new
 
         public string stripBones;
+        // Removes the part of each blendshape name up to and including its first dot ("Head.BigNose" becomes "BigNose").
+        public bool stripBlendShapePrefix;
         public string rootBone;
         public string assetName;
         public string slotName;

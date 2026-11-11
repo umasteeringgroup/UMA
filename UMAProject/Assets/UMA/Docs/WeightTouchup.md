@@ -65,6 +65,8 @@ Use **Paint Mode** to modify weights continuously with the Scene view brush. Sel
 | **Smooth** | Moves weights toward the average of connected vertices by Amount. It can smooth only the selected bone or all influences. |
 | **Smear** | Pulls the selected bone's weights from the previous brush position along the stroke direction. |
 
+With **Smooth** selected, **Constant Application** keeps smoothing while the mouse button is held, also when the pointer does not move. The brush is applied again every **Every (ms)** milliseconds (100 by default), so the weights under it keep evening out, as with Constant Application on the sculpt brushes. Without it, one stroke smooths each vertex once. The whole press is one stroke and one Undo step, and the setting is remembered. The other paint operations are not affected.
+
 Every painted result is normalized. **Replace** and **Add** can bind the selected bone to the slot when needed.
 
 Enable **Selected Vertices Only** to use the Select mode selection as a paint mask. Enable **Auto-mask Connected Vertices** to protect co-located vertices on other visible slots; this helps prevent a correction from opening a cross-slot seam.

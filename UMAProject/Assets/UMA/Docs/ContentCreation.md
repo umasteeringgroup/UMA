@@ -289,6 +289,7 @@ Open:
 - `Adjust for UDIM`: moves numbered UV tiles into the expected tile space.
 - `Calculate Tangents`: generates tangents when the source data does not provide usable values.
 - `Clear Blendshape Normals` and `Clear Blendshape Tangents`: reduce stored frame data when the project does not need it.
+- `Strip Blendshape Prefix`: removes the first part of each blendshape name, up to and including the first dot, so `Head.BigNose` is stored as `BigNose`. Use it when the exporter adds the mesh or blendshape-node name in front and the names must match other slots. Names without a dot are unchanged. A name such as `Smile.L` would lose `Smile`, so leave the option off when dots are part of your own names. When you later update such a slot by dropping a mesh on its inspector, tick the same checkbox there, or the prefixes come back.
 - `Keep All Bones`: retains the whole source hierarchy; use sparingly.
 - `Keep Bones Containing`: retains specifically named helper bones.
 - `Generate Slot LODs`: builds internal per-slot LOD triangle ranges for `UMASimpleLOD`.
