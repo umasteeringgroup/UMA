@@ -73,7 +73,7 @@ MonoBehaviour:
   isAtlasDirty: 0
   needsMaterialClear: 0
   markNotReadable: 0
-  markDynamic: 1
+  markDynamic: 0
   force32bit: 0
   animationController: {fileID: 9100000, guid: 7b2325c148834db0b13bb8f7dbce1542, type: 2}
   CharacterCreated:

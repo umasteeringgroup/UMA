@@ -1047,7 +1047,7 @@ namespace UMA
         /// <summary>
         /// Should the mesh use dynamic buffers?
         /// </summary>
-        [Tooltip("When this is true, the meshcombiner will mark the mesh as dynamic. This will slightly decrease build time and slightly increase rendering.")]
+        [Tooltip("Asks the Jobified and Incremental mesh combiners to mark the generated mesh as dynamic. The Default and bone baking combiners ignore it, because a dynamic mesh written the way they write it is much slower to render with GPU skinning. Leave this off unless you have measured a benefit.")]
         public bool markDynamic = false;
 
 		// This UMAData will require 32 bit indexes

@@ -377,6 +377,10 @@ namespace UMA.Editors
             public int maxLOD;
             public bool useAtlasOverlay;
             public float overlayScale;
+            public bool hairControlReady;
+            public SlotDataAsset.HairControlSourceType hairControlSource;
+            public float hairControlStart;
+            public float hairControlAmount;
 
             public static SlotPreserveData FromSlot(SlotDataAsset slot)
             {
@@ -407,6 +411,10 @@ namespace UMA.Editors
                 data.maxLOD = slot.maxLOD;
                 data.useAtlasOverlay = slot.useAtlasOverlay;
                 data.overlayScale = slot.overlayScale;
+                data.hairControlReady = slot.HairControlReady;
+                data.hairControlSource = slot.HairControlSource;
+                data.hairControlStart = slot.HairControlStart;
+                data.hairControlAmount = slot.HairControlAmount;
                 return data;
             }
 
@@ -438,6 +446,10 @@ namespace UMA.Editors
                 slot.maxLOD = maxLOD;
                 slot.useAtlasOverlay = useAtlasOverlay;
                 slot.overlayScale = overlayScale;
+                slot.HairControlReady = hairControlReady;
+                slot.HairControlSource = hairControlSource;
+                slot.HairControlStart = hairControlStart;
+                slot.HairControlAmount = hairControlAmount;
             }
         }
 

@@ -200,8 +200,6 @@ namespace UMA
 
         private SkinnedMeshRenderer MakeRenderer(int i, UMAData umaData, Transform rootBone, UMARendererAsset rendererAsset = null)
         {
-            Debug.Log("Creating Renderer in UMADefaultMeshCombiner");
-
             GameObject newSMRGO = new GameObject(
                 UMARendererAsset.GetRendererGameObjectName(rendererAsset, i));
             newSMRGO.transform.parent = umaData.transform;

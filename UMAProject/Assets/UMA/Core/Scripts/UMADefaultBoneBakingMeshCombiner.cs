@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UMA
@@ -145,6 +146,9 @@ namespace UMA
                 RecalculateUV(targetMesh, materialsForRenderer, updatedAtlas);
             targetMesh.ReleaseBuffers();
 
+            // The mesh is written in place and kept, so it must not be one that was marked dynamic.
+            EnsureOwnMesh(renderers[currentRendererIndex], umaData.force32bit);
+
             // Target transforms are preserved bones. Missing transforms may be created,
             // but existing animated transforms must remain untouched on a mesh-only build.
             targetMesh.ApplyDataToUnityMesh(
@@ -164,6 +168,38 @@ namespace UMA
                 bakingSkeleton.EndSkeletonUpdate();
 
             preserveUVsForRigOnlyBuild = false;
+        }
+
+        // Meshes this combiner created itself, and so knows were never marked dynamic.
+        private static readonly ConditionalWeakTable<Mesh, object> ownMeshes = new ConditionalWeakTable<Mesh, object>();
+        private static readonly object ownMeshMarker = new object();
+
+        /// <summary>
+        /// Makes sure the renderer holds a mesh this combiner created. Unlike the default combiner, which builds a
+        /// new mesh on every build, bone baking writes into the renderer's mesh and keeps it. A mesh that came from
+        /// anywhere else may have been marked dynamic (renderer creation does that when Mark Dynamic is on, and so
+        /// may another combiner that built the character earlier), and a dynamic mesh is much slower to render
+        /// with GPU skinning. Unity can neither report nor clear that mark, so such a mesh is replaced once; later
+        /// builds keep writing into the replacement.
+        /// </summary>
+        internal static Mesh EnsureOwnMesh(SkinnedMeshRenderer renderer, bool force32bit)
+        {
+            Mesh current = renderer.sharedMesh;
+            if (current != null && ownMeshes.TryGetValue(current, out _))
+                return current;
+
+            var mesh = new Mesh();
+            mesh.name = current != null ? current.name : "UMAMesh";
+            mesh.indexFormat = current != null
+                ? current.indexFormat
+                : force32bit ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+
+            // Same hand-over the default combiner uses when it replaces a renderer's mesh.
+            if (current != null && !UMAResourceLeaseOwner.ReleaseMesh(renderer))
+                UMAUtils.DestroySceneObject(current);
+            renderer.sharedMesh = mesh;
+            ownMeshes.Add(mesh, ownMeshMarker);
+            return mesh;
         }
 
         private MeshBuilder GetRendererMesh(int rendererIndex)

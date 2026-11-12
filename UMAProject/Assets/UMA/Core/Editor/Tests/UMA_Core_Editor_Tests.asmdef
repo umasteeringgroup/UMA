@@ -28,6 +28,11 @@
             "name": "com.unity.test-framework",
             "expression": "1.0.0",
             "define": "UMA_TEST_FRAMEWORK"
+        },
+        {
+            "name": "com.unity.modules.wind",
+            "expression": "",
+            "define": "UMA_WIND_MODULE"
         }
     ],
     "noEngineReferences": false

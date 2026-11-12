@@ -92,6 +92,12 @@
         },
         {
             "m_Id": "6cdc9297dc754c639ebdbfa946905332"
+        },
+        {
+            "m_Id": "df6b94b0c3a74af4a0ebc8186557ce1a"
+        },
+        {
+            "m_Id": "3a2818fea93f470796a4ef982f69d4ab"
         }
     ],
     "m_Keywords": [],
@@ -428,6 +434,24 @@
         },
         {
             "m_Id": "1d782d3b4a444f5ea14587b8c44c186a"
+        },
+        {
+            "m_Id": "e13d10435c834b18b175421e2bf1b008"
+        },
+        {
+            "m_Id": "658857fd52c94350a7102699def0d094"
+        },
+        {
+            "m_Id": "4ff1f932996842ed84a02ab3214eb53e"
+        },
+        {
+            "m_Id": "0cd4cf04a36f4a79aee9511ff0e58cc6"
+        },
+        {
+            "m_Id": "9355b0e429624e39b752f54cbb81ebed"
+        },
+        {
+            "m_Id": "f0ffa0faae3943739879bb31d5e66073"
         }
     ],
     "m_GroupDatas": [
@@ -463,6 +487,9 @@
         },
         {
             "m_Id": "1fb0c70f640a4d19923d3eca6cadc132"
+        },
+        {
+            "m_Id": "eee8e195e3254828ba90fdd02e1ae375"
         }
     ],
     "m_StickyNoteDatas": [
@@ -1122,20 +1149,6 @@
                     "m_Id": "73fdb9fac71c4f1babbb1ac26b959ae2"
                 },
                 "m_SlotId": 1
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
-                    "m_Id": "858994daffdf40b1b9fffa21e7e5c0c1"
-                },
-                "m_SlotId": 2
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "2704a97326044be09a54d3e3810db15f"
-                },
-                "m_SlotId": 0
             }
         },
         {
@@ -2060,6 +2073,104 @@
                     "m_Id": "6658e8d7852d45de9135f84b2faa26e7"
                 },
                 "m_SlotId": 14
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "858994daffdf40b1b9fffa21e7e5c0c1"
+                },
+                "m_SlotId": 2
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "f0ffa0faae3943739879bb31d5e66073"
+                },
+                "m_SlotId": 0
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "4ff1f932996842ed84a02ab3214eb53e"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "f0ffa0faae3943739879bb31d5e66073"
+                },
+                "m_SlotId": 1
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "e13d10435c834b18b175421e2bf1b008"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "f0ffa0faae3943739879bb31d5e66073"
+                },
+                "m_SlotId": 2
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "658857fd52c94350a7102699def0d094"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "f0ffa0faae3943739879bb31d5e66073"
+                },
+                "m_SlotId": 3
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "f0ffa0faae3943739879bb31d5e66073"
+                },
+                "m_SlotId": 4
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "2704a97326044be09a54d3e3810db15f"
+                },
+                "m_SlotId": 0
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "0cd4cf04a36f4a79aee9511ff0e58cc6"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "f0ffa0faae3943739879bb31d5e66073"
+                },
+                "m_SlotId": 5
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "9355b0e429624e39b752f54cbb81ebed"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "f0ffa0faae3943739879bb31d5e66073"
+                },
+                "m_SlotId": 6
             }
         }
     ],
@@ -12720,6 +12831,12 @@
         },
         {
             "m_Id": "6cdc9297dc754c639ebdbfa946905332"
+        },
+        {
+            "m_Id": "df6b94b0c3a74af4a0ebc8186557ce1a"
+        },
+        {
+            "m_Id": "3a2818fea93f470796a4ef982f69d4ab"
         }
     ]
 }
@@ -13747,7 +13864,7 @@
     "m_FunctionName": "UMA_HairVolumeShading",
     "m_FunctionSource": "",
     "m_FunctionSourceUsePragmas": true,
-    "m_FunctionBody": "// Mesh center, in object space. By default it is the middle of the renderer bounds, moved by Center Offset.\n// On a skinned character those bounds cover the whole body, so the UMAHairVolumeCenter component writes\n// the head position (world space, w = 1) into HairCenterWS and that is used instead. Center Offset is left\n// out then: it corrects the bounds center, and the component has an offset of its own.\nfloat hasCenter = saturate(HairCenterWS.w);\nfloat3 centerWS = lerp((BoundsMin + BoundsMax) * 0.5, HairCenterWS.xyz, hasCenter);\nfloat3 centerOS = TransformWorldToObject(centerWS) + CenterOffset * (1.0 - hasCenter);\nfloat3 fromCenter = PositionOS - centerOS;\nfloat dist = length(fromCenter);\n\nNormal = NormalOS;\nTangent = TangentOS;\nif (Recalculate > 0.5)\n{\n    // Point the normal out from the center, so the cards shade as one volume\n    // instead of as separate flat cards facing every way.\n    float3 outward = fromCenter / max(dist, 1e-5);\n    // A card can face the center, so that its back is what you see. Turn its normal to the outer side first:\n    // left as it is, it cancels against the outward direction at a blend near 0.5 and the card goes dark.\n    float3 meshNormal = dot(NormalOS, outward) < 0.0 ? -NormalOS : NormalOS;\n    float3 n = lerp(meshNormal, outward, NormalBlend);\n    Normal = n * rsqrt(max(dot(n, n), 1e-8));\n    // Keep the tangent perpendicular to the new normal (normal map and anisotropy use it).\n    float3 t = TangentOS - Normal * dot(TangentOS, Normal);\n    Tangent = t * rsqrt(max(dot(t, t), 1e-8));\n}\n\n// Cards near the center lie under other cards: darken them a little.\n// Runs per vertex and reaches the fragment stage through the HairShade interpolator.\nfloat outer = saturate((dist - DarkenStart) / max(DarkenEnd - DarkenStart, 1e-5));\nShade = 1.0 - Darken * (1.0 - outer);\n"
+    "m_FunctionBody": "// Mesh center, in object space. By default it is the middle of the renderer bounds, moved by Center Offset.\n// On a skinned character those bounds cover the whole body, so the UMAHairControl component writes\n// the head position (world space, w = 1) into HairCenterWS and that is used instead. Center Offset is left\n// out then: it corrects the bounds center, and the component has an offset of its own.\nfloat hasCenter = saturate(HairCenterWS.w);\nfloat3 centerWS = lerp((BoundsMin + BoundsMax) * 0.5, HairCenterWS.xyz, hasCenter);\nfloat3 centerOS = TransformWorldToObject(centerWS) + CenterOffset * (1.0 - hasCenter);\nfloat3 fromCenter = PositionOS - centerOS;\nfloat dist = length(fromCenter);\n\nNormal = NormalOS;\nTangent = TangentOS;\nif (Recalculate > 0.5)\n{\n    // Point the normal out from the center, so the cards shade as one volume\n    // instead of as separate flat cards facing every way.\n    float3 outward = fromCenter / max(dist, 1e-5);\n    // A card can face the center, so that its back is what you see. Turn its normal to the outer side first:\n    // left as it is, it cancels against the outward direction at a blend near 0.5 and the card goes dark.\n    float3 meshNormal = dot(NormalOS, outward) < 0.0 ? -NormalOS : NormalOS;\n    float3 n = lerp(meshNormal, outward, NormalBlend);\n    Normal = n * rsqrt(max(dot(n, n), 1e-8));\n    // Keep the tangent perpendicular to the new normal (normal map and anisotropy use it).\n    float3 t = TangentOS - Normal * dot(TangentOS, Normal);\n    Tangent = t * rsqrt(max(dot(t, t), 1e-8));\n}\n\n// Cards near the center lie under other cards: darken them a little.\n// Runs per vertex and reaches the fragment stage through the HairShade interpolator.\nfloat outer = saturate((dist - DarkenStart) / max(DarkenEnd - DarkenStart, 1e-5));\nShade = 1.0 - Darken * (1.0 - outer);\n"
 }
 
 {
@@ -14527,5 +14644,593 @@
         "w": 0.0
     },
     "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.GroupData",
+    "m_ObjectId": "eee8e195e3254828ba90fdd02e1ae375",
+    "m_Title": "Hair sway: tips move with the head and the wind (UMAHairControl, slots marked Hair Control Ready)",
+    "m_Position": {
+        "x": -560.0,
+        "y": -1180.0
+    }
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector4ShaderProperty",
+    "m_ObjectId": "df6b94b0c3a74af4a0ebc8186557ce1a",
+    "m_Guid": {
+        "m_GuidSerialized": "bdc9ab04-56fb-4d9b-ad80-760d6c94034e"
+    },
+    "promotedFromAssetID": "",
+    "promotedFromCategoryName": "",
+    "promotedOrdering": -1,
+    "m_Name": "Hair Sway World",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "Hair Sway World",
+    "m_DefaultReferenceName": "_Hair_Sway_World",
+    "m_OverrideReferenceName": "_HairSwayWS",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": true,
+    "m_PerRendererData": false,
+    "m_customAttributes": [],
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
+    "m_ObjectId": "a11cce4fd3f24569be8367e29e082c35",
+    "m_Id": 0,
+    "m_DisplayName": "Hair Sway World",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "e13d10435c834b18b175421e2bf1b008",
+    "m_Group": {
+        "m_Id": "eee8e195e3254828ba90fdd02e1ae375"
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -530.0,
+            "y": -960.0,
+            "width": 200.0,
+            "height": 34.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "a11cce4fd3f24569be8367e29e082c35"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "df6b94b0c3a74af4a0ebc8186557ce1a"
+    }
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector4ShaderProperty",
+    "m_ObjectId": "3a2818fea93f470796a4ef982f69d4ab",
+    "m_Guid": {
+        "m_GuidSerialized": "bc987ea2-dc8d-4591-9c98-9f5c0e160ce5"
+    },
+    "promotedFromAssetID": "",
+    "promotedFromCategoryName": "",
+    "promotedOrdering": -1,
+    "m_Name": "Hair Sway Settings",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "Hair Sway Settings",
+    "m_DefaultReferenceName": "_Hair_Sway_Settings",
+    "m_OverrideReferenceName": "_HairSwayParams",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": true,
+    "m_PerRendererData": false,
+    "m_customAttributes": [],
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
+    "m_ObjectId": "c54dc289cf114267bca3fb2194c67887",
+    "m_Id": 0,
+    "m_DisplayName": "Hair Sway Settings",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "658857fd52c94350a7102699def0d094",
+    "m_Group": {
+        "m_Id": "eee8e195e3254828ba90fdd02e1ae375"
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -530.0,
+            "y": -910.0,
+            "width": 200.0,
+            "height": 34.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "c54dc289cf114267bca3fb2194c67887"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "3a2818fea93f470796a4ef982f69d4ab"
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
+    "m_ObjectId": "52545d099085450980e06de0b5097d50",
+    "m_Id": 0,
+    "m_DisplayName": "Out",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0,
+        "w": 1.0
+    },
+    "m_DefaultValue": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0,
+        "w": 1.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.VertexColorNode",
+    "m_ObjectId": "4ff1f932996842ed84a02ab3214eb53e",
+    "m_Group": {
+        "m_Id": "eee8e195e3254828ba90fdd02e1ae375"
+    },
+    "m_Name": "Vertex Color",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -530.0,
+            "y": -1110.0,
+            "width": 206.0,
+            "height": 131.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "52545d099085450980e06de0b5097d50"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": false,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 2,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Texture2DMaterialSlot",
+    "m_ObjectId": "146071d34c594606af064568d571001a",
+    "m_Id": 0,
+    "m_DisplayName": "ID Map",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_BareResource": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "0cd4cf04a36f4a79aee9511ff0e58cc6",
+    "m_Group": {
+        "m_Id": "eee8e195e3254828ba90fdd02e1ae375"
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -530.0,
+            "y": -860.0,
+            "width": 126.0,
+            "height": 34.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "146071d34c594606af064568d571001a"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "63e8495fb0864f5abd328dc4e10338b8"
+    }
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
+    "m_ObjectId": "6ceaeaaa5680425e82c3c95519a01dfc",
+    "m_Id": 0,
+    "m_DisplayName": "Out",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.UVNode",
+    "m_ObjectId": "9355b0e429624e39b752f54cbb81ebed",
+    "m_Group": {
+        "m_Id": "eee8e195e3254828ba90fdd02e1ae375"
+    },
+    "m_Name": "UV",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -530.0,
+            "y": -810.0,
+            "width": 145.0,
+            "height": 130.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "6ceaeaaa5680425e82c3c95519a01dfc"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": false,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_OutputChannel": 0
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
+    "m_ObjectId": "a4e3c3697a5c4a24a1b28f188a21872b",
+    "m_Id": 0,
+    "m_DisplayName": "PositionOS",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "PositionOS",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
+    "m_ObjectId": "9e9ea409acc442b69fab1f5e84b30093",
+    "m_Id": 1,
+    "m_DisplayName": "Color",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Color",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
+    "m_ObjectId": "1b8b256dac774edcab88e1fb7ea9835b",
+    "m_Id": 2,
+    "m_DisplayName": "Sway",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Sway",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
+    "m_ObjectId": "d2da83c0a8b34d2fbabc137cdd2344fb",
+    "m_Id": 3,
+    "m_DisplayName": "Params",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Params",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
+    "m_ObjectId": "984a49c27ecb447aae5c0a2cd8ab6680",
+    "m_Id": 4,
+    "m_DisplayName": "Position",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Position",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Texture2DInputMaterialSlot",
+    "m_ObjectId": "f6eecd2fdcb947aa9867fb38b358ef0f",
+    "m_Id": 5,
+    "m_DisplayName": "IDMap",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "IDMap",
+    "m_StageCapability": 3,
+    "m_BareResource": false,
+    "m_Texture": {
+        "m_SerializedTexture": "",
+        "m_Guid": ""
+    },
+    "m_DefaultType": 0
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
+    "m_ObjectId": "dc5a86658f2b41fd9758bce2ec920ba7",
+    "m_Id": 6,
+    "m_DisplayName": "UV",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "UV",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+    },
+    "m_Labels": []
+}
+
+{
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.CustomFunctionNode",
+    "m_ObjectId": "f0ffa0faae3943739879bb31d5e66073",
+    "m_Group": {
+        "m_Id": "eee8e195e3254828ba90fdd02e1ae375"
+    },
+    "m_Name": "UMA_HairSway (Custom Function)",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -250.0,
+            "y": -1110.0,
+            "width": 260.0,
+            "height": 150.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "a4e3c3697a5c4a24a1b28f188a21872b"
+        },
+        {
+            "m_Id": "9e9ea409acc442b69fab1f5e84b30093"
+        },
+        {
+            "m_Id": "1b8b256dac774edcab88e1fb7ea9835b"
+        },
+        {
+            "m_Id": "d2da83c0a8b34d2fbabc137cdd2344fb"
+        },
+        {
+            "m_Id": "984a49c27ecb447aae5c0a2cd8ab6680"
+        },
+        {
+            "m_Id": "f6eecd2fdcb947aa9867fb38b358ef0f"
+        },
+        {
+            "m_Id": "dc5a86658f2b41fd9758bce2ec920ba7"
+        }
+    ],
+    "synonyms": [
+        "code",
+        "HLSL"
+    ],
+    "m_Precision": 0,
+    "m_PreviewExpanded": false,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_SourceType": 1,
+    "m_FunctionName": "UMA_HairSway",
+    "m_FunctionSource": "",
+    "m_FunctionSourceUsePragmas": true,
+    "m_FunctionBody": "// Light sway of the hair tips, driven by the UMAHairControl component (slots marked Hair Control Ready).\n// Each vertex has a place along its strand, 0 at the scalp and 1 at the tip. Params.w says where it is read:\n// 0 = vertex color (red), 1 = ID Map root channel (red, white at the scalp, so it is turned around),\n// 2 = ID Map tip channel (green). The ID Map is read with the same UVs the root and tip colors use.\n// A vertex below Start stays where it is; from there the movement grows, slowly at first, to Amount meters at 1.\n// Sway.xyz is the sway in world space (length 0 to 1); Sway.w is the phase of a ripple that runs from scalp to tip.\n// Params = (Start, Amount, Ripple strength, Source). Without the component both are zero and nothing moves.\nfloat place = Color.r;\nif (Params.w > 0.5)\n{\n    float4 id = SAMPLE_TEXTURE2D_LOD(IDMap.tex, IDMap.samplerstate, UV.xy, 0);\n    place = Params.w > 1.5 ? id.g : 1.0 - id.r;\n}\nfloat along = saturate((place - Params.x) / max(1.0 - Params.x, 1e-4));\nfloat weight = along * along * Params.y;\n// The ripple only ever takes movement away, so Amount stays the furthest a tip can go.\nfloat wave = 1.0 - Params.z * (0.5 - 0.5 * sin(Sway.w - along * 6.2831853));\nPosition = PositionOS + TransformWorldToObjectDir(Sway.xyz, false) * (weight * wave);\n"
 }
 

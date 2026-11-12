@@ -38,7 +38,7 @@ namespace UMA.Editors
         }
 
         static string[] RegularSlotFields = new string[] { "slotName", "slotGroup", "RecipePrepared", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
-        static string[] WildcardSlotFields = new string[] { "slotName", "slotGroup", "RecipePrepared", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
+        static string[] WildcardSlotFields = new string[] { "slotName", "slotGroup", "RecipePrepared", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds", "HairControlReady", "HairControlSource", "HairControlStart", "HairControlAmount" };
         private static readonly string[] TriplanarUvChannelLabels = new string[] { "0 (uv)", "1 (uv2)", "2 (uv3)", "3 (uv4)" };
         SerializedProperty RecipePrepared;
         SerializedProperty CharacterBegun;

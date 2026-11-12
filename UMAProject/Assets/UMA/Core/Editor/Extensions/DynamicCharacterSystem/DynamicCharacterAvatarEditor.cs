@@ -2371,7 +2371,7 @@ namespace UMA.CharacterSystem.Editors
             // Mark Dynamic
             if (showHelp)
             {
-                EditorGUILayout.HelpBox("Mark Dynamic: Hints meshes are updated frequently (slightly faster build, slightly higher render cost).", MessageType.Info);
+                EditorGUILayout.HelpBox("Mark Dynamic: Asks the Jobified and Incremental mesh combiners to mark the generated mesh as dynamic. The Default and bone baking combiners ignore it, because a dynamic mesh written the way they write it is much slower to render with GPU skinning. Leave this off unless you have measured a benefit.", MessageType.Info);
             }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("markDynamic"));
 
