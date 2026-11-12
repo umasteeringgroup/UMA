@@ -590,6 +590,8 @@ namespace UMA
                 var slot = source.slotData;
                 d.Value(slot?.slotName); d.Value(slot?.UVSet ?? 0); d.Value(slot?.UVRemapped ?? false);
                 d.Value(slot?.useAtlasOverlay ?? false);
+                // The combiner moves every vertex of the slot along its normal by this amount.
+                d.Value(slot?.expandAlongNormal ?? 0);
             }
             var shapes = data.umaRecipe?.BlendshapeSlots;
             d.Value(shapes?.Count ?? 0);

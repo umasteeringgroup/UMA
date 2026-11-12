@@ -84,6 +84,8 @@ Atlas matching happens independently for each channel. Materials can also be sha
 
 The cache retains outputs while owners need them; it is not a permanent library of every character ever built. Disabled or pooled avatars still own their resources. Destroying the last owner releases its output, so building a warm-up character and immediately destroying it does not guarantee a future cache hit.
 
+A renderer whose UMA Renderer Asset has **Recalculate Normals** on never shares its mesh, because its normals are written for that avatar's own blendshape weights. With **Reuse Identical Meshes** on and the jobified mesh combiner, such an avatar still keeps its own mesh when a rebuild would produce the same one, instead of combining it again; the status line then reads `Kept this avatar's own mesh`. A mesh uploaded with **Mark Not Readable** cannot be kept, because its normals could not be recalculated later.
+
 The standard/default, jobified, and incremental mesh combiners support reuse. Custom subclasses that retain custom combining behavior take their normal private path. Recipe resolution, skeleton setup, renderer binding, and some preparation still happen even on a hit. Sharing does not remove animation, skinning, or draw-call costs.
 
 ## Make individual changes safely

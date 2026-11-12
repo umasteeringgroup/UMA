@@ -107,6 +107,20 @@ namespace UMA
             finally { MeshTimings.Record(outcome, System.Diagnostics.Stopwatch.GetTimestamp() - diagnosticStart); }
         }
 
+        /// <summary>
+        /// Describes the inputs of a combine whose mesh stays with its renderer and is never shared (see
+        /// UMARendererAsset.RequiresPrivateMesh). UMAResourceLeaseOwner compares it with the request the
+        /// renderer's current mesh was built from, to keep that mesh when nothing has changed.
+        /// </summary>
+        internal static MeshRequest DescribePrivateMesh(UMAData data,
+            SkinnedMeshCombiner.CombineInstance[] sources, UMAData.GeneratedMaterial[] materials,
+            int atlasResolution, Quaternion boundsRotation, string backend = "MeshData")
+        {
+            using var measurement = new LookupMeasurement(System.Diagnostics.Stopwatch.GetTimestamp());
+            using var marker = MeshLookupMarker.Auto();
+            return DescribeMeshRequest(data, sources, materials, atlasResolution, boundsRotation, backend);
+        }
+
         internal static bool MeshInputsUnchanged(MeshRequest original, UMAData data,
             SkinnedMeshCombiner.CombineInstance[] sources, UMAData.GeneratedMaterial[] materials,
             int atlasResolution, Quaternion boundsRotation, string backend = "MeshData")

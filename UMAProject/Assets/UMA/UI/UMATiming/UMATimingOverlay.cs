@@ -5,12 +5,15 @@ using System.Globalization;
 using UMA;
 using UMA.CharacterSystem;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace UMATestProject
 {
+    // The overlay belongs to the scene that shows it: the "UMA Timing Overlay" object in the random-character sample
+    // carries this component. Nothing looks a scene up by path or name, so the UMA folder can be installed anywhere,
+    // and adding the component to an object in another scene with a generator and a Generate-mode crowd works too.
+    [AddComponentMenu("UMA/Timing Overlay")]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIDocument))]
     public sealed class UMATimingOverlay : MonoBehaviour
@@ -63,25 +66,6 @@ namespace UMATestProject
         private double nextRefresh;
         private PanelSettings ownedPanel;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void InstallForTestScene()
-        {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-            SceneManager.sceneLoaded += OnSceneLoaded;
-            for (int i = 0; i < SceneManager.sceneCount; i++)
-                OnSceneLoaded(SceneManager.GetSceneAt(i), LoadSceneMode.Additive);
-        }
-
-        private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            if (scene.path != "Assets/UMA/SRP/Samples/Scenes/U3-Generating Random Characters.unity") return;
-            foreach (var overlay in UMAObjectUtility.FindObjectsByType<UMATimingOverlay>(FindObjectsInactive.Include))
-                if (overlay.gameObject.scene == scene) return;
-            var go = new GameObject("UMA Timing Overlay");
-            SceneManager.MoveGameObjectToScene(go, scene);
-            go.AddComponent<UMATimingOverlay>();
-        }
-
         private void OnEnable()
         {
             HasCompletedRun = false;
@@ -106,6 +90,12 @@ namespace UMATestProject
             root.Clear();
             if (document.visualTreeAsset != null) document.visualTreeAsset.CloneTree(root);
             root.pickingMode = PickingMode.Ignore;
+            // This panel does not use Unity's default runtime theme, so it has no font unless one is set here.
+            // The built-in font is in every project and every build; a font file path in the style sheet is not,
+            // and with no font every label is blank.
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (font != null) root.style.unityFontDefinition = FontDefinition.FromFont(font);
+            else Debug.LogWarning("UMA Timing UI could not load the built-in font, so its text will not be drawn.", this);
             startButton = root.Q<Button>("startTiming");
             if (startButton == null)
             {
@@ -132,6 +122,10 @@ namespace UMATestProject
             BuildMetricRows(root);
             RefreshDisplay();
         }
+
+        // As a scene object this component can be enabled before the crowd in the same scene is, so OnEnable may not
+        // find it yet. By Start every object in the scene has been enabled.
+        private void Start() => ResolveSources();
 
         private void OnDisable()
         {

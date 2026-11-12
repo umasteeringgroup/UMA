@@ -192,7 +192,11 @@ namespace UMA
             System.Collections.Generic.IReadOnlyList<UMAData.GeneratedMaterial> materials)
         {
             if (renderer == null || renderer.sharedMesh == null) return;
+            // The combiner has just written new geometry.
+            UMAResourceLeaseOwner.ForgetPrivateMesh(renderer);
 #if UMA_BURSTCOMPILE
+            // Recalculated normals from an earlier build are gone with it.
+            UMARendererNormals.Invalidate(renderer.sharedMesh);
             UMARendererAsset rendererAsset = ResolveRendererAsset(data, materials);
             if (rendererAsset != null && rendererAsset._RecalculateNormals)
             {
@@ -205,6 +209,26 @@ namespace UMA
             }
 #endif
             renderer.sharedMesh.UploadMeshData(data.markNotReadable);
+        }
+
+        /// <summary>
+        /// For a renderer whose own mesh was kept instead of being combined again (see
+        /// UMAResourceLeaseOwner.TryKeepPrivateMesh). The geometry is unchanged, but the blendshape weights may
+        /// not be: a direct combiner call recalculates the normals now, as it would after combining; a
+        /// generator-managed build leaves that to FinalizeGeneratedNormals.
+        /// </summary>
+        internal static void RefreshKeptMesh(UMAData data, SkinnedMeshRenderer renderer,
+            System.Collections.Generic.IReadOnlyList<UMAData.GeneratedMaterial> materials)
+        {
+#if UMA_BURSTCOMPILE
+            if (renderer == null || renderer.sharedMesh == null || data.deferRendererMeshUpload) return;
+            UMARendererAsset rendererAsset = ResolveRendererAsset(data, materials);
+            if (rendererAsset != null && rendererAsset._RecalculateNormals)
+            {
+                rendererAsset.Recalculate(renderer);
+                renderer.sharedMesh.UploadMeshData(data.markNotReadable);
+            }
+#endif
         }
 
         internal readonly struct DeferredMeshUpload : System.IDisposable
@@ -279,66 +303,14 @@ namespace UMA
                 return;
             }
 
-            NativeArray<Vector3> vertices = default;
-            NativeArray<Vector3> normals = default;
-            NativeArray<Vector2> uvs = default;
-            NativeArray<Vector4> tangents = default;
-            NativeArray<int> triangles = default;
-            JobHandle handle = default;
-            try
+            // Skipped when the mesh already holds the result for these blendshape weights; see UMARendererNormals.
+            System.Action<NativeArray<Vector3>> observer = null;
+            if (NormalsRecalculatedForTests != null)
             {
-                vertices = new NativeArray<Vector3>(mesh.vertices, Allocator.TempJob);
-                normals = new NativeArray<Vector3>(mesh.normals, Allocator.TempJob);
-                uvs = new NativeArray<Vector2>(mesh.uv, Allocator.TempJob);
-                tangents = new NativeArray<Vector4>(mesh.tangents, Allocator.TempJob);
-                triangles = new NativeArray<int>(mesh.triangles, Allocator.TempJob);
-                Vector3[] deltaVertices = new Vector3[vertices.Length];
-
-                int blendShapeCount = mesh.blendShapeCount;
-                for (int shapeIndex = 0; shapeIndex < blendShapeCount; shapeIndex++)
-                {
-                    float weight = smr.GetBlendShapeWeight(shapeIndex);
-                    if (weight > 0f)
-                    {
-                        weight /= 100f; //bring the weight into 0-1 range.
-
-                        string blendShapeName = mesh.GetBlendShapeName(shapeIndex);
-                        if (blendShapeName.StartsWith(blendShapeNameStartsWith))
-                        {
-                            mesh.GetBlendShapeFrameVertices(shapeIndex, 0, deltaVertices, null, null);
-                            // Deallocated by the job on completion.
-                            NativeArray<Vector3> blendShapeDeltaVertices = new NativeArray<Vector3>(deltaVertices, Allocator.TempJob);
-                            try
-                            {
-                                handle = MeshUtilities.BakeOneFramePositionBlendShape(vertices, blendShapeDeltaVertices, weight, handle);
-                            }
-                            catch
-                            {
-                                blendShapeDeltaVertices.Dispose();
-                                throw;
-                            }
-                        }
-                    }
-                }
-                handle = MeshUtilities.RecalculateNormalsTangentsJobified(vertices, normals, uvs, tangents, triangles, this.NormalAngle, handle);
-                handle.Complete();
-
-                //mesh.SetVertices(vertices); //don't update the vertices if the blendshapes are going to continue...
-                mesh.SetNormals(normals);
-                mesh.SetUVs(0, uvs);
-                mesh.SetTangents(tangents);
                 // The arguments are only evaluated when a test observes the result.
-                NormalsRecalculatedForTests?.Invoke(smr, normals.ToArray());
+                observer = normals => NormalsRecalculatedForTests?.Invoke(smr, normals.ToArray());
             }
-            finally
-            {
-                handle.Complete();
-                if (vertices.IsCreated) vertices.Dispose();
-                if (normals.IsCreated) normals.Dispose();
-                if (uvs.IsCreated) uvs.Dispose();
-                if (tangents.IsCreated) tangents.Dispose();
-                if (triangles.IsCreated) triangles.Dispose();
-            }
+            UMARendererNormals.Recalculate(smr, this.NormalAngle, blendShapeNameStartsWith, observer);
         }
 #endif
         /// <summary>

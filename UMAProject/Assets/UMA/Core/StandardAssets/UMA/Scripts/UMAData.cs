@@ -443,6 +443,8 @@ namespace UMA
         [NonSerialized] public double LastBoneCleanupMilliseconds;
         [NonSerialized] internal bool BoneCleanupPending;
         [NonSerialized] internal bool AnimatorBindingsDirty;
+        // What the current humanoid Avatar was built from; see UMAAvatarReuse.
+        [NonSerialized] internal UMAAvatarReuse.Record avatarReuse;
 
         internal bool NeedsAnimatorBindingRefresh => AnimatorBindingsDirty && !rawAvatar &&
             (animationController != null || !disableAnimation);
