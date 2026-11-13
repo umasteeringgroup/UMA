@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA3_SkinRealistic_Matte
-  m_Shader: {fileID: 4800000, guid: a63d733d562b14f4b92861e35d58e5cb, type: 3}
+  m_Shader: {fileID: 4800000, guid: 10a411d0fe78e7249bdd52c64b1b18f5, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -43,6 +43,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SkinScatterLUT:
+        m_Texture: {fileID: 2800000, guid: 898ee59a0684c044993802cff280461e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _Skinmask:
         m_Texture: {fileID: 2800000, guid: ce84ac6354b628f4389fb7327538e10b, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -50,20 +54,25 @@ Material:
     m_Ints: []
     m_Floats:
     - _BumpScale: 0.7
+    - _CurvatureScale: 1
     - _DetailNormalMapScale: 0.024
     - _Detail_Gloss_Scale: 0.15
     - _Detail_Normal_Scale: 0.235
     - _DiffuseNormalStrength: 0.35
     - _DiffusionWrap: 0.12
     - _Metallic: 0
+    - _NormalBlur: 1
+    - _OcclusionColorBleed: 1
     - _OilLobeWeight: 0.1
     - _OilSmoothness: 0.72
     - _SSSBlend: 0.537
     - _ScatterRadiusMM: 2.5
+    - _ShadowScatter: 0.5
     - _SkinDebug: 0
     - _SkinIOR: 1.43
     - _Skinmask_Amount: 1
     - _SpecularAA: 0.4
+    - _ThicknessMinMM: 2
     - _TransmissionPower: 4
     - _TransmissionStrength: 0.12
     m_Colors:

@@ -1,0 +1,105 @@
+#ifndef UMA_REALISTIC_SKIN_SSS_INPUT
+#define UMA_REALISTIC_SKIN_SSS_INPUT
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/SurfaceInput.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/BRDF.hlsl"
+// Identical layout in every pass: compatible with the SRP Batcher.
+CBUFFER_START(UnityPerMaterial)
+float4 _BaseMap_ST;
+half4 _Base_Color, _SubsurfaceColor;
+float4 _Smoothness_Remap, _Ambient_Occlusion_Remap, _Detail_Tiling;
+half _BumpScale, _Skinmask_Amount, _DetailNormalMapScale, _Detail_Normal_Scale;
+half _Detail_Gloss_Scale, _SSSBlend, _ScatterRadiusMM, _DiffusionWrap;
+half _DiffuseNormalStrength, _TransmissionStrength, _TransmissionPower, _SkinIOR;
+half _OilLobeWeight, _OilSmoothness, _SpecularAA, _SkinDebug;
+half _Metallic, _ShadowScatter, _CurvatureScale, _NormalBlur;
+half _ThicknessMinMM, _OcclusionColorBleed;
+CBUFFER_END
+TEXTURE2D(_MaskMap); SAMPLER(sampler_MaskMap);
+TEXTURE2D(_Skinmask); SAMPLER(sampler_Skinmask);
+TEXTURE2D(_DetailNormalMap); SAMPLER(sampler_DetailNormalMap);
+TEXTURE2D(_SkinControlMap); SAMPLER(sampler_SkinControlMap);
+TEXTURE2D(_SkinScatterLUT);
+SAMPLER(sampler_trilinear_repeat);
+
+// The material's radius is the distance that holds about three quarters of the scattered light.
+// The diffusion profile's own distance parameter is this fraction of it. With the default radius
+// and color this gives 0.76 / 0.29 / 0.17 mm for red / green / blue.
+#define SKIN_RADIUS_TO_DISTANCE 0.303
+// Pores and fine lines are about this wide. Used to fade pore detail out of diffuse lighting.
+#define SKIN_DETAIL_FEATURE_METERS 0.0004
+// Size and blue-channel marker of the lookup texture, as written by UMASkinScatterLUTGenerator.
+#define SKIN_LOOKUP_SIZE float2(256.0, 64.0)
+#define SKIN_LOOKUP_MARKER 0.25
+// _TransmissionStrength of 0.25 is the physically scaled amount.
+#define SKIN_TRANSMISSION_SCALE 4.0
+
+struct SkinData
+{
+    SurfaceData surface;
+    half3 macroNormalTS;
+    half2 detailNormalXY;
+    half scatter;
+    half transmission;
+    half oil;
+};
+
+SkinData SampleSkin(float2 uv)
+{
+    SkinData s = (SkinData)0;
+    half4 mask = SAMPLE_TEXTURE2D(_MaskMap, sampler_MaskMap, uv);
+    half4 controls = SAMPLE_TEXTURE2D(_SkinControlMap, sampler_SkinControlMap, uv);
+    half3 albedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv).rgb;
+    // UMA's skin mask protects eyes/lips/nails from tint; it is NOT a thickness map.
+    half3 protection = saturate(SAMPLE_TEXTURE2D(_Skinmask, sampler_Skinmask, uv).rgb * _Skinmask_Amount);
+    albedo *= lerp(_Base_Color.rgb, half3(1,1,1), protection);
+    half detailMask = saturate(mask.b * controls.a);
+    half4 detail = SAMPLE_TEXTURE2D(_DetailNormalMap, sampler_DetailNormalMap, uv * _Detail_Tiling.xy) * 2 - 1;
+    // Matches the existing HDRP-style UMA packed detail contract (normal in AG).
+    half2 detailXY = detail.ag * _Detail_Normal_Scale * detailMask;
+    half3 detailNormal = half3(detailXY, sqrt(saturate(1 - dot(detailXY, detailXY))));
+    half3 macroNormal = SampleNormal(uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
+    s.macroNormalTS = macroNormal;
+    s.detailNormalXY = detailXY;
+    s.surface.normalTS = normalize(BlendNormalRNM(macroNormal, detailNormal));
+    s.surface.albedo = max(0, albedo * (1 + detail.r * _DetailNormalMapScale * detailMask));
+    s.surface.smoothness = saturate(lerp(_Smoothness_Remap.x, _Smoothness_Remap.y, mask.a)
+        + detail.b * _Detail_Gloss_Scale * detailMask);
+    s.surface.occlusion = saturate(lerp(_Ambient_Occlusion_Remap.x, _Ambient_Occlusion_Remap.y, mask.g));
+    half f0 = Sq((_SkinIOR - 1) / (_SkinIOR + 1));
+    s.surface.specular = f0.xxx;
+    s.surface.metallic = saturate(_Metallic);
+    s.surface.alpha = 1;
+    s.scatter = saturate(mask.r * controls.r * _SSSBlend);
+    s.transmission = saturate(mask.r * controls.b) * _TransmissionStrength * SKIN_TRANSMISSION_SCALE;
+    s.oil = saturate(_OilLobeWeight * controls.g);
+    return s;
+}
+
+// The macro normal map as diffuse lighting sees it in one color channel: read with a footprint as
+// wide as that channel's scattering, so wrinkles soften in red and stay crisper in blue.
+// uvDx/uvDy are the screen-space UV derivatives already widened to the footprint.
+half3 SampleSkinDiffuseNormal(float2 uv, float2 uvDx, float2 uvDy, half2 detailXY)
+{
+    half3 n = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(_BumpMap, sampler_trilinear_repeat, uv, uvDx, uvDy), _BumpScale);
+    half3 detailNormal = half3(detailXY, sqrt(saturate(1 - dot(detailXY, detailXY))));
+    return normalize(BlendNormalRNM(n, detailNormal));
+}
+
+// URP's specular workflow ignores SurfaceData.metallic. Blend explicitly so the
+// skin IOR remains unchanged at zero and both reflection lobes become metallic.
+void InitializeSkinBRDFData(SurfaceData surface, out BRDFData brdf)
+{
+    half metallic = saturate(_Metallic);
+    half oneMinusReflectivity = (1 - ReflectivitySpecular(surface.specular)) * (1 - metallic);
+    half3 specular = lerp(surface.specular, surface.albedo, metallic);
+    InitializeBRDFDataDirect(surface.albedo, surface.albedo * oneMinusReflectivity,
+        specular, 1 - oneMinusReflectivity, oneMinusReflectivity,
+        surface.smoothness, surface.alpha, brdf);
+}
+
+// Used by URP's lightmapping pass. No light-dependent color or emission is baked.
+void InitializeStandardLitSurfaceData(float2 uv, out SurfaceData surfaceData)
+{
+    surfaceData = SampleSkin(uv).surface;
+}
+#endif

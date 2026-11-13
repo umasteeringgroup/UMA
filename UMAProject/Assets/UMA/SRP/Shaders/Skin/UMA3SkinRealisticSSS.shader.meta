@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 10a411d0fe78e7249bdd52c64b1b18f5
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures:
+  - _SkinScatterLUT: {fileID: 2800000, guid: 898ee59a0684c044993802cff280461e, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

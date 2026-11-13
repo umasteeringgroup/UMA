@@ -104,6 +104,7 @@ Install the matching Overlay Painter plugin; examples and tests remain separate 
 
 ### Shading, content, and documentation
 
+- Fixed a visible line between the face and scalp, and at the neck, shoulders and hips, on dark-skinned UMA 3 characters. The tint protection masks (`UMA_3_BodyOnly_SkinMask.1001`–`1005`, `UMA_3_SkinMask.1002`) did not agree where the body's texture tiles meet: the face mask protected about a third more of the untinted albedo than the scalp mask along the hairline, so under a dark Skin Tint the face side rendered up to about 20% lighter. The masks now match along every seam, with the correction fading out over about 128 pixels; the rest of each mask, including the lighter palms, soles and face, is unchanged. Light tints were not affected.
 - The Documentation Browser has a **Sort** button that puts the documents in A–Z order. Favorites stay at the top and are sorted among themselves; **Undo** restores the previous order.
 - Removed low-value tests: benchmarks and profiling runs that only logged timings, preset contact-sheet captures that checked nothing, and two warm-lookup time limits that depended on machine speed. The documents that cited them now say so.
 - Added material-wide **Metallic** to the URP Realistic Skin shader, defaulting to zero. Both reflection lobes and environment lighting use it; the packed mask's red channel remains scattering, and decals do not override the scalar. Tint Protection Strength now permits values up to two. See the [skin shader README](SRP/Shaders/Skin/README.md).

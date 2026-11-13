@@ -78,7 +78,7 @@ Light:
   serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 0.98039216, b: 0.9019608, a: 1}
-  m_Intensity: 0.5
+  m_Intensity: 1.5
   m_Range: 10
   m_SpotAngle: 120.03466
   m_InnerSpotAngle: 21.80208
@@ -87,7 +87,7 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 1
+    m_Strength: 0.296
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
@@ -715,7 +715,7 @@ MonoBehaviour:
   priority: 0
   blendDistance: 0
   weight: 1
-  sharedProfile: {fileID: 0}
+  sharedProfile: {fileID: 11400000, guid: 9661bc6c566ab2c4d80da268aeb965b2, type: 2}
 --- !u!1 &9177085213689210184
 GameObject:
   m_ObjectHideFlags: 0
