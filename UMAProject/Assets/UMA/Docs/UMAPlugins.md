@@ -72,9 +72,12 @@ Direct UnityPackage import requires UMA with launcher API 1 already installed. A
 Select a scene avatar and use **Editors > Plugins > Hair Card Editor**. The existing **UMA > Hair Cards** menus and mesh/groom asset workflows remain available. Prefab assets and Prefab Mode cannot launch avatar authoring. Hair Cards includes its core data, runtime support, editor and shaders. The existing UMA render pipeline package supplies the hair atlas textures and optional URP hair shaders.
 
 **Hair Card Examples** contains the authored content under `Assets/UMAProjectData/HairCards/Examples`.
-**Hair Card Tests** owns `Assets/UMA/HairCards/Editor/Tests` and requires Unity Test Framework.
+**Hair Card Tests** owns `Assets/UMA/HairCardsTests` and requires Unity Test Framework.
 The main Hair Cards archive excludes both. Reinstalling an older parent that bundled tests
-preserves the existing tests during the transition to companion ownership.
+preserves the existing tests during the transition to companion ownership. UMA 3.1.5 and earlier
+installed the tests inside the plugin, at `Assets/UMA/HairCards/Editor/Tests`; installing Hair Card
+Tests again moves that copy to `Assets/UMA/HairCardsTests` (keeping its GUIDs) before replacing it,
+and reinstalling the parent leaves it in place.
 
 The Documentation Browser's **Hair Card Editor** selection contains the quick start and hairstyle guides. Installing registers its descriptor; removing the plugin removes that documentation registration. User grooms, baked assets and recovery under `Assets/UMAProjectData/HairCards`, and preferences under `UserSettings`, survive removal. The separately installed Examples package owns only its listed example assets; modified examples are preserved during removal. Editable grooms and runtime groom components require the plugin's types to load; reinstalling restores those types. Baked ordinary Unity/UMA assets do not require the authoring editor.
 
@@ -177,7 +180,7 @@ UMA's recipe, wardrobe, DCA, and embedded UMAData inspectors have explicit integ
 
 ## Register plugin documentation
 
-The Documentation Browser starts with **UMA** selected. Its top dropdown lists installed plugins with registered Markdown documentation; selecting a plugin shows only that plugin's guides. Favorites and document ordering remain available. The Plans browser remains separate.
+The Documentation Browser starts with **UMA** selected. Its top dropdown lists installed plugins with registered Markdown documentation; selecting a plugin shows only that plugin's guides. Favorites and document ordering remain available: click a document's star to favorite it, drag documents to reorder them, or press **Sort** to put the list in A–Z order, with favorites kept at the top and sorted among themselves (**Undo** brings the previous order back). The Plans browser remains separate.
 
 Ship a `UMAPluginDocumentation.json` file in the plugin's root, alongside its `.meta` file, for example:
 

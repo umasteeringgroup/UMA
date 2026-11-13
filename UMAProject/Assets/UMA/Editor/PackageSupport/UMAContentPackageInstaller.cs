@@ -1096,6 +1096,16 @@ namespace UMA.Editors.PackageSupport
             DeleteDirectory(transactionRoot);
             Directory.CreateDirectory(transactionRoot);
             ClearLastError(kind);
+            try
+            {
+                MoveLegacyInstall(kind);
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                WriteLastError(kind, error);
+                return false;
+            }
 
             string destinationRoot = UMAPathUtility.ResolveAbsolutePath(
                 UMAContentCatalog.Root(kind));
@@ -1162,6 +1172,26 @@ namespace UMA.Editors.PackageSupport
                 }
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Moves a package that an earlier release installed somewhere else to its current root, keeping its GUIDs,
+        /// so the install that follows backs it up and replaces it in place.
+        /// </summary>
+        private static void MoveLegacyInstall(UMAContentKind kind)
+        {
+            string legacy = UMAContentCatalog.LegacyRoot(kind);
+            if (string.IsNullOrEmpty(legacy) || !AssetDatabase.IsValidFolder(legacy))
+                return;
+            string root = UMAContentCatalog.Root(kind);
+            string name = UMAContentCatalog.DisplayName(kind);
+            if (AssetDatabase.IsValidFolder(root))
+                throw new InvalidOperationException(name + " is installed in both " + legacy + " and " + root +
+                    ". Delete the older copy in " + legacy + ", then install again.");
+            string moveError = AssetDatabase.MoveAsset(legacy, root);
+            if (!string.IsNullOrEmpty(moveError))
+                throw new InvalidOperationException("Could not move " + name + " from " + legacy + " to " + root + ": " + moveError);
+            Debug.Log("[UMA] Moved " + name + " from " + legacy + " to " + root + " before installing.");
         }
 
         private static void RestoreUnownedPluginFiles(UMAContentKind kind, UMAContentManifest previous,

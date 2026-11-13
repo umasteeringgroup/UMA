@@ -9,11 +9,11 @@
   <Project Path="UMA.HairCards.Core.csproj" />
   <Project Path="UMA.TexturePaint.Editor.Tests.csproj" />
   <Project Path="UMA.TexturePaint.Editor.csproj" />
+  <Project Path="UMA.HairCards.Editor.Tests.csproj" />
   <Project Path="UMA3.Samples.Editor.Tests.csproj" />
   <Project Path="UMA3.Samples.csproj" />
   <Project Path="UMA_Core_Runtime_Tests.csproj" />
   <Project Path="UMA_Editor.csproj" />
-  <Project Path="UMA.HairCards.Editor.Tests.csproj" />
   <Project Path="UMA.TexturePaint.Tests.csproj" />
   <Project Path="UMA.Dismemberment.Editor.csproj" />
   <Project Path="UMA2.Content.csproj" />

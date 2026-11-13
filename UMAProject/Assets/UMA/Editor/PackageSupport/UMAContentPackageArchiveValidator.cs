@@ -76,7 +76,7 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.OverlayPainterTests => "Assets/UMA/OverlayPainterTests",
             UMAContentKind.HairCards => "Assets/UMA/HairCards",
             UMAContentKind.HairCardsExamples => "Assets/UMAProjectData/HairCards/Examples",
-            UMAContentKind.HairCardsTests => "Assets/UMA/HairCards/Editor/Tests",
+            UMAContentKind.HairCardsTests => "Assets/UMA/HairCardsTests",
             UMAContentKind.Dismemberment => "Assets/UMA/UMADismemberment",
             UMAContentKind.DismembermentExamples => "Assets/UMA/UMADismemberment/Samples",
             UMAContentKind.DismembermentTests => "Assets/UMA/UMADismemberment/Tests",
@@ -85,6 +85,16 @@ namespace UMA.Editors.PackageSupport
 
         public static string ManifestPath(UMAContentKind kind) =>
             Root(kind) + "/" + ManifestFileName;
+
+        /// <summary>
+        /// Where earlier releases installed this package. Hair Card Tests lived inside the Hair Cards folder up to
+        /// 3.1.5; an existing copy there is moved to <see cref="Root"/> when the package is installed again.
+        /// </summary>
+        public static string LegacyRoot(UMAContentKind kind) => kind switch
+        {
+            UMAContentKind.HairCardsTests => "Assets/UMA/HairCards/Editor/Tests",
+            _ => null
+        };
 
         public static string[] Dependencies(UMAContentKind kind) => kind switch
         {
@@ -124,7 +134,10 @@ namespace UMA.Editors.PackageSupport
         public static bool IsTests(UMAContentKind kind) => Dependencies(kind).Contains("test-framework");
 
         public static bool IsCompanionPath(UMAContentKind parent, string path) => Companions(parent).Any(child =>
-            path == Root(child) || path == Root(child) + ".meta" || path.StartsWith(Root(child) + "/", StringComparison.Ordinal));
+            IsUnder(path, Root(child)) || (LegacyRoot(child) != null && IsUnder(path, LegacyRoot(child))));
+
+        private static bool IsUnder(string path, string root) =>
+            path == root || path == root + ".meta" || path.StartsWith(root + "/", StringComparison.Ordinal);
 
         public static bool OwnsPluginPath(UMAContentKind kind, string path) =>
             path.StartsWith(Root(kind) + "/", StringComparison.Ordinal) && !IsCompanionPath(kind, path);
