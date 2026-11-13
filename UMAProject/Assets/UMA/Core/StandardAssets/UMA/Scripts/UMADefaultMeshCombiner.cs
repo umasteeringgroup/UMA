@@ -347,7 +347,7 @@ namespace UMA
 #endif
                     umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton, umaData);
                 }
-                ApplyClothIfNeeded(null);
+                ApplyClothProperties();
             }
         }
 
@@ -584,7 +584,9 @@ namespace UMA
                 }
 
                 cloth.coefficients = clothSkinning;
-                clothProperties.ApplyValues(cloth);
+                // The renderer asset's cloth settings are optional: without them the
+                // slot's coefficients still drive Unity's default Cloth settings.
+                clothProperties?.ApplyValues(cloth);
             }
         }
 
@@ -642,24 +644,17 @@ namespace UMA
 			}
 		}
 
-        private void ApplyClothIfNeeded(ClothSkinningCoefficient[] clothSkinning)
+        /// <summary>
+        /// Legacy path: UMAMeshData.ApplyDataToUnityMesh has already added a Cloth component
+        /// when the combined slots carry cloth coefficients. As on every other combiner path,
+        /// the coefficients decide whether a renderer has cloth; the renderer asset's cloth
+        /// properties only tune it when present.
+        /// </summary>
+        private void ApplyClothProperties()
         {
+            if (clothProperties == null) return;
             var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
-            if (clothProperties != null)
-            {
-                if (cloth == null) cloth = renderers[currentRendererIndex].gameObject.AddComponent<Cloth>();
-                if (clothSkinning != null && clothSkinning.Length > 0)
-                    cloth.coefficients = clothSkinning;
-                clothProperties.ApplyValues(cloth);
-
-            }
-            else
-            {
-                if (cloth != null)
-                {
-                    UMAUtils.DestroySceneObject(cloth);
-                }
-            }
+            if (cloth != null) clothProperties.ApplyValues(cloth);
         }
 
         protected void RecalculateUV(UMAMeshData umaMesh)

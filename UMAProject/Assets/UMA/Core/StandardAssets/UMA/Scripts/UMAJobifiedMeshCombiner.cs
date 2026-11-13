@@ -672,26 +672,6 @@ namespace UMA
 			}
 		}
 
-        private void ApplyClothIfNeeded(ClothSkinningCoefficient[] clothSkinning)
-        {
-            var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
-            if (clothProperties != null)
-            {
-                if (cloth == null) cloth = renderers[currentRendererIndex].gameObject.AddComponent<Cloth>();
-                if (clothSkinning != null && clothSkinning.Length > 0)
-                    cloth.coefficients = clothSkinning;
-                clothProperties.ApplyValues(cloth);
-
-            }
-            else
-            {
-                if (cloth != null)
-                {
-                    UMAUtils.DestroySceneObject(cloth);
-                }
-            }
-        }
-
         protected void RecalculateUV(UMAMeshData umaMesh)
         {
             int idx = 0;
