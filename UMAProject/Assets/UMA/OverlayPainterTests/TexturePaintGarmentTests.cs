@@ -843,31 +843,6 @@ namespace UMA.TexturePaint.Editor.Tests
                 Assert.That(difference/Math.Max(1,count),Is.LessThan(.012),pair.Key.ToString());
             }
         }
-        [Test]
-        public void CaptureClothingPresetContactSheet()
-        {
-            const int columns=8,cell=128;var sheet=new Texture2D(columns*cell,4*cell,TextureFormat.RGBA32,false,true);
-            try
-            {
-                int index=0;foreach(TexturePaintGarmentPreset preset in Enum.GetValues(typeof(TexturePaintGarmentPreset)))
-                {
-                    using var f=new Fixture(preset);f.settings.garment.normal=true;
-                    var images=f.Render();var pixels=images[TexturePaintChannel.Albedo];var normals=images[TexturePaintChannel.Normal];
-                    for(int y=0;y<cell;y++)for(int x=0;x<cell;x++)
-                    {
-                        Color c=pixels[y*cell+x],n=normals[y*cell+x];float weave=.85f+.15f*Mathf.Sin((x+y)*2.1f)*Mathf.Sin((x-y)*2.7f);
-                        var background=new Color(.11f,.2f,.3f)*weave;
-                        var normal=new Vector3((n.r*2-1)*n.a,(n.g*2-1)*n.a,Mathf.Lerp(1,n.b*2-1,n.a)).normalized;
-                        float light=.6f+.45f*Mathf.Max(0,Vector3.Dot(normal,new Vector3(-.4f,.5f,1).normalized));
-                        Color output=(background*(1-c.a)+new Color(c.r,c.g,c.b)*c.a)*light;output.a=1;
-                        sheet.SetPixel(index%columns*cell+x,(3-index/columns)*cell+y,output);
-                    }
-                    index++;
-                }
-                sheet.Apply();Directory.CreateDirectory("Logs/Garment");File.WriteAllBytes("Logs/Garment/Presets.png",sheet.EncodeToPNG());
-            }
-            finally{Object.DestroyImmediate(sheet);}
-        }
     }
 }
 #endif

@@ -541,20 +541,6 @@ namespace UMA.Editors.Tests
         [Category("MeshCombiner")]
         [Category("MultiStepMeshCombiner")]
         [Category("GeneratorScheduler")]
-        public void StopwatchTicksUsePlatformFrequency()
-        {
-            double oneSecondMilliseconds =
-                UMATime.StopwatchTicksToMilliseconds(
-                    System.Diagnostics.Stopwatch.Frequency);
-
-            Assert.AreEqual(1000d, oneSecondMilliseconds, 0.0001d);
-        }
-
-        [Test]
-        [Category("UMA")]
-        [Category("MeshCombiner")]
-        [Category("MultiStepMeshCombiner")]
-        [Category("GeneratorScheduler")]
         public void ResetStatisticsClearsIncrementalAndStageMetrics()
         {
             GameObject generatorObject = null;

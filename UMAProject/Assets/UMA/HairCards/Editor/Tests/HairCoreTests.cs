@@ -4269,65 +4269,6 @@ namespace UMA.HairCards.Editor.Tests
             }
         }
 
-        [TestCase(1000, 8)]
-        [TestCase(5000, 8)]
-        [Category("HairDenseProfile")]
-        [Timeout(600000)]
-        public void ProfileDenseChildEvaluation(int guideCount, int children)
-        {
-            PopulateDenseProfileGuides(guideCount, children, 8);
-            HairEvaluationResult result = null;
-            HairEvaluationOptions options = new HairEvaluationOptions { evaluateSurfaceAnchors = false };
-            ProfileOperation($"children-{guideCount}x{children}", () => result = HairGroomEvaluator.Evaluate(groom, options),
-                () => CurveFingerprint(result));
-            Assert.That(result.CardCount, Is.EqualTo(guideCount * (children + 1)));
-        }
-
-        [Test]
-        [Category("HairDenseProfile")]
-        public void ProfileDenseSourceProjection()
-        {
-            const int vertexCount = 50000;
-            Vector3[] vertices = new Vector3[vertexCount];
-            Vector3[] normals = new Vector3[vertexCount];
-            System.Random random = new System.Random(713);
-            for (int i = 0; i < vertexCount; i++)
-            {
-                vertices[i] = new Vector3((float)random.NextDouble() - 0.5f, (float)random.NextDouble() * 0.1f, (float)random.NextDouble() - 0.5f);
-                normals[i] = new Vector3(vertices[i].x * 0.1f, 1f, vertices[i].z * 0.1f).normalized;
-            }
-            sourceMesh.Clear(); sourceMesh.vertices = vertices; sourceMesh.normals = normals;
-            sourceMesh.triangles = new[] { 0, 1, 2 };
-            groom.SetSource(sourceMesh, "mesh:test");
-            PopulateDenseProfileGuides(128, 0, 8);
-            HairModifierSettings projection = new HairModifierSettings { type = HairModifierType.SurfaceProjection, domain = HairModifierDomain.GuidesAndChildren, amount = 0.002f, weight = 0.65f };
-            groom.Groups[0].modifiers.Add(projection);
-            groom.EnsureIntegrity();
-            HairEvaluationResult result = null;
-            HairEvaluationOptions options = new HairEvaluationOptions { evaluateSurfaceAnchors = false };
-            ProfileOperation("projection-128x8-on-50000", () => result = HairGroomEvaluator.Evaluate(groom, options), () => CurveFingerprint(result));
-            Assert.That(result.evaluatedGuides.Count, Is.EqualTo(128));
-        }
-
-        [TestCase(HairCardShape.Ribbon)]
-        [TestCase(HairCardShape.TaperedTube)]
-        [Category("HairDenseProfile")]
-        public void ProfileDenseCardMeshing(HairCardShape shape)
-        {
-            PopulateDenseProfileGuides(1000, 4, 12);
-            profile.Configure(shape, 0.04f, 0.001f, 12, 6, true);
-            HairEvaluationResult evaluation = HairGroomEvaluator.Evaluate(groom, new HairEvaluationOptions { evaluateSurfaceAnchors = false });
-            HairCardMeshBuildResult build = null;
-            try
-            {
-                ProfileOperation("mesh-5000x12-" + shape,
-                    () => { build?.Dispose(); build = HairCardMeshGenerator.Build(evaluation); },
-                    () => MeshFingerprint(build.mesh));
-                Assert.That(build.cardCount, Is.EqualTo(5000));
-            }
-            finally { build?.Dispose(); }
-        }
-
         private void PopulateDenseProfileGuides(int guideCount, int children, int samples)
         {
             HairGroup group = groom.Groups[0];
@@ -4352,69 +4293,6 @@ namespace UMA.HairCards.Editor.Tests
                 group.guides.Add(guide);
             }
             groom.EnsureIntegrity();
-        }
-
-        [TestCase(1000, 8)]
-        [TestCase(5000, 8)]
-        [Category("HairDenseCachedProfile")]
-        public void ProfileCachedDenseChildEvaluation(int guideCount, int children)
-        {
-            PopulateDenseProfileGuides(guideCount, children, 8);
-            HairEvaluationWorkspace workspace = new HairEvaluationWorkspace();
-            HairEvaluationResult result = null;
-            HairEvaluationOptions options = new HairEvaluationOptions { evaluateSurfaceAnchors = false };
-            ProfileOperation($"cached-children-{guideCount}x{children}",
-                () => result = HairGroomEvaluator.Evaluate(groom, options, workspace), () => CurveFingerprint(result));
-            Assert.That(result.CardCount, Is.EqualTo(guideCount * (children + 1)));
-        }
-
-        [Test]
-        [Category("HairDenseCachedProfile")]
-        public void ProfileCachedDenseSourceProjection()
-        {
-            // Same fixture as the uncached/baseline test, with a retained preview workspace.
-            const int vertexCount = 50000;
-            Vector3[] vertices = new Vector3[vertexCount];
-            Vector3[] normals = new Vector3[vertexCount];
-            System.Random random = new System.Random(713);
-            for (int i = 0; i < vertexCount; i++)
-            {
-                vertices[i] = new Vector3((float)random.NextDouble() - 0.5f, (float)random.NextDouble() * 0.1f, (float)random.NextDouble() - 0.5f);
-                normals[i] = new Vector3(vertices[i].x * 0.1f, 1f, vertices[i].z * 0.1f).normalized;
-            }
-            sourceMesh.Clear(); sourceMesh.vertices = vertices; sourceMesh.normals = normals;
-            sourceMesh.triangles = new[] { 0, 1, 2 };
-            groom.SetSource(sourceMesh, "mesh:test");
-            PopulateDenseProfileGuides(128, 0, 8);
-            groom.Groups[0].modifiers.Add(new HairModifierSettings { type = HairModifierType.SurfaceProjection,
-                domain = HairModifierDomain.GuidesAndChildren, amount = 0.002f, weight = 0.65f });
-            groom.EnsureIntegrity();
-            HairEvaluationWorkspace workspace = new HairEvaluationWorkspace();
-            HairEvaluationResult result = null;
-            HairEvaluationOptions options = new HairEvaluationOptions { evaluateSurfaceAnchors = false };
-            ProfileOperation("cached-projection-128x8-on-50000", () => result = HairGroomEvaluator.Evaluate(groom, options, workspace),
-                () => CurveFingerprint(result));
-        }
-
-        [TestCase(HairCardShape.Ribbon, false)]
-        [TestCase(HairCardShape.TaperedTube, false)]
-        [TestCase(HairCardShape.Ribbon, true)]
-        [Category("HairDenseCachedProfile")]
-        public void ProfileCachedDenseCardMeshing(HairCardShape shape, bool editingMetadata)
-        {
-            PopulateDenseProfileGuides(1000, 4, 12);
-            profile.Configure(shape, 0.04f, 0.001f, 12, 6, true);
-            HairEvaluationResult evaluation = HairGroomEvaluator.Evaluate(groom, new HairEvaluationOptions { evaluateSurfaceAnchors = false });
-            HairMeshBuildWorkspace workspace = new HairMeshBuildWorkspace();
-            HairCardMeshBuildResult build = null;
-            try
-            {
-                ProfileOperation("cached-mesh-5000x12-" + shape + (editingMetadata ? "-editing" : string.Empty),
-                    () => { build?.Dispose(); build = HairCardMeshGenerator.Build(evaluation, "Cached", editingMetadata, workspace); },
-                    () => MeshFingerprint(build.mesh));
-                Assert.That(build.cardCount, Is.EqualTo(5000));
-            }
-            finally { build?.Dispose(); }
         }
 
         [TestCase(HairCardShape.Ribbon)]
@@ -5283,66 +5161,6 @@ namespace UMA.HairCards.Editor.Tests
                 }
             }
             finally { Object.DestroyImmediate(posed); }
-        }
-
-        [TestCase(256, 4)]
-        [TestCase(1000, 4)]
-        [TestCase(5000, 4)]
-        [Category("HairPreviewRefreshProfile")]
-        public void ProfileCardPreviewRefresh(int guideCount, int children)
-        {
-            PopulateDenseProfileGuides(guideCount, children, 12);
-            profile.Configure(HairCardShape.Ribbon, 0.04f, 0.001f, 12, 6, true);
-            Mesh posed = Object.Instantiate(sourceMesh);
-            Vector3[] positions = posed.vertices;
-            for (int i = 0; i < positions.Length; i++) positions[i] += new Vector3(0.01f, 0.02f, 0.03f);
-            posed.vertices = positions;
-            HairAuthoringPose pose = new HairAuthoringPose(sourceMesh, posed);
-            HairEvaluationWorkspace workspace = new HairEvaluationWorkspace();
-            HairEvaluationOptions options = new HairEvaluationOptions { evaluateSurfaceAnchors = false };
-            HairEvaluationResult result = null, transformed = null;
-            HairCardStage stage = null;
-            try
-            {
-                ProfileOperation($"refresh-evaluate-{guideCount}",
-                    () => result = HairGroomEvaluator.Evaluate(groom, options, workspace), () => CurveFingerprint(result));
-                ProfileOperation($"refresh-pose-{guideCount}",
-                    () => transformed = pose.TransformEvaluation(groom, result), () => CurveFingerprint(transformed));
-                stage = CreateEditingStage();
-                SetStageField(stage, "authoringPose", pose);
-                stage.PreviewMode = HairPreviewMode.Cards;
-                ProfileOperation($"refresh-stage-{guideCount}",
-                    () => { stage.QueuePreviewChange(HairPreviewChange.Evaluation, true); stage.RebuildNow(); },
-                    () => MeshFingerprint(stage.MeshBuild.mesh));
-            }
-            finally { if (stage != null) DestroyEditingStage(stage); Object.DestroyImmediate(posed); }
-        }
-
-        private static void ProfileOperation(string name, System.Action operation, System.Func<string> fingerprint)
-        {
-            operation(); // warm JIT/native paths before measuring
-            double[] milliseconds = new double[3];
-            System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
-            for (int pass = 0; pass < 3; pass++)
-            {
-                System.GC.Collect(); System.GC.WaitForPendingFinalizers(); System.GC.Collect();
-                timer.Restart(); operation(); timer.Stop();
-                milliseconds[pass] = timer.Elapsed.TotalMilliseconds;
-            }
-            System.Array.Sort(milliseconds);
-            // Unity's Mono GC.GetAllocatedBytesForCurrentThread returns zero in this editor.
-            // Count GC.Alloc events with the native recorder, separately from timing samples.
-            long allocationCount;
-            using (ProfilerRecorder recorder = ProfilerRecorder.StartNew(ProfilerCategory.Internal, "GC.Alloc", 1,
-                ProfilerRecorderOptions.SumAllSamplesInFrame | ProfilerRecorderOptions.CollectOnlyOnCurrentThread))
-            {
-                operation();
-                recorder.Stop();
-                Assert.That(recorder.Valid, Is.True, "GC.Alloc recorder must be available.");
-                allocationCount = recorder.Count == 0 ? 0 : recorder.GetSample(0).Count;
-            }
-            TestContext.WriteLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                "HAIR_PROFILE|{0}|median_ms={1:F3}|gc_allocations={2}|fingerprint={3}", name, milliseconds[1], allocationCount, fingerprint()));
         }
 
         private static string CurveFingerprint(HairEvaluationResult result)

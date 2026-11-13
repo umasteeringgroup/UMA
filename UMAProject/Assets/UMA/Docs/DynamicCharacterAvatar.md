@@ -265,7 +265,7 @@ Avatar-definition loads, Undo/Redo, project changes, and marked object edits ref
 
 To investigate remaining overhead, target **Editor** in Unity's CPU Profiler and look for `UMA.DCAInspector.Draw`, `UMA.DCAInspector.RefreshSerializedState`, and `UMA.DCAInspector.RefreshWardrobeMenu`. Compare the same running character with the Inspector visible and hidden, then collapse Character Colors, Live DNA, and Default Wardrobe Recipes individually. Drawing large expanded lists still has a cost; Inspector timing is not player-build rendering performance.
 
-Editor regression tests in `AvatarDefinitionInspectorTests` cover idle refreshes, cache invalidation, missing races, color navigation, and definition loads between Layout/Repaint (including Play mode and independent Inspectors). `InspectorIdleDrawBenchmark` reports CPU time per GUI event for a synthetic avatar; it is not an FPS guarantee for a particular scene.
+Editor regression tests in `AvatarDefinitionInspectorTests` cover idle refreshes, cache invalidation, missing races, color navigation, and definition loads between Layout/Repaint (including Play mode and independent Inspectors).
 
 ### The avatar does not generate in Play mode
 
