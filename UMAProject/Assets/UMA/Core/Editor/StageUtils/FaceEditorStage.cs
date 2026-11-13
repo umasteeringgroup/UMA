@@ -1933,8 +1933,7 @@ namespace UMA
         private void DrawPanel(Rect rect, string title, ref bool collapsed, string prefsKey, Action drawContent)
         {
             // Draw an explicit background: the skin's box texture is too transparent over the scene.
-            float shade = EditorGUIUtility.isProSkin ? 0.18f : 0.76f;
-            EditorGUI.DrawRect(rect, new Color(shade, shade, shade, 0.75f));
+            StageFloatingToolbar.DrawPanelBackground(rect);
 
             Rect headerRect = new Rect(rect.x, rect.y, rect.width, LeftPanelHeaderHeight + 6f);
             Rect buttonRect = new Rect(headerRect.x + 4f, headerRect.y + 3f, 22f, 18f);
@@ -3645,6 +3644,7 @@ namespace UMA
 
             bool wasChanged = false;
             bool wasRecipeChanged = false;
+            bool soloed = false;
             var wearables = thisDCA.GetVisibleWearables();
             SlotData[] slots = thisDCA.umaData.umaRecipe.slotDataList ?? Array.Empty<SlotData>();
 
@@ -3867,12 +3867,18 @@ namespace UMA
                 if (soloRequest != null)
                 {
                     SetSlotsEditable((slot, current) => string.Equals(slot.slotName, soloRequest, StringComparison.Ordinal));
+                    soloed = true;
                 }
             }
 
             if (wasRecipeChanged || wasChanged)
             {
                 RebuildMesh(wasRecipeChanged, true);
+            }
+            if (soloed)
+            {
+                // Show the soloed slot, as Frame Slots does, after any rebuild above has put it on the mesh.
+                ResetCameraToSelectedSlots();
             }
         }
 

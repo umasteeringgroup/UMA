@@ -51,11 +51,11 @@ If the generated character is missing slots, fix the DCA recipe first. The Face 
 
 ## 4. Open the Face Editor Stage
 
-1. In the DCA inspector, open `Utilities`.
-2. Under the Mesh Hide Assets help text, click `Create New Mesh Hide Asset`.
+1. In the DCA inspector, find the **Editing tools** section, just below **Character & race** (in Standard and Advanced view).
+2. Click `Open Face Editor (Mesh Hide Assets)`.
 3. Unity opens the `Mesh Hide Editor` stage.
 
-To edit an existing Mesh Hide Asset or Mesh Hide Asset Collection, drag it onto the DCA inspector drop area labeled `Drag & Drop a MeshModifier, Mesh Hide Asset, or Mesh Hide Collection here to edit`. Dropping a collection opens the same Face Editor Stage with the existing selections loaded.
+To edit an existing Mesh Hide Asset or Mesh Hide Asset Collection, drag it onto the drop area at the bottom of **Editing tools**, labeled `Drag & Drop a MeshModifier, Mesh Hide Asset, or Mesh Hide Collection here to edit`. Dropping a collection opens the same Face Editor Stage with the existing selections loaded.
 
 Older race-baked masks using an asset filename such as `Body_slot_baked_Race` also load onto the corresponding generated `Body_baked_Race` slot. The editor uses that generated slot's mesh for LOD calculations and records its current name when you save. If a target slot is missing, hidden, or incompatible, the **Mesh Hide Assets** panel shows a warning instead of silently loading an empty selection.
 
@@ -194,7 +194,7 @@ You can also add individual per-slot `MeshHideAsset` assets under `Mesh Hide Ass
 2. Rebuild the DCA with the wardrobe item active.
 3. Check the character in A-pose or T-pose first.
 4. Test a few animation poses that commonly expose poke-through.
-5. If the hide is too aggressive or not strong enough, drag the Mesh Hide Asset Collection back onto the DCA Utilities drop area and edit it in the Face Editor Stage.
+5. If the hide is too aggressive or not strong enough, drag the Mesh Hide Asset Collection back onto the drop area at the bottom of the DCA inspector's **Editing tools** section and edit it in the Face Editor Stage.
 
 The Face Editor Stage temporarily ignores existing mesh hides while authoring so you can see and edit the source geometry. Runtime and normal DCA builds apply the Mesh Hide Assets from active recipes.
 

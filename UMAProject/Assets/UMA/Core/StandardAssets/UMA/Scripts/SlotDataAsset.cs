@@ -810,13 +810,17 @@ namespace UMA
         [Tooltip("Where a vertex reads its place along the strand. Vertex Color: the red vertex color, dark at the scalp and white at the tip. ID Map Root: the red channel of the hair material's ID Map, which is white at the scalp. ID Map Tip: the green channel of the ID Map, which is white at the tip. The ID Map is read at the vertex, with the UVs the root and tip colors use.")]
         public HairControlSourceType HairControlSource = HairControlSourceType.VertexColor;
 
-        [Tooltip("Where the movement starts along the strand: 0 is the scalp, 1 the tip. Vertices before this do not move; from here the movement grows to the full amount at the tip.")]
+        [Tooltip("Where the movement starts along the strand: 0 is the scalp, 1 the tip. Vertices before this do not move; the rest of the strand turns about this point.")]
         [Range(0f, 1f)]
         public float HairControlStart = 0.25f;
 
-        [Tooltip("How far a hair tip moves at full sway, in meters.")]
+        [Tooltip("How far a strand turns about the point where its movement starts, at full sway, in degrees. The strand curves into an arc and keeps its length, so longer hair travels further for the same angle.")]
+        [Range(0f, 90f)]
+        public float HairControlAngle = 25f;
+
+        [Tooltip("Length of a strand from the scalp to the tip, in meters. Leave at 0 to have it measured from the slot's mesh, which is right for most hair. Set it when the measured length makes the hair swing as if it were much shorter or longer than it looks.")]
         [Min(0f)]
-        public float HairControlAmount = 0.03f;
+        public float HairControlLength = 0f;
 
 
 

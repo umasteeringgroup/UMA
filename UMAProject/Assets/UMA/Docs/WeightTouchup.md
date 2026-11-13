@@ -9,7 +9,7 @@ The tool edits the source slot asset. Every recipe and character that uses that 
 1. Open a scene containing a built `DynamicCharacterAvatar`.
 2. Put the character in a pose that exposes the deformation problem, or pose it afterwards with **Pose Mode** (see below).
 3. Select the avatar or one of its children in the Hierarchy.
-4. In the Dynamic Character Avatar inspector, open **Utilities > Skinning Weights**.
+4. In the Dynamic Character Avatar inspector, find the **Editing tools** section, just below **Character & race**.
 5. Click **Touchup Weights**.
 
 The character must have a generated `SkinnedMeshRenderer` and at least one visible, weighted, non-utility slot. Work under source control so a saved slot can be restored if the result is unsuitable.

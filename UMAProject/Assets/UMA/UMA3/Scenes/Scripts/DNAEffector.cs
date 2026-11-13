@@ -26,6 +26,11 @@ namespace UMA
 
         public void DNAChanged(float value)
         {
+            // The slider can report a value before Setup has given it a character (a UI rebuild, also in Edit mode).
+            if (dNAEffector == null)
+            {
+                return;
+            }
             dNAEffector.SetDNA(dnaName, value);
         }
     }

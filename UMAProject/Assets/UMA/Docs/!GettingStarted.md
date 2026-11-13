@@ -162,7 +162,7 @@ The Welcome window's **Example Scenes** page lists them too.
 ### The character doesn't appear
 
 1. Check that **Editor Time Generation** is on, or press Play.
-2. Switch to **Advanced View**, open **Advanced Options**, and check that **Build Character Enabled** is on.
+2. Switch to **Advanced View**, open the **Build behaviour** panel, and check that **Build Character Enabled** is on.
 3. Check that the race is listed in the Global Library. If not, rebuild the library (Step 3).
 4. Check that **Generator Prefab** is set in the project settings (Step 2).
 5. Look in the Console for messages about missing slots, overlays or shaders.

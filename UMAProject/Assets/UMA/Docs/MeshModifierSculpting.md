@@ -17,8 +17,8 @@ For the clearest and most reusable result, place the avatar in a neutral pose be
 ## Open the Mesh Modifier Editor
 
 1. Select the GameObject containing the `DynamicCharacterAvatar`.
-2. In the avatar Inspector, find **Utilities > Mesh Modifier**.
-3. Select **Create New Mesh Modifier**.
+2. In the avatar Inspector, find the **Editing tools** section, just below **Character & race** (in Standard and Advanced view).
+3. Select **Open Vertex Editor (Sculpt, Paint, Mesh Modifiers)**.
 4. Unity opens the dedicated Mesh Modifier editing stage and the Mesh Modifiers window.
 5. The editor opens in **Sculpt** mode by default. You can return to it at any time with the **Sculpt** button at the top of the tools panel; the other buttons there are **Vertex Paint**, **Advanced** and **Blendshapes**.
 

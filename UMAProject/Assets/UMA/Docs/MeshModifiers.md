@@ -24,9 +24,8 @@ They are not a replacement for correct modeling and skinning. Fix broad topology
 
 1. Select a built `DynamicCharacterAvatar`.
 2. Enable Editor Time Generation when working outside Play mode.
-3. Open the DCA inspector's Utilities section.
-4. Create a Mesh Modifier or assign an existing asset.
-5. Choose Edit.
+3. In the DCA inspector, find the **Editing tools** section, just below **Character & race**.
+4. Click **Open Vertex Editor (Sculpt, Paint, Mesh Modifiers)** to start a new Mesh Modifier, or drop an existing Mesh Modifier on the drop area at the bottom of the section to edit it.
 
 Build the avatar with every slot you intend to modify. A modifier records slot and vertex identity; topology changes can invalidate the stored selection.
 
@@ -97,7 +96,7 @@ Confirm that the final shader uses the intended vertex color channels. Painting 
 
 The floating toolbar holds the nine brushes (**Paint**, **Erase**, **Smear**, **Blur**, **Smooth**, **Burn**, **Dodge**, **Noise**, **Clear Brush**), the brush shapes (**Circle**, **Square**, **Bitmap**), the brush color swatch used by Paint, and **Clear**, which removes all painting from the editable slots and restores their original colors (Undo brings it back).
 
-The panel's **Brush** section has **Radius (mm)**, **Effect %** and **Affect Alpha**, plus **Brush Bitmap** for the Bitmap shape. Noise adds **Noise Type** (Per Vertex grain, or Smooth patches sized by **Noise Scale**), **Color Noise**, **Noise Amount** and **Same Pattern Each Stroke**. Noise never changes alpha.
+The panel's **Brush** section has **Radius (mm)**, **Effect %** and **Affect Alpha**, plus **Brush Bitmap** for the Bitmap shape. Paint adds **Blend**: **Replace** (the default) paints the brush color, so white lightens and black darkens; **Multiply** tints the color under the brush by the brush color, so it can only darken. Noise adds **Noise Type** (Per Vertex grain, or Smooth patches sized by **Noise Scale**), **Color Noise**, **Noise Amount** and **Same Pattern Each Stroke**. Noise never changes alpha.
 
 Use the `Smooth` brush to soften blocky vertex-color transitions. `Smooth Amount %` controls how strongly a stroke blends colors, while `Smooth Radius (mm)` controls the neighborhood sampled around each affected vertex. Unlike the topology-based `Blur` behavior, `Smooth` can blend across UV seams and nearby disconnected vertices; oppositely facing surfaces are excluded to reduce color bleeding through thin meshes.
 

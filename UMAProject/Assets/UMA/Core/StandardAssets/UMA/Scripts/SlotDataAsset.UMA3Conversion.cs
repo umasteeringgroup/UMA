@@ -89,10 +89,25 @@ namespace UMA
                 return false;
             }
 
+            // Only bones that move vertices can disagree in a way that matters. Weightless bones, such as the "_end"
+            // leaf bones exporters add with blank bind poses, are left out, so the warning only names real problems.
+            bool hasWeights = false;
+            if (boneWeightSums != null)
+            {
+                for (int i = 0; i < boneWeightSums.Length && !hasWeights; i++)
+                {
+                    hasWeights = boneWeightSums[i] > 0f;
+                }
+            }
+
             int mismatchCount = 0;
             float maxMismatch = 0f;
             for (int i = 0; i < candidateCount; i++)
             {
+                if (hasWeights && (i >= boneWeightSums.Length || boneWeightSums[i] <= 0f))
+                {
+                    continue;
+                }
                 if (!TryGetBoneFromRootMatrix(meshData.boneNameHashes[i], rootHash, localByHash, cachedBoneMatrices, out Matrix4x4 boneFromRoot))
                 {
                     continue;

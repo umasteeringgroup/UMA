@@ -380,7 +380,8 @@ namespace UMA.Editors
             public bool hairControlReady;
             public SlotDataAsset.HairControlSourceType hairControlSource;
             public float hairControlStart;
-            public float hairControlAmount;
+            public float hairControlAngle;
+            public float hairControlLength;
 
             public static SlotPreserveData FromSlot(SlotDataAsset slot)
             {
@@ -414,7 +415,8 @@ namespace UMA.Editors
                 data.hairControlReady = slot.HairControlReady;
                 data.hairControlSource = slot.HairControlSource;
                 data.hairControlStart = slot.HairControlStart;
-                data.hairControlAmount = slot.HairControlAmount;
+                data.hairControlAngle = slot.HairControlAngle;
+                data.hairControlLength = slot.HairControlLength;
                 return data;
             }
 
@@ -449,7 +451,8 @@ namespace UMA.Editors
                 slot.HairControlReady = hairControlReady;
                 slot.HairControlSource = hairControlSource;
                 slot.HairControlStart = hairControlStart;
-                slot.HairControlAmount = hairControlAmount;
+                slot.HairControlAngle = hairControlAngle;
+                slot.HairControlLength = hairControlLength;
             }
         }
 

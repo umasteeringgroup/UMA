@@ -241,6 +241,8 @@ namespace UMA
         private enum AutosculptAxis { X, Y, Z }
         private enum VertexPaintTool { Paint, Erase, Smear, Blur, Burn, Dodge, Noise, Clear, Smooth }
         private enum VertexPaintBrushShape { Circle, Square, Bitmap }
+        /// <summary>How the Paint brush combines the brush color with the color under it.</summary>
+        private enum VertexPaintBlend { Replace, Multiply }
 
         private sealed class SculptSlotEditState
         {
@@ -350,6 +352,7 @@ namespace UMA
         [SerializeField] private VertexPaintTool vertexPaintTool = VertexPaintTool.Paint;
         [SerializeField] private VertexPaintBrushShape vertexPaintBrushShape = VertexPaintBrushShape.Circle;
         [SerializeField] private Color vertexPaintBrushColor = new Color(0.8f, 0.25f, 0.2f, 1f);
+        [SerializeField] private VertexPaintBlend vertexPaintBlend = VertexPaintBlend.Replace;
         [SerializeField] private float vertexPaintRadius = 0.05f;
         [SerializeField] private float vertexPaintStrengthPercent = 35f;
         [SerializeField] private SculptFalloff vertexPaintFalloff = SculptFalloff.Smooth;
@@ -6092,6 +6095,7 @@ namespace UMA
                 DestroyImmediate(vertexMesh);
             }
             DestroyVertexPaintBrushCache();
+            DestroyHairRootToTipResources();
             if (vertexColorPreviewMaterial != null)
             {
                 DestroyImmediate(vertexColorPreviewMaterial);
@@ -7939,6 +7943,7 @@ namespace UMA
                 BeginVertexPaintStroke();
             }
 
+            DrawHairRootTipMarks();
             if (currentEvent.type == EventType.Repaint && vertexPaintHoverValid)
             {
                 DrawVertexPaintBrush();
@@ -8418,11 +8423,19 @@ namespace UMA
             switch (vertexPaintTool)
             {
                 case VertexPaintTool.Paint:
-                    target = new Color(
-                        current.r * vertexPaintBrushColor.r,
-                        current.g * vertexPaintBrushColor.g,
-                        current.b * vertexPaintBrushColor.b,
-                        vertexPaintAffectAlpha ? current.a * vertexPaintBrushColor.a : current.a);
+                    // Replace lays the brush color down (white lightens, black darkens); Multiply tints the color
+                    // under the brush, so it can only darken.
+                    target = vertexPaintBlend == VertexPaintBlend.Multiply
+                        ? new Color(
+                            current.r * vertexPaintBrushColor.r,
+                            current.g * vertexPaintBrushColor.g,
+                            current.b * vertexPaintBrushColor.b,
+                            vertexPaintAffectAlpha ? current.a * vertexPaintBrushColor.a : current.a)
+                        : new Color(
+                            vertexPaintBrushColor.r,
+                            vertexPaintBrushColor.g,
+                            vertexPaintBrushColor.b,
+                            vertexPaintAffectAlpha ? vertexPaintBrushColor.a : current.a);
                     break;
                 case VertexPaintTool.Erase:
                     target = new Color(1f, 1f, 1f, vertexPaintAffectAlpha ? 1f : current.a);
@@ -8999,6 +9012,7 @@ namespace UMA
             {
                 return;
             }
+            DrawHairRootTipMarks();
             Color saveColor = Handles.color;
             Mesh mesh = GetVertexMesh();
             Material mat = GetVertexMaterial(Color.red);
@@ -9317,12 +9331,31 @@ namespace UMA
             return false;
         }
 
+        private static GUIStyle leftPanelStyle;
+
+        /// <summary>The help box's spacing without its texture, so the panel background shows as it is.</summary>
+        private static GUIStyle LeftPanelStyle
+        {
+            get
+            {
+                if (leftPanelStyle == null)
+                {
+                    leftPanelStyle = new GUIStyle(EditorStyles.helpBox);
+                    leftPanelStyle.normal.background = null;
+                    leftPanelStyle.normal.scaledBackgrounds = Array.Empty<Texture2D>();
+                }
+                return leftPanelStyle;
+            }
+        }
+
         private void DrawGUIWindows(SceneView sceneView)
         {
             Handles.BeginGUI();
             EnsureGUIStyles();
             DrawStageCloseButton(sceneView);
-            GUILayout.BeginArea(leftPanelRect, EditorStyles.helpBox);
+            // The same background as the Face Editor's panels: the help box alone is too transparent over the scene.
+            StageFloatingToolbar.DrawPanelBackground(leftPanelRect);
+            GUILayout.BeginArea(leftPanelRect, LeftPanelStyle);
             {
                 if (slotWeightEditorMode)
                 {
@@ -9637,7 +9670,7 @@ namespace UMA
 
         private static readonly VertexPaintToolInfo[] VertexPaintToolInfos =
         {
-            new VertexPaintToolInfo(VertexPaintTool.Paint, "Paint", "Paint", "Multiply the current color by the brush color."),
+            new VertexPaintToolInfo(VertexPaintTool.Paint, "Paint", "Paint", "Paint the brush color. With Blend set to Multiply, tint the current color by it instead."),
             new VertexPaintToolInfo(VertexPaintTool.Erase, "Erase", "Erase", "Move painted colors gradually back toward white."),
             new VertexPaintToolInfo(VertexPaintTool.Smear, "Smear", "Smear", "Pull nearby color in the direction of the stroke."),
             new VertexPaintToolInfo(VertexPaintTool.Blur, "Blur", "Blur", "Average the colors of connected neighboring vertices."),
@@ -9723,7 +9756,7 @@ namespace UMA
             EditorGUI.BeginChangeCheck();
             Color color = EditorGUI.ColorField(
                 swatch,
-                new GUIContent(string.Empty, "Brush color used by Paint. Paint multiplies the existing vertex color by it."),
+                new GUIContent(string.Empty, "Brush color used by Paint. Paint lays it down, or with Blend set to Multiply tints the existing vertex color by it."),
                 vertexPaintBrushColor,
                 false,
                 true,
@@ -10515,6 +10548,11 @@ namespace UMA
                 RebuildMesh(true);
                 RepaintLinkedEditors();
             }
+            if (soloRequest != null)
+            {
+                // Show the soloed slot: frame its bounds, after any rebuild above has put it on the mesh.
+                FrameAllEditableSlots();
+            }
             if (wasChanged || wasRecipeChanged)
             {
                 cachedVisibilityHeight = -1f;
@@ -10701,9 +10739,14 @@ namespace UMA
             showOriginalMaterials = EditorGUILayout.Toggle(new GUIContent("Original Materials", "Display the materials from the generated UMA renderer instead of the pastel editor materials."), showOriginalMaterials);
             if (EditorGUI.EndChangeCheck())
             {
+                if (showOriginalMaterials)
+                {
+                    showVertexColorsView = false;
+                }
                 ApplyVertexDisplayOptions();
                 SceneView.RepaintAll();
             }
+            DrawVertexColorsViewOption();
             DrawWireframeOption();
 
             if (sceneToolMode == SceneToolMode.Sculpt)
@@ -10926,6 +10969,8 @@ namespace UMA
                 }
             }
             GUIHelper.EndVerticalPadded(5);
+
+            DrawHairRootToTipSection();
 
             if (DrawSectionFoldout(ref showAdvancedDisplayOptions, "Display"))
             {
@@ -11293,6 +11338,14 @@ namespace UMA
                 vertexPaintRadius = StageBrushSize.RadiusSlider(
                     new GUIContent("Radius (mm)", "Brush radius on the model, in millimeters."),
                     vertexPaintRadius);
+                if (vertexPaintTool == VertexPaintTool.Paint)
+                {
+                    vertexPaintBlend = (VertexPaintBlend)EditorGUILayout.EnumPopup(
+                        new GUIContent(
+                            "Blend",
+                            "Replace: paint the brush color; white lightens and black darkens.\nMultiply: tint the color under the brush by the brush color; it can only darken, and white changes nothing."),
+                        vertexPaintBlend);
+                }
                 if (vertexPaintTool != VertexPaintTool.Clear)
                 {
                     GUIContent effectLabel = vertexPaintTool == VertexPaintTool.Smooth
@@ -11410,6 +11463,8 @@ namespace UMA
                     }
                 }
             }
+
+            DrawHairRootToTipSection();
 
             if (DrawSectionFoldout(ref showVertexPaintSaveOptions, "More Save Options"))
             {
@@ -15442,9 +15497,9 @@ namespace UMA
                         : GetOriginalOrPastelMaterial(i);
                 }
             }
-            else if (IsVertexPaintModeEnabled && !showOriginalMaterials)
+            else if (IsVertexColorViewActive)
             {
-                Material previewMaterial = GetVertexColorPreviewMaterial();
+                Material previewMaterial = showVertexColorsView ? GetVertexColorViewMaterial() : GetVertexColorPreviewMaterial();
                 int materialCount = BakedMesh != null ? Mathf.Max(1, BakedMesh.subMeshCount) : 1;
                 applied = new Material[materialCount];
                 for (int i = 0; i < applied.Length; i++)

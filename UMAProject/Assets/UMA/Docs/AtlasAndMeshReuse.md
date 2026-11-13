@@ -19,7 +19,7 @@ An atlas is the generated texture that combines the character's overlays for a m
 5. Build or rebuild the character. For spawned characters, configure the prefab before generation begins.
 6. Build a second character from the same race, wardrobe, DNA, colors, and output settings. Keep the first character alive while the second builds so its shared output remains available.
 
-In **Advanced View**, the equivalent controls are under **Advanced Options > Cache and Reuse (NPCs)**:
+In **Advanced View**, the equivalent controls are in the **Performance & sharing** panel:
 
 | Standard View | Advanced View | C# field |
 | --- | --- | --- |
@@ -112,7 +112,7 @@ Runtime code that edits source mesh arrays or writes texture contents must also 
 
 ## Check that reuse is helping
 
-Start with two identical characters before measuring a large randomized crowd. In the DCA's **Advanced Options > Cache and Reuse (NPCs)**, use **Log Cache Diagnostics** to inspect hits, misses, pending joins, and published outputs. The status line explains cache bypasses. Reference counts include build and resource ownership, so they are not a character count.
+Start with two identical characters before measuring a large randomized crowd. In the DCA's **Advanced View**, use **Log Cache Diagnostics** in the **Diagnostics** panel to inspect hits, misses, pending joins, and published outputs. The status line explains cache bypasses. Reference counts include build and resource ownership, so they are not a character count.
 
 For an OFF/ON comparison, open the **U3-Generating Random Characters** sample, select **GeneratorParms**, and enter Play mode. Its **UMA Resource Usage Monitor** can restart the crowd with reuse off or on, replay the same initial random sequence, and compare generation timings, unique resources, and memory avoided through live sharing. Wait for **Run complete** before comparing results. See [the monitor walkthrough](GeneratedResourceReuse.md#compare-random-crowd-runs-in-the-inspector) for measurement limits.
 

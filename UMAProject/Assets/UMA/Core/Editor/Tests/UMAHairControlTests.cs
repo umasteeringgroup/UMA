@@ -12,7 +12,7 @@ namespace UMA.Editors.Tests
     {
         private const string HairShaderSource =
             "Shader \"Hidden/UMA/Tests/HairControl\" { Properties { _HairCenterWS (\"Center\", Vector) = (0,0,0,0) " +
-            "_Other (\"Other\", Float) = 0 } SubShader { Pass { } } }";
+            "_ID_Map (\"ID Map\", 2D) = \"white\" {} _Other (\"Other\", Float) = 0 } SubShader { Pass { } } }";
         private const string PlainShaderSource =
             "Shader \"Hidden/UMA/Tests/HairControlPlain\" { Properties { _Other (\"Other\", Float) = 0 } SubShader { Pass { } } }";
 
@@ -35,6 +35,21 @@ namespace UMA.Editors.Tests
             hairShader = Track(ShaderUtil.CreateShaderAsset(HairShaderSource, false));
             plainShader = Track(ShaderUtil.CreateShaderAsset(PlainShaderSource, false));
             hairMaterial = Track(new Material(hairShader));
+            // An ID Map as the hair shader expects it: red is white at the scalp (v = 0), green is white at the tip.
+            var idMap = Track(new Texture2D(4, 64, TextureFormat.RGBA32, false, true));
+            idMap.wrapMode = TextureWrapMode.Clamp;
+            idMap.filterMode = FilterMode.Point;
+            for (int y = 0; y < 64; y++)
+            {
+                float v = (y + 0.5f) / 64f;
+                for (int x = 0; x < 4; x++)
+                {
+                    idMap.SetPixel(x, y, new Color(1f - v, v, 0f, 1f));
+                }
+            }
+            idMap.Apply();
+            hairMaterial.SetTexture("_ID_Map", idMap);
+            UMAHairControl.ForgetStrandMeasurements();
             plainMaterial = Track(new Material(plainShader));
             block = new MaterialPropertyBlock();
         }
@@ -229,14 +244,108 @@ namespace UMA.Editors.Tests
             return umaData;
         }
 
-        private SlotDataAsset CreateSlot(string slotName, bool ready, float start = 0.25f, float amount = 0.03f)
+        private SlotDataAsset CreateSlot(string slotName, bool ready, float start = 0.25f, float angle = 12f)
         {
             var slot = Track(ScriptableObject.CreateInstance<SlotDataAsset>());
             slot.name = slotName;
+            slot.meshData = CreateCardMeshData();
+            slot.subMeshIndex = 0;
             slot.HairControlReady = ready;
             slot.HairControlStart = start;
-            slot.HairControlAmount = amount;
+            slot.HairControlAngle = angle;
             return slot;
+        }
+
+        private const float CardLength = 0.12f;
+
+        // One hair card, 4 cm wide and 12 cm long, running along +Y of the mesh. Its vertex color and its UV (v)
+        // run from 0 at the scalp end to 1 at the tip. With this normal and tangent the bitangent points to -Y, so
+        // the strand runs along minus the bitangent.
+        private static UMAMeshData CreateCardMeshData()
+        {
+            const int rows = 5;
+            var data = new UMAMeshData();
+            data.vertices = new Vector3[rows * 2];
+            data.normals = new Vector3[rows * 2];
+            data.tangents = new Vector4[rows * 2];
+            data.colors32 = new Color32[rows * 2];
+            data.uv = new Vector2[rows * 2];
+            var triangles = new List<int>();
+            for (int r = 0; r < rows; r++)
+            {
+                float t = r / (float)(rows - 1);
+                for (int s = 0; s < 2; s++)
+                {
+                    int i = r * 2 + s;
+                    data.vertices[i] = new Vector3(s == 0 ? -0.02f : 0.02f, t * CardLength, 0f);
+                    data.normals[i] = new Vector3(0f, 0f, -1f);
+                    data.tangents[i] = new Vector4(1f, 0f, 0f, 1f);
+                    byte shade = (byte)Mathf.RoundToInt(t * 255f);
+                    data.colors32[i] = new Color32(shade, shade, shade, 255);
+                    data.uv[i] = new Vector2(s, t);
+                }
+                if (r < rows - 1)
+                {
+                    int a = r * 2;
+                    triangles.AddRange(new[] { a, a + 2, a + 1, a + 1, a + 2, a + 3 });
+                }
+            }
+            data.vertexCount = rows * 2;
+            data.subMeshCount = 1;
+            data.submeshes = new[] { new SubMeshTriangles(triangles.ToArray()) };
+            return data;
+        }
+
+        private Vector4 SwayShapeOn(Renderer renderer, int materialIndex)
+        {
+            renderer.GetPropertyBlock(block, materialIndex);
+            return block.GetVector(UMAHairControl.HairSwayShapeProperty);
+        }
+
+        [Test]
+        public void StrandsAreMeasuredFromTheSlotMesh()
+        {
+            SlotDataAsset slot = CreateSlot("Hair", true);
+            Assert.IsTrue(UMAHairControl.TryMeasureStrands(slot, null, out UMAHairControl.StrandInfo fromColors));
+            Assert.That(fromColors.length, Is.EqualTo(CardLength).Within(1e-4f), "the vertex color goes from 0 to 1 over the card's length");
+            Assert.That(fromColors.frameDirection.x, Is.EqualTo(0f).Within(1e-4f));
+            Assert.That(fromColors.frameDirection.y, Is.EqualTo(-1f).Within(1e-4f), "scalp to tip is minus the bitangent on this card");
+            Assert.That(fromColors.agreement, Is.GreaterThan(0.999f));
+
+            // The same card read through the ID Map, with either channel, gives the same strand.
+            foreach (var source in new[] { SlotDataAsset.HairControlSourceType.IDMapRoot, SlotDataAsset.HairControlSourceType.IDMapTip })
+            {
+                slot.HairControlSource = source;
+                Assert.IsTrue(UMAHairControl.TryMeasureStrands(slot, hairMaterial.GetTexture("_ID_Map"), out UMAHairControl.StrandInfo fromMap), source.ToString());
+                Assert.That(fromMap.length, Is.EqualTo(CardLength).Within(CardLength * 0.05f), source.ToString());
+                Assert.That(fromMap.frameDirection.y, Is.EqualTo(-1f).Within(1e-3f), source.ToString());
+            }
+
+            // A slot whose colors do not change has no strands to measure.
+            slot.HairControlSource = SlotDataAsset.HairControlSourceType.VertexColor;
+            for (int i = 0; i < slot.meshData.colors32.Length; i++)
+            {
+                slot.meshData.colors32[i] = new Color32(255, 255, 255, 255);
+            }
+            Assert.IsFalse(UMAHairControl.TryMeasureStrands(slot, null, out _));
+        }
+
+        [Test]
+        public void ASlotWhoseStrandsCannotBeMeasuredDoesNotSwayAndWarns()
+        {
+            Rig rig = CreateRig(Vector3.zero);
+            SlotDataAsset slot = CreateSlot("FlatColorHair", true);
+            for (int i = 0; i < slot.meshData.colors32.Length; i++)
+            {
+                slot.meshData.colors32[i] = new Color32(255, 255, 255, 255);
+            }
+            AddUmaData(rig, slot);
+            LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("'FlatColorHair' does not sway.*could not be measured"));
+            var control = AddSteadyControl(rig);
+            control.wind = new Vector3(1f, 0f, 0f);
+            Simulate(control, 0.5f);
+            Assert.AreEqual(Vector4.zero, SwayParamsOn(rig.renderer, 1));
+            Assert.AreEqual(Vector3.zero, control.CurrentSway);
         }
 
         private Vector4 SwayParamsOn(Renderer renderer, int materialIndex)
@@ -276,7 +385,7 @@ namespace UMA.Editors.Tests
             Assert.IsFalse(slot.HairControlReady);
             Assert.AreEqual(SlotDataAsset.HairControlSourceType.VertexColor, slot.HairControlSource);
             Assert.That(slot.HairControlStart, Is.InRange(0f, 1f));
-            Assert.That(slot.HairControlAmount, Is.GreaterThan(0f));
+            Assert.That(slot.HairControlAngle, Is.GreaterThan(0f));
         }
 
         [Test]
@@ -284,9 +393,9 @@ namespace UMA.Editors.Tests
         {
             Rig ready = CreateRig(Vector3.zero);
             Rig notReady = CreateRig(new Vector3(3f, 0f, 0f));
-            SlotDataAsset readySlot = CreateSlot("ReadyHair", true, 0.4f, 0.05f);
+            SlotDataAsset readySlot = CreateSlot("ReadyHair", true, 0.4f, 20f);
             AddUmaData(ready, readySlot);
-            AddUmaData(notReady, CreateSlot("PlainHair", false, 0.4f, 0.05f));
+            AddUmaData(notReady, CreateSlot("PlainHair", false, 0.4f, 20f));
             var a = AddSteadyControl(ready);
             var b = AddSteadyControl(notReady);
             a.ripple = 0.2f;
@@ -295,19 +404,35 @@ namespace UMA.Editors.Tests
 
             Vector4 settings = SwayParamsOn(ready.renderer, 1);
             Assert.That(settings.x, Is.EqualTo(0.4f).Within(1e-6f), "x = vertex color where movement starts");
-            Assert.That(settings.y, Is.EqualTo(0.05f).Within(1e-6f), "y = meters a white vertex moves at full sway");
+            Assert.That(settings.y, Is.EqualTo(20f * Mathf.Deg2Rad).Within(1e-6f), "y = angle a strand turns at full sway, in radians");
             Assert.That(settings.z, Is.EqualTo(0.2f).Within(1e-6f), "z = ripple strength");
             Assert.That(settings.w, Is.EqualTo(0f), "w = 0: the place along the strand comes from the vertex color");
+
+            // What was measured from the slot's mesh goes along: the strand length and its direction in the tangent frame.
+            Vector4 shape = SwayShapeOn(ready.renderer, 1);
+            Assert.That(shape.x, Is.EqualTo(CardLength).Within(1e-4f), "x = length of a strand");
+            Assert.That(shape.y, Is.EqualTo(0f).Within(1e-4f), "y = part of the tangent");
+            Assert.That(shape.z, Is.EqualTo(-1f).Within(1e-4f), "z = part of the bitangent");
+            Assert.AreEqual(Vector4.zero, SwayShapeOn(notReady.renderer, 1));
+
+            // The length is in world units, so it grows with the head bone; a length set on the slot replaces the measured one.
+            ready.head.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+            a.UpdateHair(0f);
+            Assert.That(SwayShapeOn(ready.renderer, 1).x, Is.EqualTo(CardLength * 1.5f).Within(1e-4f));
+            readySlot.HairControlLength = 0.3f;
+            a.UpdateHair(0f);
+            Assert.That(SwayShapeOn(ready.renderer, 1).x, Is.EqualTo(0.45f).Within(1e-4f));
+            readySlot.HairControlLength = 0f;
             Assert.AreEqual(Vector4.zero, SwayParamsOn(notReady.renderer, 1), "a slot that is not ready does not move");
             Assert.AreEqual(1f, CenterOn(notReady.renderer, 1).w, "the volume center is still written for it");
 
             // The slot is read every update, so tuning it while the game runs shows at once.
-            readySlot.HairControlAmount = 0.02f;
+            readySlot.HairControlAngle = 5f;
             readySlot.HairControlStart = 0.1f;
             a.UpdateHair(0f);
             settings = SwayParamsOn(ready.renderer, 1);
             Assert.That(settings.x, Is.EqualTo(0.1f).Within(1e-6f));
-            Assert.That(settings.y, Is.EqualTo(0.02f).Within(1e-6f));
+            Assert.That(settings.y, Is.EqualTo(5f * Mathf.Deg2Rad).Within(1e-6f));
 
             // The numbers the shader tells the sources apart by.
             readySlot.HairControlSource = SlotDataAsset.HairControlSourceType.IDMapRoot;
@@ -329,7 +454,7 @@ namespace UMA.Editors.Tests
             var secondPass = Track(new Material(hairShader));
             Rig rig = CreateRig(Vector3.zero);
             rig.renderer.sharedMaterials = new[] { secondPass, hairMaterial };
-            UMAData umaData = AddUmaData(rig, CreateSlot("Hair", true, 0.3f, 0.04f));
+            UMAData umaData = AddUmaData(rig, CreateSlot("Hair", true, 0.3f, 15f));
             umaData.generatedMaterials.materials[0].secondPassMaterial = secondPass;
             var control = AddSteadyControl(rig);
             control.wind = new Vector3(1f, 0f, 0f);
@@ -337,7 +462,7 @@ namespace UMA.Editors.Tests
 
             Vector4 first = SwayParamsOn(rig.renderer, 1);
             Assert.That(first.x, Is.EqualTo(0.3f).Within(1e-6f));
-            Assert.That(first.y, Is.EqualTo(0.04f).Within(1e-6f));
+            Assert.That(first.y, Is.EqualTo(15f * Mathf.Deg2Rad).Within(1e-6f));
             Assert.AreEqual(first, SwayParamsOn(rig.renderer, 0), "both passes must move alike, or they come apart");
             Assert.AreEqual(SwayOn(rig.renderer, 1), SwayOn(rig.renderer, 0));
             Assert.That(((Vector3)SwayOn(rig.renderer, 0)).magnitude, Is.GreaterThan(0.1f));
@@ -444,6 +569,57 @@ namespace UMA.Editors.Tests
             }
         }
 #endif
+
+        private Vector4 SpinOn(Renderer renderer, int materialIndex)
+        {
+            renderer.GetPropertyBlock(block, materialIndex);
+            return block.GetVector(UMAHairControl.HairSpinProperty);
+        }
+
+        [Test]
+        public void TurningTheCharacterSwingsTheHairTheOtherWayAndStopsWhenItStops()
+        {
+            Rig rig = CreateRig(Vector3.zero);
+            AddUmaData(rig, CreateSlot("Hair", true));
+            var control = AddSteadyControl(rig);
+            control.turnSway = 0.15f;
+            control.movementSway = 0f; // only the turn
+            control.UpdateHair(0f);
+
+            // Half a circle a second around world up.
+            Simulate(control, 2f, step => rig.avatar.transform.Rotate(0f, 180f * step, 0f, Space.World));
+            Vector3 spin = control.CurrentSpin;
+            Assert.That(spin.y, Is.EqualTo(-0.15f * Mathf.PI).Within(0.03f), "the lag is the turn rate times Turn Sway, the other way");
+            Assert.That(Mathf.Abs(spin.x) + Mathf.Abs(spin.z), Is.LessThan(0.01f));
+            Assert.That(Vector3.Distance(SpinOn(rig.renderer, 1), spin), Is.LessThan(1e-6f), "the shader gets the lag in world space");
+
+            Simulate(control, 4f);
+            Assert.That(control.CurrentSpin.magnitude, Is.LessThan(0.01f), "at rest again after the turn stops");
+        }
+
+        [Test]
+        public void SettingTheCharacterToANewRotationIsNotATurnOfTheHair()
+        {
+            Rig rig = CreateRig(Vector3.zero);
+            AddUmaData(rig, CreateSlot("Hair", true));
+            var control = AddSteadyControl(rig);
+            control.movementSway = 0f;
+            Simulate(control, 0.5f);
+
+            rig.avatar.transform.Rotate(0f, 170f, 0f, Space.World);
+            Simulate(control, 0.5f);
+            Assert.That(control.CurrentSpin.magnitude, Is.LessThan(1e-4f));
+        }
+
+        [Test]
+        public void ASlotThatIsNotReadyGetsNoTurn()
+        {
+            Rig rig = CreateRig(Vector3.zero);
+            AddUmaData(rig, CreateSlot("PlainHair", false));
+            var control = AddSteadyControl(rig);
+            Simulate(control, 1f, step => rig.avatar.transform.Rotate(0f, 180f * step, 0f, Space.World));
+            Assert.AreEqual(Vector4.zero, SpinOn(rig.renderer, 1));
+        }
 
         [Test]
         public void MovingTheCharacterToAnotherPlaceIsNotAMovementOfTheHair()

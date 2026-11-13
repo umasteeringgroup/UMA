@@ -53,6 +53,16 @@ namespace UMA
 
         public static float Width => ButtonSize + (Padding * 2f);
 
+        /// <summary>
+        /// The background of a stage's side panels. The skin's box texture is too transparent over the scene, so
+        /// every stage draws this under its panels, which keeps the Vertex Editor and Face Editor alike.
+        /// </summary>
+        public static void DrawPanelBackground(Rect rect)
+        {
+            float shade = EditorGUIUtility.isProSkin ? 0.18f : 0.76f;
+            EditorGUI.DrawRect(rect, new Color(shade, shade, shade, 0.75f));
+        }
+
         public static Color IconTint => EditorGUIUtility.isProSkin
             ? new Color(0.86f, 0.86f, 0.86f)
             : new Color(0.15f, 0.15f, 0.15f);
