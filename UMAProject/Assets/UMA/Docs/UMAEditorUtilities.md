@@ -10,7 +10,14 @@ See [UMA Generator Setup](UMAGeneratorSetup.md) for hair-material backup/restora
 
 ## Shared Color Tables
 
-Select a Shared Color Table asset to paste color settings copied from an avatar. In Advanced View, **Copy All Checked** and **Paste/Update** transfer named sets of colors, updating matching names and creating missing entries. See [Shared Colors in Dynamic Character Avatar](DynamicCharacterAvatar.md) for the single-color and bulk workflows.
+A Shared Color Table is a reusable palette, such as hair or eye colors. Its inspector has a Standard and an Advanced View.
+
+- **Table and channels:** **Table Name** is the shared color the table applies to, and **Also Applies To** lists other shared color names that can use the same palette (names are case-sensitive). **Channel Count** must match the materials and overlays that use the table. **Default Color** marks one palette entry as the table's default (`SharedColorTable.DefaultColor`); **None** leaves it unset. The mark follows the color when colors are reordered and is cleared when that color is deleted. It is stored for tools and scripts; the shipped character code does not apply it yet.
+- **Shared colors:** **Add Color** and **Duplicate Selected** add entries; expand an entry to edit its channels and material parameters. **Base Color** marks the principal tint, and the Utilities section sets or clears it on every entry at once.
+- **Pasting from an avatar:** copy a color with **Copy** in the avatar editor, then use **Paste Values...** to replace an existing color's settings while keeping its name, or **Paste as New** to add it as a new entry.
+- **Advanced View** adds a donor material that discovers the shader's color, float, integer and range properties, preview materials that receive the selected color, and **Copy All Checked** / **Paste/Update** to transfer named sets of colors between tables, updating matching names and adding missing ones.
+
+A race lists the tables it offers in its **Color choices** section; see [RaceData](RaceData.md#color-choices). See [Shared Colors in Dynamic Character Avatar](DynamicCharacterAvatar.md) for the single-color and bulk workflows. To add or retune one shader parameter on every color of one or more tables, select them and use [Manage Color Parameters](AssetMenuBatchUtilities.md#manage-color-parameters).
 
 ## Batch Asset Inspection
 

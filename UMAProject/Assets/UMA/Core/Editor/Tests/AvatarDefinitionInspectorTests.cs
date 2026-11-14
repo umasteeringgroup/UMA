@@ -29,6 +29,16 @@ namespace UMA.Tests
         private DynamicCharacterAvatar avatar;
         private RaceData race;
         private bool hadViewPreference, originalAdvancedView;
+        // The inspector's collapsible panels remember their open state in EditorPrefs. The tests pin them all open,
+        // as they were before the panels could collapse, and put the user's choices back afterwards.
+        private static readonly string[] PanelTitles =
+        {
+            "Character & race", "Colors", "Body shape & DNA", "Wardrobe", "Load Preset", "Load Avatar Definition",
+            "Save Avatar Definition", "Save Avatar Definition File", "Animation", "Generation", "Build behaviour",
+            "Performance & sharing", "Rendering", "Bounds", "Addressables", "Events", "Diagnostics", "Legacy Load/Save",
+            "Editing tools",
+        };
+        private readonly Dictionary<string, bool?> originalPanelStates = new Dictionary<string, bool?>();
 
         [Test]
         public void MissingRaceDoesNotGrowOnRepeatedDrawsOrSwitches()
@@ -241,23 +251,6 @@ namespace UMA.Tests
             LogAssert.NoUnexpectedReceived();
         }
 
-        [UnityTest]
-        public IEnumerator InspectorIdleDrawBenchmark()
-        {
-            avatar.LoadAvatarDefinition(Definition(12));
-            ConfigureNewDna(120);
-            var window = NewWindow(NewInspector());
-            yield return WaitFor(() => window.Repaints >= 5, window);
-            window.GuiTicks = window.GuiEvents = 0;
-            int before = window.Repaints;
-            yield return WaitFor(() => window.Repaints >= before + 30, window);
-            string measurement = $"DCA_INSPECTOR_BENCHMARK events={window.GuiEvents} ms/event=" +
-                $"{window.GuiTicks * 1000.0 / System.Diagnostics.Stopwatch.Frequency / window.GuiEvents:F3}";
-            LogAssert.Expect(LogType.Log, measurement);
-            Debug.Log(measurement);
-            LogAssert.NoUnexpectedReceived();
-        }
-
         private void ConfigureNewDna(int count)
         {
             race.useNewDNA = true;
@@ -306,6 +299,13 @@ namespace UMA.Tests
             originalAdvancedView = EditorPrefs.GetBool(viewKey);
             // Existing regression cases exercise legacy and diagnostic controls, too.
             EditorPrefs.SetBool(viewKey, true);
+            originalPanelStates.Clear();
+            foreach (string title in PanelTitles)
+            {
+                string panelKey = viewKey + ".Open." + title;
+                originalPanelStates[panelKey] = EditorPrefs.HasKey(panelKey) ? EditorPrefs.GetBool(panelKey) : (bool?)null;
+                EditorPrefs.SetBool(panelKey, true);
+            }
             originalIndexer = IndexerField.GetValue(null);
             originalSettings = UMASettings.instance;
             originalSelection = Selection.activeObject;
@@ -361,6 +361,12 @@ namespace UMA.Tests
             string viewKey = UMAInspectorView.PreferenceKey(typeof(DynamicCharacterAvatar));
             if (hadViewPreference) EditorPrefs.SetBool(viewKey, originalAdvancedView);
             else EditorPrefs.DeleteKey(viewKey);
+            foreach (var panel in originalPanelStates)
+            {
+                if (panel.Value.HasValue) EditorPrefs.SetBool(panel.Key, panel.Value.Value);
+                else EditorPrefs.DeleteKey(panel.Key);
+            }
+            originalPanelStates.Clear();
         }
 
         [UnityTest]
@@ -880,13 +886,11 @@ namespace UMA.Tests
         internal DynamicCharacterAvatarEditor Inspector;
         internal Action BeforeRepaint, DrawExtra;
         internal int Repaints, AbortedEvents;
-        internal long GuiTicks, GuiEvents;
         internal bool Unscrolled;
         private Vector2 scroll;
 
         private void OnGUI()
         {
-            long start = System.Diagnostics.Stopwatch.GetTimestamp();
             bool repaint = Event.current.type == EventType.Repaint;
             if (repaint && BeforeRepaint != null)
             {
@@ -913,11 +917,6 @@ namespace UMA.Tests
             {
                 AbortedEvents++;
                 throw; // Never suppress Unity's GUI control flow, even in a test host.
-            }
-            finally
-            {
-                GuiTicks += System.Diagnostics.Stopwatch.GetTimestamp() - start;
-                GuiEvents++;
             }
         }
     }

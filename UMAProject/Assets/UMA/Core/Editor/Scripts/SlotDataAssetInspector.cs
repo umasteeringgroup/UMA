@@ -38,7 +38,7 @@ namespace UMA.Editors
         }
 
         static string[] RegularSlotFields = new string[] { "slotName", "slotGroup", "RecipePrepared", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "smooshOffset", "smooshExpand", "Welds" };
-        static string[] WildcardSlotFields = new string[] { "slotName", "slotGroup", "RecipePrepared", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds" };
+        static string[] WildcardSlotFields = new string[] { "slotName", "slotGroup", "RecipePrepared", "CharacterBegun", "SlotAtlassed", "SlotProcessed", "SlotBeginProcessing", "DNAApplied", "CharacterCompleted", "_slotDNALegacy", "_oldSlotName", "tags", "isWildCardSlot", "Races", "_rendererAsset", "maxLOD", "useAtlasOverlay", "overlayScale", "_slotDNA", "meshData", "subMeshIndex", "Welds", "HairControlReady", "HairControlSource", "HairControlStart", "HairControlAngle", "HairControlLength" };
         private static readonly string[] TriplanarUvChannelLabels = new string[] { "0 (uv)", "1 (uv2)", "2 (uv3)", "3 (uv4)" };
         SerializedProperty RecipePrepared;
         SerializedProperty CharacterBegun;
@@ -70,6 +70,7 @@ namespace UMA.Editors
         bool CopyBoneWeights;
         bool clearNormals;
         bool clearTangents;
+        bool stripBlendShapePrefix;
         UMA.SlotDataAsset.BlendshapeCopyMode blendshapeCopyMode;
         UMA.SlotDataAsset.NormalCopyMode normalCopyMode;
         bool AverageNormals;
@@ -1116,6 +1117,7 @@ namespace UMA.Editors
                 clearNormals = EditorGUILayout.ToggleLeft("Force Clear Normals", clearNormals);
                 clearTangents = EditorGUILayout.ToggleLeft("Force Clear Tangents", clearTangents);
                 GUILayout.EndHorizontal();
+                stripBlendShapePrefix = EditorGUILayout.ToggleLeft(new GUIContent("Strip Blendshape Prefix","Removes the part of each blendshape name up to and including its first dot when the slot is updated from a dropped mesh. \"Head.BigNose\" becomes \"BigNose\". Tick this when the slot was built with the same option in Slot Builder."), stripBlendShapePrefix);
                 UpdateSlotDropAreaGUI(updateDropArea);
 
                 GUILayout.Space(10);
@@ -2640,7 +2642,7 @@ namespace UMA.Editors
 
             string existingRootBone = !UMAMeshData.IsNullOrEmptyMeshData(s.meshData) ? s.meshData.RootBoneName : string.Empty;
 
-            UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, null, seamsMesh, existingRootBone, true, clearNormals, clearTangents);
+            UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, null, seamsMesh, existingRootBone, true, clearNormals, clearTangents, stripBlendShapePrefix);
             string path = AssetDatabase.GetAssetPath(target.GetEntityId());
             AssetDatabase.ImportAsset(path);
             UMAUpdateProcessor.UpdateSlot(s);

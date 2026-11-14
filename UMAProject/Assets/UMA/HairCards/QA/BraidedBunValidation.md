@@ -31,7 +31,7 @@ Scalp clearance is 0.6 mm with no root embedding. Gather additionally conforms c
 - Bun volume/tuck follow a shared Gather parent; the editable braid spline follows the Bun transform. Evaluation does not modify serialized helper geometry.
 - Property rendering is exercised at 360 px and 900 px. Setup actions are Undo/Redo tested. Growth navigation opens the actual linked map. Procedural sources explain why authored-guide sculpting does not drive their population.
 
-The IMGUI workflow remains within Hair Nodes, Hair Properties and existing scene handles. No extra EditorWindow was added. Select a Gather ring for position/orientation, endpoint radii and spacing; select its modifier for root/arrival bends, length behavior, offsets and masks. Select the Bun helper for volume/tuck placement and the Braid spline to move or reshape its surrounding plait. Mirrored duplication is a tree action rather than extra properties navigation.
+The IMGUI workflow remains within the Groom Outliner, Hair Properties and existing scene handles. No extra EditorWindow was added. Select a Gather ring for position/orientation, endpoint radii and spacing; select its modifier for root/arrival bends, length behavior, offsets and masks. Select the Bun helper for volume/tuck placement and the Braid spline to move or reshape its surrounding plait. Mirrored duplication is an outliner right-click action rather than extra properties navigation.
 
 ## Performance
 

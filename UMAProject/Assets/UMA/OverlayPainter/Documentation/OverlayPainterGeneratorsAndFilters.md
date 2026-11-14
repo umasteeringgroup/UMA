@@ -38,7 +38,7 @@ selection: knee wear, armpit sweat and cuff dirt can reuse one bone-envelope pro
 ## The essential mental model
 
 The plugins described in this guide live on **Plugin layers**. Native garment and hem/seam generators
-use Path or Projection layers; see [Placed clothing details and seams](#placed-clothing-details-and-seams). Click **+ Plugin**, choose the plugin in the layer
+use Path or Projection layers; see [Placed clothing details and seams](#placed-clothing-details-and-seams). Click **Add Layer > Plugin**, choose the plugin in the layer
 properties, set its controls, and click **Generate**. The completed result is cached as ordinary layer
 content. It remains visible, saves with the project, exports normally, and can use layer opacity,
 per-channel blending, a layer mask, groups, and layer effects.
@@ -149,7 +149,7 @@ sample only their Sprite rectangle, even when stored in an atlas.
 
 ## Placed clothing details and seams
 
-Use **+ Projection > Garment** for individual garment features or **+ Path > Garment** for details
+Use **Add Layer > Projection > Garments** for individual garment features or **Add Layer > Path > Garments** for details
 following a curve. The six families cover wrinkles/tension folds, denim wash and wear, pockets/panels,
 zippers/fasteners, distressing/repairs, and labels/prints/embroidered patches, with 32 construction
 presets. Paths add 16 **Hems & Seams** presets, for 48 path constructions; projections offer 32.
@@ -158,7 +158,7 @@ Properties. Only the selected construction's controls appear. These generate mat
 channels directly through the native placement system.
 Relief presets use Height (Normal Control) by default so RNM combines their bump with the existing
 fabric normal; direct Normal output is optional. Wear-only presets add no bump by default.
-**+ Path > Garment > Hems & Seams** adds constructions with roping and up to eight customizable
+**Add Layer > Path > Garments > Hems & Seams** adds constructions with roping and up to eight customizable
 stitch rows. Existing hem/seam layers are recognized in the same selector. Switching construction
 keeps the path's placement, width, fades, and assigned sources, and supports Undo/Redo.
 
@@ -260,7 +260,7 @@ Cloth Texture builds the actual weave and material response. It is different fro
 adds loose fibers, pilling, and frayed edges over an existing cloth surface. A strong fabric stack
 usually places Cloth Texture first and a restrained Fabric Fuzz layer above it.
 
-For pants that already have their color and quilt/seam details, choose **+ Plugin > Fabric >
+For pants that already have their color and quilt/seam details, choose **Add Layer > Plugin > Fabric >
 Surface Detail (Keep Color)**. In Properties, choose **Fabric Weave > Weave** (for example Twill,
 Denim, or Cotton / Plain), set **Thread Repeats**, then click **Generate**. This starts with Albedo
 disabled, roughness at 0.82, and subtle weave height. Its Normal Control channel uses Overlay blending
@@ -353,7 +353,7 @@ important scale control. Do not judge it only in the 2D texture: a weave that lo
 100% zoom may be the size of rope on the character.
 
 Use **Thread Aspect** to correct stretched UVs or create deliberately elongated construction.
-**Fabric Rotation** aligns the physical weave independently from stripes and motifs. **Weave
+**Weave Rotation** aligns the physical weave independently from stripes and motifs. **Weave
 Definition** controls over-under separation; **Thread Roundness** changes the crown profile; and
 **Thread Irregularity** breaks sterile computer-perfect spacing. Natural cloth usually benefits from
 some irregularity, but too much makes threads look melted or tangled.
@@ -509,7 +509,7 @@ Control is usually cheaper and more stable.
 
 ### Atlas Scatter
 
-Choose **+ Plugin > Fabric > Atlas Scatter**, or set **Active Mode** to **Atlas Scatter** at the
+Choose **Add Layer > Plugin > Fabric > Atlas Scatter**, or set **Active Mode** to **Atlas Scatter** at the
 top of an existing textile layer's parameters. This mode scatters freestanding stamps. For atlas
 fabric inside quilted panels, keep **Active Mode = Quilt** and use **Atlas Fabric** instead:
 
@@ -999,7 +999,7 @@ set to zero independently, leaving a hair-only alpha overlay.
 1. Generate Stubble Maker on a Plugin layer above the existing skin.
 2. Inspect channel thumbnails and confirm empty areas remain transparent rather than skin-colored.
 3. Refine the beard or scalp boundary with the Plugin layer's mask if needed.
-4. Choose **Export Textures & UMA Assets...** and **Runtime Overlay (Transparent)**.
+4. Choose **File > Export...** and **Runtime Overlay (Transparent)**.
 5. Enter an Export Identifier and export. Overlay Painter excludes the reconstructed base, unions
    authored channel alpha into the grayscale coverage texture, and assigns it to the new
    `OverlayDataAsset.alphaMask`.
@@ -1046,7 +1046,7 @@ For a ribbon-guided scar:
    channel if it was only being used to visualize the guide; keep the Path layer itself enabled.
    Draw the guide over the Custom target's black background. A Path layer gives editable points, tangents, widths,
    2D/3D placement, and ribbon controls.
-4. Add **Skin — Scar, Wound & Stretch Marks** with **+ Plugin** above the Path. In
+4. Add **Skin — Scar, Wound & Stretch Marks** with **Add Layer > Plugin** above the Path. In
    **Scar Placement & Ribbon Guide**, set **Guide Source** to **Custom Ribbon Channel**.
 5. Set **Scar Width (px)** and **Guide Threshold**, then Generate.
 6. Edit the guide below and Regenerate whenever the shape changes.

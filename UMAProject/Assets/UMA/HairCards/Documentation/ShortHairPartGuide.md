@@ -103,10 +103,10 @@ and an outward bend that eases back into the original sweep near the tip. The
 mask fades to zero outside the front region. It does not move roots or expand
 the Growth / Density footprint.
 
-### Find the controls in the tree
+### Find the controls in the Groom Outliner
 
 Expand a group's **Generate Hair → Natural crown cards / Natural side cards**.
-Select a modifier to show only its properties. Toggle its **Active** checkbox to
+Select a modifier to show only its properties. Toggle its **On** checkbox to
 compare it against the incoming result; changes are non-destructive and undoable.
 
 | Modifier | What to adjust |
@@ -125,8 +125,8 @@ To reshape the forelock region, expand **Optional Maps** and select
 **Forelock — soft front mask**. Paint it just like another texture-backed map.
 It is a *modifier mask*, not a growth map: white receives full extra length/bend;
 black keeps the natural style. On either forelock modifier, expand **Where this
-modifier applies** to inspect its assigned mask, and use **Show Mask** in the
-tree to see the affected strands. Both modifiers deliberately share the same map.
+modifier applies** to inspect its assigned mask, and use **Show Mask** in
+Hair Properties to see the affected strands. Both modifiers deliberately share the same map.
 
 ### Strand-aligned 2D Noise
 
@@ -202,7 +202,7 @@ lighting, and sync the fringe after editing the first-pass material directly.
 2. Author relatively few guides to establish the silhouette and part. Direct crown
    roots up and back, side roots backward/downward, and rear roots toward the nape.
    Add guides where direction changes sharply, rather than using density to fix flow.
-3. On each group's node, choose **Short Hair Part Preset…**. The confirmation is a
+3. Select each group's **Generate Hair** and choose the **Short Hair Part…** preset in Hair Properties. The confirmation is a
    popup. It replaces generation settings but preserves guides, maps, sculpt passes,
    assigned textures and materials. Undo restores settings. This is a generation
    preset, not automatic head recognition or an automatic haircut of arbitrary guides.
@@ -210,7 +210,7 @@ lighting, and sync the fringe after editing the first-pass material directly.
    up one group, not a groom-wide budget. Existing groom-wide LOD overrides are
    preserved: enable **Use profile sampling** on LOD0 in Geometry & Vertex Colors
    to use the new five-point profiles, or explicitly set the LOD override to five.
-5. Select **Materials & UVs**, then **Use UMA Short Hair Strips…** in the tree actions
+5. Select **Materials & UVs**, then **Use UMA Short Hair Strips…** in Hair Properties
    when using HairAtlasDiffuse_New or a matching layout. The action adds/selects
    three short UV sets without deleting existing sets. Roots use the top of each set.
    An assigned atlas is preserved by the preset; do not use these coordinates with

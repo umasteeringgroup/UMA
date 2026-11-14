@@ -15,6 +15,12 @@ namespace UMA
         private List<UMAData.GeneratedMaterial> generated = new List<UMAData.GeneratedMaterial>();
         [SerializeField, HideInInspector] private List<UnityEngine.Object> privateResources = new List<UnityEngine.Object>();
         [SerializeField, HideInInspector] private string originalOwner;
+        // What this renderer's own, unshared mesh was built from; see TryKeepPrivateMesh. Not serialized, so a
+        // script reload or a copy of the renderer starts without it and simply rebuilds.
+        private Mesh privateMesh;
+        private UMAResourceReuse.MeshRequest privateMeshRequest;
+        private UMAResourceReuse.MeshBinding privateMeshBinding;
+        private ulong privateMeshGeometry;
         private void OnEnable()
         {
             var renderer = GetComponent<SkinnedMeshRenderer>();
@@ -91,6 +97,42 @@ namespace UMA
             privateResources.RemoveAll(value => value == null);
             if (!privateResources.Contains(resource)) privateResources.Add(resource);
         }
+
+        // Ownership moves to the new GeneratedMaterial (and eventually its renderer or
+        // cache lease). Retiring the previous renderer must not destroy that texture.
+        internal static void DetachPrivateTexture(UMAData data, Texture texture)
+        {
+            var renderers = data.GetRenderers();
+            if (renderers == null) return;
+            foreach (var renderer in renderers)
+                if (renderer != null && renderer.TryGetComponent<UMAResourceLeaseOwner>(out var owner))
+                    owner.privateResources.RemoveAll(resource => resource == texture);
+        }
+        /// <summary>
+        /// Called when this renderer is retired while the avatar keeps its current
+        /// generated materials (for example a mesh-only rebuild that replaces the
+        /// renderer object). Those surfaces belong to the avatar again: stop
+        /// releasing their cache references and forget the private resources they
+        /// still use, so destroying this renderer cannot destroy them.
+        /// FinalizeSurfaces adopts them into the replacement renderer.
+        /// </summary>
+        internal void ReturnSurfacesTo(UMAData data)
+        {
+            var current = data != null ? data.generatedMaterials?.materials : null;
+            if (current == null || current.Count == 0) return;
+            var inUse = new HashSet<UnityEngine.Object>();
+            foreach (var gm in current)
+            {
+                if (gm == null) continue;
+                if (gm.material != null) inUse.Add(gm.material);
+                if (gm.secondPassMaterial != null) inUse.Add(gm.secondPassMaterial);
+                if (gm.resultingAtlasList != null)
+                    foreach (var texture in gm.resultingAtlasList)
+                        if (texture != null) inUse.Add(texture);
+            }
+            privateResources.RemoveAll(resource => resource == null || inUse.Contains(resource));
+            generated.RemoveAll(gm => current.Contains(gm));
+        }
         internal void AdoptPrivateStaticResources(UMAData.GeneratedMaterial material)
         {
             if (material.umaMaterial != null && material.umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
@@ -120,6 +162,58 @@ namespace UMA
             mesh?.Dispose();
             mesh = value;
         }
+        /// <summary>
+        /// Records the inputs a renderer's own mesh was just built from. Only for meshes that are never shared:
+        /// with Recalculate Normals the normals are written into the mesh for this avatar's blendshape weights.
+        /// </summary>
+        internal static void RememberPrivateMesh(SkinnedMeshRenderer renderer, UMAResourceReuse.MeshRequest request,
+            UMAResourceReuse.MeshBinding binding)
+        {
+#if UMA_BURSTCOMPILE
+            if (renderer == null || request == null || binding == null) return;
+            Mesh mesh = renderer.sharedMesh;
+            if (mesh == null || !mesh.isReadable || IsSharedMesh(renderer)) { ForgetPrivateMesh(renderer); return; }
+            var owner = Get(renderer);
+            owner.privateMesh = mesh;
+            owner.privateMeshRequest = request;
+            owner.privateMeshBinding = binding;
+            owner.privateMeshGeometry = UMARendererNormals.HashGeometry(mesh);
+#endif
+        }
+
+        /// <summary>
+        /// True when the renderer still holds the mesh recorded by <see cref="RememberPrivateMesh"/>, a new build
+        /// would get exactly the same inputs, and nothing has written to the mesh's geometry since. The mesh can
+        /// then be kept instead of being combined again. Normals and tangents are left out of the comparison:
+        /// they are recalculated into the mesh after every build that changes what they depend on.
+        /// </summary>
+        internal static bool TryKeepPrivateMesh(SkinnedMeshRenderer renderer, UMAResourceReuse.MeshRequest request,
+            out UMAResourceReuse.MeshBinding binding)
+        {
+            binding = null;
+#if UMA_BURSTCOMPILE
+            if (renderer == null || request == null || !renderer.TryGetComponent<UMAResourceLeaseOwner>(out var owner) ||
+                owner.privateMeshRequest == null || owner.privateMesh == null) return false;
+            Mesh mesh = renderer.sharedMesh;
+            if (mesh != owner.privateMesh || !mesh.isReadable || IsSharedMesh(renderer)) return false;
+            if (!owner.privateMeshRequest.Matches(request)) return false;
+            if (UMARendererNormals.HashGeometry(mesh) != owner.privateMeshGeometry) return false;
+            binding = owner.privateMeshBinding;
+            return true;
+#else
+            return false;
+#endif
+        }
+
+        /// <summary>Call when a renderer's mesh has been given new geometry.</summary>
+        internal static void ForgetPrivateMesh(SkinnedMeshRenderer renderer)
+        {
+            if (renderer == null || !renderer.TryGetComponent<UMAResourceLeaseOwner>(out var owner)) return;
+            owner.privateMesh = null;
+            owner.privateMeshRequest = null;
+            owner.privateMeshBinding = null;
+        }
+
         public static bool IsSharedMesh(SkinnedMeshRenderer renderer) => renderer != null &&
             renderer.TryGetComponent<UMAResourceLeaseOwner>(out var owner) && owner.mesh != null && owner.mesh.IsReady && owner.mesh.Resource == renderer.sharedMesh;
 

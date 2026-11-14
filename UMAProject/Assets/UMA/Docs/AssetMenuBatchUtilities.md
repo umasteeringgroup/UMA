@@ -53,6 +53,21 @@ Only channel zero receives the selected texture; additional material channels ar
 
 Existing expected overlay or recipe filenames cause that texture to be skipped rather than overwritten.
 
+## Manage Color Parameters
+
+Select one or more Shared Color Table assets and choose `Assets > UMA > Manage Color Parameters`. The window adds a shader parameter to every color in those tables, or updates it where a color already has one. Use it when a shader gains a parameter, or to retune one parameter across a whole palette, so no color is left with an old value or none at all.
+
+1. Check the tables. **Add Table** and **Add Selected** add more; **Remove** drops one.
+2. Set **Material** to a material whose shader has the parameter. The window remembers it for this project (in `UserSettings`, so it is not shared through version control). **Show Hidden Parameters** also lists parameters the shader hides from the material inspector.
+3. Choose the **Parameter**. Float, Range, Int, Color and Vector parameters are listed with their type.
+4. Choose where the **New Value** comes from:
+   - **Fixed Value**: the same value on every color. **From Material** copies the material's current value.
+   - **Existing Parameter x Multiplier**: each color's own value of the **Source Parameter**, times **Multiplier**. The source is usually the parameter itself; for example `_SpecularMultiplier` x 1.2 raises every color's highlight by a fifth. A color is multiplied in red, green and blue; its alpha is kept. Float and Int parameters can feed each other; a Color or Vector needs a source of the same type.
+5. **If a Color Lacks It** decides what a color without the source parameter gets: **Use Material Value x Multiplier** (the value it showed until now, since it came from the material), **Use Fixed Value** (not multiplied), or **Skip the Color**.
+6. Check the **Preview**, which lists every color's current and new value and why a color is skipped, then press **Apply**.
+
+Apply can be undone with **Edit > Undo**. It replaces every entry of the parameter on a color with a single one, leaves the color's other parameters alone, and saves only the tables that changed. Color values are stored as the tables store them, in gamma space, so a multiplier scales the value you see in the color picker.
+
 ## Create UMAMaterial from Material
 
 Select one Unity `Material` and choose `Assets > UMA > Create UMAMaterial from Material`.

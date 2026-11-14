@@ -11,15 +11,65 @@ A separate, opt-in skin shader for Unity 6.3 / URP 17.3 and newer. The original 
 
 Alternatively, start with a matching Material/UMAMaterial pair in `Examples`:
 
-- **Natural:** balanced, restrained skin and oil highlights.
-- **Matte:** broader, quieter highlights for dry skin.
-- **Dewy:** stronger, narrower surface-oil highlights. This is not a metallic or clear-plastic coating.
+- **Natural:** balanced, restrained skin and oil highlights. Uses [Realistic Skin SSS](#realistic-skin-sss); its UMAMaterial shares the `UMA3_SkinRealisticSSS_Natural` material.
+- **Matte:** broader, quieter highlights for dry skin. Uses [Realistic Skin SSS](#realistic-skin-sss).
+- **Dewy:** stronger, narrower surface-oil highlights. This is not a metallic or clear-plastic coating. Uses Realistic Skin.
+
+To compare the two shaders on one look, change the **Shader** of a copied example material; both read the same properties.
 
 The example materials are **atlas templates**. UMA supplies the actual character textures when building its atlas; they are not pre-baked face textures. The sample pore detail uses the existing `SkinDetail_HDRPStyle` texture.
 
+## Realistic Skin SSS
+
+`UMA/URP/Realistic Skin SSS` (`UMA3SkinRealisticSSS.shader`) is a second, higher quality version of this shader with subsurface scattering. It reads the same textures and every property of `UMA/URP/Realistic Skin`, so it can replace it on an existing material.
+
+To use it, do one of these:
+
+- Change the **Shader** of an existing Realistic Skin material to **UMA/URP/Realistic Skin SSS**. All inputs keep their values.
+- Select a UMA3 URP skin Material or UMAMaterial and choose **Assets → UMA → Skin → Create Realistic SSS URP Copy**.
+- Start from `Examples/UMA3_SkinRealisticSSS_Natural` (Material and UMAMaterial), or from the Natural or Matte example, which use this shader.
+
+What it adds over Realistic Skin:
+
+- **Diffusion from a measured profile.** Diffuse light uses the normalized Burley diffusion profile (the one HDRP uses), integrated in advance over curved surfaces and stored in a lookup texture. Each color channel has its own scattering distance, so red travels furthest. On small curved features (nostrils, lips, ear rims, fingers) light wraps past the terminator; on broad areas it stays close to plain shading, as on real skin.
+- **Wrinkles soften in diffuse light, not in reflections.** Each color channel reads the normal map with a footprint as wide as its scattering, measured in millimeters on the surface. Fine lines blur and turn slightly red in diffuse light while highlights keep full detail.
+- **Red shadow edges.** Inside a shadow's soft edge, red reaches further into the dark than green and blue.
+- **Transmission that respects what is in the way.** The thickness of the body between a light and the surface is measured in that light's shadow map (directional, spot and point lights). Ears and other thin parts glow when lit from behind, also with shadows enabled, and stay dark when something thick blocks the light. Realistic Skin loses its backlighting when the light casts shadows and lets it through the whole head when it does not.
+- **Full GGX reflections** for both lobes with Smith visibility and Schlick Fresnel, an environment term fitted to GGX (no bright plastic rim at grazing angles), horizon and occlusion-based reflection occlusion.
+- **Colored occlusion.** Creases darken red less than blue, as light bouncing inside them picks up the skin's color.
+
+Additional controls:
+
+| Control | Effect |
+|---|---|
+| **Curvature Response** | Scales how strongly surface curvature widens diffusion. 0 leaves only Broad Diffusion |
+| **Wrinkle Softening in Diffuse Lighting** | Scales the softening of the normal map in diffuse light. 0 keeps wrinkles crisp |
+| **Shadow Edge Scattering** | Red bleed inside shadow edges. 0 gives ordinary shadows |
+| **Occlusion Color Bleed** | 0 gives neutral gray occlusion |
+| **Minimum Thickness in Millimeters** | Transmission never treats a part as thinner than this. Raise it to dim and redden backlit ears |
+| **View** | Adds Curvature, Transmission, Diffuse Light, Reflection, Diffuse Normal and Thickness |
+
+Existing controls that mean something more specific here:
+
+- **Scattering Radius in Millimeters** is the distance that holds about three quarters of the scattered light, for the brightest channel of **Scattering Color**. The color sets how far each channel travels relative to the others; it does not tint the skin. The defaults (2.5 mm, color 1 / 0.38 / 0.22) give profile distances of about 0.76 / 0.29 / 0.17 mm for red / green / blue.
+- **Scattering Strength** blends between plain shading (0) and full scattering (1). The example uses 1.
+- **Backlight Transmission Strength**: 0.25 is the physically scaled amount; higher values exaggerate.
+- **Backlight Focus** brightens transmission when looking toward the light.
+- **Broad Diffusion** adds the same softening everywhere, independent of curvature.
+
+The lookup texture `UMA3SkinScatterLUT.exr` belongs to the shader (it is assigned in the shader's import settings, not on materials). **UMA → Build → Rebuild Skin Scatter Lookup Texture** recomputes it. If it is missing, the shader falls back to wrap lighting.
+
+Limits of this version:
+
+- Thickness for transmission is only as fine as the light's shadow map. With the main light, close-ups use the nearest cascade and read ears and fingers well; at a distance, or with low shadow resolution, thin parts read thicker or thinner than they are. Lights without shadows use an estimate from surface curvature instead, which lights rims and edges but not the flat part of an ear.
+- Diffusion is still computed per pixel. Light does not blur between neighboring pixels as it does in HDRP's screen-space pass, so a hard shadow edge cast across flat skin gets its red edge from the shadow's own soft edge, not from a true blur.
+- Cost per pixel: three more normal-map reads than Realistic Skin, and per light three lookup reads (six inside a shadow edge). With transmission enabled, nine shadow-map reads for the main light and five for each additional light that casts shadows. Set **Backlight Transmission Strength** to 0 to skip the shadow-map reads.
+
 ## Release notes
 
-For **3.1f5 / 3.1.5**, the changes since 3.1f3 are the material-wide Metallic control described below and the expanded 0–2 Tint Protection Strength range. The existing realistic-skin lighting model predates this update. See the [release changelog](../../../CHANGELOG.md#shading-content-and-documentation) for versioned details.
+For **3.1f6 / 3.1.6**, the changes since 3.1f5 are the new [Realistic Skin SSS](#realistic-skin-sss) shader and its lookup texture, the Natural and Matte examples moving to it, and corrected UMA 3 skin tint masks, so the face, scalp, neck, shoulders and hips no longer show a seam under a dark Skin Tint. See the [3.1f6 changelog](../../../CHANGELOG.md#shading-content-and-documentation).
+
+For **3.1f5 / 3.1.5**, the changes since 3.1f3 were the material-wide Metallic control described below and the expanded 0–2 Tint Protection Strength range. The Realistic Skin lighting model itself predates both releases. See the [3.1f5 changelog](../../../CHANGELOG.md#shading-content-and-documentation-1).
 
 ## What changed
 
@@ -90,5 +140,7 @@ Skin is one-sided. Use actual shell geometry for exposed interiors rather than d
 ## Validation
 
 The accompanying `UMARealisticSkinTests` checks the original input contract, non-destructive copying, all three example UMAMaterial channel layouts, and GPU compilation of forward/clustered/shadow/lightmap/probe-volume/instancing variants and all seven passes. Run this fixture with a graphics device, **not `-nographics`**.
+
+`UMARealisticSkinSSSTests` covers the SSS shader: every Realistic Skin input exists with the same type and default, switching a material's shader keeps its inputs, the lookup texture's import settings and shader binding, the lookup values (plain shading without scattering, energy conservation with it), the example assets, and the same pass and variant compilation.
 
 Development validation also renders the standard Human Female 3.0 and Human Male 3.0 with the same textures and lighting for the original, Natural, Matte, and Dewy materials. Lighting probes check unlit darkness, main/additional lights, and received shadows in Forward, Forward+, and Deferred.

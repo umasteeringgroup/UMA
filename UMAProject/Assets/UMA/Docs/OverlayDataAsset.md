@@ -66,6 +66,12 @@ The slot and overlay must use compatible UMA Materials. If they do not, the over
 
 See [UMA Material](UMAMaterial.md).
 
+## Shaded Preview
+
+The Inspector's preview pane (**Shaded overlay**) draws the overlay's textures on a cube with the assigned UMA Material's own Unity material, and its second pass if it has one, so you see the overlay shaded as the shader will shade it rather than as flat textures. Drag in the preview to turn the cube; **X +90** and **Y +90** turn it a quarter turn and **Reset** returns to the starting view.
+
+When the preview cannot show something, it lists why: for example, no UMA Material or Unity material is assigned, a texture channel names a property the shader does not have, or a keyword is not one of the shader's local keywords. Fix those messages before blaming the textures. The preview is a check of the overlay on its own; judge the final result on a built character, where atlasing, other overlays and shared colors also apply.
+
 ## Texture Channels
 
 The texture list follows the UMA Material's channel order. For example, a skin material might define:

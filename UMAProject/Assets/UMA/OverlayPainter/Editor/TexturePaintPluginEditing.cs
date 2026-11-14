@@ -17,13 +17,21 @@ namespace UMA.TexturePaint.Editor
         {
             if (set == null) return;
             var menu = new GenericMenu();
+            AddPluginLayerMenu(menu, set, string.Empty);
+            menu.ShowAsContext();
+        }
+
+        /// <summary>Adds the plugin layer choices to a menu, under <paramref name="prefix"/> (for example "Plugin/").</summary>
+        private void AddPluginLayerMenu(GenericMenu menu, TextureSet set, string prefix)
+        {
+            if (set == null) return;
             var plugins = controller?.Plugins;
             var cloth = plugins?.FindCommand("com.uma.texturepaint.cloth-texture");
             if (cloth != null)
             {
-                menu.AddItem(new GUIContent("Fabric/Surface Detail (Keep Color)"), false,
+                menu.AddItem(new GUIContent(prefix + "Fabric/Surface Detail (Keep Color)"), false,
                     () => AddPluginLayer(set, cloth, true));
-                menu.AddItem(new GUIContent("Fabric/Cloth Texture (Color and Weave)"), false,
+                menu.AddItem(new GUIContent(prefix + "Fabric/Cloth Texture (Color and Weave)"), false,
                     () => AddPluginLayer(set, cloth));
             }
             var textile = plugins?.FindCommand("com.uma.texturepaint.textile-surface");
@@ -33,7 +41,7 @@ namespace UMA.TexturePaint.Editor
                 for (int i = 0; i < modes.Length; i++)
                 {
                     int mode = i;
-                    menu.AddItem(new GUIContent("Fabric/" + modes[i]), false,
+                    menu.AddItem(new GUIContent(prefix + "Fabric/" + modes[i]), false,
                         () => AddPluginLayer(set, textile, textileMode: mode));
                 }
             }
@@ -45,12 +53,11 @@ namespace UMA.TexturePaint.Editor
                     if ((plugin.Descriptor.supportedTargets & TexturePaintPluginTarget.LayerContent) == 0) continue;
                     var selected = plugin;
                     string category = plugin is ITexturePaintGeneratorV2 ? "Generators/" : "Filters/";
-                    menu.AddItem(new GUIContent(category + plugin.Descriptor.displayName), false,
+                    menu.AddItem(new GUIContent(prefix + category + plugin.Descriptor.displayName), false,
                         () => AddPluginLayer(set, selected));
                 }
-            menu.AddSeparator(string.Empty);
-            menu.AddItem(new GUIContent("Empty Plugin Layer"), false, () => AddPluginLayer(set));
-            menu.ShowAsContext();
+            menu.AddSeparator(prefix);
+            menu.AddItem(new GUIContent(prefix + "Empty Plugin Layer"), false, () => AddPluginLayer(set));
         }
 
         internal static void ConfigureFabricSurfaceDetail(TexturePaintLayer layer,

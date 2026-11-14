@@ -895,6 +895,85 @@ namespace UMA
             }
         }
 
+		[NonSerialized] private UMASkeletonTemplates.Bone[] templateBones;
+		[NonSerialized] private Transform[] templateTransforms;
+
+		/// <summary>
+		/// Creates every bone of a sorted, merged slot bone list in one step when this skeleton holds nothing
+		/// but its root bone yet, by instantiating a kept copy of the same hierarchy (see
+		/// <see cref="UMASkeletonTemplates"/>). The result is what <see cref="EnsureBone"/> for each entry followed
+		/// by <see cref="EnsureBoneHierarchy"/> gives.
+		/// </summary>
+		/// <returns>False when nothing was done; the caller then adds the bones one by one.</returns>
+		internal bool TryEnsureBonesFromTemplate(UMATransform[] transforms, int count)
+		{
+			// Subclasses create and track their bones differently.
+			if (GetType() != typeof(UMASkeleton) || transforms == null || count < UMASkeletonTemplates.MinimumBones)
+			{
+				return false;
+			}
+
+			if (boneHashData.Count != 1 || !boneHashData.TryGetValue(rootBoneHash, out BoneData root) || root == null || root.boneTransform == null)
+			{
+				return false;
+			}
+
+			if (templateBones == null || templateBones.Length < count)
+			{
+				templateBones = new UMASkeletonTemplates.Bone[count];
+				templateTransforms = new Transform[count];
+			}
+
+			int newCount = 0;
+			for (int i = 0; i < count; i++)
+			{
+				UMATransform transform = transforms[i];
+				if (transform == null)
+				{
+					return false;
+				}
+				if (transform.hash == rootBoneHash)
+				{
+					// Already there; EnsureBone would skip it too.
+					continue;
+				}
+				templateBones[newCount++] = new UMASkeletonTemplates.Bone
+				{
+					hash = transform.hash, parent = transform.parent, name = transform.name,
+					position = transform.position, rotation = transform.rotation, scale = transform.scale
+				};
+			}
+
+			if (!UMASkeletonTemplates.TryCreate(templateBones, newCount, rootBoneHash, root.boneTransform, templateTransforms))
+			{
+				return false;
+			}
+
+			int created = 0;
+			for (int i = 0; i < count; i++)
+			{
+				UMATransform transform = transforms[i];
+				if (transform.hash == rootBoneHash)
+				{
+					continue;
+				}
+				BoneData newBone = new BoneData()
+				{
+					accessedFrame = frame,
+					parentBoneNameHash = transform.parent,
+					boneNameHash = transform.hash,
+					boneTransform = templateTransforms[created],
+					umaTransform = transform.Duplicate(),
+				};
+				templateTransforms[created++] = null;
+				boneHashData.Add(transform.hash, newBone);
+#if UNITY_EDITOR
+				boneHashDataBackup.Add(newBone);
+#endif
+			}
+			return true;
+		}
+
 		/// <summary>
 		/// Ensures all bones are properly initialized and parented.
 		/// </summary>

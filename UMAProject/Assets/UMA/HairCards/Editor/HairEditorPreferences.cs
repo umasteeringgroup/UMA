@@ -48,6 +48,33 @@ namespace UMA.HairCards.Editor
         internal static string Context(UnityEngine.Object asset) => asset != null && EditorUtility.IsPersistent(asset)
             ? GlobalObjectId.GetGlobalObjectIdSlow(asset).ToString() : null;
 
+        private static int interactionVersion;
+
+        /// <summary>Counts user input in the Hair windows and Scene view.</summary>
+        internal static int InteractionVersion => interactionVersion;
+
+        /// <summary>
+        /// Records user input, so the idle preference savers only capture settings (by
+        /// reflection and JSON) after something could have changed them.
+        /// </summary>
+        internal static void NoteInteraction(Event current)
+        {
+            if (current == null) return;
+            switch (current.rawType)
+            {
+                case EventType.MouseUp:
+                case EventType.KeyUp:
+                case EventType.ScrollWheel:
+                case EventType.DragPerform:
+                case EventType.ExecuteCommand:
+                    interactionVersion++;
+                    break;
+            }
+        }
+
+        /// <summary>UI Toolkit callers (no IMGUI event) report a completed user change directly.</summary>
+        internal static void NoteInteraction() => interactionVersion++;
+
         internal void Remember(object target, string section, string context = null)
         {
             if (Suspended) return;

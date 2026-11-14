@@ -28,56 +28,26 @@ namespace UMA
 #if UMA_BURSTCOMPILE
         private void RecalculateMesh(SkinnedMeshRenderer smr)
         {
-            if (smr != null)
+            Mesh mesh = smr != null ? smr.sharedMesh : null;
+            if (mesh == null || mesh.vertexCount == 0 || !mesh.isReadable)
             {
-                NativeArray<Vector3> vertices = new NativeArray<Vector3>(smr.sharedMesh.vertices, Allocator.TempJob);
-                NativeArray<Vector3> normals = new NativeArray<Vector3>(smr.sharedMesh.normals, Allocator.TempJob);
-                NativeArray<Vector2> uvs = new NativeArray<Vector2>(smr.sharedMesh.uv, Allocator.TempJob);
-                NativeArray<Vector4> tangents = new NativeArray<Vector4>(smr.sharedMesh.tangents, Allocator.TempJob);
-                NativeArray<int> triangles = new NativeArray<int>(smr.sharedMesh.triangles, Allocator.TempJob);
-                Vector3[] deltaVertices = new Vector3[vertices.Length];
-                JobHandle handle = default;
-
-                int blendShapeCount = smr.sharedMesh.blendShapeCount;
-                for (int shapeIndex = 0; shapeIndex < blendShapeCount; shapeIndex++)
-                {
-                    float weight = smr.GetBlendShapeWeight(shapeIndex);
-                    if (weight > 0f)
-                    {
-                        weight /= 100f; //bring the weight into 0-1 range.
-
-                        string blendShapeName = smr.sharedMesh.GetBlendShapeName(shapeIndex);
-                        if (blendShapeName.StartsWith(blendShapeNameStartsWith))
-                        {
-                            smr.sharedMesh.GetBlendShapeFrameVertices(shapeIndex, 0, deltaVertices, null, null);
-                            NativeArray<Vector3> blendShapeDeltaVertices = new NativeArray<Vector3>(deltaVertices, Allocator.TempJob);
-
-                            handle = MeshUtilities.BakeOneFramePositionBlendShape(vertices, blendShapeDeltaVertices, weight, handle);
-                        }
-                    }
-                }
-
-                handle = MeshUtilities.RecalculateNormalsTangentsJobified(vertices, normals, uvs, tangents, triangles, angle, handle);
-
-                handle.Complete();
-
-                //We don't need to do this if we know our mesh is a single instance!
-                //Mesh mesh = Instantiate<Mesh>(smr.sharedMesh);
-                Mesh mesh = smr.sharedMesh;
-
-                //mesh.SetVertices(vertices); //don't update the vertices if the blendshapes are going to continue...
-                mesh.SetNormals(normals);
-                mesh.SetUVs(0, uvs);
-                mesh.SetTangents(tangents);
-
-                smr.sharedMesh = mesh;
-
-                vertices.Dispose();
-                normals.Dispose();
-                uvs.Dispose();
-                tangents.Dispose();
-                triangles.Dispose();
+                return;
             }
+
+            // A reused mesh is owned by the generated-resource cache and may be
+            // bound to other avatars with different blendshape weights. Never
+            // write per-renderer results into it.
+            if (UMAResourceLeaseOwner.IsSharedMesh(smr))
+            {
+                if (Debug.isDebugBuild)
+                {
+                    Debug.LogWarning($"RecalculationSlot: skipped '{smr.name}' because its mesh is shared by the generated-resource cache.", smr);
+                }
+                return;
+            }
+
+            // Skipped when the mesh already holds the result for these blendshape weights; see UMARendererNormals.
+            UMARendererNormals.Recalculate(smr, angle, blendShapeNameStartsWith);
         }
 #endif
     }

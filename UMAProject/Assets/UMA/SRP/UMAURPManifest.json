@@ -1,7 +1,7 @@
 {
     "pipeline": "URP",
     "formatVersion": 2,
-    "umaVersion": "3.1.5",
+    "umaVersion": "3.1.6",
     "requiredPaths": [
         "Assets/UMA/SRP/Textures/ReallyWhite.png",
         "Assets/UMA/SRP/Environment/U3Environment.prefab",
@@ -238,6 +238,7 @@
         "Assets/UMA/SRP/ShaderGraphs/Graphs/Helpers/default_masks.png",
         "Assets/UMA/SRP/ShaderGraphs/Graphs/Helpers/default_normal.png",
         "Assets/UMA/SRP/ShaderGraphs/Graphs/Helpers/default_vfx_msk.png",
+        "Assets/UMA/SRP/ShaderGraphs/Graphs/LitShaderAlpha.mat",
         "Assets/UMA/SRP/ShaderGraphs/Graphs/LitShaderAlpha.shadergraph",
         "Assets/UMA/SRP/ShaderGraphs/Graphs/LitShaderOpaque.shadergraph",
         "Assets/UMA/SRP/ShaderGraphs/Graphs/TempMat",
@@ -306,6 +307,7 @@
         "Assets/UMA/SRP/ShaderGraphs/Materials/UMA_Mat_Diffuse_Normal_Metallic_Occlusion.mat",
         "Assets/UMA/SRP/ShaderGraphs/Materials/UMA_Mat_Diffuse_Normal_Metallic_ShaderGraph.mat",
         "Assets/UMA/SRP/ShaderGraphs/Materials/UMA_Mat_Diffuse_ShaderGraph.mat",
+        "Assets/UMA/SRP/ShaderGraphs/Materials/UMA_SRP_DiffuseAlpha_URP.mat",
         "Assets/UMA/SRP/ShaderGraphs/Toon",
         "Assets/UMA/SRP/ShaderGraphs/Toon/README.md",
         "Assets/UMA/SRP/ShaderGraphs/Toon/UMA3_Toon.asset",
@@ -325,6 +327,7 @@
         "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_CutoutDiffuseNormalMetallicOcclusion.asset",
         "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_CutoutDiffuseNormalSpecular.asset",
         "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_Diffuse.asset",
+        "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_DiffuseAlpha.asset",
         "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_DiffuseNormalMetallic.asset",
         "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_DiffuseNormalMetallicOcclusionAlpha.asset",
         "Assets/UMA/SRP/ShaderGraphs/UMAMaterial/UMAMaterial_UMA_SRP_DiffuseNormalSpecular.asset",
@@ -340,6 +343,8 @@
         "Assets/UMA/SRP/Shaders/HairCards/UMASweptHairURP.shader",
         "Assets/UMA/SRP/Shaders/Skin",
         "Assets/UMA/SRP/Shaders/Skin/Examples",
+        "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealisticSSS_Natural.asset",
+        "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealisticSSS_Natural.mat",
         "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealistic_Dewy.asset",
         "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealistic_Dewy.mat",
         "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealistic_Matte.asset",
@@ -351,6 +356,10 @@
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinLighting.hlsl",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinMeta.hlsl",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinRealistic.shader",
+        "Assets/UMA/SRP/Shaders/Skin/UMA3SkinRealisticSSS.shader",
+        "Assets/UMA/SRP/Shaders/Skin/UMA3SkinSSSInput.hlsl",
+        "Assets/UMA/SRP/Shaders/Skin/UMA3SkinSSSLighting.hlsl",
+        "Assets/UMA/SRP/Shaders/Skin/UMA3SkinScatterLUT.exr",
         "Assets/UMA/SRP/UMAURPManifest.json"
     ]
 }

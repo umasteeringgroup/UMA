@@ -1,6 +1,6 @@
 # UMA Renderer Assets and Cloth
 
-`UMARendererAsset` stores settings that UMA applies when it creates a `SkinnedMeshRenderer`. It also associates a renderer with optional UMA cloth properties.
+`UMARendererAsset` stores settings that UMA applies when it creates a `SkinnedMeshRenderer`. It can also hold optional UMA cloth properties that tune the cloth on that renderer.
 
 Use renderer assets when different parts of a character need distinct renderer behavior, lighting settings, cloth components, or normal-recalculation options.
 
@@ -40,7 +40,15 @@ Use these values intentionally. Splitting content across different renderer asse
 
 When Burst support is enabled, a renderer asset can request normal and tangent recalculation with a chosen angle. It can also limit blendshape participation by name where supported.
 
-Recalculation adds build work. Prefer correct source normals unless runtime deformation genuinely requires it.
+Recalculation adds build work, so prefer correct source normals unless runtime deformation genuinely requires it. The cost is lower than in earlier releases: the step is about five times faster, it is skipped when neither the mesh data nor the participating blendshape weights changed (a texture-only rebuild, for example), and with **Reuse Identical Meshes** and the jobified combiner an avatar keeps its own mesh when a rebuild would produce the same one. See [Atlas and mesh reuse](AtlasAndMeshReuse.md).
+
+## Where Cloth Comes From
+
+A slot carries cloth when it has cloth skinning coefficients (**Cloth Skinning Serialized** on the `SlotDataAsset`). They are copied from a Unity `Cloth` component on the source mesh when the slot is built. A generated renderer gets a Unity `Cloth` component whenever the slots built into it carry coefficients, with every mesh combiner.
+
+The renderer asset's cloth properties only tune that cloth. Without them, the cloth runs on Unity's default Cloth settings. A renderer asset with cloth properties does not add cloth to slots that have no coefficients.
+
+To remove cloth from a slot, clear all of its **Cloth Skinning Serialized** entries.
 
 ## Create Cloth Properties
 
@@ -52,11 +60,11 @@ The renderer asset is the bridge between the generated UMA renderer and the clot
 
 ## Assign Cloth to a Slot
 
-1. Create a renderer asset for the cloth renderer.
-2. Assign the `UMAClothProperties`.
-3. Configure shadows, motion vectors, and offscreen updates.
-4. Assign the renderer asset to every slot that should share that cloth renderer.
-5. Ensure the source slot contains valid cloth skinning coefficients.
+1. Make sure the source slot contains valid cloth skinning coefficients (build it from a mesh with a `Cloth` component).
+2. Create a renderer asset for the cloth renderer.
+3. Optionally assign `UMAClothProperties` to tune the cloth; without them Unity's defaults are used.
+4. Configure shadows, motion vectors, and offscreen updates.
+5. Assign the renderer asset to every slot that should share that cloth renderer.
 6. Build a character and inspect the generated Cloth component.
 
 Slots with different renderer assets may produce separate generated renderers. That is expected when they need different cloth behavior.
@@ -98,13 +106,17 @@ For mobile and large crowds:
 - Disable unnecessary offscreen updates.
 - Limit collision complexity.
 - Use simpler motion on background characters.
-- Consider a bone animator or shader motion when full cloth is unnecessary.
+- Consider a bone animator or shader motion when full cloth is unnecessary. For hair, the **UMA > Hair Control** component sways hair in the shader; see [Hair Animation](HairAnimation.md).
 
 ## Troubleshooting
 
 ### No Cloth component is created
 
-Check that the slot resolves to the intended renderer asset, that the renderer asset has cloth properties, and that the source slot contains cloth coefficient data.
+Check that the source slot contains cloth coefficient data (**Cloth Skinning Serialized**). Cloth properties on the renderer asset are not needed for the component to be created; they only tune it.
+
+### A renderer has cloth it should not have
+
+One of the slots built into that renderer carries cloth coefficients. Give the garment that should not simulate its own renderer asset, or clear that slot's **Cloth Skinning Serialized** entries.
 
 ### Several garments merge when they should use different cloth
 

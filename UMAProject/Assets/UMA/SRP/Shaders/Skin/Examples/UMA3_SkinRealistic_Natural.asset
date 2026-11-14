@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: UMA3_SkinRealistic_Natural
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   supportsSourceUVCropping: 0
-  _material: {fileID: 2100000, guid: b7d36ba6186af2742889574e5c86a318, type: 2}
+  _material: {fileID: 2100000, guid: ed4225f534ca1794594f3fb6db2cee83, type: 2}
   _HDRPMaterial: {fileID: 0}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
@@ -145,5 +145,5 @@ MonoBehaviour:
   shaderKeywords: []
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
-  MaterialName: UMA3_SkinRealistic_Natural
-  ShaderName: UMA/URP/Realistic Skin
+  MaterialName: UMA3_SkinRealisticSSS_Natural
+  ShaderName: UMA/URP/Realistic Skin SSS

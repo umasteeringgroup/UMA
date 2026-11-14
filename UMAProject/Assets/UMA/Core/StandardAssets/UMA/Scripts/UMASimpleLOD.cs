@@ -55,6 +55,10 @@ namespace UMA.Examples
         [Min(-1)]
         public int disableDynamicExpressionPlayerAtLOD = -1;
 
+        [Tooltip("LOD zone at which the UMA Hair Control components on this character (or below it) are disabled. The hair stops swaying, and the hair shader's volume shading goes back to the renderer bounds. -1 leaves them unmanaged.")]
+        [Min(-1)]
+        public int disableHairControlAtLOD = -1;
+
         [Tooltip("Components that implement ILODTuning. Each receives OnLODChanged when the distance-zone level changes, whether or not a matching slot or internal mesh LOD exists.")]
         public MonoBehaviour[] lodTunings = Array.Empty<MonoBehaviour>();
 
@@ -531,6 +535,20 @@ namespace UMA.Examples
                 for (int i = 0; i < players.Length; i++)
                 {
                     players[i].enabled = enabled;
+                }
+            }
+
+            if (disableHairControlAtLOD >= 0)
+            {
+                // A Hair Control can sit on the character or on any object above its hair renderers. Disabling it
+                // takes its property blocks off the hair, which gives those renderers back to the SRP Batcher;
+                // enabling it again starts the sway at rest.
+                bool enabled = lodLevel < disableHairControlAtLOD;
+                UMAHairControl[] controls =
+                    GetComponentsInChildren<UMAHairControl>(true);
+                for (int i = 0; i < controls.Length; i++)
+                {
+                    controls[i].enabled = enabled;
                 }
             }
         }

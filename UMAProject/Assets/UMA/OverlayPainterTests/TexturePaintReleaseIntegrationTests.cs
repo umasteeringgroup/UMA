@@ -5156,7 +5156,17 @@ namespace UMA.TexturePaint.Editor.Tests
         {
             Assert.That(TexturePaintSceneToolPaletteOverlay.Title,
                 Is.EqualTo("Overlay Painter Toolbar"));
-            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Has.Length.EqualTo(13));
+            // The palette also holds three spacers that group the tools; they are not controls.
+            var gapIds = new[]
+            {
+                TexturePaintToolPaletteGapFills.Id,
+                TexturePaintToolPaletteGapPath.Id,
+                TexturePaintToolPaletteGapHelp.Id
+            };
+            var controlIds = new List<string>(TexturePaintSceneToolPaletteOverlay.ElementIds);
+            controlIds.RemoveAll(id => System.Array.IndexOf(gapIds, id) >= 0);
+            Assert.That(controlIds, Has.Count.EqualTo(13));
+            Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Has.Length.EqualTo(13 + gapIds.Length));
             Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(
                 TexturePaintScenePaintToolToggle.Id));
             Assert.That(TexturePaintSceneToolPaletteOverlay.ElementIds, Does.Contain(

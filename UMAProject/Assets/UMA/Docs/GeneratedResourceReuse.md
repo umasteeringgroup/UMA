@@ -2,7 +2,7 @@
 
 For a step-by-step introduction, including Standard View setup, read [Atlas and mesh reuse](AtlasAndMeshReuse.md).
 
-Enable **Dynamic Character Avatar > Advanced Options > Cache and Reuse (NPCs)** before building a crowd:
+Enable sharing in the Dynamic Character Avatar's **Advanced View > Performance & sharing** panel before building a crowd:
 
 - **Share generated meshes**: reuse matching generated geometry. Each character still has its own skeleton, renderer, Animator, pose, cloth component and live blendshape weights.
 - **Share atlases / matching materials**: reuse identical compositor outputs, independently for each atlas channel. Share material instances only when their configured inputs match. Different surface parameters do **not** prevent texture sharing.
@@ -191,6 +191,6 @@ If shader sampling, source assets or renderer resources are deliberately mutated
 
 ## Diagnostics and tests
 
-Use **Log Cache Diagnostics** in the DCA's Advanced Options. Counters distinguish completed hits, misses, pending joins and published outputs. Reference counts include renderer, build, material and readback leases, not just avatar count. The status line explains conservative bypasses.
+Use **Log Cache Diagnostics** in the DCA's **Diagnostics** panel (Advanced View). Counters distinguish completed hits, misses, pending joins and published outputs. Reference counts include renderer, build, material and readback leases, not just avatar count. The status line explains conservative bypasses.
 
 Tests cover first-stage rejects without detailed work, equal signatures with unequal geometry, edits during pending builds, lazy-key cleanup, exact key equality, counted ownership, concurrent mesh requests, cancelled producers, pixel parity, color/revision/layout misses, different material parameters sharing one atlas, a 30-avatar shared-output crowd, independent bones and expression weights, both conversion modes, producer destruction during readback, pooling, static conversion, explicit private edits, renderer destruction and assembly-reload detachment. Existing combiner and scheduler tests remain part of the regression run.

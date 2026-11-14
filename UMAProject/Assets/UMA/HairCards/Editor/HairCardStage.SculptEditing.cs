@@ -101,7 +101,7 @@ namespace UMA.HairCards.Editor
         private bool EnsureSculptEditContext()
         {
             if (!CanEditLayer || ActiveModifier != null)
-            { actionStatus = "Select an active, unlocked sculpt layer in Hair Nodes before sculpting."; return false; }
+            { actionStatus = "Select an active, unlocked sculpt layer in the Groom Outliner before sculpting."; return false; }
             if (!IsLayerEditing)
             {
                 if (HasDownstreamSculptOperations || sceneTool == HairSceneTool.Select)
@@ -128,11 +128,11 @@ namespace UMA.HairCards.Editor
             return ActiveGroup.sculptLayers.IndexOf(node.Layer) > ActiveGroup.sculptLayers.IndexOf(ActiveLayer);
         }
 
-        private void DrawSculptEditingBanner(float width)
+        private void DrawSculptEditingBanner(float x, float width)
         {
             if (workflowStep != HairWorkflowStep.Groom) return;
             bool narrow = width < 420f;
-            GUILayout.BeginArea(new Rect(12f, 66f, width, narrow ? 104f : 72f), GUIContent.none, EditorStyles.helpBox);
+            GUILayout.BeginArea(new Rect(x, 66f, width, narrow ? 104f : 72f), GUIContent.none, EditorStyles.helpBox);
             GUILayout.Label(SculptEditingStatus, EditorStyles.wordWrappedMiniLabel);
             if (!narrow) GUILayout.BeginHorizontal();
             if (IsLayerEditing)
@@ -144,7 +144,7 @@ namespace UMA.HairCards.Editor
                 using (new EditorGUI.DisabledScope(!CanEditLayer))
                     if (GUILayout.Button("Edit This Layer")) BeginLayerEditing();
                 using (new EditorGUI.DisabledScope(ActiveGroup == null || ActiveGroup.locked || !ActiveGroup.enabled || !ActiveGroup.visible))
-                    if (GUILayout.Button("Add Finishing Sculpt Layer")) HairGroomNodeWindow.AddFinishingSculptLayer(this, ActiveGroup);
+                    if (GUILayout.Button("Add Finishing Sculpt Layer")) HairGroomNodeCommands.AddFinishingSculptLayer(this, ActiveGroup);
             }
             if (!narrow) GUILayout.EndHorizontal();
             GUILayout.EndArea();

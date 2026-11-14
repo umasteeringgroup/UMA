@@ -1,6 +1,7 @@
 using UMA.CharacterSystem;
 using UnityEditor;
 using UnityEditor.Overlays;
+using UnityEditor.SceneManagement;
 using UnityEditor.Toolbars;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -15,6 +16,15 @@ namespace UMA.Editors
     public sealed class UMAToolbarOverlay : ToolbarOverlay
     {
         private bool applyingVisibilitySetting;
+        private Stage lastStage;
+
+        /// <summary>
+        /// True while a UMA editing stage (Vertex Editor, face editor, Overlay Painter, Hair
+        /// Cards) is open. The toolbar's commands act on main-scene UMAs, so it is hidden there.
+        /// </summary>
+        private static bool InEditingStage => StageUtility.GetCurrentStage() is IUMAEditingStage;
+
+        private static bool ShouldShow => UMASettings.ShowToolbar && !InEditingStage;
 
         public UMAToolbarOverlay() : base(
             SaveSceneViewCameraButton.Id,
@@ -34,21 +44,41 @@ namespace UMA.Editors
         public override void OnCreated()
         {
             base.OnCreated();
-            UMASettings.ToolbarVisibilityChanged += ApplyVisibilitySetting;
+            UMASettings.ToolbarVisibilityChanged += HandleToolbarSettingChanged;
             displayedChanged += HandleDisplayedChanged;
-            ApplyVisibilitySetting(UMASettings.ShowToolbar);
+            EditorApplication.update += CheckStageChanged;
+            lastStage = StageUtility.GetCurrentStage();
+            ApplyVisibilitySetting(ShouldShow);
         }
 
         public override void OnWillBeDestroyed()
         {
+            EditorApplication.update -= CheckStageChanged;
             displayedChanged -= HandleDisplayedChanged;
-            UMASettings.ToolbarVisibilityChanged -= ApplyVisibilitySetting;
+            UMASettings.ToolbarVisibilityChanged -= HandleToolbarSettingChanged;
             base.OnWillBeDestroyed();
+        }
+
+        private void HandleToolbarSettingChanged(bool show)
+        {
+            ApplyVisibilitySetting(show && !InEditingStage);
+        }
+
+        /// <summary>Hides the toolbar on entering a UMA editing stage and restores it on leaving.</summary>
+        private void CheckStageChanged()
+        {
+            Stage current = StageUtility.GetCurrentStage();
+            if (ReferenceEquals(current, lastStage))
+            {
+                return;
+            }
+            lastStage = current;
+            ApplyVisibilitySetting(ShouldShow);
         }
 
         private void HandleDisplayedChanged(bool isDisplayed)
         {
-            if (isDisplayed && !UMASettings.ShowToolbar)
+            if (isDisplayed && !ShouldShow)
             {
                 ApplyVisibilitySetting(false);
             }

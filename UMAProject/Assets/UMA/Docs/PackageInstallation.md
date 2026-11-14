@@ -11,9 +11,23 @@ UMA Core supports both a traditional source-tree import and a Unity Package Mana
 
 Do not install Core in both Core locations. Duplicate scripts, GUIDs, Resources assets, shaders, and assembly definitions will produce ambiguous imports. The editable UMA3/UMA2 folders are expected to coexist with a UPM Core.
 
-For a local Core package, open **Window > Package Management > Package Manager**, choose **Add package from disk**, and select `package.json` in the staged Core folder. Release automation creates this folder without raw UMA3/UMA2 content; do not use the combined authoring tree as a Git UPM dependency.
+For a local Core package, open **Window > Package Management > Package Manager**, choose **Add package from disk**, and select `package.json` in the staged Core folder. Release automation creates this folder without raw UMA3/UMA2 content; do not use the combined authoring tree as a Git UPM dependency (see [Can I install from a Git URL?](#can-i-install-from-a-git-url)).
 
 UMA supports Unity 6.3 and newer.
+
+## Can I install from a Git URL?
+
+Not at present. A Package Manager Git URL such as `https://github.com/umasteeringgroup/UMA.git?path=/UMAProject/Assets/UMA` points at the maintainers' authoring project, not at a Core package, and fails for two reasons:
+
+- **The download is too large.** Package Manager fetches the repository through Git before it reads the `?path=` folder. The repository holds several gigabytes of history and art, and GitHub often drops a transfer that size. The usual error is `RPC failed; curl 56 Recv failure: Connection was reset`, followed by `fatal: protocol error: bad pack header`.
+- **The folder is not the Core package.** `UMAProject/Assets/UMA` also contains the UMA3 content, installed render-pipeline content, and optional plugins with their examples and tests. `.npmignore` does not apply to a Git install, so all of it would become read-only package content. Those files then share GUIDs with the editable copies that **Install UMA 3 Content...** and the render-pipeline installer place in `Assets`, and the installers refuse to continue.
+
+UMA does not currently publish a Git-installable or package-registry version of Core. Install it one of these ways instead:
+
+- **Unity package:** download the UMA `.unitypackage` from the [GitHub releases page](https://github.com/umasteeringgroup/UMA/releases) (`UMA31_f5.unitypackage` for 3.1.5) and import it with **Assets > Import Package > Custom Package...**. This creates the `Assets/UMA` source-tree layout. Install the [required Unity packages](#package-dependencies-for-an-assetsuma-installation) first.
+- **Local UPM package:** add a staged Core folder with **Add package from disk**, as described in [Supported layouts](#supported-layouts).
+
+Either way, continue with the Welcome window's render-pipeline support and **Install UMA 3 Content...** (see [Editable content packages](#editable-content-packages)). Optional plugins are on the same releases page, or under **Welcome > Plugins**.
 
 ## Read-only package content
 
@@ -29,7 +43,7 @@ The first package-based use creates project-owned copies of the shipped `UMASett
 
 ## Editable content packages
 
-Open **UMA > Welcome to UMA > Install / Update UMA Packages** for the bundled **Install/Switch UMA URP Support** and **Install/Switch UMA HDRP Support** actions and the `UMA3Content-<version>.unitypackage` installer. UMA3 imports to `Assets/UMA/UMA3`. For legacy content, use **Welcome > Plugins > UMA2Compatibility**, which locates `UMA2Compatibility-<version>.unitypackage` or asks you to select it. The main legacy content installs at `Assets/UMA2` and works without Examples. Legacy wearables and utility-slot samples install with the optional Examples companion at `Assets/UMA2CompatibilityExamples/Wearables`. Both content trees are ordinary editable project assets. Compatibility Examples and Tests are separate optional companions; see [official plugins](UMAPlugins.md).
+Open **UMA > Welcome to UMA > Install SRP Package** (shown as **Render Pipeline Support** once a pipeline is installed) for the bundled **Install UMA URP Support** and **Install UMA HDRP Support** actions (**Switch to**, **Update** or **Reinstall** once one is installed) and **Install UMA 3 Content...**, which installs the `UMA3Content-<version>.unitypackage` archive. UMA3 imports to `Assets/UMA/UMA3`. For legacy content, use **Welcome > Plugins > UMA2Compatibility**, which locates `UMA2Compatibility-<version>.unitypackage` or asks you to select it. The main legacy content installs at `Assets/UMA2` and works without Examples. Legacy wearables and utility-slot samples install with the optional Examples companion at `Assets/UMA2CompatibilityExamples/Wearables`. Both content trees are ordinary editable project assets. Compatibility Examples and Tests are separate optional companions; see [official plugins](UMAPlugins.md).
 
 The installer validates archive identity, exact destination paths, GUID ownership, the declared Core compatibility range, exact package dependencies, and the owned-file manifest before importing. Existing matching source trees can be adopted without replacement. Updates classify every owned path as unchanged, locally modified/deleted/added, and upstream unchanged/changed/added/removed in `Library/UMA/ContentInstaller/<content>/LastChangeReport.txt`. A conflict defaults to cancellation; only the explicit **Back Up and Replace** action proceeds. The previous tree and its root `.meta` are retained below `Library/UMA/ContentInstaller`, and the live content-root GUID is preserved across successful updates and rollbacks.
 
@@ -144,7 +158,7 @@ This is needed only for development and release validation; normal UMA consumers
 4. Remove the remaining imported `Assets/UMA` Core only after confirming it is versioned or recoverable.
 5. Install the same Core version through Package Manager and let Unity finish refreshing.
 6. Restore the two content folders to their original `Assets/UMA/UMA3` and `Assets/UMA2` paths, or import the matching content archives. If upgrading from `com.umasteeringgroup.uma2`, uninstall that old UPM package and wait for its GUIDs to unregister first.
-7. Use **Install / Update UMA Packages** for UMA3 and **Plugins > UMA2Compatibility** for legacy content, with matching archives, to adopt restored trees and establish ownership manifests.
+7. Use the Welcome window's **Render Pipeline Support** page (**Update, or Reinstall UMA 3 Content...**) for UMA3 and **Plugins > UMA2Compatibility** for legacy content, with matching archives, to adopt restored trees and establish ownership manifests.
 8. Open **Edit > Project Settings > UMA**, verify the package and project-data paths, then rebuild the Global Library.
 9. Validate representative races, wardrobe, builds, Overlay Painter save/export, and player builds.
 

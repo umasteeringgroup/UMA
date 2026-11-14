@@ -2,10 +2,10 @@
     "formatVersion": 2,
     "requiredPluginApiVersion": 1,
     "contentId": "dismemberment-examples",
-    "contentVersion": "3.1.5",
-    "umaVersion": "3.1.5",
-    "requiredCoreVersion": "3.1.5",
-    "minimumCoreVersion": "3.1.5",
+    "contentVersion": "3.1.6",
+    "umaVersion": "3.1.6",
+    "requiredCoreVersion": "3.1.6",
+    "minimumCoreVersion": "3.1.6",
     "maximumCoreVersionExclusive": "3.2.0",
     "installRoot": "Assets/UMA/UMADismemberment/Samples",
     "dependencies": [
@@ -159,8 +159,8 @@
         {
             "path": "Assets/UMA/UMADismemberment/Samples/Scene/U3-GoreExample.unity",
             "guid": "fb7b7bdfb5bc6c143970c8b80074dce9",
-            "bytes": 3000688,
-            "sha256": "ef6e4dd8393d3e0cfb382c98979f112a9ac2bcc739d3fbd805a44f70dd57bfe7",
+            "bytes": 3001008,
+            "sha256": "2ca36ec2b0bb49a1c573c54b6ff46697b8ef26681ebe11e00ec1325afd1a8af3",
             "metaBytes": 175,
             "metaSha256": "f2ef40a7ef9674a7f3f523a59327eb811e5bc6611fcaaaf77b6ac9d62f7ad060"
         },

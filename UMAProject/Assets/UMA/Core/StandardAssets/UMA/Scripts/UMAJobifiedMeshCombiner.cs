@@ -396,6 +396,10 @@ namespace UMA
                 var batchesToBuild = new List<SkinnedMeshCombinerMeshAPI.RendererBatch>();
                 var buildIndices = new List<int>();
                 var leases = new UMAGeneratedResourceCache.Lease<Mesh>[rendererBatches.Count];
+                // For renderers whose mesh is never shared: the request for this build, and the binding of the
+                // renderer's current mesh when that mesh was built from the same inputs and can be kept.
+                var privateRequests = new UMAResourceReuse.MeshRequest[rendererBatches.Count];
+                var keptMeshes = new UMAResourceReuse.MeshBinding[rendererBatches.Count];
                 var clothResults = new ClothSkinningCoefficient[rendererBatches.Count][];
                 try
                 {
@@ -406,6 +410,15 @@ namespace UMA
                     var batch = rendererBatches[i];
                     if (UMAResourceReuse.MeshesEnabled(umaData))
                     {
+                        if (UMARendererAsset.RequiresPrivateMesh(umaData, rendererMaterials[batch.CurrentRendererIndex]))
+                        {
+                            // Recalculated normals are written into the mesh for this avatar's blendshape
+                            // weights, so the mesh cannot go through the shared cache. It can still be kept.
+                            privateRequests[i] = UMAResourceReuse.DescribePrivateMesh(
+                                umaData, batch.Sources, rendererMaterials[batch.CurrentRendererIndex], atlasResolution, boundsRotation);
+                            if (UMAResourceLeaseOwner.TryKeepPrivateMesh(batch.Renderer, privateRequests[i], out keptMeshes[i]))
+                                continue;
+                        }
                         try
                         {
                             leases[i] = UMAResourceReuse.AcquireMesh(
@@ -442,7 +455,25 @@ namespace UMA
                     int rendererIndex = rendererBatches[batchIndex].CurrentRendererIndex;
                     var renderer = renderers[rendererIndex];
                     var lease = leases[batchIndex];
-                    if (lease != null && lease.IsReady)
+                    var keptMesh = keptMeshes[batchIndex];
+                    if (keptMesh != null)
+                    {
+                        // What the combine would have set on the renderer. The bones are looked up again
+                        // because the skeleton's transforms may have been recreated.
+                        renderer.bones = umaData.skeleton.HashesToTransforms(keptMesh.BoneHashes);
+                        if (renderer.rootBone == null) renderer.rootBone = umaData.GetGlobalTransform();
+                        renderer.localBounds = keptMesh.LocalBounds;
+                        clothResults[batchIndex] = keptMesh.Cloth;
+                        var keptSources = rendererBatches[batchIndex].Sources;
+                        for (int s = 0; s < keptSources.Length; s++)
+                            if (keptSources[s].slotData != null)
+                            {
+                                keptSources[s].slotData.vertexOffset = keptMesh.VertexOffsets[s];
+                                keptSources[s].slotData.skinnedMeshRenderer = rendererIndex;
+                            }
+                        umaData.resourceReuseStatus = "Kept this avatar's own mesh";
+                    }
+                    else if (lease != null && lease.IsReady)
                     {
                         var binding = (UMAResourceReuse.MeshBinding)lease.Metadata;
                         UMAResourceReuse.BindMesh(umaData, renderer, lease);
@@ -465,7 +496,16 @@ namespace UMA
 #if UMA_COMBINER_TIMINGS
                     var swMaterials = System.Diagnostics.Stopwatch.StartNew();
 #endif
-                    AssignRendererMaterials(renderer, rendererMaterials[rendererIndex]);
+                    AssignRendererMaterials(renderer, rendererMaterials[rendererIndex], keptMesh != null);
+                    if (keptMesh != null)
+                    {
+                        UMARendererAsset.RefreshKeptMesh(umaData, renderer, rendererMaterials[rendererIndex]);
+                    }
+                    else if (privateRequests[batchIndex] != null)
+                    {
+                        UMAResourceLeaseOwner.RememberPrivateMesh(renderer, privateRequests[batchIndex],
+                            UMAResourceReuse.CaptureMeshBinding(renderer, rendererBatches[batchIndex].Sources, clothResults[batchIndex]));
+                    }
                     if (leases[batchIndex] != null)
                     {
                         lease.Publish(renderer.sharedMesh, UMAResourceReuse.CaptureMeshBinding(renderer,
@@ -631,26 +671,6 @@ namespace UMA
 				}
 			}
 		}
-
-        private void ApplyClothIfNeeded(ClothSkinningCoefficient[] clothSkinning)
-        {
-            var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
-            if (clothProperties != null)
-            {
-                if (cloth == null) cloth = renderers[currentRendererIndex].gameObject.AddComponent<Cloth>();
-                if (clothSkinning != null && clothSkinning.Length > 0)
-                    cloth.coefficients = clothSkinning;
-                clothProperties.ApplyValues(cloth);
-
-            }
-            else
-            {
-                if (cloth != null)
-                {
-                    UMAUtils.DestroySceneObject(cloth);
-                }
-            }
-        }
 
         protected void RecalculateUV(UMAMeshData umaMesh)
         {
@@ -854,13 +874,15 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
                 throw new InvalidOperationException($"Generated material {materialIndex} has no usable first-pass material.");
         }
 
-        private void AssignRendererMaterials(SkinnedMeshRenderer renderer, IReadOnlyList<UMAData.GeneratedMaterial> materials)
+        // meshKept: the renderer's own mesh from the previous build is being used again. Like a mesh from the
+        // shared cache it already has its final submeshes, including the ones repeated for second passes.
+        private void AssignRendererMaterials(SkinnedMeshRenderer renderer, IReadOnlyList<UMAData.GeneratedMaterial> materials, bool meshKept = false)
         {
             _materialBuffer.Clear();
             _submeshBuffer.Clear();
             var mesh = renderer.sharedMesh;
             var submeshCount = mesh.subMeshCount;
-            bool cachedMesh = UMAResourceLeaseOwner.IsSharedMesh(renderer);
+            bool cachedMesh = meshKept || UMAResourceLeaseOwner.IsSharedMesh(renderer);
 
             for (int i = 0; i < materials.Count; i++)
             {
@@ -925,7 +947,7 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
             if (!cachedMesh)
             {
                 mesh.SetSubMeshes(_submeshBuffer, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
-                mesh.UploadMeshData(umaData.markNotReadable);
+                UMARendererAsset.UploadGeneratedMesh(umaData, renderer, materials);
             }
         }
 

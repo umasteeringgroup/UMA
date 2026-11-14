@@ -200,8 +200,6 @@ namespace UMA
 
         private SkinnedMeshRenderer MakeRenderer(int i, UMAData umaData, Transform rootBone, UMARendererAsset rendererAsset = null)
         {
-            Debug.Log("Creating Renderer in UMADefaultMeshCombiner");
-
             GameObject newSMRGO = new GameObject(
                 UMARendererAsset.GetRendererGameObjectName(rendererAsset, i));
             newSMRGO.transform.parent = umaData.transform;
@@ -349,7 +347,7 @@ namespace UMA
 #endif
                     umaMesh.ApplyDataToUnityMesh(renderers[currentRendererIndex], umaData.skeleton, umaData);
                 }
-                ApplyClothIfNeeded(null);
+                ApplyClothProperties();
             }
         }
 
@@ -586,7 +584,9 @@ namespace UMA
                 }
 
                 cloth.coefficients = clothSkinning;
-                clothProperties.ApplyValues(cloth);
+                // The renderer asset's cloth settings are optional: without them the
+                // slot's coefficients still drive Unity's default Cloth settings.
+                clothProperties?.ApplyValues(cloth);
             }
         }
 
@@ -644,24 +644,17 @@ namespace UMA
 			}
 		}
 
-        private void ApplyClothIfNeeded(ClothSkinningCoefficient[] clothSkinning)
+        /// <summary>
+        /// Legacy path: UMAMeshData.ApplyDataToUnityMesh has already added a Cloth component
+        /// when the combined slots carry cloth coefficients. As on every other combiner path,
+        /// the coefficients decide whether a renderer has cloth; the renderer asset's cloth
+        /// properties only tune it when present.
+        /// </summary>
+        private void ApplyClothProperties()
         {
+            if (clothProperties == null) return;
             var cloth = renderers[currentRendererIndex].GetComponent<Cloth>();
-            if (clothProperties != null)
-            {
-                if (cloth == null) cloth = renderers[currentRendererIndex].gameObject.AddComponent<Cloth>();
-                if (clothSkinning != null && clothSkinning.Length > 0)
-                    cloth.coefficients = clothSkinning;
-                clothProperties.ApplyValues(cloth);
-
-            }
-            else
-            {
-                if (cloth != null)
-                {
-                    UMAUtils.DestroySceneObject(cloth);
-                }
-            }
+            if (cloth != null) clothProperties.ApplyValues(cloth);
         }
 
         protected void RecalculateUV(UMAMeshData umaMesh)
@@ -881,6 +874,19 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
                     Material secondPass = cm.secondPassMaterial;
                     if (secondPass == null || secondPass == firstPass || secondPass.shader != cm.umaMaterial.secondPass.shader)
                     {
+                        // Replacing the second pass must not strand the previous private instance.
+                        if (secondPass != null && secondPass != firstPass)
+                        {
+                            if (cm.cachedSecondPass != null)
+                            {
+                                cm.cachedSecondPass.Dispose();
+                                cm.cachedSecondPass = null;
+                            }
+                            else if (!UMAGeneratedResourceCache.IsManagedResource(secondPass))
+                            {
+                                UMAUtils.DestroySceneObject(secondPass);
+                            }
+                        }
                         secondPass = UnityEngine.Object.Instantiate(cm.umaMaterial.secondPass);
                         cm.secondPassMaterial = secondPass;
                     }
@@ -899,7 +905,7 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
             if (!cachedMesh)
             {
                 mesh.SetSubMeshes(_submeshBuffer, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
-                mesh.UploadMeshData(umaData.markNotReadable);
+                UMARendererAsset.UploadGeneratedMesh(umaData, renderer, combinedMaterialList);
             }
         }
 

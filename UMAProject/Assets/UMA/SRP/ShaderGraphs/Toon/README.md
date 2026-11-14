@@ -7,7 +7,7 @@ Two editable graphs support **Unity 6.3 / Shader Graph 17.3**, with both **URP a
 
 ## Package exports in UMA 3.1f5
 
-The source graphs retain both render-pipeline targets. Starting with this release, the SRP package builder writes pipeline-specific copies containing only the selected target, preserving the source graphs. See the [installation/export release notes](../../../CHANGELOG.md#installation-configuration-and-validation) for the changes since 3.1f3. Existing toon controls below are unchanged.
+The source graphs retain both render-pipeline targets. Starting with this release, the SRP package builder writes pipeline-specific copies containing only the selected target, preserving the source graphs. See the [installation/export release notes](../../../CHANGELOG.md#installation-configuration-and-validation-1) for the changes since 3.1f3. Existing toon controls below are unchanged.
 
 ## Use with UMA
 

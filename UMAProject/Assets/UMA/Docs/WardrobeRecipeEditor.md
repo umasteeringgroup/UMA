@@ -296,7 +296,7 @@ The `Slots` tab contains:
 - `Shared Colors & Properties`.
 - A main drag/drop area for slots, overlays, and recipes.
 - `Add Base slot` popup when compatible race base slots are known.
-- `Add Slot` object field.
+- `Add Slot` indexed picker (see [Indexed pickers](#indexed-pickers)).
 - `Add Placeholder Slot` button.
 - Recipe utilities such as `Clear Recipe`, `Remove Nulls`, `Collapse All`, `Expand All`, `Select All Slots`, and `Select All Overlays`.
 - One foldout per slot in the recipe.
@@ -326,10 +326,16 @@ If you drag a folder, the editor scans `.asset` files under that folder and subf
 ### Method 3: Use Add Slot
 
 1. Open the `Slots` tab.
-2. Use the `Add Slot` object field.
-3. Assign a `SlotDataAsset`.
+2. Click **Select indexed asset…** next to `Add Slot` and pick a slot from the list, or drag a `SlotDataAsset` onto the small **drop here** box beside it.
+3. The slot is added to the recipe.
 
 This is the most explicit way to add one slot.
+
+### Indexed pickers
+
+The `Add Slot` and `Add Overlay` fields, the `Add Slot` field inside a slot (shared overlays), and the `Add Slot` field under **Additional Blendshape Slots** are indexed pickers. **Select indexed asset…** opens a searchable list of the assets of that type registered in the UMA Global Library, sorted by their slot or overlay name; where the file name differs, it is shown in brackets. Type to filter the list and use the arrow keys to move through it. Only the asset that the library returns for that name is listed, so a duplicate with the same lookup name cannot be added by mistake. The **drop here** box beside each picker accepts an asset dragged from the Project window.
+
+Browsing the list never changes the recipe; only the asset you choose is added. An asset that is not in the Global Library does not appear: add it to the library first (**UMA > Global Library**), or drag it onto the **drop here** box.
 
 ### Method 4: Use Add Base Slot
 
@@ -372,6 +378,10 @@ Slot header controls:
 `Disable in recipe` keeps the slot data in the recipe but marks it disabled. Disabled slots are treated as hidden during DCA post-processing.
 
 Use this when you want to keep work in progress in the recipe without letting it render.
+
+### Convert Slot To Placeholder
+
+**Convert slot to placeholder**, directly below `Disable in recipe`, turns a normal slot into a placeholder slot. It removes the SlotDataAsset reference and keeps the slot name, overlays, tags and race matching criteria, so the overlays are applied to matching slots at build time instead of to a mesh of their own. It also works for slots that share overlays with another slot, and supports Undo.
 
 ### Utilities
 
@@ -437,8 +447,8 @@ An OverlayDataAsset provides one or more textures and material data for a slot. 
 
 1. Open the `Slots` tab.
 2. Expand the slot that should receive the overlay.
-3. Use the slot's `Add Overlay` object field.
-4. Assign an `OverlayDataAsset`.
+3. Use the slot's `Add Overlay` indexed picker: click **Select indexed asset…** and choose the overlay, or drag an `OverlayDataAsset` onto **drop here**.
+4. The overlay is added to that slot.
 5. The overlay appears as a foldout under the slot.
 
 This is the safest and clearest method because you decide exactly which slot receives the overlay.
@@ -905,6 +915,14 @@ Tags are exact, but they can be reused in many assets. Inspect slot tags and ove
 The overlay's UMAMaterial should usually match the slot's UMAMaterial. If the channel count is the same, the editor can copy the slot material to the overlay. If the channel count differs, fix the assets manually so textures, color channels, and materials line up.
 
 --------------------------------------------------------------------------------
+
+### The Inspector Says The Recipe Changed Outside This Inspector
+
+The recipe asset was changed by something else (a plugin, a script, version control) while this inspector had edits that were not saved. Plugin buttons stay disabled until you choose: **Use inspector edits** keeps your pending edits and saves them over the outside change; **Reload asset and discard inspector edits** loads the changed asset and drops your pending edits. If you close the inspector instead, your working copy is kept as JSON under `Library/UMA/PluginRecovery`. See [Official Plugins](UMAPlugins.md).
+
+### Checking The Saved Recipe Data
+
+Select the recipe in the Project window and choose **Assets > UMA > View Recipe JSON** to see the stored recipe string in a read-only viewer. **Format JSON** switches between indented and stored text, and **Copy JSON** copies the original text unchanged. Character recipe inspectors have the same viewer under **View JSON string**.
 
 ## Quick Reference
 

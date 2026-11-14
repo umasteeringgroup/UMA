@@ -826,7 +826,10 @@ namespace UMA
                 submeshBuffer,
                 MeshUpdateFlags.DontRecalculateBounds |
                 MeshUpdateFlags.DontValidateIndices);
-            if (!cachedMesh) mesh.UploadMeshData(data.markNotReadable);
+            if (!cachedMesh)
+            {
+                UMARendererAsset.UploadGeneratedMesh(data, renderer, materials);
+            }
         }
 
         private static void SetupCloth(

@@ -87,8 +87,25 @@ namespace UMA.HairCards
         }
         internal HairSurfaceFields Fields(HairGroup group)
         {
-            if (!fields.TryGetValue(group.Id, out var value)) fields.Add(group.Id, value = new HairSurfaceFields());
+            if (!fields.TryGetValue(group.Id, out var value))
+                fields.Add(group.Id, value = new HairSurfaceFields { DeferTextureField = deferTextureFields });
             return value;
+        }
+        private bool deferTextureFields;
+        internal bool DeferTextureFields
+        {
+            get => deferTextureFields;
+            set { deferTextureFields = value; foreach (var field in fields.Values) field.DeferTextureField = value; }
+        }
+        internal bool CompleteDeferredFields()
+        {
+            bool applied = false;
+            foreach (var field in fields.Values) applied |= field.CompleteDeferredField();
+            return applied;
+        }
+        internal bool HasDeferredFields
+        {
+            get { foreach (var field in fields.Values) if (field.HasDeferredField) return true; return false; }
         }
         internal StageCache Stage(HairGenerationStage stage)
         {

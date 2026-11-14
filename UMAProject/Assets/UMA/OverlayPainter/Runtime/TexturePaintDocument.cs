@@ -1228,6 +1228,19 @@ namespace UMA.TexturePaint
             return null;
         }
 
+        // An earlier build named linked path layers "<name> · Linked Path Result" with the
+        // middle dot damaged by repeated encoding conversions. Written as escapes so this file
+        // never carries the damaged text itself.
+        private const string GarbledMiddleDot =
+            "ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â·";
+
+        internal static string RepairGarbledLayerName(string name)
+        {
+            return string.IsNullOrEmpty(name) || name.IndexOf(GarbledMiddleDot, StringComparison.Ordinal) < 0
+                ? name
+                : name.Replace(GarbledMiddleDot, "·");
+        }
+
         public void Migrate()
         {
             int loadedSchemaVersion = schemaVersion;
@@ -1263,6 +1276,7 @@ namespace UMA.TexturePaint
                 {
                     TexturePaintDocumentLayer layer = surface.layers[layerIndex];
                     if (layer == null) continue;
+                    layer.name = RepairGarbledLayerName(layer.name);
                     layer.channels ??= new List<TexturePaintDocumentLayerChannel>();
                     layer.strokes ??= new List<TexturePaintStrokeRecord>();
                     layer.effects ??= new TexturePaintLayerEffects();

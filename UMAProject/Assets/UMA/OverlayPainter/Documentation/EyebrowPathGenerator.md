@@ -1,6 +1,6 @@
 # Eyebrows
 
-Choose **+Path Ã¢â€ â€™ Generators Ã¢â€ â€™ Hair Ã¢â€ â€™ Eyebrows**. Draw an **open** path from the inner head beside the nose to the outer tail. Start with Natural or Groomed, set the path width to the brow's overall width, and adjust density, hair length, strand thickness, slant, color, and seed. The Scene view labels the selected path's head and tail in both world and UV authoring modes. **Reverse** changes growth direction without moving points; **Flip Across** swaps its upper and lower sides when UV orientation requires it. World-space paths automatically keep the upper growth side facing world up, whether drawn on the left or right brow. The correction is applied once to the source groom, so mirrored copies retain the same anatomical direction. Flip Across remains a manual override; existing UV projects keep their authored orientation. For a character posed sideways or upside down, use the override and path roll as needed.
+Choose **+Path → Generators → Hair → Eyebrows**. Draw an **open** path from the inner head beside the nose to the outer tail. Start with Natural or Groomed, set the path width to the brow's overall width, and adjust density, hair length, strand thickness, slant, color, and seed. The Scene view labels the selected path's head and tail in both world and UV authoring modes. **Reverse** changes growth direction without moving points; **Flip Across** swaps its upper and lower sides when UV orientation requires it. World-space paths automatically keep the upper growth side facing world up, whether drawn on the left or right brow. The correction is applied once to the source groom, so mirrored copies retain the same anatomical direction. Flip Across remains a manual override; existing UV projects keep their authored orientation. For a character posed sideways or upside down, use the override and path roll as needed.
 
 The generator makes individual curved hairs with transparent gaps, coordinated roughness and rounded Normal Control relief. It does not add geometry. Use Normal Control to combine relief with the skin's existing normal; adding a second generated normal would apply the same relief twice. The receiving UMA material must support a normal map to display relief.
 
@@ -12,7 +12,7 @@ UMA3's **HDEyeBrows_Thin_Wardrobe** equips **UMA30_Eyebrows_slot** with **HDEyeB
 
 The separate **OverlayPainter Examples** companion includes **Eyebrows/Projects/HDEyebrows Groomed.asset** and **HDEyebrows Bushy.asset**. These are editable OverlayPainter documents with two UV paths and transparent base textures. Open a document to work on the standalone shell. On an equipped character, select that slot and load the document through the painter's File menu. The UV placement survives face DNA changes. Select the layer to see its yellow path and red points on the 3D shell. Click a point to expose green curve handles and a blue width handle; drag a point on the shell to reposition it. The same UV path remains editable in the 2D window, where you can also add or insert points. Each side has its own seed and settings.
 
-The example builder is available at **UMA Ã¢â€ â€™ Overlay Painter Ã¢â€ â€™ Examples Ã¢â€ â€™ Create Eyebrow Shell Projects**. It recreates the named example documents, so save your customized versions elsewhere first. It can also capture the shell on a currently built UMA3 character. Generated material ownership must be available after script reload; rebuild the character from its existing recipe if reconstruction reports missing ownership.
+The example builder is available at **UMA → Overlay Painter → Examples → Create Eyebrow Shell Projects**. It recreates the named example documents, so save your customized versions elsewhere first. It can also capture the shell on a currently built UMA3 character. Generated material ownership must be available after script reload; rebuild the character from its existing recipe if reconstruction reports missing ownership.
 
 For skin-painted eyebrows, select the face skin target instead. Avoid leaving an existing textured eyebrow shell over the new artwork. The face capture example uses the actual built UMA mesh in an isolated preview and leaves the character's materials and recipe unchanged.
 
@@ -26,7 +26,7 @@ For skin-painted eyebrows, select the face skin target instead. Avoid leaving an
 
 Geometry is generated in units of the **base full path width**. For example, hair length 0.5 is half that width; thickness 0.01 is one percent. Path length determines the local aspect ratio. UV paths use normalized UV units, so the mesh's UV distortion still affects their physical appearance. World paths use surface-world distances. Changing texture resolution changes sampling, not strand identities or geometry. Existing point widths stretch the local ribbon and its hairs; use them for placement, then use the generator's upper/lower profiles for root distribution.
 
-The path is the primary placement guide. Length Scale, Rotation, Slant, Center Offset, Arch and Tail Drop operate inside that guide. Presets preserve the path itself; **Apply Shape** controls whether preset shape settings are copied. Overall brow slant and local **Hair Slant** are separate controls.
+The path is the primary placement guide. Length Scale, Rotation, Slant, Center Offset, Arch and Tail Drop operate inside that guide. Presets preserve the path itself; **Apply preset shape too** controls whether preset shape settings are copied (off by default, so a preset keeps your shape profiles). Overall brow slant and local **Hair Slant** are separate controls.
 
 Upper and lower profiles define the **root region**, not a hard clipping mask for every strand. Groomed containment bends hairs towards that region; stray allowance and flyaways permit controlled extensions. Transparent padding expands the ribbon to contain those hairs without shrinking the brow. Keep enough room between a shell's UV boundaries and the groom: texture generation cannot extend the physical shell.
 
@@ -34,14 +34,14 @@ Upper and lower profiles define the **root region**, not a hard clipping mask fo
 
 Expand an artistic parameter to choose Constant, Start/End, Start/Middle/End (movable midpoint), Full Curve, From Start, From End, or Region. The displayed domain identifies whether the curve follows **u**, **v**, or **s**. For strand profiles, start/end mean root/tip. Region has separate entrance and exit curves. From Start/End provide linear regional influences.
 
-For quantities such as fullness, length, thickness and density, the curve **multiplies** the base value. For angles, it **adds degrees**. Constant leaves the base value unchanged. Randomness-amplitude curves are separate from the value curves. Weighted curve tangents and wrapping are stored in the path's JSON and preserved by duplication. The three domains are sampled over 0Ã¢â‚¬â€œ1; wrapping is preserved for editing, but the domain itself is clamped.
+For quantities such as fullness, length, thickness and density, the curve **multiplies** the base value. For angles, it **adds degrees**. Constant leaves the base value unchanged. Randomness-amplitude curves are separate from the value curves. Weighted curve tangents and wrapping are stored in the path's JSON and preserved by duplication. The three domains are sampled over 0–1; wrapping is preserved for editing, but the domain itself is clamped.
 
-Evaluation order is: path metric Ã¢â€ â€™ root density and shape Ã¢â€ â€™ blended growth field Ã¢â€ â€™ strand length/bend/clumping/waviness Ã¢â€ â€™ root-to-tip thickness and opacity Ã¢â€ â€™ shared coverage Ã¢â€ â€™ material shading. Invalid negative physical quantities are clamped. Work limits reject oversized requests while preserving the previous layer output.
+Evaluation order is: path metric → root density and shape → blended growth field → strand length/bend/clumping/waviness → root-to-tip thickness and opacity → shared coverage → material shading. Invalid negative physical quantities are clamped. Work limits reject oversized requests while preserving the previous layer output.
 
 Examples:
 
 - Thin outer tail: lower the end of Upper, Lower and Fullness over **u**.
-- Upright head and swept body: Head Angle around 75Ã‚Â°, Body Angle around 25Ã‚Â°, then Arch/Tail towards 0Ã‚Â°.
+- Upright head and swept body: Head Angle around 75°, Body Angle around 25°, then Arch/Tail towards 0°.
 - Disorder only at the tail: use a From End or Region curve on Direction Variation.
 - Fine upper edge: reduce Length Across and Thickness Across at **v = 1**.
 - Soft roots and sharp tips: keep Root Fade short and gentle, use a long Tip Taper with a sharper curve, and retain a zero endpoint in Strand Width.

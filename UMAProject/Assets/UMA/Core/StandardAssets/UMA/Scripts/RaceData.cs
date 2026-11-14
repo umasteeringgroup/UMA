@@ -191,6 +191,12 @@ namespace UMA
 		[Tooltip("The compatibility pose for old UMA2 rigs. Old slots are converted to this race using this pose.")]		
 		public UMABonePose LegacyCompatibilityPose;
 
+		[Tooltip("Rest pose of the older rig this race replaces (for example the UMA 2 HumanMale rig on HumanMale30). Slots still flagged as legacy that were built for that rig are converted to this race's rig automatically when a character is built. Leave empty to turn this off for the race.")]
+		public UMARigRestPoseAsset legacyRig;
+
+		[Tooltip("Optional per-bone overrides used when legacy slots are converted for this race.")]
+		public UMASlotRigConversionProfile legacyRigProfile;
+
 
         public DynamicDNAConverterController[] GetConverters(UMADnaBase DNA)
 		{

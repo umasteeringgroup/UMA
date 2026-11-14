@@ -31,6 +31,14 @@ namespace UMA.HairCards.Editor
             window.Show();
         }
 
+        /// <summary>Opens this window as a tab next to <paramref name="dockNextTo"/>.</summary>
+        internal static void OpenDockedWith(System.Type dockNextTo)
+        {
+            var window = GetWindow<HairGroomPreviewWindow>(dockNextTo);
+            window.initialPlacementDone = true;
+            window.Show();
+        }
+
         internal static void OpenVisibility()
         {
             Open();
@@ -40,7 +48,7 @@ namespace UMA.HairCards.Editor
         private void OnEnable()
         {
             titleContent = new GUIContent("Hair Preview & Settings");
-            minSize = new Vector2(360f, 400f);
+            minSize = new Vector2(280f, 300f);
             if (HairEditorPreferences.Suspended) return;
             RestoreContext(HairCardStage.ActiveStage?.Groom);
             EditorApplication.update += SaveIdlePreferences;
@@ -61,11 +69,15 @@ namespace UMA.HairCards.Editor
             Page = previewPage;
         }
 
+        private int savedInteraction = -1;
+
         private void SaveIdlePreferences()
         {
             if (HairEditorPreferences.Suspended || HairCardStage.ActiveStage?.IsEditing == true ||
-                EditorApplication.timeSinceStartup < nextPreferencesSave) return;
+                EditorApplication.timeSinceStartup < nextPreferencesSave ||
+                savedInteraction == HairEditorPreferences.InteractionVersion) return;
             nextPreferencesSave = EditorApplication.timeSinceStartup + 2d;
+            savedInteraction = HairEditorPreferences.InteractionVersion;
             HairEditorPreferences.instance.Remember(this, "preview", preferenceContext);
         }
 
@@ -100,6 +112,7 @@ namespace UMA.HairCards.Editor
 
         private void OnGUI()
         {
+            HairEditorPreferences.NoteInteraction(Event.current);
             HairCardStage stage = HairCardStage.ActiveStage;
             if (stage?.Groom != preferenceGroom && !HairEditorPreferences.Suspended)
             {
@@ -108,7 +121,7 @@ namespace UMA.HairCards.Editor
             }
             using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
             {
-                if (GUILayout.Button("Nodes", EditorStyles.toolbarButton)) HairGroomNodeWindow.Open();
+                if (GUILayout.Button("Outliner", EditorStyles.toolbarButton)) HairGroomNodeWindow.Open();
                 if (GUILayout.Button("Properties", EditorStyles.toolbarButton)) HairGroomWorkspace.OpenProperties();
                 GUILayout.FlexibleSpace();
                 using (new EditorGUI.DisabledScope(stage?.Groom == null))
@@ -118,7 +131,7 @@ namespace UMA.HairCards.Editor
             Page = GUILayout.Toolbar(Page, new[] { "Preview & Visibility", "Settings" }, GUILayout.Height(25f));
             if (stage?.Groom == null)
             {
-                EditorGUILayout.HelpBox("Open a Hair Groom asset or select a source character/mesh to use preview controls and saved settings. This window docks independently of Hair Nodes and Hair Properties.", MessageType.Info);
+                EditorGUILayout.HelpBox("Open a Hair Groom asset or select a source character/mesh to use preview controls and saved settings. This window docks independently of the Groom Outliner and Hair Properties.", MessageType.Info);
                 if (GUILayout.Button("Open Selected Source", GUILayout.Height(30f))) HairCardMenu.OpenSelectedSource();
                 return;
             }

@@ -67,7 +67,8 @@ mutated; changes become visible when the avatar rebuilds.
 ## Storage benchmark decision
 
 Tested in the current **UMA NextGen 3.0f5 / Unity 6000.3.18f1** checkout, not a copied
-validation project. Representative results from `UMASlotPreparationBenchmarkTests`:
+validation project. Representative results from `UMASlotPreparationBenchmarkTests` (since removed from
+the test suite; restore it from version control to re-measure):
 
 | UMA30 body tile | Vertices | Current pack stage | Prototype native copy | Extra packed bytes | Extra topology bytes |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -86,8 +87,8 @@ for another stored copy.
 **Decision: do not serialize duplicate packed vertex streams or triangle records yet.**
 These three tiles alone would add 325,392 bytes of vertex streams and 147,792 bytes of
 topology. The small measured stage costs do not establish an end-to-end benefit large
-enough to justify that storage and invalidation complexity. The benchmark remains
-available for future platform-specific testing.
+enough to justify that storage and invalidation complexity. For platform-specific testing,
+restore the benchmark from version control.
 
 A synthetic 24k-vertex/two-frame slot took about 18.7 ms for first-use conversion,
 versus 0.17 ms to verify its saved preparation. These are one-time costs per source

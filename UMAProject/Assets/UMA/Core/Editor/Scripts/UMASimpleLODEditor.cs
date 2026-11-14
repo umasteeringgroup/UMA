@@ -527,11 +527,12 @@ namespace UMA.Editors
             }
 
             using (inspectorView.Section("Runtime feature reduction",
-                "The three Disable At LOD values stop bone animators, UMA expressions, or dynamic expressions at and beyond the selected level; -1 leaves that feature unmanaged. Additional LOD-Tuned Components receive level changes so other systems can reduce their own cost with the character."))
+                "The Disable At LOD values stop bone animators, UMA expressions, dynamic expressions, or Hair Control at and beyond the selected level; -1 leaves that feature unmanaged. Without Hair Control the hair does not sway and its volume shading uses the renderer bounds instead of the head, so pick a level where that no longer shows. Additional LOD-Tuned Components receive level changes so other systems can reduce their own cost with the character."))
             {
                 inspectorView.Field(serializedObject, "disableBoneAnimatorsAtLOD", "Disable Bone Animators at LOD");
                 inspectorView.Field(serializedObject, "disableUMAExpressionPlayerAtLOD", "Disable UMA Expressions at LOD");
                 inspectorView.Field(serializedObject, "disableDynamicExpressionPlayerAtLOD", "Disable Dynamic Expressions at LOD");
+                inspectorView.Field(serializedObject, "disableHairControlAtLOD", "Disable Hair Control at LOD");
                 inspectorView.Field(serializedObject, "lodTunings", "Additional LOD-Tuned Components");
                 EditorGUILayout.LabelField("Use -1 to leave a feature unmanaged.", EditorStyles.wordWrappedMiniLabel);
             }

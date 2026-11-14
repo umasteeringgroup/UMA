@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &1
+MonoBehaviour:
+  m_ObjectHideFlags: 53
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UMA_Core_Editor:UMA.Editors:SharedColorParameterSettings
+  material: {fileID: -876546973899608171, guid: 2ead69edbcd1b7642aae643cd21fd604, type: 3}
+  showHidden: 0
+  edit:
+    parameterName: _SpecularMultiplier
+    kind: 0
+    source: 1
+    floatValue: 0.5
+    intValue: 0
+    colorValue: {r: 0.5, g: 0, b: 0, a: 0}
+    vectorValue: {x: 0.5, y: 0, z: 0, w: 0}
+    sourceParameter: _SpecularMultiplier
+    multiplier: 1.2
+    whenSourceMissing: 0

@@ -1024,8 +1024,12 @@ namespace UMA
 
                 umaData.skeleton.BeginSkeletonUpdate();
                 updateStarted = true;
-                for (int boneIndex = 0; boneIndex < mergedCount; boneIndex++)
-                    umaData.skeleton.EnsureBone(mergedTransforms[boneIndex]);
+                // An empty skeleton can get all of its bones at once from a kept copy of the hierarchy.
+                if (!umaData.skeleton.TryEnsureBonesFromTemplate(mergedTransforms, mergedCount))
+                {
+                    for (int boneIndex = 0; boneIndex < mergedCount; boneIndex++)
+                        umaData.skeleton.EnsureBone(mergedTransforms[boneIndex]);
+                }
                 umaData.skeleton.EnsureBoneHierarchy();
             }
             finally
@@ -2214,16 +2218,17 @@ namespace UMA
                         {
                             var mask = ci.triangleMask[sm];
                             int triCount = triLen / 3;
-                            int removed = 0;
-                            int maskedTriangles = Math.Min(mask.Length, triCount);
-                            for (int t = 0; t < maskedTriangles; t++)
-                                if (mask[t]) removed++;
+                            // One pass over the mask gives both the job's copy and the number of hidden triangles.
+                            var nativeMask = BitArrayToNative(mask, triCount, nativeAllocator, out int removed);
                             int writeCount = (triCount - removed) * 3;
-                            if (writeCount == 0) continue;
-                            ValidateIndexDestinationRange(dstStart, writeCount, subIndexStart[dstSub], subIndexStart[dstSub] + subMeshTriangleLength[dstSub], s, sm);
-                            var nativeMask = BitArrayToNative(mask, triCount, nativeAllocator);
+                            if (writeCount == 0)
+                            {
+                                nativeMask.Dispose();
+                                continue;
+                            }
                             try
                             {
+                                ValidateIndexDestinationRange(dstStart, writeCount, subIndexStart[dstSub], subIndexStart[dstSub] + subMeshTriangleLength[dstSub], s, sm);
                                 if (triangleMasks == null) triangleMasks = new List<NativeArray<byte>>();
                                 triangleMasks.Add(nativeMask);
                             }
@@ -2523,6 +2528,21 @@ namespace UMA
         {
             if (meta == null || vertexCount <= 0 || mesh == null) return;
 
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
+            // One set of full-size buffers serves every frame. A frame only fills the vertex ranges of the
+            // sources that have the shape, so before the next frame only those ranges are cleared again,
+            // not the whole buffer. ArrayPool may return a larger array; that is safe because the span
+            // overload below passes exactly the vertex-count slice.
+            var pool = ArrayPool<Vector3>.Shared;
+            Vector3[] dvPooled = null;
+            Vector3[] dnPooled = null;
+            Vector3[] dtPooled = null;
+            var dvWritten = new List<(int start, int count)>(8);
+            var dnWritten = new List<(int start, int count)>(8);
+            var dtWritten = new List<(int start, int count)>(8);
+            try
+            {
+#endif
             foreach (var kv in meta)
             {
                 string shapeName = kv.Key;
@@ -2531,35 +2551,22 @@ namespace UMA
 
                 for (int f = 0; f < info.frameCount; f++)
                 {
-                    var pool = ArrayPool<Vector3>.Shared;
                     Vector3[] dv = null;
                     Vector3[] dn = null;
                     Vector3[] dt = null;
-#if UMA_BURSTCOMPILE && !UNITY_WEBGL
-                    Vector3[] dnPooled = null;
-                    Vector3[] dtPooled = null;
-#endif
-                    // ArrayPool may return a larger array. Pooling is therefore only safe with
-                    // Unity 6's span overload, where we can pass the exact vertex-count slice.
                     try
                     {
 #if UMA_BURSTCOMPILE && !UNITY_WEBGL
-                        dv = pool.Rent(vertexCount);
-                        Array.Clear(dv, 0, vertexCount);
-
-                        // Only rent normal/tangent buffers if required. Keep original references so we only return pooled arrays.
+                        dv = PrepareBlendShapeBuffer(pool, ref dvPooled, dvWritten, vertexCount);
+                        // Only normal/tangent buffers a shape needs are rented.
                         if (info.hasNormals)
                         {
-                            dnPooled = pool.Rent(vertexCount);
-                            dn = dnPooled;
-                            Array.Clear(dn, 0, vertexCount);
+                            dn = PrepareBlendShapeBuffer(pool, ref dnPooled, dnWritten, vertexCount);
                         }
 
                         if (info.hasTangents)
                         {
-                            dtPooled = pool.Rent(vertexCount);
-                            dt = dtPooled;
-                            Array.Clear(dt, 0, vertexCount);
+                            dt = PrepareBlendShapeBuffer(pool, ref dtPooled, dtWritten, vertexCount);
                         }
 
 #else
@@ -2599,6 +2606,9 @@ namespace UMA
                                 if (fr.deltaVertices != null && fr.deltaVertices.Length == vc)
                                 {
                                     Array.Copy(fr.deltaVertices, 0, dv, vo, vc);
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
+                                    dvWritten.Add((vo, vc));
+#endif
                                 }
                                 else
                                 {
@@ -2609,12 +2619,18 @@ namespace UMA
                                 if (info.hasNormals && dn != null && fr.deltaNormals != null && fr.deltaNormals.Length == vc)
                                 {
                                     Array.Copy(fr.deltaNormals, 0, dn, vo, vc);
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
+                                    dnWritten.Add((vo, vc));
+#endif
                                 }
 
                                 // Copy tangents if requested & length matches
                                 if (info.hasTangents && dt != null && fr.deltaTangents != null && fr.deltaTangents.Length == vc)
                                 {
                                     Array.Copy(fr.deltaTangents, 0, dt, vo, vc);
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
+                                    dtWritten.Add((vo, vc));
+#endif
                                 }
                             }
                         }
@@ -2646,18 +2662,40 @@ namespace UMA
                     {
                         throw new InvalidOperationException($"Failed adding blendshape '{shapeName}' frame {f}.", ex);
                     }
-                    finally
-                    {
-#if UMA_BURSTCOMPILE && !UNITY_WEBGL
-                        // Return only the pooled arrays (original references)
-                        if (dv != null) pool.Return(dv, false);
-                        if (dnPooled != null) pool.Return(dnPooled, false);
-                        if (dtPooled != null) pool.Return(dtPooled, false);
-#endif
-                    }
                 }
             }
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
+            }
+            finally
+            {
+                if (dvPooled != null) pool.Return(dvPooled, false);
+                if (dnPooled != null) pool.Return(dnPooled, false);
+                if (dtPooled != null) pool.Return(dtPooled, false);
+            }
+#endif
         }
+
+#if UMA_BURSTCOMPILE && !UNITY_WEBGL
+        // Returns the buffer with its first vertexCount entries zero. The first use rents and clears it; later
+        // uses clear only the ranges the previous frame wrote, which are then forgotten.
+        private static Vector3[] PrepareBlendShapeBuffer(ArrayPool<Vector3> pool, ref Vector3[] buffer, List<(int start, int count)> written, int vertexCount)
+        {
+            if (buffer == null)
+            {
+                buffer = pool.Rent(vertexCount);
+                Array.Clear(buffer, 0, vertexCount);
+            }
+            else
+            {
+                for (int i = 0; i < written.Count; i++)
+                {
+                    Array.Clear(buffer, written[i].start, written[i].count);
+                }
+            }
+            written.Clear();
+            return buffer;
+        }
+#endif
 
         /// <summary>
         /// Retains two reusable sets of full-output delta buffers. While Unity
@@ -3688,19 +3726,40 @@ namespace UMA
             }
         }
 
-        private static NativeArray<byte> BitArrayToNative(BitArray ba, int triangleCount, Allocator allocator)
+        // One byte per triangle: 1 where the mask hides it. Triangles past the end of the mask are not hidden.
+        // set: the number of hidden triangles.
+        private static unsafe NativeArray<byte> BitArrayToNative(BitArray ba, int triangleCount, Allocator allocator, out int set)
         {
+            set = 0;
             var result = new NativeArray<byte>(triangleCount, allocator, NativeArrayOptions.ClearMemory);
+            int count = Math.Min(ba.Count, triangleCount);
+            if (count <= 0) return result;
+            // BitArray copies itself out 32 flags at a time, lowest bit first, which is far quicker than
+            // asking for each flag.
+            int wordCount = (ba.Count + 31) / 32;
+            int[] words = ArrayPool<int>.Shared.Rent(wordCount);
             try
             {
-                int count = Math.Min(ba.Count, triangleCount);
-                for (int i = 0; i < count; i++) result[i] = ba[i] ? (byte)1 : (byte)0;
+                ba.CopyTo(words, 0);
+                byte* target = (byte*)NativeArrayUnsafeUtility.GetUnsafePtr(result);
+                int hidden = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    int bit = (words[i >> 5] >> (i & 31)) & 1;
+                    target[i] = (byte)bit;
+                    hidden += bit;
+                }
+                set = hidden;
                 return result;
             }
             catch
             {
                 result.Dispose();
                 throw;
+            }
+            finally
+            {
+                ArrayPool<int>.Shared.Return(words, false);
             }
         }
         #endregion

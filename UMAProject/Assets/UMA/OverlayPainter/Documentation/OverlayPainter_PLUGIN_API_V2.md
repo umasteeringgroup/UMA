@@ -232,7 +232,7 @@ have a meaningful mask representation.
 
 ## Generator and filter layers
 
-Create a **Plugin layer** with **+ Plugin**, choose a generator or filter from its properties, configure
+Create a **Plugin layer** with **Add Layer > Plugin**, choose a generator or filter from its properties, configure
 the schema, and click **Generate**. A layer execution receives only its logical target surfaces and
 reads the composed channels below its stack position. Output is cached in the same layer and is
 replaced atomically on regeneration. Cancel or failure keeps the previous cache; Undo/Redo swaps the

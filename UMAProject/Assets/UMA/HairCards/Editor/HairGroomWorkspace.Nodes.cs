@@ -22,7 +22,7 @@ namespace UMA.HairCards.Editor
             using (var scroll = new EditorGUILayout.ScrollViewScope(detailsScroll))
             {
                 detailsScroll = scroll.scrollPosition;
-                if (node == null) { EditorGUILayout.HelpBox("Select a node in Hair Nodes to edit it.", MessageType.Info); return; }
+                if (node == null) { EditorGUILayout.HelpBox("Select an item in the Groom Outliner to edit it.", MessageType.Info); return; }
                 EditorGUILayout.Space(5f);
                 if (node.Group?.generation?.enabled == true && node.Group.generation.cards.source == HairPopulationSource.PaintedScalp &&
                     (node.Kind == HairGroomNodeKind.Guides || node.Kind == HairGroomNodeKind.Groom || node.Kind == HairGroomNodeKind.Layer))
@@ -39,62 +39,77 @@ namespace UMA.HairCards.Editor
                 if (node.Group?.generation?.enabled == true && node.Group.generation.cards.source != HairPopulationSource.Scalp && node.Group.generation.cards.source != HairPopulationSource.PaintedScalp &&
                     (node.Kind == HairGroomNodeKind.Guides || node.Kind == HairGroomNodeKind.Groom || node.Kind == HairGroomNodeKind.Layer || node.Kind == HairGroomNodeKind.GrowthMap))
                     EditorGUILayout.HelpBox("This group generates hair from forms. Edit its Shared Helpers for shape and facing; add modifiers to its generated population. Optional painted root density only removes existing form roots. To create new roots when painting, use Painted Scalp generation.", MessageType.Info);
-                switch (node.Kind)
-                {
-                    case HairGroomNodeKind.Source: DrawSetup(stage); break;
-                    case HairGroomNodeKind.Group: DrawGroupNode(stage, node.Group); break;
-                    case HairGroomNodeKind.GrowthMap:
-                        using (new EditorGUI.DisabledScope(node.Group.locked)) DrawGrowth(stage); break;
-                    case HairGroomNodeKind.OptionalMaps:
-                        EditorGUILayout.LabelField("Maps", node.Group.maps.Count.ToString());
-                        EditorGUILayout.HelpBox("Expand Optional Maps in Hair Nodes and select the map to edit. Use + Map in the tree to add an optional map.", MessageType.Info);
-                        break;
-                    case HairGroomNodeKind.Guides: DrawGuides(stage); break;
-                    case HairGroomNodeKind.Groom:
-                        EditorGUILayout.LabelField("Sculpt passes", node.Group.sculptLayers.Count.ToString());
-                        EditorGUILayout.HelpBox("Select a sculpt pass beneath Grooming in Hair Nodes to comb or sculpt. Use + Sculpt Pass in the tree to create one. Passes evaluate top to bottom.", MessageType.Info);
-                        break;
-                    case HairGroomNodeKind.Layer: DrawPassNode(stage, node); DrawGroom(stage); break;
-                    case HairGroomNodeKind.Modifier:
-                        if (node.Layer != null && (!node.Layer.visible || node.Layer.opacity <= 0f))
-                            EditorGUILayout.HelpBox("The owning sculpt pass is hidden or has zero opacity. This modifier will not affect the normal output.", MessageType.Warning);
-                        using (new EditorGUI.DisabledScope(node.Locked)) DrawModifier(stage, node.Modifier);
-                        break;
-                    case HairGroomNodeKind.Children:
-                        using (new EditorGUI.DisabledScope(node.Locked))
-                        {
-                            HairGenerationEditor.DrawOverview(stage, node.Group);
-                            if (!node.Group.generation.enabled) DrawChildren(stage);
-                        }
-                        break;
-                    case HairGroomNodeKind.Population:
-                        using (new EditorGUI.DisabledScope(node.Locked)) HairGenerationEditor.DrawPopulation(stage, node); break;
-                    case HairGroomNodeKind.ScalpShading:
-                        using (new EditorGUI.DisabledScope(node.Locked)) HairGenerationEditor.DrawScalp(stage, node.Group); break;
-                    case HairGroomNodeKind.Cards:
-                    case HairGroomNodeKind.Geometry:
-                    case HairGroomNodeKind.Atlas:
-                        using (new EditorGUI.DisabledScope(node.Locked)) DrawCards(stage, node.Kind); break;
-                    case HairGroomNodeKind.Helpers:
-                        EditorGUILayout.LabelField("Shared helpers", stage.Groom.SharedHelpers.Count.ToString());
-                        EditorGUILayout.HelpBox("Select a helper beneath Shared Helpers in Hair Nodes to edit it. Create or bind helpers using the tree's helper controls.", MessageType.Info);
-                        break;
-                    case HairGroomNodeKind.Helper: DrawHelperNode(stage, node.Helper); break;
-                    case HairGroomNodeKind.Constraints:
-                        EditorGUILayout.LabelField("Constraints", node.Group.constraints.Count.ToString());
-                        EditorGUILayout.HelpBox("Select a constraint beneath this branch in Hair Nodes to edit it. Use + Constraint in the tree to choose a shared helper.", MessageType.Info);
-                        break;
-                    case HairGroomNodeKind.Constraint: DrawConstraintNode(stage, node); break;
-                    case HairGroomNodeKind.Optimize: DrawOptimize(stage); break;
-                    case HairGroomNodeKind.Output: DrawValidateAndBake(stage); break;
-                    case HairGroomNodeKind.LegacyModifiers:
-                        EditorGUILayout.HelpBox("Use Organize into sculpt pass in Hair Nodes to move these modifiers into an editable pass without changing their result.", MessageType.Info);
-                        break;
-                }
+                node.Handler.DrawProperties(this, stage, node);
             }
         }
 
-        private static void DrawGroupNode(HairCardStage stage, HairGroup group)
+        /// <summary>Edit This Layer / Return to Final Preview, and a finishing layer, for the
+        /// grooming branch. Editing state is not node management, so it lives with the pass.</summary>
+        internal static void DrawLayerEditingControls(HairCardStage stage, HairGroomNode node)
+        {
+            HairGroup group = node.Group;
+            EditorGUILayout.HelpBox(stage.SculptEditingStatus, MessageType.Info);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (stage.IsLayerEditing)
+                {
+                    if (GUILayout.Button("Return to Final Preview")) stage.ReturnToFinalPreview();
+                }
+                else
+                    using (new EditorGUI.DisabledScope(!stage.CanEditLayer || node.Kind != HairGroomNodeKind.Layer))
+                        if (GUILayout.Button(new GUIContent("Edit This Layer", "Edit before this layer's modifiers, temporarily bypassing all later operations."))) stage.BeginLayerEditing();
+                using (new EditorGUI.DisabledScope(!HairGroomNodeCommands.CanAddFinishingLayer(stage, group)))
+                    if (GUILayout.Button(new GUIContent("Add Finishing Sculpt Layer", "Add an additive layer after the complete guide stack, including helper constraints. Nothing is baked or overwritten.")))
+                    { HairGroomNodeCommands.AddFinishingSculptLayer(stage, group); GUIUtility.ExitGUI(); }
+            }
+            EditorGUILayout.Space(4f);
+        }
+
+        /// <summary>Population and mask inspection previews for generation items.</summary>
+        internal static void DrawInspectionControls(HairCardStage stage, HairGroomNode node)
+        {
+            bool inspectionActive = !string.IsNullOrEmpty(stage.InspectedPopulationId) || !string.IsNullOrEmpty(stage.InspectedMaskId);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (node.Population != null && node.Modifier == null)
+                {
+                    bool inspecting = stage.InspectedPopulationId == node.Population.Id && string.IsNullOrEmpty(stage.InspectedMaskId);
+                    if (GUILayout.Toggle(inspecting, new GUIContent("Inspect Population", "Isolate this population, colored by parent clump."), EditorStyles.miniButton) != inspecting)
+                        stage.InspectPopulation(inspecting ? null : node.Population.Id);
+                }
+                if (node.Modifier != null)
+                {
+                    bool showing = stage.InspectedMaskId == node.Modifier.Id;
+                    if (GUILayout.Toggle(showing, new GUIContent("Show Mask", "Preview where this modifier applies."), EditorStyles.miniButton) != showing)
+                        stage.InspectPopulation(node.Population?.Id, showing ? null : node.Modifier.Id);
+                }
+                using (new EditorGUI.DisabledScope(!inspectionActive))
+                    if (GUILayout.Button(new GUIContent("Final Hair", "Return to the complete output, all downstream stages included."), EditorStyles.miniButton))
+                        stage.InspectPopulation(null);
+            }
+            EditorGUILayout.LabelField(inspectionActive ? "Inspection preview active · not the baked output" : "Final hair · all downstream stages included",
+                EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.Space(4f);
+        }
+
+        /// <summary>One-click generation presets for a group's Generate Hair branch.</summary>
+        internal static void DrawGenerationPresets(HairCardStage stage, HairGroomNode node)
+        {
+            using (new EditorGUI.DisabledScope(node.Locked))
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.Label("Presets", EditorStyles.miniBoldLabel, GUILayout.Width(52f));
+                if (GUILayout.Button(new GUIContent("Short Hair Part…", "Short, softly clumped ribbons: up to 2,500 cards and four segments per card. Preserve a part with separate groups or Part Regions."), EditorStyles.miniButtonLeft))
+                    HairGenerationEditor.ConfirmPreset(stage, node, HairGenerationEditor.Preset.ShortHairPart);
+                if (GUILayout.Button(new GUIContent("Curly Volume…", "Set up surface-rooted ringlets with automatic curl resolution. Preserves guides, sculpt passes, assigned textures and materials."), EditorStyles.miniButtonMid))
+                    HairGenerationEditor.ConfirmPreset(stage, node, HairGenerationEditor.Preset.CurlyVolume);
+                if (GUILayout.Button(new GUIContent("Swept Clumps…", "Configure generated clumps, hairline, curved ribbons and LOD sampling. Existing guides/sculpting and assigned textures/materials are preserved."), EditorStyles.miniButtonRight))
+                    HairGenerationEditor.ConfirmPreset(stage, node, HairGenerationEditor.Preset.SweptClumps);
+            }
+            EditorGUILayout.Space(4f);
+        }
+
+        internal static void DrawGroupNode(HairCardStage stage, HairGroup group)
         {
             using (new EditorGUI.DisabledScope(group.locked))
             {
@@ -112,7 +127,7 @@ namespace UMA.HairCards.Editor
             EditorGUILayout.LabelField($"{group.guides.Count:N0} guides · {group.sculptLayers.Count:N0} sculpt passes", EditorStyles.miniLabel);
         }
 
-        private static void DrawPassNode(HairCardStage stage, HairGroomNode node)
+        internal static void DrawPassNode(HairCardStage stage, HairGroomNode node)
         {
             HairSculptLayer layer = node.Layer;
             using (new EditorGUI.DisabledScope(node.Group.locked))
@@ -134,7 +149,7 @@ namespace UMA.HairCards.Editor
             if (EditorGUILayout.Toggle("Solo (preview only)", solo) != solo) stage.SoloLayer(layer.Id);
         }
 
-        private static void DrawHelperNode(HairCardStage stage, HairHelper helper)
+        internal static void DrawHelperNode(HairCardStage stage, HairHelper helper)
         {
             bool locked = EditorGUILayout.Toggle("Lock helper", helper.locked);
             if (locked != helper.locked) { Undo.RecordObject(stage.Groom, "Lock Hair Helper"); helper.locked = locked; HairGroomCommands.Commit(stage.Groom, HairPreviewChange.Display); }
@@ -153,11 +168,12 @@ namespace UMA.HairCards.Editor
                 { Undo.RecordObject(stage.Groom, "Edit Hair Helper"); helper.name = name; helper.visible = visible; helper.radius = radius; helper.size = size; HairGroomCommands.Commit(stage.Groom); }
             }
             HairFormEditor.DrawHelperProperties(stage, helper);
+            if (HairFormEditor.IsForm(helper)) HairFormEditor.DrawHelperActions(stage, helper);
             EditorGUILayout.HelpBox(helper.embedded ? "Move this helper with its Scene gizmo. Embedded helpers are saved with the groom." :
                 "Move/rotate/scale the linked source scene object to edit this helper. Its source-relative transform is saved for bake/runtime, including scaled or mirrored parents. The stage gizmo is display-only for linked helpers.", MessageType.Info);
         }
 
-        private static void DrawConstraintNode(HairCardStage stage, HairGroomNode node)
+        internal static void DrawConstraintNode(HairCardStage stage, HairGroomNode node)
         {
             HairConstraintSettings constraint = node.Constraint;
             using (new EditorGUI.DisabledScope(node.Locked))

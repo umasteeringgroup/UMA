@@ -18,6 +18,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.modules.wind",
+            "expression": "",
+            "define": "UMA_WIND_MODULE"
+        }
+    ],
     "noEngineReferences": false
 }

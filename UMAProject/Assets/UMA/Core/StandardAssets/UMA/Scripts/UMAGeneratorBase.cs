@@ -486,8 +486,13 @@ namespace UMA
                         var previousAvatar = animator.avatar;
                         if (!umaData.KeepAvatar || animator.avatar == null)
                         {
-                            UMAUtils.DestroyAvatar(animator.avatar);
-                            SetAvatar(umaData, animator, !evaluateAnimatorPoseAfterAvatarUpdate);
+                            // A humanoid Avatar built from exactly this skeleton state is kept, and only its
+                            // pose step is run again; see UMAAvatarReuse.
+                            if (!UMAAvatarReuse.TryReuse(umaData, animator, !evaluateAnimatorPoseAfterAvatarUpdate))
+                            {
+                                UMAUtils.DestroyAvatar(animator.avatar);
+                                SetAvatar(umaData, animator, !evaluateAnimatorPoseAfterAvatarUpdate);
+                            }
                         }
 
                         // Assigning a new Avatar refreshes Unity's bindings. When
@@ -527,10 +532,14 @@ namespace UMA
             {
                 case RaceData.UMATarget.Humanoid:
                     umaTPose.DeSerialize();
-                    var avatar = CreateAvatar(umaData, umaTPose, preserveDnaHipsTransform);
+                    // Notes what the Avatar is built from, so a later rig update that starts from the same
+                    // state can keep it.
+                    UMAAvatarReuse.Record reuse = UMAAvatarReuse.Begin(umaData, animator, preserveDnaHipsTransform);
+                    var avatar = CreateAvatar(umaData, umaTPose, preserveDnaHipsTransform, out HumanDescription description);
                     if (avatar != null)
                     {
                         animator.avatar = avatar;
+                        UMAAvatarReuse.Complete(umaData, reuse, avatar, description);
                     }
                     break;
                 case RaceData.UMATarget.Generic:
@@ -596,64 +605,81 @@ namespace UMA
         /// <param name="umaTPose">UMA TPose.</param>
         public static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose, bool preserveDnaHipsTransform = false)
         {
+            return CreateAvatar(umaData, umaTPose, preserveDnaHipsTransform, out _);
+        }
+
+        private static Avatar CreateAvatar(UMAData umaData, UmaTPose umaTPose, bool preserveDnaHipsTransform, out HumanDescription description)
+        {
             //Debug.Log("Avatar: Creating humanoid avatar for " + umaData.name);
             umaTPose.DeSerialize();
-            HumanDescription description = CreateHumanDescription(umaData, umaTPose);
+            description = CreateHumanDescription(umaData, umaTPose);
             //DebugLogHumanAvatar(umaData.gameObject, description);
             try
             {
                 Avatar res = AvatarBuilder.BuildHumanAvatar(umaData.gameObject, description);
                 CreatedAvatars.Add(res.GetUmaObjectId());
                 res.name = umaData.name;
-                if (umaTPose.HasExtractedHumanPose())
-                {
-                    // SetHumanPose retargets its normalized bodyPosition against the
-                    // newly proportioned Avatar. During a partial edit-time DNA build
-                    // that can move Hips even when the active DNA touches only child
-                    // bones. Preserve the already-correct post-DNA Hips transform while
-                    // still restoring the serialized muscle pose.
-                    Transform hips = null;
-                    Vector3 hipsPosition = default;
-                    Quaternion hipsRotation = default;
-                    Vector3 hipsScale = default;
-                    if (preserveDnaHipsTransform && umaData.skeleton != null)
-                    {
-                        string hipsBoneName = umaTPose.BoneNameFromHumanName("Hips");
-                        if (string.IsNullOrEmpty(hipsBoneName))
-                        {
-                            hipsBoneName = "Hips";
-                        }
-                        hips = umaData.skeleton.GetBoneTransform(hipsBoneName);
-                        if (hips != null)
-                        {
-                            hipsPosition = hips.position;
-                            hipsRotation = hips.rotation;
-                            hipsScale = hips.localScale;
-                        }
-                    }
-
-                    HumanPose pose = umaTPose.GetHumanPose();
-                    var handler = new HumanPoseHandler(res, umaData.transform);
-                    try
-                    {
-                        handler.SetHumanPose(ref pose);
-                    }
-                    finally
-                    {
-                        handler.Dispose();
-                        if (hips != null)
-                        {
-                            hips.SetPositionAndRotation(hipsPosition, hipsRotation);
-                            hips.localScale = hipsScale;
-                        }
-                    }
-                }
+                ApplyExtractedHumanPose(umaData, umaTPose, res, preserveDnaHipsTransform);
                 return res;
             }
             catch (Exception ex)
             {
                 Debug.LogError("Error creating avatar: " + ex.Message);
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Applies the T-pose asset's stored human pose through a humanoid Avatar, as the last step of building
+        /// that Avatar. Also run on its own when a rig update keeps its Avatar (see UMAAvatarReuse), so the bones
+        /// end up exactly where a rebuild would leave them.
+        /// </summary>
+        internal static void ApplyExtractedHumanPose(UMAData umaData, UmaTPose umaTPose, Avatar avatar, bool preserveDnaHipsTransform)
+        {
+            if (!umaTPose.HasExtractedHumanPose())
+            {
+                return;
+            }
+
+            // SetHumanPose retargets its normalized bodyPosition against the
+            // newly proportioned Avatar. During a partial edit-time DNA build
+            // that can move Hips even when the active DNA touches only child
+            // bones. Preserve the already-correct post-DNA Hips transform while
+            // still restoring the serialized muscle pose.
+            Transform hips = null;
+            Vector3 hipsPosition = default;
+            Quaternion hipsRotation = default;
+            Vector3 hipsScale = default;
+            if (preserveDnaHipsTransform && umaData.skeleton != null)
+            {
+                string hipsBoneName = umaTPose.BoneNameFromHumanName("Hips");
+                if (string.IsNullOrEmpty(hipsBoneName))
+                {
+                    hipsBoneName = "Hips";
+                }
+                hips = umaData.skeleton.GetBoneTransform(hipsBoneName);
+                if (hips != null)
+                {
+                    hipsPosition = hips.position;
+                    hipsRotation = hips.rotation;
+                    hipsScale = hips.localScale;
+                }
+            }
+
+            HumanPose pose = umaTPose.GetHumanPose();
+            var handler = new HumanPoseHandler(avatar, umaData.transform);
+            try
+            {
+                handler.SetHumanPose(ref pose);
+            }
+            finally
+            {
+                handler.Dispose();
+                if (hips != null)
+                {
+                    hips.SetPositionAndRotation(hipsPosition, hipsRotation);
+                    hips.localScale = hipsScale;
+                }
             }
         }
 

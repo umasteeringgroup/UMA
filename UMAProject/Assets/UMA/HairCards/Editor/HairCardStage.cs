@@ -12,7 +12,7 @@ using Unity.Profiling;
 
 namespace UMA.HairCards.Editor
 {
-    public sealed partial class HairCardStage : PreviewSceneStage
+    public sealed partial class HairCardStage : PreviewSceneStage, IUMAEditingStage
     {
         private const double RebuildDelay = 0.04d;
         private static readonly ProfilerMarker PreviewRefreshMarker = new ProfilerMarker("HairCards.RefreshPreview");
@@ -168,6 +168,7 @@ namespace UMA.HairCards.Editor
         private bool saveRequested;
         private bool workspaceInteractionActive;
         private double lastWorkspaceInteraction;
+        private double lastSceneStrokeEnd;
         private double lastSavedAt;
         private HairPreviewChange pendingPreviewChanges = HairPreviewChange.All;
         private readonly HashSet<string> selectedGuideSet = new HashSet<string>(StringComparer.Ordinal);
@@ -253,7 +254,9 @@ namespace UMA.HairCards.Editor
             new Dictionary<string, CurveBrushEntry>(StringComparer.Ordinal);
         private readonly List<string> staleGuideBufferIds = new List<string>();
         private readonly HashSet<string> activeBrushBufferIds = new HashSet<string>(StringComparer.Ordinal);
-        private readonly HairEvaluationWorkspace evaluationWorkspace = new HairEvaluationWorkspace();
+        // Detailed growth maps make a texel-resolution distance graph that takes seconds to
+        // solve; the preview builds it in the background instead of pausing at stroke end.
+        private readonly HairEvaluationWorkspace evaluationWorkspace = new HairEvaluationWorkspace { DeferSurfaceTextureFields = true };
         private readonly HairMeshBuildWorkspace meshWorkspace = new HairMeshBuildWorkspace();
         private readonly HairGuideDepthRenderer guideDepthRenderer = new HairGuideDepthRenderer();
         private HairSculptLayer strokeSculptLayer;
@@ -464,12 +467,12 @@ namespace UMA.HairCards.Editor
         }
 
         internal string SceneHelpText => sceneTool == HairSceneTool.PaintGrowth
-            ? $"{(EffectivePaintErase ? "ERASE" : "PAINT")} · {ActiveMap?.DisplayName ?? "Active map"}\n" +
+            ? $"{(EffectivePaintErase ? "Erase" : "Paint")} · {ActiveMap?.DisplayName ?? "Active map"}\n" +
               "Left-drag: paint • Hold Shift: erase • Release Shift: restore selected mode\n" +
               "M: mirror • [ / ]: radius • Shift + [ / ]: hardness\n" +
               "Shift + right-drag: radius / hardness • Alt: camera navigation"
             : sceneTool == HairSceneTool.Erase
-                ? "ERASE GUIDES · Left-drag: delete whole guides • Frozen guides are protected\n" +
+                ? "Erase Guides · Left-drag: delete whole guides • Frozen guides are protected\n" +
                   "[ / ]: radius • Shift + right-drag: radius • Ctrl/Cmd + Z: undo stroke • Alt: camera navigation"
             : ToolInstruction(sceneTool) + (SupportsBrushAdjustment()
                 ? "\n[ / ]: radius • Shift + [ / ]: hardness\nShift + right-drag: radius / hardness • Alt: camera navigation"
@@ -739,7 +742,7 @@ namespace UMA.HairCards.Editor
                 HairSceneTool.Smooth => "Relax nearby curvature without shrinking the guides.",
                 HairSceneTool.Cut => "Drag a line across the view to slice intersecting guides and remove their tip side.",
                 HairSceneTool.Erase => "Drag to delete whole guides under the brush. Frozen guides are protected. Undo restores the stroke.",
-                HairSceneTool.DrawFlow => "Drag on the scalp from START to END to draw flow. Release to apply; Esc cancels. Alt orbits.",
+                HairSceneTool.DrawFlow => "Drag on the scalp from start to end to draw flow. Release to apply; Esc cancels. Alt orbits.",
                 HairSceneTool.EditFlow => "Drag a flow point on the scalp to move it. Shift-click the path to insert a point; Delete removes the selected point. Esc cancels.",
                 _ => $"Drag across guide curves with {ObjectNames.NicifyVariableName(tool.ToString())}."
             };
@@ -749,6 +752,7 @@ namespace UMA.HairCards.Editor
         {
             EditorApplication.delayCall -= ShowFirstSceneView;
             closing = true;
+            ReleaseSceneDrawingResources();
             EndGravitySimulation();
             ReleaseSceneInputCapture(true);
             EndBraidSplineDrag();
@@ -771,6 +775,7 @@ namespace UMA.HairCards.Editor
             avatarPreview?.Dispose();
             avatarPreview = null;
             authoringPose = null;
+            InvalidateSceneCurveCache();
             DestroyPreviewObject(boundBodyMaterial);boundBodyMaterial=null;
             DestroyPreviewObject(growthOverlayMesh);
             growthOverlayMesh = null;
@@ -1205,6 +1210,7 @@ namespace UMA.HairCards.Editor
         internal HairEvaluationOptions ConfigureGravityEvaluation(HairEvaluationOptions options)
         {
             authoringPose?.RefreshGuideMatrices(groom);
+            InvalidateSceneCurveCache();
             options.sourceToWorld = SourceToStageMatrix;
             options.guideToSourcePose = GuideToGravityPose;
             options.anchorToSourcePose = AnchorToGravityPose;
@@ -1248,9 +1254,11 @@ namespace UMA.HairCards.Editor
 
         private void RefreshDisplayGuideCurves(HairEvaluationResult sourceEvaluation)
         {
+            InvalidateSceneCurveCache();
             brushEvaluationEditLayerId = IsLayerEditing ? editingLayerId : null;
             brushEvaluationRevision = groom != null ? EditorUtility.GetDirtyCount(groom) : -1;
             authoringPose?.RefreshGuideMatrices(groom);
+            InvalidateSceneCurveCache();
             displayGuideCurves.Clear();
             if (sourceEvaluation?.evaluatedGuides != null)
             {
@@ -1456,6 +1464,8 @@ namespace UMA.HairCards.Editor
         {
             if (asset != null && !editedResources.Contains(asset)) editedResources.Add(asset);
         }
+
+        private int savedPreferencesInteraction = -1;
 
         internal void SaveEditorPreferences()
         {
@@ -1687,6 +1697,7 @@ namespace UMA.HairCards.Editor
             scalpFilter = scalpObject.AddComponent<MeshFilter>();
             Mesh paintSurface = CreateAuthoringSurfaceMesh(sourceRenderer);
             authoringPose = new HairAuthoringPose(groom.SourceMesh, paintSurface);
+            InvalidateSceneCurveCache();
             authoringBonePositions = authoringPose.IsActive ? HairPaintedAreaBounds.CaptureBones(sourceRenderer) : null;
             authoringHeadPosition = HairBoneFocus.Capture(sourceAvatar, HumanBodyBones.Head);
             authoringNeckPosition = HairBoneFocus.Capture(sourceAvatar, HumanBodyBones.Neck);
@@ -1934,14 +1945,24 @@ namespace UMA.HairCards.Editor
         {
             double now = EditorApplication.timeSinceStartup;
             if (braidDragHelper != null && GUIUtility.hotControl != braidDragControl) EndBraidSplineDrag();
+            if (!closing && evaluationWorkspace.CompleteDeferredSurfaceFields())
+            {
+                // The detailed hairline field finished; refresh cards and scalp shading with it.
+                pendingPreviewChanges |= HairPreviewChange.Evaluation;
+                rebuildQueued = true;
+                rebuildNotBefore = 0d;
+                RepaintAll();
+            }
             if (!IsEditing && now >= nextExternalHelperSync)
             {
                 nextExternalHelperSync = now + .1d;
                 if (SyncExternalHelpers()) QueuePreviewChange(HairPreviewChange.Evaluation);
             }
-            if (!IsEditing && now >= nextPreferencesSave)
+            if (!IsEditing && now >= nextPreferencesSave &&
+                savedPreferencesInteraction != HairEditorPreferences.InteractionVersion)
             {
                 nextPreferencesSave = now + 2d;
+                savedPreferencesInteraction = HairEditorPreferences.InteractionVersion;
                 SaveEditorPreferences();
             }
             if (gravitySimulationActive && now >= nextGravityStep)
@@ -1976,8 +1997,10 @@ namespace UMA.HairCards.Editor
                 RepaintAll();
             }
             if (!IsEditing && releaseValidationQueued) ValidateReleaseNow();
+            // Saving a large groom blocks for about a second; keep it out of the gap between
+            // strokes too, not only workspace edits.
             if (!IsEditing && !rebuildQueued &&
-                now - lastWorkspaceInteraction >= 1.5d && (saveRequested || now >= nextAutosave))
+                now - lastWorkspaceInteraction >= 1.5d && (saveRequested || (now - lastSceneStrokeEnd >= 3d && now >= nextAutosave)))
             {
                 if (saveRequested || HasUnsavedChanges) SaveNow();
                 else nextAutosave = now + AutosaveDelay;
@@ -2106,6 +2129,7 @@ namespace UMA.HairCards.Editor
         private void OnSceneGUI(SceneView sceneView)
         {
             if (sceneView == null || groom == null) return;
+            HairEditorPreferences.NoteInteraction(Event.current);
             // Reserve these before any conditional handle drawing. Guide/root handles are hidden
             // during a stroke; allocating afterward changes Unity's control-ID sequence between
             // MouseDown and MouseDrag and causes the stage to lose ownership of every other stroke.
@@ -2261,93 +2285,180 @@ namespace UMA.HairCards.Editor
             }
         }
 
+        private const string SceneHintsPref = "UMA.HairCards.SceneHints";
+
+        /// <summary>Whether the Scene view shows the tool help box. Toggled with Hints on the toolbar.</summary>
+        internal static bool SceneHintsVisible
+        {
+            get => EditorPrefs.GetBool(SceneHintsPref, true);
+            set => EditorPrefs.SetBool(SceneHintsPref, value);
+        }
+
+        private const string ToolIconPrefix = "UMAHair_";
+
+        // The floating tool toolbar, grouped: selection and growth painting; guide creation;
+        // grooming brushes; helpers and flow.
+        private static readonly HairSceneTool[][] ToolGroups =
+        {
+            new[] { HairSceneTool.Select, HairSceneTool.PaintGrowth },
+            new[] { HairSceneTool.PlaceGuide, HairSceneTool.DrawGuide, HairSceneTool.Erase },
+            new[]
+            {
+                HairSceneTool.Comb, HairSceneTool.Grab, HairSceneTool.Smooth, HairSceneTool.Length, HairSceneTool.Cut,
+                HairSceneTool.Width, HairSceneTool.Clump, HairSceneTool.Part, HairSceneTool.Freeze
+            },
+            new[] { HairSceneTool.Helper, HairSceneTool.DrawFlow, HairSceneTool.EditFlow },
+        };
+
+        private StageFloatingToolbar toolToolbar;
+
+        private StageFloatingToolbar ToolToolbar =>
+            toolToolbar ?? (toolToolbar = new StageFloatingToolbar("UMA.HairCards.ToolbarPosition", ToolIconPrefix));
+
+        private static string ToolLabel(HairSceneTool tool) => tool switch
+        {
+            HairSceneTool.PaintGrowth => "Paint Growth",
+            HairSceneTool.DrawFlow => "Draw Flow",
+            HairSceneTool.EditFlow => "Edit Flow",
+            _ => ObjectNames.NicifyVariableName(tool.ToString())
+        };
+
+        private static float ToolToolbarHeight
+        {
+            get
+            {
+                int buttons = 1; // Mirror X
+                foreach (HairSceneTool[] group in ToolGroups) buttons += group.Length;
+                return StageFloatingToolbar.HeightFor(buttons, ToolGroups.Length);
+            }
+        }
+
+        /// <summary>Left edge for the help box and banner: beside the tool toolbar when it is docked on the left.</summary>
+        private float SceneContentLeft
+        {
+            get
+            {
+                Rect toolbar = ToolToolbar.Rect;
+                return toolbar.width > 0f && toolbar.x < 200f ? toolbar.xMax + 8f : 12f;
+            }
+        }
+
+        private void DrawToolToolbar(float viewportWidth, float viewportHeight)
+        {
+            StageFloatingToolbar toolbar = ToolToolbar;
+            toolbar.IconPrefix = ToolIconPrefix;
+            toolbar.Layout(new Rect(0f, 0f, viewportWidth, viewportHeight), new Rect(0f, 60f, 0f, 0f),
+                ToolToolbarHeight, 12f);
+            float y = toolbar.BeginFrame();
+            for (int groupIndex = 0; groupIndex < ToolGroups.Length; groupIndex++)
+            {
+                if (groupIndex > 0) toolbar.Separator(ref y);
+                foreach (HairSceneTool tool in ToolGroups[groupIndex])
+                {
+                    bool on = sceneTool == tool;
+                    if (toolbar.Toggle(ref y, tool.ToString(), ToolLabel(tool), ToolInstruction(tool), on) && !on)
+                        SceneTool = tool;
+                }
+            }
+
+            // Mirror X applies to growth painting and slice cuts; each keeps its own setting.
+            toolbar.Separator(ref y);
+            bool paint = sceneTool == HairSceneTool.PaintGrowth;
+            bool cut = sceneTool == HairSceneTool.Cut;
+            bool mirrorOn = paint ? mirrorPaintX : cut && mirrorCutX;
+            using (new EditorGUI.DisabledScope(!paint && !cut))
+            {
+                if (toolbar.Toggle(ref y, StageFloatingToolbar.GetIcon("UMAFace_", "MirrorX"), "Mirror X",
+                        paint || cut
+                            ? "Mirror " + (paint ? "growth painting" : "slice cuts") + " across the source mesh's local X = 0 plane (M)."
+                            : "Mirror X is available for Paint Growth and Cut.",
+                        mirrorOn))
+                {
+                    if (paint) MirrorPaintX = !mirrorPaintX;
+                    else if (cut) MirrorCutX = !mirrorCutX;
+                }
+            }
+            toolbar.EndFrame();
+        }
+
         private void DrawSceneToolbar(SceneView sceneView)
         {
             var layout = new SceneToolbarLayout(sceneView.cameraViewport);
             float toolbarWidth = layout.Toolbar.width;
             if (toolbarWidth <= 0f) return;
-            bool fullBrushControls = toolbarWidth >= 1040f;
             Handles.BeginGUI();
             GUI.Box(layout.Toolbar, GUIContent.none, EditorStyles.toolbar);
             // Reserve the action buttons independently of GUILayout. Neither a long status
-            // label nor the tool popup can push Save / Exit beyond the usable viewport.
+            // label nor the tool name can push Save / Exit beyond the usable viewport.
             if (layout.Tools.width >= 40f)
             {
                 GUILayout.BeginArea(layout.Tools);
                 GUILayout.BeginHorizontal();
-                if (toolbarWidth >= 400f && GUILayout.Button("Workspace", EditorStyles.toolbarButton, GUILayout.Width(76f)))
+                if (toolbarWidth >= 300f && GUILayout.Button(new GUIContent("Workspace", "Open the Groom Outliner, Preview and Properties windows"),
+                        EditorStyles.toolbarButton, GUILayout.Width(76f)))
                     HairGroomWorkspace.OpenForActiveStage();
-                HairSceneTool toolbarTool = (HairSceneTool)EditorGUILayout.EnumPopup(sceneTool,
-                    EditorStyles.toolbarPopup, GUILayout.Width(Mathf.Min(110f, layout.Tools.width - 8f)));
-                if (toolbarTool != sceneTool) SceneTool = toolbarTool;
-                // Keep Save / Exit visible in narrow Scene views. All brush settings also
-                // remain available in Hair Properties; brush-adjustment shortcuts still work.
-                if (SupportsBrushAdjustment() && toolbarWidth >= 700f)
+                if (toolbarWidth >= 420f)
                 {
-                    GUILayout.Label("Radius", GUILayout.Width(42f));
-                    brushRadius = GUILayout.HorizontalSlider(brushRadius, HairBrushInteractionUtility.MinimumRadius,
-                        HairBrushInteractionUtility.MaximumRadius, GUILayout.Width(82f));
-                    if (fullBrushControls && sceneTool != HairSceneTool.Erase)
-                    {
-                        GUILayout.Label("Hard", GUILayout.Width(31f));
-                        brushHardness = GUILayout.HorizontalSlider(brushHardness, 0f, 1f, GUILayout.Width(70f));
-                        GUILayout.Label("Strength", GUILayout.Width(52f));
-                        brushStrength = GUILayout.HorizontalSlider(brushStrength, 0.01f, 1f, GUILayout.Width(80f));
-                    }
-                    if (fullBrushControls && IsGroomTool(sceneTool) && sceneTool != HairSceneTool.Cut)
-                    {
-                        BrushScope = (HairBrushScope)EditorGUILayout.EnumPopup(brushScope,
-                            EditorStyles.toolbarPopup, GUILayout.Width(130f));
-                    }
-                }
-                else if (sceneTool == HairSceneTool.Cut && toolbarWidth >= 800f)
-                {
-                    GUILayout.Label("Drag a slice line in the Scene view", EditorStyles.miniLabel,
-                        GUILayout.Width(190f));
-                }
-                if (sceneTool == HairSceneTool.PaintGrowth && toolbarWidth >= 600f)
-                {
-                    bool mirrored = GUILayout.Toggle(mirrorPaintX, "Mirror X", EditorStyles.toolbarButton,
-                        GUILayout.Width(66f));
-                    if (mirrored != mirrorPaintX) MirrorPaintX = mirrored;
-                }
-                else if (sceneTool == HairSceneTool.Cut && toolbarWidth >= 600f)
-                {
-                    bool mirrored = GUILayout.Toggle(mirrorCutX, "Mirror X", EditorStyles.toolbarButton,
-                        GUILayout.Width(66f));
-                    if (mirrored != mirrorCutX) MirrorCutX = mirrored;
+                    // Tools are chosen on the floating toolbar; this names the active one.
+                    Vector2 oldIconSize = EditorGUIUtility.GetIconSize();
+                    EditorGUIUtility.SetIconSize(new Vector2(14f, 14f));
+                    Color oldContent = GUI.contentColor;
+                    GUI.contentColor = StageFloatingToolbar.IconTint;
+                    GUILayout.Label(new GUIContent(" " + ToolLabel(sceneTool), ToolToolbar.GetIcon(sceneTool.ToString()),
+                        ToolInstruction(sceneTool)), EditorStyles.miniBoldLabel, GUILayout.MaxWidth(160f));
+                    GUI.contentColor = oldContent;
+                    EditorGUIUtility.SetIconSize(oldIconSize);
                 }
                 GUILayout.FlexibleSpace();
-                if (toolbarWidth >= 340f && GUILayout.Button("Rebuild", EditorStyles.toolbarButton, GUILayout.Width(60f))) QueueRebuild(true);
+                bool hints = SceneHintsVisible;
+                bool nextHints = GUILayout.Toggle(hints, new GUIContent("Hints", "Show the tool help box in the Scene view"),
+                    EditorStyles.toolbarButton, GUILayout.Width(44f));
+                if (nextHints != hints) { SceneHintsVisible = nextHints; sceneView.Repaint(); }
+                if (toolbarWidth >= 340f && GUILayout.Button(new GUIContent("Rebuild", "Rebuild the hair preview now"),
+                        EditorStyles.toolbarButton, GUILayout.Width(60f))) QueueRebuild(true);
                 GUILayout.EndHorizontal();
                 GUILayout.EndArea();
             }
             if (GUI.Button(layout.Save, "Save", EditorStyles.toolbarButton)) SaveNow();
             bool exitRequested = GUI.Button(layout.Exit, ExitStageContent, EditorStyles.toolbarButton);
-            sceneStatusStyle ??= new GUIStyle(EditorStyles.miniLabel) { clipping = TextClipping.Clip, wordWrap = false };
-            Rect statusRect = layout.Status;
-            if (toolbarWidth >= 800f)
+
+            float contentLeft = SceneContentLeft;
+            float helpWidth = Mathf.Min(layout.HelpWidth, Mathf.Max(0f, toolbarWidth - contentLeft));
+            if (helpWidth >= 40f) DrawSculptEditingBanner(contentLeft, helpWidth);
+
+            // Labels only draw on Repaint; build their text only then.
+            if (Event.current.type == EventType.Repaint)
             {
+                sceneStatusStyle ??= new GUIStyle(EditorStyles.miniLabel) { clipping = TextClipping.Clip, wordWrap = false };
+                Rect statusRect = layout.Status;
+                string layerName = ActiveGroup?.sculptLayers.Find(layer => layer != null && layer.Id == activeLayerId)?.name ?? "New sculpt layer";
+                string status = $"{ActiveGroup?.name} / {layerName}  ·  {PreviewStatus}";
                 int paintableTriangles = PaintableTriangleCount;
-                string surface = paintableTriangles > 0 ? $"Surface {paintableTriangles:N0} tris" : "No paint surface";
-                string badge = validation == null ? "Waiting" : $"{validation.ErrorCount} errors, {validation.WarningCount} warnings";
-                var summary = new GUIContent($"{surface}    {badge}", $"{surface}\n{badge}");
-                float summaryWidth = Mathf.Min(sceneStatusStyle.CalcSize(summary).x, toolbarWidth * 0.45f);
-                GUI.Label(new Rect(statusRect.xMax - summaryWidth, statusRect.y, summaryWidth, statusRect.height), summary, sceneStatusStyle);
-                statusRect.width -= summaryWidth + 8f;
+                string details = $"{AffectedGuideCount:N0} guides under the brush\n" +
+                    (paintableTriangles > 0 ? $"Paint surface: {paintableTriangles:N0} triangles" : "No paint surface") +
+                    (validation == null ? "\nValidation: waiting" : $"\nValidation: {validation.ErrorCount} errors, {validation.WarningCount} warnings");
+                if (validation != null && (validation.ErrorCount > 0 || validation.WarningCount > 0))
+                {
+                    // Only problems are worth the space; the full summary is in the tooltip.
+                    var issues = new GUIContent(validation.ErrorCount > 0
+                        ? $"{validation.ErrorCount} errors, {validation.WarningCount} warnings"
+                        : $"{validation.WarningCount} warnings", details);
+                    float issuesWidth = Mathf.Min(sceneStatusStyle.CalcSize(issues).x, toolbarWidth * 0.45f);
+                    GUI.Label(new Rect(statusRect.xMax - issuesWidth, statusRect.y, issuesWidth, statusRect.height), issues, sceneStatusStyle);
+                    statusRect.width -= issuesWidth + 8f;
+                }
+                GUI.Label(statusRect, new GUIContent(status, status + "\n" + details), sceneStatusStyle);
+
+                if (SceneHintsVisible && helpWidth >= 40f)
+                {
+                    sceneHelpStyle ??= new GUIStyle(EditorStyles.helpBox) { fontSize = 11, wordWrap = true };
+                    GUIContent help = new GUIContent(SceneHelpText);
+                    float helpTop = workflowStep == HairWorkflowStep.Groom ? (helpWidth < 420f ? 174f : 142f) : 66f;
+                    GUI.Label(new Rect(contentLeft, helpTop, helpWidth, sceneHelpStyle.CalcHeight(help, helpWidth)), help, sceneHelpStyle);
+                }
             }
-            string status = $"{ActiveGroup?.name} / {ActiveGroup?.sculptLayers.Find(layer => layer != null && layer.Id == activeLayerId)?.name ?? "New sculpt layer"}" +
-                $"    ·    {AffectedGuideCount:N0} affected    ·    {PreviewStatus}";
-            GUI.Label(statusRect, new GUIContent(status, status), sceneStatusStyle);
-            sceneHelpStyle ??= new GUIStyle(EditorStyles.helpBox) { fontSize = 11, wordWrap = true };
-            float helpWidth = layout.HelpWidth;
-            if (helpWidth >= 40f)
-            {
-                GUIContent help = new GUIContent(SceneHelpText);
-                DrawSculptEditingBanner(helpWidth);
-                GUI.Label(new Rect(12f, workflowStep == HairWorkflowStep.Groom ? (helpWidth < 420f ? 174f : 142f) : 66f,
-                    helpWidth, sceneHelpStyle.CalcHeight(help, helpWidth)), help, sceneHelpStyle);
-            }
+
+            DrawToolToolbar(sceneView.cameraViewport.width, sceneView.cameraViewport.height);
             Handles.EndGUI();
             // Finish all layout/Handles scopes before closing their backing stage.
             if (exitRequested) { ExitGrooming(); GUIUtility.ExitGUI(); }
@@ -2356,6 +2467,19 @@ namespace UMA.HairCards.Editor
         private void DrawGuides()
         {
             if (groom.Groups == null) return;
+            BeginRootDots();
+            try
+            {
+                DrawGuideCurvesAndHandles();
+            }
+            finally
+            {
+                FlushRootDots();
+            }
+        }
+
+        private void DrawGuideCurvesAndHandles()
+        {
             for (int groupIndex = 0; groupIndex < groom.Groups.Count; groupIndex++)
             {
                 HairGroup group = groom.Groups[groupIndex];
@@ -2414,10 +2538,10 @@ namespace UMA.HairCards.Editor
                                     // Erase owns the gesture even directly over a root. Keep the
                                     // display preference, but don't let selection caps steal input.
                                     if (Event.current.type == EventType.Repaint)
-                                        Handles.DotHandleCap(0, rootPosition, Quaternion.identity, rootSize, EventType.Repaint);
+                                        RootDotCap(0, rootPosition, Quaternion.identity, rootSize, EventType.Repaint);
                                 }
                                 else if (Handles.Button(rootPosition, Quaternion.identity, rootSize, rootSize,
-                                        Handles.DotHandleCap))
+                                        RootDotCap))
                                 {
                                     if (Event.current.shift || Event.current.control || Event.current.command) ToggleGuideSelection(guide.Id);
                                     else SetActiveGuide(guide.Id, 0);
@@ -2449,33 +2573,6 @@ namespace UMA.HairCards.Editor
                         Handles.matrix = oldMatrix;
                     }
                 }
-            }
-        }
-
-        private void DrawEvaluatedChildren()
-        {
-            if (sculptPreviewPending) return;
-            if (strokeActive || !EffectiveChildren || !EffectiveChildSplines || EffectivePreviewMode != HairPreviewMode.GuidesAndChildren ||
-                evaluation?.curves == null)
-                return;
-            int childCount = evaluation.childCurveCount;
-            int stride = Mathf.Max(1, childCount / 2500);
-            int encountered = 0;
-            for (int curveIndex = 0; curveIndex < evaluation.curves.Count; curveIndex++)
-            {
-                HairEvaluatedCurve curve = evaluation.curves[curveIndex];
-                if (curve == null || !curve.isChild || curve.points.Count < 2) continue;
-                if (encountered++ % stride != 0) continue;
-                Matrix4x4 oldMatrix = Handles.matrix;
-                Handles.matrix = oldMatrix * (authoringPose?.MatrixForCurve(groom, curve) ?? Matrix4x4.identity);
-                Color color = curve.groupColor;
-                if (populationInspection) color = PopulationColor(curve);
-                color.a = populationInspection ? 0.95f : 0.38f;
-                Handles.color = color;
-                for (int pointIndex = 1; pointIndex < curve.points.Count; pointIndex++)
-                    if (populationInspection) Handles.DrawLine(curve.points[pointIndex - 1].position, curve.points[pointIndex].position);
-                    else Handles.DrawDottedLine(curve.points[pointIndex - 1].position, curve.points[pointIndex].position, 3f);
-                Handles.matrix = oldMatrix;
             }
         }
 
@@ -2604,43 +2701,6 @@ namespace UMA.HairCards.Editor
                 {
                     Handles.matrix = outerMatrix;
                 }
-            }
-        }
-
-        private void DrawGrowthMap()
-        {
-            HairGrowthMap map = ActiveMap;
-            Mesh mesh = groom.SourceMesh;
-            if (map == null || mesh == null || map.values == null || map.UsesTexture) return;
-            Vector3[] vertices = mesh.vertices;
-            int stride = Mathf.Max(1, vertices.Length / 3000);
-            for (int i = 0; i < vertices.Length && i < map.values.Length; i += stride)
-            {
-                if (!IsSourceVertexVisible(i)) continue;
-                float normalized = Mathf.InverseLerp(map.valueRange.x, map.valueRange.y, map.values[i]);
-                Handles.color = Color.Lerp(new Color(0.03f, 0.08f, 0.2f, 0.35f),
-                    new Color(1f, 0.25f, 0.03f, 0.9f), normalized);
-                Vector3 displayVertex = authoringPose?.PosedVertex(i) ?? vertices[i];
-                float size = LocalHandleSize(displayVertex) * 0.008f;
-                Handles.DotHandleCap(0, displayVertex, Quaternion.identity, size, EventType.Repaint);
-            }
-        }
-
-        private void DrawGenerationPreview()
-        {
-            if (generationPreview?.guides == null) return;
-            for (int guideIndex = 0; guideIndex < generationPreview.guides.Count; guideIndex++)
-            {
-                HairGuide guide = generationPreview.guides[guideIndex];
-                if (guide == null) continue;
-                Matrix4x4 oldMatrix = Handles.matrix;
-                if (authoringPose != null && authoringPose.TryGetMatrix(guide.root, out Matrix4x4 guidePose))
-                    Handles.matrix = oldMatrix * guidePose;
-                Handles.color = new Color(0.1f, 1f, 0.8f, 0.9f);
-                for (int pointIndex = 1; pointIndex < guide.points.Count; pointIndex++)
-                    Handles.DrawDottedLine(guide.points[pointIndex - 1].position,
-                        guide.points[pointIndex].position, 4f);
-                Handles.matrix = oldMatrix;
             }
         }
 
@@ -3476,6 +3536,7 @@ namespace UMA.HairCards.Editor
             pointHandleStrokeActive = false;
             if (!strokeActive) return;
             strokeActive = false;
+            lastSceneStrokeEnd = EditorApplication.timeSinceStartup;
             curveStrokePlaneValid = false;
             curveStrokePoseRadiusScale = 1f;
             hasPreviousStrokePosition = false;

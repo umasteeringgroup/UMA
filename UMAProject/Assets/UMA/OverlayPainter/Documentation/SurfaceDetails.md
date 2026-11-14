@@ -4,7 +4,7 @@ These constructions are part of Overlay Painter. Editable presets and validation
 
 ## Fingerprints, Smudges & Surface Residue
 
-Choose **+Plugin → Generators → Fingerprints, Smudges & Surface Residue**. The default writes **Roughness only**. This lets an oily mark disturb a polished reflection without repainting armor, glass or leather. Enable Output Albedo for colored residue and Output Normal Control for subtle thickness. Output Metallic is optional and replaces metallic with zero only inside the mark; leave it off for very thin films on metal.
+Choose **Add Layer → Plugin → Generators → Fingerprints, Smudges & Surface Residue**. The default writes **Roughness only**. This lets an oily mark disturb a polished reflection without repainting armor, glass or leather. Enable Output Albedo for colored residue and Output Normal Control for subtle thickness. Output Metallic is optional and replaces metallic with zero only inside the mark; leave it off for very thin films on metal.
 
 Five constructions are available:
 
@@ -20,7 +20,7 @@ Use the Placement Mask or an ordinary painted layer mask to keep marks on select
 
 ## Splashes, Smears & Drips
 
-Choose **+Plugin → Generators → Splashes, Smears & Drips**. Blood, mud, paint and oil share a deterministic deposition model: irregular impact pools, tendrils, satellite droplets, directional wiping and runoff. The presets change color and wet/dry material response; all controls remain editable.
+Choose **Add Layer → Plugin → Generators → Splashes, Smears & Drips**. Blood, mud, paint and oil share a deterministic deposition model: irregular impact pools, tendrils, satellite droplets, directional wiping and runoff. The presets change color and wet/dry material response; all controls remain editable.
 
 Impact Direction and Impact Stretch shape the impact. Satellite Droplets controls the surrounding drops. Smear Length and Smear Direction add drag marks independently of the impact angle. Drip Length and Runoff Direction control trails with rounded terminal drops. Smear/drip lengths are multiples of Mark Radius.
 

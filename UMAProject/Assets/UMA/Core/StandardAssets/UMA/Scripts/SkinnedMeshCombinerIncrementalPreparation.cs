@@ -1053,7 +1053,8 @@ namespace UMA
                             BitArrayToNative(
                                 mask,
                                 triangleCount,
-                                nativeAllocator);
+                                nativeAllocator,
+                                out _);
                         if (triangleMasks == null)
                         {
                             triangleMasks =

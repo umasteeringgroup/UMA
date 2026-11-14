@@ -24,9 +24,8 @@ They are not a replacement for correct modeling and skinning. Fix broad topology
 
 1. Select a built `DynamicCharacterAvatar`.
 2. Enable Editor Time Generation when working outside Play mode.
-3. Open the DCA inspector's Utilities section.
-4. Create a Mesh Modifier or assign an existing asset.
-5. Choose Edit.
+3. In the DCA inspector, find the **Editing tools** section, just below **Character & race**.
+4. Click **Open Vertex Editor (Sculpt, Paint, Mesh Modifiers)** to start a new Mesh Modifier, or drop an existing Mesh Modifier on the drop area at the bottom of the section to edit it.
 
 Build the avatar with every slot you intend to modify. A modifier records slot and vertex identity; topology changes can invalidate the stored selection.
 
@@ -39,7 +38,15 @@ The Mesh Modifiers window provides four workflows:
 - `Advanced`: precise per-vertex or vertex-set adjustments.
 - `Blendshapes`: extract source blendshape frames into Mesh Modifier data.
 
-Choose the simplest workflow that produces the required result.
+Choose the simplest workflow that produces the required result. The same four buttons appear at the top of the tools panel in the editing stage.
+
+### The editing stage
+
+The stage shows a **tools panel** and a **Slots** panel on the left of the Scene view, and a **floating toolbar** beside them. The toolbar holds the tools of the current workflow (Sculpt brushes, Vertex Paint brushes, or Advanced selection tools) and ends with **Frame**, which frames the character from the starting camera angle. Hover a button for its name and what it does; the panel's **Tool** row also names the active tool. Drag the toolbar's grip to move it, or double-click the grip to dock it again. **Close** is at the top right of the Scene view.
+
+The **Slots** panel decides what every tool may change. Tick **Show** to display a slot and **Edit** to let the tools change it; **S** solos a slot. The quick actions are **Edit: All / None / Invert / No Base** and **Show: All / Editable Only / Invert**. Every shown slot is editable until you lock it. Commands that write one `SlotDataAsset` need exactly one editable slot, so solo that slot first. See [Choose the slots to sculpt](MeshModifierSculpting.md#choose-the-slots-to-sculpt).
+
+Brush sizes are shown in millimeters on the model (**Radius (mm)**, 1–250 mm). The UMA Toolbar overlay is hidden while the stage is open and returns when you close it.
 
 ## Build and Preview Controls
 
@@ -60,7 +67,7 @@ Use `Only Active Vertex-Set Modifier` when isolating one correction. Disable `Re
 
 Sculpt is the preferred workflow for organic position changes.
 
-It supports individual slots, the first non-base slot, all non-base slots, and other available targets. Brush modes include additive and subtractive movement, smoothing, grab, crease, pinch, plane, boundary-aware, and elastic operations.
+It sculpts whichever slots are editable in the Slots panel: one slot, several, or every non-base slot with **No Base**. Brush modes include additive and subtractive movement, smoothing, grab, crease, pinch, plane, boundary-aware, and elastic operations.
 
 Sculpt also supports:
 
@@ -87,9 +94,34 @@ Vertex Paint stores color changes on selected slot vertices. Use it when a shade
 
 Confirm that the final shader uses the intended vertex color channels. Painting data that the shader never reads has no visible result.
 
-Use the `Smooth` paint behavior to soften blocky vertex-color transitions. `Smooth Amount %` controls how strongly a stroke blends colors, while `Smooth Radius` controls the world-space neighborhood sampled around each affected vertex. Unlike the topology-based `Blur` behavior, `Smooth` can blend across UV seams and nearby disconnected vertices; oppositely facing surfaces are excluded to reduce color bleeding through thin meshes.
+The floating toolbar holds the nine brushes (**Paint**, **Erase**, **Smear**, **Blur**, **Smooth**, **Burn**, **Dodge**, **Noise**, **Clear Brush**), the brush shapes (**Circle**, **Square**, **Bitmap**), the brush color swatch used by Paint, and **Clear**, which removes all painting from the editable slots and restores their original colors (Undo brings it back).
 
-The `General Smooth` section applies one simultaneous smoothing pass to the current slot, or every editable slot when `All Slots` is selected. Its independent `Amount %` and world-space `Radius` controls set the strength and sample area. `Cutoff %` returns results below the threshold to the slot's unmodified color, so imperceptible color spread does not create extra MeshModifier adjustments.
+The panel's **Brush** section has **Radius (mm)**, **Effect %** and **Affect Alpha**, plus **Brush Bitmap** for the Bitmap shape. Paint adds **Blend**: **Replace** (the default) paints the brush color, so white lightens and black darkens; **Multiply** tints the color under the brush by the brush color, so it can only darken. Noise adds **Noise Type** (Per Vertex grain, or Smooth patches sized by **Noise Scale**), **Color Noise**, **Noise Amount** and **Same Pattern Each Stroke**. Noise never changes alpha.
+
+Use the `Smooth` brush to soften blocky vertex-color transitions. `Smooth Amount %` controls how strongly a stroke blends colors, while `Smooth Radius (mm)` controls the neighborhood sampled around each affected vertex. Unlike the topology-based `Blur` behavior, `Smooth` can blend across UV seams and nearby disconnected vertices; oppositely facing surfaces are excluded to reduce color bleeding through thin meshes.
+
+The **Whole-Slot Operations** section has `General Smooth`, which applies one simultaneous smoothing pass to the editable slot (**Smooth Slot**) or to every editable slot (**Smooth Editable Slots**). Its independent `Amount %` and `Radius (mm)` controls set the strength and sample area. `Cutoff %` returns results below the threshold to the slot's unmodified color, so imperceptible color spread does not create extra MeshModifier adjustments. **Fill Slot with White** sets every color on a single soloed slot to white; the toolbar's **Clear** instead restores the original colors.
+
+Save with **Modifier Name** and **Save as MeshModifier** at the bottom of the panel; this keeps sculpt work too. **More Save Options** has **Save Colors to SlotDataAsset**, which bakes the colors into one soloed slot's mesh data.
+
+## Advanced Selection Tools
+
+The `Advanced` workflow selects vertices for the precision and vertex-set editors in the Mesh Modifiers window. Its floating toolbar has three groups:
+
+- Tools: **Select** (click a vertex, or drag a rectangle), **Point Brush** and **Circle Brush** (drag; each vertex changes once per stroke).
+- Mode: **Define Set** chooses which vertices belong to the selection; **Define State** marks vertices already in the selection Active or Inactive.
+- Action: in Define Set, **Add**, **Remove** or **Invert**; in Define State, **Activate**, **Deactivate** or **Toggle**.
+
+The panel's **Tool** row shows the tool and action. It also has:
+
+- **Obscured** and **Backfacing** to allow selecting hidden and away-facing vertices, and **Default State** for newly added vertices.
+- **Select All**, **Invert** and **Clear** for the whole selection, and **Activate All**, **Deactivate All** and **Invert State** for its states.
+- **Selection File**: **Save...**, **Load...** (replace) and **Append...** store the selection as JSON.
+- **Select by raycasting** (Select tool in Define Set): cast from an editable slot to select the vertices that hit other slots.
+- **Weights**: **Smooth Selected Weights** and **View/Edit Vertex Weights**.
+- **Display**: **Handle Size**, **Active Color** and **Inactive Color** for the vertex markers.
+
+Hold Alt and use the mouse to move the camera.
 
 ## Advanced Per-Vertex Precision
 
@@ -108,8 +140,8 @@ Select a current vertex in the Scene view, add the required adjustment type, and
 
 Use `Advanced > Vertex Sets / Bulk` when the same adjustment should apply to an explicit group.
 
-1. Select vertices in the Scene view.
-2. Mark the intended vertices Active.
+1. Select vertices in the Scene view with **Define Set**.
+2. Mark the intended vertices Active with **Define State** or **Activate All**.
 3. Choose the adjustment type.
 4. Click `Create Modifier From Active Vertices`.
 5. Edit the template value.
@@ -224,7 +256,7 @@ The modifier may be included through more than one source, such as both manual t
 
 ### A clothing correction affects the body
 
-Check the modifier's slot keys and target selection. Reauthor with the clothing slot selected.
+Check the modifier's slot keys and target selection. Reauthor with only the clothing slot editable in the **Slots** panel.
 
 ### Normals look incorrect
 

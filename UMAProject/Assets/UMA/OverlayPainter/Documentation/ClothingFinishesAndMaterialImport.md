@@ -2,7 +2,7 @@
 
 ## Wetness and sweat
 
-Use **+ Plugin → Generators → Fabric — Wetness & Sweat** above the clothing material.
+Use **Add Layer → Plugin → Generators → Fabric — Wetness & Sweat** above the clothing material.
 Choose Rain-soaked Cloth, Sweat Patches or Dry Salt Residue. Amount controls the extent
 of the patches; Absorption darkens the existing fabric, Drying reduces saturation and
 introduces residue at patch boundaries, and Fiber Wicking breaks up those boundaries.
@@ -18,7 +18,7 @@ Armpits → Add Region Mask** and tune a shared clothing profile. See
 
 ## Leather and coated fabric
 
-Use **+ Plugin → Generators → Fabric — Leather & Coated Fabric**. Profiles include Soft
+Use **Add Layer → Plugin → Generators → Fabric — Leather & Coated Fabric**. Profiles include Soft
 Leather, Worn Leather, Suede and Coated Fabric. Start with a bundled preset, then tune
 Grain Size, Creases, Dye / Coating Wear, color and roughness. Edge and cavity influences
 include the lower stack's combined normal detail as well as mesh-map information.
@@ -28,7 +28,7 @@ and disabled by default because these clothing materials are normally dielectric
 
 ## Print aging
 
-Use **+ Plugin → Generators → Fabric — Print Aging** above the printed artwork. Assign
+Use **Add Layer → Plugin → Generators → Fabric — Print Aging** above the printed artwork. Assign
 a **Print Coverage Mask** with white artwork on a black or transparent background.
 This mask is required: the generator does not guess which parts of an opaque garment
 are printed ink. Include the artwork's holes and transparent areas in the mask.
@@ -62,7 +62,7 @@ examples without overwriting existing authored presets.
 
 ## Automatic editable seam paths
 
-Open **+ Path → Generators → Automatic Seams from Boundaries**. Choose UV Island Borders
+Open **Add Layer → Path → Generators → Automatic Seams from Boundaries**. Choose UV Island Borders
 or Mask Contours, then select a stitch or seam construction. Mask contours include holes
 and respect alpha. Adjust the threshold and choose the listed boundaries to convert.
 

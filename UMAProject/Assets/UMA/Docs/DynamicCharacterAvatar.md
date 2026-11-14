@@ -16,6 +16,30 @@ Make sure the project has:
 
 Create an avatar from **GameObject > UMA > Create New Dynamic Character Avatar**, or add `DynamicCharacterAvatar` to an empty GameObject.
 
+## Inspector Layout
+
+The Inspector has two views, chosen at its top. **Standard View** shows the everyday settings. **Advanced View** shows every setting, in foldable panels grouped by job:
+
+| Panel | Contents |
+| --- | --- |
+| **Character & race** | Active race, User Information, and what happens when the race changes. |
+| **Editing tools** | Vertex Editor, Face Editor, Touchup Weights, Create Slot From Scene Mesh, and a drop area for editing existing Mesh Modifiers and Mesh Hide Assets. Also in Standard View. |
+| **Wardrobe** | Default wardrobe recipes, Additional Utility Recipes, and what the built character is wearing now. |
+| **Colors** | The avatar's shared colors. |
+| **Body shape & DNA** | Live or predefined DNA, and how blendshapes are loaded. |
+| **Animation** | Race animation controllers and animator options. |
+| **Generation** | Editor Time Generation, rebuild buttons, presets, and avatar definition files. |
+| **Build behaviour** | Build Character Enabled, Always Rebuild Skeleton. |
+| **Performance & sharing** | Generator inheritance, mesh and atlas sharing, NPC builds, atlas resolution. |
+| **Rendering** | Renderer asset, slot materials, hiding, mesh readability and Mark Dynamic. |
+| **Bounds** | Bounds offset and adjustment, and the current renderer bounds. |
+| **Addressables** | Delay Unload and Bundle Check, when Addressables are installed. |
+| **Events** | The character's events. |
+| **Diagnostics** | Loop Build, cache diagnostics, manual Mesh Modifiers, the generated UMA Data, and the placeholder model. |
+| **Legacy Load/Save** | Loading and saving recipes the UMA 2 way. |
+
+The first five panels start open and the rest folded. Each panel remembers whether it is open, and its **Help** toggle describes all its settings. These are editor preferences; they are not saved with the avatar.
+
 ## First Character Workflow
 
 1. Select the DCA GameObject.
@@ -65,6 +89,8 @@ At runtime, use the wearable APIs rather than editing the generated recipe by ha
 
 Wardrobe collections can apply coordinated groups of recipes. They are useful for complete outfits, but individual recipes still need correct race compatibility and wardrobe-region behavior.
 
+In Standard View, the **Default wardrobe** section lists one card per wardrobe region. **Show regions** chooses **All** regions or **Assigned only** (remembered per project). Click a card to choose a recipe for that region; its **Inspect** button opens the equipped recipe without opening the picker.
+
 ## DNA
 
 DNA controls proportions, facial features, poses, and other race-defined effects. The visible controls come from the active race and its DNA configuration.
@@ -77,6 +103,8 @@ For art review:
 - Check blendshapes and mesh modifiers if the race uses them.
 
 When changing several DNA values from code, defer the build until all values are set. This avoids generating the same character repeatedly.
+
+Each DNA slider row in the Inspector has two small buttons: the magnifier (**Inspect DNA**) opens the DNA asset behind the slider, and the history icon resets that value to its default. DNA labels use the DNA's display name, falling back to its name.
 
 See [New DNA System](NewDNASystem.md) and [DNA Creation Guide](DNACreationGuide.md).
 
@@ -208,7 +236,7 @@ See [UMA Asset Indexer and Global Library](UMAAssetIndexer.md).
 
 ## Performance Guidance
 
-For matching NPC appearances, enable **Advanced Options > Cache and Reuse (NPCs)**. Meshes and atlas channels are matched independently; different material parameters can keep separate material instances while still sharing textures. Options default to off. See [Generated Resource Reuse](GeneratedResourceReuse.md) for setup, lifetime rules, safe per-character edits and diagnostics.
+For matching NPC appearances, enable sharing in the **Performance & sharing** panel of **Advanced View**. Meshes and atlas channels are matched independently; different material parameters can keep separate material instances while still sharing textures. Options default to off. See [Generated Resource Reuse](GeneratedResourceReuse.md) for setup, lifetime rules, safe per-character edits and diagnostics.
 
 - Stagger large crowds instead of asking every avatar to build in one frame.
 - Configure the generator and mesh combiner for the target platform.
@@ -241,7 +269,7 @@ Avatar-definition loads, Undo/Redo, project changes, and marked object edits ref
 
 To investigate remaining overhead, target **Editor** in Unity's CPU Profiler and look for `UMA.DCAInspector.Draw`, `UMA.DCAInspector.RefreshSerializedState`, and `UMA.DCAInspector.RefreshWardrobeMenu`. Compare the same running character with the Inspector visible and hidden, then collapse Character Colors, Live DNA, and Default Wardrobe Recipes individually. Drawing large expanded lists still has a cost; Inspector timing is not player-build rendering performance.
 
-Editor regression tests in `AvatarDefinitionInspectorTests` cover idle refreshes, cache invalidation, missing races, color navigation, and definition loads between Layout/Repaint (including Play mode and independent Inspectors). `InspectorIdleDrawBenchmark` reports CPU time per GUI event for a synthetic avatar; it is not an FPS guarantee for a particular scene.
+Editor regression tests in `AvatarDefinitionInspectorTests` cover idle refreshes, cache invalidation, missing races, color navigation, and definition loads between Layout/Repaint (including Play mode and independent Inspectors).
 
 ### The avatar does not generate in Play mode
 

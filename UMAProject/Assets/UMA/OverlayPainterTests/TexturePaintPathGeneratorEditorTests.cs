@@ -14,7 +14,15 @@ namespace UMA.TexturePaint.Editor.Tests
     public sealed class TexturePaintPathGeneratorEditorTests
     {
         private const BindingFlags Private=BindingFlags.Instance|BindingFlags.NonPublic;
-        private static object Invoke(object target,string method,params object[] args)=>target.GetType().GetMethod(method,Private).Invoke(target,args);
+        // Reflection does not supply optional parameters, so trailing ones get their declared defaults.
+        private static object Invoke(object target,string method,params object[] args)
+        {
+            var info=target.GetType().GetMethod(method,Private);
+            var parameters=info.GetParameters();
+            var full=new object[parameters.Length];
+            for(int i=0;i<full.Length;i++)full[i]=i<args.Length?args[i]:parameters[i].DefaultValue;
+            return info.Invoke(target,full);
+        }
         private static void Set(object target,string field,object value)=>target.GetType().GetField(field,Private).SetValue(target,value);
         private static T Get<T>(object target,string field)=>(T)target.GetType().GetField(field,Private).GetValue(target);
 

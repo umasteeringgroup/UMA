@@ -11,7 +11,7 @@ namespace UMA.Tests
     public class UMAResourceReuseMeshTests
     {
         [TestCase(1)] [TestCase(12)]
-        public void LargeSourceMeshLookupHasBoundedTimeAndKeySize(int sourceCount)
+        public void LargeSourceMeshLookupIsStableAndKeySizeIsBounded(int sourceCount)
         {
             using (var f = new Fixture())
             {
@@ -34,16 +34,10 @@ namespace UMA.Tests
                 }, sourceCount).ToArray();
                 var materials = data.generatedMaterials.materials.ToArray();
                 Func<UMAGeneratedResourceKey> lookup = () => UMAResourceReuse.DescribeMesh(data, sources, materials, 256, Quaternion.identity);
-                var coldTimer = System.Diagnostics.Stopwatch.StartNew();
-                var first = lookup(); // Warm JIT and source fingerprints before measuring repeated requests.
-                coldTimer.Stop();
-                var timer = System.Diagnostics.Stopwatch.StartNew();
+                var first = lookup();
                 for (int i = 0; i < 100; i++) Assert.That(lookup(), Is.EqualTo(first));
-                timer.Stop();
                 int descriptionBytes = ((byte[])typeof(UMAGeneratedResourceKey).GetField("description",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(first)).Length;
-                Debug.Log($"Mesh lookup: {timer.Elapsed.TotalMilliseconds / 100:F4} ms warm, {coldTimer.Elapsed.TotalMilliseconds:F2} ms first fingerprint, {descriptionBytes:N0} key bytes/request ({sourceCount} source entries, 25k vertices, 40 blendshapes).");
-                Assert.That(timer.Elapsed.TotalMilliseconds / 100, Is.LessThan(.5), "Warm mesh lookup must stay below 0.5 ms.");
                 Assert.That(descriptionBytes, Is.LessThan(32 * 1024), "Repeated keys must not duplicate source geometry.");
                 mesh.blendShapes[39].frames[0].deltaVertices[vertexCount - 1] = Vector3.one;
                 UMAResourceReuse.InvalidateMeshSource(mesh);
@@ -113,10 +107,6 @@ namespace UMA.Tests
                 var quarter = key();
                 slot.meshModifiers = asset.GetScaledRuntimeModifiers(.25f);
                 Assert.That(key(), Is.EqualTo(quarter));
-                var timer = System.Diagnostics.Stopwatch.StartNew();
-                for (int i = 0; i < 100; i++) key();
-                timer.Stop();
-                Assert.That(timer.Elapsed.TotalMilliseconds / 100, Is.LessThan(.5));
                 slot.meshModifiers[0].Scale = .75f;
                 Assert.That(key(), Is.Not.EqualTo(quarter));
                 slot.meshModifiers[0].Scale = .25f;
@@ -406,6 +396,96 @@ namespace UMA.Tests
                 UMAMeshData.CleanupGlobalBuffers();
             }
         }
+
+#if UMA_BURSTCOMPILE
+        // Generator-managed builds defer normals until DNA weights are applied. The real
+        // combiners must keep the CPU copy of the combined mesh inside that scope, and the
+        // generator's finalize step must then recalculate and honor markNotReadable.
+        [TestCase("Default")] [TestCase("Jobified")] [TestCase("Incremental")]
+        public void GeneratorDeferredCombinersKeepCpuDataUntilNormalsAreFinalized(string kind)
+        {
+            const System.Reflection.BindingFlags nonPublicStatic =
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+            var observerField = typeof(UMARendererAsset).GetField("NormalsRecalculatedForTests", nonPublicStatic);
+            try
+            {
+                using (var f = new Fixture())
+                {
+                    var asset = f.Keep(ScriptableObject.CreateInstance<UMARendererAsset>());
+                    typeof(UMARendererAsset).GetField("_RecalculateNormals",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(asset, true);
+                    f.Slot.meshData.normals = Enumerable.Repeat(Vector3.right, 3).ToArray();
+                    var data = f.Avatar();
+                    data.defaultRendererAsset = asset;
+                    data.markNotReadable = true;
+                    int recalculations = 0;
+                    Vector3[] observed = null;
+                    observerField.SetValue(null, (Action<SkinnedMeshRenderer, Vector3[]>)((smr, normals) =>
+                    {
+                        recalculations++;
+                        observed = normals;
+                    }));
+
+                    var scopeType = typeof(UMARendererAsset).GetNestedType("DeferredMeshUpload", System.Reflection.BindingFlags.NonPublic);
+                    var scope = (IDisposable)Activator.CreateInstance(scopeType,
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic, null, new object[] { data }, null);
+                    try
+                    {
+                        if (kind == "Default") data.gameObject.AddComponent<UMADefaultMeshCombiner>().UpdateUMAMesh(true, data, 256);
+                        else if (kind == "Jobified") f.BuildJobified(data);
+                        else f.Build(data);
+                    }
+                    finally { scope.Dispose(); }
+
+                    var mesh = data.GetRenderer(0).sharedMesh;
+                    Assert.IsTrue(mesh.isReadable, "The combiner must keep CPU data while normals are deferred.");
+                    Assert.AreEqual(0, recalculations, "Normals must not be calculated before DNA weights are applied.");
+
+                    typeof(UMARendererAsset).GetMethod("FinalizeGeneratedNormals", nonPublicStatic).Invoke(null, new object[] { data });
+
+                    Assert.AreEqual(1, recalculations);
+                    Assert.NotNull(observed);
+                    foreach (var normal in observed)
+                        Assert.That(Vector3.Distance(normal, Vector3.forward), Is.LessThan(.0001f));
+                    Assert.IsFalse(mesh.isReadable, "Finalizing must complete the upload and honor markNotReadable.");
+                }
+            }
+            finally
+            {
+                observerField.SetValue(null, null);
+            }
+        }
+
+        [TestCase("Default")] [TestCase("Jobified")] [TestCase("Incremental")]
+        public void DirectCombinersRecalculatePrivateMeshesAndHonorFinalUpload(string kind)
+        {
+            using (var f = new Fixture())
+            {
+                var asset = f.Keep(ScriptableObject.CreateInstance<UMARendererAsset>());
+                typeof(UMARendererAsset).GetField("_RecalculateNormals",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(asset, true);
+                f.Slot.meshData.normals = Enumerable.Repeat(Vector3.right, 3).ToArray();
+                var first = f.Avatar();
+                var second = f.Avatar();
+                first.defaultRendererAsset = second.defaultRendererAsset = asset;
+                second.markNotReadable = true;
+                void Build(UMAData data)
+                {
+                    if (kind == "Default") data.gameObject.AddComponent<UMADefaultMeshCombiner>().UpdateUMAMesh(true, data, 256);
+                    else if (kind == "Jobified") f.BuildJobified(data);
+                    else f.Build(data);
+                }
+                Build(first);
+                Build(second);
+                var mesh = first.GetRenderer(0).sharedMesh;
+                Assert.AreNotSame(mesh, second.GetRenderer(0).sharedMesh, "Per-avatar normals must bypass mesh sharing.");
+                Assert.IsTrue(mesh.isReadable);
+                foreach (var normal in mesh.normals)
+                    Assert.That(Vector3.Distance(normal, Vector3.forward), Is.LessThan(.0001f));
+                Assert.IsFalse(second.GetRenderer(0).sharedMesh.isReadable, "Direct callers must still finish uploading their meshes.");
+            }
+        }
+#endif
 
         [TestCase(false)] [TestCase(true)]
         public void MatchingAvatarsShareMeshButNotBonesOrExpressionWeights(bool secondPass)

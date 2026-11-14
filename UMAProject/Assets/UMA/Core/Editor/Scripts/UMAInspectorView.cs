@@ -15,6 +15,9 @@ namespace UMA.Editors
         private readonly Dictionary<string, SerializedProperty> properties = new Dictionary<string, SerializedProperty>();
         private readonly Dictionary<string, string> sectionHelpKeys = new Dictionary<string, string>();
         private readonly Dictionary<string, bool> sectionHelpStates = new Dictionary<string, bool>();
+        private readonly Dictionary<string, string> sectionOpenKeys = new Dictionary<string, string>();
+        private readonly Dictionary<string, bool> sectionOpenStates = new Dictionary<string, bool>();
+        private static GUIStyle sectionFoldoutStyle;
         private static readonly GUIContent[] Modes = { new GUIContent("Standard View"), new GUIContent("Advanced View") };
         private static readonly GUIContent HelpToggle = new GUIContent("Help", "Show a description of every option in this section.");
         private static readonly Dictionary<string, GUIContent> Labels = new Dictionary<string, GUIContent>();
@@ -101,6 +104,75 @@ namespace UMA.Editors
             }
 
             return new PanelScope(title, helpText, showHelp, this, id, helpKey);
+        }
+
+        /// <summary>
+        /// A section like <see cref="Section(string, string, bool, string)"/> whose title is a foldout. Draw the
+        /// contents only while <see cref="CollapsibleScope.Expanded"/> is true. Whether it is open is an editor
+        /// preference, kept per inspected type and section, and never changes or dirties the inspected asset.
+        /// </summary>
+        public CollapsibleScope CollapsibleSection(string title, string helpText, bool expandedByDefault = true, string sectionId = null)
+        {
+            string id = string.IsNullOrEmpty(sectionId) ? title : sectionId;
+            if (!sectionHelpKeys.TryGetValue(id, out string helpKey))
+                sectionHelpKeys[id] = helpKey = key + ".Help." + id;
+            if (!sectionOpenKeys.TryGetValue(id, out string openKey))
+                sectionOpenKeys[id] = openKey = key + ".Open." + id;
+
+            // Read both at Layout only, so a click changes the control tree on the next event, not this one.
+            bool layout = Event.current == null || Event.current.type == EventType.Layout;
+            if (!sectionHelpStates.TryGetValue(id, out bool showHelp) || layout)
+            {
+                showHelp = EditorPrefs.GetBool(helpKey, false);
+                sectionHelpStates[id] = showHelp;
+            }
+            if (!sectionOpenStates.TryGetValue(id, out bool expanded) || layout)
+            {
+                expanded = EditorPrefs.GetBool(openKey, expandedByDefault);
+                sectionOpenStates[id] = expanded;
+            }
+            return new CollapsibleScope(title, helpText, showHelp, expanded, this, id, helpKey, openKey);
+        }
+
+        /// <summary>What <see cref="CollapsibleSection"/> returns: dispose it to close the section.</summary>
+        public sealed class CollapsibleScope : IDisposable
+        {
+            private readonly EditorGUILayout.VerticalScope scope;
+
+            /// <summary>Whether the section is open, so its contents should be drawn.</summary>
+            public bool Expanded { get; }
+
+            internal CollapsibleScope(string title, string helpText, bool showHelp, bool expanded, UMAInspectorView owner, string sectionId, string helpKey, string openKey)
+            {
+                Expanded = expanded;
+                scope = new EditorGUILayout.VerticalScope(PanelStyle);
+                if (sectionFoldoutStyle == null)
+                    sectionFoldoutStyle = new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold };
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    bool changedBefore = GUI.changed;
+                    bool open = EditorGUILayout.Foldout(expanded, title, true, sectionFoldoutStyle);
+                    if (open != expanded)
+                    {
+                        owner.sectionOpenStates[sectionId] = open;
+                        EditorPrefs.SetBool(openKey, open);
+                    }
+                    if (expanded)
+                    {
+                        bool requested = EditorGUILayout.ToggleLeft(HelpToggle, showHelp, GUILayout.Width(52));
+                        if (requested != showHelp)
+                        {
+                            owner.sectionHelpStates[sectionId] = requested;
+                            EditorPrefs.SetBool(helpKey, requested);
+                        }
+                    }
+                    GUI.changed = changedBefore;
+                }
+                if (expanded && showHelp && !string.IsNullOrEmpty(helpText))
+                    EditorGUILayout.HelpBox(helpText, MessageType.Info);
+            }
+
+            public void Dispose() { scope.Dispose(); }
         }
 
         private sealed class PanelScope : IDisposable

@@ -76,12 +76,19 @@ Increase these values for large crowds or slow-moving characters. Reduce them on
 
 ## Runtime Feature Tuning
 
-The three `Disable ... At LOD` fields can suspend costly runtime systems at a
+The `Disable ... At LOD` fields can suspend costly runtime systems at a
 selected distance zone:
 
 - `Disable Bone Animators At LOD`
 - `Disable UMA Expression Player At LOD`
 - `Disable Dynamic Expression Player At LOD`
+- `Disable Hair Control At LOD`: the **UMA > Hair Control** components on the
+  character and below it. The hair stops swaying, and the hair shader's volume
+  shading uses the middle of the renderer bounds instead of the head. The saving
+  is small: a few microseconds of CPU per character per frame, plus the hair
+  draws going back to the SRP Batcher, which helps crowds. The hair shader does
+  the same vertex work either way. Pick a level where the sway and the shading
+  center no longer show. See [Hair Animation](HairAnimation.md).
 
 The selected level is inclusive. A value of `2` enables the system at LOD 0 and
 1, then disables it at LOD 2 and above. The default value of `-1` leaves that

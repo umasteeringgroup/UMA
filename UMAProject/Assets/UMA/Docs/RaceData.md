@@ -234,6 +234,22 @@ Test:
 
 The old `backwardsCompatibleWith` list exists only for migration. Use the current Cross Compatibility Settings for new work.
 
+## Legacy Rig
+
+`Legacy Rig` and `Legacy Rig Profile`, above *Cross Compatibility Settings*, let a race wear clothing built for an older rig, such as UMA 2 wardrobe on a UMA 3 race.
+
+- `Legacy Rig` is a *Rig Rest Pose* asset: the older rig's bone hierarchy, baked from that rig's race. HumanMale30 ships with `UMA3/Races/LegacyRigs/HumanMale UMA2 Rig Rest Pose`. Slots flagged as legacy that were built for this rig are converted to the race's rig when a character is built. Leave it empty and nothing is converted.
+- `Legacy Rig Profile` holds optional per-bone corrections and effectors for that conversion.
+- **Open Rig Profile Editor** edits the profile against a live preview character.
+
+See [Slot Rig Conversion](SlotRigConversion.md) for the full workflow.
+
+## Color Choices
+
+The **Color choices** section in Standard View holds the race's **Race Color Lists**: the Shared Color Tables this race offers, such as Hair, Skin or Eyes palettes. Use **+** and **-** to add or remove a **Color Table**, and drag the handles to reorder them.
+
+A table applies to the shared color with its own name, and to the names in its **Also Applies To** list (names are case-sensitive). When a character needs a palette for a shared color, the race's table for that exact name is used first, then a table that lists the name under Also Applies To. The sample character creator shows the race palette when there is one. Set the color names and a table's **Default Color** on the tables themselves; see [UMA Editor Utilities](UMAEditorUtilities.md#shared-color-tables).
+
 ## Race Thumbnails
 
 Assign:

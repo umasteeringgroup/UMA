@@ -394,36 +394,6 @@ namespace UMA.TexturePaint.Editor.Tests
             for(int i=0;i<8;i++)s.rows.Add(new TexturePaintSeamStitchRow { offset=0,relief=2,thickness=.1f });
             foreach(var c in r.Render()[TexturePaintChannel.NormalControl])Assert.That(c.r,Is.InRange(0f,1f));
         }
-        [Test]
-        public void CapturePresetContactSheetFromProductionRenderer()
-        {
-            using var r=new Ribbon();const int cell=128;const int columns=4;
-            var sheet=new Texture2D(columns*cell,4*cell,TextureFormat.RGBA32,false,true);
-            try
-            {
-                int index=0;
-                foreach(var preset in Presets())
-                {
-                    r.context.hemSeam=TexturePaintHemSeamSettings.Create(preset);r.context.hemSeam.normal=true;
-                    var output=r.Render();var colors=output[TexturePaintChannel.Albedo];var normals=output[TexturePaintChannel.Normal];
-                    for(int y=0;y<cell;y++)for(int x=0;x<cell;x++)
-                    {
-                        // Neutral synthetic denim weave under the actual generated layer.
-                        float weave=.8f+.2f*Mathf.Sin((x+y)*2.1f)*Mathf.Sin((x-y)*2.7f);
-                        var cloth=new Color(.11f,.2f,.3f)*weave;cloth.a=1;
-                        Color c=colors[y*cell+x];Color n=normals[y*cell+x];
-                        var normal=new Vector3((n.r*2-1)*n.a,(n.g*2-1)*n.a,Mathf.Lerp(1,n.b*2-1,n.a)).normalized;
-                        float light=.65f+.4f*Mathf.Max(0,Vector3.Dot(normal,new Vector3(-.4f,.5f,1).normalized));
-                        var result=(cloth*(1-c.a)+new Color(c.r,c.g,c.b)*c.a)*light;result.a=1;
-                        sheet.SetPixel(index%columns*cell+x,(3-index/columns)*cell+y,result);
-                    }
-                    index++;
-                }
-                sheet.Apply();Directory.CreateDirectory("Logs/HemSeam");File.WriteAllBytes("Logs/HemSeam/Presets.png",sheet.EncodeToPNG());
-            }
-            finally{Object.DestroyImmediate(sheet);}
-        }
-
     }
 }
 #endif

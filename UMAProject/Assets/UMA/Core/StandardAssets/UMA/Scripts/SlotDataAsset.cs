@@ -25,6 +25,20 @@ namespace UMA
         #region enums
         public enum BlendshapeCopyMode {UpdateAndAdd, ClearAndReplace, AddNewOnly }
         public enum NormalCopyMode {CopyNormals, AverageNormals }
+
+        /// <summary>
+        /// Where the hair shader reads a vertex's place along its strand for the Hair Control sway. The numbers
+        /// are the ones the shader gets, so do not change them.
+        /// </summary>
+        public enum HairControlSourceType
+        {
+            /// <summary>Red vertex color: dark at the scalp, white at the tip.</summary>
+            VertexColor = 0,
+            /// <summary>Red channel of the material's ID Map, which is white at the scalp.</summary>
+            IDMapRoot = 1,
+            /// <summary>Green channel of the material's ID Map, which is white at the tip.</summary>
+            IDMapTip = 2
+        }
         #endregion
 
         // Legacy flag to identify old slots that mayNeedConverting to new Bone Pose.
@@ -788,6 +802,25 @@ namespace UMA
 
         [Tooltip("This is used to grow around the center. Negative values subtract. Positive values add.")]
         public Vector3 smooshExpand = Vector3.one;
+
+        [Header("Hair Control")]
+        [Tooltip("This slot is prepared for the UMA Hair Control component: every vertex can tell where it is along its strand, from the scalp to the tip (see Hair Control Source). When checked, a Hair Control on the character sways the tips of this hair with movement and wind. Every slot that is built into the same submesh has to be checked too.")]
+        public bool HairControlReady = false;
+
+        [Tooltip("Where a vertex reads its place along the strand. Vertex Color: the red vertex color, dark at the scalp and white at the tip. ID Map Root: the red channel of the hair material's ID Map, which is white at the scalp. ID Map Tip: the green channel of the ID Map, which is white at the tip. The ID Map is read at the vertex, with the UVs the root and tip colors use.")]
+        public HairControlSourceType HairControlSource = HairControlSourceType.VertexColor;
+
+        [Tooltip("Where the movement starts along the strand: 0 is the scalp, 1 the tip. Vertices before this do not move; the rest of the strand turns about this point.")]
+        [Range(0f, 1f)]
+        public float HairControlStart = 0.25f;
+
+        [Tooltip("How far a strand turns about the point where its movement starts, at full sway, in degrees. The strand curves into an arc and keeps its length, so longer hair travels further for the same angle.")]
+        [Range(0f, 90f)]
+        public float HairControlAngle = 25f;
+
+        [Tooltip("Length of a strand from the scalp to the tip, in meters. Leave at 0 to have it measured from the slot's mesh, which is right for most hair. Set it when the measured length makes the hair swing as if it were much shorter or longer than it looks.")]
+        [Min(0f)]
+        public float HairControlLength = 0f;
 
 
 

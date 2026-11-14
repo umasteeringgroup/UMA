@@ -128,6 +128,15 @@ namespace UMA.Editors
             locationLabel.style.overflow = Overflow.Hidden;
             toolbar.Add(locationLabel);
 
+            Button sortButton = new Button(SortDocumentsAlphabetically)
+            {
+                text = "Sort",
+                tooltip = "Sort the documents from A to Z. Favorites stay at the top and are sorted among themselves. Undo restores the previous order."
+            };
+            sortButton.style.width = 44f;
+            sortButton.style.height = 18f;
+            toolbar.Add(sortButton);
+
             Button refreshButton = new Button(RefreshDocuments)
             {
                 text = "Refresh"
@@ -481,6 +490,39 @@ namespace UMA.Editors
             }
 
             return insertionIndex;
+        }
+
+        private void SortDocumentsAlphabetically()
+        {
+            if (configuration == null || documentationPaths.Count == 0)
+                return;
+
+            Undo.RecordObject(configuration, "Sort UMA Documentation");
+            SortAlphabetically(documentationPaths, path =>
+            {
+                UMADocumentConfiguration.DocumentEntry entry = GetEntry(path);
+                return entry != null && entry.favorite;
+            });
+            RewriteVisibleOrder();
+            SaveConfiguration();
+            RefreshView();
+        }
+
+        /// <summary>
+        /// Orders documents by name, ignoring case, with favorites kept above the rest and sorted among themselves.
+        /// </summary>
+        public static void SortAlphabetically(List<string> documentPaths, Func<string, bool> isFavorite)
+        {
+            if (documentPaths == null)
+                return;
+
+            List<string> sorted = documentPaths
+                .OrderBy(path => isFavorite != null && isFavorite(path) ? 0 : 1)
+                .ThenBy(path => Path.GetFileNameWithoutExtension(path), StringComparer.OrdinalIgnoreCase)
+                .ThenBy(path => path, StringComparer.Ordinal)
+                .ToList();
+            documentPaths.Clear();
+            documentPaths.AddRange(sorted);
         }
 
         private void RewriteVisibleOrder()

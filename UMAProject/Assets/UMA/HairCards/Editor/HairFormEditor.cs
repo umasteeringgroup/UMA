@@ -31,7 +31,7 @@ namespace UMA.HairCards.Editor
                 if (!ids.Contains(current)) { ids.Add(current); names.Add("Missing helper (replace)"); }
                 entry.stringValue = ids[EditorGUILayout.Popup("Form " + (i + 1), ids.IndexOf(current), names.ToArray())];
             }
-            EditorGUILayout.LabelField("Add/remove form bindings in the tree actions. One count is shared across all assigned forms; it is not multiplied per form.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.LabelField("Add or remove form bindings by right-clicking this population in the Groom Outliner. One count is shared across all assigned forms; it is not multiplied per form.", EditorStyles.wordWrappedMiniLabel);
             void Field(string name, string label, string tip = null) => EditorGUILayout.PropertyField(form.FindPropertyRelative(name), new GUIContent(label, tip));
             Field("cardWidth", "Card width (m)");
             Field("segments", "Length segments / card", "This directly sets the segment ceiling. LOD sample overrides and interactive preview may lower it. Shape control points are independent of this budget.");
@@ -97,53 +97,46 @@ namespace UMA.HairCards.Editor
             }
             population.form.helperIds.Add(helper.Id); HairGroomCommands.Commit(groom); return helper;
         }
-        internal static void DrawActions(HairCardStage stage, HairGroomNode node)
+        /// <summary>Form-population items for the outliner's right-click and Add menus.</summary>
+        internal static void AddFormMenuItems(HairCardStage stage, HairGroomNode node, GenericMenu menu)
         {
-            if (node.Kind == HairGroomNodeKind.Group || node.Kind == HairGroomNodeKind.Children)
-                using (new EditorGUI.DisabledScope(node.Locked))
+            var population = node.Population;
+            if (population == null || population.source == HairPopulationSource.Scalp || population.source == HairPopulationSource.PaintedScalp) return;
+            bool editable = !node.Locked && stage.Groom.SourceMesh != null;
+            string create = population.source == HairPopulationSource.Bun ? "Create && Edit Bun Helper" :
+                population.source == HairPopulationSource.Braid ? "Create && Edit Braid Rail" : "Create && Edit Grid Panel";
+            menu.AddSeparator(string.Empty);
+            if (editable) menu.AddItem(new GUIContent(create.Replace("&&", "and")), false, () =>
+            {
+                var bounds = stage.Groom.SourceMesh.bounds;
+                var helper = AddHelper(stage.Groom, population, bounds.center + Vector3.up * bounds.extents.y);
+                if (helper != null) stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Helper, helper.Id));
+            });
+            else menu.AddDisabledItem(new GUIContent(create.Replace("&&", "and")));
+            if (!node.Locked) menu.AddItem(new GUIContent("Bind Existing Form"), false, () =>
+            { Undo.RecordObject(stage.Groom, "Add Form Binding"); population.form.helperIds.Add(string.Empty); HairGroomCommands.Commit(stage.Groom); });
+            else menu.AddDisabledItem(new GUIContent("Bind Existing Form"));
+            if (population.form.helperIds.Count == 0 || node.Locked) { menu.AddDisabledItem(new GUIContent("Remove Form Binding")); return; }
+            for (int index = 0; index < population.form.helperIds.Count; index++)
+            {
+                int captured = index; string id = population.form.helperIds[index];
+                string label = (index + 1) + ". " + (stage.Groom.FindHelper(id)?.name ?? "Missing - unassigned form");
+                menu.AddItem(new GUIContent("Remove Form Binding/" + label.Replace("/", "-")), false, () =>
                 {
-                    if (GUILayout.Button("+ Grid Panel Group")) AddGroup(stage, HairPopulationSource.GridPanels);
-                    if (GUILayout.Button("+ Braid Group")) AddGroup(stage, HairPopulationSource.Braid);
-                    if (GUILayout.Button("+ Bun Group")) AddGroup(stage, HairPopulationSource.Bun);
-                }
-            if (node.Kind == HairGroomNodeKind.Population && node.Population.source != HairPopulationSource.Scalp && node.Population.source != HairPopulationSource.PaintedScalp)
-                using (new EditorGUI.DisabledScope(node.Locked))
-                {
-                    if (GUILayout.Button(node.Population.source == HairPopulationSource.Bun ? "+ Create & Edit Bun Helper" : node.Population.source == HairPopulationSource.Braid ? "+ Create & Edit Braid Rail" : "+ Create & Edit Grid Panel"))
-                    {
-                        var helper = AddHelper(stage.Groom, node.Population, stage.Groom.SourceMesh.bounds.center + Vector3.up * stage.Groom.SourceMesh.bounds.extents.y);
-                        stage.SelectNode(HairGroomNodes.Key(HairGroomNodeKind.Helper, helper.Id));
-                    }
-                    if (GUILayout.Button("+ Bind Existing Form"))
-                    { Undo.RecordObject(stage.Groom, "Add Form Binding"); node.Population.form.helperIds.Add(string.Empty); HairGroomCommands.Commit(stage.Groom); }
-                    using (new EditorGUI.DisabledScope(node.Population.form.helperIds.Count == 0))
-                        if (GUILayout.Button("Remove Form Binding…"))
-                        {
-                            var menu = new GenericMenu();
-                            for (int index = 0; index < node.Population.form.helperIds.Count; index++)
-                            {
-                                int captured = index; string id = node.Population.form.helperIds[index];
-                                string label = (index + 1) + ". " + (stage.Groom.FindHelper(id)?.name ?? "Missing / unassigned form");
-                                menu.AddItem(new GUIContent(label), false, () =>
-                                {
-                                    if (captured >= node.Population.form.helperIds.Count || node.Population.form.helperIds[captured] != id || node.Locked) return;
-                                    if (!EditorUtility.DisplayDialog("Remove Form Binding?", "Stop generating on '" + label + "'? The helper itself is kept. Undo restores the binding.", "Remove Binding", "Cancel")) return;
-                                    Undo.RecordObject(stage.Groom, "Remove Form Binding"); node.Population.form.helperIds.RemoveAt(captured); HairGroomCommands.Commit(stage.Groom);
-                                });
-                            }
-                            menu.ShowAsContext();
-                        }
-                }
-            if (node.Kind == HairGroomNodeKind.Helper && IsForm(node.Helper)) DrawHelperActions(stage, node.Helper);
+                    if (captured >= population.form.helperIds.Count || population.form.helperIds[captured] != id || node.Locked) return;
+                    if (!EditorUtility.DisplayDialog("Remove Form Binding?", "Stop generating on '" + label + "'? The helper itself is kept. Undo restores the binding.", "Remove Binding", "Cancel")) return;
+                    Undo.RecordObject(stage.Groom, "Remove Form Binding"); population.form.helperIds.RemoveAt(captured); HairGroomCommands.Commit(stage.Groom);
+                });
+            }
         }
-        private static void AddGroup(HairCardStage stage, HairPopulationSource source)
+        internal static void AddGroup(HairCardStage stage, HairPopulationSource source)
         {
             Vector3 origin = stage.Groom.SourceMesh.bounds.center + Vector3.up * stage.Groom.SourceMesh.bounds.extents.y;
             var group = CreateGroup(stage.Groom, source, origin);
             stage.SelectNode(source == HairPopulationSource.Braid ? HairGroomNodes.Key(HairGroomNodeKind.Helper, group.generation.cards.form.helperIds[0]) :
                 HairGroomNodes.Key(HairGroomNodeKind.Population, group.generation.cards.Id));
         }
-        private static void DrawHelperActions(HairCardStage stage, HairHelper helper)
+        internal static void DrawHelperActions(HairCardStage stage, HairHelper helper)
         {
             if (GUILayout.Button("Frame This Form")) stage.FrameForm(helper);
             using (new EditorGUI.DisabledScope(helper.locked || !helper.embedded))
@@ -244,7 +237,7 @@ namespace UMA.HairCards.Editor
                     float rise = EditorGUILayout.Slider("Coil rise (m)", helper.coilRise, -.1f, .1f);
                     if (EditorGUI.EndChangeCheck())
                     { Undo.RecordObject(stage.Groom, "Edit Bun Coil Settings"); helper.braidScale = braidScale; helper.coilRadius = radius; helper.coilTurns = turns; helper.coilRise = rise; HairGroomCommands.Commit(stage.Groom); }
-                    EditorGUILayout.LabelField("Coil settings apply when you choose Form Rail into Bun in the tree. They never replace your edited points automatically.", EditorStyles.wordWrappedMiniLabel);
+                    EditorGUILayout.LabelField("Coil settings apply when you choose Form Rail into Bun below. They never replace your edited points automatically.", EditorStyles.wordWrappedMiniLabel);
                     var euler = EditorGUILayout.Vector3Field("Initial braid frame", helper.rotation.eulerAngles);
                     if (Quaternion.Angle(Quaternion.Euler(euler), helper.rotation) > .001f)
                     { Undo.RecordObject(stage.Groom, "Rotate Braid Frame"); helper.rotation = Quaternion.Euler(euler); HairGroomCommands.Commit(stage.Groom); }

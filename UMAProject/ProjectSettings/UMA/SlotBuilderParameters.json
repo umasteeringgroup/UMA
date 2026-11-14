@@ -15,6 +15,7 @@
     "nameAfterMaterial": false,
     "KeepBones": [],
     "BoneStripper": "",
+    "stripBlendShapePrefix": false,
     "useRootFolder": false,
     "keepAllBones": false,
     "rotationEnabled": false,

@@ -541,20 +541,6 @@ namespace UMA.Editors.Tests
         [Category("MeshCombiner")]
         [Category("MultiStepMeshCombiner")]
         [Category("GeneratorScheduler")]
-        public void StopwatchTicksUsePlatformFrequency()
-        {
-            double oneSecondMilliseconds =
-                UMATime.StopwatchTicksToMilliseconds(
-                    System.Diagnostics.Stopwatch.Frequency);
-
-            Assert.AreEqual(1000d, oneSecondMilliseconds, 0.0001d);
-        }
-
-        [Test]
-        [Category("UMA")]
-        [Category("MeshCombiner")]
-        [Category("MultiStepMeshCombiner")]
-        [Category("GeneratorScheduler")]
         public void ResetStatisticsClearsIncrementalAndStageMetrics()
         {
             GameObject generatorObject = null;
@@ -1210,6 +1196,134 @@ namespace UMA.Editors.Tests
             }
         }
 
+#if UMA_BURSTCOMPILE
+        // "initial": the shape change is requested up front.
+        // "characterBegun": a build callback marks the shape dirty after validation.
+        // "preprocess": the mesh combiner promotes the shape change (as bone baking does).
+        // The later two used to run the pending material clear before the rebuild was known.
+        [TestCase("initial")] [TestCase("characterBegun")] [TestCase("preprocess")]
+        [Category("UMA")]
+        [Category("MultiStepMeshCombiner")]
+        [Category("IncrementalRendererPreservation")]
+        public void NormalsPromotedMeshRebuildPreservesVisibleMaterials(string promotion)
+        {
+            // A texture + shape update (no mesh change) on an unreadable mesh whose
+            // renderer recalculates normals is promoted to a multi-frame mesh
+            // rebuild. The visible materials must be preserved for that rebuild.
+            GameObject generatorObject = null;
+            GameObject avatarObject = null;
+            RaceData race = null;
+            UMAMaterial umaMaterial = null;
+            TextureMerge textureMerge = null;
+            UMARendererAsset asset = null;
+            Material previousMaterial = null;
+            Texture2D previousTexture = null;
+            Mesh previousMesh = null;
+            try
+            {
+                generatorObject = new GameObject("Normals preservation generator");
+                var generator = generatorObject.AddComponent<SchedulerTestGenerator>();
+                var combiner = generatorObject.AddComponent<FakeMultiStepMeshCombiner>();
+                textureMerge = ScriptableObject.CreateInstance<TextureMerge>();
+                generator.textureMerge = textureMerge;
+                combiner.stepsToComplete = 3;
+                ConfigureGenerator(generator, combiner);
+
+                avatarObject = new GameObject("Normals preservation UMA");
+                UMAData data = CreateUmaData(avatarObject, out race);
+                asset = ScriptableObject.CreateInstance<UMARendererAsset>();
+                typeof(UMARendererAsset).GetField("_RecalculateNormals", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .SetValue(asset, true);
+                data.defaultRendererAsset = asset;
+
+                var rendererObject = new GameObject("Previous live renderer");
+                rendererObject.transform.SetParent(avatarObject.transform, false);
+                var previousRenderer = rendererObject.AddComponent<SkinnedMeshRenderer>();
+                previousMesh = new Mesh { name = "Previous unreadable mesh" };
+                previousMesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+                previousMesh.triangles = new[] { 0, 1, 2 };
+                if (promotion == "preprocess")
+                {
+                    // Readable, so only the combiner (not normals) promotes the rebuild.
+                    combiner.onPreprocess = current => current.isMeshDirty |= current.isShapeDirty;
+                }
+                else
+                {
+                    previousMesh.UploadMeshData(true);
+                    Assert.IsFalse(previousMesh.isReadable);
+                }
+                previousRenderer.sharedMesh = previousMesh;
+                previousRenderer.rootBone = avatarObject.transform;
+
+                Shader shader = Shader.Find("Hidden/InternalErrorShader");
+                Assert.NotNull(shader);
+                previousMaterial = new Material(shader);
+                previousTexture = new Texture2D(2, 2);
+                previousMaterial.mainTexture = previousTexture;
+                previousRenderer.sharedMaterial = previousMaterial;
+
+                umaMaterial = ScriptableObject.CreateInstance<UMAMaterial>();
+                umaMaterial.materialType = UMAMaterial.MaterialType.Atlas;
+                umaMaterial.material = previousMaterial;
+                var previousGeneratedMaterials = new UMAData.GeneratedMaterials();
+                previousGeneratedMaterials.materials.Add(new UMAData.GeneratedMaterial
+                {
+                    umaMaterial = umaMaterial,
+                    material = previousMaterial,
+                    resultingAtlasList = new Texture[] { previousTexture },
+                    skinnedMeshRenderer = previousRenderer
+                });
+                previousGeneratedMaterials.rendererAssets.Add(null);
+                data.generatedMaterials = previousGeneratedMaterials;
+                data.SetRenderers(new[] { previousRenderer });
+                data.SetRendererAssets(new[] { asset });
+                bool late = promotion != "initial";
+                data.isTextureDirty = true;
+                data.isShapeDirty = promotion != "characterBegun";
+                data.isMeshDirty = false;
+                // A pending clear is destructive; it must wait for the final preservation decision.
+                data.needsMaterialClear = late;
+                if (promotion == "characterBegun")
+                {
+                    data.OnCharacterBegun += begun => begun.isShapeDirty = true;
+                }
+
+                generator.addDirtyUMA(data);
+                generator.Work();
+
+                Assert.AreEqual(1, combiner.beginCalls, "The promoted mesh rebuild must start.");
+                Assert.AreEqual(1, generator.QueueSize(), "The mesh rebuild spans several frames.");
+                Assert.IsTrue(previousMaterial != null, "The visible material must survive while the new mesh is pending.");
+                Assert.IsTrue(previousTexture != null, "The visible atlas must survive while the new mesh is pending.");
+                Assert.AreSame(previousMaterial, previousRenderer.sharedMaterial);
+                Assert.AreNotSame(previousGeneratedMaterials, data.generatedMaterials,
+                    "The in-progress build must use a detached generated-material set.");
+
+                generator.removeUMA(data);
+                generator.Work();
+
+                Assert.IsTrue(generator.IsIdle());
+                Assert.AreSame(previousGeneratedMaterials, data.generatedMaterials,
+                    "Cancellation must restore the generated materials used by the visible renderer.");
+                Assert.IsTrue(previousMaterial != null);
+                Assert.IsTrue(previousTexture != null);
+                Assert.AreEqual(late, data.needsMaterialClear, "Rollback must restore the pending material clear.");
+            }
+            finally
+            {
+                if (generatorObject != null) UnityEngine.Object.DestroyImmediate(generatorObject);
+                if (avatarObject != null) UnityEngine.Object.DestroyImmediate(avatarObject);
+                if (previousMesh != null) UnityEngine.Object.DestroyImmediate(previousMesh);
+                if (previousMaterial != null) UnityEngine.Object.DestroyImmediate(previousMaterial);
+                if (previousTexture != null) UnityEngine.Object.DestroyImmediate(previousTexture);
+                if (umaMaterial != null) UnityEngine.Object.DestroyImmediate(umaMaterial);
+                if (textureMerge != null) UnityEngine.Object.DestroyImmediate(textureMerge);
+                if (asset != null) UnityEngine.Object.DestroyImmediate(asset);
+                if (race != null) UnityEngine.Object.DestroyImmediate(race);
+            }
+        }
+#endif
+
         [Test]
         [Category("UMA")]
         [Category("MeshCombiner")]
@@ -1415,6 +1529,267 @@ namespace UMA.Editors.Tests
             }
         }
 
+#if UMA_BURSTCOMPILE
+        [TestCase(false, false)] [TestCase(false, true)]
+        [TestCase(true, false)] [TestCase(true, true)]
+        public void NormalsUseFinalBlendshapeWeightsBeforeDiscardingCpuData(bool multiStep, bool nonReadable)
+        {
+            var generatorObject = new GameObject("Normals timing generator");
+            var avatarObject = new GameObject("Normals timing avatar");
+            var meshes = new List<Mesh>();
+            RaceData race = null;
+            UMARendererAsset asset = null;
+            try
+            {
+                var generator = generatorObject.AddComponent<SchedulerTestGenerator>();
+                var combiner = generatorObject.AddComponent<FakeMultiStepMeshCombiner>();
+                ConfigureGenerator(generator, combiner);
+                var data = CreateUmaData(avatarObject, out race);
+                race.useNewDNA = false;
+                asset = ScriptableObject.CreateInstance<UMARendererAsset>();
+                typeof(UMARendererAsset).GetField("_RecalculateNormals", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .SetValue(asset, true);
+                data.defaultRendererAsset = asset;
+                data.markNotReadable = nonReadable;
+                data.isShapeDirty = true;
+                generator.autoSetRaceBlendshapes = true;
+                typeof(UMAGeneratorBuiltin).GetField("raceNames", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .SetValue(generator, new HashSet<string> { race.raceName });
+
+                var rendererObject = new GameObject("Normals timing renderer");
+                rendererObject.transform.SetParent(avatarObject.transform, false);
+                var renderer = rendererObject.AddComponent<SkinnedMeshRenderer>();
+                data.SetRenderers(new[] { renderer });
+                data.SetRendererAssets(new[] { asset });
+                var upload = typeof(UMARendererAsset).GetMethod("UploadGeneratedMesh", BindingFlags.Static | BindingFlags.NonPublic);
+                combiner.onStep = () =>
+                {
+                    var mesh = new Mesh();
+                    meshes.Add(mesh);
+                    mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+                    mesh.normals = new[] { Vector3.forward, Vector3.forward, Vector3.forward };
+                    mesh.uv = new[] { Vector2.zero, Vector2.right, Vector2.up };
+                    mesh.tangents = new[] { new Vector4(1, 0, 0, 1), new Vector4(1, 0, 0, 1), new Vector4(1, 0, 0, 1) };
+                    mesh.triangles = new[] { 0, 1, 2 };
+                    mesh.AddBlendShapeFrame("DNA", 100, new[] { Vector3.zero, Vector3.zero, Vector3.forward }, null, null);
+                    // Race blendshapes currently use weight 1, so this contributes one unit at that weight.
+                    mesh.AddBlendShapeFrame(race.raceName, 100, new[] { Vector3.zero, Vector3.zero, Vector3.forward * 100 }, null, null);
+                    renderer.sharedMesh = mesh;
+                    upload.Invoke(null, new object[] { data, renderer, null });
+                    generator.AdvanceOneMillisecond();
+                };
+                Vector3[] observedNormals = null;
+                SetNormalsObserver((smr, normals) => { if (smr == renderer) observedNormals = normals; });
+                int bodyCalls = 0;
+                float dnaWeight = 100;
+                generator.updateBody = current =>
+                {
+                    bodyCalls++;
+                    Assert.IsTrue(renderer.sharedMesh.isReadable, "CPU data must survive until DNA has applied its weights.");
+                    renderer.SetBlendShapeWeight(0, dnaWeight);
+                };
+
+                void Build()
+                {
+                    observedNormals = null;
+                    if (multiStep)
+                    {
+                        generator.addDirtyUMA(data);
+                        for (int i = 0; i < 20 && !generator.IsIdle(); i++) generator.Work();
+                        Assert.IsTrue(generator.IsIdle());
+                    }
+                    else Assert.IsTrue(generator.GenerateSingleUMA(data, false));
+                }
+                void CheckResult(float height)
+                {
+                    Assert.That(renderer.GetBlendShapeWeight(0), Is.EqualTo(dnaWeight));
+                    Assert.That(renderer.GetBlendShapeWeight(1), Is.EqualTo(1));
+                    Assert.That(renderer.sharedMesh.isReadable, Is.EqualTo(!nonReadable));
+                    // The CPU copy may be gone, so check what was calculated before the final upload.
+                    Assert.NotNull(observedNormals, "Normals must be recalculated for every build.");
+                    var expectedNormal = new Vector3(0, -height, 1).normalized;
+                    foreach (var normal in observedNormals)
+                        Assert.That(Vector3.Distance(normal, expectedNormal), Is.LessThan(.0001f));
+                    if (!nonReadable)
+                    {
+                        var expected = new Vector3(0, -height, 1).normalized;
+                        foreach (var normal in renderer.sharedMesh.normals)
+                            Assert.That(Vector3.Distance(normal, expected), Is.LessThan(.0001f));
+                        Assert.That(renderer.sharedMesh.vertices[2], Is.EqualTo(Vector3.up), "Only normals should be baked.");
+                    }
+                }
+
+                Build();
+                Assert.That(bodyCalls, Is.EqualTo(1));
+                CheckResult(2);
+
+                // A later DNA-only update must rebuild unreadable geometry, but can reuse readable geometry.
+                dnaWeight = 0;
+                data.isShapeDirty = true;
+                data.isMeshDirty = false;
+                data.dirty = true;
+                Build();
+                Assert.That(bodyCalls, Is.EqualTo(2));
+                Assert.That(combiner.beginCalls, Is.EqualTo(nonReadable ? 2 : 1));
+                CheckResult(1);
+            }
+            finally
+            {
+                SetNormalsObserver(null);
+                UnityEngine.Object.DestroyImmediate(avatarObject);
+                UnityEngine.Object.DestroyImmediate(generatorObject);
+                foreach (var mesh in meshes) if (mesh != null) UnityEngine.Object.DestroyImmediate(mesh);
+                if (asset != null) UnityEngine.Object.DestroyImmediate(asset);
+                if (race != null) UnityEngine.Object.DestroyImmediate(race);
+            }
+        }
+
+        private static void SetNormalsObserver(Action<SkinnedMeshRenderer, Vector3[]> observer)
+        {
+            typeof(UMARendererAsset).GetField("NormalsRecalculatedForTests", BindingFlags.Static | BindingFlags.NonPublic)
+                .SetValue(null, observer);
+        }
+
+        private static bool IsMeshUploadDeferred(UMAData data) =>
+            (bool)typeof(UMAData).GetField("deferRendererMeshUpload", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(data);
+
+        // Deferred normals must survive a restart (using the newest weights), leave no
+        // recalculation behind after cancellation, and always restore the deferral
+        // scope, including when the mesh combiner throws.
+        [TestCase("restart", true)] [TestCase("cancel", true)]
+        [TestCase("failure", true)] [TestCase("failure", false)]
+        public void DeferredNormalsHandleRestartCancellationAndFailure(string scenario, bool multiStep)
+        {
+            var generatorObject = new GameObject("Normals lifecycle generator");
+            var avatarObject = new GameObject("Normals lifecycle avatar");
+            var meshes = new List<Mesh>();
+            RaceData race = null;
+            UMARendererAsset asset = null;
+            try
+            {
+                var generator = generatorObject.AddComponent<SchedulerTestGenerator>();
+                var combiner = generatorObject.AddComponent<FakeMultiStepMeshCombiner>();
+                ConfigureGenerator(generator, combiner);
+                combiner.stepsToComplete = 2;
+                int injectedFailures = 0;
+                var data = CreateUmaData(avatarObject, out race);
+                race.useNewDNA = false;
+                asset = ScriptableObject.CreateInstance<UMARendererAsset>();
+                typeof(UMARendererAsset).GetField("_RecalculateNormals", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .SetValue(asset, true);
+                data.defaultRendererAsset = asset;
+                data.markNotReadable = true;
+                data.isShapeDirty = true;
+
+                var rendererObject = new GameObject("Normals lifecycle renderer");
+                rendererObject.transform.SetParent(avatarObject.transform, false);
+                var renderer = rendererObject.AddComponent<SkinnedMeshRenderer>();
+                data.SetRenderers(new[] { renderer });
+                data.SetRendererAssets(new[] { asset });
+                var upload = typeof(UMARendererAsset).GetMethod("UploadGeneratedMesh", BindingFlags.Static | BindingFlags.NonPublic);
+                combiner.onStep = () =>
+                {
+                    if (scenario == "failure")
+                    {
+                        // Only after the deferral scope is active, so restoring it is what is tested.
+                        Assert.IsTrue(IsMeshUploadDeferred(data), "The failure must happen inside the deferral scope.");
+                        injectedFailures++;
+                        throw new InvalidOperationException("Simulated combiner failure");
+                    }
+                    var mesh = new Mesh();
+                    meshes.Add(mesh);
+                    mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+                    mesh.normals = new[] { Vector3.forward, Vector3.forward, Vector3.forward };
+                    mesh.uv = new[] { Vector2.zero, Vector2.right, Vector2.up };
+                    mesh.tangents = new[] { new Vector4(1, 0, 0, 1), new Vector4(1, 0, 0, 1), new Vector4(1, 0, 0, 1) };
+                    mesh.triangles = new[] { 0, 1, 2 };
+                    mesh.AddBlendShapeFrame("DNA", 100, new[] { Vector3.zero, Vector3.zero, Vector3.forward }, null, null);
+                    renderer.sharedMesh = mesh;
+                    upload.Invoke(null, new object[] { data, renderer, null });
+                    generator.AdvanceOneMillisecond();
+                };
+                float dnaWeight = 100;
+                generator.updateBody = current => renderer.SetBlendShapeWeight(0, dnaWeight);
+                Vector3[] observedNormals = null;
+                int recalculations = 0;
+                SetNormalsObserver((smr, normals) => { if (smr == renderer) { observedNormals = normals; recalculations++; } });
+
+                if (scenario == "failure")
+                {
+                    if (multiStep)
+                    {
+                        // The scheduler reports the failure and keeps running.
+                        UnityEngine.TestTools.LogAssert.Expect(LogType.Error,
+                            new System.Text.RegularExpressions.Regex("Exception while generating UMA .*Simulated combiner failure"));
+                        UnityEngine.TestTools.LogAssert.Expect(LogType.Exception,
+                            new System.Text.RegularExpressions.Regex("Simulated combiner failure"));
+                        generator.addDirtyUMA(data);
+                        for (int i = 0; i < 20 && !generator.IsIdle(); i++) generator.Work();
+                        Assert.IsTrue(generator.IsIdle(), "A failed build must leave the queue.");
+                    }
+                    else
+                    {
+                        // A direct caller receives the combiner's own exception.
+                        var thrown = Assert.Throws<InvalidOperationException>(() => generator.GenerateSingleUMA(data, false));
+                        Assert.That(thrown.Message, Is.EqualTo("Simulated combiner failure"));
+                    }
+                    Assert.AreEqual(1, injectedFailures, "The injected combiner failure must be reached exactly once.");
+                    Assert.IsFalse(IsMeshUploadDeferred(data), "A failed build must restore the upload scope.");
+                    Assert.AreEqual(0, recalculations);
+                    return;
+                }
+
+                generator.addDirtyUMA(data);
+                generator.Work();
+                Assert.IsFalse(generator.IsIdle(), "The fake mesh operation spans two frames.");
+                Assert.IsFalse(IsMeshUploadDeferred(data), "Deferral is scoped to each combiner step.");
+
+                if (scenario == "cancel")
+                {
+                    generator.removeUMA(data);
+                    for (int i = 0; i < 20 && !generator.IsIdle(); i++) generator.Work();
+                    Assert.IsTrue(generator.IsIdle());
+                    Assert.IsFalse(IsMeshUploadDeferred(data));
+                    Assert.AreEqual(0, recalculations, "A cancelled build must not finalize normals.");
+                    return;
+                }
+
+                // restart: a newer DNA request arrives while the mesh is still building.
+                Assert.AreEqual(1, combiner.operations.Count);
+                var firstOperation = combiner.operations[0];
+                Assert.AreEqual(1, firstOperation.completedSteps, "The first operation must still be in progress.");
+                dnaWeight = 50;
+                data.isShapeDirty = true;
+                generator.addDirtyUMA(data);
+                for (int i = 0; i < 20 && !generator.IsIdle(); i++) generator.Work();
+                Assert.IsTrue(generator.IsIdle());
+                Assert.AreEqual(2, combiner.beginCalls, "The newer request must start a replacement operation.");
+                Assert.That(firstOperation.cancelCalls, Is.GreaterThan(0), "The stale operation must be cancelled.");
+                Assert.IsTrue(firstOperation.disposed, "The stale operation must be disposed.");
+                Assert.Less(firstOperation.completedSteps, 2, "The stale operation must not complete.");
+                Assert.AreEqual(1, recalculations, "Only the replacement build may finalize normals.");
+                Assert.IsFalse(IsMeshUploadDeferred(data));
+                Assert.NotNull(observedNormals);
+                Assert.That(renderer.GetBlendShapeWeight(0), Is.EqualTo(dnaWeight));
+                var expected = new Vector3(0, -(dnaWeight / 100f), 1).normalized;
+                foreach (var normal in observedNormals)
+                    Assert.That(Vector3.Distance(normal, expected), Is.LessThan(.0001f),
+                        "The restarted build must use the newest blendshape weights.");
+                Assert.IsFalse(renderer.sharedMesh.isReadable, "The final upload must still honor markNotReadable.");
+            }
+            finally
+            {
+                SetNormalsObserver(null);
+                UnityEngine.Object.DestroyImmediate(avatarObject);
+                UnityEngine.Object.DestroyImmediate(generatorObject);
+                foreach (var mesh in meshes) if (mesh != null) UnityEngine.Object.DestroyImmediate(mesh);
+                if (asset != null) UnityEngine.Object.DestroyImmediate(asset);
+                if (race != null) UnityEngine.Object.DestroyImmediate(race);
+            }
+        }
+#endif
+
         private static void ConfigureGenerator(
             SchedulerTestGenerator generator,
             UMAMeshCombiner combiner)
@@ -1479,6 +1854,13 @@ namespace UMA.Editors.Tests
     public sealed class SchedulerTestGenerator : UMAGenerator
     {
         private long timestamp;
+        public Action<UMAData> updateBody;
+
+        public override void UpdateUMABody(UMAData data)
+        {
+            if (updateBody != null) updateBody(data);
+            else base.UpdateUMABody(data);
+        }
 
         public override void Awake()
         {

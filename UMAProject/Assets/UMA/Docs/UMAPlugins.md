@@ -7,7 +7,13 @@ page lists compact, single-line rows with those companions indented immediately 
 parent. Install the parent first. **Remove All** on the parent removes its installed companions first, then the parent; normal
 plugin use does not require examples or Unity Test Framework.
 
-**Install All Plugins** asks once for the entire batch, including Examples and Tests.
+The top of the Plugins page has three batch buttons:
+
+- **Install all plugins** installs every missing or unverified plugin, with its Examples and Tests packages. It is disabled when everything is installed.
+- **Reinstall all plugins** processes every plugin and its Examples and Tests again, including packages already installed, and installs any that are missing. Use it after updating UMA, or to repair a damaged install.
+- **Remove all plugins** removes every installed plugin and its companions. When removal is not possible, the button is disabled and its tooltip says why (for example, unmanaged files that must be adopted first).
+
+**Install all plugins** asks once for the entire batch, including Examples and Tests.
 It skips packages already installed, registers matching unmanaged content, and backs up
 content that needs replacement while preserving extra files and separately installed companions.
 The approval survives script reloads and downloaded-package callbacks. Individual Install/Reinstall
@@ -15,6 +21,11 @@ actions retain their normal confirmations. A final dialog lists every package as
 already installed, failed/cancelled, or not attempted. A failed or cancelled installation stops
 the queue and keeps successful earlier installations. The report is also saved to
 `Library/UMA/ContentInstaller/LastPluginInstallReport.txt`.
+
+You can switch to another application while a batch runs: UMA keeps the Editor updating
+in the background until the installs, downloads or removals finish. Keep at least part of
+the Unity window visible, because a minimized or fully covered Editor may still pause until
+you return to it.
 
 ## Overlay Painter installation and use
 
@@ -72,9 +83,12 @@ Direct UnityPackage import requires UMA with launcher API 1 already installed. A
 Select a scene avatar and use **Editors > Plugins > Hair Card Editor**. The existing **UMA > Hair Cards** menus and mesh/groom asset workflows remain available. Prefab assets and Prefab Mode cannot launch avatar authoring. Hair Cards includes its core data, runtime support, editor and shaders. The existing UMA render pipeline package supplies the hair atlas textures and optional URP hair shaders.
 
 **Hair Card Examples** contains the authored content under `Assets/UMAProjectData/HairCards/Examples`.
-**Hair Card Tests** owns `Assets/UMA/HairCards/Editor/Tests` and requires Unity Test Framework.
+**Hair Card Tests** owns `Assets/UMA/HairCardsTests` and requires Unity Test Framework.
 The main Hair Cards archive excludes both. Reinstalling an older parent that bundled tests
-preserves the existing tests during the transition to companion ownership.
+preserves the existing tests during the transition to companion ownership. UMA 3.1.5 and earlier
+installed the tests inside the plugin, at `Assets/UMA/HairCards/Editor/Tests`; installing Hair Card
+Tests again moves that copy to `Assets/UMA/HairCardsTests` (keeping its GUIDs) before replacing it,
+and reinstalling the parent leaves it in place.
 
 The Documentation Browser's **Hair Card Editor** selection contains the quick start and hairstyle guides. Installing registers its descriptor; removing the plugin removes that documentation registration. User grooms, baked assets and recovery under `Assets/UMAProjectData/HairCards`, and preferences under `UserSettings`, survive removal. The separately installed Examples package owns only its listed example assets; modified examples are preserved during removal. Editable grooms and runtime groom components require the plugin's types to load; reinstalling restores those types. Baked ordinary Unity/UMA assets do not require the authoring editor.
 
@@ -177,7 +191,7 @@ UMA's recipe, wardrobe, DCA, and embedded UMAData inspectors have explicit integ
 
 ## Register plugin documentation
 
-The Documentation Browser starts with **UMA** selected. Its top dropdown lists installed plugins with registered Markdown documentation; selecting a plugin shows only that plugin's guides. Favorites and document ordering remain available. The Plans browser remains separate.
+The Documentation Browser starts with **UMA** selected. Its top dropdown lists installed plugins with registered Markdown documentation; selecting a plugin shows only that plugin's guides. Favorites and document ordering remain available: click a document's star to favorite it, drag documents to reorder them, or press **Sort** to put the list in A–Z order, with favorites kept at the top and sorted among themselves (**Undo** brings the previous order back). The Plans browser remains separate.
 
 Ship a `UMAPluginDocumentation.json` file in the plugin's root, alongside its `.meta` file, for example:
 

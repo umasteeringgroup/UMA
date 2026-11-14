@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64cb21cb67364e6b88ee17f47f46ab63, type: 3}
-  m_Name: 
+  m_Name: Evening Berry
   m_EditorClassIdentifier: UMA.TexturePaint.Runtime::UMA.TexturePaint.TexturePaintMaterialPreset
   schemaVersion: 3
   presetId: 4977628e8c4d4b53af559ca8099e3b82

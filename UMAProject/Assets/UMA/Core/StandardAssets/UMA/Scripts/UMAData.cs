@@ -443,6 +443,8 @@ namespace UMA
         [NonSerialized] public double LastBoneCleanupMilliseconds;
         [NonSerialized] internal bool BoneCleanupPending;
         [NonSerialized] internal bool AnimatorBindingsDirty;
+        // What the current humanoid Avatar was built from; see UMAAvatarReuse.
+        [NonSerialized] internal UMAAvatarReuse.Record avatarReuse;
 
         internal bool NeedsAnimatorBindingRefresh => AnimatorBindingsDirty && !rawAvatar &&
             (animationController != null || !disableAnimation);
@@ -568,6 +570,13 @@ namespace UMA
 			}
 
 			GameObject rendererObject = renderer.gameObject;
+			// The avatar may keep its current generated materials across this
+			// renderer's replacement (mesh-only rebuilds). Retiring the renderer
+			// must not destroy or release surfaces that are still in use.
+			if (rendererObject.TryGetComponent<UMAResourceLeaseOwner>(out var retiringOwner))
+			{
+				retiringOwner.ReturnSurfacesTo(this);
+			}
 			Cloth cloth = rendererObject.GetComponent<Cloth>();
 			if (cloth != null)
 			{
@@ -1032,10 +1041,13 @@ namespace UMA
         /// </summary>
         [Tooltip("When this is true, the meshcombiner will upload the data and the mesh will no longer be readable. Set this to false if you use a 3rd party asset that needs to read the mesh data.")]
         public bool markNotReadable = false;
+        // Scoped to generator-owned combiner calls. Direct combiner callers still
+        // finalize immediately; generation waits until DNA has set blendshape weights.
+        [NonSerialized] internal bool deferRendererMeshUpload;
         /// <summary>
         /// Should the mesh use dynamic buffers?
         /// </summary>
-        [Tooltip("When this is true, the meshcombiner will mark the mesh as dynamic. This will slightly decrease build time and slightly increase rendering.")]
+        [Tooltip("Asks the Jobified and Incremental mesh combiners to mark the generated mesh as dynamic. The Default and bone baking combiners ignore it, because a dynamic mesh written the way they write it is much slower to render with GPU skinning. Leave this off unless you have measured a benefit.")]
         public bool markDynamic = false;
 
 		// This UMAData will require 32 bit indexes
@@ -3631,18 +3643,27 @@ namespace UMA
                 {
                     cachedMaterial.cachedFirstPass?.Dispose(); cachedMaterial.cachedFirstPass = null;
                     cachedMaterial.cachedSecondPass?.Dispose(); cachedMaterial.cachedSecondPass = null;
+
+                    // Materials are instantiated before any atlas is built, so they must be
+                    // destroyed even when resultingAtlasList was never assigned (for example
+                    // when generation failed between material creation and texture processing).
+                    bool usesExistingMaterial = cachedMaterial.umaMaterial != null &&
+                        cachedMaterial.umaMaterial.materialType == UMAMaterial.MaterialType.UseExistingMaterial;
+                    if (cachedMaterial.secondPassMaterial != null)
+                    {
+                        if (!sharedSecond && cachedMaterial.secondPassMaterial != cachedMaterial.material)
+                        {
+                            UMAUtils.DestroySceneObject(cachedMaterial.secondPassMaterial);
+                        }
+                        cachedMaterial.secondPassMaterial = null;
+                    }
+                    if (!sharedFirst && !usesExistingMaterial && cachedMaterial.material != null)
+                    {
+                        UMAUtils.DestroySceneObject(cachedMaterial.material);
+                    }
                 }
 				if (generatedMaterials.materials[atlasIndex] != null && generatedMaterials.materials[atlasIndex].resultingAtlasList != null)
 				{
-					if (generatedMaterials.materials[atlasIndex].secondPassMaterial != null)
-					{
-						if (!sharedSecond) UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].secondPassMaterial);
-						generatedMaterials.materials[atlasIndex].secondPassMaterial = null;
-					}
-					if (!sharedFirst && generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
-                    {
-						UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
-                    }
 					for (int textureIndex = 0; textureIndex < generatedMaterials.materials[atlasIndex].resultingAtlasList.Length; textureIndex++)
 					{
 						if (generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] != null)
@@ -3679,17 +3700,8 @@ namespace UMA
 							}
 						}
 					}
-					if (generatedMaterials.materials[atlasIndex].umaMaterial.materialType != UMAMaterial.MaterialType.UseExistingMaterial)
-					{
-						if (!sharedFirst) UMAUtils.DestroySceneObject(generatedMaterials.materials[atlasIndex].material);
-						generatedMaterials.materials[atlasIndex] = null;
-					}
-					else
-					{
-						//Debug.Log("Not removing material " + generatedMaterials.materials[atlasIndex].material.name);
-                        generatedMaterials.materials[atlasIndex] = null;
-                    }
                 }
+				generatedMaterials.materials[atlasIndex] = null;
 			}
 			generatedMaterials.materials.Clear();
         }

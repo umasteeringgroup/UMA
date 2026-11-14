@@ -1,0 +1,16 @@
+{
+    "name": "UMA.Timing",
+    "rootNamespace": "",
+    "references": [
+        "UMA_Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

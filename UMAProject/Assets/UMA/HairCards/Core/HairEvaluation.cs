@@ -134,6 +134,25 @@ namespace UMA.HairCards
         internal readonly List<HairCurvePoint> helperCurve = new List<HairCurvePoint>();
         internal bool inUse;
 
+        /// <summary>The painted-surface field this workspace keeps for a group. Callers that shade
+        /// or sample the same source mesh reuse it instead of rebuilding the distance graph.</summary>
+        public HairSurfaceFields SurfaceFields(HairGroup group) => populations.Fields(group);
+
+        /// <summary>Interactive previews: build texture-resolution surface fields on a worker
+        /// thread. Evaluations use the per-vertex field until <see cref="CompleteDeferredSurfaceFields"/>
+        /// installs the detailed one. Leave off for bakes, validation and tests.</summary>
+        public bool DeferSurfaceTextureFields
+        {
+            get => populations.DeferTextureFields;
+            set => populations.DeferTextureFields = value;
+        }
+
+        /// <summary>Main thread only. True when a deferred field was installed and the caller
+        /// should evaluate again.</summary>
+        public bool CompleteDeferredSurfaceFields() => populations.CompleteDeferredFields();
+
+        public bool HasDeferredSurfaceFields => populations.HasDeferredFields;
+
         public void Clear()
         {
             if (inUse) throw new InvalidOperationException("Cannot clear an active hair evaluation workspace.");

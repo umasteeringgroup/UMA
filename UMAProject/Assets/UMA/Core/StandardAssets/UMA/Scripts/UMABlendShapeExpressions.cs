@@ -361,5 +361,14 @@ namespace UMA
             return param;
         }
 
+        private void OnDestroy()
+        {
+            // bakedMesh is created by this component and is never assigned to a renderer.
+            if (bakedMesh != null)
+            {
+                UMAUtils.DestroySceneObject(bakedMesh);
+                bakedMesh = null;
+            }
+        }
     }
 }

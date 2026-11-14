@@ -1,223 +1,220 @@
 # Getting Started with UMA 3
 
-This guide builds a first UMA 3 character using the current project settings and Global Library workflow.
+UMA builds characters from parts. You choose a body type, dress it in clothing, adjust its shape and colors, and UMA assembles one optimized character mesh. Nothing is modeled by hand in Unity: you edit settings, and UMA rebuilds the character for you.
 
-## Before You Begin
+This guide takes you from a fresh install to your first customized character. You do not need to write code. A short section for programmers is at the end.
 
-Confirm the UMA package is present. The shared starter prefabs are in:
+## Words you will see
 
-`<UMA install>/Core/Defaults`
+| Term | What it means |
+|---|---|
+| **Race** | The base body: its mesh, skeleton, shape controls and which clothing fits it. `Human Male 3.0` and `Human Female 3.0` are the standard UMA 3 races. |
+| **Slot** | One piece of mesh, such as a head, torso, or a shirt. |
+| **Overlay** | A texture layer painted onto a slot, such as skin, makeup, or a logo. |
+| **Wardrobe recipe** | A wearable item, such as a shirt or hairstyle. It adds slots and overlays, and can hide the body underneath. |
+| **Shared color** | A named color, such as Skin, Hair or Eyes, that tints every part using that name. |
+| **DNA** | Sliders that change the body's shape: height, head size, nose width, and so on. |
+| **Dynamic Character Avatar (DCA)** | The component on a GameObject that holds all the choices above and builds the character. |
+| **Global Library** | UMA's catalog of every race, recipe, slot and overlay in your project. UMA can only use what is listed there. |
+| **Generator** | The behind-the-scenes object that builds characters. UMA creates it for you when one is needed. |
 
-The folder contains:
+## Step 1: Install UMA's render pipeline support and content
 
-- `UMA_GLIB`: generator and supporting scene setup
-- `UMADynamicCharacterAvatar`: standard character prefab
+UMA's materials depend on your render pipeline, so install the matching support first.
 
-Optional UMA 3 sample prefabs are in:
+1. Open **UMA > Welcome to UMA**. It also opens by itself when a project loads, unless you turned that off.
+2. Select **Install SRP Package** (later named **Render Pipeline Support**) on the left.
+3. Click **Install UMA URP Support** or **Install UMA HDRP Support**, whichever matches your project. Install only one.
+4. On the same page, click **Install UMA 3 Content...**. This adds the races, clothing, materials and example scenes.
+5. Optional: open **Plugins** to add extras such as Overlay Painter or the Hair Card Editor.
 
-`<UMA install>/UMA3/Getting Started`
+UMA rebuilds the Global Library after installing content. For details, including updating later, see [Package Installation](PackageInstallation.md).
 
-That folder contains:
+## Step 2: Check the project settings
 
-- `UMADynamicCharacterAvatar-LOD`: character prefab with LOD support
-- `UMARandomGeneratedCharacter` and `UMARandomGeneratedCharacterV2`: random-generation examples
-- `UMADefaultUtilityEnvironment`: simple preview environment
+Open **Edit > Project Settings > UMA** and find **Editor Settings**.
 
-## Configure UMA Settings
+- **Character Prefab** should be `UMADynamicCharacterAvatar`.
+- **Generator Prefab** should be `UMA_GLIB`.
 
-Open:
+Both prefabs are in `<UMA folder>/Core/Defaults`. **UMA Folder** shows where UMA is installed; it is read-only and detected automatically. **Show UMA Toolbar** turns the UMA Toolbar in the Scene view on or off.
 
-`Edit > Project Settings > UMA`
+You do not need to place a generator in your scenes. When a character needs building, UMA creates one from the **Generator Prefab**. Avoid keeping several generators in one scene.
 
-In the Editor Settings section:
+### Choose speed or fidelity
 
-1. Assign the standard character prefab to `Character Prefab`.
-2. Assign `UMA_GLIB` to `Generator Prefab`.
-3. Check the read-only `UMA Folder` display for the detected installation location. UMA resolves installation and shader package paths automatically.
+Open **UMA > Welcome to UMA > Configure UMA** and click one of:
 
-The generator prefab is important even when it is not placed in every scene. At runtime, UMA can instantiate the configured generator when a DCA requests generation and no scene generator exists.
+- **Setup UMA for maximum speed**: combines skin textures into atlases and uses faster hair materials. Good for games with many characters.
+- **Setup UMA for maximum fidelity**: keeps textures separate for the best quality. Good for cinematics and close-ups.
 
-Do not intentionally keep several active generators unless the project has a tested custom architecture.
+Characters already in the open scene rebuild to show the change. Your atlas sizes and quality settings are kept. To fine-tune quality and performance, see [Configure UMA and Generator Setup](UMAGeneratorSetup.md).
 
-Open **UMA > Welcome to UMA > Configure UMA** to review skin and hair UMAMaterials and choose **Setup UMA for maximum speed** or **Setup UMA for maximum fidelity**. The active page's navigation button stays highlighted. Speed uses Atlas skin materials and compatible Alpha Clip hair passes; Fidelity uses No Atlas and restores backed-up hair assignments. Both presets request rebuilds for active editor-generated avatars in the active scene.
+## Step 3: Make sure the Global Library knows your content
 
-The presets preserve runtime/editor atlas resolutions, scene overrides, and quality profiles. An existing scene generator can retain settings that differ from the configured prefab. For the complete settings and performance guidance, see [Configure UMA and Generator Setup](UMAGeneratorSetup.md).
+Open **UMA > Global Library**. You should see races and recipes listed.
 
-## Build the Global Library
+**When you add new content** (a new shirt, hairstyle, or race), add it to the library in one of these ways:
 
-Open:
+- Drag the assets or their folder onto the Global Library window's drop area.
+- Select them in the Project window, right-click, and choose **Add selected assets to UMA global library**.
+- Select them and choose **UMA > Asset Management > Add Selected Assets to Global Library**.
 
-`UMA > Global Library`
+**If things are missing after a large import**, rebuild the whole library:
 
-The Global Library is UMA's project-wide asset index. It resolves races, recipes, slots, overlays, materials, DNA assets, and other UMA content.
+1. Close the Global Library window.
+2. Open **UMA > Global Library Maintenance**.
+3. Click **Rebuild Library From Project**.
+4. Reopen the Global Library and check that your races and recipes are listed.
 
-For a new import or after large content changes:
+See [The Global Library](UMAAssetIndexer.md) for searching, filtering and repair tools.
 
-1. Close the Global Library window if maintenance requests it.
-2. Open `UMA > Global Library Maintenance`.
-3. Select `Rebuild Library From Project`.
-4. Reopen the Global Library and confirm races and recipes are listed.
+## Step 4: Create your first character
 
-For day-to-day content additions, drag the new assets or their folder onto the Global Library's add area, or select them in the Project window and use:
+Choose **GameObject > UMA > Create New Dynamic Character Avatar**. You can also click **Create UMA Character** under **Getting Started** in the Welcome window.
 
-`Assets > Add selected assets to UMA global library`
+UMA adds a GameObject named `New Dynamic Character Avatar`, selects it, and sets its race to `Human Male 3.0`. **Editor Time Generation** is on by default, so the character appears in the Scene view without pressing Play.
 
-See [UMAAssetIndexer.md](UMAAssetIndexer.md).
+If you can't see it:
 
-## Create the First Character
+- Press **F** in the Scene view to frame the selected character.
+- Make sure the scene has a light, and that the character is not under the ground.
 
-Use:
+You can also drag a ready-made character prefab into the scene: `UMADynamicCharacterAvatar` in `<UMA folder>/Core/Defaults`, or the LOD variants in `<UMA folder>/UMA3/Getting Started`. The same folder has `UMADefaultUtilityEnvironment`, a simple floor-and-light preview set.
 
-`GameObject > UMA > Create New Dynamic Character Avatar`
+## Step 5: Customize the character
 
-UMA creates a GameObject with `DynamicCharacterAvatar` and selects `Human Male 3.0` as the initial race.
+Select the character. Its Inspector is where you do almost everything. The tabs at the top switch between:
 
-Alternatively, drag `UMADynamicCharacterAvatar.prefab` into the scene.
+- **Standard View**: the everyday controls, described below.
+- **Advanced View**: every option, including animation, events, and build settings.
 
-Make sure:
+Each section has a **Help** button that shows a description of every option in that section.
 
-- `Build Character Enabled` is on.
-- The selected race exists in the Global Library.
-- The character is in front of a camera.
-- The scene has suitable lighting.
-- The character is not below or inside the ground.
+The Standard View sections are:
 
-Press Play. If no generator was already loaded, UMA uses the Generator Prefab from UMA Settings.
+| Section | What you do there |
+|---|---|
+| **Character & race** | Pick the race. Clothing that doesn't support the new race is not equipped. |
+| **Editing tools** | Open the editors that work on the built character: the **Vertex Editor** (sculpt, vertex paint, Mesh Modifiers), the **Face Editor** (hide the body under clothing), **Touchup Weights**, and **Create Slot From Scene Mesh**. They need **Editor Time Generation** on. |
+| **Generation & avatar definition** | Turn **Editor Time Generation** on or off, **Regenerate Avatar**, and save or load the character's look. |
+| **Default wardrobe** | Choose the clothing for each wardrobe region (hair, chest, legs, feet, and so on). Use **Inspect** to open a recipe. |
+| **Colors** | Edit the shared colors, such as skin, hair and eyes. Click **Edit** for the full color settings, where **Copy** copies them for pasting elsewhere. |
+| **Body shape & DNA** | Drag the DNA sliders to change the body and face. |
+| **Randomize** | Pick a random-avatar setup and click **Randomize** for a quick variation. |
+| **Presets** | Save the current look as a preset (**Create...**), or **Apply** a saved one. |
+| **Animation** | Choose the **Default Animator Controller**, or a different controller per race. |
+| **Generation & resource sharing** | Add utility recipes such as colliders, and choose whether this character shares identical meshes and atlases with others or follows the generator's quality profile. |
 
-## Edit the Character
+Changes rebuild the character automatically while **Editor Time Generation** is on.
 
-The DCA inspector is the main artist-facing character control.
+### Clothing and races
 
-### Change race
+A wardrobe recipe only equips when it supports the character's race (or a race the recipe is marked compatible with). If a shirt disappears after changing race, it was made for a different body.
 
-Choose a race in the Active Race control. Wardrobe recipes only equip when they support that race or a configured cross-compatible race.
+A wardrobe recipe can do more than add a mesh. It can also tint shared colors, hide body faces under clothing, reshape the body to fit, and adjust DNA. See [Wardrobe Recipe Editor](WardrobeRecipeEditor.md).
 
-### Add wearable items
+### Editor Time Generation and memory
 
-Add recipes to the default wardrobe or wearable controls. A wearable can contribute:
+Characters built in the editor use memory and rebuild after script changes. Turn **Editor Time Generation** off on characters you are not currently working on. The UMA Toolbar's pause button stops editor generation for every character at once.
 
-- Mesh slots
-- Texture overlays
-- Shared colors
-- Mesh hides
-- Mesh modifiers
-- DNA overrides
-- Suppression or replacement rules
+## The UMA Toolbar
 
-### Change colors
+The **UMA Toolbar** sits in the Scene view. Its buttons:
 
-Open the character colors section and edit shared colors such as skin, hair, and eyes. Shared colors may control ordinary tint channels or shader property blocks, depending on the recipe and material.
+- save and restore the Scene camera
+- rebuild the selected characters, or all of them
+- switch the mesh combiner
+- focus on or select parts of the character
+- show the selected character's skeleton
+- pause editor-time generation
+- open diagnostics and the UMA tools menu
 
-### Change DNA
+Hover a button for its name. The toolbar hides itself inside UMA editing stages, such as the Mesh Hide or Mesh Modifier editors, and returns when you leave them. Turn it off entirely with **Show UMA Toolbar** in the project settings.
 
-Open the DNA customization section. DNA can drive bone changes, poses, blendshapes, mesh modifiers, overlay transforms, and shared colors.
+## Example scenes
 
-See [DNACreationGuide.md](DNACreationGuide.md).
+After installing render pipeline support (Step 1), example scenes are in `Assets/UMA/SRP/Samples/Scenes`. Good ones to open first:
 
-## Editor-Time Preview
+- **U3-Character Creator**: a complete in-game character creator.
+- **U3-How to equip items**: changing clothing.
+- **U3-How to Use a Slider to control DNA**: driving body shape from UI.
+- **U3-Generating Random Characters**: crowds of random characters.
+- **U3-How to Construct a DCA from scratch** and **U3-How to Construct and load a DCA from a prefab**: setting up characters.
+- **U3-How to Load and Save a DCA to a string**: saving a character's look.
+- **U3-Decals**, **U3-Ragdolls and Shooting Example** and **U3-Integrating with Timeline**: decals, ragdolls, and characters in Timeline.
+- Also included: **U3-Car Scene**, **U3-Sandbox** and **U3-Tools-Photobooth** (recipe icon generation; see [Photobooth Icon Generation](PhotoboothIconGeneration.MD)).
 
-Enable `Editor Time Generation` on a DCA to preview the generated character without entering Play mode.
+The Welcome window's **Example Scenes** page lists them too.
 
-Editor-time generation is useful for:
+## What to do next
 
-- Wardrobe authoring
-- DNA setup
-- Mesh modifiers
-- Mesh hides
-- Material and overlay checks
-
-Generated editor previews consume memory and may rebuild after script reloads. Disable editor-time generation on characters that do not need a live preview.
-
-## First Runtime Changes
-
-Common DCA calls include:
-
-```csharp
-avatar.ChangeRace("Human Female 3.0");
-avatar.SetSlot("Chest", "Example Shirt");
-avatar.SetDNA("height", 0.65f, rebuild: true);
-avatar.SetColorValue("Skin", new Color(0.9f, 0.72f, 0.62f));
-avatar.UpdateColors(true);
-```
-
-To batch several changes into one build:
-
-```csharp
-avatar.BuildCharacterEnabled = false;
-
-avatar.ChangeRace("Human Female 3.0");
-avatar.SetSlot("Chest", "Example Shirt");
-avatar.SetDNA("height", 0.65f);
-
-avatar.BuildCharacterEnabled = true;
-```
-
-Generation is queued. Use character completion events when later code needs the finished renderer or mesh.
-
-See [DynamicCharacterAvatar.md](DynamicCharacterAvatar.md).
-
-## Save and Load
-
-Use `AvatarDefinition` for current DCA save data:
-
-```csharp
-string json = avatar.GetAvatarDefinitionString(false, false);
-avatar.LoadAvatarDefinition(json);
-```
-
-The older `GetCurrentRecipe()` and old recipe-string loading APIs remain only for compatibility and should not be used for new code.
-
-## Recommended Example Scenes
-
-Current UMA 3 examples are under:
-
-`Assets/UMA/SRP/Samples/Scenes` (after installing UMA URP or HDRP support)
-
-Good starting points include:
-
-- `U3-Character Creator`
-- `U3-How to Construct a DCA from scratch`
-- `U3-How to Construct and load a DCA from a prefab`
-- `U3-How to equip items`
-- `U3-How to Load and Save a DCA to a string`
-- `U3-How to Use a Slider to control DNA`
-- `U3-Generating Random Characters`
+| I want to... | Read |
+|---|---|
+| Make my own clothing | [Content Creation](ContentCreation.md), then [Wardrobe Recipe Editor](WardrobeRecipeEditor.md) |
+| Stop the body poking through clothing | [Mesh Hide Assets](MeshHideAssets.md) |
+| Reshape or sculpt a slot to fit | [Mesh Modifiers](MeshModifiers.md) and [Sculpting Mesh Modifiers](MeshModifierSculpting.md) |
+| Add or change body-shape sliders | [DNA Creation Guide](DNACreationGuide.md) |
+| Create a new race | [Creating a New Race](CreatingANewRace.md) and [Race Data](RaceData.md) |
+| Add tattoos, scars or decals | [Decals](Decals.md) |
+| Make hair sway | [Hair Animation](HairAnimation.md) |
+| Use UMA 2 clothing on UMA 3 characters | [Slot Rig Conversion](SlotRigConversion.md) |
+| Make clothing follow body shapes | [Blendshape Transfer](BlendshapeTransfer.md) |
+| Generate random characters | [Random Avatars](RandomAvatar.md) |
+| Improve quality or performance | [Configure UMA and Generator Setup](UMAGeneratorSetup.md) |
+| Ship characters in a build | [Addressables](Addressables.md) |
 
 ## Troubleshooting
 
-### The character does not generate
+### The character doesn't appear
 
-Check:
-
-1. `Build Character Enabled` is on.
-2. UMA Settings has a valid Generator Prefab.
-3. The race is indexed.
-4. The race has a valid base recipe or FBX route.
-5. The Console does not report missing slots, overlays, or shaders.
-
-Adding `UMA_GLIB` manually can be used as a diagnostic, but a correctly configured Generator Prefab should make that unnecessary.
-
-### The character works in the editor but not in a build
-
-The content may not be included in Resources or Addressables. Verify that the race and all recipe dependencies are indexed, then review [Addressables.md](Addressables.md).
+1. Check that **Editor Time Generation** is on, or press Play.
+2. Switch to **Advanced View**, open the **Build behaviour** panel, and check that **Build Character Enabled** is on.
+3. Check that the race is listed in the Global Library. If not, rebuild the library (Step 3).
+4. Check that **Generator Prefab** is set in the project settings (Step 2).
+5. Look in the Console for messages about missing slots, overlays or shaders.
 
 ### The character is pink
 
-The assigned Unity material or shader is missing for the active render pipeline. Import the correct UMA SRP package and verify the `UMAMaterial` template.
+Its materials don't match your render pipeline. Install the matching UMA URP or HDRP support from the Welcome window (Step 1).
 
-### Wardrobe does not appear
+### A piece of clothing doesn't show up
 
-Check the recipe's compatible races, wardrobe region, material compatibility, suppression rules, and whether the recipe is indexed.
+- Does the recipe support this race? Open it with **Inspect** and check its compatible races.
+- Is the recipe in the Global Library?
+- Is another item hiding or replacing it? Some recipes hide others in the same region.
 
-### DNA sliders are missing
+### The DNA sliders are missing
 
-Confirm the race enables the intended DNA system and has its DNA collection or legacy converters assigned.
+The race has no DNA set up for this system. Open the race asset and check its DNA settings. See [Race Data](RaceData.md).
 
-## Next Steps
+### It works in the editor but not in a build
 
-- [PackageInstallation.md](PackageInstallation.md)
-- [ContentCreation.md](ContentCreation.md)
-- [WardrobeRecipeEditor.md](WardrobeRecipeEditor.md)
-- [RaceData.md](RaceData.md)
-- [UMAGeneratorSetup.md](UMAGeneratorSetup.md)
-- [RandomAvatar.md](RandomAvatar.md)
+Your content may not be included in the build. Make sure everything is in the Global Library, then see [Addressables](Addressables.md).
+
+## For programmers
+
+The Dynamic Character Avatar can be changed from scripts. Generation is queued, so wait for the character's events before reading its finished mesh.
+
+```csharp
+// Batch several changes into one build.
+avatar.BuildCharacterEnabled = false;
+avatar.ChangeRace("Human Female 3.0");
+avatar.SetSlot("Chest", "YourShirtRecipeName");
+avatar.SetDNA("height", 0.65f);
+avatar.BuildCharacterEnabled = true;
+
+// Change a shared color.
+var skin = new OverlayColorData(3);
+skin.color = new Color(0.9f, 0.72f, 0.62f);
+avatar.SetRawColor("Skin", skin);
+```
+
+Save and load a character's look as an Avatar Definition:
+
+```csharp
+string saved = avatar.GetAvatarDefinitionString(false);
+avatar.LoadAvatarDefinition(saved);
+```
+
+`SetColor` and `SetColorValue` are obsolete; use `SetRawColor`. The older `GetCurrentRecipe()` and recipe-string loading remain only for compatibility. See [Dynamic Character Avatar](DynamicCharacterAvatar.md) for the full API and events.

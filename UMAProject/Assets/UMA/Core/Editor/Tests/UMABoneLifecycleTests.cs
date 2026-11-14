@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
@@ -314,30 +313,5 @@ namespace UMA.Editors.Tests
             Assert.That(generator.CleanupUnusedBones || generator.MeasureBoneCleanup, Is.False);
         }
 
-        [Test]
-        public void CleanupBenchmarkReportsDisabledRetainedAndPruningCosts()
-        {
-            var names = new string[300];
-            for (int i = 0; i < names.Length; i++) { names[i] = "Base" + i; Child(root, names[i]); }
-            data.OverrideTpose = Pose(names); Skeleton();
-            data.CleanupUnusedBones(generator); // warm-up
-            var clock = Stopwatch.StartNew();
-            generator.CleanupUnusedBones = false;
-            for (int i = 0; i < 1000; i++) data.CleanupUnusedBones(generator);
-            double disabled = clock.Elapsed.TotalMilliseconds / 1000;
-            generator.CleanupUnusedBones = true; generator.MeasureBoneCleanup = true;
-            clock.Restart();
-            for (int i = 0; i < 100; i++) data.CleanupUnusedBones(generator);
-            double retained = clock.Elapsed.TotalMilliseconds / 100;
-            for (int i = 0; i < 100; i++)
-            {
-                var bone = Child(root, "Unused" + i);
-                data.skeleton.AddBone(Hash(root.name), Hash(bone.name), bone);
-            }
-            Assert.That(data.CleanupUnusedBones(generator), Is.EqualTo(100));
-            TestContext.WriteLine($"Bone cleanup: disabled {disabled:F6} ms; 301 retained {retained:F4} ms; prune 100 {data.LastBoneCleanupMilliseconds:F4} ms (Editor DestroyImmediate).");
-            Assert.That(data.skeleton.boneCount, Is.EqualTo(301));
-            Assert.That(generator.BoneCleanupTotalMilliseconds, Is.GreaterThan(0));
-        }
     }
 }

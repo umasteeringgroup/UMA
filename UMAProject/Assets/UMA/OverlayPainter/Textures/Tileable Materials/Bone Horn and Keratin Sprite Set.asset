@@ -424,7 +424,7 @@ MonoBehaviour:
   - {fileID: -6626895461791280791}
   - {fileID: 7232170289487886449}
   - {fileID: -4161672081476308928}
-  thumbnailSourceHash: 197e3322ed5e82c63718ca63abc1bbf7
+  thumbnailSourceHash: 15eec31943d5b0558c2c312c0d9b907a
   cubeThumbnails:
   - {fileID: 4822824296653018321}
   - {fileID: 9111611914990382272}
@@ -435,7 +435,7 @@ MonoBehaviour:
   - {fileID: 1278503035520209828}
   - {fileID: 8876214097907000034}
   - {fileID: 5992927250395910317}
-  cubeThumbnailSourceHash: 197e3322ed5e82c63718ca63abc1bbf7|CutoutCube-1
+  cubeThumbnailSourceHash: 15eec31943d5b0558c2c312c0d9b907a|CutoutCube-1
 --- !u!28 &1278503035520209828
 Texture2D:
   m_ObjectHideFlags: 1

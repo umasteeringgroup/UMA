@@ -16,6 +16,8 @@
 #pragma kernel CSUnassociateAlpha
 #pragma kernel CSApplyChannelAdjustments
 #pragma kernel CSClear
+// Editor-only painting: these kernels read back float2/float4 RWTexture2D targets, which OpenGL ES 3 cannot do.
+#pragma exclude_renderers gles3
 
 Texture2D<float4> _Base;
 int _UseEmptyBase;

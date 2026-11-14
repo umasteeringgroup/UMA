@@ -196,6 +196,8 @@ The lower **Bone List** search filters the available skeleton tree. Its **Clear*
 
 **Bone Display Mode** controls the skeleton visualization in the Scene view: **Pose Bones**, **Filtered**, **All**, or **None**. Choose a view that lets you see the skin and the controls you need. It does not add or remove pose entries.
 
+**Bone Draw Style**, just below it, chooses how those bones are drawn. **Line** (the default) draws a thin line per bone. **Stick** draws Blender-style batons that you can click in the Scene view to select a bone; clicking a bone that is not yet in the pose adds it. **Stick Width** sets their thickness. A bone with one offset child points at that child; a bone with several children or none gets a short stub, with dashed lines to its other children; an Adjust bone that sits on its parent's joint is drawn as a ring. The selected bone is green, its mirror blue, and the bone under the pointer yellow. Both settings are remembered between sessions.
+
 Several upper-list actions operate on the whole pose, even if a text filter hides some rows:
 
 | Action | Effect |
@@ -507,6 +509,6 @@ For handoff, include the target race, the reference character, the expected stre
 
 ## Version and source reference
 
-This guide was checked against the UMA **3.1.5** source in `C:/GitHub/UMA/UMAProject`, configured for Unity **6000.3.26f1**. UMA supports Unity **6.3 and newer**. Check your installed controls when moving to another version.
+This guide was checked against the UMA **3.1.6** source in `C:/GitHub/UMA/UMAProject`, configured for Unity **6000.3.26f1**. UMA supports Unity **6.3 and newer**. Check your installed controls when moving to another version.
 
 Implementation references: [Bone Pose Editor](../Core/Editor/Scripts/UMABonePoseEditor.cs), [group controls](../Core/Editor/Scripts/UMABonePoseEditor.Groups.cs), [editor context](../Core/Editor/Scripts/UMABonePoseEditorContext.cs), and [bone-pose asset](../Core/StandardAssets/UMA/Scripts/UMABonePose.cs). Workflows and limitations were reviewed against these files; visual quality still needs evaluation on your own rig.

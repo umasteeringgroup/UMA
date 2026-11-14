@@ -154,10 +154,18 @@ namespace UMA
 		public static ValidateResult ValidateSlot(SkinnedMeshRenderer RaceSMR, SkinnedMeshRenderer SlotSMR, out string description)
 		{
 			var slotMesh = new Mesh();
-
-			slotMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-			SlotSMR.BakeMesh(slotMesh);
-			var bounds = slotMesh.bounds;
+			Bounds bounds;
+			try
+			{
+				slotMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+				SlotSMR.BakeMesh(slotMesh);
+				bounds = slotMesh.bounds;
+			}
+			finally
+			{
+				// The baked mesh is only needed for its bounds.
+				UMAUtils.DestroySceneObject(slotMesh);
+			}
 			if (bounds.max.y < 0.05f)
 			{
 				description = "Scale Factor on the Model Import Settings seems to be wrong!";

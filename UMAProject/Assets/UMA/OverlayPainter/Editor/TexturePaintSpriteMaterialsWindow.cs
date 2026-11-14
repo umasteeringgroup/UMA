@@ -25,6 +25,13 @@ namespace UMA.TexturePaint.Editor
         private PopupField<string> categoryField, setField;
         private ScrollView scroll;
         private Label status;
+        private SliderInt sizeField;
+        private Button rebuildButton;
+        // One column of thumbnails: labels and the help line are dropped so the window can
+        // be made as narrow as a single thumbnail.
+        private bool compact;
+        private const float TileMargin = 3f;
+        private const float ScrollbarAllowance = 18f;
 
         [MenuItem("Window/UMA/Overlay Painter Materials", false, 2024)]
         public static void ShowWindow() => GetWindow<TexturePaintSpriteMaterialsWindow>().Show();
@@ -37,7 +44,7 @@ namespace UMA.TexturePaint.Editor
         private void OnEnable()
         {
             titleContent = new GUIContent("Overlay Painter Materials");
-            minSize = new Vector2(190, 240);
+            minSize = new Vector2(80, 240);
             EditorApplication.projectChanged += RefreshSets;
             SpriteMaterialThumbnails.Changed += RefreshImages;
         }
@@ -53,19 +60,36 @@ namespace UMA.TexturePaint.Editor
             root.Clear();
             categoryField = new PopupField<string>("Category", OverlayPainterSpriteSet.UsageTypes.ToList(),
                 Mathf.Max(0, Array.IndexOf(OverlayPainterSpriteSet.UsageTypes, category)));
-            categoryField.RegisterValueChangedCallback(e => { category = e.newValue; RefreshSets(); });
+            // Change events bubble: a field's own label sends one when its text changes (the
+            // compact layout clears the labels). React only to the field's own value.
+            categoryField.RegisterValueChangedCallback(e =>
+            {
+                if (e.target != categoryField) return;
+                category = e.newValue;
+                RefreshSets();
+            });
+            categoryField.tooltip = "Category";
+            // Repair a category saved by the earlier bug (an empty string), or one that no longer exists.
+            category = categoryField.value;
             root.Add(categoryField);
             setField = new PopupField<string>("Sprite Set", new List<string> { "No sets" }, 0);
             setField.RegisterValueChangedCallback(e =>
             {
+                if (e.target != setField) return;
                 int index = setField.index;
                 selectedSet = (uint)index < (uint)sets.Count ? sets[index] : null;
                 DrawTiles();
             });
+            setField.tooltip = "Sprite Set";
             root.Add(setField);
-            var size = new SliderInt("Size", 64, 256) { value = thumbnailSize, showInputField = true };
-            size.RegisterValueChangedCallback(e => { thumbnailSize = Mathf.Clamp(e.newValue, 64, 256); ResizeTiles(); });
-            root.Add(size);
+            sizeField = new SliderInt("Size", 64, 256) { value = thumbnailSize, showInputField = true, tooltip = "Thumbnail size" };
+            sizeField.RegisterValueChangedCallback(e =>
+            {
+                if (e.target != sizeField) return;
+                thumbnailSize = Mathf.Clamp(e.newValue, 64, 256);
+                UpdateCompactLayout(true);
+            });
+            root.Add(sizeField);
             scroll = new ScrollView(ScrollViewMode.Vertical);
             scroll.style.flexGrow = 1;
             scroll.contentContainer.style.flexDirection = FlexDirection.Row;
@@ -74,9 +98,36 @@ namespace UMA.TexturePaint.Editor
             status = new Label("Drag onto the current paint target.");
             status.style.whiteSpace = WhiteSpace.Normal;
             root.Add(status);
-            root.Add(new Button(() => { if (selectedSet != null) SpriteMaterialThumbnails.Enqueue(selectedSet, true); })
-                { text = "Rebuild Thumbnails", tooltip = "Render this set again using URP Lit and its material channels." });
+            rebuildButton = new Button(() => { if (selectedSet != null) SpriteMaterialThumbnails.Enqueue(selectedSet, true); })
+                { text = "Rebuild Thumbnails", tooltip = "Render this set again using URP Lit and its material channels." };
+            root.Add(rebuildButton);
+            compact = false;
+            root.RegisterCallback<GeometryChangedEvent>(_ => UpdateCompactLayout(false));
             RefreshSets();
+        }
+
+        /// <summary>
+        /// Switches to the compact header when only one column of thumbnails fits, and fits
+        /// the thumbnails to the width there.
+        /// </summary>
+        private void UpdateCompactLayout(bool force)
+        {
+            if (categoryField == null) return;
+            float width = rootVisualElement.layout.width;
+            if (float.IsNaN(width) || width <= 0f) return;
+            bool oneColumn = width < (2f * (thumbnailSize + TileMargin * 2f)) + ScrollbarAllowance;
+            if (oneColumn != compact || force)
+            {
+                compact = oneColumn;
+                categoryField.label = compact ? null : "Category";
+                setField.label = compact ? null : "Sprite Set";
+                sizeField.label = compact ? null : "Size";
+                sizeField.showInputField = !compact;
+                rebuildButton.text = compact ? "Rebuild" : "Rebuild Thumbnails";
+                status.style.display = compact ? DisplayStyle.None : DisplayStyle.Flex;
+            }
+            scroll.tooltip = compact ? status.text : null;
+            ResizeTiles();
         }
 
         private void RefreshSets()
@@ -112,12 +163,20 @@ namespace UMA.TexturePaint.Editor
             status.text = count == 0 ? "No sprites available in this category." : category == OverlayPainterSpriteSet.Path
                 ? "Drag onto the current target to start a path. Shift-click to add points."
                 : "Drag onto the current paint target to create a " + (category == OverlayPainterSpriteSet.Projection ? "projection." : "fill layer.");
+            if (compact) scroll.tooltip = status.text;
             if (selectedSet != null) SpriteMaterialThumbnails.Enqueue(selectedSet);
         }
         private void ResizeTiles()
         {
             if (scroll == null) return;
-            foreach (var tile in scroll.Children()) { tile.style.width = thumbnailSize; tile.style.height = thumbnailSize; }
+            float size = thumbnailSize;
+            if (compact)
+            {
+                // Fit the single column to the window instead of clipping the thumbnails.
+                float available = rootVisualElement.layout.width - ScrollbarAllowance - TileMargin * 2f;
+                if (!float.IsNaN(available)) size = Mathf.Clamp(available, 32f, thumbnailSize);
+            }
+            foreach (var tile in scroll.Children()) { tile.style.width = size; tile.style.height = size; }
         }
         private void RefreshImages(OverlayPainterSpriteSet set)
         {

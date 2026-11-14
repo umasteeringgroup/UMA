@@ -91,6 +91,11 @@ namespace UMA
             {
                 using var measurement = new LookupMeasurement(System.Diagnostics.Stopwatch.GetTimestamp());
                 using var marker = MeshLookupMarker.Auto();
+                if (UMARendererAsset.RequiresPrivateMesh(data, materials))
+                {
+                    // Callers treat NotSupportedException as a cache bypass and build a private mesh.
+                    throw new NotSupportedException("Recalculate Normals is enabled for this renderer; its normals depend on the avatar's blendshape weights.");
+                }
                 request = DescribeMeshRequest(data, sources, materials, atlasResolution, boundsRotation, backend);
                 var lease = UMAGeneratedResourceCache.Shared.Acquire<Mesh>(request.Key);
                 MeshAdmissionCount++;
@@ -100,6 +105,20 @@ namespace UMA
                 return lease;
             }
             finally { MeshTimings.Record(outcome, System.Diagnostics.Stopwatch.GetTimestamp() - diagnosticStart); }
+        }
+
+        /// <summary>
+        /// Describes the inputs of a combine whose mesh stays with its renderer and is never shared (see
+        /// UMARendererAsset.RequiresPrivateMesh). UMAResourceLeaseOwner compares it with the request the
+        /// renderer's current mesh was built from, to keep that mesh when nothing has changed.
+        /// </summary>
+        internal static MeshRequest DescribePrivateMesh(UMAData data,
+            SkinnedMeshCombiner.CombineInstance[] sources, UMAData.GeneratedMaterial[] materials,
+            int atlasResolution, Quaternion boundsRotation, string backend = "MeshData")
+        {
+            using var measurement = new LookupMeasurement(System.Diagnostics.Stopwatch.GetTimestamp());
+            using var marker = MeshLookupMarker.Auto();
+            return DescribeMeshRequest(data, sources, materials, atlasResolution, boundsRotation, backend);
         }
 
         internal static bool MeshInputsUnchanged(MeshRequest original, UMAData data,

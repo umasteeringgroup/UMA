@@ -12,13 +12,12 @@ using UnityEngine.Rendering;
 
 namespace UMA
 {
-    public class FaceEditorStage : PreviewSceneStage
+    public class FaceEditorStage : PreviewSceneStage, IUMAEditingStage
     {
         private static bool eventsHooked;
 
         private static void EnsureEditorEvents()
         {
-#if UNITY_EDITOR
             if (eventsHooked)
             {
                 return;
@@ -27,12 +26,10 @@ namespace UMA
             AssemblyReloadEvents.beforeAssemblyReload += ExitStageIfActive;
             CompilationPipeline.compilationStarted += _ => ExitStageIfActive();
             EditorApplication.playModeStateChanged += _ => ExitStageIfActive();
-#endif
         }
 
         private static void ExitStageIfActive()
         {
-#if UNITY_EDITOR
             try
             {
                 if (StageUtility.GetCurrentStage() is FaceEditorStage)
@@ -43,7 +40,6 @@ namespace UMA
             catch
             {
             }
-#endif
         }
 
         private struct CachedSlotTriangle
@@ -109,6 +105,25 @@ namespace UMA
             bakedVertices = BakedMesh.vertices;
             bakedNormals = BakedMesh.normals;
             bakedTriangles = BakedMesh.triangles;
+            bakedCacheMesh = BakedMesh;
+        }
+
+        private Mesh bakedCacheMesh;
+
+        /// <summary>
+        /// Refreshes the baked mesh arrays only when the mesh was replaced. The face editor
+        /// never moves vertices, and every rebuild bakes into a new Mesh. Unlike
+        /// RefreshBakedMeshCaches this keeps the brush's screen-space triangle cache, so the
+        /// overlay can rebuild during a paint stroke without forcing every triangle to be
+        /// projected again on the next mouse move.
+        /// </summary>
+        private void EnsureBakedMeshCaches()
+        {
+            if (BakedMesh == null || !ReferenceEquals(bakedCacheMesh, BakedMesh) ||
+                bakedVertices == null || bakedVertices.Length != BakedMesh.vertexCount)
+            {
+                RefreshBakedMeshCaches();
+            }
         }
 
         [Serializable]
@@ -238,7 +253,9 @@ namespace UMA
         private bool paintMirrorX;
         private bool paintAddMode = true;
         private PaintBrushMode paintBrushMode = PaintBrushMode.Point;
-        private int paintBrushRadiusPixels = 24;
+        // Brush radius on the model, in meters (shown in millimeters).
+        [SerializeField]
+        private float paintBrushRadius = 0.01f;
         private Texture2D paintBrushTexture;
         private Texture2D cachedPaintBrushTexture;
         private Color32[] cachedPaintBrushPixels;
@@ -250,8 +267,9 @@ namespace UMA
         private Rect currentDragRect;
         private bool rubberBandCullBackfaces = true;
         private const float ClickDragThreshold = 6f;
-        private const int MinPaintBrushRadiusPixels = 1;
-        private const int MaxPaintBrushRadiusPixels = 256;
+        // Limits for the brush's size on screen after converting it from millimeters.
+        private const float MinPaintBrushRadiusPixels = 1f;
+        private const float MaxPaintBrushRadiusPixels = 4096f;
         private const float PaintBrushMaskThreshold = 0.01f;
         private const int ParallelBrushSelectionThreshold = 8192;
 
@@ -280,9 +298,6 @@ namespace UMA
         public Rect MeshHideAssetsCollapsedWindow;
 
         private Rect leftPanelRect;
-        private Vector2 lastSceneViewSize = Vector2.zero;
-        private float cachedVisibilityHeight = -1f;
-        private float cachedMeshHideAssetsHeight = 260f;
 
         private const string PanelCollapsePrefKeyPrefix = "UMA.FaceEditorStage.PanelCollapse.";
         [SerializeField]
@@ -544,15 +559,10 @@ namespace UMA
         {
             return new GUIContent("Face Editor");
         }
-        private GUIStyle _toolbarButtonStyle;
 
         protected override bool OnOpenStage()
         {
             base.OnOpenStage();
-
-            _toolbarButtonStyle = new GUIStyle(EditorStyles.toolbarButton);
-            _toolbarButtonStyle.fixedWidth = 52;   // ← make them thinner
-            _toolbarButtonStyle.alignment = TextAnchor.MiddleCenter;
 
             EnsureEditorEvents();
 
@@ -613,7 +623,6 @@ namespace UMA
             SceneView.duringSceneGui += OnSceneGUI;
             Undo.undoRedoPerformed += OnUndoRedoSelection;
             NeedsCameraSetup = true;
-            cachedVisibilityHeight = -1f;
 
             RefreshVisibleSlotLists();
             RefreshSlotSelectionEntries();
@@ -756,7 +765,6 @@ namespace UMA
 
         private void ValidateMeshHideAssets()
         {
-#if UNITY_EDITOR
             if (CurrentHideAsset != null)
             {
                 ValidateMeshHideAsset(CurrentHideAsset);
@@ -772,12 +780,10 @@ namespace UMA
                     ValidateMeshHideAsset(mha);
                 }
             }
-#endif
         }
 
         private void ValidateMeshHideAsset(MeshHideAsset mha)
         {
-#if UNITY_EDITOR
             if (mha == null)
             {
                 return;
@@ -791,7 +797,6 @@ namespace UMA
             mha.RebuildFlagsFromEditorUVMask();
             EditorUtility.SetDirty(mha);
             AssetDatabase.SaveAssetIfDirty(mha);
-#endif
         }
 
         private void SetFaceMaterialColors(GameObject faceObject)
@@ -1008,7 +1013,8 @@ namespace UMA
             DrawRaycastDebugRaysHandles(sceneView);
 
             DrawMeshHideOverlay(sceneView);
-            DrawPaintBrush(sceneView, Event.current, leftPanelRect.Contains(Event.current.mousePosition));
+            DrawPaintBrush(sceneView, Event.current,
+                leftPanelRect.Contains(Event.current.mousePosition) || IsMouseOverFaceToolbar(Event.current.mousePosition));
             HandleFacePick(Event.current, sceneView);
         }
 
@@ -1029,6 +1035,39 @@ namespace UMA
                 Handles.color = r.color;
                 Handles.DrawLine(r.origin, r.origin + (r.direction * r.distance));
             }
+        }
+
+        /// <summary>
+        /// The brush radius in Scene view GUI points: its size in millimeters, as seen at the
+        /// surface under the cursor (or at the model's depth when the cursor is off the model).
+        /// The selection tests work in screen space, so they use this.
+        /// </summary>
+        private float GetPaintBrushRadiusPixels(SceneView sceneView, Vector2 mousePosition)
+        {
+            float radius = Mathf.Clamp(paintBrushRadius, StageBrushSize.MinRadiusMm / 1000f, StageBrushSize.MaxRadiusMm / 1000f);
+            Camera camera = sceneView != null ? sceneView.camera : (openedSceneView != null ? openedSceneView.camera : null);
+            if (camera == null)
+            {
+                return MinPaintBrushRadiusPixels;
+            }
+
+            Ray ray = HandleUtility.GUIPointToWorldRay(mousePosition);
+            Vector3 point;
+            if (meshCollider != null && meshCollider.Raycast(ray, out RaycastHit hit, 1000f))
+            {
+                point = hit.point;
+            }
+            else if (FaceObject != null && BakedMesh != null)
+            {
+                Vector3 center = FaceObject.transform.TransformPoint(BakedMesh.bounds.center);
+                point = ray.GetPoint(Mathf.Max(camera.nearClipPlane, Vector3.Dot(center - ray.origin, ray.direction)));
+            }
+            else
+            {
+                return MinPaintBrushRadiusPixels;
+            }
+
+            return Mathf.Clamp(StageBrushSize.PixelRadiusAt(point, radius, camera), MinPaintBrushRadiusPixels, MaxPaintBrushRadiusPixels);
         }
 
         private void DrawPaintBrush(SceneView sceneView, Event currentEvent, bool mouseOverAnyWindow)
@@ -1055,7 +1094,7 @@ namespace UMA
                 return;
             }
 
-            float brushRadius = Mathf.Clamp(paintBrushRadiusPixels, MinPaintBrushRadiusPixels, MaxPaintBrushRadiusPixels);
+            float brushRadius = GetPaintBrushRadiusPixels(sceneView, mousePosition);
             Color brushColor = paintAddMode ? new Color(0.25f, 0.75f, 1f, 0.9f) : new Color(1f, 0.35f, 0.25f, 0.9f);
 
             Handles.BeginGUI();
@@ -1244,7 +1283,9 @@ namespace UMA
 
             if (overlayVisibleLineMesh != null && overlayVisibleLineMesh.vertexCount > 0)
             {
-                overlayLineMaterial.SetColor("_Color", OverlayLineBlack);
+                // UMA/UMADiffuse reads _BaseColor; setting only _Color left the wireframe at the
+                // material's default white until a hidden-face outline set _BaseColor.
+                SetOverlayColor(overlayLineMaterial, OverlayLineBlack);
                 overlayLineMaterial.SetPass(0);
                 Graphics.DrawMesh(
                     overlayVisibleLineMesh,
@@ -1262,7 +1303,7 @@ namespace UMA
 
             if (overlayHiddenFillMesh != null && overlayHiddenFillMesh.vertexCount > 0)
             {
-                overlayMaterial.SetColor("_BaseColor", OverlayFillRed);
+                SetOverlayColor(overlayMaterial, OverlayFillRed);
                 overlayMaterial.SetPass(0);
                 Graphics.DrawMesh(
                     overlayHiddenFillMesh,
@@ -1280,7 +1321,7 @@ namespace UMA
 
             if (overlayHiddenLineMesh != null && overlayHiddenLineMesh.vertexCount > 0)
             {
-                overlayLineMaterial.SetColor("_BaseColor", OverlayLineBlack);
+                SetOverlayColor(overlayLineMaterial, OverlayLineBlack);
                 overlayLineMaterial.SetPass(0);
                 Graphics.DrawMesh(
                     overlayHiddenLineMesh,
@@ -1306,6 +1347,8 @@ namespace UMA
 
             slotTriangleCacheBuilt = true;
             slotTriangleCache.Clear();
+            slotTriangleCacheIndex.Clear();
+            slotTriangleCacheVersion++;
 
             if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null || thisDCA.umaData.umaRecipe.slotDataList == null)
             {
@@ -1342,6 +1385,7 @@ namespace UMA
                     for (int t = 0; t < triCount; t++)
                     {
                         int ti = t * 3;
+                        slotTriangleCacheIndex[new SlotTriangleKey(slot.slotName, sm, t)] = slotTriangleCache.Count;
                         slotTriangleCache.Add(new CachedSlotTriangle
                         {
                             slotName = slot.slotName,
@@ -1356,6 +1400,88 @@ namespace UMA
             }
         }
 
+        // Index of each slot triangle in slotTriangleCache, so the hidden-face overlay can
+        // walk only the hidden faces instead of every triangle.
+        private readonly Dictionary<SlotTriangleKey, int> slotTriangleCacheIndex = new Dictionary<SlotTriangleKey, int>();
+        private int slotTriangleCacheVersion;
+
+        // The wireframe of every selectable triangle does not depend on which faces are
+        // hidden, so it is rebuilt only when the mesh, the selectable slots, slot
+        // visibility or the LOD change, not on every brush stroke.
+        private bool overlayWireDirty = true;
+        private Mesh overlayWireCacheMesh;
+        private int overlayWireCacheSlotSelectionVersion = -1;
+        private int overlayWireCacheTriangleVersion = -1;
+        private int overlayWireCacheSuppressedHash;
+
+        private readonly List<Vector3> overlayWireVertices = new List<Vector3>(4096);
+        private readonly List<Vector3> overlayHiddenFillVertices = new List<Vector3>(1024);
+        private readonly List<Vector3> overlayHiddenLineVertices = new List<Vector3>(2048);
+
+        private int GetSuppressedSlotsHash()
+        {
+            var slots = thisDCA != null && thisDCA.umaData != null ? thisDCA.umaData.umaRecipe?.slotDataList : null;
+            if (slots == null) return 0;
+            unchecked
+            {
+                int hash = 17;
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    hash = (hash * 31) + (slots[i] != null && slots[i].Suppressed ? 1 : 0);
+                }
+                return hash;
+            }
+        }
+
+        /// <summary>
+        /// The triangle's baked positions, pushed slightly along its normal so the overlay sits
+        /// on the surface. False when the triangle should not be drawn (slot hidden, not
+        /// selectable, or out of range).
+        /// </summary>
+        private bool TryGetOverlayTriangle(CachedSlotTriangle tri, Vector3[] vertices, out Vector3 v0, out Vector3 v1, out Vector3 v2)
+        {
+            v0 = v1 = v2 = Vector3.zero;
+            if (string.IsNullOrEmpty(tri.slotName) ||
+                !slotLookupByName.TryGetValue(tri.slotName, out var slot) || slot == null || slot.Suppressed ||
+                // Per requirement: if slot is not selectable, do not draw any wireframe/overlay.
+                !IsSlotSelected(tri.slotName))
+            {
+                return false;
+            }
+
+            int v0b = slot.vertexOffset + tri.v0Slot;
+            int v1b = slot.vertexOffset + tri.v1Slot;
+            int v2b = slot.vertexOffset + tri.v2Slot;
+            if (v0b < 0 || v1b < 0 || v2b < 0 || v0b >= vertices.Length || v1b >= vertices.Length || v2b >= vertices.Length)
+            {
+                return false;
+            }
+
+            v0 = vertices[v0b];
+            v1 = vertices[v1b];
+            v2 = vertices[v2b];
+            Vector3 n = Vector3.Cross(v1 - v0, v2 - v0);
+            if (n.sqrMagnitude > 1e-12f)
+            {
+                n.Normalize();
+                Vector3 offset = n * OverlayVertexOffset;
+                v0 += offset;
+                v1 += offset;
+                v2 += offset;
+            }
+            return true;
+        }
+
+        private static void AddOverlayLines(List<Vector3> lines, Vector3 v0, Vector3 v1, Vector3 v2)
+        {
+            lines.Add(v0);
+            lines.Add(v1);
+            lines.Add(v1);
+            lines.Add(v2);
+            lines.Add(v2);
+            lines.Add(v0);
+        }
+
         private void RebuildOverlayMeshes(int startSubmesh, int endSubmeshExclusive)
         {
             EnsureOverlayMesh(ref overlayVisibleFillMesh, "OverlayVisibleFill");
@@ -1363,92 +1489,57 @@ namespace UMA
             EnsureOverlayMesh(ref overlayHiddenFillMesh, "OverlayHiddenFill");
             EnsureOverlayMesh(ref overlayHiddenLineMesh, "OverlayHiddenLine");
 
-            List<Vector3> visibleFillVertices = new List<Vector3>(1024);
-            List<Vector3> visibleLineVertices = new List<Vector3>(2048);
-            List<Vector3> hiddenFillVertices = new List<Vector3>(1024);
-            List<Vector3> hiddenLineVertices = new List<Vector3>(2048);
-
-            RefreshBakedMeshCaches();
+            EnsureBakedMeshCaches();
             Vector3[] bakedVertices = this.bakedVertices;
             if (bakedVertices == null)
             {
                 return;
             }
-            for (int i = 0; i < slotTriangleCache.Count; i++)
+
+            // Wireframe: every drawable triangle. Hidden faces also get their own outline
+            // below, in the same black, drawn over their red fill.
+            int suppressedHash = GetSuppressedSlotsHash();
+            if (overlayWireDirty || !ReferenceEquals(overlayWireCacheMesh, BakedMesh) ||
+                overlayWireCacheSlotSelectionVersion != slotSelectionVersion ||
+                overlayWireCacheTriangleVersion != slotTriangleCacheVersion ||
+                overlayWireCacheSuppressedHash != suppressedHash)
             {
-                var tri = slotTriangleCache[i];
-                if (string.IsNullOrEmpty(tri.slotName))
+                overlayWireVertices.Clear();
+                for (int i = 0; i < slotTriangleCache.Count; i++)
                 {
-                    continue;
-                }
-
-                if (!slotLookupByName.TryGetValue(tri.slotName, out var slot) || slot == null)
-                {
-                    continue;
-                }
-                if (slot.Suppressed)
-                {
-                    continue;
-                }
-
-                // Per requirement: if slot is not selectable, do not draw any wireframe/overlay.
-                if (!IsSlotSelected(tri.slotName))
-                {
-                    continue;
-                }
-
-                int v0b = slot.vertexOffset + tri.v0Slot;
-                int v1b = slot.vertexOffset + tri.v1Slot;
-                int v2b = slot.vertexOffset + tri.v2Slot;
-                if (v0b < 0 || v1b < 0 || v2b < 0 || v0b >= bakedVertices.Length || v1b >= bakedVertices.Length || v2b >= bakedVertices.Length)
-                {
-                    continue;
-                }
-
-                Vector3 v0 = bakedVertices[v0b];
-                Vector3 v1 = bakedVertices[v1b];
-                Vector3 v2 = bakedVertices[v2b];
-
-                bool isHidden = selectedSlotTriangles.Contains(new SlotTriangleKey(tri.slotName, tri.slotSubmeshIndex, tri.slotTriangleIndex));
-
-                    Vector3 n = Vector3.Cross(v1 - v0, v2 - v0);
-                    if (n.sqrMagnitude > 1e-12f)
+                    if (TryGetOverlayTriangle(slotTriangleCache[i], bakedVertices, out Vector3 v0, out Vector3 v1, out Vector3 v2))
                     {
-                        n.Normalize();
-                        Vector3 offset = n * OverlayVertexOffset;
-                        v0 += offset;
-                        v1 += offset;
-                        v2 += offset;
+                        AddOverlayLines(overlayWireVertices, v0, v1, v2);
                     }
-
-                if (isHidden)
-                {
-                    hiddenFillVertices.Add(v0);
-                    hiddenFillVertices.Add(v1);
-                    hiddenFillVertices.Add(v2);
-
-                    hiddenLineVertices.Add(v0);
-                    hiddenLineVertices.Add(v1);
-                    hiddenLineVertices.Add(v1);
-                    hiddenLineVertices.Add(v2);
-                    hiddenLineVertices.Add(v2);
-                    hiddenLineVertices.Add(v0);
                 }
-                else
-                {
-                    visibleLineVertices.Add(v0);
-                    visibleLineVertices.Add(v1);
-                    visibleLineVertices.Add(v1);
-                    visibleLineVertices.Add(v2);
-                    visibleLineVertices.Add(v2);
-                    visibleLineVertices.Add(v0);
-                }
+                ApplyLineMesh(overlayVisibleLineMesh, overlayWireVertices);
+                overlayVisibleFillMesh.Clear();
+                overlayWireDirty = false;
+                overlayWireCacheMesh = BakedMesh;
+                overlayWireCacheSlotSelectionVersion = slotSelectionVersion;
+                overlayWireCacheTriangleVersion = slotTriangleCacheVersion;
+                overlayWireCacheSuppressedHash = suppressedHash;
             }
 
-            ApplyTriangleMesh(overlayVisibleFillMesh, visibleFillVertices);
-            ApplyTriangleMesh(overlayHiddenFillMesh, hiddenFillVertices);
-            ApplyLineMesh(overlayVisibleLineMesh, visibleLineVertices);
-            ApplyLineMesh(overlayHiddenLineMesh, hiddenLineVertices);
+            // Hidden faces: walk only the hidden set.
+            overlayHiddenFillVertices.Clear();
+            overlayHiddenLineVertices.Clear();
+            foreach (SlotTriangleKey key in selectedSlotTriangles)
+            {
+                if (!slotTriangleCacheIndex.TryGetValue(key, out int cacheIndex))
+                {
+                    continue;
+                }
+                if (TryGetOverlayTriangle(slotTriangleCache[cacheIndex], bakedVertices, out Vector3 v0, out Vector3 v1, out Vector3 v2))
+                {
+                    overlayHiddenFillVertices.Add(v0);
+                    overlayHiddenFillVertices.Add(v1);
+                    overlayHiddenFillVertices.Add(v2);
+                    AddOverlayLines(overlayHiddenLineVertices, v0, v1, v2);
+                }
+            }
+            ApplyTriangleMesh(overlayHiddenFillMesh, overlayHiddenFillVertices);
+            ApplyLineMesh(overlayHiddenLineMesh, overlayHiddenLineVertices);
 
             overlayCacheSourceMesh = BakedMesh;
             overlayCacheSelectionVersion = selectionVersion;
@@ -1503,6 +1594,7 @@ namespace UMA
         private void MarkOverlayMeshDirty()
         {
             overlayMeshDirty = true;
+            overlayWireDirty = true;
             overlayCacheSourceMesh = null;
             overlayCacheSelectionVersion = -1;
             overlayCacheStartSubmesh = -1;
@@ -1527,6 +1619,19 @@ namespace UMA
 
             DestroyImmediate(mesh);
             mesh = null;
+        }
+
+        /// <summary>Sets an overlay material's color on whichever color property its shader has.</summary>
+        private static void SetOverlayColor(Material material, Color color)
+        {
+            if (material.HasProperty("_BaseColor"))
+            {
+                material.SetColor("_BaseColor", color);
+            }
+            if (material.HasProperty("_Color"))
+            {
+                material.SetColor("_Color", color);
+            }
         }
 
         private static void EnsureOverlayMaterials()
@@ -1642,15 +1747,193 @@ namespace UMA
             DrawStageCloseButton(sceneView);
 
             DrawPanel(faceToolsPanelCollapsed ? FaceEditorToolsCollapsedWindow : FaceEditorToolsWindow, "Face Tools", ref faceToolsPanelCollapsed, PanelCollapsePrefKeyPrefix + "FaceTools", () => DoToolsWindow(0));
-            DrawPanel(visibilityPanelCollapsed ? VisibleWearablesCollapsedWindow : VisibleWearablesWindow, "Visibility", ref visibilityPanelCollapsed, PanelCollapsePrefKeyPrefix + "Visibility", () => DoVisibilityWindow(0));
+            DrawPanel(visibilityPanelCollapsed ? VisibleWearablesCollapsedWindow : VisibleWearablesWindow, "Slots", ref visibilityPanelCollapsed, PanelCollapsePrefKeyPrefix + "Visibility", () => DoSlotsWindow(0));
             DrawPanel(meshHideAssetsPanelCollapsed ? MeshHideAssetsCollapsedWindow : MeshHideAssetsWindow, "Mesh Hide Assets", ref meshHideAssetsPanelCollapsed, PanelCollapsePrefKeyPrefix + "MeshHideAssets", () => DoMeshHideAssetsWindow(0));
+            DrawFaceToolbar(sceneView);
+        }
+
+        // ---------------------------------------------------------------
+        // Floating face toolbar: tools, hide/unhide, options and actions.
+        // ---------------------------------------------------------------
+
+        private enum FaceTool { Select, Point, Circle, Square, Texture }
+
+        private struct FaceToolbarItem
+        {
+            public FaceTool tool;
+            public string icon;
+            public string label;
+            public string tooltip;
+
+            public FaceToolbarItem(FaceTool tool, string icon, string label, string tooltip)
+            {
+                this.tool = tool;
+                this.icon = icon;
+                this.label = label;
+                this.tooltip = tooltip;
+            }
+        }
+
+        private static readonly FaceToolbarItem[] FaceToolItems =
+        {
+            new FaceToolbarItem(FaceTool.Select, "Select", "Select", "Click a face, or drag a rectangle, to hide or unhide faces. Hold Shift and drag to hide faces one at a time, or Ctrl to unhide them."),
+            new FaceToolbarItem(FaceTool.Point, "Point", "Point Brush", "Drag to paint the single face under the cursor."),
+            new FaceToolbarItem(FaceTool.Circle, "Circle", "Circle Brush", "Drag to paint every face inside a circle. Set its size with Radius."),
+            new FaceToolbarItem(FaceTool.Square, "Square", "Square Brush", "Drag to paint every face inside a square. Set its size with Radius."),
+            new FaceToolbarItem(FaceTool.Texture, "Texture", "Texture Brush", "Drag to paint with a custom brush shape. Choose the Brush Texture in the panel."),
+        };
+
+        private const int FaceToolbarButtonCount = 12;
+        private const int FaceToolbarSeparatorCount = 3;
+
+        private StageFloatingToolbar faceToolbar;
+
+        private StageFloatingToolbar FaceToolbar =>
+            faceToolbar ?? (faceToolbar = new StageFloatingToolbar("UMA.FaceEditorStage.ToolbarPosition", "UMAFace_"));
+
+        private bool IsMouseOverFaceToolbar(Vector2 mousePosition) =>
+            faceToolbar != null && faceToolbar.Contains(mousePosition);
+
+        private FaceTool CurrentFaceTool
+        {
+            get
+            {
+                if (!paintMode)
+                {
+                    return FaceTool.Select;
+                }
+                switch (paintBrushMode)
+                {
+                    case PaintBrushMode.Circle: return FaceTool.Circle;
+                    case PaintBrushMode.Square: return FaceTool.Square;
+                    case PaintBrushMode.Loadable: return FaceTool.Texture;
+                    default: return FaceTool.Point;
+                }
+            }
+        }
+
+        private void SetFaceTool(FaceTool tool)
+        {
+            paintMode = tool != FaceTool.Select;
+            switch (tool)
+            {
+                case FaceTool.Point: paintBrushMode = PaintBrushMode.Point; break;
+                case FaceTool.Circle: paintBrushMode = PaintBrushMode.Circle; break;
+                case FaceTool.Square: paintBrushMode = PaintBrushMode.Square; break;
+                case FaceTool.Texture: paintBrushMode = PaintBrushMode.Loadable; break;
+            }
+            SceneView.RepaintAll();
+        }
+
+        private FaceToolbarItem CurrentFaceToolItem
+        {
+            get
+            {
+                FaceTool tool = CurrentFaceTool;
+                foreach (FaceToolbarItem item in FaceToolItems)
+                {
+                    if (item.tool == tool) return item;
+                }
+                return FaceToolItems[0];
+            }
+        }
+
+        private void DrawFaceToolbar(SceneView sceneView)
+        {
+            if (sceneView == null || closing)
+            {
+                return;
+            }
+
+            StageFloatingToolbar toolbar = FaceToolbar;
+            float height = StageFloatingToolbar.HeightFor(FaceToolbarButtonCount, FaceToolbarSeparatorCount);
+            toolbar.Layout(GetSceneViewUsableRect(sceneView), leftPanelRect, height, LeftPanelPadding);
+            float y = toolbar.BeginFrame();
+
+            FaceTool current = CurrentFaceTool;
+            foreach (FaceToolbarItem item in FaceToolItems)
+            {
+                if (toolbar.Toggle(ref y, item.icon, item.label, item.tooltip, current == item.tool) && current != item.tool)
+                {
+                    SetFaceTool(item.tool);
+                }
+            }
+
+            toolbar.Separator(ref y);
+            if (toolbar.Toggle(ref y, "Hide", "Hide Faces", "Painting and selecting hide faces (shown in red).", paintAddMode))
+            {
+                paintAddMode = true;
+                SceneView.RepaintAll();
+            }
+            if (toolbar.Toggle(ref y, "Unhide", "Unhide Faces", "Painting and selecting unhide faces.", !paintAddMode))
+            {
+                paintAddMode = false;
+                SceneView.RepaintAll();
+            }
+
+            toolbar.Separator(ref y);
+            if (toolbar.Toggle(ref y, "MirrorX", "Mirror X", "Mirror paint strokes across the mesh's local X = 0 plane.", paintMirrorX))
+            {
+                paintMirrorX = !paintMirrorX;
+            }
+            if (toolbar.Toggle(ref y, "CullBackfaces", "Cull Backfaces", "Skip faces that point away from the camera when painting or rectangle selecting.", rubberBandCullBackfaces))
+            {
+                rubberBandCullBackfaces = !rubberBandCullBackfaces;
+            }
+
+            toolbar.Separator(ref y);
+            if (toolbar.Button(ref y, "Frame", "Frame Slots", "Move the camera to frame the selectable slots."))
+            {
+                ResetCameraToSelectedSlots();
+            }
+            if (toolbar.Button(ref y, "SelectAll", "Hide All", "Hide every face on the selectable slots."))
+            {
+                RecordSelectionUndo("Select All Faces");
+                SelectAllFaces();
+            }
+            if (toolbar.Button(ref y, "Clear", "Clear", "Unhide every face (clear the selection)."))
+            {
+                ClearFaceSelection();
+            }
+
+            toolbar.EndFrame();
+        }
+
+        private void ClearFaceSelection()
+        {
+            RecordSelectionUndo("Clear Face Selection");
+            selectedSlotTriangles.Clear();
+            if (selectedSlotTrianglesSerialized != null)
+            {
+                selectedSlotTrianglesSerialized.Clear();
+            }
+            selectionVersion++;
+            MarkOverlayMeshDirty();
+            SceneView.RepaintAll();
+        }
+
+        /// <summary>The panel's "Tool" row: the active tool's icon, name, operation and what it does.</summary>
+        private void DrawCurrentFaceToolSummary()
+        {
+            FaceToolbarItem item = CurrentFaceToolItem;
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(new GUIContent("Tool", "Choose tools from the floating toolbar beside this panel."), GUILayout.Width(70f));
+                Vector2 oldIconSize = EditorGUIUtility.GetIconSize();
+                EditorGUIUtility.SetIconSize(new Vector2(16f, 16f));
+                Color oldContent = GUI.contentColor;
+                GUI.contentColor = StageFloatingToolbar.IconTint;
+                GUILayout.Label(new GUIContent(" " + item.label + (paintAddMode ? "  (Hide)" : "  (Unhide)"), FaceToolbar.GetIcon(item.icon), item.tooltip), EditorStyles.boldLabel);
+                GUI.contentColor = oldContent;
+                EditorGUIUtility.SetIconSize(oldIconSize);
+            }
+            GUILayout.Label(item.tooltip, EditorStyles.wordWrappedMiniLabel);
         }
 
         private void DrawPanel(Rect rect, string title, ref bool collapsed, string prefsKey, Action drawContent)
         {
             // Draw an explicit background: the skin's box texture is too transparent over the scene.
-            float shade = EditorGUIUtility.isProSkin ? 0.18f : 0.76f;
-            EditorGUI.DrawRect(rect, new Color(shade, shade, shade, 0.75f));
+            StageFloatingToolbar.DrawPanelBackground(rect);
 
             Rect headerRect = new Rect(rect.x, rect.y, rect.width, LeftPanelHeaderHeight + 6f);
             Rect buttonRect = new Rect(headerRect.x + 4f, headerRect.y + 3f, 22f, 18f);
@@ -1661,19 +1944,8 @@ namespace UMA
                 EditorPrefs.SetBool(prefsKey, collapsed);
             }
 
-            const float rightButtonWidth = 52f;
-            Rect rightButtonRect = new Rect(headerRect.xMax - rightButtonWidth - 4f, headerRect.y + 3f, rightButtonWidth, 18f);
-            bool showClose = string.Equals(prefsKey, PanelCollapsePrefKeyPrefix + "FaceTools", StringComparison.Ordinal);
-            if (showClose)
-            {
-                if (GUI.Button(rightButtonRect, "Close", EditorStyles.miniButton))
-                {
-                    RequestClose();
-                }
-            }
-
-            float rightInset = showClose ? (rightButtonWidth + 8f) : 4f;
-            GUI.Label(new Rect(headerRect.x + 30f, headerRect.y + 4f, headerRect.width - 34f - rightInset, headerRect.height), title, EditorStyles.boldLabel);
+            // The stage's Close button sits at the top right of the Scene view.
+            GUI.Label(new Rect(headerRect.x + 30f, headerRect.y + 4f, headerRect.width - 38f, headerRect.height), title, EditorStyles.boldLabel);
 
             if (collapsed)
             {
@@ -1862,16 +2134,10 @@ namespace UMA
             LoadCollapsePrefsIfNeeded();
 
             Rect usableRect = GetSceneViewUsableRect(openedSceneView);
-            Vector2 sceneSize = usableRect.size;
-            if (sceneSize != lastSceneViewSize)
-            {
-                lastSceneViewSize = sceneSize;
-                cachedVisibilityHeight = -1f;
-            }
 
             const float toolsMinExpanded = 180f;
             const float visibilityMinExpanded = 160f;
-            const float meshHideMinExpanded = 200f;
+            const float meshHideMinExpanded = 160f;
 
             float width = Mathf.Clamp(FaceEditorToolsWindow.width, LeftPanelWidthMin, LeftPanelWidthMax);
 
@@ -1893,16 +2159,19 @@ namespace UMA
 
             float remainingForExpanded = Mathf.Max(0f, availableStackHeight - separatorsHeight - totalCollapsed);
 
-            int expandedCount = 0;
-            if (!faceToolsPanelCollapsed) expandedCount++;
-            if (!visibilityPanelCollapsed) expandedCount++;
-            if (!meshHideAssetsPanelCollapsed) expandedCount++;
+            // The Slots list gets the most room; Face Tools is short now that its tools live
+            // on the floating toolbar.
+            const float toolsWeight = 0.9f;
+            const float slotsWeight = 1.3f;
+            const float meshHideWeight = 0.8f;
+            float weightSum = (faceToolsPanelCollapsed ? 0f : toolsWeight) +
+                              (visibilityPanelCollapsed ? 0f : slotsWeight) +
+                              (meshHideAssetsPanelCollapsed ? 0f : meshHideWeight);
+            float perWeight = weightSum > 0f ? (remainingForExpanded / weightSum) : 0f;
 
-            float each = expandedCount > 0 ? (remainingForExpanded / expandedCount) : 0f;
-
-            float toolsExpandedHeight = faceToolsPanelCollapsed ? 0f : Mathf.Max(toolsMinExpanded, each);
-            float visibilityExpandedHeight = visibilityPanelCollapsed ? 0f : Mathf.Max(visibilityMinExpanded, each);
-            float meshHideExpandedHeight = meshHideAssetsPanelCollapsed ? 0f : Mathf.Max(meshHideMinExpanded, each);
+            float toolsExpandedHeight = faceToolsPanelCollapsed ? 0f : Mathf.Max(toolsMinExpanded, perWeight * toolsWeight);
+            float visibilityExpandedHeight = visibilityPanelCollapsed ? 0f : Mathf.Max(visibilityMinExpanded, perWeight * slotsWeight);
+            float meshHideExpandedHeight = meshHideAssetsPanelCollapsed ? 0f : Mathf.Max(meshHideMinExpanded, perWeight * meshHideWeight);
 
             // If mins caused us to exceed available space, scale down only expanded panels (respecting mins best-effort).
             float expandedSumWithMins = (faceToolsPanelCollapsed ? 0f : toolsExpandedHeight) +
@@ -1988,90 +2257,23 @@ namespace UMA
             return new Rect(x, y, w, h);
         }
 
-        private float GetVisibilitySectionHeightEstimate(float maxHeight)
-        {
-            if (cachedVisibilityHeight >= 0f)
-            {
-                return cachedVisibilityHeight;
-            }
-
-            float baseHeight = 200f;
-            cachedVisibilityHeight = Mathf.Clamp(baseHeight, 160f, Mathf.Max(160f, maxHeight));
-            return cachedVisibilityHeight;
-        }
-
         private void DoMeshHideAssetsWindow(int id)
         {
             using (var scroll = new GUILayout.ScrollViewScope(MeshHideAssetsScrollLocation))
             {
                 MeshHideAssetsScrollLocation = scroll.scrollPosition;
-                DrawSelectableSlotsSection();
-            }
-
-            if (Event.current.type == EventType.Repaint)
-            {
-                cachedMeshHideAssetsHeight = MeshHideAssetsWindow.height;
-            }
-
-        }
-
-        private void DrawSelectableSlotsSection()
-        {
-            RefreshSlotSelectionEntries();
-
-            if (slotSelectionEntries == null || slotSelectionEntries.Count == 0)
-            {
-                EditorGUILayout.HelpBox("No slots available in the current recipe.", MessageType.Info);
-                return;
-            }
-
-            EditorGUILayout.LabelField("Selectable Slots", EditorStyles.boldLabel);
-
-            DrawRecalculateFromUVSection();
-
-            using (new GUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button("Select Visible"))
-                {
-                    SetSlotSelectionFromVisibility(true);
-                }
-
-                if (GUILayout.Button("Clear"))
-                {
-                    SetAllSlotSelections(false);
-                }
-            }
-
-            for (int i = 0; i < slotSelectionEntries.Count; i++)
-            {
-                var e = slotSelectionEntries[i];
-                if (e == null || string.IsNullOrEmpty(e.slotName))
-                {
-                    continue;
-                }
-
-                bool newSelected = EditorGUILayout.ToggleLeft(e.slotName, e.isSelected);
-                if (newSelected != e.isSelected)
-                {
-                    e.isSelected = newSelected;
-                    RebuildSelectedSlotNameCache();
-                    MarkOverlayMeshDirty();
-                }
-            }
-
-            GUILayout.Space(8);
-            if (GUILayout.Button("Create MeshHideAssets (Split by Slot)"))
-            {
-                SaveSelections();
+                DrawRecalculateFromUVSection();
+                DrawRaycastOcclusionSection();
             }
         }
+
+        private bool raycastDebugFoldout;
 
         private void DrawRaycastOcclusionSection()
         {
-#if UNITY_EDITOR
             EditorGUILayout.Space(6);
             EditorGUILayout.LabelField("Raycast Occlusion", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Raycast all selected slots against visible slots.", MessageType.Info);
+            EditorGUILayout.LabelField("Hide the faces of the editable slots that the other shown slots cover.", EditorStyles.wordWrappedMiniLabel);
 
             LoadRaycastPrefsIfNeeded();
 
@@ -2081,10 +2283,17 @@ namespace UMA
             raycastOcclusionAdd = EditorGUILayout.ToggleLeft("Add to existing hides (otherwise replace)", raycastOcclusionAdd);
             raycastOcclusionStrategy = (MeshHideAsset.TriangleHideStrategy)EditorGUILayout.EnumPopup(new GUIContent("Triangle Strategy"), raycastOcclusionStrategy);
 
-            raycastDrawDebugRays = EditorGUILayout.ToggleLeft("Draw debug rays", raycastDrawDebugRays);
-            using (new EditorGUI.DisabledScope(!raycastDrawDebugRays))
+            raycastDebugFoldout = EditorGUILayout.Foldout(raycastDebugFoldout, "Debug", true);
+            if (raycastDebugFoldout)
             {
-                raycastDebugRayCount = EditorGUILayout.IntSlider(new GUIContent("Debug Ray Count"), raycastDebugRayCount, 0, 65536);
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    raycastDrawDebugRays = EditorGUILayout.ToggleLeft("Draw debug rays", raycastDrawDebugRays);
+                    using (new EditorGUI.DisabledScope(!raycastDrawDebugRays))
+                    {
+                        raycastDebugRayCount = EditorGUILayout.IntSlider(new GUIContent("Debug Ray Count"), raycastDebugRayCount, 0, 65536);
+                    }
+                }
             }
 
             SaveRaycastPrefs();
@@ -2103,7 +2312,7 @@ namespace UMA
             }
 
             EditorGUI.BeginDisabledGroup(!anySelected);
-            if (GUILayout.Button("Raycast Occlusion To MeshHideAssets"))
+            if (GUILayout.Button(new GUIContent("Raycast Occlusion To MeshHideAssets", anySelected ? string.Empty : "Make at least one slot editable in the Slots panel.")))
             {
                 RaycastOcclusionToMeshHideAssets();
             }
@@ -2113,10 +2322,8 @@ namespace UMA
             {
                 EditorGUILayout.HelpBox(raycastOcclusionStatus, raycastOcclusionStatusType);
             }
-#endif
         }
 
-#if UNITY_EDITOR
         private bool raycastPrefsLoaded;
 
         private void LoadRaycastPrefsIfNeeded()
@@ -2892,11 +3099,9 @@ namespace UMA
 
             return marked;
         }
-#endif
 
         private void DrawRecalculateFromUVSection()
         {
-#if UNITY_EDITOR
             MeshHideAssetCollection collection = CurrentHideCollection;
             MeshHideAsset single = CurrentHideAsset;
 
@@ -2905,8 +3110,7 @@ namespace UMA
                 return;
             }
 
-            EditorGUILayout.Space(6);
-            EditorGUILayout.LabelField("MeshHideAssets", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Recalculate From UV", EditorStyles.boldLabel);
 
             if (single != null)
             {
@@ -2930,12 +3134,10 @@ namespace UMA
                 }
                 DrawRecalculateButtonForMeshHideAsset(mha);
             }
-#endif
         }
 
         private void DrawRecalculateButtonForMeshHideAsset(MeshHideAsset mha)
         {
-#if UNITY_EDITOR
             string slotName = (mha != null) ? mha.AssetSlotName : null;
             if (string.IsNullOrEmpty(slotName))
             {
@@ -2952,12 +3154,10 @@ namespace UMA
             }
             if (mha != null && meshHideLoadWarnings.TryGetValue(mha, out var warning))
                 EditorGUILayout.HelpBox(warning, MessageType.Warning);
-#endif
         }
 
         private void RecalculateFromUV(MeshHideAsset mha)
         {
-#if UNITY_EDITOR
             if (mha == null)
             {
                 return;
@@ -3016,7 +3216,6 @@ namespace UMA
             RebuildTriangleSlotOwnership();
             LoadSelections();
             MarkOverlayMeshDirty();
-#endif
         }
 
         private void SetAllSlotSelections(bool selected)
@@ -3122,6 +3321,11 @@ namespace UMA
                 }
             }
 
+            if (count <= 1)
+            {
+                return;
+            }
+
             var mode = (MeshHideAsset.TriangleHideStrategy)EditorGUILayout.EnumPopup(
                 new GUIContent("Copy LOD Mode", "Generate directly from LOD 0. Strict requires all 3 vertices, Weighted requires 2, and Conservative requires 1. Click Recalculate LOD to preview the result."), lodGenerationStrategy);
             if (mode != lodGenerationStrategy)
@@ -3185,67 +3389,26 @@ namespace UMA
 
                 DrawLODSelector();
 
-                GUILayout.Label("Selection", centeredLabel);
+                GUILayout.Label("Hide Faces", centeredLabel);
 
-                paintMode = EditorGUILayout.ToggleLeft("Paint Mode", paintMode);
-                paintMirrorX = EditorGUILayout.ToggleLeft(new GUIContent("Mirror X", "Mirror paint strokes across the mesh's local X = 0 plane."), paintMirrorX);
-                using (new GUILayout.HorizontalScope())
-                {
-                    GUILayout.Label("Operation", GUILayout.Width(70f));
-                    bool add = GUILayout.Toggle(paintAddMode, "Add", "Button");
-                    bool remove = GUILayout.Toggle(!paintAddMode, "Remove", "Button");
-                    if (add != paintAddMode)
-                    {
-                        paintAddMode = true;
-                    }
-                    else if (remove == true)
-                    {
-                        paintAddMode = false;
-                    }
-                }
-
+                // Tools, hide/unhide, Mirror X, Cull Backfaces, Frame, Hide All and Clear
+                // live on the floating toolbar beside this panel.
+                DrawCurrentFaceToolSummary();
                 DrawPaintBrushOptions();
 
-                rubberBandCullBackfaces = EditorGUILayout.ToggleLeft("Rubber Band Cull Backfaces", rubberBandCullBackfaces);
-
-                if (GUILayout.Button("Reset Camera"))
-                {
-                    ResetCameraToSelectedSlots();
-                }
-
-                using (new GUILayout.HorizontalScope())
-                {
-                    if (GUILayout.Button("Clear"))
-                    {
-                        RecordSelectionUndo("Clear Face Selection");
-                        selectedSlotTriangles.Clear();
-                        if (selectedSlotTrianglesSerialized != null)
-                        {
-                            selectedSlotTrianglesSerialized.Clear();
-                        }
-                        selectionVersion++;
-                        MarkOverlayMeshDirty();
-                    }
-                    if (GUILayout.Button("Select All"))
-                    {
-                        RecordSelectionUndo("Select All Faces");
-                        SelectAllFaces();
-                    }
-                }
-
                 GUILayout.Space(6);
-                GUILayout.Label($"Selected Faces: {SelectedSlotTriangleCount}");
+                GUILayout.Label($"Hidden Faces: {SelectedSlotTriangleCount}");
+            }
 
-                DrawRaycastOcclusionSection();
-
-                if ((CurrentHideAsset != null || CurrentHideCollection != null) && GUILayout.Button("Save Mesh Hide Assets (All Edited LODs)"))
-                {
-                    SaveSelections();
-                }
-                if (GUILayout.Button("Create MeshHideAssets (Split by Slot)"))
-                {
-                    SaveSelections(true);
-                }
+            // Saving stays visible however far the panel is scrolled.
+            if ((CurrentHideAsset != null || CurrentHideCollection != null) &&
+                GUILayout.Button(new GUIContent("Save Mesh Hide Assets (All Edited LODs)", "Write the hidden faces into the MeshHideAssets this editor was opened with.")))
+            {
+                SaveSelections();
+            }
+            if (GUILayout.Button(new GUIContent("Create MeshHideAssets (Split by Slot)", "Create a new MeshHideAsset for each slot that has hidden faces.")))
+            {
+                SaveSelections(true);
             }
         }
 
@@ -3256,19 +3419,12 @@ namespace UMA
                 return;
             }
 
-            using (new GUILayout.HorizontalScope())
-            {
-                GUILayout.Label("Brush", GUILayout.Width(70f));
-                paintBrushMode = (PaintBrushMode)GUILayout.Toolbar((int)paintBrushMode, new string[] { "Point", "Circle", "Square", "Load" }, _toolbarButtonStyle);
-            }
-
+            // The brush shape is chosen on the floating toolbar.
             if (paintBrushMode != PaintBrushMode.Point)
             {
-                using (new GUILayout.HorizontalScope())
-                {
-                    GUILayout.Label("Radius", GUILayout.Width(70f));
-                    paintBrushRadiusPixels = EditorGUILayout.IntSlider(paintBrushRadiusPixels, MinPaintBrushRadiusPixels, MaxPaintBrushRadiusPixels);
-                }
+                paintBrushRadius = StageBrushSize.RadiusSlider(
+                    new GUIContent("Radius (mm)", "Brush radius on the model, in millimeters. The brush looks larger on screen as you zoom in."),
+                    paintBrushRadius);
             }
 
             if (paintBrushMode == PaintBrushMode.Loadable)
@@ -3376,7 +3532,106 @@ namespace UMA
             return hasAny;
         }
 
-        private void DoVisibilityWindow(int id)
+        // ---------------------------------------------------------------
+        // Slots panel: one row per slot with Show and Edit checkboxes, like the
+        // Vertex Editor. Show displays the slot in the stage; Edit lets the tools
+        // hide its faces. It replaces the separate Visibility and Selectable Slots
+        // lists.
+        // ---------------------------------------------------------------
+
+        private bool showFaceSlotsWearables = true;
+        private string slotsPanelNotice;
+        private double slotsPanelNoticeUntil;
+        private GUIStyle slotsRowLabel;
+        private GUIStyle slotsRowLabelDimmed;
+        private GUIStyle slotsSummaryStyle;
+        private GUIStyle slotsNoticeStyle;
+        private GUIStyle slotsActionLabel;
+
+        private void EnsureSlotsPanelStyles()
+        {
+            if (slotsRowLabel != null)
+            {
+                return;
+            }
+            slotsRowLabel = new GUIStyle(EditorStyles.label) { clipping = TextClipping.Clip };
+            slotsRowLabelDimmed = new GUIStyle(slotsRowLabel);
+            slotsRowLabelDimmed.normal.textColor = EditorGUIUtility.isProSkin
+                ? new Color(0.55f, 0.55f, 0.55f)
+                : new Color(0.45f, 0.45f, 0.45f);
+            slotsSummaryStyle = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleRight };
+            slotsNoticeStyle = new GUIStyle(slotsSummaryStyle) { fontStyle = FontStyle.Bold };
+            slotsNoticeStyle.normal.textColor = EditorGUIUtility.isProSkin
+                ? new Color(1f, 0.75f, 0.3f)
+                : new Color(0.65f, 0.35f, 0f);
+            // Same height and margins as the mini buttons beside it, so the text lines up.
+            slotsActionLabel = new GUIStyle(EditorStyles.miniBoldLabel)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                fixedHeight = EditorStyles.miniButton.fixedHeight > 0f ? EditorStyles.miniButton.fixedHeight : EditorGUIUtility.singleLineHeight,
+                margin = new RectOffset(EditorStyles.miniBoldLabel.margin.left, EditorStyles.miniBoldLabel.margin.right,
+                    EditorStyles.miniButton.margin.top, EditorStyles.miniButton.margin.bottom),
+                padding = new RectOffset(EditorStyles.miniBoldLabel.padding.left, EditorStyles.miniBoldLabel.padding.right, 0, 0),
+            };
+        }
+
+        /// <summary>Shows a short message in the Slots panel header for a few seconds.</summary>
+        private void ShowSlotsPanelNotice(string message)
+        {
+            slotsPanelNotice = message;
+            slotsPanelNoticeUntil = EditorApplication.timeSinceStartup + 3.0;
+            SceneView.RepaintAll();
+        }
+
+        private SlotSelectionEntry GetSlotSelectionEntry(string slotName)
+        {
+            if (slotSelectionEntries == null || string.IsNullOrEmpty(slotName))
+            {
+                return null;
+            }
+            for (int i = 0; i < slotSelectionEntries.Count; i++)
+            {
+                var entry = slotSelectionEntries[i];
+                if (entry != null && string.Equals(entry.slotName, slotName, StringComparison.Ordinal))
+                {
+                    return entry;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Changes which slots the tools may edit, then refreshes the overlay.</summary>
+        private void SetSlotsEditable(Func<SlotData, bool, bool> editable)
+        {
+            if (slotSelectionEntries == null)
+            {
+                return;
+            }
+            bool changed = false;
+            for (int i = 0; i < slotSelectionEntries.Count; i++)
+            {
+                var entry = slotSelectionEntries[i];
+                if (entry == null || string.IsNullOrEmpty(entry.slotName) ||
+                    !slotLookupByName.TryGetValue(entry.slotName, out var slot) || slot == null)
+                {
+                    continue;
+                }
+                bool wanted = editable(slot, entry.isSelected);
+                if (wanted != entry.isSelected)
+                {
+                    entry.isSelected = wanted;
+                    changed = true;
+                }
+            }
+            if (changed)
+            {
+                RebuildSelectedSlotNameCache();
+                MarkOverlayMeshDirty();
+                SceneView.RepaintAll();
+            }
+        }
+
+        private void DoSlotsWindow(int id)
         {
             if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
             {
@@ -3384,134 +3639,235 @@ namespace UMA
                 return;
             }
 
+            EnsureSlotsPanelStyles();
             RefreshVisibleSlotListsIfNeeded();
 
             bool wasChanged = false;
             bool wasRecipeChanged = false;
-            bool blockedHideAllSlots = false;
-
+            bool soloed = false;
             var wearables = thisDCA.GetVisibleWearables();
+            SlotData[] slots = thisDCA.umaData.umaRecipe.slotDataList ?? Array.Empty<SlotData>();
 
-            using (var scroll = new GUILayout.ScrollViewScope(VisibleWearablesLocation))
+            if (EnsureAtLeastOneVisibleSlot())
             {
-                VisibleWearablesLocation = scroll.scrollPosition;
+                wasChanged = true;
+            }
 
-                if (EnsureAtLeastOneVisibleSlot())
+            int visibleSlotCount = GetVisibleSlotCount();
+            int editingCount = 0;
+            foreach (var slot in slots)
+            {
+                if (slot != null && !slot.Suppressed && IsSlotSelected(slot.slotName)) editingCount++;
+            }
+
+            // Header: a one-line summary, or a short-lived notice.
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.FlexibleSpace();
+                bool showNotice = !string.IsNullOrEmpty(slotsPanelNotice) && EditorApplication.timeSinceStartup < slotsPanelNoticeUntil;
+                GUILayout.Label(showNotice ? slotsPanelNotice : "Editing " + editingCount + " of " + visibleSlotCount + " shown",
+                    showNotice ? slotsNoticeStyle : slotsSummaryStyle);
+            }
+
+            // Quick actions stay above the list so they never scroll out of view.
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(new GUIContent("Edit", "Choose which slots the tools may hide faces on."), slotsActionLabel, GUILayout.Width(34));
+                if (GUILayout.Button(new GUIContent("All", "Make every shown slot editable."), EditorStyles.miniButtonLeft))
                 {
-                    wasChanged = true;
+                    SetSlotsEditable((slot, current) => !slot.Suppressed);
                 }
-
-                GUILayout.Label("Visible Wearables", EditorStyles.boldLabel);
-                if (wearables != null)
+                if (GUILayout.Button(new GUIContent("None", "Lock every slot."), EditorStyles.miniButtonMid))
                 {
-                    foreach (var wearable in wearables)
-                    {
-                        if (wearable == null)
-                        {
-                            continue;
-                        }
-
-                        GUILayout.BeginHorizontal();
-                        bool wasDisabled = wearable.disabled;
-                        bool desiredVisible = GUILayout.Toggle(!wearable.disabled, string.Empty, GUILayout.Width(24));
-                        wearable.disabled = !desiredVisible;
-                        if (wearable.disabled != wasDisabled)
-                        {
-                            wasRecipeChanged = true;
-                        }
-                        GUILayout.Label(wearable.name);
-                        GUILayout.EndHorizontal();
-                    }
+                    SetSlotsEditable((slot, current) => false);
                 }
-
-                GUILayout.Space(10);
-                GUILayout.Label("Visible Slots", EditorStyles.boldLabel);
-
-                int visibleSlotCount = GetVisibleSlotCount();
-                var slots = thisDCA.umaData.umaRecipe.slotDataList;
-                if (slots != null)
+                if (GUILayout.Button(new GUIContent("Invert", "Swap editable and locked slots among the shown slots."), EditorStyles.miniButtonRight))
                 {
-                    for (int i = 0; i < slots.Length; i++)
+                    SetSlotsEditable((slot, current) => !slot.Suppressed && !current);
+                }
+            }
+
+            using (new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(new GUIContent("Show", "Choose which slots are displayed."), slotsActionLabel, GUILayout.Width(34));
+                if (GUILayout.Button(new GUIContent("All", "Show every slot."), EditorStyles.miniButtonLeft))
+                {
+                    foreach (var slot in slots)
                     {
-                        var slot = slots[i];
-                        if (slot == null)
+                        if (slot != null && slot.Suppressed)
                         {
-                            continue;
-                        }
-
-                        GUILayout.BeginHorizontal();
-                        bool wasSuppressed = slot.Suppressed;
-                        bool desiredVisible = GUILayout.Toggle(!slot.Suppressed, string.Empty, GUILayout.Width(24));
-                        bool desiredSuppressed = !desiredVisible;
-
-                        if (desiredSuppressed && !slot.Suppressed && visibleSlotCount <= 1)
-                        {
-                            desiredSuppressed = false;
-                            blockedHideAllSlots = true;
-                        }
-
-                        slot.Suppressed = desiredSuppressed;
-                        if (slot.Suppressed != wasSuppressed)
-                        {
+                            slot.Suppressed = false;
                             wasChanged = true;
-                            visibleSlotCount += slot.Suppressed ? -1 : 1;
                         }
-
-                        string label = slot.slotName;
-                        if (label.Length > 27)
-                        {
-                            label = label.Substring(0, 24) + "...";
-                        }
-                        if (GUILayout.Button(label, EditorStyles.label))
-                        {
-                            if (!(slot.Suppressed == false && visibleSlotCount <= 1))
-                            {
-                                slot.Suppressed = !slot.Suppressed;
-                                wasChanged = true;
-                                visibleSlotCount += slot.Suppressed ? -1 : 1;
-                            }
-                            else
-                            {
-                                blockedHideAllSlots = true;
-                            }
-                        }
-                        GUILayout.EndHorizontal();
                     }
                 }
-
-                GUILayout.Space(8);
-                if (GUILayout.Button("Invert Visiblity", EditorStyles.miniButton))
+                if (GUILayout.Button(new GUIContent("Editable Only", "Hide every slot that is not editable."), EditorStyles.miniButtonMid))
                 {
-                    if (wearables != null)
+                    if (editingCount == 0)
                     {
-                        foreach (var wearable in wearables)
+                        ShowSlotsPanelNotice("No slot is editable.");
+                    }
+                    else
+                    {
+                        foreach (var slot in slots)
                         {
-                            if (wearable == null) continue;
-                            wearable.disabled = !wearable.disabled;
-                            wasRecipeChanged = true;
+                            if (slot != null && !slot.Suppressed && !IsSlotSelected(slot.slotName))
+                            {
+                                slot.Suppressed = true;
+                                wasChanged = true;
+                            }
                         }
                     }
-
-                    if (slots != null)
+                }
+                if (GUILayout.Button(new GUIContent("Invert", "Swap shown and hidden slots and wearables."), EditorStyles.miniButtonRight))
+                {
+                    int totalSlots = 0;
+                    foreach (var slot in slots)
                     {
-                        for (int i = 0; i < slots.Length; i++)
+                        if (slot != null) totalSlots++;
+                    }
+                    if (totalSlots > 0 && totalSlots == visibleSlotCount)
+                    {
+                        ShowSlotsPanelNotice("At least one slot must stay visible.");
+                    }
+                    else
+                    {
+                        if (wearables != null)
                         {
-                            var slot = slots[i];
+                            foreach (var wearable in wearables)
+                            {
+                                if (wearable == null) continue;
+                                wearable.disabled = !wearable.disabled;
+                                wasRecipeChanged = true;
+                            }
+                        }
+                        foreach (var slot in slots)
+                        {
                             if (slot == null) continue;
                             slot.Suppressed = !slot.Suppressed;
                             wasChanged = true;
                         }
                     }
+                }
+            }
+            GUILayout.Space(2);
 
-                    if (EnsureAtLeastOneVisibleSlot())
+            using (var scroll = new GUILayout.ScrollViewScope(VisibleWearablesLocation))
+            {
+                VisibleWearablesLocation = scroll.scrollPosition;
+
+                // Wearables (whole recipes) can be shown or hidden as a group.
+                if (wearables != null && wearables.Length > 0)
+                {
+                    showFaceSlotsWearables = EditorGUILayout.Foldout(showFaceSlotsWearables, "Wearables (" + wearables.Length + ")", true);
+                    if (showFaceSlotsWearables)
                     {
-                        wasChanged = true;
+                        foreach (var wearable in wearables)
+                        {
+                            if (wearable == null) continue;
+                            using (new GUILayout.HorizontalScope())
+                            {
+                                GUILayout.Space(8);
+                                bool wasHidden = wearable.disabled;
+                                wearable.disabled = !GUILayout.Toggle(!wearable.disabled, new GUIContent(string.Empty, "Show this wearable."), GUILayout.Width(18));
+                                if (wasHidden != wearable.disabled)
+                                {
+                                    wasRecipeChanged = true;
+                                }
+                                GUILayout.Label(new GUIContent(wearable.name, wearable.name), wearable.disabled ? slotsRowLabelDimmed : slotsRowLabel, GUILayout.MinWidth(40));
+                            }
+                        }
+                    }
+                    GUILayout.Space(4);
+                }
+
+                // Column headings.
+                using (new GUILayout.HorizontalScope())
+                {
+                    GUILayout.Label(new GUIContent("Show", "Display the slot in the stage."), EditorStyles.miniBoldLabel, GUILayout.Width(34));
+                    GUILayout.Label(new GUIContent("Edit", "Let the tools hide this slot's faces."), EditorStyles.miniBoldLabel, GUILayout.Width(30));
+                    GUILayout.Label("Slot", EditorStyles.miniBoldLabel);
+                }
+
+                string soloRequest = null;
+                foreach (var slot in slots)
+                {
+                    if (slot == null || string.IsNullOrEmpty(slot.slotName))
+                    {
+                        continue;
+                    }
+
+                    SlotSelectionEntry entry = GetSlotSelectionEntry(slot.slotName);
+                    bool editable = !slot.Suppressed && entry != null && entry.isSelected;
+
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        // Show
+                        GUILayout.Space(8);
+                        bool desiredVisible = GUILayout.Toggle(!slot.Suppressed, new GUIContent(string.Empty, "Show this slot in the stage."), GUILayout.Width(26));
+                        if (desiredVisible == slot.Suppressed)
+                        {
+                            if (desiredVisible)
+                            {
+                                slot.Suppressed = false;
+                                visibleSlotCount++;
+                                wasChanged = true;
+                            }
+                            else if (visibleSlotCount <= 1)
+                            {
+                                ShowSlotsPanelNotice("At least one slot must stay visible.");
+                            }
+                            else
+                            {
+                                slot.Suppressed = true;
+                                visibleSlotCount--;
+                                wasChanged = true;
+                            }
+                        }
+
+                        // Edit
+                        using (new EditorGUI.DisabledScope(slot.Suppressed || entry == null))
+                        {
+                            string editTip = slot.Suppressed ? "Hidden. Show it to edit it." : "Let the tools hide this slot's faces.";
+                            bool requested = GUILayout.Toggle(editable, new GUIContent(string.Empty, editTip), GUILayout.Width(22));
+                            if (requested != editable && entry != null && !slot.Suppressed)
+                            {
+                                entry.isSelected = requested;
+                                RebuildSelectedSlotNameCache();
+                                MarkOverlayMeshDirty();
+                            }
+                        }
+
+                        // Name: clicking it toggles Edit, like the checkbox. The full name is in the tooltip.
+                        string tooltip = slot.slotName +
+                            (slot.Suppressed ? "\nHidden. Show it to edit it." : editable ? "\nEditable." : "\nLocked: the tools will not change it.") +
+                            "\nClick to toggle Edit. Solo (S) makes it the only editable slot.";
+                        if (GUILayout.Button(new GUIContent(slot.slotName, tooltip), editable ? slotsRowLabel : slotsRowLabelDimmed, GUILayout.MinWidth(40)) &&
+                            !slot.Suppressed && entry != null)
+                        {
+                            entry.isSelected = !entry.isSelected;
+                            RebuildSelectedSlotNameCache();
+                            MarkOverlayMeshDirty();
+                        }
+
+                        // Solo: show it if needed and make it the only editable slot.
+                        if (GUILayout.Button(new GUIContent("S", "Solo: make this the only editable slot (and show it)."), EditorStyles.miniButton, GUILayout.Width(22)))
+                        {
+                            soloRequest = slot.slotName;
+                            if (slot.Suppressed)
+                            {
+                                slot.Suppressed = false;
+                                visibleSlotCount++;
+                                wasChanged = true;
+                            }
+                        }
                     }
                 }
 
-                if (blockedHideAllSlots)
+                if (soloRequest != null)
                 {
-                    EditorGUILayout.HelpBox("At least one slot must remain visible.", MessageType.Info);
+                    SetSlotsEditable((slot, current) => string.Equals(slot.slotName, soloRequest, StringComparison.Ordinal));
+                    soloed = true;
                 }
             }
 
@@ -3519,7 +3875,11 @@ namespace UMA
             {
                 RebuildMesh(wasRecipeChanged, true);
             }
-
+            if (soloed)
+            {
+                // Show the soloed slot, as Frame Slots does, after any rebuild above has put it on the mesh.
+                ResetCameraToSelectedSlots();
+            }
         }
 
         private void LoadCollapsePrefsIfNeeded()
@@ -4176,24 +4536,48 @@ namespace UMA
                 return;
             }
 
-            float brushRadius = Mathf.Clamp(paintBrushRadiusPixels, MinPaintBrushRadiusPixels, MaxPaintBrushRadiusPixels);
+            float brushRadius = GetPaintBrushRadiusPixels(view, mousePosition);
             Rect brushBounds = new Rect(mousePosition.x - brushRadius, mousePosition.y - brushRadius, brushRadius * 2f, brushRadius * 2f);
             List<SlotTriangleKey> matchingTriangles = GetBrushSelectionMatches(mousePosition, brushRadius, brushBounds);
             bool changed = false;
 
-            for (int i = 0; i < matchingTriangles.Count; i++)
+            if (add)
             {
-                SlotTriangleKey slotKey = matchingTriangles[i];
-                changed |= add ? AddSelectedSlotTriangle(slotKey) : RemoveSelectedSlotTriangle(slotKey);
+                for (int i = 0; i < matchingTriangles.Count; i++)
+                {
+                    changed |= AddSelectedSlotTriangle(matchingTriangles[i]);
+                }
+            }
+            else
+            {
+                // Remove from the set first, then from the serialized list in one pass.
+                // Removing one key at a time searched the whole list for every face.
+                brushRemovedTriangles.Clear();
+                for (int i = 0; i < matchingTriangles.Count; i++)
+                {
+                    if (selectedSlotTriangles.Remove(matchingTriangles[i]))
+                    {
+                        brushRemovedTriangles.Add(matchingTriangles[i]);
+                    }
+                }
+                if (brushRemovedTriangles.Count > 0)
+                {
+                    changed = true;
+                    selectedSlotTrianglesSerialized?.RemoveAll(k =>
+                        brushRemovedTriangles.Contains(new SlotTriangleKey(k.slotName, k.slotSubmeshIndex, k.slotTriangleIndex)));
+                }
             }
 
             if (changed)
             {
+                // Only the hidden faces changed: the overlay rebuilds them from selectionVersion
+                // and keeps its wireframe.
                 selectionVersion++;
-                MarkOverlayMeshDirty();
                 SceneView.RepaintAll();
             }
         }
+
+        private readonly HashSet<SlotTriangleKey> brushRemovedTriangles = new HashSet<SlotTriangleKey>();
 
         private List<SlotTriangleKey> GetBrushSelectionMatches(Vector2 mousePosition, float brushRadius, Rect brushBounds)
         {
@@ -4271,7 +4655,7 @@ namespace UMA
             }
 
             EnsureSlotTriangleCacheBuilt();
-            RefreshBakedMeshCaches();
+            EnsureBakedMeshCaches();
             Vector3[] vertices = bakedVertices;
             if (vertices == null || vertices.Length == 0)
             {
@@ -4618,7 +5002,7 @@ namespace UMA
             {
                 localRay = new Ray(MirrorX(localRay.origin), MirrorX(localRay.direction));
             }
-            RefreshBakedMeshCaches();
+            EnsureBakedMeshCaches();
             Vector3[] bakedVertices = this.bakedVertices;
             if (bakedVertices == null)
             {
@@ -4731,8 +5115,8 @@ namespace UMA
                     return false;
                 }
 
+                // Only hidden faces changed; the overlay keeps its wireframe.
                 selectionVersion++;
-                MarkOverlayMeshDirty();
                 return true;
             }
 
@@ -4741,7 +5125,6 @@ namespace UMA
                 return false;
             }
             selectionVersion++;
-            MarkOverlayMeshDirty();
             return true;
         }
 
@@ -4757,7 +5140,7 @@ namespace UMA
             Matrix4x4 matrix = FaceObject.transform.localToWorldMatrix;
             Camera cam = openedSceneView != null ? openedSceneView.camera : (SceneView.lastActiveSceneView != null ? SceneView.lastActiveSceneView.camera : null);
             Vector3 camForward = cam != null ? cam.transform.forward : Vector3.forward;
-            RefreshBakedMeshCaches();
+            EnsureBakedMeshCaches();
             Vector3[] bakedVertices = this.bakedVertices;
             if (bakedVertices == null)
             {
@@ -4872,8 +5255,8 @@ namespace UMA
                     return false;
                 }
 
+                // Only hidden faces changed; the overlay keeps its wireframe.
                 selectionVersion++;
-                MarkOverlayMeshDirty();
                 return true;
             }
 
@@ -4882,7 +5265,6 @@ namespace UMA
                 return false;
             }
             selectionVersion++;
-            MarkOverlayMeshDirty();
             return true;
         }
 

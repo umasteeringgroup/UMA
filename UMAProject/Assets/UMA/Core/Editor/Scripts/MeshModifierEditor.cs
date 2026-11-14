@@ -82,6 +82,74 @@ namespace UMA
         [SerializeField] private bool showBuildOptions = true;
 
         private bool suppressUndoRebuild = false;
+
+        // Undo and the character build. An undo step needs the character rebuilt only when it changed
+        // what the character is built from: the modifiers, or which kind of build was asked for.
+        // Sculpt, mask and paint strokes undo on the stage's own mesh, and a rebuild would replace
+        // that mesh and drop every stroke made so far.
+        private enum CharacterBuildKind { Normal, TPose, Reset }
+        // Serialized, so Undo restores the kind of build the editor state asks for.
+        [SerializeField] private CharacterBuildKind characterBuildKind = CharacterBuildKind.Normal;
+        // Not serialized, so Undo leaves them alone: what the character was last built as.
+        [NonSerialized] private CharacterBuildKind builtCharacterKind = CharacterBuildKind.Normal;
+        [NonSerialized] private string builtModifierSignature;
+
+        /// <summary>The character is about to be built from <paramref name="modifiers"/>.</summary>
+        private void NoteCharacterBuilt(CharacterBuildKind kind, List<MeshModifier.Modifier> modifiers)
+        {
+            builtCharacterKind = kind;
+            builtModifierSignature = BuildModifierSignature(modifiers);
+        }
+
+        /// <summary>
+        /// Everything in a modifier list that changes the built mesh, as text. The Active flag of an
+        /// adjustment is selection state in this editor and is left out.
+        /// </summary>
+        private static string BuildModifierSignature(List<MeshModifier.Modifier> modifiers)
+        {
+            var text = new System.Text.StringBuilder();
+            if (modifiers == null)
+            {
+                return string.Empty;
+            }
+            foreach (MeshModifier.Modifier modifier in modifiers)
+            {
+                if (modifier == null)
+                {
+                    continue;
+                }
+                text.Append('[').Append(modifier.SlotName).Append('|').Append(modifier.DNAName).Append('|')
+                    .Append(modifier.Scale.ToString("R", System.Globalization.CultureInfo.InvariantCulture)).Append('|')
+                    .Append(modifier.adjustments != null ? modifier.adjustments.GetType().FullName : "none");
+                if (modifier.adjustments != null && modifier.adjustments.vertexAdjustments != null)
+                {
+                    foreach (VertexAdjustment adjustment in modifier.adjustments.vertexAdjustments)
+                    {
+                        if (adjustment == null)
+                        {
+                            continue;
+                        }
+                        text.Append('\n').Append(adjustment.GetType().FullName).Append(':')
+                            .Append(JsonUtility.ToJson(adjustment).Replace("\"active\":true", "\"active\":false"));
+                    }
+                }
+                text.Append(']');
+            }
+            return text.ToString();
+        }
+
+        /// <summary>True when the character already shows what the editor state asks for.</summary>
+        private bool CharacterMatchesEditorState()
+        {
+            if (builtModifierSignature == null || builtCharacterKind != characterBuildKind)
+            {
+                return false;
+            }
+            List<MeshModifier.Modifier> wanted = characterBuildKind == CharacterBuildKind.Reset
+                ? new List<MeshModifier.Modifier>()
+                : DoModifierSplit(true);
+            return builtModifierSignature == BuildModifierSignature(wanted);
+        }
         private bool activeAdjustmentInteractiveUndoArmed = false;
         private bool bulkModifierInteractiveUndoArmed = false;
 
@@ -191,10 +259,28 @@ namespace UMA
                 return;
             }
 
+            // A stroke on the stage's mesh (sculpt, mask, paint) changes nothing the character is built
+            // from: Undo has already put the mesh back, and a rebuild would throw the other strokes away.
+            if (CharacterMatchesEditorState())
+            {
+                return;
+            }
+
             suppressUndoRebuild = true;
             try
             {
-                DoCharacterRebuild();
+                switch (characterBuildKind)
+                {
+                    case CharacterBuildKind.TPose:
+                        DoCharacterRebuild(true);
+                        break;
+                    case CharacterBuildKind.Reset:
+                        DoCharacterReset();
+                        break;
+                    default:
+                        DoCharacterRebuild();
+                        break;
+                }
             }
             finally
             {
@@ -296,6 +382,11 @@ namespace UMA
             unselectedButton.normal.background = new Texture2D(1, 1);
             unselectedButton.normal.background.SetPixel(0, 0, Color.white);
             unselectedButton.normal.background.Apply();
+
+            // The character as it stands is what this editor state asks for: Undo rebuilds it only
+            // when a step changes that.
+            characterBuildKind = CharacterBuildKind.Normal;
+            NoteCharacterBuilt(CharacterBuildKind.Normal, DoModifierSplit(true));
         }
 
         private string GetModifierSlotKey(SlotData slot)
@@ -1602,12 +1693,21 @@ namespace UMA
             {
                 thisDCA.umaData.ManualMeshModifiers = DoModifierSplit(true);
             }
+            CharacterBuildKind kind = forceTPose ? CharacterBuildKind.TPose : CharacterBuildKind.Normal;
+            if (LoadMeshModifiers)
+            {
+                // A build without the modifiers is a step inside a larger action, not a state to return to.
+                characterBuildKind = kind;
+            }
+            NoteCharacterBuilt(kind, thisDCA.umaData.ManualMeshModifiers);
             vertexEditorStage.RebuildMesh(forceTPose,buildCollisionMesh);
         }
 
         public void DoCharacterReset()
         {
             thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
+            characterBuildKind = CharacterBuildKind.Reset;
+            NoteCharacterBuilt(CharacterBuildKind.Reset, thisDCA.umaData.ManualMeshModifiers);
             vertexEditorStage.RebuildMesh(false);
         }
 
@@ -1737,6 +1837,7 @@ namespace UMA
         {
             thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
             SplitModifiersBySlot(thisDCA.umaData.ManualMeshModifiers, activeModifier);
+            NoteCharacterBuilt(CharacterBuildKind.Normal, thisDCA.umaData.ManualMeshModifiers);
             vertexEditorStage.RebuildMesh(false);
         }
 

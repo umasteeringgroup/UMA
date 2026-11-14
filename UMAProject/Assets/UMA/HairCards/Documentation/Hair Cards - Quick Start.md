@@ -1,4 +1,4 @@
-# Hair Cards — Node Workflow & Reference
+# Hair Cards — Groom Outliner Workflow & Reference
 
 UMA Hair Cards is a guide-driven system for authoring game-ready hair. The normal workflow is:
 
@@ -9,7 +9,7 @@ vertex shading, follow [Swept Clumps: complete hairstyle guide](SweptClumpsGuide
 The card-generation step now lives under **Generate Hair**: enable Surface generation to create
 independently scalp-anchored clump/card populations, or leave it off for children-per-guide.
 
-The editable `HairGroomAsset` is the source. Card meshes and UMA assets are generated outputs that can be rebuilt. The node tree is a typed view over that same data: opening it does not convert, regenerate, or discard a groom.
+The editable `HairGroomAsset` is the source. Card meshes and UMA assets are generated outputs that can be rebuilt. The Groom Outliner is a typed view over that same data: opening it does not convert, regenerate, or discard a groom.
 
 For an existing unweighted groom, use **Source & Setup → Bind Character / Race**.
 Choose a generated character or RaceData, select body slots, **Preview Alignment**,
@@ -17,73 +17,136 @@ then **Attach Validated Binding…**. This preserves the hairstyle and saves a s
 weighted donor and skeleton for reopening, root-based card skinning, and real-slot
 scalp shading. See [Attach an existing hairstyle](SweptClumpsGuide.md#attach-an-existing-hairstyle-to-a-uma-character).
 
-## Workspace: select a node, edit its properties
+## Workspace: select an item, edit its properties
 
 Opening a stage opens three independently dockable Unity windows:
 
-- **Hair Nodes** is the navigator. Select a row to edit it; expand its arrow to reveal children. Search finds nodes and keeps their ancestors visible. Optional Maps starts collapsed. Clear search to see the full groom again.
-- Use **↑ / ↓** to select, **← / →** to collapse/expand, **Home / End** to jump, and **Ctrl/Cmd+F** to focus node search. Selecting a node through another control reveals it in the tree; a search that would hide the new selection is cleared.
-- **Hair Properties** shows only the selected node's properties and authoring tools. It has no workflow shortcuts, next/back links, child-node picker, or node-management toolbar. Select a different tree row to change what is edited.
-- **Hair Preview & Settings** has two tabs: **Preview & Visibility** for display, avatar filtering and camera focus, and **Settings** for separate resets. Its tab and scroll positions are independent of node selection, so preview controls can stay visible while you edit a node.
-- Drag any window's tab into your preferred Unity dock. Put Nodes beside the Scene view, Properties on the other side, and Preview & Settings below or alongside it. Tab-dock panels when space is limited.
-- Close any window without closing the stage or the other panels. Reopen it from **UMA > Hair Cards > Hair Nodes / Hair Properties / Hair Preview & Settings**, or use the Hair Nodes toolbar. **Hair Groom Workspace** opens all three. **Frame**, **Save**, **Help**, **Issues**, and **Exit Stage** are in Hair Nodes.
-- **Hair Nodes is the single workflow navigator.** Select Growth / Density to paint, Guides to generate/place guides, a Sculpt Pass to groom, and Geometry or Materials & UVs to edit cards. Branch rows describe their contents; they do not silently edit the previously selected child. Selecting a node does not itself regenerate guides.
-- Create groups, sculpt passes, modifiers, optional maps, helpers and constraints with the tree's context-sensitive controls. Duplicate, reorder and remove selected passes/modifiers there too. Removal confirmations are popups and Undo is supported.
-- **Focus current area / Head / Neck** are under **Hair Preview & Settings > Preview & Visibility > Avatar Visibility**. Confirmations remain popups. Existing visibility preferences are retained when moving to the new window.
+- **Groom Outliner** lists the groom as a tree and is the single workflow navigator. Select a row to edit it in Hair Properties.
+- **Hair Properties** shows only the selected item's properties and authoring tools.
+- **Hair Preview & Settings** holds display, avatar visibility, camera focus and preferences.
 
-The hierarchy is:
+Drag any window's tab into your preferred Unity dock: the Groom Outliner beside the Scene view, Hair Properties on the other side, and Hair Preview & Settings below or alongside it. Close any window without closing the stage or the other windows, and reopen it from **UMA > Hair Cards > Groom Outliner / Hair Properties / Hair Preview & Settings** or from the outliner's **⋮** menu. **UMA > Hair Cards > Hair Groom Workspace** opens all three.
+
+### The Groom Outliner
+
+From top to bottom the window shows:
+
+| Area | What it does |
+|---|---|
+| **Add ▾** | Creates something for the selected row (a sculpt pass, modifier, map, constraint or population stage) plus groom-level items: a **Group** of any role, a **Grid Panel**, **Braid** or **Bun Group**, or a shared **Helper**. |
+| **Issues (N)** | Lists validation issues. Choose **Go to setting** or **Select guide** to jump to the source. |
+| **⋮** | **Frame Groom**, **Expand All / Collapse All**, open the other windows, **Quick Start Help**, **Save** and **Exit Stage**. |
+| Step bar | **Setup, Growth, Guides, Groom, Cards, LODs, Bake.** Click a step to select its main item in the active group. Selecting any row also highlights its step, so the bar always shows where you are. |
+| Search | Filters by name, description or kind and keeps matching items' parents visible. Selecting an item elsewhere (for example in the Scene) clears a search that would hide it. |
+| Tree | One row per item, with **On** and **Lock** columns. |
+
+**Columns.** **On** is the item's Active toggle: groups, sculpt passes, modifiers, constraints and population stages can be bypassed without deleting them. Inactive rows are dimmed. **Lock** protects a group, sculpt pass or helper against edits; locking a group also protects everything inside it. Maps, geometry and materials have no generic toggle because their own controls decide their effect (a map's **V** changes only its overlay).
+
+**Badges** after a row's name show references and temporary states:
+
+- `editing`, `bypassed`, `solo`, `inspecting`, `mask shown`: the current sculpt edit point and preview states.
+- `finishing`: a finishing sculpt pass that runs after Constraints.
+- `mask: <map>`, `helper: <name>`, `continues: <name>`: what a pass, modifier or constraint uses.
+- `growth: <group>`: a population that grows from another group's painted density.
+- `N forms`: Grid Panel, Braid or Bun forms bound to a population.
+- `used by N` / `unused`: how many items use a shared helper. Select the helper and Hair Properties lists them under **Used By** with **Select** buttons. Optional maps show the same list.
+
+**Right-click** any row for everything you can do with it: its **Add** submenu, **Active**, **Locked**, **Move Earlier / Move Later**, **Duplicate** and **Remove…**. Helpers add **Constrain Group '<name>' to This Helper** and **Duplicate Mirrored Helper**; form populations add **Create & Edit Bun Helper**, **Create & Edit Braid Rail** or **Create & Edit Grid Panel** (by population source), **Bind Existing Form** and **Remove Form Binding**. Right-click empty space to add a group or helper.
+
+**Drag and drop** reorders sculpt passes, modifiers and clump population stages among their siblings. Drops onto another parent, across groups, or across the finishing-pass boundary are rejected.
+
+**Keyboard** (with the outliner focused):
+
+| Key | Action |
+|---|---|
+| ↑ / ↓, Home / End | Move the selection |
+| ← / → | Collapse / expand |
+| Alt+↑ / Alt+↓ | Move Earlier / Move Later |
+| Ctrl/Cmd+D | Duplicate |
+| Delete (Cmd+Backspace on macOS) | Remove… |
+| Ctrl/Cmd+F | Focus search |
+
+Collapsing a branch that contains the selection selects the branch. Expansion, search and scroll are remembered per groom. Optional Maps starts collapsed.
+
+### Hair Properties
+
+Hair Properties edits the selected row and nothing else. It has no navigation, next/back links or item-management toolbar; use the outliner for those. Selected items do get their editing tools here:
+
+- **Sculpt passes:** **Edit This Layer / Return to Final Preview** and **Add Finishing Sculpt Layer**.
+- **Generate Hair:** the **Short Hair Part…**, **Curly Volume…** and **Swept Clumps…** presets, each with a confirmation listing what changes.
+- **Population stages and their modifiers:** **Inspect Population**, **Show Mask** and **Final Hair**.
+- **Source & Setup:** **Import Authored Guide File…** and the character binding tools.
+- **Form helpers:** form editing and **Duplicate Mirrored Form**.
+- **Materials & UVs:** the atlas, material and UV set editor.
+
+Branch rows such as Grooming or Optional Maps show counts and guidance. They never silently edit the previously selected child, and selecting an item never regenerates guides.
+
+### Hair Preview & Settings
+
+**Preview & Visibility** covers display, avatar filtering and camera focus (**Focus current area / Head / Neck** are under **Avatar Visibility**). **Settings** holds separate resets. Its tab and scroll position do not follow selection, so preview controls stay put while you edit. Confirmations are popups.
+
+### Scene view toolbars
+
+The Scene view has two toolbars while a groom is open:
+
+- The **tool toolbar** is a floating column of icons on the left. Its groups are **Select** and **Paint Growth**; **Place Guide**, **Draw Guide** and **Erase**; the grooming brushes (**Comb**, **Grab**, **Smooth**, **Length**, **Cut**, **Width**, **Clump**, **Part**, **Freeze**); and **Helper**, **Draw Flow** and **Edit Flow**. **Mirror X** at the bottom mirrors growth painting or slice cuts; each keeps its own setting, and `M` toggles it. Hover a button for its name and how to use it. Drag the grip to move the toolbar, or double-click the grip to dock it again; its position is remembered. Selecting an outliner item still picks a suitable tool automatically.
+- The **top toolbar** has **Workspace** (opens the Groom Outliner, Properties and Preview windows), the active tool's name, **Hints** (shows or hides the Scene help box), **Rebuild**, **Save** and **Exit**. The status line below it shows the group, sculpt pass and preview state.
+
+The UMA Toolbar overlay is hidden while the stage is open, because its commands act on the main scene. It returns when you exit.
+
+### The hierarchy
 
 ```text
 Source & Setup
 Coverage (group)
-├─ 1 · Growth / Density
+├─ Growth / Density
 ├─ Optional Maps
 │  ├─ Density Multiplier
 │  └─ Length / other masks
-├─ 2 · Guides
-├─ 3 · Grooming
+├─ Guides (n)
+├─ Grooming
 │  ├─ Sculpt Pass
 │  │  ├─ Spline Flow
 │  │  └─ Gravity
+│  ├─ Constraints
 │  └─ Finishing Pass
-├─ Constraints
-├─ 4 · Generate Hair
+├─ Generate Hair
 │  ├─ Primary Clumps / modifiers (when enabled)
-│  └─ Fine Hair Cards / modifiers (when enabled)
-├─ 5 · Hair Cards
+│  └─ Fine Hair Cards / modifiers
+├─ Hair Cards
 │  ├─ Geometry & Vertex Colors
 │  └─ Materials & UVs
 └─ Scalp Vertex Shading
 Shared Helpers
-6 · Optimize & LODs
-7 · Validate & Bake
+Optimize & LODs
+Validate & Bake
 ```
 
-Each group has its own paint, guides, sculpt passes, children and card resources. Helpers and output settings are shared at groom level. Helper/resource branches are references, not additional processing steps.
+A groom can have any number of groups, for example coverage, a gathered sweep, each ponytail, a braid, a bun and flyaways. Each group has its own paint, guides, sculpt passes, children and card resources. Helpers and output settings are shared at groom level. Helper/resource branches are references, not additional processing steps.
 
-**Processing order:** within Grooming, sculpt passes run **top to bottom**. Each pass applies its painted sculpt offsets, then its modifiers top to bottom. Drag a sculpt pass or modifier above/below a sibling, or use **↑ / ↓** in Hair Nodes. Cross-pass and cross-group drops are rejected; moving a pass moves its modifiers with it. This is the same stored/evaluated order as before, now displayed in forward order instead of the old reverse layer stack.
+**Processing order:** within Grooming, sculpt passes run **top to bottom**. Each pass applies its painted sculpt offsets, then its modifiers top to bottom. Constraints run next, then finishing passes. Reorder by dragging a row onto a sibling, or with **Move Earlier / Move Later** (right-click or **Alt+↑/↓**). Moving a pass moves its modifiers with it. This is the same stored and evaluated order as before.
 
-An **Active** toggle is independent of selection. Groups, sculpt passes, modifiers and constraints can be bypassed where applicable. Maps, geometry and materials do not get a misleading generic toggle: their typed controls determine their behavior. A map's **V** changes only its overlay, not its painted effect. The group node controls preview visibility and locking; a sculpt-pass node controls its lock, opacity, blend and preview-only Solo. Locked nodes are marked in the tree. Only the selected node's properties are shown.
+The **On** toggle is independent of selection. A group row controls preview visibility and locking; a sculpt pass row controls its lock, opacity, blend and preview-only Solo. Only the selected item's properties are shown.
 
 ### First groom in seven actions
 
 1. Select **Source & Setup**, check the binding, then use **Preview & Visibility** to isolate the scalp.
 2. Select the group's **Growth / Density** node and paint the region.
 3. Select **Guides**, preview generation, inspect it, then Accept or Replace Generated Only.
-4. Select **Grooming**, use **+ Sculpt Pass** in Hair Nodes, and comb with that pass selected. Select the pass before adding modifiers; select a modifier to edit its parameters.
-5. Select **Generate Hair** to control interpolated fill. Use **Swept Clumps Preset…** in the tree for the surface-generation workflow. Select **Hair Cards** to assign resources; use Geometry and Materials & UVs for detailed setup.
+4. Right-click **Grooming** (or use **Add ▾**) and choose **Sculpt Pass**, then comb with that pass selected. Select the pass before adding modifiers; select a modifier to edit its parameters.
+5. Select **Generate Hair** to control interpolated fill. Use its **Swept Clumps…** preset in Hair Properties for the surface-generation workflow. Select **Hair Cards** to assign resources; use Geometry and Materials & UVs for detailed setup.
 6. Select **Optimize & LODs** to set release budgets.
 7. Select **Validate & Bake**, resolve blockers, inspect a dry run, then bake.
 
-The detailed sections below describe these nodes, shortcuts, safety rules and the unchanged authoring/evaluation features.
+The detailed sections below describe these items, shortcuts, safety rules and the unchanged authoring/evaluation features.
 
 ## 1. Open the Hair Card System
 
 For a generated UMA character:
 
 1. Select the `DynamicCharacterAvatar`.
-2. In its Inspector, open **Utilities**.
-3. Under **Hair Cards**, click **Open Hair Card System**.
+2. At the top of its Inspector, expand **Plugins** (under **Editors**).
+3. Click **Hair Card Editor**. The character is generated first if needed; the button is unavailable for a prefab asset or a character open in Prefab Mode.
 4. Choose a location and name for the new `HairGroomAsset`.
 
 You can also select a readable Mesh, a `HairGroomAsset`, or a generated avatar and choose **UMA > Hair Cards > Open Hair Card Stage**.
@@ -96,7 +159,7 @@ Reopening the groom no longer requires the original character to regenerate. Whe
 
 If an older groom already shows **Missing** for Source Mesh, opening first tries its embedded snapshot or recorded original source. When automatic recovery is unavailable, select the groom in the Inspector, choose the original readable mesh or generated character/renderer in **Restore Source From**, and click **Restore Source**. Use the original race, wardrobe and LOD: repair rejects different vertex/triangle topology and does not silently rebind your hair. A generated replacement is then saved as a private snapshot. The groom's stable source identity, surviving maps, guides and layers are retained. Loading a missing-source groom no longer clears its paint arrays; paint already overwritten by an older version requires a recovery snapshot or backup.
 
-Hair Nodes, Hair Properties, Hair Preview & Settings and the Scene view work together. The selected node chooses a suitable Scene tool automatically, so selecting Guides or Grooming does not leave the growth-paint tool active.
+Groom Outliner, Hair Properties, Hair Preview & Settings and the Scene view work together. The selected item chooses a suitable Scene tool automatically, so selecting Guides or Grooming does not leave the growth-paint tool active.
 
 The **Preview & Visibility** tab in **Hair Preview & Settings** is the single location for preview mode, Full/Draft quality, **Rebuild Card Preview**, card wireframe, root handles and size, guide and child spline visibility, selected control points, freeze mask, scene depth, authoring surface, character preview, and helpers. It stays available independently of the selected node, even with Hair Properties closed. Avatar part filters remain directly below it under **Avatar Visibility**.
 
@@ -112,7 +175,7 @@ Turn off **Show card wireframe** for a clean material preview: this hides the ye
 
 While painting a growth map, **hold Shift to erase temporarily**, including midway through a drag. Release Shift to return to the selected mode; if Erase was already selected, it remains selected. Normal and mirrored brushes use the same temporary mode, and changing direction within a stroke remains one Undo operation. This does not reverse grooming tools. Shift + right-drag still adjusts radius/hardness, and Shift + brackets still adjusts hardness.
 
-The Scene view shows contextual helper instructions at the **top-left, below the hair toolbar**, including the active PAINT/ERASE mode and map, temporary erase, mirror, brush-size/hardness and navigation shortcuts. The Erase button and brush color also reflect temporary erase without saving it as your selected mode.
+The Scene view shows contextual helper instructions at the **top-left, beside the tool toolbar** (turn them off with **Hints**), including the active PAINT/ERASE mode and map, temporary erase, mirror, brush-size/hardness and navigation shortcuts. The Erase button and brush color also reflect temporary erase without saving it as your selected mode.
 
 Editor options are saved automatically while idle, on **Save**, and when closing the workspace/stage. Reopening the same groom restores its brushes, root influence, gravity options, mirrors, guide-generation parameters, display/visibility options, workflow/tool selection, and workspace layout options. UV-preview channel, checker colors, background, snapping, outlines, units, zoom/pan, and selection are remembered too. Idle persistence does not run during a grooming stroke. These local preferences survive Unity restarts in `UserSettings/UMA.HairCards.Preferences.asset`; they do not affect baked output or need to be shared with the groom.
 
@@ -146,7 +209,7 @@ Select the primary **Growth / Density** map, then:
 
 The Growth overlay is blue at zero and moves through purple to orange as strength increases. The character's regular textures may remain visible beneath the translucent overlay; orange on the intended scalp is the important result. With **Mirror X** enabled, a second brush ring previews the opposite footprint on the posed character. Vertices on or near the centerline receive one brush application, not doubled strength.
 
-**One map is enough:** `0` means no growth, `0.5` means half density, and `1` means full density. The optional **Density Multiplier** defaults to `1` and is under **Optional Maps** in Hair Nodes, along with Length and other styling maps. Leave it alone for the basic workflow. Use it to thin parts of a groom independently of its primary boundary; for example, primary `0.5` × multiplier `0.5` gives `0.25`. The primary map reports non-neutral multiplier paint even when the optional branch is collapsed. Select **Optional Maps** for **Reset Density Multiplier to 1**, with Undo support. Collapsing a branch containing the selected map selects that collection and leaves paint mode. Select a map again to resume painting.
+**One map is enough:** `0` means no growth, `0.5` means half density, and `1` means full density. The optional **Density Multiplier** defaults to `1` and is under **Optional Maps** in the Groom Outliner, along with Length and other styling maps. Leave it alone for the basic workflow. Use it to thin parts of a groom independently of its primary boundary; for example, primary `0.5` × multiplier `0.5` gives `0.25`. The primary map reports non-neutral multiplier paint even when the optional branch is collapsed. Select **Optional Maps** for **Reset Density Multiplier to 1**, with Undo support. Collapsing a branch containing the selected map selects that collection and leaves paint mode. Select a map again to resume painting.
 
 Hardness `0` produces a gradual fade from the brush center to its edge; hardness `1` fills the footprint uniformly. Overlapping samples within one stroke retain that falloff instead of repeatedly hardening the edge. Release and paint another stroke to build up coverage; Erase uses the same soft falloff. To compare hardness settings, start on a cleared patch—painting softly over an already full mask does not reduce it. Growth maps are stored per source vertex, so very coarse meshes limit how finely a soft edge can be represented.
 
@@ -200,19 +263,19 @@ Unlock the active group before generating, accepting, placing, or editing guides
 
 ## 4. Groom and style the guides
 
-Expand **Grooming** in Hair Nodes and select a **Sculpt Pass**. Its brush shelf appears in Properties and Comb becomes active when entering from selection/helper mode. The Grooming collection itself does not sculpt. Solid colored curves are authored guides; faint dotted curves are generated children in **Guides And Children** preview mode when **Include children in preview** and **Show child splines** are enabled in Hair Preview & Settings.
+Expand **Grooming** in the Groom Outliner and select a **Sculpt Pass**. Its brush shelf appears in Properties and Comb becomes active when entering from selection/helper mode. The Grooming collection itself does not sculpt. Solid colored curves are authored guides; faint dotted curves are generated children in **Guides And Children** preview mode when **Include children in preview** and **Show child splines** are enabled in Hair Preview & Settings.
 
 ### Choose where to sculpt
 
-**Happy with Spline Flow and want to comb the result?** Choose **Add Finishing Sculpt Layer** in Hair Nodes (also available in the Scene banner). The new additive pass receives the complete modified guide shape and applies your strokes afterward:
+**Happy with Spline Flow and want to comb the result?** Choose **Add Finishing Sculpt Layer** in the sculpt pass's Properties or its right-click menu (also available in the Scene banner). The new additive pass receives the complete modified guide shape and applies your strokes afterward:
 
 `Base Sculpt → Spline Flow → group modifiers / helper constraints → Finishing Sculpt`
 
-Nothing is baked, and the earlier pass and flow paths remain editable. Finishing passes appear after Constraints in the Grooming tree. Their order can be changed within the finishing section; they cannot be dragged across the constraint boundary. Subsequent **+ Sculpt Pass** actions append to that section.
+Nothing is baked, and the earlier pass and flow paths remain editable. Finishing passes appear after Constraints under Grooming in the outliner, with a `finishing` badge. Their order can be changed within the finishing section; they cannot be dragged across the constraint boundary. Subsequent **Add > Sculpt Pass** actions append to that section.
 
 **Want to change the original sculpt instead?** Select its pass and choose **Edit This Layer**. This displays the accumulated shape through that pass's sculpting, *before its modifiers*. All earlier operations remain enabled. Its own modifiers and later operations in the group are temporarily bypassed; other groups are unaffected. This is not Solo, which removes earlier passes too.
 
-The tree marks the editing pass and temporarily bypassed operations, while the Scene banner explains the edit point. Brush targeting, control handles, guides, children and idle card previews all use this same shape. It remains stable between strokes—modifiers do not switch on and off at each mouse press/release. Choose **Return to Final Preview**, or select a different node, to view the complete result again. Active toggles, visibility and modifier parameters are never rewritten by this mode. Reopening the stage starts in final preview; runtime and bake always use the full stack.
+The outliner marks the editing pass (`editing`) and temporarily bypassed operations (`bypassed`), while the Scene banner explains the edit point. Brush targeting, control handles, guides, children and idle card previews all use this same shape. It remains stable between strokes—modifiers do not switch on and off at each mouse press/release. Choose **Return to Final Preview**, or select a different node, to view the complete result again. Active toggles, visibility and modifier parameters are never rewritten by this mode. Reopening the stage starts in final preview; runtime and bake always use the full stack.
 
 A terminal unmodified pass can enter editing directly, since there is no shape difference from the final preview. Otherwise the brush is paused until you explicitly choose an edit point or add a finishing layer. Locked, hidden and zero-opacity passes cannot be sculpted and do not silently create replacement layers.
 
@@ -257,21 +320,21 @@ At the top of the guide library, **Delete selected** immediately removes the sel
 
 While dragging a Cut slice, red segments mark exactly which tips will be discarded, intersection markers locate the new ends, and a count appears beside the line. **Mirror X** includes both sides in the same preview and counts a guide only once. Frozen tip anchors are protected. Release applies the cut; Escape cancels it.
 
-Brush edits are written to the active visible, unlocked Sculpt Layer. If none is usable, the system creates one automatically. Use **+ Sculpt Layer** for separate passes, such as Base Flow, Silhouette, and Flyaways. Layer visibility, lock, opacity, and blend mode are non-destructive controls.
+Brush edits are written to the active visible, unlocked Sculpt Layer. If none is usable, the system creates one automatically. Add separate passes, such as Base Flow, Silhouette, and Flyaways, by right-clicking **Grooming** and choosing **Add > Sculpt Pass**. Layer visibility, lock, opacity, and blend mode are non-destructive controls.
 
 Point edits use the same layer rules as brushes. An active layer completely hidden by an opaque Override layer is replaced as the editing destination by a new top sculpt layer, leaving the protected layers unchanged. Partially overridden layers compensate for their effective opacity so the point does not jump back after release.
 
-### Sculpt-pass and modifier nodes
+### Sculpt passes and modifiers
 
-Select a **Sculpt Pass** under the group's **Grooming** node to edit its name, lock, Active state, opacity and sculpt blend. Use **Edit This Layer** to sculpt at that pass, or **Add Finishing Sculpt Layer** to refine the final result. Select a modifier beneath it to edit only that modifier; select its owning pass in the tree to return to the brush shelf. The Grooming branch itself is a collection, not an implicit sculpt target.
+Select a **Sculpt Pass** under the group's **Grooming** node to edit its name, lock, Active state, opacity and sculpt blend. Use **Edit This Layer** to sculpt at that pass, or **Add Finishing Sculpt Layer** to refine the final result. Select a modifier beneath it to edit only that modifier; select its owning pass in the outliner to return to the brush shelf. The Grooming branch itself is a collection, not an implicit sculpt target.
 
-In **Hair Nodes**, use **+ Sculpt Pass**, then select that pass and choose **+ Modifier**. Modifier nodes retain their individual Active toggles, blend weights, root-to-tip influence, domains, helpers and operation-specific settings. The tree's **Duplicate** copies a pass with independent modifier IDs and influence curves, or copies just the selected modifier. **Remove…** uses a popup and supports Undo. No node deletion removes a shared material or atlas asset.
+In the **Groom Outliner**, right-click a group or **Grooming** and choose **Add > Sculpt Pass**, then right-click that pass and choose **Add > Modifier**. Modifiers keep their individual Active toggles, blend weights, root-to-tip influence, domains, helpers and operation-specific settings. The outliner's **Duplicate** (right-click or **Ctrl/Cmd+D**) copies a pass with independent modifier IDs and influence curves, or copies just the selected modifier. **Remove…** uses a popup and supports Undo. Removing an item never deletes a shared material or atlas asset.
 
 Sculpt passes and their child modifiers evaluate top to bottom. **↑** means earlier; **↓** means later. Dragging only accepts siblings of the same type. Sculpt passes remain the existing serialized sculpt layers; this is not a new procedural graph or a data conversion. A modifier changes accumulated hair at its position in the sequence, not only its parent's painted offsets. Children inherit evaluated guide shapes, then receive child-domain operations.
 
 **Active** bypasses a pass and its modifiers. **Solo (preview only)** isolates that pass for preview without changing release output. **Lock sculpt pass** prevents changes to its sculpting and modifiers. **Opacity** scales sculpt offsets and modifier weights; **Sculpt blend** applies to painted offsets. A disabled or zero-opacity parent still prevents an Active modifier from affecting normal output. Inactive modifiers retain all parameters and can be configured before enabling.
 
-Existing group-level modifiers remain evaluable. If an unorganized modifier branch appears, select it and choose **Organize into a sculpt pass**; this preserves modifier IDs and is undoable. Shared helpers have their own branch. Select a helper to edit it or constrain the current group, then select the resulting constraint under that group's **Constraints** node.
+Existing group-level modifiers remain evaluable. If an unorganized modifier branch appears, select it and choose **Organize into Sculpt Pass** in Properties or its right-click menu; this preserves modifier IDs and is undoable. Shared helpers have their own branch. Select a helper to edit it or constrain the current group, then select the resulting constraint under that group's **Constraints** node.
 
 **Flow Align** rotates each strand segment toward **Source-local direction**, reconstructing the strand from its unchanged root and preserving every input segment length. **Alignment (0–1)** controls the rotation amount, multiplied by Blend weight and the root-to-tip influence curve (sampled at each segment's end). At full alignment, blend and influence, the strand points along the chosen direction; zero alignment, zero blend or a zero direction has no effect. Width and roll are unchanged. Direction is relative to the source mesh, not the Scene camera, and the result follows the character's authoring pose.
 
@@ -317,20 +380,20 @@ Every evaluation starts from the incoming layer shape and simulates the saved du
 
 After upgrading, rebuild and review existing procedural layers: root-moving/stretching effects and double application to children are intentionally corrected. Gravity amount now means seconds, Helper Follow amount now controls follow strength, and Collision/Push Out surface offset now means actual clearance rather than multiplying blend strength. The original guides and sculpt-layer data are not rewritten.
 
-The current group/painting layer is shown above the brushes and in the Scene toolbar. Modifier properties show only the selected operation's type-specific controls, such as amplitude, cycles, phase, scale and root-to-tip influence where supported.
+The current group/painting layer is shown above the brushes and in the Scene status line. Modifier properties show only the selected operation's type-specific controls, such as amplitude, cycles, phase, scale and root-to-tip influence where supported.
 
 For helper-driven placement:
 
-1. Select **Shared Helpers** in Hair Nodes. Use **+ Curve Rail**, **+ Collider**, or assign a **New helper source** and **Bind Scene Object as Curve Rail**. Binding uses the Hierarchy selection if the source field is empty.
-2. Select the helper's tree row and position it with its Scene gizmo; its properties appear in Hair Properties.
-3. Select the desired group's **Constraints** branch and use **+ Constraint to Helper…** in the tree. Alternatively, the helper's tree controls offer **Constrain group: [name]** for the currently active group.
-4. Select the resulting constraint in the tree; adjust its type, weight, Active state and helper binding in Properties. Use **Remove…** in Hair Nodes to remove it, with popup confirmation and Undo.
+1. Right-click **Shared Helpers** in the Groom Outliner and choose **Add > Helper > Curve Rail** or **Collider**, or select a scene object in the Hierarchy and choose **Bind Selected Scene Object … as Curve Rail**.
+2. Select the helper's row in the outliner and position it with its Scene gizmo; its properties appear in Hair Properties.
+3. Right-click the group's **Constraints** row and choose **Add > Constraint to Helper > [helper]**. Or right-click the helper and choose **Constrain Group '[name]' to This Helper** for the active group.
+4. Select the resulting constraint in the outliner; adjust its type, weight, Active state and helper binding in Properties. Use **Remove…** (right-click or **Delete**) in the Groom Outliner to remove it, with popup confirmation and Undo.
 
 ## 5. Build the cards
 
 Select **Hair Cards**.
 
-Select **Hair Cards** to assign a Card Profile, then select its **Geometry & Vertex Colors** child node to adjust shape. New grooms receive a default ribbon profile; **Create Default Ribbon Profile** repairs a missing profile. Textures and UV sets can be configured before adding guides.
+Select **Hair Cards** to assign a Card Profile, then select its **Geometry & Vertex Colors** child to adjust shape. New grooms receive a default ribbon profile; **Create Default Ribbon Profile** repairs a missing profile. Textures and UV sets can be configured before adding guides.
 
 **Use profile sampling** chooses the sampling source for the current LOD. When enabled, each group uses its Card Profile's sample count. Otherwise, edit the active **LOD samples** override. The effective points-per-card count is shown underneath; inactive profile sampling is disabled instead of silently ignored. Existing grooms retain their LOD overrides until you choose profile sampling.
 
@@ -365,7 +428,7 @@ Directly below the pass materials, select a **Shared Color Table**, then a **Sha
 
 Unlike the automatic atlas binding described above, this is an explicit **edit to the assigned materials**, with Undo support: other objects sharing those materials also change. Only specified, supported parameters are copied. Clearing the selector does not reset previous material values; use Undo to revert. **Apply Shared Color Shader Parameters** reapplies the selection after you edit the table. Assigning a different pass material also applies the selected color. Table and entry selection are saved in the Atlas Profile and inherited by new grooms; applied material parameters are saved with the workspace and used by generated/baked hair. Explicit atlas textures still take precedence in the atlas bindings. This is a copy/apply operation, not a live link to the table at runtime.
 
-Each named **UV Set** is a rectangle on the atlas. Everything is edited directly in the **Materials & UVs** node's Properties panel; no additional UV editor popup is needed:
+Each named **UV Set** is a rectangle on the atlas. Everything is edited directly in the **Materials & UVs** item's Properties; no additional UV editor popup is needed:
 
 - **+ Draw Set** or **+ Add Set** starts drawing a new rectangle on the canvas.
 - Select a numbered list entry or canvas outline. Drag the rectangle to move it; drag its four corner handles to resize it. **Redraw** replaces the selected rectangle with a fresh drag.
@@ -415,13 +478,13 @@ Open **Validate & Bake**.
 2. Configure the output folder and asset name.
 3. Choose the Unity Mesh, UMA SlotDataAsset, OverlayDataAsset, Wardrobe Recipe, and library options needed by the project.
 4. Assign the UMA Material, existing Overlay, compatible Race, and Wardrobe Slot when creating those UMA outputs.
-5. Open **Issues (N)** in Hair Nodes and choose an issue's **Select guide** or **Go to setting** action to locate its source in the tree. The validation report stays in Properties without navigation buttons. **Create profile** and **Create atlas** remain scoped, undoable repairs in that report; locked groups are protected.
+5. Open **Issues (N)** on the Groom Outliner toolbar and choose an issue's **Select guide** or **Go to setting** action to select its source in the outliner. The validation report stays in Properties without navigation buttons. **Create profile** and **Create atlas** remain scoped, undoable repairs in that report; locked groups are protected.
 6. Click **Dry Run (all output)** to validate without writing output assets. A settings change marks the previous release report as outdated.
 7. Click **Bake** when validation is clear. Bake always repeats full release validation and stops before writing output if any exported LOD has a blocking error.
 
 **Save** preserves the groom and dirty linked card profiles and atlases, including an atlas/profile edited through the workspace and then unassigned. It does not save unrelated project assets. The header shows unsaved changes, queued saves, or the last save time. Shared profile/atlas edits affect their other users too. Autosave checks every 30 seconds, waits for strokes, gravity holds, UV drags, text editing, and other workspace gestures to finish, and requires a brief idle period. Unchanged assets do not trigger another recovery write. Recovery snapshots live under `Assets/UMAProjectData/HairCards/Recovery`.
 
-The Setup tab exposes the working **Mirror growth paint X** and **Mirror slice cut X** switches. These mirror across source-local X = 0; there is no global comb/Grab symmetry switch. Procedural mirroring is available as a Mirror modifier.
+**Mirror X** on the floating Scene tool toolbar (shortcut **M**) mirrors growth painting and slice cuts across the source mesh's local X = 0 plane; it is available for Paint Growth and Cut, and the Setup tab has the same switch. There is no global comb/Grab symmetry switch. Procedural mirroring is available as a Mirror modifier.
 
 ## Troubleshooting
 
@@ -433,9 +496,9 @@ The Setup tab exposes the working **Mirror growth paint X** and **Mirror slice c
 - Make sure at least one relevant source slot is visible.
 - Look for the translucent blue-to-orange overlay, not a replacement of the character material.
 
-**I changed nodes but it still paints**
+**I selected a different item but it still paints**
 
-This is corrected by scoped workflow tools. Growth uses Paint/Select, Guides uses Select/Place/Draw, Groom uses grooming brushes, and output nodes use Select. If an old stage was already open during a script update, close and reopen the Hair Card Stage once.
+This is corrected by scoped workflow tools. Growth uses Paint/Select, Guides uses Select/Place/Draw, Groom uses grooming brushes, and output items use Select. If an old stage was already open during a script update, close and reopen the Hair Card Stage once.
 
 **Preview generates zero guides**
 
@@ -454,7 +517,7 @@ The generation preview is temporary. Return to Guides and click **2. Accept N as
 - Confirm guides were accepted and the active group is visible, enabled, and unlocked.
 - Move over the displayed guide curve until the brush circle appears. Every spline segment inside the radius contributes influence to its authored controls; a control point does not need to sit inside the circle.
 - Confirm the active Sculpt Layer is visible and unlocked.
-- If the banner says **Final preview**, choose **Edit This Layer** in Hair Nodes, or **Add Finishing Sculpt Layer** to work after the modifiers. The tool will not write final-result strokes underneath an active modifier.
+- If the banner says **Final preview**, choose **Edit This Layer** in the sculpt pass's Properties, or **Add Finishing Sculpt Layer** to work after the modifiers. The tool will not write final-result strokes underneath an active modifier.
 - Increase Radius enough to reach nearby guide points.
 - Drag the mouse; Comb and Grab need movement after the initial click.
 
@@ -479,4 +542,4 @@ The generation preview is temporary. Return to Guides and click **2. Accept N as
 - `Shift` + right-drag: Horizontal movement changes brush radius; vertical movement changes hardness. The outer brush circle and inner falloff circle update live, anchored where the drag began (including the mirrored growth brush).
 - `Alt` + mouse: normal Scene view navigation
 
-Shortcuts can be remapped in Unity's Shortcut Manager. The `?` button in the Hair Groom header opens this guide.
+Shortcuts can be remapped in Unity's Shortcut Manager. **Quick Start Help** in the outliner's **⋮** menu, or **Help** in Hair Preview & Settings, opens this guide.

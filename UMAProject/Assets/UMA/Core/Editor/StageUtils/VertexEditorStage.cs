@@ -17,7 +17,7 @@ using Unity.Burst;
 
 namespace UMA
 {
-    public class VertexEditorStage : PreviewSceneStage
+    public partial class VertexEditorStage : PreviewSceneStage, IUMAEditingStage
     {
         private static bool eventsHooked;
 
@@ -73,6 +73,9 @@ namespace UMA
 
         private void RefreshBakedMeshCaches()
         {
+            // Called after every sculpt sample and from several per-frame paths, so it must
+            // stay cheap: the triangle list comes from the topology cache, and the UI caches
+            // below notice a rebuilt mesh by its reference.
             if (BakedMesh == null)
             {
                 bakedVertices = null;
@@ -83,7 +86,80 @@ namespace UMA
 
             bakedVertices = BakedMesh.vertices;
             bakedNormals = BakedMesh.normals;
-            bakedTriangles = BakedMesh.triangles;
+            bakedTriangles = GetBakedTriangles();
+            SyncEditableWireframeVertices();
+        }
+
+        // ---------------------------------------------------------------
+        // Per-frame caches. The Scene GUI runs several times a frame while the
+        // brush is over the model, so it must not copy the whole baked mesh
+        // or unpack recipes on every event.
+        // ---------------------------------------------------------------
+
+        private Mesh topologyCacheMesh;
+        private int[] topologyCacheTriangles;
+        private int topologyCacheVertexCount;
+        private readonly List<Vector3> hitTestVertices = new List<Vector3>();
+        private readonly List<Vector3> hitTestNormals = new List<Vector3>();
+        private static readonly RaycastHit[] HitTestBuffer = new RaycastHit[32];
+
+        /// <summary>
+        /// The baked mesh's triangle list. Sculpting and painting move vertices but never
+        /// change triangles, and a rebuild creates a new Mesh, so this is copied only when
+        /// the mesh is replaced. Callers must not modify the returned array.
+        /// </summary>
+        private int[] GetBakedTriangles()
+        {
+            if (BakedMesh == null)
+            {
+                return Array.Empty<int>();
+            }
+            int indexCount = 0;
+            for (int i = 0; i < BakedMesh.subMeshCount; i++)
+            {
+                indexCount += (int)BakedMesh.GetIndexCount(i);
+            }
+            if (!ReferenceEquals(topologyCacheMesh, BakedMesh) || topologyCacheTriangles == null ||
+                topologyCacheVertexCount != BakedMesh.vertexCount || topologyCacheTriangles.Length != indexCount)
+            {
+                topologyCacheTriangles = BakedMesh.triangles;
+                topologyCacheMesh = BakedMesh;
+                topologyCacheVertexCount = BakedMesh.vertexCount;
+            }
+            return topologyCacheTriangles;
+        }
+
+        private RaceData baseSlotCacheRace;
+        private UMARecipeBase baseSlotCacheRecipe;
+        private Mesh baseSlotCacheMesh;
+        private readonly Dictionary<SlotDataAsset, bool> baseSlotCache = new Dictionary<SlotDataAsset, bool>();
+
+        /// <summary>
+        /// True when the slot is part of the active race's base recipe. Checking means
+        /// unpacking the base recipe, so the answer is cached per slot asset until the
+        /// race, its base recipe or the baked mesh changes.
+        /// </summary>
+        private bool IsBaseSculptSlot(SlotData slot)
+        {
+            RaceData race = thisDCA != null && thisDCA.activeRace != null ? thisDCA.activeRace.data : null;
+            if (slot == null || slot.asset == null || race == null)
+            {
+                return false;
+            }
+            if (!ReferenceEquals(race, baseSlotCacheRace) || !ReferenceEquals(race.baseRaceRecipe, baseSlotCacheRecipe) ||
+                !ReferenceEquals(BakedMesh, baseSlotCacheMesh))
+            {
+                baseSlotCache.Clear();
+                baseSlotCacheRace = race;
+                baseSlotCacheRecipe = race.baseRaceRecipe;
+                baseSlotCacheMesh = BakedMesh;
+            }
+            if (!baseSlotCache.TryGetValue(slot.asset, out bool isBase))
+            {
+                isBase = RaceBaseRecipeContainsSlot(race, slot.asset);
+                baseSlotCache[slot.asset] = isBase;
+            }
+            return isBase;
         }
 
         // Edit Options
@@ -140,7 +216,7 @@ namespace UMA
         enum SelectionBrushShape { Point, Circle };
 
         private enum SceneToolMode { Select, SelectionBrush, Sculpt, VertexPaint }
-        private enum TouchupWeightTool { Select, Paint }
+        private enum TouchupWeightTool { Select, Paint, Pose }
         private enum TouchupWeightPaintMode { Replace, Add, Remove, Smooth, Smear }
 
         [Serializable]
@@ -156,7 +232,7 @@ namespace UMA
             public int vertexIndex;
             public List<TouchupUndoBoneWeight> weights = new List<TouchupUndoBoneWeight>();
         }
-        private enum SculptTool { Add, Remove, Smooth, Grab, Crease, Pinch, Plane, Boundary, ElasticDeform }
+        private enum SculptTool { Add, Remove, Smooth, Grab, Crease, Pinch, Plane, Boundary, ElasticDeform, Heal }
         private enum SculptPlaneMode { Flatten, Fill, Scrape }
         private enum SculptBoundaryMode { Grab, Bend, Expand, Inflate, Twist, Smooth }
         private enum SculptElasticMode { Grab, Scale, Twist }
@@ -165,6 +241,8 @@ namespace UMA
         private enum AutosculptAxis { X, Y, Z }
         private enum VertexPaintTool { Paint, Erase, Smear, Blur, Burn, Dodge, Noise, Clear, Smooth }
         private enum VertexPaintBrushShape { Circle, Square, Bitmap }
+        /// <summary>How the Paint brush combines the brush color with the color under it.</summary>
+        private enum VertexPaintBlend { Replace, Multiply }
 
         private sealed class SculptSlotEditState
         {
@@ -215,17 +293,15 @@ namespace UMA
         [SerializeField] private float sculptElasticVolumePreservation = 0.65f;
         [SerializeField] private bool sculptSymmetryX = false;
         [SerializeField] private bool sculptConnectedOnly = false;
-        [SerializeField] private bool sculptUpdateNormalsWhileSculpting = false;
+        [SerializeField] private bool sculptUpdateNormalsWhileSculpting = true;
         [SerializeField] private AnimationCurve sculptCustomFalloff = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
-        [SerializeField] private int sculptSlotIndex = 0;
-        [SerializeField] private bool sculptDefaultSlotChosen = false;
         [SerializeField] private string sculptModifierName = string.Empty;
         [SerializeField] private string sculptBlendshapeName = string.Empty;
         [SerializeField] private string sculptBlendshapeStatusMessage = string.Empty;
         [SerializeField] private MessageType sculptBlendshapeStatusType = MessageType.Info;
         [SerializeField] private string sculptNewSlotName = string.Empty;
+        // The editable slots (from the Slots panel) that sculpting can target.
         private readonly List<SlotData> sculptSlots = new List<SlotData>();
-        private readonly List<string> sculptSlotNames = new List<string>();
         private readonly Dictionary<SlotData, SculptSlotEditState> sculptSlotStates = new Dictionary<SlotData, SculptSlotEditState>();
         private readonly Dictionary<int, List<SculptSeamVertex>> sculptCrossSlotSeams = new Dictionary<int, List<SculptSeamVertex>>();
         private readonly List<List<SculptSeamVertex>> sculptCrossSlotSeamGroups = new List<List<SculptSeamVertex>>();
@@ -276,6 +352,7 @@ namespace UMA
         [SerializeField] private VertexPaintTool vertexPaintTool = VertexPaintTool.Paint;
         [SerializeField] private VertexPaintBrushShape vertexPaintBrushShape = VertexPaintBrushShape.Circle;
         [SerializeField] private Color vertexPaintBrushColor = new Color(0.8f, 0.25f, 0.2f, 1f);
+        [SerializeField] private VertexPaintBlend vertexPaintBlend = VertexPaintBlend.Replace;
         [SerializeField] private float vertexPaintRadius = 0.05f;
         [SerializeField] private float vertexPaintStrengthPercent = 35f;
         [SerializeField] private SculptFalloff vertexPaintFalloff = SculptFalloff.Smooth;
@@ -288,13 +365,27 @@ namespace UMA
         [SerializeField] private float vertexPaintNoiseScale = 12f;
         [SerializeField] private float vertexPaintNoiseAmount = 0.15f;
         [SerializeField] private int vertexPaintNoiseSeed;
+        [SerializeField] private VertexPaintNoiseType vertexPaintNoiseType = VertexPaintNoiseType.PerVertex;
+        [SerializeField] private bool vertexPaintNoiseColor = false;
+        [SerializeField] private bool vertexPaintNoiseRepeat = false;
+        private const float VertexPaintNoiseBrushGain = 2f;
+        // The seed the current stroke uses: Noise Seed when repeating, otherwise a new
+        // random value per mouse stroke (kept when the stroke moves onto another slot).
+        private int vertexPaintNoiseStrokeSeed;
+        private readonly System.Random vertexPaintNoiseRandom = new System.Random();
+
+        private enum VertexPaintNoiseType
+        {
+            /// <summary>Each vertex gets its own pseudo-random offset (grain).</summary>
+            PerVertex,
+            /// <summary>Smooth Perlin noise across the surface; Noise Scale sets the feature size.</summary>
+            Smooth,
+        }
         [SerializeField] private bool vertexPaintAffectAlpha = true;
         [SerializeField] private bool vertexPaintSymmetryX = false;
-        [SerializeField] private int vertexPaintSlotIndex;
-        [SerializeField] private bool vertexPaintDefaultSlotChosen;
         [SerializeField] private string vertexPaintModifierName = string.Empty;
+        // The editable slots (from the Slots panel) that vertex painting can target.
         private readonly List<SlotData> vertexPaintSlots = new List<SlotData>();
-        private readonly List<string> vertexPaintSlotNames = new List<string>();
         private SlotData vertexPaintSlot;
         private int vertexPaintSlotStart = -1;
         private int vertexPaintSlotVertexCount;
@@ -323,15 +414,149 @@ namespace UMA
         private Texture2D vertexPaintCachedBrushSource;
         private Material vertexColorPreviewMaterial;
 
-        private const int SculptSlotSpecialOptionCount = 2;
-        private bool IsSculptAllSlotsMode => sculptSlotIndex == 0;
-        private bool IsSculptAllNonBaseSlotsMode => sculptSlotIndex == 1;
-        private bool IsSculptMultiSlotMode => IsSculptAllSlotsMode || IsSculptAllNonBaseSlotsMode;
-        private bool IsVertexPaintAllSlotsMode => vertexPaintSlotIndex == 0;
+        // More than one editable slot: each stroke targets the editable slot under the pointer.
+        // Exactly one (a "solo" slot): that slot is edited, and it can be saved into its SlotDataAsset.
+        private bool IsSculptMultiSlotMode => sculptSlots.Count > 1;
+        private bool IsVertexPaintAllSlotsMode => vertexPaintSlots.Count > 1;
 
-        string[] selectFrom = new string[] { "All Slots" };
-        int selectionSlot = 0; // 0 is all slots
-        string[] visibleSelectFrom = new string[] { "All Slots" };
+        // ---- Slot targeting -------------------------------------------------
+        // One list (the Slots panel) decides which slots every tool may edit.
+        [SerializeField] private VertexStageSlotTargets slotTargets = new VertexStageSlotTargets();
+        [SerializeField] private bool showSlotsPanelWearables = true;
+        // Matches VertexStageSlotTargets' initial Version, so opening the stage does not
+        // count as a change.
+        private int appliedSlotTargetsVersion = 0;
+
+        private SlotData[] RecipeSlots =>
+            thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null &&
+            thisDCA.umaData.umaRecipe.slotDataList != null
+                ? thisDCA.umaData.umaRecipe.slotDataList
+                : Array.Empty<SlotData>();
+
+        /// <summary>
+        /// True when tools may edit this slot: it is visible, has mesh data, is not a
+        /// utility slot, and is not locked in the Slots panel. Weight touchup always
+        /// edits only its own slot.
+        /// </summary>
+        private bool IsSlotEditable(SlotData slot)
+        {
+            if (slot == null)
+            {
+                return false;
+            }
+            if (touchupWeightsMode)
+            {
+                return touchupWeightSlot != null &&
+                       (ReferenceEquals(slot, touchupWeightSlot) ||
+                        string.Equals(slot.slotName, touchupWeightSlot.slotName, StringComparison.Ordinal));
+            }
+            return slotTargets.IsEditable(slot, IsSelectableSlot);
+        }
+
+        /// <summary>Editable slots, in recipe order.</summary>
+        private List<SlotData> GetEditableSlots()
+        {
+            var result = new List<SlotData>();
+            foreach (SlotData slot in RecipeSlots)
+            {
+                if (IsSlotEditable(slot)) result.Add(slot);
+            }
+            return result;
+        }
+
+        /// <summary>Visible slots that could be edited (whether or not they are locked).</summary>
+        private List<SlotData> GetSelectableSlots()
+        {
+            var result = new List<SlotData>();
+            foreach (SlotData slot in RecipeSlots)
+            {
+                if (IsSelectableSlot(slot)) result.Add(slot);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Brings every tool in line with the Slots panel after the user changes
+        /// which slots are editable. Edits already made to a slot that is now locked
+        /// are kept and still saved.
+        /// </summary>
+        private void ApplySlotTargetChanges()
+        {
+            if (appliedSlotTargetsVersion == slotTargets.Version)
+            {
+                return;
+            }
+            appliedSlotTargetsVersion = slotTargets.Version;
+            CancelInteraction();
+            EndSculptStroke(true);
+            EndVertexPaintStroke(true);
+            ClearCrossSlotSculptSeams();
+            RefreshVisibleSlotLists();
+            if (sceneToolMode == SceneToolMode.Sculpt)
+            {
+                EnsureSculptSession(true);
+            }
+            else if (sceneToolMode == SceneToolMode.VertexPaint)
+            {
+                EnsureVertexPaintSession(true);
+            }
+            RepaintLinkedEditors();
+            SceneView.RepaintAll();
+        }
+
+        /// <summary>
+        /// One line, shared by every tool, saying which slots it will edit, with a
+        /// button that frames them. Returns false when nothing is editable.
+        /// </summary>
+        private bool DrawEditTargetSummary(string singleSlotHint)
+        {
+            List<SlotData> editable = GetEditableSlots();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Editing", GUILayout.Width(ToolLabelWidth));
+            string text;
+            string tooltip;
+            if (editable.Count == 0)
+            {
+                text = "No slots";
+                tooltip = "Tick Edit next to a slot in the Slots panel.";
+            }
+            else if (editable.Count == 1)
+            {
+                text = editable[0].slotName;
+                tooltip = "Only this slot is editable.";
+            }
+            else
+            {
+                text = editable.Count + " slots";
+                var names = new List<string>(editable.Count);
+                foreach (SlotData slot in editable) names.Add(slot.slotName);
+                tooltip = string.Join("\n", names);
+            }
+            GUILayout.Label(new GUIContent(text, tooltip), EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(editable.Count == 0))
+            {
+                if (GUILayout.Button(new GUIContent("\u25CE", "Frame the editable slots in the Scene view."), EditorStyles.miniButton, GUILayout.Width(26)))
+                {
+                    FrameAllEditableSlots();
+                }
+            }
+            GUILayout.EndHorizontal();
+
+            if (editable.Count == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    touchupWeightsMode
+                        ? "No slot is selected for weight touchup."
+                        : "No slot is editable. Tick Edit next to a slot in the Slots panel.",
+                    MessageType.Warning);
+                return false;
+            }
+            if (editable.Count > 1 && !string.IsNullOrEmpty(singleSlotHint))
+            {
+                EditorGUILayout.LabelField(singleSlotHint, HelpBoxStyle ?? EditorStyles.wordWrappedMiniLabel);
+            }
+            return true;
+        }
 
         private enum RaycastSelectDirection
         {
@@ -350,6 +575,7 @@ namespace UMA
         private bool showRaycastSelection = false;
         [SerializeField]
         private int raycastSelectionSlot = 0;
+        private string[] visibleSelectFrom = new string[] { "Choose slot..." };
         [SerializeField]
         private RaycastSelectDirection raycastDirection = RaycastSelectDirection.Outward;
         [SerializeField]
@@ -538,7 +764,7 @@ namespace UMA
             }
 
             int triBase = triangleIndex * 3;
-            var tris = BakedMesh.triangles;
+            int[] tris = GetBakedTriangles();
             if (triBase + 2 >= tris.Length)
             {
                 return null;
@@ -797,15 +1023,15 @@ namespace UMA
             if (raycastSelectionSlot <= 0 || raycastSelectionSlot >= visibleSelectFrom.Length)
             {
                 raycastStatusType = MessageType.Info;
-                raycastStatusMessage = "Select a visible slot to raycast from.";
+                raycastStatusMessage = "Choose an editable slot to cast from.";
                 return;
             }
 
             SlotData sourceSlot = thisDCA.umaData.umaRecipe.GetSlot(visibleSelectFrom[raycastSelectionSlot]);
-            if (sourceSlot == null || !IsSelectableSlot(sourceSlot))
+            if (sourceSlot == null || !IsSlotEditable(sourceSlot))
             {
                 raycastStatusType = MessageType.Warning;
-                raycastStatusMessage = "Raycast skipped: source slot is not selectable.";
+                raycastStatusMessage = "Raycast skipped: the source slot is not editable.";
                 return;
             }
 
@@ -1671,18 +1897,6 @@ namespace UMA
             touchupSkinningPositionOffsets.Clear();
             ResetTouchupPaintData();
             RefreshVisibleSlotLists();
-            selectionSlot = 0;
-            if (slot != null)
-            {
-                for (int i = 1; i < selectFrom.Length; i++)
-                {
-                    if (string.Equals(selectFrom[i], slot.slotName, StringComparison.Ordinal))
-                    {
-                        selectionSlot = i;
-                        break;
-                    }
-                }
-            }
 
             touchupWeightBoneHash = FindDominantTouchupBoneHash(slot);
             EnsureTouchupPaintData(out _);
@@ -2075,6 +2289,7 @@ namespace UMA
             touchupAssetWeights = null;
             touchupWorkingWeights = null;
             touchupConnectedVertices = null;
+            touchupBuddies = null;
             touchupCrossSlotMaskedVertices = null;
             touchupDisplayColors = null;
             touchupPaintStrokeWeights.Clear();
@@ -2145,6 +2360,8 @@ namespace UMA
             }
 
             touchupConnectedVertices = BuildTouchupConnectedVertices(meshData);
+            // Vertices that are one point of the surface are weighted as one.
+            BuildTouchupBuddies(meshData);
             touchupCrossSlotMaskedVertices = BuildTouchupCrossSlotVertexMask();
             return true;
         }
@@ -2495,6 +2712,7 @@ namespace UMA
                 touchupWorkingWeights[vertexIndex] = paintedWeights;
                 touchupPaintStrokeWeights[vertexIndex] = CloneBoneWeightList(paintedWeights);
                 changedVertices.Add(vertexIndex);
+                ApplyTouchupPaintToBuddies(vertexIndex, paintedWeights, changedVertices);
             }
 
             if (changedVertices.Count == 0)
@@ -2801,6 +3019,7 @@ namespace UMA
                 }
                 targetVertices.Add(vertexIndex);
             }
+            AddTouchupBuddies(targetVertices);
 
             // Calculate the complete batch before changing touchupWorkingWeights so every
             // result is sampled from the same pre-operation state.
@@ -5730,6 +5949,10 @@ namespace UMA
             SceneManager.MoveGameObjectToScene(cameraAnchor, scene);
             Tools.hidden = true;
             SceneView.duringSceneGui += OnSceneGUI;
+            Undo.undoRedoPerformed -= OnSculptMaskUndoRedo;
+            Undo.undoRedoPerformed += OnSculptMaskUndoRedo;
+            AssemblyReloadEvents.beforeAssemblyReload -= ReleaseSculptMaskResources;
+            AssemblyReloadEvents.beforeAssemblyReload += ReleaseSculptMaskResources;
             NeedsCameraSetup = true;
             // The caller generates the UMA synchronously before opening this stage.
             // Do not regenerate here: editor-time DCA generation destroys and replaces
@@ -5740,6 +5963,7 @@ namespace UMA
             {
                 InitializeTouchupWeights();
             }
+            ProcessPendingBlendshapeEdit();
 
             return true;
         }
@@ -5773,12 +5997,45 @@ namespace UMA
         protected override void OnCloseStage()
         {
             closing = true;
+            // These three must happen whatever else goes wrong. A stage that stops half way through
+            // closing leaves its panels drawing over the main Scene view, Unity's transform tools
+            // hidden, and its preview scene behind.
+            SceneView.duringSceneGui -= OnSceneGUI;
+            Tools.hidden = false;
+            try
+            {
+                CloseStageResources();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+            finally
+            {
+                base.OnCloseStage();
+            }
+        }
+
+        private void CloseStageResources()
+        {
             Undo.undoRedoPerformed -= OnTouchupWeightUndoRedo;
+            Undo.undoRedoPerformed -= OnSculptMaskUndoRedo;
+            AssemblyReloadEvents.beforeAssemblyReload -= ReleaseSculptMaskResources;
+            ReleaseSculptMaskResources();
+            DestroyEditableWireframe();
+            DestroyTemporaryTPose();
+            DestroyTouchupPoseResources();
             EditorApplication.update -= OnTouchupLiveUpdate;
             EndSculptStroke(true);
             EndVertexPaintStroke(true);
+            // The baked mesh goes with the stage; an edit that was not saved goes with it.
+            editRestVertices = null;
+            editBlendshapeName = string.Empty;
+            editSlots.Clear();
+            unsavedShapes.Clear();
+            bakedSkin = null;
             if (thisDCA != null && thisDCA.umaData != null)
-                thisDCA.umaData.CharacterUpdated.RemoveAction(BuildCollisionMesh);
+                thisDCA.umaData.OnCharacterUpdated -= BuildCollisionMesh;
             Tools.hidden = false;
             if (VertexObject != null)
             {
@@ -5805,7 +6062,10 @@ namespace UMA
                 {
                     wearable.disabled = false;
                 }
-                thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
+                if (thisDCA.umaData != null)
+                {
+                    thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
+                }
                 if (!ownsSlotWeightPreviewAvatar && thisDCA.editorTimeGeneration)
                 {
                     thisDCA.ignoreMeshHideAssets = false;
@@ -5835,6 +6095,7 @@ namespace UMA
                 DestroyImmediate(vertexMesh);
             }
             DestroyVertexPaintBrushCache();
+            DestroyHairRootToTipResources();
             if (vertexColorPreviewMaterial != null)
             {
                 DestroyImmediate(vertexColorPreviewMaterial);
@@ -5842,11 +6103,10 @@ namespace UMA
             }
             DestroyPastelVertexMaterials();
             DestroyOriginalVertexMaterialCopies();
-            if (ownsSlotWeightPreviewAvatar && thisDCA != null && thisDCA.gameObject != null)
+            if ((ownsSlotWeightPreviewAvatar || ownsTemporaryCharacter) && thisDCA != null && thisDCA.gameObject != null)
             {
                 DestroyImmediate(thisDCA.gameObject);
             }
-            base.OnCloseStage();
         }
 
         private void OnTouchupWeightUndoRedo()
@@ -5956,15 +6216,51 @@ namespace UMA
             {
                 SceneView.RepaintAll();
             }
-            AdjustWindowRects();
+            AdjustWindowRects(view);
+            if (Event.current.type == EventType.Layout)
+            {
+                UpdateEditableWireframe();
+            }
+            if (!ShowSculptToolbar)
+            {
+                // The mask wash belongs to Sculpt; hide it in the other tools.
+                SetSculptMaskOverlayVisible(false);
+            }
             DoSceneGUI(view);
         }
 
         public void AdjustWindowRects()
         {
-         Rect r = SceneView.lastActiveSceneView.position;
+            AdjustWindowRects(null);
+        }
+
+        /// <summary>
+        /// Lays out the left panel and the floating toolbar inside the area the Scene
+        /// camera draws into. Docked overlay toolbars (for example the one along the top)
+        /// take space from the Scene view window, so the window size is too tall.
+        /// </summary>
+        private void AdjustWindowRects(SceneView view)
+        {
+            if (view == null) view = openedSceneView != null ? openedSceneView : SceneView.lastActiveSceneView;
+            if (view == null) return;
+            Rect r = GetSceneViewportRect(view);
             float panelWidth = Mathf.Clamp(r.width * 0.33f, LeftPanelWidthMin, LeftPanelWidthMax);
             leftPanelRect = new Rect(LeftPanelPadding, LeftPanelPadding, panelWidth, r.height - (LeftPanelPadding * 2f));
+            LayoutStageToolbar(r);
+        }
+
+        /// <summary>
+        /// The Scene view's camera area in GUI points, with the origin at its top-left
+        /// (the origin Handles.BeginGUI uses). Falls back to the whole window.
+        /// </summary>
+        private static Rect GetSceneViewportRect(SceneView view)
+        {
+            Rect viewport = view.cameraViewport;
+            if (viewport.width > 1f && viewport.height > 1f)
+            {
+                return new Rect(0f, 0f, viewport.width, viewport.height);
+            }
+            return new Rect(0f, 0f, view.position.width, view.position.height);
         }
 
         Quaternion test = Quaternion.identity;
@@ -5974,7 +6270,8 @@ namespace UMA
 
             Event currentEvent = Event.current;
             Vector2 mousePos = currentEvent.mousePosition;
-         bool mouseOverAnyWindow = leftPanelRect.Contains(mousePos);
+            bool mouseOverAnyWindow = leftPanelRect.Contains(mousePos) ||
+                (ShowStageToolbar && StageToolbar.Contains(mousePos));
             // Let SceneView handle built-in focus shortcut (F) when the cursor is not over our UI.
             if (!mouseOverAnyWindow && currentEvent.type == EventType.KeyDown && currentEvent.keyCode == KeyCode.F)
             {
@@ -5993,6 +6290,20 @@ namespace UMA
                 HandleVertexPaintSceneGUI(sceneView, currentEvent, mouseOverAnyWindow);
                 DrawGUIWindows(sceneView);
                 return;
+            }
+            if (touchupWeightsMode && touchupWeightTool == TouchupWeightTool.Pose)
+            {
+                HandleTouchupPoseSceneGUI(sceneView, currentEvent, mouseOverAnyWindow);
+                DrawGUIWindows(sceneView);
+                return;
+            }
+            if (touchupWeightsMode && currentEvent.type == EventType.Repaint)
+            {
+                LoadTouchupPosePrefs();
+                if (touchupShowBones)
+                {
+                    DrawTouchupSkeleton(TouchupPoseRenderer, false);
+                }
             }
             if (!rectSelect && Event.current.alt)
             {
@@ -6239,13 +6550,7 @@ namespace UMA
             if (!touchupWeightsMode && isEditing)
             {
                 Rect topCenter = new Rect(0, 25, sceneView.position.width, 20);
-                GUI.Label(topCenter, "** Edit Mode **", centeredLabel);
-            }
-            else if (!touchupWeightsMode)
-            {
-                Rect topCenter = new Rect(0, 25, sceneView.position.width, 20);
-                string modeText = currentDefineMode == DefineMode.DefineVertexSet ? "** Define Vertex Set Mode **" : "** Define Vertex State Mode **";
-                GUI.Label(topCenter, modeText, centeredLabel);
+                GUI.Label(topCenter, "Edit Mode", centeredLabel);
             }
 
 
@@ -6262,6 +6567,8 @@ namespace UMA
             {
                 if (selectionBrushing)
                 {
+                    // Constant application: the Smooth weight brush may work the same vertices again.
+                    PrepareTouchupConstantSmooth();
                     ApplySelectionBrush(currentEvent);
                 }
                 SceneView.RepaintAll();
@@ -6288,8 +6595,15 @@ namespace UMA
                     TryGetSculptHit(currentEvent.mousePosition, out sculptHoverPoint, out sculptHoverNormal, out sculptHoverTangent);
                 currentHitValid = sculptHoverValid;
             }
-            if (wasSculpting && !sculpting && sculptHoverValid && currentEvent.type == EventType.MouseDrag && currentEvent.button == 0)
+            if (currentEvent.rawType == EventType.MouseUp || currentEvent.type == EventType.MouseDown ||
+                currentEvent.type == EventType.MouseLeaveWindow)
             {
+                sculptResumeAfterSlotSwitch = false;
+            }
+            if ((wasSculpting || sculptResumeAfterSlotSwitch) && !sculpting && sculptHoverValid &&
+                currentEvent.type == EventType.MouseDrag && currentEvent.button == 0)
+            {
+                sculptResumeAfterSlotSwitch = false;
                 BeginSculptStroke();
             }
             if (currentEvent.type == EventType.Repaint)
@@ -6334,6 +6648,12 @@ namespace UMA
             {
                 EndSculptStroke(true);
             }
+            else if (currentEvent.type == EventType.Layout && sculpting && currentHitValid)
+            {
+                // The view repaints continuously during a stroke, so this runs every frame while the
+                // button is held, whether or not the pointer moves.
+                ApplyConstantSculptIfDue();
+            }
             if (sculpting || sculptHoverValid) sceneView.Repaint();
         }
 
@@ -6343,7 +6663,7 @@ namespace UMA
             sculptHoverConnectedComponent = -1;
             if (sculptSlot == null || VertexObject == null || BakedMesh == null || !phyScene.IsValid()) return false;
             Ray ray = HandleUtility.GUIPointToWorldRay(guiPoint);
-            RaycastHit[] hits = new RaycastHit[32];
+            RaycastHit[] hits = HitTestBuffer;
             int count = phyScene.Raycast(ray.origin, ray.direction, hits, 10000f);
             Array.Sort(hits, 0, count, RaycastHitDistanceComparer.Instance);
             for (int i = 0; i < count; i++)
@@ -6356,14 +6676,21 @@ namespace UMA
                 if (!IsSculptMultiSlotMode && (sculptSlot == null || hitSlot.slotName != sculptSlot.slotName)) continue;
                 if (IsSculptMultiSlotMode && !ReferenceEquals(hitSlot, sculptSlot))
                 {
+                    // The switch can be seen during a Layout or Repaint event, not just a drag,
+                    // so remember that a held stroke must resume on the new slot.
+                    if (sculpting) sculptResumeAfterSlotSwitch = true;
                     EndSculptStroke(true);
                     ActivateSculptSlot(hitSlot);
                 }
                 if (sculptSlot == null || sculptOriginalVertices == null) continue;
                 point = hit.point;
                 Vector3 localPoint = VertexObject.transform.InverseTransformPoint(point);
-                Vector3[] vertices = BakedMesh.vertices;
-                Vector3[] normals = BakedMesh.normals;
+                List<Vector3> vertices = hitTestVertices;
+                List<Vector3> normals = hitTestNormals;
+                BakedMesh.GetVertices(vertices);
+                BakedMesh.GetNormals(normals);
+                if (sculptSlotStart < 0 || sculptSlotStart + sculptSlotVertexCount > vertices.Count ||
+                    sculptSlotStart + sculptSlotVertexCount > normals.Count) continue;
                 Vector3 average = Vector3.zero; float total = 0f;
                 for (int v = 0; v < sculptSlotVertexCount; v++)
                 {
@@ -6374,14 +6701,14 @@ namespace UMA
                 }
                 Vector3 localNormal = total > 1e-6f ? (average / total).normalized : VertexObject.transform.InverseTransformDirection(hit.normal).normalized;
                 normal = VertexObject.transform.TransformDirection(localNormal).normalized;
-                int[] tris = BakedMesh.triangles; int ti = hit.triangleIndex * 3;
+                int[] tris = GetBakedTriangles(); int ti = hit.triangleIndex * 3;
                 if (ti >= 0 && ti < tris.Length)
                 {
                     int localHitVertex = tris[ti] - sculptSlotStart;
                     if (sculptConnectedComponents != null && localHitVertex >= 0 && localHitVertex < sculptConnectedComponents.Length)
                         sculptHoverConnectedComponent = sculptConnectedComponents[localHitVertex];
                 }
-                Vector3 edge = ti + 1 < tris.Length ? vertices[tris[ti + 1]] - vertices[tris[ti]] : Vector3.right;
+                Vector3 edge = ti >= 0 && ti + 1 < tris.Length ? vertices[tris[ti + 1]] - vertices[tris[ti]] : Vector3.right;
                 Vector3 worldEdge = VertexObject.transform.TransformVector(edge);
                 tangent = Vector3.ProjectOnPlane(worldEdge, normal).normalized;
                 if (tangent.sqrMagnitude < 1e-6f) tangent = Vector3.ProjectOnPlane(sculptHoverTangent, normal).normalized;
@@ -6455,7 +6782,289 @@ namespace UMA
             Handles.DrawAAPolyLine(3.5f, point, point + normal * sculptRadius * .45f);
         }
 
+        // ---------------------------------------------------------------
+        // Sculpt mask display: a soft colored wash over every masked slot,
+        // like the Overlay Painter's selection, instead of per-vertex dots.
+        // ---------------------------------------------------------------
+
+        private const string SculptMaskColorPref = "UMA.VertexEditorStage.SculptMaskColor.v2";
+        private const string SculptMaskShowPref = "UMA.VertexEditorStage.SculptMaskShow";
+        private static readonly int SculptMaskBufferId = Shader.PropertyToID("_SculptMask");
+        private static readonly int SculptMaskCountId = Shader.PropertyToID("_SculptMaskCount");
+        private static readonly int SculptMaskColorId = Shader.PropertyToID("_Color");
+        private static readonly Color DefaultSculptMaskColor = new Color(0.04f, 0.12f, 0.55f, 0.75f);
+
+        private Color sculptMaskColor = DefaultSculptMaskColor;
+        private bool sculptShowMask = true;
+        private bool sculptMaskPrefsLoaded;
+        private Material sculptMaskMaterial;
+        private GraphicsBuffer sculptMaskBuffer;
+        private float[] sculptMaskValues;
+        private bool sculptMaskDirty = true;
+        private bool sculptMaskHasAny;
+        private double sculptMaskNextRefresh;
+
+        private void LoadSculptMaskPrefs()
+        {
+            if (sculptMaskPrefsLoaded) return;
+            sculptMaskPrefsLoaded = true;
+            sculptShowMask = EditorPrefs.GetBool(SculptMaskShowPref, true);
+            if (ColorUtility.TryParseHtmlString("#" + EditorPrefs.GetString(SculptMaskColorPref, string.Empty), out Color saved))
+            {
+                sculptMaskColor = saved;
+            }
+        }
+
+        private void SaveSculptMaskPrefs()
+        {
+            EditorPrefs.SetBool(SculptMaskShowPref, sculptShowMask);
+            EditorPrefs.SetString(SculptMaskColorPref, ColorUtility.ToHtmlStringRGBA(sculptMaskColor));
+        }
+
+        /// <summary>The mask array the tools read for a slot: the live array for the active slot.</summary>
+        private float[] GetSculptStateMask(SculptSlotEditState state)
+        {
+            if (state == null) return null;
+            if (ReferenceEquals(state, activeSculptState) && sculptMask != null && sculptMask.Length == state.count)
+            {
+                return sculptMask;
+            }
+            if (state.mask == null || state.mask.Length != state.count)
+            {
+                state.mask = new float[state.count];
+            }
+            return state.mask;
+        }
+
+        /// <summary>Removes the mask from every slot.</summary>
+        private void ClearAllSculptMasks()
+        {
+            foreach (SculptSlotEditState state in sculptSlotStates.Values)
+            {
+                float[] mask = GetSculptStateMask(state);
+                if (mask != null) Array.Clear(mask, 0, mask.Length);
+            }
+            if (sculptMask != null) Array.Clear(sculptMask, 0, sculptMask.Length);
+            sculptMaskDirty = true;
+            SceneView.RepaintAll();
+        }
+
+        /// <summary>Inverts the mask on every editable slot.</summary>
+        private void InvertEditableSculptMasks()
+        {
+            foreach (SlotData slot in sculptSlots)
+            {
+                float[] mask = GetSculptStateMask(GetOrCreateSculptSlotState(slot));
+                if (mask == null) continue;
+                for (int i = 0; i < mask.Length; i++) mask[i] = 1f - mask[i];
+            }
+            sculptMaskDirty = true;
+            SceneView.RepaintAll();
+        }
+
+        private void OnSculptMaskUndoRedo()
+        {
+            // Undo restores the serialized active mask as a new array; keep the slot's state on it.
+            if (activeSculptState != null && sculptMask != null && sculptMask.Length == activeSculptState.count)
+            {
+                activeSculptState.mask = sculptMask;
+            }
+            sculptMaskDirty = true;
+            // Undo can also restore or remove sculpted vertex positions.
+            sculptChangesUiDirty = true;
+            if (!closing && BakedMesh != null)
+            {
+                // Undo put the stroke's vertices and normals back on the mesh itself. The copies the
+                // brush reads, and the collider it is aimed with, still show the stroke.
+                ReuploadBakedMeshAfterUndo();
+                BakedMesh.RecalculateBounds();
+                RefreshBakedMeshCaches();
+                RefreshSculptCollider();
+                RepaintLinkedEditors();
+                SceneView.RepaintAll();
+            }
+        }
+
+        /// <summary>
+        /// Undo restores the mesh's data but leaves the copy the graphics card draws as it was, so the
+        /// Scene view kept showing the undone stroke until the next one. Setting the channels again
+        /// sends the restored data to be drawn.
+        /// </summary>
+        private void ReuploadBakedMeshAfterUndo()
+        {
+            int count = BakedMesh.vertexCount;
+            Vector3[] vertices = BakedMesh.vertices;
+            Vector3[] normals = BakedMesh.normals;
+            Vector4[] tangents = BakedMesh.tangents;
+            Color[] colors = BakedMesh.colors;
+            BakedMesh.vertices = vertices;
+            if (normals != null && normals.Length == count) BakedMesh.normals = normals;
+            if (tangents != null && tangents.Length == count) BakedMesh.tangents = tangents;
+            if (colors != null && colors.Length == count) BakedMesh.colors = colors;
+            BakedMesh.UploadMeshData(false);
+        }
+
+        private void ReleaseSculptMaskResources()
+        {
+            // Also runs before scripts reload: the character must not be left in a Touchup Weights pose.
+            RestoreTouchupPoseBones();
+            DestroySculptMaskOverlay();
+            if (sculptMaskBuffer != null)
+            {
+                sculptMaskBuffer.Release();
+                sculptMaskBuffer = null;
+            }
+            if (sculptMaskMaterial != null)
+            {
+                DestroyImmediate(sculptMaskMaterial);
+                sculptMaskMaterial = null;
+            }
+            sculptMaskValues = null;
+            sculptMaskDirty = true;
+        }
+
+        /// <summary>
+        /// Fills the per-vertex mask buffer from every slot's mask. Rebuilt when a mask
+        /// changes, and at most twice a second otherwise as a safety net.
+        /// </summary>
+        private bool UpdateSculptMaskBuffer()
+        {
+            int count = BakedMesh.vertexCount;
+            if (count <= 0) return false;
+            if (sculptMaskBuffer == null || sculptMaskBuffer.count != count || sculptMaskValues == null || sculptMaskValues.Length != count)
+            {
+                if (sculptMaskBuffer != null) sculptMaskBuffer.Release();
+                sculptMaskBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, count, sizeof(float));
+                sculptMaskValues = new float[count];
+                sculptMaskDirty = true;
+            }
+            if (!sculptMaskDirty && EditorApplication.timeSinceStartup < sculptMaskNextRefresh)
+            {
+                return sculptMaskHasAny;
+            }
+
+            Array.Clear(sculptMaskValues, 0, count);
+            bool any = false;
+            foreach (SculptSlotEditState state in sculptSlotStates.Values)
+            {
+                float[] mask = GetSculptStateMask(state);
+                if (mask == null || state.start < 0 || state.start + state.count > count) continue;
+                int length = Mathf.Min(mask.Length, state.count);
+                for (int i = 0; i < length; i++)
+                {
+                    float value = mask[i];
+                    if (value > 0f)
+                    {
+                        sculptMaskValues[state.start + i] = value;
+                        any = true;
+                    }
+                }
+            }
+            sculptMaskBuffer.SetData(sculptMaskValues);
+            sculptMaskHasAny = any;
+            sculptMaskDirty = false;
+            sculptMaskNextRefresh = EditorApplication.timeSinceStartup + 0.5;
+            return any;
+        }
+
+        private Material GetSculptMaskMaterial()
+        {
+            if (sculptMaskMaterial != null) return sculptMaskMaterial;
+            Shader shader = Shader.Find("Hidden/UMA/VertexStage/SculptMask");
+            if (shader == null || !shader.isSupported) return null;
+            sculptMaskMaterial = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+            return sculptMaskMaterial;
+        }
+
+        // The wash is drawn by a hidden child renderer in the stage's preview scene, so the
+        // render pipeline draws it in its transparent pass after the character. Drawing it
+        // immediately from the Scene GUI puts it underneath the character in URP.
+        private GameObject sculptMaskOverlayObject;
+        private MeshFilter sculptMaskOverlayFilter;
+        private MeshRenderer sculptMaskOverlayRenderer;
+
+        private void SetSculptMaskOverlayVisible(bool visible)
+        {
+            if (sculptMaskOverlayRenderer != null && sculptMaskOverlayRenderer.enabled != visible)
+            {
+                sculptMaskOverlayRenderer.enabled = visible;
+            }
+        }
+
+        private bool EnsureSculptMaskOverlay(Material material)
+        {
+            if (VertexObject == null || BakedMesh == null || material == null) return false;
+            if (sculptMaskOverlayObject == null || sculptMaskOverlayObject.transform.parent != VertexObject.transform)
+            {
+                if (sculptMaskOverlayObject != null) DestroyImmediate(sculptMaskOverlayObject);
+                sculptMaskOverlayObject = new GameObject("Sculpt Mask Overlay") { hideFlags = HideFlags.HideAndDontSave };
+                sculptMaskOverlayObject.transform.SetParent(VertexObject.transform, false);
+                sculptMaskOverlayFilter = sculptMaskOverlayObject.AddComponent<MeshFilter>();
+                sculptMaskOverlayRenderer = sculptMaskOverlayObject.AddComponent<MeshRenderer>();
+                sculptMaskOverlayRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                sculptMaskOverlayRenderer.receiveShadows = false;
+                sculptMaskOverlayRenderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+                sculptMaskOverlayRenderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+                sculptMaskOverlayRenderer.allowOcclusionWhenDynamic = false;
+                SceneVisibilityManager.instance.DisablePicking(sculptMaskOverlayObject, false);
+            }
+            if (sculptMaskOverlayFilter.sharedMesh != BakedMesh)
+            {
+                sculptMaskOverlayFilter.sharedMesh = BakedMesh;
+            }
+            int materialCount = Mathf.Max(1, BakedMesh.subMeshCount);
+            Material[] materials = sculptMaskOverlayRenderer.sharedMaterials;
+            if (materials == null || materials.Length != materialCount || materials[0] != material)
+            {
+                materials = new Material[materialCount];
+                for (int i = 0; i < materialCount; i++) materials[i] = material;
+                sculptMaskOverlayRenderer.sharedMaterials = materials;
+            }
+            return true;
+        }
+
+        private void DestroySculptMaskOverlay()
+        {
+            if (sculptMaskOverlayObject != null)
+            {
+                DestroyImmediate(sculptMaskOverlayObject);
+            }
+            sculptMaskOverlayObject = null;
+            sculptMaskOverlayFilter = null;
+            sculptMaskOverlayRenderer = null;
+        }
+
         private void DrawSculptMaskVisualization(SceneView sceneView)
+        {
+            LoadSculptMaskPrefs();
+            if (!sculptShowMask || BakedMesh == null || VertexObject == null || sceneView == null || sceneView.camera == null)
+            {
+                SetSculptMaskOverlayVisible(false);
+                return;
+            }
+
+            Material material = SystemInfo.graphicsShaderLevel >= 45 ? GetSculptMaskMaterial() : null;
+            if (material == null)
+            {
+                SetSculptMaskOverlayVisible(false);
+                DrawSculptMaskPoints(sceneView);
+                return;
+            }
+            if (!UpdateSculptMaskBuffer() || !EnsureSculptMaskOverlay(material))
+            {
+                SetSculptMaskOverlayVisible(false);
+                return;
+            }
+
+            material.SetBuffer(SculptMaskBufferId, sculptMaskBuffer);
+            material.SetInteger(SculptMaskCountId, sculptMaskBuffer.count);
+            material.SetColor(SculptMaskColorId, sculptMaskColor);
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent + 100;
+            SetSculptMaskOverlayVisible(true);
+        }
+
+        /// <summary>Fallback for graphics devices without structured buffers: dots on the active slot.</summary>
+        private void DrawSculptMaskPoints(SceneView sceneView)
         {
             if (sculptMask == null || BakedMesh == null || VertexObject == null || sceneView == null || sceneView.camera == null || sculptSlotStart < 0)
                 return;
@@ -6493,10 +7102,45 @@ namespace UMA
             Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { this, BakedMesh }, undoName);
             Array.Clear(sculptStrokeApplied, 0, sculptStrokeApplied.Length);
             Array.Clear(sculptStrokeLimit, 0, sculptStrokeLimit.Length);
+            if (Event.current != null && Event.current.type == EventType.MouseDown)
+            {
+                // A new mouse stroke. A stroke that only moved onto another slot keeps its progress.
+                sculptMaskStrokeOtherSlots.Clear();
+                sculptStrokeAppliedOtherSlots.Clear();
+                sculptStrokeLimitOtherSlots.Clear();
+            }
+            else if (sculptMaskTool == SculptMaskTool.None && activeSculptState != null &&
+                     sculptStrokeAppliedOtherSlots.TryGetValue(activeSculptState, out float[] carriedApplied) &&
+                     carriedApplied.Length == sculptStrokeApplied.Length &&
+                     sculptStrokeLimitOtherSlots.TryGetValue(activeSculptState, out float[] carriedLimit) &&
+                     carriedLimit.Length == sculptStrokeLimit.Length)
+            {
+                // This stroke already moved vertices on this slot: on an earlier visit, or through
+                // the welded seam while sculpting a neighboring slot.
+                Array.Copy(carriedApplied, sculptStrokeApplied, carriedApplied.Length);
+                Array.Copy(carriedLimit, sculptStrokeLimit, carriedLimit.Length);
+            }
+            else if (sculptMaskTool != SculptMaskTool.None && activeSculptState != null &&
+                     sculptMaskStrokeOtherSlots.TryGetValue(activeSculptState, out float[] carried) &&
+                     carried.Length == sculptStrokeApplied.Length)
+            {
+                // The mask brush already reached this slot from its neighbor during this stroke.
+                float maxEffect = sculptRadius * sculptStrengthPercent * .01f;
+                for (int i = 0; i < carried.Length; i++) sculptStrokeApplied[i] = carried[i] * maxEffect;
+            }
             sculptStrokePlanePoint = VertexObject.transform.InverseTransformPoint(sculptHoverPoint);
             sculptStrokePlaneNormal = VertexObject.transform.InverseTransformDirection(sculptHoverNormal).normalized;
+            // A mask stroke never moves vertices, so one copy of the positions serves the
+            // whole stroke (until it moves onto another slot and starts again).
+            sculptStrokeIsMask = sculptMaskTool != SculptMaskTool.None;
+            sculptMaskStrokePositions = sculptStrokeIsMask ? BakedMesh.vertices : null;
+            sculptMaskStrokeSlotBounds.Clear();
             sculpting = true; sculptHasLastSample = false;
+            ScheduleConstantSculptApplication();
         }
+
+        private bool sculptStrokeIsMask;
+        private Vector3[] sculptMaskStrokePositions;
 
         // Cloth can join this anchored-drag path later without changing the stroke lifecycle.
         private bool IsSculptDragMode => sculptMaskTool == SculptMaskTool.None &&
@@ -6848,18 +7492,49 @@ namespace UMA
             float distance = Vector3.Distance(sculptLastSamplePoint, point);
             int steps = Mathf.Clamp(Mathf.CeilToInt(distance / spacing), 1, 32);
             Vector3 start = sculptLastSamplePoint;
-            for (int i = 1; i <= steps; i++) ApplySculptSample(Vector3.Lerp(start, point, i / (float)steps), normal);
+            // All the samples of one mouse event work on one vertex array; the mesh, its
+            // normals and the collider are updated once at the end, not once per sample.
+            Vector3[] vertices = null;
+            for (int i = 1; i <= steps; i++)
+            {
+                ApplySculptSampleToVertices(Vector3.Lerp(start, point, i / (float)steps), normal, ref vertices);
+            }
+            CommitSculptSamples(vertices);
         }
 
         private void ApplySculptSample(Vector3 worldPoint, Vector3 worldNormal)
         {
+            Vector3[] vertices = null;
+            ApplySculptSampleToVertices(worldPoint, worldNormal, ref vertices);
+            CommitSculptSamples(vertices);
+        }
+
+        private Vector3[] sculptSampleBefore;
+
+        /// <summary>
+        /// Applies one brush sample. Sculpt brushes change <paramref name="vertices"/>, which
+        /// is fetched from the mesh on first use; call <see cref="CommitSculptSamples"/> with
+        /// it afterwards. Mask brushes change only the mask and leave it null.
+        /// </summary>
+        private void ApplySculptSampleToVertices(Vector3 worldPoint, Vector3 worldNormal, ref Vector3[] vertices)
+        {
             if (!sculpting || sculptOriginalVertices == null || IsSculptDragMode) return;
-            Vector3[] vertices = BakedMesh.vertices;
             Vector3 localPoint = VertexObject.transform.InverseTransformPoint(worldPoint);
             Vector3 localNormal = VertexObject.transform.InverseTransformDirection(worldNormal).normalized;
             float strength = sculptStrengthPercent * .01f;
             float maxEffect = sculptRadius * strength;
-            Vector3[] before = (Vector3[])vertices.Clone();
+            if (sculptStrokeIsMask && sculptMaskTool != SculptMaskTool.None)
+            {
+                ApplySculptMaskSample(localPoint, localNormal, maxEffect);
+                sculptLastSamplePoint = worldPoint; sculptHasLastSample = true;
+                return;
+            }
+            if (vertices == null || vertices.Length != BakedMesh.vertexCount) vertices = BakedMesh.vertices;
+            // Each sample reads the positions left by the previous one, as before batching.
+            if (sculptSampleBefore == null || sculptSampleBefore.Length != vertices.Length)
+                sculptSampleBefore = new Vector3[vertices.Length];
+            Array.Copy(vertices, sculptSampleBefore, vertices.Length);
+            Vector3[] before = sculptSampleBefore;
             int connectedComponent = sculptConnectedOnly ? sculptHoverConnectedComponent : -1;
             Vector3 planePoint = sculptTool == SculptTool.Plane ? sculptStrokePlanePoint : localPoint;
             Vector3 planeNormal = sculptTool == SculptTool.Plane ? sculptStrokePlaneNormal : localNormal;
@@ -6871,7 +7546,7 @@ namespace UMA
                 if ((mirroredPoint - localPoint).sqrMagnitude > 0.0000000001f)
                 {
                     int mirroredComponent = sculptConnectedOnly
-                        ? FindSculptConnectedComponentAtPoint(mirroredPoint)
+                        ? FindSculptConnectedComponentAtPoint(mirroredPoint, before)
                         : -1;
                     ApplySculptBrushPass(
                         mirroredPoint,
@@ -6884,6 +7559,16 @@ namespace UMA
                         ReflectLocalX(planeNormal).normalized);
                 }
             }
+            sculptLastSamplePoint = worldPoint; sculptHasLastSample = true;
+        }
+
+        /// <summary>
+        /// Writes sculpted vertices back to the mesh and updates its bounds, normals (when
+        /// live normals are on), caches and collider. Does nothing for mask-only samples.
+        /// </summary>
+        private void CommitSculptSamples(Vector3[] vertices)
+        {
+            if (vertices == null || BakedMesh == null || vertices.Length != BakedMesh.vertexCount) return;
             BakedMesh.vertices = vertices;
             BakedMesh.RecalculateBounds();
             if (sculptUpdateNormalsWhileSculpting)
@@ -6893,8 +7578,34 @@ namespace UMA
             }
             RefreshBakedMeshCaches();
             RefreshSculptCollider();
-            sculptLastSamplePoint = worldPoint; sculptHasLastSample = true;
             EditorUtility.SetDirty(BakedMesh); EditorUtility.SetDirty(this);
+        }
+
+        /// <summary>
+        /// One Mask Paint or Mask Erase sample. Only the mask changes, so the mesh is not
+        /// uploaded and its normals, bounds, caches and collider are left alone.
+        /// </summary>
+        private void ApplySculptMaskSample(Vector3 localPoint, Vector3 localNormal, float maxEffect)
+        {
+            if (sculptMaskStrokePositions == null || sculptMaskStrokePositions.Length != BakedMesh.vertexCount)
+            {
+                sculptMaskStrokePositions = BakedMesh.vertices;
+            }
+            Vector3[] positions = sculptMaskStrokePositions;
+            int connectedComponent = sculptConnectedOnly ? sculptHoverConnectedComponent : -1;
+            ApplySculptBrushPass(localPoint, localNormal, maxEffect, positions, positions, connectedComponent, localPoint, localNormal);
+            if (sculptSymmetryX)
+            {
+                Vector3 mirroredPoint = ReflectLocalX(localPoint);
+                if ((mirroredPoint - localPoint).sqrMagnitude > 0.0000000001f)
+                {
+                    int mirroredComponent = sculptConnectedOnly ? FindSculptConnectedComponentAtPoint(mirroredPoint) : -1;
+                    Vector3 mirroredNormal = ReflectLocalX(localNormal).normalized;
+                    ApplySculptBrushPass(mirroredPoint, mirroredNormal, maxEffect, positions, positions, mirroredComponent, mirroredPoint, mirroredNormal);
+                }
+            }
+            sculptMaskDirty = true;
+            EditorUtility.SetDirty(this);
         }
 
         private void ApplySculptBrushPass(
@@ -6908,6 +7619,7 @@ namespace UMA
             Vector3 deformationNormal)
         {
             if (sculptConnectedOnly && connectedComponent < 0) return;
+            PaintSculptMaskOnOtherSlots(localPoint, samplePositions);
             for (int i = 0; i < sculptSlotVertexCount; i++)
             {
                 if (sculptConnectedOnly &&
@@ -6923,6 +7635,68 @@ namespace UMA
                     i, falloff, maxEffect, localPoint, localNormal, deformationPoint, deformationNormal,
                     vertices, samplePositions);
             }
+        }
+
+        /// <summary>
+        /// Per-stroke progress of the mask brushes on editable slots other than the one under
+        /// the pointer, so a stroke adds at most its falloff to each vertex, as on the active slot.
+        /// </summary>
+        private readonly Dictionary<SculptSlotEditState, float[]> sculptMaskStrokeOtherSlots =
+            new Dictionary<SculptSlotEditState, float[]>();
+
+        private readonly Dictionary<SculptSlotEditState, Bounds> sculptMaskStrokeSlotBounds =
+            new Dictionary<SculptSlotEditState, Bounds>();
+
+        /// <summary>A held stroke was ended only because the pointer moved onto another slot.</summary>
+        private bool sculptResumeAfterSlotSwitch;
+        private bool vertexPaintResumeAfterSlotSwitch;
+
+        /// <summary>
+        /// The mask brushes reach every editable slot inside the brush radius, not just the slot
+        /// under the pointer, so masks do not stop at slot seams. Sculpt brushes still work on
+        /// one slot at a time (shared edges stay welded). Connected Only keeps the mask on the
+        /// surface under the pointer.
+        /// </summary>
+        private void PaintSculptMaskOnOtherSlots(Vector3 localPoint, Vector3[] samplePositions)
+        {
+            if (sculptMaskTool == SculptMaskTool.None || !IsSculptMultiSlotMode || sculptConnectedOnly || sculptRadius <= 0f)
+            {
+                return;
+            }
+            float sign = sculptMaskTool == SculptMaskTool.Paint ? 1f : -1f;
+            float radiusSquared = sculptRadius * sculptRadius;
+            foreach (SlotData slot in sculptSlots)
+            {
+                if (slot == null || ReferenceEquals(slot, sculptSlot)) continue;
+                SculptSlotEditState state = GetOrCreateSculptSlotState(slot);
+                float[] mask = GetSculptStateMask(state);
+                if (mask == null || state.start < 0 || state.start + state.count > samplePositions.Length) continue;
+                // Skip slots the brush cannot reach. Vertices do not move during a mask
+                // stroke, so each slot's bounds are measured once per stroke.
+                if (!sculptMaskStrokeSlotBounds.TryGetValue(state, out Bounds slotBounds))
+                {
+                    slotBounds = new Bounds(samplePositions[state.start], Vector3.zero);
+                    for (int i = 1; i < state.count; i++) slotBounds.Encapsulate(samplePositions[state.start + i]);
+                    sculptMaskStrokeSlotBounds[state] = slotBounds;
+                }
+                if (slotBounds.SqrDistance(localPoint) > radiusSquared) continue;
+                if (!sculptMaskStrokeOtherSlots.TryGetValue(state, out float[] applied) || applied.Length != state.count)
+                {
+                    applied = new float[state.count];
+                    sculptMaskStrokeOtherSlots[state] = applied;
+                }
+                for (int i = 0; i < state.count; i++)
+                {
+                    float distanceSquared = (samplePositions[state.start + i] - localPoint).sqrMagnitude;
+                    if (distanceSquared > radiusSquared) continue;
+                    float desired = Mathf.Max(0f, EvaluateSculptFalloff(Mathf.Sqrt(distanceSquared) / sculptRadius));
+                    float amount = desired - applied[i];
+                    if (amount <= 0f) continue;
+                    applied[i] = desired;
+                    mask[i] = Mathf.Clamp01(mask[i] + (sign * amount));
+                }
+            }
+            sculptMaskDirty = true;
         }
 
         private void ApplySculptVertex(
@@ -6961,9 +7735,10 @@ namespace UMA
                     sculptStrokeApplied[weldedIndex] += amount;
                 }
                 SynchronizeCrossSlotSculptMask(coincident, sculptMask[coincident[0]]);
+                sculptMaskDirty = true;
                 return;
             }
-            if (sculptTool == SculptTool.Smooth)
+            if (sculptTool == SculptTool.Smooth || sculptTool == SculptTool.Heal)
             {
                 HashSet<int> neighborSet = new HashSet<int>();
                 for (int i = 0; i < coincident.Count; i++)
@@ -6977,7 +7752,10 @@ namespace UMA
                 foreach (int neighbor in neighborSet) average += before[sculptSlotStart + neighbor];
                 average /= neighborSet.Count;
                 float blend = Mathf.Clamp01(amount / Mathf.Max(sculptRadius, 1e-6f));
-                Vector3 smoothedPosition = Vector3.Lerp(before[sculptSlotStart + coincident[0]], average, blend);
+                // Smooth evens out the positions; Heal evens out how far they have been moved.
+                Vector3 smoothedPosition = sculptTool == SculptTool.Heal
+                    ? HealedSculptPosition(coincident[0], neighborSet, before, blend)
+                    : Vector3.Lerp(before[sculptSlotStart + coincident[0]], average, blend);
                 for (int i = 0; i < coincident.Count; i++) vertices[sculptSlotStart + coincident[i]] = smoothedPosition;
                 SynchronizeCrossSlotSculptPosition(coincident, smoothedPosition, vertices);
             }
@@ -7020,6 +7798,75 @@ namespace UMA
                 SynchronizeCrossSlotSculptPosition(coincident, weldedPosition, vertices);
             }
             for (int i = 0; i < coincident.Count; i++) sculptStrokeApplied[coincident[i]] += amount;
+            SynchronizeCrossSlotSculptProgress(coincident, sculptStrokeApplied[coincident[0]], sculptStrokeLimit[coincident[0]]);
+        }
+
+        // Sculpt stroke progress (how far each vertex has moved, and its limit) for slots
+        // other than the active one, kept until the next mouse stroke. Indexed by each slot's
+        // own vertex index.
+        private readonly Dictionary<SculptSlotEditState, float[]> sculptStrokeAppliedOtherSlots =
+            new Dictionary<SculptSlotEditState, float[]>();
+        private readonly Dictionary<SculptSlotEditState, float[]> sculptStrokeLimitOtherSlots =
+            new Dictionary<SculptSlotEditState, float[]>();
+
+        private void GetSculptStrokeProgress(SculptSlotEditState state, out float[] applied, out float[] limit)
+        {
+            if (!sculptStrokeAppliedOtherSlots.TryGetValue(state, out applied) || applied.Length != state.count)
+            {
+                applied = new float[state.count];
+                sculptStrokeAppliedOtherSlots[state] = applied;
+            }
+            if (!sculptStrokeLimitOtherSlots.TryGetValue(state, out limit) || limit.Length != state.count)
+            {
+                limit = new float[state.count];
+                sculptStrokeLimitOtherSlots[state] = limit;
+            }
+        }
+
+        private void MergeSculptStrokeProgress(SculptSlotEditState state, float[] applied, float[] limit)
+        {
+            GetSculptStrokeProgress(state, out float[] storedApplied, out float[] storedLimit);
+            for (int i = 0; i < state.count; i++)
+            {
+                storedApplied[i] = Mathf.Max(storedApplied[i], applied[i]);
+                storedLimit[i] = Mathf.Max(storedLimit[i], limit[i]);
+            }
+        }
+
+        /// <summary>
+        /// A welded seam vertex moved on the active slot, which also moved its partners on the
+        /// neighboring slots. Record that progress for them, so the stroke does not push them
+        /// again when it crosses onto their slot.
+        /// </summary>
+        private void SynchronizeCrossSlotSculptProgress(List<int> localIndices, float applied, float limit)
+        {
+            if (!IsSculptMultiSlotMode || !sculptCrossSlotSeamsBuilt || localIndices == null)
+            {
+                return;
+            }
+            for (int i = 0; i < localIndices.Count; i++)
+            {
+                if (!sculptCrossSlotSeams.TryGetValue(sculptSlotStart + localIndices[i], out List<SculptSeamVertex> seamGroup))
+                {
+                    continue;
+                }
+                for (int seamIndex = 0; seamIndex < seamGroup.Count; seamIndex++)
+                {
+                    SculptSeamVertex seamVertex = seamGroup[seamIndex];
+                    if (ReferenceEquals(seamVertex.slot, sculptSlot))
+                    {
+                        continue;
+                    }
+                    SculptSlotEditState state = GetOrCreateSculptSlotState(seamVertex.slot);
+                    if (state == null || seamVertex.localIndex < 0 || seamVertex.localIndex >= state.count)
+                    {
+                        continue;
+                    }
+                    GetSculptStrokeProgress(state, out float[] otherApplied, out float[] otherLimit);
+                    otherApplied[seamVertex.localIndex] = Mathf.Max(otherApplied[seamVertex.localIndex], applied);
+                    otherLimit[seamVertex.localIndex] = Mathf.Max(otherLimit[seamVertex.localIndex], limit);
+                }
+            }
         }
 
         private void RefreshSculptCollider()
@@ -7036,8 +7883,18 @@ namespace UMA
                 return;
             }
             sculpting = false; sculptHasLastSample = false;
-            if (finalize && BakedMesh != null)
+            bool maskStroke = sculptStrokeIsMask;
+            sculptStrokeIsMask = false;
+            sculptMaskStrokePositions = null;
+            if (maskStroke)
             {
+                // The mesh did not change; just show the final mask.
+                sculptMaskDirty = true;
+                if (finalize) { RepaintLinkedEditors(); SceneView.RepaintAll(); }
+            }
+            else if (finalize && BakedMesh != null)
+            {
+                sculptChangesUiDirty = true;
                 BakedMesh.RecalculateNormals();
                 SynchronizeCrossSlotSculptNormals();
                 BakedMesh.RecalculateBounds();
@@ -7074,11 +7931,19 @@ namespace UMA
                 vertexPaintHoverValid = false;
             }
 
-            if (wasVertexPainting && !vertexPainting && currentHitValid && currentEvent.type == EventType.MouseDrag && currentEvent.button == 0)
+            if (currentEvent.rawType == EventType.MouseUp || currentEvent.type == EventType.MouseDown ||
+                currentEvent.type == EventType.MouseLeaveWindow)
             {
+                vertexPaintResumeAfterSlotSwitch = false;
+            }
+            if ((wasVertexPainting || vertexPaintResumeAfterSlotSwitch) && !vertexPainting && currentHitValid &&
+                currentEvent.type == EventType.MouseDrag && currentEvent.button == 0)
+            {
+                vertexPaintResumeAfterSlotSwitch = false;
                 BeginVertexPaintStroke();
             }
 
+            DrawHairRootTipMarks();
             if (currentEvent.type == EventType.Repaint && vertexPaintHoverValid)
             {
                 DrawVertexPaintBrush();
@@ -7125,7 +7990,7 @@ namespace UMA
             }
 
             Ray ray = HandleUtility.GUIPointToWorldRay(guiPoint);
-            RaycastHit[] hits = new RaycastHit[32];
+            RaycastHit[] hits = HitTestBuffer;
             int count = phyScene.Raycast(ray.origin, ray.direction, hits, 10000f);
             Array.Sort(hits, 0, count, RaycastHitDistanceComparer.Instance);
             for (int hitIndex = 0; hitIndex < count; hitIndex++)
@@ -7141,12 +8006,19 @@ namespace UMA
                 {
                     continue;
                 }
+                if (!IsSlotEditable(hitSlot))
+                {
+                    continue;
+                }
                 if (!IsVertexPaintAllSlotsMode && (vertexPaintSlot == null || hitSlot.slotName != vertexPaintSlot.slotName))
                 {
                     continue;
                 }
                 if (IsVertexPaintAllSlotsMode && !ReferenceEquals(hitSlot, vertexPaintSlot))
                 {
+                    // As for sculpting: a held stroke must resume on the new slot even when the
+                    // switch is seen during a Layout or Repaint event.
+                    if (vertexPainting) vertexPaintResumeAfterSlotSwitch = true;
                     EndVertexPaintStroke(true);
                     ActivateVertexPaintSlot(hitSlot);
                 }
@@ -7157,8 +8029,15 @@ namespace UMA
 
                 point = hit.point;
                 Vector3 localPoint = VertexObject.transform.InverseTransformPoint(point);
-                Vector3[] vertices = BakedMesh.vertices;
-                Vector3[] normals = BakedMesh.normals;
+                List<Vector3> vertices = hitTestVertices;
+                List<Vector3> normals = hitTestNormals;
+                BakedMesh.GetVertices(vertices);
+                BakedMesh.GetNormals(normals);
+                if (vertexPaintSlotStart < 0 || vertexPaintSlotStart + vertexPaintSlotVertexCount > vertices.Count ||
+                    vertexPaintSlotStart + vertexPaintSlotVertexCount > normals.Count)
+                {
+                    continue;
+                }
                 Vector3 averageNormal = Vector3.zero;
                 float totalWeight = 0f;
                 for (int vertexIndex = 0; vertexIndex < vertexPaintSlotVertexCount; vertexIndex++)
@@ -7180,9 +8059,9 @@ namespace UMA
                     : VertexObject.transform.InverseTransformDirection(hit.normal).normalized;
                 normal = VertexObject.transform.TransformDirection(localNormal).normalized;
 
-                int[] triangles = BakedMesh.triangles;
+                int[] triangles = GetBakedTriangles();
                 int triangleStart = hit.triangleIndex * 3;
-                Vector3 edge = triangleStart + 1 < triangles.Length
+                Vector3 edge = triangleStart >= 0 && triangleStart + 1 < triangles.Length
                     ? vertices[triangles[triangleStart + 1]] - vertices[triangles[triangleStart]]
                     : Vector3.right;
                 Vector3 worldEdge = VertexObject.transform.TransformVector(edge);
@@ -7303,6 +8182,15 @@ namespace UMA
 
         private void BeginVertexPaintStroke()
         {
+            BeginVertexPaintStroke(Event.current != null && Event.current.type == EventType.MouseDown);
+        }
+
+        /// <summary>
+        /// Starts a stroke segment. A new mouse stroke resets the per-slot progress and builds
+        /// the cross-slot neighborhood; a segment that only moved onto another slot keeps both.
+        /// </summary>
+        private void BeginVertexPaintStroke(bool newMouseStroke)
+        {
             if (vertexPaintColors == null || vertexPaintColors.Length == 0 || BakedMesh == null)
             {
                 return;
@@ -7314,6 +8202,34 @@ namespace UMA
             Undo.SetCurrentGroupName(undoName);
             Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { this, BakedMesh }, undoName);
             Array.Clear(vertexPaintStrokeApplied, 0, vertexPaintStrokeApplied.Length);
+            vertexPaintSpillContexts.Clear();
+            if (newMouseStroke)
+            {
+                // A new mouse stroke. A stroke that only moved onto another slot keeps its progress
+                // and its cross-slot neighborhood.
+                vertexPaintStrokeProgress.Clear();
+                vertexPaintSlotBounds.Clear();
+                vertexPaintNoiseStrokeSeed = vertexPaintNoiseRepeat ? vertexPaintNoiseSeed : vertexPaintNoiseRandom.Next();
+                ClearVertexPaintGlobalNeighborhood();
+                if (IsVertexPaintAllSlotsMode && VertexPaintToolUsesNeighbors(vertexPaintTool))
+                {
+                    BuildVertexPaintGlobalNeighborhood(
+                        BakedMesh.vertices,
+                        BakedMesh.normals,
+                        vertexPaintTool == VertexPaintTool.Smooth ? vertexPaintSmoothRadius : 0f);
+                }
+            }
+            else if (vertexPaintSlot != null &&
+                     vertexPaintStrokeProgress.TryGetValue(vertexPaintSlot, out float[] carried) &&
+                     carried.Length == vertexPaintStrokeApplied.Length)
+            {
+                // The brush already reached this slot from its neighbor during this stroke.
+                Array.Copy(carried, vertexPaintStrokeApplied, carried.Length);
+            }
+            if (vertexPaintSlot != null)
+            {
+                vertexPaintStrokeProgress[vertexPaintSlot] = vertexPaintStrokeApplied;
+            }
             if (vertexPaintTool == VertexPaintTool.Smooth)
             {
                 BuildVertexPaintWorldSmoothingMap(BakedMesh.vertices, BakedMesh.normals, vertexPaintSmoothRadius);
@@ -7351,6 +8267,11 @@ namespace UMA
 
             Vector3[] vertices = BakedMesh.vertices;
             Vector3[] normals = BakedMesh.normals;
+            if (vertexPaintGlobalNeighbors != null)
+            {
+                // Every slot's colors before this sample, for Smear, Blur and Smooth across seams.
+                vertexPaintGlobalColors = BakedMesh.colors32;
+            }
             Vector3 localPoint = VertexObject.transform.InverseTransformPoint(worldPoint);
             Vector3 localNormal = VertexObject.transform.InverseTransformDirection(worldNormal).normalized;
             Vector3 localTangent = VertexObject.transform.InverseTransformDirection(worldTangent).normalized;
@@ -7398,6 +8319,12 @@ namespace UMA
                 EditorUtility.SetDirty(this);
                 vertexPaintStrokeChanged = true;
             }
+
+            // Reach into neighboring editable slots inside the brush, so paint does not
+            // stop at a slot seam until the pointer crosses it.
+            PaintVertexColorsOnOtherSlots(
+                localPoint, localNormal, localTangent, localBitangent, strokeDirection,
+                brushStrength, vertices, normals);
 
             vertexPaintLastSamplePoint = worldPoint;
             vertexPaintHasLastSample = true;
@@ -7496,11 +8423,19 @@ namespace UMA
             switch (vertexPaintTool)
             {
                 case VertexPaintTool.Paint:
-                    target = new Color(
-                        current.r * vertexPaintBrushColor.r,
-                        current.g * vertexPaintBrushColor.g,
-                        current.b * vertexPaintBrushColor.b,
-                        vertexPaintAffectAlpha ? current.a * vertexPaintBrushColor.a : current.a);
+                    // Replace lays the brush color down (white lightens, black darkens); Multiply tints the color
+                    // under the brush, so it can only darken.
+                    target = vertexPaintBlend == VertexPaintBlend.Multiply
+                        ? new Color(
+                            current.r * vertexPaintBrushColor.r,
+                            current.g * vertexPaintBrushColor.g,
+                            current.b * vertexPaintBrushColor.b,
+                            vertexPaintAffectAlpha ? current.a * vertexPaintBrushColor.a : current.a)
+                        : new Color(
+                            vertexPaintBrushColor.r,
+                            vertexPaintBrushColor.g,
+                            vertexPaintBrushColor.b,
+                            vertexPaintAffectAlpha ? vertexPaintBrushColor.a : current.a);
                     break;
                 case VertexPaintTool.Erase:
                     target = new Color(1f, 1f, 1f, vertexPaintAffectAlpha ? 1f : current.a);
@@ -7531,7 +8466,10 @@ namespace UMA
                     break;
             }
 
-            Color result = vertexPaintTool == VertexPaintTool.Clear ? target : Color.Lerp(current, target, amount);
+            // Noise's target is already scaled by Noise Amount, and the brush falloff blends it
+            // in only partway, so Noise gets twice the blend of the other brushes.
+            float blend = vertexPaintTool == VertexPaintTool.Noise ? Mathf.Clamp01(amount * VertexPaintNoiseBrushGain) : amount;
+            Color result = vertexPaintTool == VertexPaintTool.Clear ? target : Color.Lerp(current, target, blend);
             Color32 result32 = result;
             bool changed = false;
             for (int i = 0; i < coincident.Count; i++)
@@ -7547,8 +8485,245 @@ namespace UMA
             return changed;
         }
 
+        // ---------------------------------------------------------------
+        // Cross-slot neighborhoods for Smear, Blur and Smooth. Slots are separate meshes:
+        // at a seam their vertices sit at the same positions but no triangle joins them.
+        // These tables span every editable slot in baked-mesh index space and join the
+        // coincident seam vertices, so both sides of a seam see the same neighbors and
+        // end up with the same color.
+        // ---------------------------------------------------------------
+
+        /// <summary>Neighbors of each editable baked vertex, including across slot seams; null when unused.</summary>
+        private List<int>[] vertexPaintGlobalNeighbors;
+        /// <summary>Every slot's colors at the start of the current brush sample, in baked index space.</summary>
+        private Color32[] vertexPaintGlobalColors;
+        private Dictionary<Vector3Int, List<int>> vertexPaintGlobalCells;
+        private Vector3[] vertexPaintGlobalPositions;
+        private Vector3[] vertexPaintGlobalNormals;
+        private float vertexPaintGlobalCellSize;
+
+        private static bool VertexPaintToolUsesNeighbors(VertexPaintTool tool) =>
+            tool == VertexPaintTool.Smear || tool == VertexPaintTool.Blur || tool == VertexPaintTool.Smooth;
+
+        private void ClearVertexPaintGlobalNeighborhood()
+        {
+            vertexPaintGlobalNeighbors = null;
+            vertexPaintGlobalColors = null;
+            vertexPaintGlobalCells = null;
+            vertexPaintGlobalPositions = null;
+            vertexPaintGlobalNormals = null;
+        }
+
+        /// <summary>
+        /// Builds the cross-slot neighbor table (and, for a smoothing radius above zero, the
+        /// world-space cell map) over every editable slot.
+        /// </summary>
+        private void BuildVertexPaintGlobalNeighborhood(Vector3[] vertices, Vector3[] normals, float smoothingRadius)
+        {
+            ClearVertexPaintGlobalNeighborhood();
+            if (BakedMesh == null || VertexObject == null || vertices == null || vertexPaintSlots.Count < 2)
+            {
+                return;
+            }
+
+            int vertexCount = vertices.Length;
+            bool[] editable = new bool[vertexCount];
+            int[] owner = new int[vertexCount];
+            for (int slotIndex = 0; slotIndex < vertexPaintSlots.Count; slotIndex++)
+            {
+                SlotData slot = vertexPaintSlots[slotIndex];
+                if (slot == null || slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData)) continue;
+                int start = GetVisibleBakedVertexIndex(slot, 0);
+                int count = slot.asset.meshData.vertexCount;
+                if (start < 0 || start + count > vertexCount) continue;
+                for (int i = start; i < start + count; i++)
+                {
+                    editable[i] = true;
+                    owner[i] = slotIndex;
+                }
+            }
+
+            List<int>[] neighbors = new List<int>[vertexCount];
+            for (int i = 0; i < vertexCount; i++)
+            {
+                if (editable[i]) neighbors[i] = new List<int>(6);
+            }
+            int[] triangles = BakedMesh.triangles;
+            for (int t = 0; t + 2 < triangles.Length; t += 3)
+            {
+                int a = triangles[t], b = triangles[t + 1], c = triangles[t + 2];
+                if (a >= vertexCount || b >= vertexCount || c >= vertexCount) continue;
+                if (!editable[a] || !editable[b] || !editable[c]) continue;
+                AddGlobalPaintEdge(neighbors, a, b);
+                AddGlobalPaintEdge(neighbors, b, c);
+                AddGlobalPaintEdge(neighbors, c, a);
+            }
+
+            // Join vertices that share a position (slot seams and UV seams): each one takes
+            // the union of the group's neighbors, so every copy blurs and smears alike.
+            float tolerance = Mathf.Max(0.000001f, BakedMesh.bounds.size.magnitude * 0.000001f);
+            float inverseTolerance = 1f / tolerance;
+            Dictionary<Vector3Int, List<int>> groups = new Dictionary<Vector3Int, List<int>>();
+            for (int i = 0; i < vertexCount; i++)
+            {
+                if (!editable[i]) continue;
+                Vector3 p = vertices[i];
+                Vector3Int key = new Vector3Int(
+                    Mathf.RoundToInt(p.x * inverseTolerance),
+                    Mathf.RoundToInt(p.y * inverseTolerance),
+                    Mathf.RoundToInt(p.z * inverseTolerance));
+                if (!groups.TryGetValue(key, out List<int> group))
+                {
+                    group = new List<int>(2);
+                    groups.Add(key, group);
+                }
+                group.Add(i);
+            }
+            foreach (List<int> group in groups.Values)
+            {
+                if (group.Count < 2) continue;
+                HashSet<int> members = new HashSet<int>(group);
+                HashSet<int> union = new HashSet<int>();
+                for (int g = 0; g < group.Count; g++)
+                {
+                    foreach (int neighbor in neighbors[group[g]])
+                    {
+                        if (!members.Contains(neighbor)) union.Add(neighbor);
+                    }
+                }
+                for (int g = 0; g < group.Count; g++)
+                {
+                    neighbors[group[g]] = new List<int>(union);
+                }
+            }
+            vertexPaintGlobalNeighbors = neighbors;
+
+            if (smoothingRadius > 0f)
+            {
+                vertexPaintGlobalCellSize = Mathf.Max(0.000001f, smoothingRadius);
+                float inverseCellSize = 1f / vertexPaintGlobalCellSize;
+                Transform vertexTransform = VertexObject.transform;
+                Matrix4x4 worldNormalMatrix = vertexTransform.localToWorldMatrix.inverse.transpose;
+                bool hasNormals = normals != null && normals.Length == vertexCount;
+                vertexPaintGlobalCells = new Dictionary<Vector3Int, List<int>>();
+                vertexPaintGlobalPositions = new Vector3[vertexCount];
+                vertexPaintGlobalNormals = hasNormals ? new Vector3[vertexCount] : null;
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    if (!editable[i]) continue;
+                    Vector3 world = vertexTransform.TransformPoint(vertices[i]);
+                    vertexPaintGlobalPositions[i] = world;
+                    if (hasNormals)
+                    {
+                        vertexPaintGlobalNormals[i] = worldNormalMatrix.MultiplyVector(normals[i]).normalized;
+                    }
+                    Vector3Int cell = GetVertexPaintWorldSmoothingCell(world, inverseCellSize);
+                    if (!vertexPaintGlobalCells.TryGetValue(cell, out List<int> cellVertices))
+                    {
+                        cellVertices = new List<int>();
+                        vertexPaintGlobalCells.Add(cell, cellVertices);
+                    }
+                    cellVertices.Add(i);
+                }
+            }
+        }
+
+        private static void AddGlobalPaintEdge(List<int>[] neighbors, int a, int b)
+        {
+            if (a == b) return;
+            if (!neighbors[a].Contains(b)) neighbors[a].Add(b);
+            if (!neighbors[b].Contains(a)) neighbors[b].Add(a);
+        }
+
+        /// <summary>True when the neighbor-based brushes should read across slots.</summary>
+        private bool UseVertexPaintGlobalNeighbors =>
+            vertexPaintGlobalNeighbors != null && vertexPaintGlobalColors != null && vertexPaintSlotStart >= 0 &&
+            vertexPaintSlotStart + vertexPaintSlotVertexCount <= vertexPaintGlobalNeighbors.Length &&
+            vertexPaintGlobalColors.Length == vertexPaintGlobalNeighbors.Length;
+
+        private Color GetGlobalVertexPaintSmearColor(int bakedIndex, Vector3 strokeDirection, Vector3[] allVertices)
+        {
+            List<int> neighbors = vertexPaintGlobalNeighbors[bakedIndex];
+            if (strokeDirection.sqrMagnitude < 0.000001f || neighbors == null)
+            {
+                return GetGlobalVertexPaintNeighborAverage(bakedIndex);
+            }
+            Vector3 currentPosition = allVertices[bakedIndex];
+            float bestScore = 0f;
+            int bestIndex = -1;
+            for (int i = 0; i < neighbors.Count; i++)
+            {
+                int neighbor = neighbors[i];
+                float score = Vector3.Dot(currentPosition - allVertices[neighbor], strokeDirection);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestIndex = neighbor;
+                }
+            }
+            return bestIndex >= 0 ? (Color)vertexPaintGlobalColors[bestIndex] : GetGlobalVertexPaintNeighborAverage(bakedIndex);
+        }
+
+        private Color GetGlobalVertexPaintNeighborAverage(int bakedIndex)
+        {
+            List<int> neighbors = vertexPaintGlobalNeighbors[bakedIndex];
+            Color sum = vertexPaintGlobalColors[bakedIndex];
+            if (neighbors == null || neighbors.Count == 0)
+            {
+                return sum;
+            }
+            int count = 1;
+            for (int i = 0; i < neighbors.Count; i++)
+            {
+                sum += (Color)vertexPaintGlobalColors[neighbors[i]];
+                count++;
+            }
+            return sum / count;
+        }
+
+        private Color GetGlobalVertexPaintWorldAverage(int bakedIndex, float radius)
+        {
+            radius = Mathf.Max(0.000001f, radius);
+            float radiusSquared = radius * radius;
+            float inverseCellSize = 1f / Mathf.Max(0.000001f, vertexPaintGlobalCellSize);
+            Vector3 centerPosition = vertexPaintGlobalPositions[bakedIndex];
+            Vector3 centerNormal = vertexPaintGlobalNormals != null ? vertexPaintGlobalNormals[bakedIndex] : Vector3.zero;
+            Vector3Int centerCell = GetVertexPaintWorldSmoothingCell(centerPosition, inverseCellSize);
+            Color weightedColor = Color.clear;
+            float totalWeight = 0f;
+            for (int x = -1; x <= 1; x++)
+            for (int y = -1; y <= 1; y++)
+            for (int z = -1; z <= 1; z++)
+            {
+                if (!vertexPaintGlobalCells.TryGetValue(centerCell + new Vector3Int(x, y, z), out List<int> candidates)) continue;
+                for (int c = 0; c < candidates.Count; c++)
+                {
+                    int neighbor = candidates[c];
+                    float distanceSquared = (vertexPaintGlobalPositions[neighbor] - centerPosition).sqrMagnitude;
+                    if (distanceSquared > radiusSquared) continue;
+                    float normalWeight = 1f;
+                    if (vertexPaintGlobalNormals != null)
+                    {
+                        float alignment = Vector3.Dot(centerNormal, vertexPaintGlobalNormals[neighbor]);
+                        if (alignment <= 0f) continue;
+                        normalWeight = Mathf.Lerp(0.15f, 1f, alignment * alignment);
+                    }
+                    float spatialWeight = 1f - distanceSquared / radiusSquared;
+                    spatialWeight *= spatialWeight;
+                    float weight = spatialWeight * normalWeight;
+                    weightedColor += (Color)vertexPaintGlobalColors[neighbor] * weight;
+                    totalWeight += weight;
+                }
+            }
+            return totalWeight > 0.000001f ? weightedColor / totalWeight : (Color)vertexPaintGlobalColors[bakedIndex];
+        }
+
         private Color GetVertexPaintSmearColor(int vertexIndex, Color32[] source, Vector3 strokeDirection, Vector3[] allVertices)
         {
+            if (UseVertexPaintGlobalNeighbors)
+            {
+                return GetGlobalVertexPaintSmearColor(vertexPaintSlotStart + vertexIndex, strokeDirection, allVertices);
+            }
             if (strokeDirection.sqrMagnitude < 0.000001f || vertexPaintNeighbors == null || vertexPaintNeighbors[vertexIndex] == null)
             {
                 return GetVertexPaintNeighborAverage(vertexIndex, source);
@@ -7574,6 +8749,10 @@ namespace UMA
 
         private Color GetVertexPaintNeighborAverage(int vertexIndex, Color32[] source)
         {
+            if (UseVertexPaintGlobalNeighbors)
+            {
+                return GetGlobalVertexPaintNeighborAverage(vertexPaintSlotStart + vertexIndex);
+            }
             if (vertexPaintNeighbors == null || vertexPaintNeighbors[vertexIndex] == null || vertexPaintNeighbors[vertexIndex].Count == 0)
             {
                 return source[vertexIndex];
@@ -7635,6 +8814,10 @@ namespace UMA
 
         private Color GetVertexPaintWorldAverage(int vertexIndex, Color32[] source, float radius)
         {
+            if (UseVertexPaintGlobalNeighbors && vertexPaintGlobalCells != null)
+            {
+                return GetGlobalVertexPaintWorldAverage(vertexPaintSlotStart + vertexIndex, radius);
+            }
             if (vertexPaintWorldSmoothingCells == null || vertexPaintWorldSmoothingPositions == null ||
                 vertexIndex < 0 || vertexIndex >= vertexPaintWorldSmoothingPositions.Length)
             {
@@ -7706,19 +8889,72 @@ namespace UMA
                 Mathf.FloorToInt(worldPosition.z * inverseCellSize));
         }
 
+        /// <summary>
+        /// The Noise brush's target color for a vertex. Per Vertex gives every vertex its own
+        /// random value; Smooth uses Perlin noise, so nearby vertices move together. The value
+        /// depends on the vertex position and the stroke's seed, so duplicated seam vertices
+        /// match. Without Color Noise all three channels move together (lighter or darker).
+        /// Noise never changes alpha.
+        /// </summary>
         private Color GetVertexPaintNoiseColor(int vertexIndex, Color current, Vector3[] allVertices)
         {
-            Vector3 position = allVertices[vertexPaintSlotStart + vertexIndex] * Mathf.Max(0.0001f, vertexPaintNoiseScale);
-            float seed = vertexPaintNoiseSeed * 0.173f;
-            float r = Mathf.PerlinNoise(position.x + seed + 11.3f, position.y + position.z + 7.7f) * 2f - 1f;
-            float g = Mathf.PerlinNoise(position.y + seed + 31.9f, position.z + position.x + 19.1f) * 2f - 1f;
-            float b = Mathf.PerlinNoise(position.z + seed + 53.7f, position.x + position.y + 37.3f) * 2f - 1f;
-            float a = Mathf.PerlinNoise(position.x + position.z + seed + 71.9f, position.y + 43.1f) * 2f - 1f;
+            Vector3 position = allVertices[vertexPaintSlotStart + vertexIndex];
+            int seed = vertexPaintNoiseStrokeSeed;
+            float r, g, b;
+            if (vertexPaintNoiseType == VertexPaintNoiseType.PerVertex)
+            {
+                // Quantize to 0.1 mm so coincident vertices (seams, UV splits) get the same value.
+                int x = Mathf.RoundToInt(position.x * 10000f);
+                int y = Mathf.RoundToInt(position.y * 10000f);
+                int z = Mathf.RoundToInt(position.z * 10000f);
+                r = HashVertexPaintNoise(x, y, z, seed, 0);
+                g = vertexPaintNoiseColor ? HashVertexPaintNoise(x, y, z, seed, 1) : r;
+                b = vertexPaintNoiseColor ? HashVertexPaintNoise(x, y, z, seed, 2) : r;
+            }
+            else
+            {
+                Vector3 p = position * Mathf.Max(0.0001f, vertexPaintNoiseScale);
+                // Perlin repeats every 256 units, so keep the seed offset inside that range.
+                float offset = (HashVertexPaintNoise(seed, 0, 0, 0, 3) * 200f) + 11.3f;
+                r = Mathf.Clamp01(Mathf.PerlinNoise(p.x + offset, p.y + p.z + 7.7f));
+                g = vertexPaintNoiseColor ? Mathf.Clamp01(Mathf.PerlinNoise(p.y + offset + 31.9f, p.z + p.x + 19.1f)) : r;
+                b = vertexPaintNoiseColor ? Mathf.Clamp01(Mathf.PerlinNoise(p.z + offset + 53.7f, p.x + p.y + 37.3f)) : r;
+            }
             return new Color(
-                Mathf.Clamp01(current.r + r * vertexPaintNoiseAmount),
-                Mathf.Clamp01(current.g + g * vertexPaintNoiseAmount),
-                Mathf.Clamp01(current.b + b * vertexPaintNoiseAmount),
-                vertexPaintAffectAlpha ? Mathf.Clamp01(current.a + a * vertexPaintNoiseAmount) : current.a);
+                NoiseChannel(current.r, r, vertexPaintNoiseAmount),
+                NoiseChannel(current.g, g, vertexPaintNoiseAmount),
+                NoiseChannel(current.b, b, vertexPaintNoiseAmount),
+                current.a);
+        }
+
+        /// <summary>
+        /// Picks a value between "darker by amount" and "lighter by amount", measured as a
+        /// fraction of how far the channel can move. Adding a raw offset wasted half the
+        /// vertices on white (they cannot get whiter); this way every vertex changes, and at
+        /// Amount 1 white vertices land anywhere from black to white.
+        /// </summary>
+        private static float NoiseChannel(float value, float random01, float amount)
+        {
+            float darkest = value * (1f - amount);
+            float lightest = value + ((1f - value) * amount);
+            return Mathf.Lerp(darkest, lightest, random01);
+        }
+
+        /// <summary>A pseudo-random value in [0, 1] for a quantized position and seed.</summary>
+        private static float HashVertexPaintNoise(int x, int y, int z, int seed, int channel)
+        {
+            unchecked
+            {
+                uint h = (uint)x * 0x8DA6B343u;
+                h ^= (uint)y * 0xD8163841u;
+                h ^= (uint)z * 0xCB1AB31Fu;
+                h ^= (uint)seed * 0x165667B1u;
+                h ^= (uint)(channel + 1) * 0x27D4EB2Fu;
+                h ^= h >> 15; h *= 0x2C1B3C6Du;
+                h ^= h >> 12; h *= 0x297A2D39u;
+                h ^= h >> 15;
+                return (h & 0xFFFFFFu) / (float)0xFFFFFFu;
+            }
         }
 
         private void EndVertexPaintStroke(bool finalize)
@@ -7738,6 +8974,9 @@ namespace UMA
                 RepaintLinkedEditors();
                 SceneView.RepaintAll();
             }
+            // Colors painted into neighboring slots are already in the preview; keep the
+            // adjustments in step with it even when the stroke is cancelled.
+            FlushVertexPaintSpillContexts();
             if (vertexPaintUndoGroup >= 0)
             {
                 Undo.CollapseUndoOperations(vertexPaintUndoGroup);
@@ -7773,6 +9012,7 @@ namespace UMA
             {
                 return;
             }
+            DrawHairRootTipMarks();
             Color saveColor = Handles.color;
             Mesh mesh = GetVertexMesh();
             Material mat = GetVertexMaterial(Color.red);
@@ -8091,17 +9331,40 @@ namespace UMA
             return false;
         }
 
+        private static GUIStyle leftPanelStyle;
+
+        /// <summary>The help box's spacing without its texture, so the panel background shows as it is.</summary>
+        private static GUIStyle LeftPanelStyle
+        {
+            get
+            {
+                if (leftPanelStyle == null)
+                {
+                    leftPanelStyle = new GUIStyle(EditorStyles.helpBox);
+                    leftPanelStyle.normal.background = null;
+                    leftPanelStyle.normal.scaledBackgrounds = Array.Empty<Texture2D>();
+                }
+                return leftPanelStyle;
+            }
+        }
+
         private void DrawGUIWindows(SceneView sceneView)
         {
             Handles.BeginGUI();
             EnsureGUIStyles();
             DrawStageCloseButton(sceneView);
-            GUILayout.BeginArea(leftPanelRect, EditorStyles.helpBox);
+            // The same background as the Face Editor's panels: the help box alone is too transparent over the scene.
+            StageFloatingToolbar.DrawPanelBackground(leftPanelRect);
+            GUILayout.BeginArea(leftPanelRect, LeftPanelStyle);
             {
                 if (slotWeightEditorMode)
                 {
                     DoToolsPanel();
                     GUILayout.EndArea();
+                    if (ShowAdvancedToolbar)
+                    {
+                        DrawAdvancedToolbar();
+                    }
                     Handles.EndGUI();
                     return;
                 }
@@ -8132,8 +9395,639 @@ namespace UMA
             }
             GUILayout.EndArea();
 
+            if (ShowSculptToolbar)
+            {
+                DrawSculptToolbar();
+            }
+            else if (ShowVertexPaintToolbar)
+            {
+                DrawVertexPaintToolbar();
+            }
+            else if (ShowAdvancedToolbar)
+            {
+                DrawAdvancedToolbar();
+            }
 
             Handles.EndGUI();
+        }
+
+        // ---------------------------------------------------------------
+        // Floating sculpt toolbar
+        // ---------------------------------------------------------------
+
+        private const float ToolLabelWidth = 120f;
+        // Kept from the original sculpt toolbar so its saved position carries over.
+        private const string StageToolbarPositionPref = "UMA.VertexEditorStage.SculptToolbarPosition";
+        private const string SculptIconPrefix = "UMASculpt_";
+        private const string VertexPaintIconPrefix = "UMAVPaint_";
+
+        private struct SculptToolInfo
+        {
+            public SculptTool tool;
+            public SculptMaskTool mask;
+            public string icon;
+            public string label;
+            public string tooltip;
+
+            public SculptToolInfo(SculptTool tool, string icon, string label, string tooltip)
+            {
+                this.tool = tool;
+                this.mask = SculptMaskTool.None;
+                this.icon = icon;
+                this.label = label;
+                this.tooltip = tooltip;
+            }
+
+            public SculptToolInfo(SculptMaskTool mask, string icon, string label, string tooltip)
+            {
+                this.tool = SculptTool.Add;
+                this.mask = mask;
+                this.icon = icon;
+                this.label = label;
+                this.tooltip = tooltip;
+            }
+        }
+
+        private static readonly SculptToolInfo[] SculptToolInfos =
+        {
+            new SculptToolInfo(SculptTool.Add, "Add", "Add", "Move vertices outward along the averaged surface normal."),
+            new SculptToolInfo(SculptTool.Remove, "Remove", "Remove", "Move vertices inward along the averaged surface normal."),
+            new SculptToolInfo(SculptTool.Smooth, "Smooth", "Smooth", "Relax vertices toward their connected neighbors."),
+            new SculptToolInfo(SculptTool.Heal, "Heal", "Heal", "Even out how far the vertices have been moved, so a pinched or folded area returns to its modelled shape and spacing."),
+            new SculptToolInfo(SculptTool.Grab, "Grab", "Grab", "Drag vertices parallel to the Scene camera's view plane."),
+            new SculptToolInfo(SculptTool.Crease, "Crease", "Crease", "Pinch vertices toward the stroke while adding an adjustable ridge or indentation."),
+            new SculptToolInfo(SculptTool.Pinch, "Pinch", "Pinch", "Draw vertices together across the surface without adding depth."),
+            new SculptToolInfo(SculptTool.Plane, "Plane", "Plane", "Flatten, fill, or scrape vertices toward the plane captured at stroke start."),
+            new SculptToolInfo(SculptTool.Boundary, "Boundary", "Boundary", "Deform the nearest open edge, such as a hem or cuff, and propagate the effect into the garment."),
+            new SculptToolInfo(SculptTool.ElasticDeform, "Elastic", "Elastic Deform", "Broad grab, scale, or twist deformation with smooth volume-aware falloff."),
+        };
+
+        private static readonly SculptToolInfo[] SculptMaskInfos =
+        {
+            new SculptToolInfo(SculptMaskTool.Paint, "MaskPaint", "Mask Paint", "Protect vertices under the brush from sculpting. Click again to return to the sculpt tool."),
+            new SculptToolInfo(SculptMaskTool.Erase, "MaskErase", "Mask Erase", "Remove protection under the brush. Click again to return to the sculpt tool."),
+        };
+
+        private StageFloatingToolbar stageToolbar;
+        private GUIStyle sculptToolNameStyle;
+
+        /// <summary>
+        /// The floating toolbar beside the left panel. Sculpt and Vertex Paint share it (and
+        /// its saved position); each draws its own buttons and icon set.
+        /// </summary>
+        private StageFloatingToolbar StageToolbar =>
+            stageToolbar ?? (stageToolbar = new StageFloatingToolbar(StageToolbarPositionPref, SculptIconPrefix));
+
+        private bool ShowSculptToolbar =>
+            !slotWeightEditorMode && !touchupWeightsMode && sceneToolMode == SceneToolMode.Sculpt;
+
+        private bool ShowVertexPaintToolbar =>
+            !slotWeightEditorMode && !touchupWeightsMode && sceneToolMode == SceneToolMode.VertexPaint;
+
+        /// <summary>Advanced vertex selection (also used by the slot weight editor).</summary>
+        private bool ShowAdvancedToolbar =>
+            !touchupWeightsMode &&
+            (sceneToolMode == SceneToolMode.Select || sceneToolMode == SceneToolMode.SelectionBrush) &&
+            (slotWeightEditorMode || modifierEditor == null || !modifierEditor.IsBlendshapeExtractionWorkflow);
+
+        /// <summary>Sculpt, Vertex Paint and Advanced share one floating toolbar position.</summary>
+        private bool ShowStageToolbar => ShowSculptToolbar || ShowVertexPaintToolbar || ShowAdvancedToolbar;
+
+        private SculptToolInfo CurrentSculptToolInfo
+        {
+            get
+            {
+                if (sculptMaskTool != SculptMaskTool.None)
+                {
+                    foreach (SculptToolInfo info in SculptMaskInfos)
+                        if (info.mask == sculptMaskTool) return info;
+                }
+                foreach (SculptToolInfo info in SculptToolInfos)
+                    if (info.tool == sculptTool) return info;
+                return SculptToolInfos[0];
+            }
+        }
+
+        /// <summary>
+        /// The white glyph for a tool, at 2x on high-DPI displays. The icons live next to
+        /// this script in Icons/ and are tinted for the editor skin.
+        /// </summary>
+        private static Texture2D GetSculptIcon(string name) => StageFloatingToolbar.GetIcon(SculptIconPrefix, name);
+
+        private static Texture2D GetVertexPaintIcon(string name) => StageFloatingToolbar.GetIcon(VertexPaintIconPrefix, name);
+
+        // Tools, a separator, the mask brushes, a separator and Frame.
+        private static float SculptToolbarHeight =>
+            StageFloatingToolbar.HeightFor(SculptToolInfos.Length + SculptMaskInfos.Length + 1, 2);
+
+        /// <summary>Places the floating toolbar for the current tool inside the Scene view's camera area.</summary>
+        private void LayoutStageToolbar(Rect viewport)
+        {
+            float height = ShowVertexPaintToolbar ? VertexPaintToolbarHeight
+                : ShowAdvancedToolbar ? AdvancedToolbarHeight
+                : SculptToolbarHeight;
+            StageToolbar.Layout(viewport, leftPanelRect, height, LeftPanelPadding);
+        }
+
+        /// <summary>Frames the character from the stage's starting camera angle.</summary>
+        private void FrameCharacter()
+        {
+            SceneView view = openedSceneView != null ? openedSceneView : SceneView.lastActiveSceneView;
+            if (view == null || VertexObject == null || cameraAnchor == null)
+            {
+                return;
+            }
+            Selection.activeObject = VertexObject;
+            view.AlignViewToObject(cameraAnchor.transform);
+            view.FrameSelected(true);
+        }
+
+        /// <summary>The Frame button every stage toolbar ends with.</summary>
+        private void DrawToolbarFrameButton(StageFloatingToolbar toolbar, ref float y)
+        {
+            toolbar.Separator(ref y);
+            if (toolbar.Button(
+                    ref y,
+                    StageFloatingToolbar.GetIcon(StageFloatingToolbar.SharedIconPrefix, "Frame"),
+                    "Frame",
+                    "Frame the character from the starting camera angle."))
+            {
+                FrameCharacter();
+            }
+        }
+
+        /// <summary>A bold, clickable section heading. Returns whether the section is open.</summary>
+        private bool DrawSectionFoldout(ref bool open, string title)
+        {
+            if (sectionFoldoutStyle == null)
+            {
+                sectionFoldoutStyle = new GUIStyle(EditorStyles.foldout) { fontStyle = FontStyle.Bold };
+            }
+            EditorGUILayout.Space(2f);
+            open = EditorGUILayout.Foldout(open, title, true, sectionFoldoutStyle);
+            return open;
+        }
+
+        private GUIStyle sectionFoldoutStyle;
+        [SerializeField] private bool showSculptBrushSection = true;
+        [SerializeField] private bool showSculptMaskSection = true;
+        [SerializeField] private bool showSculptSaveOptions;
+        [SerializeField] private bool showVertexPaintBrushSection = true;
+        [SerializeField] private bool showVertexPaintSlotOperations;
+        [SerializeField] private bool showVertexPaintSaveOptions;
+        [SerializeField] private bool showAdvancedDisplayOptions;
+        private bool showRaycastDebugOptions;
+
+        private void EnsureToolNameStyle()
+        {
+            if (sculptToolNameStyle != null)
+            {
+                return;
+            }
+            sculptToolNameStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                imagePosition = ImagePosition.ImageLeft,
+                fixedHeight = 20f,
+                alignment = TextAnchor.MiddleLeft,
+            };
+        }
+
+        /// <summary>
+        /// A floating column of icon buttons beside the left panel: the nine sculpt
+        /// brushes and the two mask brushes. Drag the grip to move it; double-click
+        /// the grip to dock it beside the panel again.
+        /// </summary>
+        private void DrawSculptToolbar()
+        {
+            StageFloatingToolbar toolbar = StageToolbar;
+            toolbar.IconPrefix = SculptIconPrefix;
+            float y = toolbar.BeginFrame();
+            foreach (SculptToolInfo info in SculptToolInfos)
+            {
+                bool on = sculptMaskTool == SculptMaskTool.None && sculptTool == info.tool;
+                if (toolbar.Toggle(ref y, info.icon, info.label, info.tooltip, on) && !on)
+                {
+                    sculptTool = info.tool;
+                    sculptMaskTool = SculptMaskTool.None;
+                    RepaintLinkedEditors();
+                }
+            }
+
+            toolbar.Separator(ref y);
+
+            foreach (SculptToolInfo info in SculptMaskInfos)
+            {
+                bool on = sculptMaskTool == info.mask;
+                if (toolbar.Toggle(ref y, info.icon, info.label, info.tooltip, on))
+                {
+                    sculptMaskTool = on ? SculptMaskTool.None : info.mask;
+                    RepaintLinkedEditors();
+                }
+            }
+            DrawToolbarFrameButton(toolbar, ref y);
+            toolbar.EndFrame();
+        }
+
+        /// <summary>The Sculpt panel's "Tool" row: the active brush's icon, name and what it does.</summary>
+        private void DrawCurrentSculptToolSummary()
+        {
+            EnsureToolNameStyle();
+            SculptToolInfo info = CurrentSculptToolInfo;
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(new GUIContent("Tool", "Choose brushes from the floating toolbar beside this panel."), GUILayout.Width(ToolLabelWidth));
+            Vector2 oldIconSize = EditorGUIUtility.GetIconSize();
+            EditorGUIUtility.SetIconSize(new Vector2(16f, 16f));
+            Color oldContent = GUI.contentColor;
+            GUI.contentColor = StageFloatingToolbar.IconTint;
+            GUILayout.Label(new GUIContent(" " + info.label, GetSculptIcon(info.icon), info.tooltip), sculptToolNameStyle);
+            GUI.contentColor = oldContent;
+            EditorGUIUtility.SetIconSize(oldIconSize);
+            GUILayout.EndHorizontal();
+            GUILayout.Label(info.tooltip, EditorStyles.wordWrappedMiniLabel);
+        }
+
+        // ---------------------------------------------------------------
+        // Floating vertex paint toolbar
+        // ---------------------------------------------------------------
+
+        private const float VertexPaintToolbarSwatchHeight = 18f;
+
+        private struct VertexPaintToolInfo
+        {
+            public VertexPaintTool tool;
+            public string icon;
+            public string label;
+            public string tooltip;
+
+            public VertexPaintToolInfo(VertexPaintTool tool, string icon, string label, string tooltip)
+            {
+                this.tool = tool;
+                this.icon = icon;
+                this.label = label;
+                this.tooltip = tooltip;
+            }
+        }
+
+        private static readonly VertexPaintToolInfo[] VertexPaintToolInfos =
+        {
+            new VertexPaintToolInfo(VertexPaintTool.Paint, "Paint", "Paint", "Paint the brush color. With Blend set to Multiply, tint the current color by it instead."),
+            new VertexPaintToolInfo(VertexPaintTool.Erase, "Erase", "Erase", "Move painted colors gradually back toward white."),
+            new VertexPaintToolInfo(VertexPaintTool.Smear, "Smear", "Smear", "Pull nearby color in the direction of the stroke."),
+            new VertexPaintToolInfo(VertexPaintTool.Blur, "Blur", "Blur", "Average the colors of connected neighboring vertices."),
+            new VertexPaintToolInfo(VertexPaintTool.Smooth, "Smooth", "Smooth", "Blend toward a distance-weighted world-space neighborhood, including across seams and nearby disconnected vertices."),
+            new VertexPaintToolInfo(VertexPaintTool.Burn, "Burn", "Burn", "Darken the existing colors."),
+            new VertexPaintToolInfo(VertexPaintTool.Dodge, "Dodge", "Dodge", "Lighten the existing colors."),
+            new VertexPaintToolInfo(VertexPaintTool.Noise, "Noise", "Noise", "Lighten or darken each vertex by a random amount, or in soft patches with Noise Type set to Smooth."),
+            new VertexPaintToolInfo(VertexPaintTool.Clear, "ClearBrush", "Clear Brush", "Reset the colors under the brush to white at once."),
+        };
+
+        private VertexPaintToolInfo CurrentVertexPaintToolInfo
+        {
+            get
+            {
+                foreach (VertexPaintToolInfo info in VertexPaintToolInfos)
+                    if (info.tool == vertexPaintTool) return info;
+                return VertexPaintToolInfos[0];
+            }
+        }
+
+        private struct VertexPaintShapeInfo
+        {
+            public VertexPaintBrushShape shape;
+            public string icon;
+            public string label;
+            public string tooltip;
+
+            public VertexPaintShapeInfo(VertexPaintBrushShape shape, string icon, string label, string tooltip)
+            {
+                this.shape = shape;
+                this.icon = icon;
+                this.label = label;
+                this.tooltip = tooltip;
+            }
+        }
+
+        private static readonly VertexPaintShapeInfo[] VertexPaintShapeInfos =
+        {
+            new VertexPaintShapeInfo(VertexPaintBrushShape.Circle, "ShapeCircle", "Circle Brush", "Circular radial brush."),
+            new VertexPaintShapeInfo(VertexPaintBrushShape.Square, "ShapeSquare", "Square Brush", "Square planar brush."),
+            new VertexPaintShapeInfo(VertexPaintBrushShape.Bitmap, "ShapeBitmap", "Bitmap Brush", "Use a texture's alpha and grayscale as the brush mask. Choose the Brush Bitmap in the panel."),
+        };
+
+        // Brushes, shapes, the color swatch and Clear, then Frame.
+        private static float VertexPaintToolbarHeight =>
+            StageFloatingToolbar.HeightFor(VertexPaintToolInfos.Length + VertexPaintShapeInfos.Length + 2, 3) +
+            VertexPaintToolbarSwatchHeight + StageFloatingToolbar.Gap;
+
+        /// <summary>
+        /// The Vertex Paint toolbar: the nine brushes, the brush shapes, the brush color, a Clear
+        /// button that removes the painting from every editable slot, and Frame.
+        /// </summary>
+        private void DrawVertexPaintToolbar()
+        {
+            StageFloatingToolbar toolbar = StageToolbar;
+            toolbar.IconPrefix = VertexPaintIconPrefix;
+            float y = toolbar.BeginFrame();
+            foreach (VertexPaintToolInfo info in VertexPaintToolInfos)
+            {
+                bool on = vertexPaintTool == info.tool;
+                if (toolbar.Toggle(ref y, info.icon, info.label, info.tooltip, on) && !on)
+                {
+                    EndVertexPaintStroke(true);
+                    vertexPaintTool = info.tool;
+                    RepaintLinkedEditors();
+                }
+            }
+
+            toolbar.Separator(ref y);
+            foreach (VertexPaintShapeInfo info in VertexPaintShapeInfos)
+            {
+                bool on = vertexPaintBrushShape == info.shape;
+                if (toolbar.Toggle(ref y, info.icon, info.label, info.tooltip, on) && !on)
+                {
+                    vertexPaintBrushShape = info.shape;
+                    RepaintLinkedEditors();
+                    SceneView.RepaintAll();
+                }
+            }
+
+            toolbar.Separator(ref y);
+            Rect swatch = new Rect(toolbar.ButtonX + 1f, y, StageFloatingToolbar.ButtonSize - 2f, VertexPaintToolbarSwatchHeight);
+            EditorGUI.BeginChangeCheck();
+            Color color = EditorGUI.ColorField(
+                swatch,
+                new GUIContent(string.Empty, "Brush color used by Paint. Paint lays it down, or with Blend set to Multiply tints the existing vertex color by it."),
+                vertexPaintBrushColor,
+                false,
+                true,
+                false);
+            if (EditorGUI.EndChangeCheck())
+            {
+                vertexPaintBrushColor = color;
+                RepaintLinkedEditors();
+            }
+            y += VertexPaintToolbarSwatchHeight + StageFloatingToolbar.Gap;
+
+            if (toolbar.Button(
+                    ref y,
+                    "ClearAll",
+                    "Clear",
+                    "Remove all painting from the editable slots, restoring their original vertex colors. Undo brings it back."))
+            {
+                ClearEditableVertexPaint();
+            }
+            DrawToolbarFrameButton(toolbar, ref y);
+            toolbar.EndFrame();
+        }
+
+        // ---------------------------------------------------------------
+        // Floating Advanced toolbar: selection tools, Define Set/State and
+        // the action for the current mode.
+        // ---------------------------------------------------------------
+
+        private const string AdvancedIconPrefix = "UMAAdv_";
+
+        private enum AdvancedTool { Select, BrushPoint, BrushCircle }
+
+        private struct AdvancedButtonInfo
+        {
+            public int value;
+            public string icon;
+            public string label;
+            public string tooltip;
+
+            public AdvancedButtonInfo(int value, string icon, string label, string tooltip)
+            {
+                this.value = value;
+                this.icon = icon;
+                this.label = label;
+                this.tooltip = tooltip;
+            }
+        }
+
+        private static readonly AdvancedButtonInfo[] AdvancedToolInfos =
+        {
+            new AdvancedButtonInfo((int)AdvancedTool.Select, "Select", "Select", "Click a vertex, or drag a rectangle, to apply the action."),
+            new AdvancedButtonInfo((int)AdvancedTool.BrushPoint, "BrushPoint", "Point Brush", "Drag to apply the action to the vertex under the cursor. Each vertex is changed once per stroke."),
+            new AdvancedButtonInfo((int)AdvancedTool.BrushCircle, "BrushCircle", "Circle Brush", "Drag to apply the action to every vertex inside the circle. Each vertex is changed once per stroke. Set its size with Radius."),
+        };
+
+        private static readonly AdvancedButtonInfo[] AdvancedDefineInfos =
+        {
+            new AdvancedButtonInfo((int)DefineMode.DefineVertexSet, "DefineSet", "Define Set", "Choose which vertices belong to the selection."),
+            new AdvancedButtonInfo((int)DefineMode.DefineVertexState, "DefineState", "Define State", "Mark selected vertices Active or Inactive. Only vertices already in the selection change."),
+        };
+
+        private static readonly AdvancedButtonInfo[] AdvancedSetActionInfos =
+        {
+            new AdvancedButtonInfo((int)selectMode.Add, "Add", "Add", "Add vertices to the selection."),
+            new AdvancedButtonInfo((int)selectMode.Remove, "Remove", "Remove", "Remove vertices from the selection."),
+            new AdvancedButtonInfo((int)selectMode.InvertSelection, "Invert", "Invert", "Add unselected vertices and remove selected ones."),
+        };
+
+        private static readonly AdvancedButtonInfo[] AdvancedStateActionInfos =
+        {
+            new AdvancedButtonInfo((int)selectMode.Activate, "Activate", "Activate", "Mark selected vertices Active."),
+            new AdvancedButtonInfo((int)selectMode.Deactivate, "Deactivate", "Deactivate", "Mark selected vertices Inactive."),
+            new AdvancedButtonInfo((int)selectMode.ToggleState, "Toggle", "Toggle", "Flip selected vertices between Active and Inactive."),
+        };
+
+        // Three tools, two define modes, three actions and Frame.
+        private static float AdvancedToolbarHeight => StageFloatingToolbar.HeightFor(9, 3);
+
+        private AdvancedTool CurrentAdvancedTool =>
+            sceneToolMode != SceneToolMode.SelectionBrush ? AdvancedTool.Select
+            : selectionBrushShape == SelectionBrushShape.Circle ? AdvancedTool.BrushCircle
+            : AdvancedTool.BrushPoint;
+
+        private AdvancedButtonInfo[] CurrentAdvancedActionInfos =>
+            currentDefineMode == DefineMode.DefineVertexSet ? AdvancedSetActionInfos : AdvancedStateActionInfos;
+
+        private static AdvancedButtonInfo FindAdvancedInfo(AdvancedButtonInfo[] infos, int value)
+        {
+            foreach (AdvancedButtonInfo info in infos)
+            {
+                if (info.value == value) return info;
+            }
+            return infos[0];
+        }
+
+        /// <summary>Advanced editing always uses one of the two selection tools.</summary>
+        private void EnsureAdvancedSelectionMode()
+        {
+            if (sceneToolMode != SceneToolMode.Select && sceneToolMode != SceneToolMode.SelectionBrush)
+            {
+                ChangeSceneToolMode(SceneToolMode.Select);
+            }
+        }
+
+        private void SetAdvancedTool(AdvancedTool tool)
+        {
+            if (tool == AdvancedTool.Select)
+            {
+                ChangeSceneToolMode(SceneToolMode.Select);
+            }
+            else
+            {
+                ChangeSceneToolMode(SceneToolMode.SelectionBrush);
+                selectionBrushShape = tool == AdvancedTool.BrushCircle ? SelectionBrushShape.Circle : SelectionBrushShape.Point;
+            }
+            RepaintLinkedEditors();
+            SceneView.RepaintAll();
+        }
+
+        private void SetDefineMode(DefineMode mode)
+        {
+            if (mode == currentDefineMode)
+            {
+                return;
+            }
+            CancelInteraction();
+            currentDefineMode = mode;
+            currentMode = currentDefineMode == DefineMode.DefineVertexSet ? selectMode.Add : selectMode.ToggleState;
+            RepaintLinkedEditors();
+            SceneView.RepaintAll();
+        }
+
+        private void DrawAdvancedToolbar()
+        {
+            StageFloatingToolbar toolbar = StageToolbar;
+            toolbar.IconPrefix = AdvancedIconPrefix;
+            float y = toolbar.BeginFrame();
+
+            AdvancedTool currentTool = CurrentAdvancedTool;
+            foreach (AdvancedButtonInfo info in AdvancedToolInfos)
+            {
+                bool on = (int)currentTool == info.value;
+                if (toolbar.Toggle(ref y, info.icon, info.label, info.tooltip, on) && !on)
+                {
+                    SetAdvancedTool((AdvancedTool)info.value);
+                }
+            }
+
+            toolbar.Separator(ref y);
+            foreach (AdvancedButtonInfo info in AdvancedDefineInfos)
+            {
+                bool on = (int)currentDefineMode == info.value;
+                if (toolbar.Toggle(ref y, info.icon, info.label, info.tooltip, on) && !on)
+                {
+                    SetDefineMode((DefineMode)info.value);
+                }
+            }
+
+            toolbar.Separator(ref y);
+            foreach (AdvancedButtonInfo info in CurrentAdvancedActionInfos)
+            {
+                bool on = (int)currentMode == info.value;
+                if (toolbar.Toggle(ref y, info.icon, info.label, info.tooltip, on) && !on)
+                {
+                    currentMode = (selectMode)info.value;
+                    RepaintLinkedEditors();
+                }
+            }
+
+            DrawToolbarFrameButton(toolbar, ref y);
+            toolbar.EndFrame();
+        }
+
+        /// <summary>The Advanced panel's "Tool" row: the tool, the action and what they do.</summary>
+        private void DrawCurrentAdvancedToolSummary()
+        {
+            EnsureToolNameStyle();
+            AdvancedButtonInfo tool = FindAdvancedInfo(AdvancedToolInfos, (int)CurrentAdvancedTool);
+            AdvancedButtonInfo action = FindAdvancedInfo(CurrentAdvancedActionInfos, (int)currentMode);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(new GUIContent("Tool", "Choose tools and actions from the floating toolbar beside this panel."), GUILayout.Width(ToolLabelWidth));
+            Vector2 oldIconSize = EditorGUIUtility.GetIconSize();
+            EditorGUIUtility.SetIconSize(new Vector2(16f, 16f));
+            Color oldContent = GUI.contentColor;
+            GUI.contentColor = StageFloatingToolbar.IconTint;
+            GUILayout.Label(
+                new GUIContent(" " + tool.label + "  \u00B7  " + action.label, StageFloatingToolbar.GetIcon(AdvancedIconPrefix, tool.icon), tool.tooltip),
+                sculptToolNameStyle);
+            GUI.contentColor = oldContent;
+            EditorGUIUtility.SetIconSize(oldIconSize);
+            GUILayout.EndHorizontal();
+            GUILayout.Label(tool.tooltip + " " + action.tooltip + " Hold Alt and use the mouse to move the camera.", EditorStyles.wordWrappedMiniLabel);
+        }
+
+        /// <summary>The Vertex Paint panel's "Tool" row: the active brush's icon, name and what it does.</summary>
+        private void DrawCurrentVertexPaintToolSummary()
+        {
+            EnsureToolNameStyle();
+            VertexPaintToolInfo info = CurrentVertexPaintToolInfo;
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(new GUIContent("Tool", "Choose brushes from the floating toolbar beside this panel."), GUILayout.Width(ToolLabelWidth));
+            Vector2 oldIconSize = EditorGUIUtility.GetIconSize();
+            EditorGUIUtility.SetIconSize(new Vector2(16f, 16f));
+            Color oldContent = GUI.contentColor;
+            GUI.contentColor = StageFloatingToolbar.IconTint;
+            GUILayout.Label(new GUIContent(" " + info.label, GetVertexPaintIcon(info.icon), info.tooltip), sculptToolNameStyle);
+            GUI.contentColor = oldContent;
+            EditorGUIUtility.SetIconSize(oldIconSize);
+            GUILayout.EndHorizontal();
+            GUILayout.Label(info.tooltip, EditorStyles.wordWrappedMiniLabel);
+        }
+
+        /// <summary>
+        /// Removes the painting from every editable slot: each slot goes back to the vertex
+        /// colors it had before painting (white for slots without color data). One undo step.
+        /// </summary>
+        private void ClearEditableVertexPaint()
+        {
+            EnsureVertexPaintSession();
+            EndVertexPaintStroke(true);
+            if (BakedMesh == null || vertexPaintSlot == null)
+            {
+                return;
+            }
+
+            SlotData originalSlot = vertexPaintSlot;
+            List<SlotData> targetSlots = new List<SlotData>(vertexPaintSlots);
+            bool undoRegistered = false;
+            int undoGroup = -1;
+            for (int slotIndex = 0; slotIndex < targetSlots.Count; slotIndex++)
+            {
+                ActivateVertexPaintSlot(targetSlots[slotIndex], true);
+                if (vertexPaintColors == null || vertexPaintBaseColors == null ||
+                    vertexPaintColors.Length != vertexPaintBaseColors.Length)
+                {
+                    continue;
+                }
+
+                bool painted = false;
+                for (int i = 0; i < vertexPaintColors.Length && !painted; i++)
+                {
+                    painted = !ColorsEqual(vertexPaintColors[i], vertexPaintBaseColors[i]);
+                }
+                if (!painted)
+                {
+                    continue;
+                }
+
+                if (!undoRegistered)
+                {
+                    Undo.IncrementCurrentGroup();
+                    undoGroup = Undo.GetCurrentGroup();
+                    Undo.SetCurrentGroupName("Clear Vertex Paint");
+                    Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { this, BakedMesh }, "Clear Vertex Paint");
+                    undoRegistered = true;
+                }
+
+                vertexPaintColors = (Color32[])vertexPaintBaseColors.Clone();
+                ApplyVertexPaintColorsToPreview(vertexPaintSlotStart, vertexPaintColors);
+                SyncVertexPaintAdjustments();
+                vertexPaintDirtySlots.Add(GetVertexPaintSlotKey());
+            }
+
+            ActivateVertexPaintSlot(originalSlot, true);
+            if (undoRegistered)
+            {
+                Undo.CollapseUndoOperations(undoGroup);
+                vertexPaintDirty = true;
+            }
+            RepaintLinkedEditors();
+            SceneView.RepaintAll();
         }
 
         private void DrawStageCloseButton(SceneView sceneView)
@@ -8277,8 +10171,6 @@ namespace UMA
         {
             float line = EditorGUIUtility.singleLineHeight;
             float vSpacing = 2f;
-            float header = Mathf.Max(LeftPanelHeaderHeight, line);
-
             int wearableCount = 0;
             int slotCount = 0;
             if (thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null)
@@ -8289,18 +10181,19 @@ namespace UMA
                 slotCount = slots != null ? slots.Length : 0;
             }
 
-            // Approximate height for:
-            // - "Visibility" header
-            // - scroll view containing wearables + slots + button + optional help box
+            // Approximate height for the fixed header and button rows plus a
+            // scroll view holding the wearables and slot rows.
             float scrollContentLines = 0f;
-            scrollContentLines += 1f; // "Visible Wearables" header
-            scrollContentLines += wearableCount;
-            scrollContentLines += 1f; // "Visible Slots" header
+            if (wearableCount > 0)
+            {
+                scrollContentLines += 1.3f; // "Wearables" foldout + spacing
+                if (showSlotsPanelWearables) scrollContentLines += wearableCount;
+            }
+            scrollContentLines += 1f; // column headings
             scrollContentLines += slotCount;
-            scrollContentLines += 1.5f; // spacing + invert button
-            scrollContentLines += 2f; // safety margin / possible helpbox
+            scrollContentLines += 1f; // safety margin
 
-            float estimated = header + ((scrollContentLines * (line + vSpacing)) + (LeftPanelPadding * 2f)) + 8f;
+            float estimated = GetSlotPanelFixedHeight() + (scrollContentLines * (line + vSpacing)) + (LeftPanelPadding * 2f);
             return Mathf.Clamp(estimated, 50f, maxHeight);
         }
 
@@ -8310,135 +10203,337 @@ namespace UMA
                 ? "Weight Touchup"
                 : slotWeightEditorMode ? "Vertex Selection" : "Authoring Workflow";
             GUILayout.Label(panelTitle, EditorStyles.boldLabel);
-            DoToolsWindow(VertexEditorToolsWindowID);
+            float oldLabelWidth = EditorGUIUtility.labelWidth;
+            EditorGUIUtility.labelWidth = ToolLabelWidth;
+            try
+            {
+                DoToolsWindow(VertexEditorToolsWindowID);
+            }
+            finally
+            {
+                EditorGUIUtility.labelWidth = oldLabelWidth;
+            }
         }
 
+        private GUIStyle slotRowLabel;
+        private GUIStyle slotRowLabelDimmed;
+        private GUIStyle slotRowBadge;
+
+        private void EnsureSlotPanelStyles()
+        {
+            if (slotRowLabel != null)
+            {
+                return;
+            }
+            slotRowLabel = new GUIStyle(EditorStyles.label) { clipping = TextClipping.Clip };
+            slotRowLabelDimmed = new GUIStyle(slotRowLabel);
+            slotRowLabelDimmed.normal.textColor = EditorGUIUtility.isProSkin
+                ? new Color(0.55f, 0.55f, 0.55f)
+                : new Color(0.45f, 0.45f, 0.45f);
+            slotRowBadge = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleRight };
+            slotRowBadge.normal.textColor = slotRowLabelDimmed.normal.textColor;
+            slotRowSummary = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.MiddleRight };
+            slotPanelNoticeStyle = new GUIStyle(slotRowSummary) { fontStyle = FontStyle.Bold };
+            // Same height and margins as the mini buttons beside it, so the text lines up.
+            slotRowActionLabel = new GUIStyle(EditorStyles.miniBoldLabel)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                fixedHeight = EditorStyles.miniButton.fixedHeight > 0f ? EditorStyles.miniButton.fixedHeight : EditorGUIUtility.singleLineHeight,
+                margin = new RectOffset(EditorStyles.miniBoldLabel.margin.left, EditorStyles.miniBoldLabel.margin.right,
+                    EditorStyles.miniButton.margin.top, EditorStyles.miniButton.margin.bottom),
+                padding = new RectOffset(EditorStyles.miniBoldLabel.padding.left, EditorStyles.miniBoldLabel.padding.right, 0, 0),
+            };
+            slotPanelNoticeStyle.normal.textColor = EditorGUIUtility.isProSkin
+                ? new Color(1f, 0.75f, 0.3f)
+                : new Color(0.65f, 0.35f, 0f);
+        }
+
+        /// <summary>Why a visible slot cannot be edited, or null when it can.</summary>
+        private static string GetNotEditableReason(SlotData slot)
+        {
+            if (slot.Suppressed) return "Hidden. Show it to edit it.";
+            if (slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData)) return "This slot has no mesh data.";
+            if (slot.asset.isUtilitySlot) return "Utility slots cannot be edited.";
+            return null;
+        }
+
+        private bool SlotHasUnsavedEdits(SlotData slot)
+        {
+            if (sculptSlotStates.TryGetValue(slot, out SculptSlotEditState state) && HasSculptChangesForUI(state))
+            {
+                return true;
+            }
+            return vertexPaintDirtySlots.Contains(GetVertexPaintSlotKey(slot));
+        }
+
+        /// <summary>
+        /// The Slots panel: one row per slot with Show and Edit checkboxes. Show hides
+        /// or shows the slot in the stage. Edit decides whether the tools (selection,
+        /// raycast, sculpt, vertex paint) may change it. This one list replaces the
+        /// separate per-tool slot pickers.
+        /// </summary>
         private void DrawVisibilityPanel(float availableHeight)
         {
+            EnsureSlotPanelStyles();
             GUILayout.BeginVertical(EditorStyles.helpBox);
-            GUILayout.Label("Visibility", EditorStyles.boldLabel);
 
-            // Fill the remainder of the visibility section with the scroll view.
-            float headerHeight = Mathf.Max(LeftPanelHeaderHeight, EditorGUIUtility.singleLineHeight);
-            float scrollHeight = Mathf.Max(0f, availableHeight - headerHeight - 8f);
-            VisibleWearablesLocation = GUILayout.BeginScrollView(VisibleWearablesLocation, GUILayout.Height(scrollHeight));
             bool wasChanged = false;
             bool wasRecipeChanged = false;
-            bool blockedHideAllSlots = false;
             var wearables = thisDCA.GetVisibleWearables();
+            SlotData[] slots = RecipeSlots;
 
             if (EnsureAtLeastOneVisibleSlot())
             {
                 wasChanged = true;
             }
 
-            GUILayout.Label("Visible Wearables", EditorStyles.boldLabel);
-            foreach (var wearable in wearables)
+            int visibleSlotCount = GetVisibleSlotCount();
+            int editableCount = 0;
+            int selectableCount = 0;
+            foreach (var slot in slots)
+            {
+                if (slot == null) continue;
+                if (GetNotEditableReason(slot) == null && IsSelectableSlot(slot)) selectableCount++;
+                if (IsSlotEditable(slot)) editableCount++;
+            }
+
+            // Header: title and a one-line summary (or a short-lived notice).
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(new GUIContent("Slots", "Show: display the slot in the stage.\nEdit: let the tools change the slot."), EditorStyles.boldLabel, GUILayout.ExpandWidth(false));
+            GUILayout.FlexibleSpace();
+            bool showNotice = !string.IsNullOrEmpty(slotPanelNotice) && EditorApplication.timeSinceStartup < slotPanelNoticeUntil;
+            if (showNotice)
+            {
+                GUILayout.Label(slotPanelNotice, slotPanelNoticeStyle);
+            }
+            else
+            {
+                GUILayout.Label(
+                    touchupWeightsMode
+                        ? "Touchup: " + (touchupWeightSlot != null ? touchupWeightSlot.slotName : "no slot")
+                        : "Editing " + editableCount + " of " + selectableCount,
+                    slotRowSummary);
+            }
+            GUILayout.EndHorizontal();
+
+            // Quick actions stay above the list so they never scroll out of view.
+            using (new EditorGUI.DisabledScope(touchupWeightsMode))
             {
                 GUILayout.BeginHorizontal();
-                bool wasVisible = wearable.disabled;
-                wearable.disabled = !GUILayout.Toggle(!wearable.disabled, string.Empty, GUILayout.Width(24));
-                if (wasVisible != wearable.disabled)
+                GUILayout.Label(new GUIContent("Edit", "Choose which slots the tools may change."), slotRowActionLabel, GUILayout.Width(34));
+                if (GUILayout.Button(new GUIContent("All", "Make every shown slot editable."), EditorStyles.miniButtonLeft))
                 {
-                    wasRecipeChanged = true;
+                    slotTargets.EditAll();
                 }
-                GUILayout.Label(wearable.name);
+                if (GUILayout.Button(new GUIContent("None", "Lock every slot."), EditorStyles.miniButtonMid))
+                {
+                    slotTargets.EditNone(slots);
+                }
+                if (GUILayout.Button(new GUIContent("Invert", "Swap editable and locked slots."), EditorStyles.miniButtonMid))
+                {
+                    slotTargets.Invert(slots, IsSelectableSlot);
+                }
+                if (GUILayout.Button(new GUIContent("No Base", "Edit only slots that are not part of the race's base recipe (for example clothing)."), EditorStyles.miniButtonRight))
+                {
+                    slotTargets.EditOnly(slots, slot => !IsBaseSculptSlot(slot));
+                }
                 GUILayout.EndHorizontal();
             }
 
-            GUILayout.Space(10);
-            GUILayout.Label("Visible Slots", EditorStyles.boldLabel);
-            int visibleSlotCount = GetVisibleSlotCount();
-            foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(new GUIContent("Show", "Choose which slots are displayed."), slotRowActionLabel, GUILayout.Width(34));
+            if (GUILayout.Button(new GUIContent("All", "Show every slot."), EditorStyles.miniButtonLeft))
+            {
+                foreach (var slot in slots)
+                {
+                    if (slot != null && slot.Suppressed)
+                    {
+                        slot.Suppressed = false;
+                        wasChanged = true;
+                    }
+                }
+            }
+            if (GUILayout.Button(new GUIContent("Editable Only", "Hide every slot that is not editable."), EditorStyles.miniButtonMid))
+            {
+                if (editableCount > 0)
+                {
+                    foreach (var slot in slots)
+                    {
+                        if (slot != null && !slot.Suppressed && !IsSlotEditable(slot))
+                        {
+                            HideSlotFromPanel(slot);
+                            wasChanged = true;
+                        }
+                    }
+                }
+                else
+                {
+                    ShowSlotPanelNotice("No slot is editable.");
+                }
+            }
+            if (GUILayout.Button(new GUIContent("Invert", "Swap shown and hidden slots and wearables."), EditorStyles.miniButtonRight))
+            {
+                int totalSlots = 0;
+                foreach (var slot in slots)
+                {
+                    if (slot != null) totalSlots++;
+                }
+                if (totalSlots > 0 && totalSlots == visibleSlotCount)
+                {
+                    ShowSlotPanelNotice("At least one slot must stay visible.");
+                }
+                else
+                {
+                    if (wearables != null)
+                    {
+                        foreach (var wearable in wearables)
+                        {
+                            wearable.disabled = !wearable.disabled;
+                            wasRecipeChanged = true;
+                        }
+                    }
+                    foreach (var slot in slots)
+                    {
+                        if (slot == null) continue;
+                        if (slot.Suppressed) slot.Suppressed = false;
+                        else HideSlotFromPanel(slot);
+                        wasChanged = true;
+                    }
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(2);
+
+            float scrollHeight = Mathf.Max(EditorGUIUtility.singleLineHeight * 2f, availableHeight - GetSlotPanelFixedHeight());
+            VisibleWearablesLocation = GUILayout.BeginScrollView(VisibleWearablesLocation, GUILayout.Height(scrollHeight));
+
+            // Wearables (whole recipes) can be shown or hidden as a group.
+            if (wearables != null && wearables.Length > 0)
+            {
+                bool wasShowingWearables = showSlotsPanelWearables;
+                showSlotsPanelWearables = EditorGUILayout.Foldout(showSlotsPanelWearables, "Wearables (" + wearables.Length + ")", true);
+                if (wasShowingWearables != showSlotsPanelWearables)
+                {
+                    cachedVisibilityHeight = -1f;
+                }
+                if (showSlotsPanelWearables)
+                {
+                    foreach (var wearable in wearables)
+                    {
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Space(8);
+                        bool wasHidden = wearable.disabled;
+                        wearable.disabled = !GUILayout.Toggle(!wearable.disabled, new GUIContent(string.Empty, "Show this wearable."), GUILayout.Width(18));
+                        if (wasHidden != wearable.disabled)
+                        {
+                            wasRecipeChanged = true;
+                        }
+                        GUILayout.Label(new GUIContent(wearable.name, wearable.name), wearable.disabled ? slotRowLabelDimmed : slotRowLabel, GUILayout.MinWidth(40));
+                        GUILayout.EndHorizontal();
+                    }
+                }
+                GUILayout.Space(4);
+            }
+
+            // Column headings.
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(new GUIContent("Show", "Display the slot in the stage."), EditorStyles.miniBoldLabel, GUILayout.Width(34));
+            GUILayout.Label(new GUIContent("Edit", "Let the tools change the slot."), EditorStyles.miniBoldLabel, GUILayout.Width(30));
+            GUILayout.Label("Slot", EditorStyles.miniBoldLabel);
+            GUILayout.EndHorizontal();
+
+            string soloRequest = null;
+            foreach (var slot in slots)
             {
                 if (slot == null)
                 {
                     continue;
                 }
+
+                string notEditable = GetNotEditableReason(slot);
+                bool canEdit = notEditable == null && IsSelectableSlot(slot);
+                bool editable = IsSlotEditable(slot);
+
                 GUILayout.BeginHorizontal();
-                bool wasDisabled = slot.Suppressed;
-                bool desiredVisible = GUILayout.Toggle(!slot.Suppressed, string.Empty, GUILayout.Width(24));
-                bool desiredSuppressed = !desiredVisible;
 
-                if (desiredSuppressed && !slot.Suppressed && visibleSlotCount <= 1)
+                // Show
+                GUILayout.Space(8);
+                bool desiredVisible = GUILayout.Toggle(!slot.Suppressed, new GUIContent(string.Empty, "Show this slot in the stage."), GUILayout.Width(26));
+                if (desiredVisible == slot.Suppressed)
                 {
-                    desiredSuppressed = false;
-                    blockedHideAllSlots = true;
-                }
-
-                slot.Suppressed = desiredSuppressed;
-                if (slot.Suppressed != wasDisabled)
-                {
-                    wasChanged = true;
-                    visibleSlotCount += slot.Suppressed ? -1 : 1;
-                }
-                if (slot.Suppressed && editAdjustment != null && editAdjustment.slotName == slot.slotName)
-                {
-                    editAdjustment = null;
-                }
-                string label = slot.slotName;
-                if (label.Length > 27)
-                {
-                    label = label.Substring(0, 24) + "...";
-                }
-                if (GUILayout.Button(label, EditorStyles.label))
-                {
-                    slot.Suppressed = !slot.Suppressed;
-                    wasChanged = true;
-                    visibleSlotCount += slot.Suppressed ? -1 : 1;
-                    if (slot.Suppressed && editAdjustment != null && editAdjustment.slotName == slot.slotName)
+                    if (desiredVisible)
                     {
-                        editAdjustment = null;
+                        slot.Suppressed = false;
+                        visibleSlotCount++;
+                        wasChanged = true;
+                    }
+                    else if (visibleSlotCount <= 1)
+                    {
+                        ShowSlotPanelNotice("At least one slot must stay visible.");
+                    }
+                    else
+                    {
+                        HideSlotFromPanel(slot);
+                        visibleSlotCount--;
+                        wasChanged = true;
+                    }
+                }
+
+                // Edit
+                using (new EditorGUI.DisabledScope(!canEdit || touchupWeightsMode))
+                {
+                    string editTip = touchupWeightsMode
+                        ? "Weight touchup edits only its own slot."
+                        : notEditable ?? "Let the tools change this slot.";
+                    bool requestedEditable = GUILayout.Toggle(editable, new GUIContent(string.Empty, editTip), GUILayout.Width(22));
+                    if (requestedEditable != editable && canEdit && !touchupWeightsMode)
+                    {
+                        slotTargets.SetEditable(slot.slotName, requestedEditable);
+                    }
+                }
+
+                // Name: clicking it toggles Edit, like the checkbox.
+                bool isBase = IsBaseSculptSlot(slot);
+                string tooltip = slot.slotName +
+                    (isBase ? "\nPart of the race's base recipe." : string.Empty) +
+                    (notEditable != null ? "\n" + notEditable : (editable ? "\nEditable." : "\nLocked: the tools will not change it.")) +
+                    "\nClick to toggle Edit. Solo (S) makes it the only editable slot.";
+                string label = slot.slotName;
+                if (SlotHasUnsavedEdits(slot))
+                {
+                    label = "• " + label;
+                    tooltip += "\nHas unsaved edits.";
+                }
+                if (GUILayout.Button(new GUIContent(label, tooltip), editable ? slotRowLabel : slotRowLabelDimmed, GUILayout.MinWidth(40)) &&
+                    canEdit && !touchupWeightsMode)
+                {
+                    slotTargets.SetEditable(slot.slotName, !editable);
+                }
+                if (isBase)
+                {
+                    GUILayout.Label(new GUIContent("base", "Part of the race's base recipe."), slotRowBadge, GUILayout.Width(28));
+                }
+
+                // Solo: show it if needed and make it the only editable slot.
+                using (new EditorGUI.DisabledScope(touchupWeightsMode || slot.asset == null ||
+                                                   UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData) || slot.asset.isUtilitySlot))
+                {
+                    if (GUILayout.Button(new GUIContent("S", "Solo: make this the only editable slot (and show it)."), EditorStyles.miniButton, GUILayout.Width(22)))
+                    {
+                        soloRequest = slot.slotName;
+                        if (slot.Suppressed)
+                        {
+                            slot.Suppressed = false;
+                            visibleSlotCount++;
+                            wasChanged = true;
+                        }
                     }
                 }
                 GUILayout.EndHorizontal();
             }
-
-            GUILayout.Space(8);
-            if (GUILayout.Button("Invert Visiblity", EditorStyles.miniButton))
+            if (soloRequest != null)
             {
-                foreach (var wearable in wearables)
-                {
-                    wearable.disabled = !wearable.disabled;
-                    wasRecipeChanged = true;
-                }
-
-                int totalSlots = 0;
-                foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
-                {
-                    if (slot != null)
-                    {
-                        totalSlots++;
-                    }
-                }
-
-                if (totalSlots > 0 && (totalSlots - visibleSlotCount) == 0)
-                {
-                    blockedHideAllSlots = true;
-                }
-
-                foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
-                {
-                    if (slot == null)
-                    {
-                        continue;
-                    }
-                    if (blockedHideAllSlots)
-                    {
-                        continue;
-                    }
-                    slot.Suppressed = !slot.Suppressed;
-                    wasChanged = true;
-                    if (slot.Suppressed && editAdjustment != null && editAdjustment.slotName == slot.slotName)
-                    {
-                        editAdjustment = null;
-                    }
-                }
-            }
-
-            if (blockedHideAllSlots)
-            {
-                EditorGUILayout.HelpBox("At least one slot must remain visible.", MessageType.Warning);
+                slotTargets.Solo(soloRequest, slots);
             }
 
             GUILayout.EndScrollView();
@@ -8453,13 +10548,55 @@ namespace UMA
                 RebuildMesh(true);
                 RepaintLinkedEditors();
             }
+            if (soloRequest != null)
+            {
+                // Show the soloed slot: frame its bounds, after any rebuild above has put it on the mesh.
+                FrameAllEditableSlots();
+            }
+            if (wasChanged || wasRecipeChanged)
+            {
+                cachedVisibilityHeight = -1f;
+            }
+            ApplySlotTargetChanges();
             GUILayout.EndVertical();
+        }
+
+        private string slotPanelNotice;
+        private double slotPanelNoticeUntil;
+        private GUIStyle slotPanelNoticeStyle;
+        private GUIStyle slotRowSummary;
+        private GUIStyle slotRowActionLabel;
+
+        /// <summary>Shows a short message in the Slots panel header for a few seconds.</summary>
+        private void ShowSlotPanelNotice(string message)
+        {
+            slotPanelNotice = message;
+            slotPanelNoticeUntil = EditorApplication.timeSinceStartup + 3.0;
+            SceneView.RepaintAll();
+        }
+
+        private void HideSlotFromPanel(SlotData slot)
+        {
+            slot.Suppressed = true;
+            if (editAdjustment != null && editAdjustment.slotName == slot.slotName)
+            {
+                editAdjustment = null;
+            }
+        }
+
+        /// <summary>Height of the Slots panel above its scrolling list: header, two button rows and padding.</summary>
+        private float GetSlotPanelFixedHeight()
+        {
+            float line = EditorGUIUtility.singleLineHeight;
+            float buttonRow = (EditorStyles.miniButton.fixedHeight > 0f ? EditorStyles.miniButton.fixedHeight : line) +
+                EditorStyles.miniButton.margin.vertical;
+            float header = Mathf.Max(LeftPanelHeaderHeight, line) + 2f;
+            float helpBoxPadding = EditorStyles.helpBox.padding.vertical + EditorStyles.helpBox.margin.vertical;
+            return header + (buttonRow * 2f) + 2f + helpBoxPadding + 4f;
         }
 
         private Vector2 ToolsPos = new Vector2(0, 0);
         private const float ToolsPanelRightPadding = 10f;
-        private GUIStyle smallButtonStyle;
-        private GUIStyle threeButtonStyle;
         bool doneButton = false;
         public float ToolWindowAreaHeight = 0.0f;
         public MeshModifierEditor.EditorMode editorMode = MeshModifierEditor.EditorMode.VertexAdjustments;
@@ -8525,7 +10662,15 @@ namespace UMA
             int currentWorkflow = GetAuthoringWorkflowIndex();
             int requestedWorkflow = GUILayout.Toolbar(
                 currentWorkflow,
-                new[] { "Sculpt", "Vertex Paint", "Advanced", "Blendshapes" });
+                new[]
+                {
+                    new GUIContent("Sculpt", "Shape the mesh with brushes."),
+                    new GUIContent("Vertex Paint", "Paint vertex colors."),
+                    new GUIContent("Advanced", "Select vertices and build mesh modifiers."),
+                    new GUIContent("Blendshapes", "Extract blendshapes in the Mesh Modifiers window.")
+                },
+                GUI.skin.button,
+                GUI.ToolbarButtonSize.FitToContents);
             if (requestedWorkflow == currentWorkflow)
             {
                 return;
@@ -8551,32 +10696,10 @@ namespace UMA
             }
         }
 
-        private void DrawAdvancedSelectionToolbar()
-        {
-            if (sceneToolMode != SceneToolMode.Select && sceneToolMode != SceneToolMode.SelectionBrush)
-            {
-                ChangeSceneToolMode(SceneToolMode.Select);
-            }
-
-            int currentTool = sceneToolMode == SceneToolMode.SelectionBrush ? 1 : 0;
-            int requestedTool = GUILayout.Toolbar(currentTool, new[] { "Select", "Select Brush" });
-            SceneToolMode requestedMode = requestedTool == 0 ? SceneToolMode.Select : SceneToolMode.SelectionBrush;
-            if (requestedMode != sceneToolMode)
-            {
-                ChangeSceneToolMode(requestedMode);
-            }
-        }
-
         public void DoToolsWindow(int ID)
         {
             if (!doneButton)
             {
-                smallButtonStyle = new GUIStyle(EditorStyles.miniButton);
-                threeButtonStyle = new GUIStyle(EditorStyles.miniButton);
-                smallButtonStyle.fontSize = 9;
-                smallButtonStyle.fixedWidth = 82;
-                threeButtonStyle.fontSize = 9;
-                threeButtonStyle.fixedWidth = 54;
                 doneButton = true;
                 ToolWindowAreaHeight = VertexEditorToolsWindow.height;
             }
@@ -8589,68 +10712,50 @@ namespace UMA
                 120f,
                 leftPanelRect.width - scrollbarWidth - ToolsPanelRightPadding);
             GUILayout.BeginArea(new Rect(0, 0, toolsContentWidth, ToolsPos.y + ToolWindowAreaHeight));
+            GUILayout.BeginVertical(GUILayout.Width(toolsContentWidth));
             SceneView sceneView = SceneView.lastActiveSceneView;
             if (touchupWeightsMode)
             {
                 DrawTouchupWeightsTools(sceneView);
-                if (Event.current.type == EventType.Repaint)
-                {
-                    ToolWindowAreaHeight = Mathf.Max(180f, GUILayoutUtility.GetLastRect().yMax + 20f);
-                }
-                GUILayout.EndArea();
-                GUILayout.Space(ToolWindowAreaHeight + 10);
-                GUILayout.EndScrollView();
+                EndToolsScroll(180f);
                 return;
             }
 
-            if (slotWeightEditorMode)
-            {
-                DrawAdvancedSelectionToolbar();
-            }
-            else
+            if (!slotWeightEditorMode)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Space(3f);
                 DrawAuthoringWorkflowToolbar();
                 GUILayout.EndHorizontal();
-                if (GetAuthoringWorkflowIndex() == 2)
-                {
-                    GUILayout.Label("Advanced Selection", EditorStyles.miniBoldLabel);
-                    DrawAdvancedSelectionToolbar();
-                }
+            }
+            if (slotWeightEditorMode || GetAuthoringWorkflowIndex() == 2)
+            {
+                // Select, Select Brush, Define Set/State and the actions are on the floating toolbar.
+                EnsureAdvancedSelectionMode();
             }
             selectionBrushModeSet = sceneToolMode == SceneToolMode.SelectionBrush;
             selectionBrushModeState = sceneToolMode == SceneToolMode.SelectionBrush;
             EditorGUI.BeginChangeCheck();
-            if (touchupWeightsMode)
-            {
-                EditorGUILayout.HelpBox("The mesh is shown in Blender-style weight colors for the bone selected in the Touchup Weights window.", MessageType.Info);
-            }
-            else
-            {
-                showOriginalMaterials = EditorGUILayout.Toggle(new GUIContent("Original Materials", "Display the materials from the generated UMA renderer instead of the pastel editor materials."), showOriginalMaterials);
-            }
+            showOriginalMaterials = EditorGUILayout.Toggle(new GUIContent("Original Materials", "Display the materials from the generated UMA renderer instead of the pastel editor materials."), showOriginalMaterials);
             if (EditorGUI.EndChangeCheck())
             {
+                if (showOriginalMaterials)
+                {
+                    showVertexColorsView = false;
+                }
                 ApplyVertexDisplayOptions();
                 SceneView.RepaintAll();
             }
+            DrawVertexColorsViewOption();
+            DrawWireframeOption();
+
             if (sceneToolMode == SceneToolMode.Sculpt)
             {
                 GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
                 DrawSculptOptions();
                 GUIHelper.EndVerticalPadded(5);
-                if (GUILayout.Button("Reset Camera") && sceneView != null)
-                {
-                    Selection.activeObject = VertexObject;
-                    sceneView.AlignViewToObject(cameraAnchor.transform);
-                    sceneView.FrameSelected(true);
-                }
-                if (Event.current.type == EventType.Repaint)
-                    ToolWindowAreaHeight = Mathf.Max(240f, GUILayoutUtility.GetLastRect().yMax + 20f);
-                GUILayout.EndArea();
-                GUILayout.Space(ToolWindowAreaHeight + 10);
-                GUILayout.EndScrollView();
+                EndToolsScroll(240f);
+                DrawSculptSaveBar();
                 return;
             }
             if (sceneToolMode == SceneToolMode.VertexPaint)
@@ -8658,17 +10763,8 @@ namespace UMA
                 GUIHelper.BeginVerticalPadded(5, new Color(0.82f, 0.9f, 0.82f), EditorStyles.helpBox);
                 DrawVertexPaintOptions();
                 GUIHelper.EndVerticalPadded(5);
-                if (GUILayout.Button("Reset Camera") && sceneView != null)
-                {
-                    Selection.activeObject = VertexObject;
-                    sceneView.AlignViewToObject(cameraAnchor.transform);
-                    sceneView.FrameSelected(true);
-                }
-                if (Event.current.type == EventType.Repaint)
-                    ToolWindowAreaHeight = Mathf.Max(320f, GUILayoutUtility.GetLastRect().yMax + 20f);
-                GUILayout.EndArea();
-                GUILayout.Space(ToolWindowAreaHeight + 10);
-                GUILayout.EndScrollView();
+                EndToolsScroll(320f);
+                DrawVertexPaintSaveBar();
                 return;
             }
             if (!slotWeightEditorMode && modifierEditor != null && modifierEditor.IsBlendshapeExtractionWorkflow)
@@ -8682,269 +10778,115 @@ namespace UMA
                 {
                     modifierEditor.Focus();
                 }
+                // This workflow has no floating toolbar, so it keeps its own Frame button.
+                if (GUILayout.Button(new GUIContent("Frame Character", "Frame the character from the starting camera angle.")))
+                {
+                    FrameCharacter();
+                }
                 GUIHelper.EndVerticalPadded(5);
-                if (GUILayout.Button("Reset Camera") && sceneView != null)
-                {
-                    Selection.activeObject = VertexObject;
-                    sceneView.AlignViewToObject(cameraAnchor.transform);
-                    sceneView.FrameSelected(true);
-                }
-                if (Event.current.type == EventType.Repaint)
-                {
-                    ToolWindowAreaHeight = Mathf.Max(180f, GUILayoutUtility.GetLastRect().yMax + 20f);
-                }
-                GUILayout.EndArea();
-                GUILayout.Space(ToolWindowAreaHeight + 10);
-                GUILayout.EndScrollView();
+                EndToolsScroll(180f);
                 return;
             }
-            #region Editor Options
-            GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
-            GUILayout.Label("Editor Options", centeredLabel);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Handle Size", GUILayout.Width(82));
-            HandlesSize = EditorGUILayout.Slider(HandlesSize, 0.0f, 0.04f);
-            GUILayout.EndHorizontal();
-            GUILayout.Label("Vertex Colors", centeredLabel);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Active", GUILayout.Width(82));
-            ActiveColor = EditorGUILayout.ColorField(ActiveColor, GUILayout.Width(90));
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Inactive", GUILayout.Width(82));
-            InactiveColor = EditorGUILayout.ColorField(InactiveColor, GUILayout.Width(90));
-            GUILayout.EndHorizontal();
-            if (slotWeightEditorReadOnly)
+
+            DrawAdvancedOptions();
+            EndToolsScroll(50f);
+        }
+
+        /// <summary>Closes the tools scroll area, sized to what was drawn in it.</summary>
+        private void EndToolsScroll(float minHeight)
+        {
+            if (Event.current.type == EventType.Repaint)
             {
-                EditorGUILayout.HelpBox("Current character mode is read-only. Select vertices to inspect generated weights.", MessageType.Info);
+                ToolWindowAreaHeight = Mathf.Max(minHeight, GUILayoutUtility.GetLastRect().yMax + 20f);
             }
-            else
+            GUILayout.EndVertical();
+            GUILayout.EndArea();
+            GUILayout.Space(ToolWindowAreaHeight + 10);
+            GUILayout.EndScrollView();
+        }
+
+        /// <summary>Sculpt's main save, kept below the scrolling options so it is always in view.</summary>
+        private void DrawSculptSaveBar()
+        {
+            GUILayout.Space(2f);
+            sculptModifierName = EditorGUILayout.TextField("Modifier Name", sculptModifierName);
+            using (new EditorGUI.DisabledScope(!HasSculptChangesForUI()))
             {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Smooth Amount", GUILayout.Width(82));
-                weightSmoothAmount = EditorGUILayout.Slider(weightSmoothAmount, 0.0f, 1.0f);
-                GUILayout.EndHorizontal();
-                EditorGUI.BeginDisabledGroup(SelectedVertexes == null || SelectedVertexes.Count == 0);
-                if (GUILayout.Button("Smooth Selected Weights"))
+                if (GUILayout.Button(new GUIContent("Save MeshModifier", "Save the sculpted slots, and any painted colors, as a MeshModifier. More save options are under More Save Options.")))
                 {
-                    SmoothSelectedVertexWeights(weightSmoothAmount);
-                }
-                EditorGUI.EndDisabledGroup();
-                if (GUILayout.Button("View/Edit Vertex Weights"))
-                {
-                    ShowCurrentVertexWeightsPopup();
+                    SaveSculptModifier();
                 }
             }
-            GUIHelper.EndVerticalPadded(5);
-            #endregion
-            #region Selection Options
+        }
+
+        /// <summary>Vertex Paint's main save, kept below the scrolling options so it is always in view.</summary>
+        private void DrawVertexPaintSaveBar()
+        {
+            GUILayout.Space(2f);
+            vertexPaintModifierName = EditorGUILayout.TextField("Modifier Name", vertexPaintModifierName);
+            using (new EditorGUI.DisabledScope(!vertexPaintDirty && !HasSculptChangesForUI()))
+            {
+                if (GUILayout.Button(new GUIContent("Save as MeshModifier", "Save vertex-color adjustments together with the current modifier and sculpt work.")))
+                {
+                    SaveSculptModifier();
+                }
+            }
+        }
+
+        /// <summary>
+        /// The Advanced panel: the current tool, the whole-selection actions, selection files,
+        /// raycast selection, weights and display options. The tools themselves are on the
+        /// floating toolbar.
+        /// </summary>
+        private void DrawAdvancedOptions()
+        {
             GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
-            GUILayout.Label("Selection Options", centeredLabel);
+            GUILayout.Label(currentDefineMode == DefineMode.DefineVertexSet ? "Define Vertex Set" : "Define Vertex State", centeredLabel);
+            DrawCurrentAdvancedToolSummary();
+            DrawSelectionBrushOptions();
 
-            if (IsSelectionBrushModeEnabled)
-            {
-                EditorGUILayout.HelpBox(
-                    "Select Brush changes the selected vertex set or its Active/Inactive state. It does not paint mesh vertex colors; use Vertex Paint for color data.",
-                    MessageType.Info);
-            }
-
-            GUILayout.BeginHorizontal();
-            DefineMode newDefineMode = (DefineMode)GUILayout.Toolbar((int)currentDefineMode, new string[] { "Define Set", "Define State" });
-            GUILayout.EndHorizontal();
-            if (newDefineMode != currentDefineMode)
-            {
-                CancelInteraction();
-                currentDefineMode = newDefineMode;
-                currentMode = currentDefineMode == DefineMode.DefineVertexSet ? selectMode.Add : selectMode.ToggleState;
-            }
-
-            GUILayout.Label(currentDefineMode == DefineMode.DefineVertexSet ? "Current Mode: Define Vertex Set" : "Current Mode: Define Vertex State", EditorStyles.miniBoldLabel);
-
-            GUILayout.BeginHorizontal();
             selectObscured = EditorGUILayout.Toggle("Obscured", selectObscured);
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            EditorGUI.BeginDisabledGroup(!selectObscured);
-            selectFacingAway = EditorGUILayout.Toggle("Backfacing", selectFacingAway);
-            EditorGUI.EndDisabledGroup();
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Default State", GUILayout.Width(92));
-            currentNewVertexState = EditorGUILayout.Popup(currentNewVertexState, new string[] { "Inactive", "Active" });
-            GUILayout.EndHorizontal();
+            using (new EditorGUI.DisabledScope(!selectObscured))
+            {
+                selectFacingAway = EditorGUILayout.Toggle("Backfacing", selectFacingAway);
+            }
+            currentNewVertexState = EditorGUILayout.Popup(
+                new GUIContent("Default State", "The state given to vertices when they are added to the selection."),
+                currentNewVertexState,
+                new[] { new GUIContent("Inactive"), new GUIContent("Active") });
 
             if (currentDefineMode == DefineMode.DefineVertexSet)
             {
-                DrawSelectionBrushOptions();
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Selection Action", GUILayout.Width(92));
-                int setAction = currentMode == selectMode.Remove ? 1 : currentMode == selectMode.InvertSelection ? 2 : 0;
-                int newSetAction = GUILayout.Toolbar(setAction, new string[] { "Add", "Remove", "Invert" });
-                currentMode = newSetAction == 1 ? selectMode.Remove : newSetAction == 2 ? selectMode.InvertSelection : selectMode.Add;
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("Slot Filter", GUILayout.Width(92));
-
-                if (touchupWeightsMode)
-                {
-                    EditorGUILayout.LabelField(touchupWeightSlot != null ? touchupWeightSlot.slotName : "No slot selected");
-                }
-                else
-                {
-                    if (selectionSlot >= selectFrom.Length)
-                    {
-                        selectionSlot = 0;
-                    }
-                    selectionSlot = EditorGUILayout.Popup(selectionSlot, selectFrom);
-                }
-                GUILayout.EndHorizontal();
-
-                if (sceneToolMode == SceneToolMode.Select)
-                {
-                    GUILayout.BeginHorizontal();
-                    showRaycastSelection = EditorGUILayout.Foldout(showRaycastSelection, "Select by raycasting", true);
-                    GUILayout.EndHorizontal();
-                }
-
-                if (sceneToolMode == SceneToolMode.Select && showRaycastSelection)
-                {
-                 RefreshVisibleSlotListsIfNeeded();
-                    GUIHelper.BeginVerticalPadded(5, new Color(0.92f, 0.92f, 0.97f), EditorStyles.helpBox);
-
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Selection Slot", GUILayout.Width(92));
-                    if (raycastSelectionSlot >= visibleSelectFrom.Length)
-                    {
-                        raycastSelectionSlot = 0;
-                    }
-                    raycastSelectionSlot = EditorGUILayout.Popup(raycastSelectionSlot, visibleSelectFrom);
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Direction", GUILayout.Width(92));
-                    raycastDirection = (RaycastSelectDirection)EditorGUILayout.EnumPopup(raycastDirection);
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Hit Faces", GUILayout.Width(92));
-                    raycastHitFaceFilter = (RaycastHitFaceFilter)EditorGUILayout.EnumPopup(raycastHitFaceFilter);
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Raycast Length", GUILayout.Width(92));
-                    raycastLength = EditorGUILayout.Slider(raycastLength,0.01f,1.0f);
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();
-                    raycastDrawDebugRays = EditorGUILayout.Toggle("Debug Rays", raycastDrawDebugRays);
-                    GUILayout.EndHorizontal();
-                    EditorGUI.BeginDisabledGroup(!raycastDrawDebugRays);
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label("Debug Ray Limit", GUILayout.Width(92));
-                    raycastDebugRayLimit = EditorGUILayout.IntSlider(raycastDebugRayLimit, 0, 1024);
-                    GUILayout.EndHorizontal();
-                    EditorGUI.EndDisabledGroup();
-
-                    raycastAddToSelection = GUILayout.Toggle(raycastAddToSelection, "Add to selection (otherwise replace)");
-
-                    EditorGUI.BeginDisabledGroup(raycastSelectionSlot <= 0);
-                    if (GUILayout.Button("Select by raycast"))
-                    {
-                        Undo.RegisterCompleteObjectUndo(this, "Select Vertexes By Raycast");
-                        SelectByRaycast();
-                        RepaintLinkedEditors();
-                        SceneView.RepaintAll();
-                    }
-                    EditorGUI.EndDisabledGroup();
-
-                    if (!string.IsNullOrEmpty(raycastStatusMessage))
-                    {
-                       GUILayout.Label("Result (copy/paste):", EditorStyles.miniBoldLabel);
-                        float line = EditorGUIUtility.singleLineHeight;
-                        EditorGUILayout.HelpBox(raycastStatusMessage, raycastStatusType, true);
-                    }
-
-                    GUIHelper.EndVerticalPadded(5);
-                }
-            }
-            else
-            {
-                DrawSelectionBrushOptions();
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("State Action", GUILayout.Width(92));
-                int stateAction = currentMode == selectMode.Activate ? 0 : currentMode == selectMode.Deactivate ? 1 : 2;
-                int newStateAction = GUILayout.Toolbar(stateAction, new string[] { "Activate", "Deactivate", "Toggle" });
-                currentMode = newStateAction == 0 ? selectMode.Activate : newStateAction == 1 ? selectMode.Deactivate : selectMode.ToggleState;
-                GUILayout.EndHorizontal();
+                // Selection only picks vertices on editable slots (see the Slots panel).
+                DrawEditTargetSummary(null);
             }
 
-
+            EditorGUILayout.Space(4f);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Save", threeButtonStyle))
-            {
-                // Save the vertex selections
-                SaveSelections();
-            }
-
-            if (GUILayout.Button("Load", threeButtonStyle))
-            {
-                // Load the vertex selections
-                Undo.RegisterCompleteObjectUndo(this, "Load Vertex Selection");
-                SelectedVertexes.Clear();
-                LoadSelections();
-                RepaintLinkedEditors();
-            }
-            if (GUILayout.Button("Append", threeButtonStyle))
-            {
-                // Append the vertex selections
-                Undo.RegisterCompleteObjectUndo(this, "Append Vertex Selection");
-                LoadSelections();
-                RepaintLinkedEditors();
-            }
-            GUILayout.EndHorizontal();
-
             if (currentDefineMode == DefineMode.DefineVertexSet)
             {
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Invert Selection", smallButtonStyle))
-                {
-                    Undo.RegisterCompleteObjectUndo(this, "Invert Vertex Selection");
-                    InvertSelection();
-                    RepaintLinkedEditors();
-                }
-                if (GUILayout.Button("Select All", smallButtonStyle))
+                if (GUILayout.Button(new GUIContent("Select All", "Select every vertex on the editable slots."), EditorStyles.miniButtonLeft))
                 {
                     Undo.RegisterCompleteObjectUndo(this, "Select All Vertexes");
                     SelectAll();
                     RepaintLinkedEditors();
                 }
-                GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Clear Selection", smallButtonStyle))
+                if (GUILayout.Button(new GUIContent("Invert", "Select the unselected vertices and deselect the selected ones."), EditorStyles.miniButtonMid))
+                {
+                    Undo.RegisterCompleteObjectUndo(this, "Invert Vertex Selection");
+                    InvertSelection();
+                    RepaintLinkedEditors();
+                }
+                if (GUILayout.Button(new GUIContent("Clear", "Deselect every vertex."), EditorStyles.miniButtonRight))
                 {
                     Undo.RegisterCompleteObjectUndo(this, "Clear Vertex Selection");
                     SelectedVertexes.Clear();
                     RepaintLinkedEditors();
                 }
-                GUILayout.EndHorizontal();
             }
             else
             {
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Invert State", smallButtonStyle))
-                {
-                    Undo.RegisterCompleteObjectUndo(this, "Invert Vertex State");
-                    for (int i = 0; i < SelectedVertexes.Count; i++)
-                    {
-                        SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
-                    }
-                    RepaintLinkedEditors();
-                }
-                if (GUILayout.Button("Activate all", smallButtonStyle))
+                if (GUILayout.Button(new GUIContent("Activate All", "Mark every selected vertex Active."), EditorStyles.miniButtonLeft))
                 {
                     Undo.RegisterCompleteObjectUndo(this, "Activate Vertex State");
                     for (int i = 0; i < SelectedVertexes.Count; i++)
@@ -8953,63 +10895,153 @@ namespace UMA
                     }
                     RepaintLinkedEditors();
                 }
-                GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Deactivate all", smallButtonStyle))
+                if (GUILayout.Button(new GUIContent("Deactivate All", "Mark every selected vertex Inactive."), EditorStyles.miniButtonMid))
                 {
                     Undo.RegisterCompleteObjectUndo(this, "Deactivate Vertex State");
                     for (int i = 0; i < SelectedVertexes.Count; i++)
                     {
                         SelectedVertexes[i].isActive = false;
                     }
-                        RepaintLinkedEditors();
+                    RepaintLinkedEditors();
                 }
-                GUILayout.EndHorizontal();
+                if (GUILayout.Button(new GUIContent("Invert State", "Flip every selected vertex between Active and Inactive."), EditorStyles.miniButtonRight))
+                {
+                    Undo.RegisterCompleteObjectUndo(this, "Invert Vertex State");
+                    for (int i = 0; i < SelectedVertexes.Count; i++)
+                    {
+                        SelectedVertexes[i].isActive = !SelectedVertexes[i].isActive;
+                    }
+                    RepaintLinkedEditors();
+                }
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(new GUIContent("Selection File", "Store the selected vertices in a JSON file, or read them back."), GUILayout.Width(ToolLabelWidth));
+            if (GUILayout.Button(new GUIContent("Save...", "Save the selected vertices to a JSON file."), EditorStyles.miniButtonLeft))
+            {
+                SaveSelections();
+            }
+            if (GUILayout.Button(new GUIContent("Load...", "Replace the selection with the vertices in a JSON file."), EditorStyles.miniButtonMid))
+            {
+                Undo.RegisterCompleteObjectUndo(this, "Load Vertex Selection");
+                SelectedVertexes.Clear();
+                LoadSelections();
+                RepaintLinkedEditors();
+            }
+            if (GUILayout.Button(new GUIContent("Append...", "Add the vertices in a JSON file to the current selection."), EditorStyles.miniButtonRight))
+            {
+                Undo.RegisterCompleteObjectUndo(this, "Append Vertex Selection");
+                LoadSelections();
+                RepaintLinkedEditors();
+            }
+            GUILayout.EndHorizontal();
+
+            if (currentDefineMode == DefineMode.DefineVertexSet && sceneToolMode == SceneToolMode.Select)
+            {
+                showRaycastSelection = EditorGUILayout.Foldout(showRaycastSelection, "Select by raycasting", true);
+                if (showRaycastSelection)
+                {
+                    DrawRaycastSelectionOptions();
+                }
             }
             GUIHelper.EndVerticalPadded(5);
-            #endregion
 
-            //GUILayout.Label("camera: " + sceneView.camera.transform.position.ToString());
-            if (GUILayout.Button("Reset Camera"))
+            GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
+            GUILayout.Label("Weights", centeredLabel);
+            if (slotWeightEditorReadOnly)
             {
-                Selection.activeObject = VertexObject;
-                sceneView.AlignViewToObject(cameraAnchor.transform);
-                sceneView.FrameSelected(true);
-                sceneView.AlignViewToObject(cameraAnchor.transform);
-            }
-            GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.85f, 1f));
-            if (currentDefineMode == DefineMode.DefineVertexSet)
-            {
-                if (selectionBrushModeSet)
-                {
-                    GUILayout.TextArea("Define Vertex Set mode\nSelect Brush enabled: click-drag applies the Selection Action to vertices under the cursor\nSelection Action is Add / Remove / Invert\nEach vertex is processed only once per stroke\n\nThis edits selection membership, not vertex colors. Hold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
-                }
-                else
-                {
-                    GUILayout.TextArea("Define Vertex Set mode\nClick a vertex, or click-drag a rectangle, to change the selection\nSelection Action is Add / Remove / Invert\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
-                }
+                EditorGUILayout.HelpBox("Current character mode is read-only. Select vertices to inspect generated weights.", MessageType.Info);
             }
             else
             {
-                if (selectionBrushModeState)
+                weightSmoothAmount = EditorGUILayout.Slider(new GUIContent("Smooth Amount", "How far Smooth Selected Weights moves each weight toward its neighbors."), weightSmoothAmount, 0.0f, 1.0f);
+                using (new EditorGUI.DisabledScope(SelectedVertexes == null || SelectedVertexes.Count == 0))
                 {
-                    GUILayout.TextArea("Define Vertex State mode\nOnly affects already selected vertices\nSelect Brush enabled: click-drag applies the State Action\nState Action is Toggle / Activate / Deactivate\nEach vertex is processed only once per stroke\n\nThis edits selection state, not vertex colors. Hold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
+                    if (GUILayout.Button("Smooth Selected Weights"))
+                    {
+                        SmoothSelectedVertexWeights(weightSmoothAmount);
+                    }
                 }
-                else
+                if (GUILayout.Button("View/Edit Vertex Weights"))
                 {
-                    GUILayout.TextArea("Define Vertex State mode\nOnly affects already selected vertices\nClick a selected vertex, or click-drag a rectangle, to apply State Action\nState Action is selected from Toggle / Activate / Deactivate\n\nHold Alt and use mouse buttons/wheel to navigate.", HelpBoxStyle);
+                    ShowCurrentVertexWeightsPopup();
                 }
-            }
-            if (Event.current.type == EventType.Repaint)
-            {
-                Rect lastRect = GUILayoutUtility.GetLastRect();
-                ToolWindowAreaHeight = Mathf.Max(50f, lastRect.yMax + 10f);
             }
             GUIHelper.EndVerticalPadded(5);
-            GUILayout.EndArea();
-            GUILayout.Space(ToolWindowAreaHeight + 10);
-            GUILayout.EndScrollView();
-            // Define a small drag area so the rest of the window is NOT draggable
+
+            DrawHairRootToTipSection();
+
+            if (DrawSectionFoldout(ref showAdvancedDisplayOptions, "Display"))
+            {
+                HandlesSize = EditorGUILayout.Slider(new GUIContent("Handle Size", "Size of the selected-vertex markers."), HandlesSize, 0.0f, 0.04f);
+                ActiveColor = EditorGUILayout.ColorField(new GUIContent("Active Color", "Marker color for Active vertices."), ActiveColor);
+                InactiveColor = EditorGUILayout.ColorField(new GUIContent("Inactive Color", "Marker color for Inactive vertices."), InactiveColor);
+            }
+        }
+
+        private void DrawRaycastSelectionOptions()
+        {
+            RefreshVisibleSlotListsIfNeeded();
+            GUIHelper.BeginVerticalPadded(5, new Color(0.92f, 0.92f, 0.97f), EditorStyles.helpBox);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(new GUIContent("Cast From", "The editable slot whose vertices cast the rays."), GUILayout.Width(ToolLabelWidth));
+            if (raycastSelectionSlot >= visibleSelectFrom.Length)
+            {
+                raycastSelectionSlot = 0;
+            }
+            raycastSelectionSlot = EditorGUILayout.Popup(raycastSelectionSlot, visibleSelectFrom);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Direction", GUILayout.Width(ToolLabelWidth));
+            raycastDirection = (RaycastSelectDirection)EditorGUILayout.EnumPopup(raycastDirection);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Hit Faces", GUILayout.Width(ToolLabelWidth));
+            raycastHitFaceFilter = (RaycastHitFaceFilter)EditorGUILayout.EnumPopup(raycastHitFaceFilter);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Raycast Length", GUILayout.Width(ToolLabelWidth));
+            raycastLength = EditorGUILayout.Slider(raycastLength, 0.01f, 1.0f);
+            GUILayout.EndHorizontal();
+
+            raycastAddToSelection = GUILayout.Toggle(raycastAddToSelection, "Add to selection (otherwise replace)");
+
+            showRaycastDebugOptions = EditorGUILayout.Foldout(showRaycastDebugOptions, "Debug", true);
+            if (showRaycastDebugOptions)
+            {
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    raycastDrawDebugRays = EditorGUILayout.Toggle("Debug Rays", raycastDrawDebugRays);
+                    using (new EditorGUI.DisabledScope(!raycastDrawDebugRays))
+                    {
+                        raycastDebugRayLimit = EditorGUILayout.IntSlider("Debug Ray Limit", raycastDebugRayLimit, 0, 1024);
+                    }
+                }
+            }
+
+            using (new EditorGUI.DisabledScope(raycastSelectionSlot <= 0))
+            {
+                if (GUILayout.Button("Select by Raycast"))
+                {
+                    Undo.RegisterCompleteObjectUndo(this, "Select Vertexes By Raycast");
+                    SelectByRaycast();
+                    RepaintLinkedEditors();
+                    SceneView.RepaintAll();
+                }
+            }
+
+            if (!string.IsNullOrEmpty(raycastStatusMessage))
+            {
+                GUILayout.Label("Result (copy/paste):", EditorStyles.miniBoldLabel);
+                EditorGUILayout.HelpBox(raycastStatusMessage, raycastStatusType, true);
+            }
+
+            GUIHelper.EndVerticalPadded(5);
         }
 
         private void DrawTouchupWeightsTools(SceneView sceneView)
@@ -9024,7 +11056,7 @@ namespace UMA
             EditorGUI.BeginChangeCheck();
             TouchupWeightTool requestedTool = (TouchupWeightTool)GUILayout.Toolbar(
                 (int)touchupWeightTool,
-                new[] { "Select Mode", "Paint Mode" });
+                new[] { "Select Mode", "Paint Mode", "Pose Mode" });
             if (EditorGUI.EndChangeCheck() && requestedTool != touchupWeightTool)
             {
                 CancelInteraction();
@@ -9033,7 +11065,11 @@ namespace UMA
                 touchupPaintStatusMessage = string.Empty;
             }
 
-            if (touchupWeightTool == TouchupWeightTool.Select)
+            if (touchupWeightTool == TouchupWeightTool.Pose)
+            {
+                DrawTouchupPoseOptions();
+            }
+            else if (touchupWeightTool == TouchupWeightTool.Select)
             {
                 EditorGUILayout.HelpBox(
                     "Drag to select vertices on the current slot. Hold Shift to add and Ctrl to remove.",
@@ -9117,6 +11153,7 @@ namespace UMA
                             "Selected Bone Only",
                             "Smooth only the selected bone. When disabled, all influences are smoothed together."),
                         touchupSmoothSelectedBoneOnly);
+                    DrawTouchupConstantSmoothOptions();
                 }
 
                 string operationHelp;
@@ -9189,6 +11226,8 @@ namespace UMA
                 OnTouchupLiveUpdate();
             }
 
+            DrawTouchupShowBonesOptions();
+
             selectObscured = EditorGUILayout.Toggle(
                 new GUIContent("Select Obscured", "Allow the brush to select vertices hidden behind the visible surface."),
                 selectObscured);
@@ -9237,20 +11276,16 @@ namespace UMA
 
         private void DrawSelectionBrushOptions()
         {
+            // The brush shape is chosen on the floating toolbar.
             if (!IsSelectionBrushModeEnabled)
             {
                 return;
             }
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Select Brush", GUILayout.Width(92));
-            selectionBrushShape = (SelectionBrushShape)GUILayout.Toolbar((int)selectionBrushShape, new string[] { "Point", "Circle" });
-            GUILayout.EndHorizontal();
-
             if (selectionBrushShape == SelectionBrushShape.Circle)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Radius", GUILayout.Width(92));
+                GUILayout.Label("Radius", GUILayout.Width(ToolLabelWidth));
                 selectionBrushRadiusPixels = EditorGUILayout.IntSlider(selectionBrushRadiusPixels, MinSelectionBrushRadiusPixels, MaxSelectionBrushRadiusPixels);
                 GUILayout.EndHorizontal();
             }
@@ -9259,288 +11294,217 @@ namespace UMA
         private void DrawVertexPaintOptions()
         {
             EnsureVertexPaintSession();
+            // Brushes are limited to 250 mm, even while the Brush section is collapsed.
+            vertexPaintRadius = Mathf.Clamp(vertexPaintRadius, StageBrushSize.MinRadiusMm / 1000f, StageBrushSize.MaxRadiusMm / 1000f);
             GUILayout.Label("Vertex Paint", centeredLabel);
-            EditorGUILayout.HelpBox(
-                "Paint the selected slot's existing vertex colors. Slots without color data begin white. " +
-                "Painting creates the existing VertexColorAdjustment data used by MeshModifiers.",
-                MessageType.Info);
+            EditorGUILayout.LabelField(
+                "Paint the vertex colors of the editable slots; slots without color data start white. Painting is saved as VertexColorAdjustments in a MeshModifier.",
+                EditorStyles.wordWrappedMiniLabel);
 
-            if (vertexPaintSlots.Count == 0 || vertexPaintSlot == null)
+            if (!DrawEditTargetSummary(
+                    "The brush paints whichever editable slot is under the pointer."))
             {
-                EditorGUILayout.HelpBox("No visible editable slot is available.", MessageType.Warning);
+                return;
+            }
+            if (vertexPaintSlot == null)
+            {
+                EditorGUILayout.HelpBox("The editable slots have no paintable vertices on this renderer.", MessageType.Warning);
                 return;
             }
 
-            int oldSlotIndex = vertexPaintSlotIndex;
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Slot", GUILayout.Width(92));
-            vertexPaintSlotIndex = EditorGUILayout.Popup(vertexPaintSlotIndex, vertexPaintSlotNames.ToArray());
-            bool frameSlot = GUILayout.Button(new GUIContent("F", "Frame the selected vertex-paint slot in the Scene view."), EditorStyles.miniButton, GUILayout.Width(26));
-            GUILayout.EndHorizontal();
-            if (oldSlotIndex != vertexPaintSlotIndex)
-            {
-                EndVertexPaintStroke(true);
-                vertexPaintModifierName = string.Empty;
-                EnsureVertexPaintSession(true);
-            }
-            if (frameSlot)
-            {
-                if (IsVertexPaintAllSlotsMode) FrameAllEditableSlots();
-                else FrameSelectedVertexPaintSlot();
-            }
-            if (IsVertexPaintAllSlotsMode)
-            {
-                EditorGUILayout.HelpBox(
-                    $"All Slots is active. The brush follows the slot under the pointer. Current target: {(vertexPaintSlot != null ? vertexPaintSlot.slotName : "None")}.",
-                    MessageType.None);
-            }
+            // The brush, its shape and its color are chosen on the floating toolbar.
+            DrawCurrentVertexPaintToolSummary();
 
-            vertexPaintTool = (VertexPaintTool)EditorGUILayout.EnumPopup(
-                new GUIContent("Behavior", "How the brush changes vertex colors."),
-                vertexPaintTool);
-            if (vertexPaintTool == VertexPaintTool.Paint)
+            if (DrawSectionFoldout(ref showVertexPaintBrushSection, "Brush"))
             {
-                vertexPaintBrushColor = EditorGUILayout.ColorField(
-                    new GUIContent("Brush Color", "Paint multiplies the existing vertex color by this color."),
-                    vertexPaintBrushColor);
-            }
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Brush", GUILayout.Width(92));
-            vertexPaintBrushShape = (VertexPaintBrushShape)GUILayout.Toolbar(
-                (int)vertexPaintBrushShape,
-                new[]
+                if (vertexPaintBrushShape == VertexPaintBrushShape.Bitmap)
                 {
-                    new GUIContent("Circle", "Circular radial brush."),
-                    new GUIContent("Square", "Square planar brush."),
-                    new GUIContent("Bitmap", "Use a texture's alpha and grayscale as the brush mask.")
-                });
-            GUILayout.EndHorizontal();
-
-            if (vertexPaintBrushShape == VertexPaintBrushShape.Bitmap)
-            {
-                EditorGUI.BeginChangeCheck();
-                vertexPaintBrushTexture = (Texture2D)EditorGUILayout.ObjectField(
-                    new GUIContent("Brush Bitmap", "A user-provided bitmap. Alpha and luminance define brush strength."),
-                    vertexPaintBrushTexture,
-                    typeof(Texture2D),
-                    false);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    DestroyVertexPaintBrushCache();
+                    EditorGUI.BeginChangeCheck();
+                    vertexPaintBrushTexture = (Texture2D)EditorGUILayout.ObjectField(
+                        new GUIContent("Brush Bitmap", "A user-provided bitmap. Alpha and luminance define brush strength."),
+                        vertexPaintBrushTexture,
+                        typeof(Texture2D),
+                        false);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        DestroyVertexPaintBrushCache();
+                    }
+                    if (vertexPaintBrushTexture == null)
+                    {
+                        EditorGUILayout.HelpBox("Assign a bitmap before painting with the Bitmap brush.", MessageType.Warning);
+                    }
                 }
-                if (vertexPaintBrushTexture == null)
-                {
-                    EditorGUILayout.HelpBox("Assign a bitmap before painting with the Bitmap brush.", MessageType.Warning);
-                }
-            }
 
-            vertexPaintRadius = EditorGUILayout.Slider(
-                new GUIContent("Size", "World-space brush radius."),
-                vertexPaintRadius,
-                0.001f,
-                0.5f);
-            if (vertexPaintTool != VertexPaintTool.Clear)
-            {
-                GUIContent effectLabel = vertexPaintTool == VertexPaintTool.Smooth
-                    ? new GUIContent("Smooth Amount %", "How strongly each stroke moves colors toward their world-space neighborhood average.")
-                    : new GUIContent("Effect %", "Maximum effect a vertex can receive during one stroke.");
-                vertexPaintStrengthPercent = EditorGUILayout.Slider(
-                    effectLabel,
-                    vertexPaintStrengthPercent,
-                    0f,
-                    100f);
-            }
-            if (vertexPaintTool == VertexPaintTool.Smooth)
-            {
-                vertexPaintSmoothRadius = EditorGUILayout.Slider(
+                vertexPaintRadius = StageBrushSize.RadiusSlider(
+                    new GUIContent("Radius (mm)", "Brush radius on the model, in millimeters."),
+                    vertexPaintRadius);
+                if (vertexPaintTool == VertexPaintTool.Paint)
+                {
+                    vertexPaintBlend = (VertexPaintBlend)EditorGUILayout.EnumPopup(
+                        new GUIContent(
+                            "Blend",
+                            "Replace: paint the brush color; white lightens and black darkens.\nMultiply: tint the color under the brush by the brush color; it can only darken, and white changes nothing."),
+                        vertexPaintBlend);
+                }
+                if (vertexPaintTool != VertexPaintTool.Clear)
+                {
+                    GUIContent effectLabel = vertexPaintTool == VertexPaintTool.Smooth
+                        ? new GUIContent("Smooth Amount %", "How strongly each stroke moves colors toward their world-space neighborhood average.")
+                        : new GUIContent("Effect %", "Maximum effect a vertex can receive during one stroke.");
+                    vertexPaintStrengthPercent = EditorGUILayout.Slider(
+                        effectLabel,
+                        vertexPaintStrengthPercent,
+                        0f,
+                        100f);
+                }
+                if (vertexPaintTool == VertexPaintTool.Smooth)
+                {
+                    vertexPaintSmoothRadius = StageBrushSize.MillimeterSlider(
+                        new GUIContent(
+                            "Smooth Radius (mm)",
+                            "Radius sampled around each affected vertex, in millimeters. Larger values blend broader color transitions and cross UV seams."),
+                        vertexPaintSmoothRadius,
+                        1f,
+                        500f);
+                }
+                vertexPaintFalloff = (SculptFalloff)EditorGUILayout.EnumPopup("Falloff", vertexPaintFalloff);
+                if (vertexPaintFalloff == SculptFalloff.UserDefined)
+                {
+                    vertexPaintCustomFalloff = EditorGUILayout.CurveField(
+                        "Curve",
+                        vertexPaintCustomFalloff,
+                        Color.green,
+                        new Rect(0f, 0f, 1f, 1f));
+                }
+                vertexPaintSymmetryX = EditorGUILayout.Toggle(
                     new GUIContent(
-                        "Smooth Radius",
-                        "World-space radius sampled around each affected vertex. Larger values blend broader color transitions and cross UV seams."),
-                    vertexPaintSmoothRadius,
-                    0.001f,
-                    0.5f);
-            }
-            vertexPaintFalloff = (SculptFalloff)EditorGUILayout.EnumPopup("Falloff", vertexPaintFalloff);
-            if (vertexPaintFalloff == SculptFalloff.UserDefined)
-            {
-                vertexPaintCustomFalloff = EditorGUILayout.CurveField(
-                    "Curve",
-                    vertexPaintCustomFalloff,
-                    Color.green,
-                    new Rect(0f, 0f, 1f, 1f));
-            }
-            vertexPaintSymmetryX = EditorGUILayout.Toggle(
-                new GUIContent(
-                    "X Symmetry",
-                    "Repeat every brush sample across the character's local X axis, including square/bitmap orientation and stroke direction."),
-                vertexPaintSymmetryX);
-            vertexPaintAffectAlpha = EditorGUILayout.Toggle(
-                new GUIContent("Affect Alpha", "Allow Paint, Erase, Smear, Blur, Smooth, Noise, and Clear to modify vertex alpha."),
-                vertexPaintAffectAlpha);
+                        "X Symmetry",
+                        "Repeat every brush sample across the character's local X axis, including square/bitmap orientation and stroke direction."),
+                    vertexPaintSymmetryX);
+                vertexPaintAffectAlpha = EditorGUILayout.Toggle(
+                    new GUIContent("Affect Alpha", "Allow Paint, Erase, Smear, Blur, Smooth, and Clear to modify vertex alpha. Noise never changes alpha."),
+                    vertexPaintAffectAlpha);
 
-            if (vertexPaintTool == VertexPaintTool.Noise)
-            {
-                vertexPaintNoiseScale = EditorGUILayout.Slider(
-                    new GUIContent("Noise Scale", "Spatial frequency of the procedural noise."),
-                    vertexPaintNoiseScale,
-                    0.1f,
-                    100f);
-                vertexPaintNoiseAmount = EditorGUILayout.Slider(
-                    new GUIContent("Noise Amount", "Maximum color variation introduced by Noise."),
-                    vertexPaintNoiseAmount,
-                    0f,
-                    1f);
-                vertexPaintNoiseSeed = EditorGUILayout.IntField("Noise Seed", vertexPaintNoiseSeed);
-            }
-
-            string behaviorDescription;
-            switch (vertexPaintTool)
-            {
-                case VertexPaintTool.Paint: behaviorDescription = "Paint multiplies the current color by the brush color."; break;
-                case VertexPaintTool.Erase: behaviorDescription = "Erase moves painted colors back toward white."; break;
-                case VertexPaintTool.Smear: behaviorDescription = "Smear pulls nearby color in the direction of the stroke."; break;
-                case VertexPaintTool.Blur: behaviorDescription = "Blur averages connected neighboring vertex colors."; break;
-                case VertexPaintTool.Smooth: behaviorDescription = "Smooth blends a distance-weighted world-space neighborhood, including seams and nearby disconnected vertices while avoiding oppositely facing surfaces."; break;
-                case VertexPaintTool.Burn: behaviorDescription = "Burn darkens the existing RGB values."; break;
-                case VertexPaintTool.Dodge: behaviorDescription = "Dodge lightens the existing RGB values."; break;
-                case VertexPaintTool.Noise: behaviorDescription = "Noise adds repeatable procedural color variation."; break;
-                default: behaviorDescription = "Clear resets every affected channel to white."; break;
-            }
-            EditorGUILayout.HelpBox(behaviorDescription, MessageType.None);
-
-            EditorGUILayout.Space(6f);
-            GUILayout.Label("General Smooth", EditorStyles.miniBoldLabel);
-            vertexPaintGeneralSmoothPercent = EditorGUILayout.Slider(
-                new GUIContent(
-                    "Amount %",
-                    "How strongly every affected vertex moves toward its world-space neighborhood average."),
-                vertexPaintGeneralSmoothPercent,
-                0f,
-                100f);
-            vertexPaintGeneralSmoothRadius = EditorGUILayout.Slider(
-                new GUIContent(
-                    "Radius",
-                    "World-space neighborhood sampled around every vertex in the current slot or all editable slots."),
-                vertexPaintGeneralSmoothRadius,
-                0.001f,
-                0.5f);
-            vertexPaintGeneralSmoothCutoffPercent = EditorGUILayout.Slider(
-                new GUIContent(
-                    "Cutoff %",
-                    "Return a vertex to its unmodified slot color when its largest resulting channel difference is below this percentage, preventing imperceptible smoothing from spreading into the MeshModifier."),
-                vertexPaintGeneralSmoothCutoffPercent,
-                0f,
-                10f);
-
-            string generalSmoothTarget = IsVertexPaintAllSlotsMode ? "All Slots" : "Current Slot";
-            using (new EditorGUI.DisabledScope(vertexPaintGeneralSmoothPercent <= 0f))
-            {
-                if (GUILayout.Button(new GUIContent(
-                        "Smooth " + generalSmoothTarget,
-                        "Apply one simultaneous world-space color smoothing pass to " + generalSmoothTarget.ToLowerInvariant() + ".")))
+                if (vertexPaintTool == VertexPaintTool.Noise)
                 {
-                    SmoothVertexPaintSlots();
+                    vertexPaintNoiseType = (VertexPaintNoiseType)EditorGUILayout.EnumPopup(
+                        new GUIContent("Noise Type", "Per Vertex: each vertex gets its own random change (grain).\nSmooth: soft patches that vary across the surface; Noise Scale sets their size."),
+                        vertexPaintNoiseType);
+                    if (vertexPaintNoiseType == VertexPaintNoiseType.Smooth)
+                    {
+                        vertexPaintNoiseScale = EditorGUILayout.Slider(
+                            new GUIContent("Noise Scale", "Spatial frequency of the smooth noise. Higher values make smaller patches."),
+                            vertexPaintNoiseScale,
+                            0.1f,
+                            100f);
+                    }
+                    vertexPaintNoiseColor = EditorGUILayout.Toggle(
+                        new GUIContent("Color Noise", "Vary red, green and blue separately. Off: vary only brightness."),
+                        vertexPaintNoiseColor);
+                    vertexPaintNoiseAmount = EditorGUILayout.Slider(
+                        new GUIContent("Noise Amount", "How far each vertex may move toward black or white. At 1, a white vertex can land anywhere from black to white."),
+                        vertexPaintNoiseAmount,
+                        0f,
+                        1f);
+                    vertexPaintNoiseRepeat = EditorGUILayout.Toggle(
+                        new GUIContent("Same Pattern Each Stroke", "Use Noise Seed for every stroke, so repeated strokes push the same vertices the same way. Off: every stroke gets a new random pattern."),
+                        vertexPaintNoiseRepeat);
+                    using (new EditorGUI.DisabledScope(!vertexPaintNoiseRepeat))
+                    {
+                        vertexPaintNoiseSeed = EditorGUILayout.IntField("Noise Seed", vertexPaintNoiseSeed);
+                    }
                 }
             }
-            EditorGUILayout.HelpBox(
-                "Only vertices whose resulting colors differ from the unmodified slot by at least Cutoff % are retained as modifier adjustments.",
-                MessageType.None);
 
-            EditorGUI.BeginDisabledGroup(IsVertexPaintAllSlotsMode);
-            if (GUILayout.Button(new GUIContent("Clear Entire Slot to White", "Reset every vertex color on the selected slot to white. Select a specific slot to use this command.")))
+            if (DrawSectionFoldout(ref showVertexPaintSlotOperations, "Whole-Slot Operations"))
             {
-                ClearVertexPaintSlotToWhite();
-            }
-            EditorGUI.EndDisabledGroup();
+                GUILayout.Label("General Smooth", EditorStyles.miniBoldLabel);
+                vertexPaintGeneralSmoothPercent = EditorGUILayout.Slider(
+                    new GUIContent(
+                        "Amount %",
+                        "How strongly every affected vertex moves toward its world-space neighborhood average."),
+                    vertexPaintGeneralSmoothPercent,
+                    0f,
+                    100f);
+                vertexPaintGeneralSmoothRadius = StageBrushSize.MillimeterSlider(
+                    new GUIContent(
+                        "Radius (mm)",
+                        "Neighborhood sampled around every vertex in the current slot or all editable slots, in millimeters."),
+                    vertexPaintGeneralSmoothRadius,
+                    1f,
+                    500f);
+                vertexPaintGeneralSmoothCutoffPercent = EditorGUILayout.Slider(
+                    new GUIContent(
+                        "Cutoff %",
+                        "Return a vertex to its unmodified slot color when its largest resulting channel difference is below this percentage, preventing imperceptible smoothing from spreading into the MeshModifier."),
+                    vertexPaintGeneralSmoothCutoffPercent,
+                    0f,
+                    10f);
 
-            EditorGUILayout.Space(6f);
-            GUILayout.Label("Save Painted Colors", EditorStyles.miniBoldLabel);
-            vertexPaintModifierName = EditorGUILayout.TextField("Modifier Name", vertexPaintModifierName);
-            EditorGUI.BeginDisabledGroup(!vertexPaintDirty && !HasSculptChanges());
-            if (GUILayout.Button(new GUIContent("Save as MeshModifier", "Save vertex-color adjustments together with the current modifier and sculpt work.")))
-            {
-                SaveSculptModifier();
-            }
-            EditorGUI.EndDisabledGroup();
+                string generalSmoothTarget = IsVertexPaintAllSlotsMode ? "Editable Slots" : "Slot";
+                using (new EditorGUI.DisabledScope(vertexPaintGeneralSmoothPercent <= 0f))
+                {
+                    if (GUILayout.Button(new GUIContent(
+                            "Smooth " + generalSmoothTarget,
+                            "Apply one simultaneous world-space color smoothing pass to " + generalSmoothTarget.ToLowerInvariant() + ". Only vertices that change by at least Cutoff % are kept as modifier adjustments.")))
+                    {
+                        SmoothVertexPaintSlots();
+                    }
+                }
 
-            EditorGUI.BeginDisabledGroup(!vertexPaintDirty || IsVertexPaintAllSlotsMode);
-            if (GUILayout.Button(new GUIContent("Save Colors to SlotDataAsset", "Bake the previewed colors directly into the selected SlotDataAsset's mesh data.")))
-            {
-                SaveVertexPaintToSlotDataAsset();
+                EditorGUILayout.Space(4f);
+                using (new EditorGUI.DisabledScope(IsVertexPaintAllSlotsMode))
+                {
+                    if (GUILayout.Button(new GUIContent(
+                            "Fill Slot with White",
+                            "Set every vertex color on the slot to white. The toolbar's Clear instead restores the slot's original colors. Solo one slot in the Slots panel to use this.")))
+                    {
+                        ClearVertexPaintSlotToWhite();
+                    }
+                }
             }
-            EditorGUI.EndDisabledGroup();
-            EditorGUILayout.HelpBox(
-                "MeshModifier keeps all painted slots non-destructive and portable. To write colors into one SlotDataAsset, select that specific slot first.",
-                MessageType.Info);
+
+            DrawHairRootToTipSection();
+
+            if (DrawSectionFoldout(ref showVertexPaintSaveOptions, "More Save Options"))
+            {
+                using (new EditorGUI.DisabledScope(!vertexPaintDirty || IsVertexPaintAllSlotsMode))
+                {
+                    if (GUILayout.Button(new GUIContent("Save Colors to SlotDataAsset", "Bake the previewed colors directly into the selected SlotDataAsset's mesh data.")))
+                    {
+                        SaveVertexPaintToSlotDataAsset();
+                    }
+                }
+                EditorGUILayout.HelpBox(
+                    "MeshModifier keeps all painted slots non-destructive and portable. To write colors into one SlotDataAsset, solo that slot in the Slots panel first.",
+                    MessageType.Info);
+            }
         }
 
-        private void RefreshVertexPaintSlots(SlotData preferredSlot = null)
+        private void RefreshVertexPaintSlots()
         {
-            bool preserveAllSlots = vertexPaintSlotIndex == 0;
-            if (preferredSlot == null)
-            {
-                preferredSlot = vertexPaintSlot;
-            }
-
             vertexPaintSlots.Clear();
-            vertexPaintSlotNames.Clear();
-            vertexPaintSlotNames.Add("All Slots");
-            if (thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null)
-            {
-                foreach (SlotData slot in thisDCA.umaData.umaRecipe.slotDataList)
-                {
-                    if (!IsSelectableSlot(slot))
-                    {
-                        continue;
-                    }
-                    vertexPaintSlots.Add(slot);
-                    vertexPaintSlotNames.Add(slot.slotName);
-                }
-            }
-
-            vertexPaintSlotIndex = Mathf.Clamp(vertexPaintSlotIndex, 0, vertexPaintSlots.Count);
-            if (preserveAllSlots)
-            {
-                vertexPaintSlotIndex = 0;
-            }
-            else if (preferredSlot != null)
-            {
-                int found = vertexPaintSlots.FindIndex(slot => ReferenceEquals(slot, preferredSlot));
-                if (found < 0)
-                {
-                    found = vertexPaintSlots.FindIndex(slot => slot != null && slot.slotName == preferredSlot.slotName);
-                }
-                if (found >= 0)
-                {
-                    vertexPaintSlotIndex = found + 1;
-                }
-            }
+            vertexPaintSlots.AddRange(GetEditableSlots());
         }
 
         private void EnsureVertexPaintSession(bool force = false)
         {
-            SlotData preferredSlot = vertexPaintSlotIndex > 0 && vertexPaintSlotIndex <= vertexPaintSlots.Count
-                ? vertexPaintSlots[vertexPaintSlotIndex - 1]
-                : vertexPaintSlot;
-            RefreshVertexPaintSlots(preferredSlot);
-            if (!vertexPaintDefaultSlotChosen)
-            {
-                vertexPaintSlotIndex = 0;
-                vertexPaintDefaultSlotChosen = true;
-            }
+            RefreshVertexPaintSlots();
 
             if (!vertexPaintPreviewInitialized)
             {
                 InitializeVertexPaintPreview();
             }
 
+            // Keep painting the current slot while it stays editable; otherwise start
+            // with the first non-base editable slot (clothing before the body). With several editable slots the brush
+            // retargets to the slot under the pointer.
             SlotData requested = null;
             if (vertexPaintSlots.Count > 0)
             {
-                requested = IsVertexPaintAllSlotsMode
-                    ? (vertexPaintSlots.Contains(vertexPaintSlot) ? vertexPaintSlot : vertexPaintSlots[0])
-                    : vertexPaintSlots[Mathf.Clamp(vertexPaintSlotIndex - 1, 0, vertexPaintSlots.Count - 1)];
+                requested = vertexPaintSlots.Contains(vertexPaintSlot)
+                    ? vertexPaintSlot
+                    : vertexPaintSlots[FindDefaultVertexPaintSlotIndex()];
             }
             ActivateVertexPaintSlot(requested, force);
         }
@@ -9555,7 +11519,27 @@ namespace UMA
             }
 
             EndVertexPaintStroke(true);
-            vertexPaintSlot = requested;
+            if (!LoadVertexPaintSlotState(requested))
+            {
+                return;
+            }
+            ApplyVertexPaintColorsToPreview(vertexPaintSlotStart, vertexPaintColors);
+            if (string.IsNullOrEmpty(vertexPaintModifierName))
+            {
+                vertexPaintModifierName = IsVertexPaintAllSlotsMode
+                    ? "Multi-Slot Vertex Paint"
+                    : GetVertexPaintSlotKey() + " Vertex Paint";
+            }
+            ApplyVertexDisplayOptions();
+        }
+
+        /// <summary>
+        /// Loads a slot's colors and topology into the vertex paint fields, without ending a
+        /// stroke or touching the preview. Returns false when the slot cannot be painted.
+        /// </summary>
+        private bool LoadVertexPaintSlotState(SlotData slot)
+        {
+            vertexPaintSlot = slot;
             vertexPaintSlotStart = -1;
             vertexPaintSlotVertexCount = 0;
             vertexPaintBaseColors = null;
@@ -9565,7 +11549,7 @@ namespace UMA
             vertexPaintStrokeApplied = null;
             if (vertexPaintSlot == null || vertexPaintSlot.asset == null || BakedMesh == null)
             {
-                return;
+                return false;
             }
 
             vertexPaintSlotVertexCount = vertexPaintSlot.asset.meshData.vertexCount;
@@ -9573,21 +11557,239 @@ namespace UMA
             if (vertexPaintSlotStart < 0 || vertexPaintSlotStart + vertexPaintSlotVertexCount > BakedMesh.vertexCount)
             {
                 vertexPaintSlotVertexCount = 0;
-                return;
+                return false;
             }
 
             vertexPaintBaseColors = BuildVertexPaintColors(vertexPaintSlot, false);
             vertexPaintColors = BuildVertexPaintColors(vertexPaintSlot, true);
             vertexPaintStrokeApplied = new float[vertexPaintSlotVertexCount];
             BuildVertexPaintTopology();
-            ApplyVertexPaintColorsToPreview(vertexPaintSlotStart, vertexPaintColors);
-            if (string.IsNullOrEmpty(vertexPaintModifierName))
+            return true;
+        }
+
+        // ---------------------------------------------------------------
+        // Painting across slot seams. The brush paints the slot under the pointer; any
+        // other editable slot inside the brush is painted through a temporary context,
+        // and those colors are written to the adjustments when the stroke segment ends.
+        // ---------------------------------------------------------------
+
+        private sealed class VertexPaintSlotContext
+        {
+            public SlotData slot;
+            public int start = -1;
+            public int count;
+            public Color32[] baseColors;
+            public Color32[] colors;
+            public List<int>[] neighbors;
+            public List<int>[] coincident;
+            public float[] strokeApplied;
+            public Dictionary<Vector3Int, List<int>> smoothingCells;
+            public Vector3[] smoothingPositions;
+            public Vector3[] smoothingNormals;
+            public float smoothingCellSize;
+            public bool changed;
+        }
+
+        /// <summary>Other slots painted during the current stroke segment (null = cannot be painted).</summary>
+        private readonly Dictionary<SlotData, VertexPaintSlotContext> vertexPaintSpillContexts =
+            new Dictionary<SlotData, VertexPaintSlotContext>();
+        /// <summary>Per-slot stroke progress for the whole mouse stroke, across slot switches.</summary>
+        private readonly Dictionary<SlotData, float[]> vertexPaintStrokeProgress = new Dictionary<SlotData, float[]>();
+        private readonly Dictionary<SlotData, Bounds> vertexPaintSlotBounds = new Dictionary<SlotData, Bounds>();
+
+        private VertexPaintSlotContext CaptureVertexPaintContext()
+        {
+            return new VertexPaintSlotContext
             {
-                vertexPaintModifierName = IsVertexPaintAllSlotsMode
-                    ? "All Slots Vertex Paint"
-                    : GetVertexPaintSlotKey() + " Vertex Paint";
+                slot = vertexPaintSlot,
+                start = vertexPaintSlotStart,
+                count = vertexPaintSlotVertexCount,
+                baseColors = vertexPaintBaseColors,
+                colors = vertexPaintColors,
+                neighbors = vertexPaintNeighbors,
+                coincident = vertexPaintCoincidentVertices,
+                strokeApplied = vertexPaintStrokeApplied,
+                smoothingCells = vertexPaintWorldSmoothingCells,
+                smoothingPositions = vertexPaintWorldSmoothingPositions,
+                smoothingNormals = vertexPaintWorldSmoothingNormals,
+                smoothingCellSize = vertexPaintWorldSmoothingCellSize,
+            };
+        }
+
+        private void RestoreVertexPaintContext(VertexPaintSlotContext context)
+        {
+            vertexPaintSlot = context.slot;
+            vertexPaintSlotStart = context.start;
+            vertexPaintSlotVertexCount = context.count;
+            vertexPaintBaseColors = context.baseColors;
+            vertexPaintColors = context.colors;
+            vertexPaintNeighbors = context.neighbors;
+            vertexPaintCoincidentVertices = context.coincident;
+            vertexPaintStrokeApplied = context.strokeApplied;
+            vertexPaintWorldSmoothingCells = context.smoothingCells;
+            vertexPaintWorldSmoothingPositions = context.smoothingPositions;
+            vertexPaintWorldSmoothingNormals = context.smoothingNormals;
+            vertexPaintWorldSmoothingCellSize = context.smoothingCellSize;
+        }
+
+        private Bounds GetVertexPaintSlotBounds(SlotData slot, Vector3[] vertices)
+        {
+            if (vertexPaintSlotBounds.TryGetValue(slot, out Bounds bounds))
+            {
+                return bounds;
             }
-            ApplyVertexDisplayOptions();
+            int start = GetVisibleBakedVertexIndex(slot, 0);
+            int count = slot.asset != null && slot.asset.meshData != null ? slot.asset.meshData.vertexCount : 0;
+            if (start < 0 || count <= 0 || start + count > vertices.Length)
+            {
+                bounds = new Bounds(new Vector3(float.MaxValue * 0.5f, 0f, 0f), Vector3.zero);
+            }
+            else
+            {
+                bounds = new Bounds(vertices[start], Vector3.zero);
+                for (int i = 1; i < count; i++) bounds.Encapsulate(vertices[start + i]);
+            }
+            vertexPaintSlotBounds[slot] = bounds;
+            return bounds;
+        }
+
+        /// <summary>Builds (once per stroke segment) the paint context of another slot. Leaves the active context loaded.</summary>
+        private VertexPaintSlotContext GetVertexPaintSpillContext(SlotData slot, VertexPaintSlotContext active)
+        {
+            if (vertexPaintSpillContexts.TryGetValue(slot, out VertexPaintSlotContext context))
+            {
+                return context;
+            }
+
+            context = null;
+            if (LoadVertexPaintSlotState(slot))
+            {
+                if (vertexPaintStrokeProgress.TryGetValue(slot, out float[] carried) && carried.Length == vertexPaintSlotVertexCount)
+                {
+                    vertexPaintStrokeApplied = carried;
+                }
+                else
+                {
+                    vertexPaintStrokeProgress[slot] = vertexPaintStrokeApplied;
+                }
+                vertexPaintWorldSmoothingCells = null;
+                vertexPaintWorldSmoothingPositions = null;
+                vertexPaintWorldSmoothingNormals = null;
+                if (vertexPaintTool == VertexPaintTool.Smooth)
+                {
+                    BuildVertexPaintWorldSmoothingMap(BakedMesh.vertices, BakedMesh.normals, vertexPaintSmoothRadius);
+                }
+                context = CaptureVertexPaintContext();
+            }
+            vertexPaintSpillContexts[slot] = context;
+            RestoreVertexPaintContext(active);
+            return context;
+        }
+
+        /// <summary>Paints every other editable slot that lies inside the brush at this sample.</summary>
+        private void PaintVertexColorsOnOtherSlots(
+            Vector3 localPoint,
+            Vector3 localNormal,
+            Vector3 localTangent,
+            Vector3 localBitangent,
+            Vector3 strokeDirection,
+            float brushStrength,
+            Vector3[] vertices,
+            Vector3[] normals)
+        {
+            if (!IsVertexPaintAllSlotsMode || vertexPaintSlot == null)
+            {
+                return;
+            }
+
+            // A square or bitmap brush reaches its corners at about 1.41 x the radius.
+            float reach = vertexPaintRadius * 1.5f;
+            float reachSquared = reach * reach;
+            Vector3 mirroredPoint = ReflectLocalX(localPoint);
+            SlotData activeSlot = vertexPaintSlot;
+            VertexPaintSlotContext active = null;
+            for (int slotIndex = 0; slotIndex < vertexPaintSlots.Count; slotIndex++)
+            {
+                SlotData slot = vertexPaintSlots[slotIndex];
+                if (slot == null || ReferenceEquals(slot, activeSlot))
+                {
+                    continue;
+                }
+
+                Bounds bounds = GetVertexPaintSlotBounds(slot, vertices);
+                bool near = bounds.SqrDistance(localPoint) <= reachSquared;
+                bool nearMirror = vertexPaintSymmetryX && bounds.SqrDistance(mirroredPoint) <= reachSquared;
+                if (!near && !nearMirror)
+                {
+                    continue;
+                }
+
+                if (active == null)
+                {
+                    active = CaptureVertexPaintContext();
+                }
+                VertexPaintSlotContext context = GetVertexPaintSpillContext(slot, active);
+                if (context == null)
+                {
+                    continue;
+                }
+
+                RestoreVertexPaintContext(context);
+                Color32[] before = (Color32[])vertexPaintColors.Clone();
+                bool changed = false;
+                if (near)
+                {
+                    changed |= ApplyVertexPaintBrushPass(
+                        localPoint, localNormal, localTangent, localBitangent, strokeDirection,
+                        brushStrength, before, vertices, normals);
+                }
+                if (nearMirror)
+                {
+                    changed |= ApplyVertexPaintBrushPass(
+                        mirroredPoint,
+                        ReflectLocalX(localNormal).normalized,
+                        ReflectLocalX(localTangent).normalized,
+                        ReflectLocalX(localBitangent).normalized,
+                        ReflectLocalX(strokeDirection).normalized,
+                        brushStrength, before, vertices, normals);
+                }
+                if (changed)
+                {
+                    ApplyVertexPaintColorsToPreview(vertexPaintSlotStart, vertexPaintColors);
+                    context.changed = true;
+                }
+                RestoreVertexPaintContext(active);
+            }
+        }
+
+        /// <summary>Writes the colors painted on other slots during this stroke segment to the adjustments.</summary>
+        private void FlushVertexPaintSpillContexts()
+        {
+            if (vertexPaintSpillContexts.Count == 0)
+            {
+                return;
+            }
+
+            VertexPaintSlotContext active = CaptureVertexPaintContext();
+            bool anySynced = false;
+            foreach (VertexPaintSlotContext context in vertexPaintSpillContexts.Values)
+            {
+                if (context == null || !context.changed)
+                {
+                    continue;
+                }
+                RestoreVertexPaintContext(context);
+                SyncVertexPaintAdjustments();
+                vertexPaintDirtySlots.Add(GetVertexPaintSlotKey());
+                anySynced = true;
+            }
+            RestoreVertexPaintContext(active);
+            vertexPaintSpillContexts.Clear();
+            if (anySynced)
+            {
+                vertexPaintDirty = true;
+                RepaintLinkedEditors();
+            }
         }
 
         private void InitializeVertexPaintPreview()
@@ -9600,9 +11802,12 @@ namespace UMA
             Color32[] allColors = new Color32[BakedMesh.vertexCount];
             FillWhite(allColors);
             RefreshVertexPaintSlots();
-            for (int slotIndex = 0; slotIndex < vertexPaintSlots.Count; slotIndex++)
+            // Preview the colors of every visible slot, including locked ones, so
+            // locking a painted slot does not make its paint appear to vanish.
+            List<SlotData> previewSlots = GetSelectableSlots();
+            for (int slotIndex = 0; slotIndex < previewSlots.Count; slotIndex++)
             {
-                SlotData slot = vertexPaintSlots[slotIndex];
+                SlotData slot = previewSlots[slotIndex];
                 if (slot == null || slot.asset == null)
                 {
                     continue;
@@ -10017,6 +12222,12 @@ namespace UMA
 
             Vector3[] vertices = BakedMesh.vertices;
             Vector3[] normals = BakedMesh.normals;
+            if (targetSlots.Count > 1)
+            {
+                // One simultaneous pass over every editable slot, reading across slot seams.
+                BuildVertexPaintGlobalNeighborhood(vertices, normals, vertexPaintGeneralSmoothRadius);
+                vertexPaintGlobalColors = BakedMesh.colors32;
+            }
             for (int slotIndex = 0; slotIndex < targetSlots.Count; slotIndex++)
             {
                 SlotData targetSlot = targetSlots[slotIndex];
@@ -10102,6 +12313,7 @@ namespace UMA
             vertexPaintWorldSmoothingCells = null;
             vertexPaintWorldSmoothingPositions = null;
             vertexPaintWorldSmoothingNormals = null;
+            ClearVertexPaintGlobalNeighborhood();
             ActivateVertexPaintSlot(originalSlot, true);
 
             if (undoRegistered)
@@ -10308,53 +12520,8 @@ namespace UMA
             return modifier.adjustments.vertexAdjustments.Count > 0 ? modifier : null;
         }
 
-        private void FrameSelectedVertexPaintSlot()
-        {
-            if (vertexPaintSlot == null || BakedMesh == null || VertexObject == null ||
-                vertexPaintSlotStart < 0 || vertexPaintSlotVertexCount <= 0)
-            {
-                return;
-            }
-
-            Vector3[] vertices = BakedMesh.vertices;
-            Vector3 first = VertexObject.transform.TransformPoint(vertices[vertexPaintSlotStart]);
-            Bounds bounds = new Bounds(first, Vector3.zero);
-            for (int i = 1; i < vertexPaintSlotVertexCount; i++)
-            {
-                bounds.Encapsulate(VertexObject.transform.TransformPoint(vertices[vertexPaintSlotStart + i]));
-            }
-            bounds.Expand(Mathf.Max(0.001f, bounds.size.magnitude * 0.01f));
-            SceneView sceneView = openedSceneView != null ? openedSceneView : SceneView.lastActiveSceneView;
-            if (sceneView != null)
-            {
-                sceneView.Frame(bounds, false);
-                sceneView.Repaint();
-            }
-        }
-
+        /// <summary>Frames the editable slots (the whole mesh when none are editable).</summary>
         private void FrameAllEditableSlots()
-        {
-            if (VertexObject == null || BakedMesh == null || BakedMesh.vertexCount == 0)
-            {
-                return;
-            }
-
-            Vector3[] vertices = BakedMesh.vertices;
-            Bounds bounds = new Bounds(VertexObject.transform.TransformPoint(vertices[0]), Vector3.zero);
-            for (int i = 1; i < vertices.Length; i++)
-            {
-                bounds.Encapsulate(VertexObject.transform.TransformPoint(vertices[i]));
-            }
-            bounds.Expand(Mathf.Max(0.001f, bounds.size.magnitude * 0.01f));
-            SceneView sceneView = openedSceneView != null ? openedSceneView : SceneView.lastActiveSceneView;
-            if (sceneView != null)
-            {
-                sceneView.Frame(bounds, false);
-                sceneView.Repaint();
-            }
-        }
-
-        private void FrameAllNonBaseSculptSlots()
         {
             if (VertexObject == null || BakedMesh == null || BakedMesh.vertexCount == 0)
             {
@@ -10364,39 +12531,43 @@ namespace UMA
             Vector3[] vertices = BakedMesh.vertices;
             bool hasBounds = false;
             Bounds bounds = new Bounds();
-            for (int slotIndex = 0; slotIndex < sculptSlots.Count; slotIndex++)
+            void Encapsulate(int vertexIndex)
             {
-                SlotData slot = sculptSlots[slotIndex];
-                if (!IsSculptSlotIncludedInTarget(slot) || slot.asset == null)
+                Vector3 point = VertexObject.transform.TransformPoint(vertices[vertexIndex]);
+                if (!hasBounds)
+                {
+                    bounds = new Bounds(point, Vector3.zero);
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(point);
+                }
+            }
+
+            foreach (SlotData slot in GetEditableSlots())
+            {
+                if (slot.asset == null || UMAMeshData.IsNullOrEmptyMeshData(slot.asset.meshData))
                 {
                     continue;
                 }
-
                 int start = GetVisibleBakedVertexIndex(slot, 0);
                 int count = slot.asset.meshData.vertexCount;
                 if (start < 0 || start + count > vertices.Length)
                 {
                     continue;
                 }
-
                 for (int vertexIndex = start; vertexIndex < start + count; vertexIndex++)
                 {
-                    Vector3 point = VertexObject.transform.TransformPoint(vertices[vertexIndex]);
-                    if (!hasBounds)
-                    {
-                        bounds = new Bounds(point, Vector3.zero);
-                        hasBounds = true;
-                    }
-                    else
-                    {
-                        bounds.Encapsulate(point);
-                    }
+                    Encapsulate(vertexIndex);
                 }
             }
-
             if (!hasBounds)
             {
-                return;
+                for (int vertexIndex = 0; vertexIndex < vertices.Length; vertexIndex++)
+                {
+                    Encapsulate(vertexIndex);
+                }
             }
 
             bounds.Expand(Mathf.Max(0.001f, bounds.size.magnitude * 0.01f));
@@ -10408,58 +12579,34 @@ namespace UMA
             }
         }
 
-        private void RefreshSculptSlots(SlotData preferredSlot = null)
+        private void RefreshSculptSlots()
         {
-            bool preserveMultiSlotTarget = IsSculptMultiSlotMode;
-            if (preferredSlot == null) preferredSlot = sculptSlot;
+            List<SlotData> editable = GetEditableSlots();
+            bool changed = editable.Count != sculptSlots.Count;
+            for (int i = 0; !changed && i < editable.Count; i++)
+            {
+                changed = !ReferenceEquals(editable[i], sculptSlots[i]);
+            }
+            if (!changed)
+            {
+                return;
+            }
             sculptSlots.Clear();
-            sculptSlotNames.Clear();
-            sculptSlotNames.Add("All Slots");
-            sculptSlotNames.Add("All non-base slots");
-            if (thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null)
-            {
-                foreach (SlotData slot in thisDCA.umaData.umaRecipe.slotDataList)
-                {
-                    if (IsSelectableSlot(slot))
-                    {
-                        sculptSlots.Add(slot);
-                        sculptSlotNames.Add(slot.slotName);
-                    }
-                }
-            }
-            sculptSlotIndex = Mathf.Clamp(sculptSlotIndex, 0, sculptSlots.Count + SculptSlotSpecialOptionCount - 1);
-            if (preserveMultiSlotTarget)
-            {
-                sculptSlotIndex = IsSculptAllSlotsMode ? 0 : 1;
-            }
-            else if (preferredSlot != null)
-            {
-                int found = sculptSlots.FindIndex(slot => ReferenceEquals(slot, preferredSlot));
-                if (found < 0) found = sculptSlots.FindIndex(slot => slot != null && slot.slotName == preferredSlot.slotName);
-                if (found >= 0) sculptSlotIndex = found + SculptSlotSpecialOptionCount;
-            }
+            sculptSlots.AddRange(editable);
+            // Welded seams are only valid for the slot set they were built from.
+            ClearCrossSlotSculptSeams();
         }
 
         private void EnsureSculptSession(bool force = false)
         {
-            SlotData preferredSlot = sculptSlotIndex >= SculptSlotSpecialOptionCount &&
-                                     sculptSlotIndex < sculptSlots.Count + SculptSlotSpecialOptionCount
-                ? sculptSlots[sculptSlotIndex - SculptSlotSpecialOptionCount]
-                : sculptSlot;
-            RefreshSculptSlots(preferredSlot);
-            if (!sculptDefaultSlotChosen)
-            {
-                sculptSlotIndex = FindDefaultSculptSlotIndex() + SculptSlotSpecialOptionCount;
-                sculptDefaultSlotChosen = true;
-            }
+            RefreshSculptSlots();
+            // Keep sculpting the current slot while it stays editable; otherwise start
+            // with the first non-base editable slot (clothing before the body). With
+            // several editable slots each stroke retargets to the slot under the pointer.
             SlotData requested = null;
             if (sculptSlots.Count > 0)
             {
-                requested = IsSculptMultiSlotMode
-                    ? (sculptSlots.Contains(sculptSlot) && IsSculptSlotIncludedInTarget(sculptSlot)
-                        ? sculptSlot
-                        : FindFirstSculptTargetSlot())
-                    : sculptSlots[Mathf.Clamp(sculptSlotIndex - SculptSlotSpecialOptionCount, 0, sculptSlots.Count - 1)];
+                requested = sculptSlots.Contains(sculptSlot) ? sculptSlot : FindFirstSculptTargetSlot();
             }
             ActivateSculptSlot(requested, force);
             if (IsSculptMultiSlotMode)
@@ -10522,6 +12669,28 @@ namespace UMA
                 return;
             }
             EndSculptStroke(false);
+            if (sculptMaskTool == SculptMaskTool.None && activeSculptState != null && sculptStrokeApplied != null &&
+                sculptStrokeLimit != null && sculptStrokeApplied.Length == activeSculptState.count)
+            {
+                // Remember how far the sculpt stroke moved this slot's vertices, so a stroke that
+                // comes back, or welded seam vertices it already moved, are not pushed twice.
+                // Seam partners on other slots are recorded as they move (see
+                // SynchronizeCrossSlotSculptProgress), so merge into any record they started.
+                MergeSculptStrokeProgress(activeSculptState, sculptStrokeApplied, sculptStrokeLimit);
+            }
+            if (sculptMaskTool != SculptMaskTool.None && activeSculptState != null && sculptStrokeApplied != null &&
+                sculptStrokeApplied.Length == activeSculptState.count)
+            {
+                // Remember how far the mask brush got on the slot being left, in case the stroke
+                // spills back onto it from the next slot.
+                float maxEffect = sculptRadius * sculptStrengthPercent * .01f;
+                if (maxEffect > 1e-7f)
+                {
+                    float[] progress = new float[sculptStrokeApplied.Length];
+                    for (int i = 0; i < progress.Length; i++) progress[i] = sculptStrokeApplied[i] / maxEffect;
+                    sculptMaskStrokeOtherSlots[activeSculptState] = progress;
+                }
+            }
             if (activeSculptState != null && sculptMask != null)
             {
                 activeSculptState.mask = sculptMask;
@@ -10549,6 +12718,7 @@ namespace UMA
             sculptOriginalVertices = state.originalVertices;
             sculptOriginalNormals = state.originalNormals;
             sculptMask = state.mask ?? (state.mask = new float[sculptSlotVertexCount]);
+            sculptMaskDirty = true;
             sculptStrokeApplied = new float[sculptSlotVertexCount];
             sculptStrokeLimit = new float[sculptSlotVertexCount];
             sculptNeighbors = new List<int>[sculptSlotVertexCount];
@@ -10564,11 +12734,9 @@ namespace UMA
             BuildSculptCoincidentVertexMap();
             BuildSculptConnectedComponents();
             if (string.IsNullOrEmpty(sculptModifierName))
-                sculptModifierName = IsSculptAllSlotsMode
-                    ? "All Slots Sculpt"
-                    : IsSculptAllNonBaseSlotsMode
-                        ? "All Non-Base Slots Sculpt"
-                        : GetSculptSlotKey() + " Sculpt";
+                sculptModifierName = IsSculptMultiSlotMode
+                    ? "Multi-Slot Sculpt"
+                    : GetSculptSlotKey() + " Sculpt";
             if (string.IsNullOrEmpty(sculptBlendshapeName))
                 sculptBlendshapeName = sculptModifierName;
             if (string.IsNullOrEmpty(sculptNewSlotName)) sculptNewSlotName = sculptSlot.slotName + "_modified";
@@ -10739,6 +12907,8 @@ namespace UMA
             }
         }
 
+        private readonly HashSet<int> sculptMaskSeamScratch = new HashSet<int>();
+
         private void SynchronizeCrossSlotSculptMask(List<int> localIndices, float targetMask)
         {
             if (!IsSculptMultiSlotMode || !sculptCrossSlotSeamsBuilt || localIndices == null)
@@ -10746,7 +12916,9 @@ namespace UMA
                 return;
             }
 
-            HashSet<int> updatedVertices = new HashSet<int>();
+            // Runs for every masked vertex of every sample: reuse the set instead of allocating.
+            HashSet<int> updatedVertices = sculptMaskSeamScratch;
+            updatedVertices.Clear();
             for (int i = 0; i < localIndices.Count; i++)
             {
                 int bakedIndex = sculptSlotStart + localIndices[i];
@@ -10804,36 +12976,18 @@ namespace UMA
             BakedMesh.normals = normals;
         }
 
-        private int FindDefaultSculptSlotIndex()
-        {
-            if (sculptSlots.Count == 0) return 0;
-            for (int i = 0; i < sculptSlots.Count; i++)
-            {
-                SlotData slot = sculptSlots[i];
-                if (!IsBaseSculptSlot(slot)) return i;
-            }
-            return 0;
-        }
-
         private SlotData FindFirstSculptTargetSlot()
         {
             for (int i = 0; i < sculptSlots.Count; i++)
             {
-                SlotData slot = sculptSlots[i];
-                if (IsSculptSlotIncludedInTarget(slot)) return slot;
+                if (!IsBaseSculptSlot(sculptSlots[i])) return sculptSlots[i];
             }
-            return null;
+            return sculptSlots.Count > 0 ? sculptSlots[0] : null;
         }
 
         private bool IsSculptSlotIncludedInTarget(SlotData slot)
         {
-            return slot != null && (!IsSculptAllNonBaseSlotsMode || !IsBaseSculptSlot(slot));
-        }
-
-        private bool IsBaseSculptSlot(SlotData slot)
-        {
-            RaceData race = thisDCA != null && thisDCA.activeRace != null ? thisDCA.activeRace.data : null;
-            return slot != null && RaceBaseRecipeContainsSlot(race, slot.asset);
+            return IsSlotEditable(slot);
         }
 
         private void BuildSculptCoincidentVertexMap()
@@ -10917,13 +13071,20 @@ namespace UMA
             return slot.asset != null && !string.IsNullOrEmpty(slot.asset.sourceSlot) ? slot.asset.sourceSlot : slot.slotName;
         }
 
-        private int FindSculptConnectedComponentAtPoint(Vector3 localPoint)
+        private int FindSculptConnectedComponentAtPoint(Vector3 localPoint) =>
+            FindSculptConnectedComponentAtPoint(localPoint, null);
+
+        /// <summary>
+        /// The connected component nearest a point. Pass the working vertex array during a
+        /// batch of samples, since the mesh itself is only updated when the batch ends.
+        /// </summary>
+        private int FindSculptConnectedComponentAtPoint(Vector3 localPoint, Vector3[] vertices)
         {
             if (BakedMesh == null || sculptConnectedComponents == null || sculptSlotStart < 0)
                 return -1;
 
-            Vector3[] vertices = BakedMesh.vertices;
-            int[] triangles = BakedMesh.triangles;
+            if (vertices == null || vertices.Length != BakedMesh.vertexCount) vertices = BakedMesh.vertices;
+            int[] triangles = GetBakedTriangles();
             float closestDistance = float.PositiveInfinity;
             int closestComponent = -1;
             int slotEnd = sculptSlotStart + sculptSlotVertexCount;
@@ -11044,9 +13205,10 @@ namespace UMA
         private SlotData GetAutosculptOccluderSlot()
         {
             if (string.IsNullOrEmpty(autosculptOccluderSlotName)) return null;
-            for (int i = 0; i < sculptSlots.Count; i++)
+            List<SlotData> visibleSlots = GetSelectableSlots();
+            for (int i = 0; i < visibleSlots.Count; i++)
             {
-                SlotData slot = sculptSlots[i];
+                SlotData slot = visibleSlots[i];
                 if (slot != null && string.Equals(slot.slotName, autosculptOccluderSlotName, StringComparison.Ordinal))
                     return slot;
             }
@@ -11061,14 +13223,15 @@ namespace UMA
 
             GUIHelper.BeginVerticalPadded(5, new Color(0.9f, 0.94f, 1f), EditorStyles.helpBox);
             EditorGUILayout.HelpBox(
-                "Choose the slot that should remain unchanged. Target vertices cast outward along the selected local axis toward that occluder, then move inward using the current Radius, Effect %, Falloff, mask, and X Symmetry settings.",
+                "Choose the slot that should remain unchanged (it only needs to be visible; lock it in the Slots panel to protect it from brushes). Target vertices cast outward along the selected local axis toward that occluder, then move inward using the current Radius, Effect %, Falloff, mask, and X Symmetry settings.",
                 MessageType.Info);
 
-            List<string> occluderNames = new List<string>(sculptSlots.Count + 1) { "Select Occluder..." };
+            List<SlotData> occluderCandidates = GetSelectableSlots();
+            List<string> occluderNames = new List<string>(occluderCandidates.Count + 1) { "Select Occluder..." };
             int selectedOccluder = 0;
-            for (int i = 0; i < sculptSlots.Count; i++)
+            for (int i = 0; i < occluderCandidates.Count; i++)
             {
-                SlotData slot = sculptSlots[i];
+                SlotData slot = occluderCandidates[i];
                 if (slot == null) continue;
                 occluderNames.Add(slot.slotName);
                 if (string.Equals(slot.slotName, autosculptOccluderSlotName, StringComparison.Ordinal))
@@ -11129,8 +13292,8 @@ namespace UMA
             }
             EditorGUI.BeginDisabledGroup(occluder == null || !hasAllSlotTarget);
             if (GUILayout.Button(new GUIContent(
-                    "Autosculpt All Slots",
-                    "Autosculpt every visible editable slot except the selected occluder.")))
+                    "Autosculpt Editable Slots",
+                    "Autosculpt every editable slot except the selected occluder.")))
             {
                 ApplyAutosculpt(true);
             }
@@ -11139,7 +13302,7 @@ namespace UMA
             if (currentIsOccluder)
             {
                 EditorGUILayout.HelpBox(
-                    "The current slot is the occluder, so use Autosculpt All Slots or select a different current slot.",
+                    "The current slot is the occluder, so use Autosculpt Editable Slots or make a different slot editable.",
                     MessageType.None);
             }
             if (!string.IsNullOrEmpty(autosculptStatusMessage))
@@ -11497,184 +13660,157 @@ namespace UMA
         private void DrawSculptOptions()
         {
             EnsureSculptSession();
+            // Brushes are limited to 250 mm, even while the Brush section is collapsed.
+            sculptRadius = Mathf.Clamp(sculptRadius, StageBrushSize.MinRadiusMm / 1000f, StageBrushSize.MaxRadiusMm / 1000f);
             GUILayout.Label("Sculpt", centeredLabel);
-            if (sculptSlots.Count == 0)
+            if (!DrawEditTargetSummary(
+                    "Strokes sculpt whichever editable slot is under the pointer. Shared edges stay welded."))
             {
-                EditorGUILayout.HelpBox("No visible editable slot is available.", MessageType.Warning);
                 return;
-            }
-            int oldSlot = sculptSlotIndex;
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Slot", GUILayout.Width(92));
-            sculptSlotIndex = EditorGUILayout.Popup(sculptSlotIndex, sculptSlotNames.ToArray());
-            bool frameSlot = GUILayout.Button(new GUIContent("◎", "Frame the selected sculpt slot in the Scene view."), EditorStyles.miniButton, GUILayout.Width(26));
-            GUILayout.EndHorizontal();
-            if (oldSlot != sculptSlotIndex)
-            {
-                EndSculptStroke(true);
-                sculptNewSlotName = string.Empty;
-                EnsureSculptSession(true);
-            }
-            if (frameSlot)
-            {
-                if (IsSculptAllSlotsMode) FrameAllEditableSlots();
-                else if (IsSculptAllNonBaseSlotsMode) FrameAllNonBaseSculptSlots();
-                else FrameSelectedSculptSlot();
-            }
-            if (IsSculptMultiSlotMode)
-            {
-                string targetDescription = IsSculptAllNonBaseSlotsMode
-                    ? "All non-base slots is active. Each stroke targets the non-base slot under the pointer; base-race slots are ignored."
-                    : "All Slots is active. Each stroke targets the slot under the pointer.";
-                EditorGUILayout.HelpBox(
-                    $"{targetDescription} Current target: {(sculptSlot != null ? sculptSlot.slotName : "None")}. Co-located boundary vertices are welded across targeted slots and every affected slot is retained.",
-                    MessageType.None);
             }
             if (sculptSlot == null || sculptMask == null)
             {
-                EditorGUILayout.HelpBox(
-                    IsSculptAllNonBaseSlotsMode
-                        ? "No visible editable non-base slot is available for this avatar. Select a specific slot or All Slots."
-                        : "No visible editable slot is available.",
-                    MessageType.Warning);
+                EditorGUILayout.HelpBox("The editable slots have no sculptable vertices on this renderer.", MessageType.Warning);
                 return;
             }
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Tool", GUILayout.Width(92));
-            GUIContent[] tools = {
-                new GUIContent("Add", "Add: move vertices outward along the averaged surface normal."),
-                new GUIContent("Remove", "Remove: move vertices inward along the averaged surface normal."),
-                new GUIContent("Smooth", "Smooth: relax vertices toward their connected neighbors."),
-                new GUIContent("Grab", "Grab: drag vertices parallel to the Scene camera's view plane."),
-                new GUIContent("Crease", "Crease: pinch vertices toward the stroke while adding an adjustable ridge or indentation."),
-                new GUIContent("Pinch", "Pinch: draw vertices together across the surface without adding depth."),
-                new GUIContent("Plane", "Plane: flatten, fill, or scrape vertices toward the plane captured at stroke start."),
-                new GUIContent("Boundary", "Boundary: deform the nearest open edge and propagate the effect into the garment."),
-                new GUIContent("Elastic", "Elastic Deform: broad grab, scale, or twist deformation with smooth volume-aware falloff.") };
-            sculptTool = (SculptTool)GUILayout.SelectionGrid((int)sculptTool, tools, 3, EditorStyles.miniButton);
-            GUILayout.EndHorizontal();
-            sculptRadius = EditorGUILayout.Slider(new GUIContent("Radius", "World-space brush radius."), sculptRadius, 0.001f, 0.5f);
-            sculptStrengthPercent = EditorGUILayout.Slider(new GUIContent("Effect %", "Maximum effect a vertex can receive during one stroke. For Grab, this controls how closely the center follows the cursor."), sculptStrengthPercent, 0f, 100f);
-            sculptFalloff = (SculptFalloff)EditorGUILayout.EnumPopup("Falloff", sculptFalloff);
-            if (sculptFalloff == SculptFalloff.UserDefined) sculptCustomFalloff = EditorGUILayout.CurveField("Curve", sculptCustomFalloff, Color.green, new Rect(0, 0, 1, 1));
-            if (sculptTool == SculptTool.Crease)
+            DrawCurrentSculptToolSummary();
+
+            if (DrawSectionFoldout(ref showSculptBrushSection, "Brush"))
             {
-                sculptPinchStrength = EditorGUILayout.Slider(new GUIContent("Pinch", "How strongly vertices converge toward the stroke."), sculptPinchStrength, 0f, 2f);
-                sculptCreaseDepth = EditorGUILayout.Slider(new GUIContent("Depth", "Negative values cut a crease; positive values raise a ridge."), sculptCreaseDepth, -1f, 1f);
+                sculptRadius = StageBrushSize.RadiusSlider(new GUIContent("Radius (mm)", "Brush radius on the model, in millimeters."), sculptRadius);
+                sculptStrengthPercent = EditorGUILayout.Slider(new GUIContent("Effect %", "Maximum effect a vertex can receive during one stroke. For Grab, this controls how closely the center follows the cursor."), sculptStrengthPercent, 0f, 100f);
+                sculptFalloff = (SculptFalloff)EditorGUILayout.EnumPopup("Falloff", sculptFalloff);
+                if (sculptFalloff == SculptFalloff.UserDefined) sculptCustomFalloff = EditorGUILayout.CurveField("Curve", sculptCustomFalloff, Color.green, new Rect(0, 0, 1, 1));
+                if (sculptTool == SculptTool.Crease)
+                {
+                    sculptPinchStrength = EditorGUILayout.Slider(new GUIContent("Pinch", "How strongly vertices converge toward the stroke."), sculptPinchStrength, 0f, 2f);
+                    sculptCreaseDepth = EditorGUILayout.Slider(new GUIContent("Depth", "Negative values cut a crease; positive values raise a ridge."), sculptCreaseDepth, -1f, 1f);
+                }
+                else if (sculptTool == SculptTool.Pinch)
+                {
+                    sculptPinchStrength = EditorGUILayout.Slider(new GUIContent("Pinch", "How strongly vertices converge toward the stroke."), sculptPinchStrength, 0f, 2f);
+                }
+                else if (sculptTool == SculptTool.Plane)
+                {
+                    sculptPlaneMode = (SculptPlaneMode)EditorGUILayout.EnumPopup("Plane Mode", sculptPlaneMode);
+                    EditorGUILayout.HelpBox(
+                        "The first point of each stroke fixes the working plane. Flatten affects both sides, Fill raises only recessed vertices, and Scrape lowers only protruding vertices.",
+                        MessageType.None);
+                }
+                else if (sculptTool == SculptTool.Heal)
+                {
+                    DrawHealOptions();
+                }
+                else if (sculptTool == SculptTool.Boundary)
+                {
+                    sculptBoundaryMode = (SculptBoundaryMode)EditorGUILayout.EnumPopup("Boundary Mode", sculptBoundaryMode);
+                    if (sculptBoundaryVertices == null || sculptBoundaryVertices.Count == 0)
+                        EditorGUILayout.HelpBox("The selected slot has no open mesh boundary.", MessageType.Warning);
+                    else
+                        EditorGUILayout.HelpBox("Start the drag near an open hem, cuff, collar, sleeve, or skirt edge. Radius controls how far the deformation propagates across the surface.", MessageType.None);
+                }
+                else if (sculptTool == SculptTool.ElasticDeform)
+                {
+                    sculptElasticMode = (SculptElasticMode)EditorGUILayout.EnumPopup("Elastic Mode", sculptElasticMode);
+                    if (sculptElasticMode == SculptElasticMode.Grab)
+                        sculptElasticVolumePreservation = EditorGUILayout.Slider(new GUIContent("Preserve Volume", "Adds a small perpendicular bulge through the transition area to reduce visible volume loss."), sculptElasticVolumePreservation, 0f, 1f);
+                    EditorGUILayout.HelpBox("Drag across the view plane. Scale and Twist use the drag direction along the surface tangent to determine their sign and amount.", MessageType.None);
+                }
+                sculptSymmetryX = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "X Symmetry",
+                        "Repeat every brush sample from the reflected position and surface direction across the character's local X axis."),
+                    sculptSymmetryX);
+                sculptConnectedOnly = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "Connected Only",
+                        "Restrict the brush to the connected surface under its center. This prevents nearby disconnected layers in the same slot, such as the fabric behind a pocket, from being modified."),
+                    sculptConnectedOnly);
+                sculptUpdateNormalsWhileSculpting = EditorGUILayout.Toggle(new GUIContent("Live Normal Updates", "Recalculate mesh normals as you drag, once per mouse move, instead of only when the stroke ends. This improves live surface feedback but costs more CPU time."), sculptUpdateNormalsWhileSculpting);
+                DrawConstantApplicationOptions();
+                if (IsSculptDragMode)
+                {
+                    EditorGUILayout.HelpBox(
+                        "Press on the surface, then drag in the Scene view. The affected area and target slot are frozen until release; multi-slot targets keep connected slot boundaries welded.",
+                        MessageType.None);
+                }
             }
-            else if (sculptTool == SculptTool.Pinch)
+
+            if (DrawSectionFoldout(ref showSculptMaskSection, "Mask"))
             {
-                sculptPinchStrength = EditorGUILayout.Slider(new GUIContent("Pinch", "How strongly vertices converge toward the stroke."), sculptPinchStrength, 0f, 2f);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(new GUIContent("Mask", "Masked vertices are protected from sculpting. Paint or erase the mask with the mask brushes on the toolbar."), GUILayout.Width(ToolLabelWidth));
+                LoadSculptMaskPrefs();
+                bool showMask = GUILayout.Toggle(sculptShowMask, new GUIContent("Show", "Show the mask as a colored wash over the mesh."), EditorStyles.miniButtonLeft);
+                if (showMask != sculptShowMask)
+                {
+                    sculptShowMask = showMask;
+                    SaveSculptMaskPrefs();
+                    SceneView.RepaintAll();
+                }
+                if (GUILayout.Button(new GUIContent("Clear", "Remove the mask from every slot."), EditorStyles.miniButtonMid)) ClearAllSculptMasks();
+                if (GUILayout.Button(new GUIContent("Invert", "Invert the mask on every editable slot: protect what was unprotected, and the reverse."), EditorStyles.miniButtonRight)) InvertEditableSculptMasks();
+                GUILayout.EndHorizontal();
+                using (new EditorGUI.DisabledScope(!sculptShowMask))
+                {
+                    EditorGUI.BeginChangeCheck();
+                    Color maskColor = EditorGUILayout.ColorField(
+                        new GUIContent("Mask Color", "Color and opacity of the mask wash. Alpha sets how strongly fully masked areas are tinted."),
+                        sculptMaskColor, true, true, false);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        sculptMaskColor = maskColor;
+                        SaveSculptMaskPrefs();
+                        SceneView.RepaintAll();
+                    }
+                }
             }
-            else if (sculptTool == SculptTool.Plane)
-            {
-                sculptPlaneMode = (SculptPlaneMode)EditorGUILayout.EnumPopup("Plane Mode", sculptPlaneMode);
-                EditorGUILayout.HelpBox(
-                    "The first point of each stroke fixes the working plane. Flatten affects both sides, Fill raises only recessed vertices, and Scrape lowers only protruding vertices.",
-                    MessageType.None);
-            }
-            else if (sculptTool == SculptTool.Boundary)
-            {
-                sculptBoundaryMode = (SculptBoundaryMode)EditorGUILayout.EnumPopup("Boundary Mode", sculptBoundaryMode);
-                if (sculptBoundaryVertices == null || sculptBoundaryVertices.Count == 0)
-                    EditorGUILayout.HelpBox("The selected slot has no open mesh boundary.", MessageType.Warning);
-                else
-                    EditorGUILayout.HelpBox("Start the drag near an open hem, cuff, collar, sleeve, or skirt edge. Radius controls how far the deformation propagates across the surface.", MessageType.None);
-            }
-            else if (sculptTool == SculptTool.ElasticDeform)
-            {
-                sculptElasticMode = (SculptElasticMode)EditorGUILayout.EnumPopup("Elastic Mode", sculptElasticMode);
-                if (sculptElasticMode == SculptElasticMode.Grab)
-                    sculptElasticVolumePreservation = EditorGUILayout.Slider(new GUIContent("Preserve Volume", "Adds a small perpendicular bulge through the transition area to reduce visible volume loss."), sculptElasticVolumePreservation, 0f, 1f);
-                EditorGUILayout.HelpBox("Drag across the view plane. Scale and Twist use the drag direction along the surface tangent to determine their sign and amount.", MessageType.None);
-            }
-            sculptSymmetryX = EditorGUILayout.Toggle(
-                new GUIContent(
-                    "X Symmetry",
-                    "Repeat every brush sample from the reflected position and surface direction across the character's local X axis."),
-                sculptSymmetryX);
-            sculptConnectedOnly = EditorGUILayout.Toggle(
-                new GUIContent(
-                    "Connected Only",
-                    "Restrict the brush to the connected surface under its center. This prevents nearby disconnected layers in the same slot, such as the fabric behind a pocket, from being modified."),
-                sculptConnectedOnly);
-            sculptUpdateNormalsWhileSculpting = EditorGUILayout.Toggle(new GUIContent("Live Normal Updates", "Recalculate mesh normals after every brush sample. This improves live surface feedback but costs more CPU time."), sculptUpdateNormalsWhileSculpting);
-            if (IsSculptDragMode)
-            {
-                EditorGUILayout.HelpBox(
-                    "Press on the surface, then drag in the Scene view. The affected area and target slot are frozen until release; multi-slot targets keep connected slot boundaries welded.",
-                    MessageType.None);
-            }
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Mask", GUILayout.Width(92));
-            sculptMaskTool = (SculptMaskTool)GUILayout.Toolbar((int)sculptMaskTool, new[] { new GUIContent("Off", "Sculpt normally."), new GUIContent("Paint", "Protect vertices under the brush."), new GUIContent("Erase", "Remove protection under the brush.") });
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Clear Mask")) Array.Clear(sculptMask, 0, sculptMask.Length);
-            if (GUILayout.Button("Invert Mask")) for (int i = 0; i < sculptMask.Length; i++) sculptMask[i] = 1f - sculptMask[i];
-            GUILayout.EndHorizontal();
+
             DrawAutosculptOptions();
-            sculptModifierName = EditorGUILayout.TextField("Modifier Name", sculptModifierName);
-            EditorGUI.BeginDisabledGroup(!HasSculptChanges());
-            if (GUILayout.Button("Save MeshModifier")) SaveSculptModifier();
-            EditorGUI.EndDisabledGroup();
 
-            EditorGUILayout.Space(6f);
-            GUILayout.Label("Save Sculpt as Blendshape", EditorStyles.miniBoldLabel);
-            sculptBlendshapeName = EditorGUILayout.TextField("Blendshape Name", sculptBlendshapeName);
-            EditorGUI.BeginDisabledGroup(!HasSculptChanges() || string.IsNullOrWhiteSpace(sculptBlendshapeName));
-            if (GUILayout.Button(new GUIContent(
-                    "Save Sculpt as Blendshape",
-                    "Add or replace a 100%-weight blendshape on every SlotDataAsset changed by this sculpt session.")))
+            DrawBlendshapeEditSection();
+
+            if (DrawSectionFoldout(ref showSculptSaveOptions, "More Save Options"))
             {
-                SaveSculptAsBlendshape();
+                GUILayout.Label("Save Sculpt as Blendshape", EditorStyles.miniBoldLabel);
+                sculptBlendshapeName = EditorGUILayout.TextField("Blendshape Name", sculptBlendshapeName);
+                EditorGUI.BeginDisabledGroup(!HasSculptChangesForUI() || string.IsNullOrWhiteSpace(sculptBlendshapeName));
+                if (GUILayout.Button(new GUIContent(
+                        "Save Sculpt as Blendshape",
+                        "Add or replace a 100%-weight blendshape on every SlotDataAsset changed by this sculpt session.")))
+                {
+                    SaveSculptAsBlendshape();
+                }
+                EditorGUI.EndDisabledGroup();
+                if (!string.IsNullOrEmpty(sculptBlendshapeStatusMessage))
+                    EditorGUILayout.HelpBox(sculptBlendshapeStatusMessage, sculptBlendshapeStatusType);
+
+                EditorGUILayout.Space(6f);
+                GUILayout.Label("Save Slot Mesh", EditorStyles.miniBoldLabel);
+                // While a blendshape is loaded the strokes are changes to that shape, not to the slot's rest mesh.
+                EditorGUI.BeginDisabledGroup(IsSculptMultiSlotMode || IsEditingBlendshape || !HasSculptChangesForUI(activeSculptState));
+                if (GUILayout.Button(new GUIContent("Save slot modifications to base slot", "Overwrite the selected SlotDataAsset's MeshData with the sculpted vertex positions.")))
+                    SaveSculptToBaseSlot();
+                sculptNewSlotName = EditorGUILayout.TextField("New Slot Name", sculptNewSlotName);
+                EditorGUI.BeginDisabledGroup(string.IsNullOrWhiteSpace(sculptNewSlotName));
+                if (GUILayout.Button(new GUIContent("Save slot modifications to a new slot", "Create a new SlotDataAsset with copied settings and sculpted MeshData.")))
+                    SaveSculptToNewSlot();
+                EditorGUI.EndDisabledGroup();
+                EditorGUI.EndDisabledGroup();
+                EditorGUILayout.HelpBox(
+                    IsSculptMultiSlotMode
+                        ? "Save MeshModifier includes every slot you have sculpted, including slots you have since locked. To write or create a SlotDataAsset, solo one slot in the Slots panel."
+                        : "Edits on other slots remain available for MeshModifier saving.",
+                    MessageType.Info);
             }
-            EditorGUI.EndDisabledGroup();
-            if (!string.IsNullOrEmpty(sculptBlendshapeStatusMessage))
-                EditorGUILayout.HelpBox(sculptBlendshapeStatusMessage, sculptBlendshapeStatusType);
-
-            EditorGUILayout.Space(6f);
-            GUILayout.Label("Save Slot Mesh", EditorStyles.miniBoldLabel);
-            EditorGUI.BeginDisabledGroup(IsSculptMultiSlotMode || !HasCurrentSculptChanges());
-            if (GUILayout.Button(new GUIContent("Save slot modifications to base slot", "Overwrite the selected SlotDataAsset's MeshData with the sculpted vertex positions.")))
-                SaveSculptToBaseSlot();
-            sculptNewSlotName = EditorGUILayout.TextField("New Slot Name", sculptNewSlotName);
-            EditorGUI.BeginDisabledGroup(string.IsNullOrWhiteSpace(sculptNewSlotName));
-            if (GUILayout.Button(new GUIContent("Save slot modifications to a new slot", "Create a new SlotDataAsset with copied settings and sculpted MeshData.")))
-                SaveSculptToNewSlot();
-            EditorGUI.EndDisabledGroup();
-            EditorGUI.EndDisabledGroup();
-            EditorGUILayout.HelpBox(
-                IsSculptMultiSlotMode
-                    ? "Drag over any targetable slot to sculpt it. Connected target-slot boundaries remain welded, and Save MeshModifier includes every directly or indirectly affected slot. Select a specific slot to write or create a SlotDataAsset."
-                    : "Drag on the selected slot to sculpt. Edits on other slots remain available for MeshModifier saving.",
-                MessageType.Info);
-        }
-
-        private void FrameSelectedSculptSlot()
-        {
-            if (sculptSlot == null || BakedMesh == null || VertexObject == null || sculptSlotStart < 0 || sculptSlotVertexCount <= 0) return;
-            Vector3[] vertices = BakedMesh.vertices;
-            if (sculptSlotStart + sculptSlotVertexCount > vertices.Length) return;
-
-            Vector3 first = VertexObject.transform.TransformPoint(vertices[sculptSlotStart]);
-            Bounds bounds = new Bounds(first, Vector3.zero);
-            for (int i = 1; i < sculptSlotVertexCount; i++)
-                bounds.Encapsulate(VertexObject.transform.TransformPoint(vertices[sculptSlotStart + i]));
-
-            // Give zero-thickness or very small slots enough extent for SceneView.Frame.
-            float minimumExtent = Mathf.Max(0.001f, bounds.size.magnitude * 0.01f);
-            bounds.Expand(minimumExtent);
-            SceneView sceneView = openedSceneView != null ? openedSceneView : SceneView.lastActiveSceneView;
-            if (sceneView == null) return;
-            sceneView.Frame(bounds, false);
-            sceneView.Repaint();
         }
 
         private bool HasSculptChanges()
         {
+            if (BakedMesh == null) return false;
+            BakedMesh.GetVertices(sculptChangeVertices);
             foreach (SculptSlotEditState state in sculptSlotStates.Values)
-                if (HasSculptChanges(state)) return true;
+                if (HasSculptChanges(state, sculptChangeVertices)) return true;
             return false;
         }
 
@@ -11685,20 +13821,80 @@ namespace UMA
 
         private bool HasSculptChanges(SculptSlotEditState state)
         {
-            if (state == null || state.originalVertices == null || BakedMesh == null ||
-                state.start < 0 || state.start + state.count > BakedMesh.vertexCount) return false;
-            Vector3[] vertices = BakedMesh.vertices;
+            if (state == null || BakedMesh == null) return false;
+            BakedMesh.GetVertices(sculptChangeVertices);
+            return HasSculptChanges(state, sculptChangeVertices);
+        }
+
+        private static bool HasSculptChanges(SculptSlotEditState state, List<Vector3> vertices)
+        {
+            if (state == null || state.originalVertices == null || vertices == null ||
+                state.start < 0 || state.start + state.count > vertices.Count) return false;
             for (int i = 0; i < state.count; i++)
                 if ((vertices[state.start + i] - state.originalVertices[i]).sqrMagnitude > 1e-12f) return true;
             return false;
         }
 
+        private readonly List<Vector3> sculptChangeVertices = new List<Vector3>();
+        private readonly HashSet<SculptSlotEditState> sculptChangedStatesForUI = new HashSet<SculptSlotEditState>();
+        private bool sculptChangesUiDirty = true;
+        private Mesh sculptChangesUiMesh;
+        private double sculptChangesUiNextRefresh;
+
+        /// <summary>
+        /// Which slots have sculpt changes, for the panels (unsaved-edit dots and the
+        /// Save buttons). Comparing every slot with its original vertices on every GUI
+        /// event is too slow, so this is refreshed after strokes, undo and rebuilds, and
+        /// at most twice a second otherwise. Saving still uses the exact check.
+        /// </summary>
+        private void RefreshSculptChangesForUI()
+        {
+            if (!sculptChangesUiDirty && ReferenceEquals(sculptChangesUiMesh, BakedMesh) &&
+                EditorApplication.timeSinceStartup < sculptChangesUiNextRefresh)
+            {
+                return;
+            }
+            sculptChangesUiDirty = false;
+            sculptChangesUiMesh = BakedMesh;
+            sculptChangesUiNextRefresh = EditorApplication.timeSinceStartup + 0.5;
+            sculptChangedStatesForUI.Clear();
+            if (BakedMesh == null || sculptSlotStates.Count == 0)
+            {
+                return;
+            }
+            BakedMesh.GetVertices(sculptChangeVertices);
+            foreach (SculptSlotEditState state in sculptSlotStates.Values)
+            {
+                if (HasSculptChanges(state, sculptChangeVertices))
+                {
+                    sculptChangedStatesForUI.Add(state);
+                }
+            }
+        }
+
+        private bool HasSculptChangesForUI()
+        {
+            RefreshSculptChangesForUI();
+            return sculptChangedStatesForUI.Count > 0;
+        }
+
+        private bool HasSculptChangesForUI(SculptSlotEditState state)
+        {
+            if (state == null) return false;
+            RefreshSculptChangesForUI();
+            return sculptChangedStatesForUI.Contains(state);
+        }
+
         private List<SculptSlotEditState> GetChangedSculptStates()
         {
             List<SculptSlotEditState> changed = new List<SculptSlotEditState>();
+            if (BakedMesh != null)
+            {
+                BakedMesh.GetVertices(sculptChangeVertices);
+            }
             foreach (SculptSlotEditState state in sculptSlotStates.Values)
             {
-                if (HasSculptChanges(state))
+                if (BakedMesh != null && HasSculptChanges(state, sculptChangeVertices))
                     changed.Add(state);
             }
             changed.Sort((left, right) => string.Compare(
@@ -11752,6 +13948,14 @@ namespace UMA
                 sculptBlendshapeStatusMessage = "Enter a blendshape name before saving.";
                 return;
             }
+            if (IsEditingBlendshape && string.Equals(blendshapeName, editBlendshapeName, StringComparison.Ordinal))
+            {
+                // The strokes are changes to this shape, not a replacement for it.
+                int saved = SaveBlendshapeEdit();
+                sculptBlendshapeStatusType = saved > 0 ? MessageType.Info : MessageType.Warning;
+                sculptBlendshapeStatusMessage = blendshapeEditStatus;
+                return;
+            }
 
             List<SculptSlotEditState> changedStates = GetChangedSculptStates();
             if (changedStates.Count == 0)
@@ -11771,15 +13975,17 @@ namespace UMA
             {
                 SculptSlotEditState state = changedStates[i];
                 string slotName = state != null && state.slot != null ? state.slot.slotName : "Unknown";
-                SlotDataAsset target = state != null && state.slot != null ? state.slot.asset : null;
-                if (target == null)
+                if (state == null || state.slot == null || state.slot.asset == null)
                 {
                     errors.Add("Slot '" + slotName + "' has no SlotDataAsset.");
                     continue;
                 }
-                if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(target)))
+                // The target is the slot's asset in the project: the base slot behind a baked copy, the
+                // original behind a slot worn through legacy rig conversion. The deltas are mapped back
+                // through the character's skinning (and that conversion) into its mesh space.
+                if (!TryBuildMappedSculptBlendshape(state, blendshapeName, out SlotDataAsset target, out UMABlendShape shape, out string error))
                 {
-                    errors.Add("Slot '" + slotName + "' does not reference a saved project asset.");
+                    errors.Add("Slot '" + slotName + "': " + error);
                     continue;
                 }
                 if (shapes.ContainsKey(target))
@@ -11787,11 +13993,6 @@ namespace UMA
                     errors.Add(
                         "Slots '" + targetSlotNames[target] + "' and '" + slotName +
                         "' share SlotDataAsset '" + target.name + "'. Give them independent slot assets before saving different sculpt results as blendshapes.");
-                    continue;
-                }
-                if (!TryBuildSculptBlendshape(state, blendshapeName, out UMABlendShape shape, out string error))
-                {
-                    errors.Add("Slot '" + slotName + "': " + error);
                     continue;
                 }
 
@@ -11833,10 +14034,14 @@ namespace UMA
             {
                 SlotDataAsset target = targets[i];
                 AddOrReplaceBlendshape(target.meshData, shapes[target]);
+                target.meshData.InvalidateBuildData();
                 EditorUtility.SetDirty(target);
             }
             AssetDatabase.SaveAssets();
             Undo.CollapseUndoOperations(undoGroup);
+            // Converted copies of legacy slots were made before the shape existed.
+            UMALegacySlotConverter.ClearCache();
+            blendshapeNameCache = null;
 
             sculptBlendshapeName = blendshapeName;
             sculptBlendshapeStatusType = MessageType.Info;
@@ -11844,61 +14049,6 @@ namespace UMA
                 "Saved blendshape '" + blendshapeName + "' on " + targets.Count +
                 " sculpted SlotDataAsset(s). Regenerate the avatar to load the saved blendshape.";
             RepaintLinkedEditors();
-        }
-
-        private bool TryBuildSculptBlendshape(
-            SculptSlotEditState state,
-            string blendshapeName,
-            out UMABlendShape shape,
-            out string error)
-        {
-            shape = null;
-            error = string.Empty;
-            if (state == null || state.slot == null || state.slot.asset == null ||
-                UMAMeshData.IsNullOrEmptyMeshData(state.slot.asset.meshData))
-            {
-                error = "The source mesh data is unavailable.";
-                return false;
-            }
-            if (BakedMesh == null || state.originalVertices == null || state.originalVertices.Length != state.count ||
-                state.start < 0 || state.start + state.count > BakedMesh.vertexCount ||
-                state.slot.asset.meshData.vertexCount != state.count)
-            {
-                error = "The source topology no longer matches the sculpt preview.";
-                return false;
-            }
-
-            Vector3[] currentVertices = BakedMesh.vertices;
-            Vector3[] deltaVertices = new Vector3[state.count];
-            for (int i = 0; i < state.count; i++)
-                deltaVertices[i] = currentVertices[state.start + i] - state.originalVertices[i];
-
-            Vector3[] deltaNormals = new Vector3[0];
-            Vector3[] currentNormals = BakedMesh.normals;
-            if (state.hasOriginalNormals && state.originalNormals != null &&
-                state.originalNormals.Length == state.count && currentNormals != null &&
-                state.start + state.count <= currentNormals.Length)
-            {
-                deltaNormals = new Vector3[state.count];
-                for (int i = 0; i < state.count; i++)
-                    deltaNormals[i] = currentNormals[state.start + i] - state.originalNormals[i];
-            }
-
-            shape = new UMABlendShape
-            {
-                shapeName = blendshapeName,
-                frames = new[]
-                {
-                    new UMABlendFrame
-                    {
-                        frameWeight = 100f,
-                        deltaVertices = deltaVertices,
-                        deltaNormals = deltaNormals,
-                        deltaTangents = new Vector3[0]
-                    }
-                }
-            };
-            return true;
         }
 
         private static bool HasBlendshape(UMAMeshData meshData, string blendshapeName)
@@ -11925,53 +14075,25 @@ namespace UMA
             meshData.blendShapes = shapes.ToArray();
         }
 
-        private UMAMeshData BuildSculptedSlotMeshData()
-        {
-            if (!HasCurrentSculptChanges() || sculptSlot == null || sculptSlot.asset == null ||
-                UMAMeshData.IsNullOrEmptyMeshData(sculptSlot.asset.meshData))
-                return null;
-
-            UMAMeshData meshData = sculptSlot.asset.meshData.DeepCopy();
-            if (meshData == null || meshData.vertices == null || meshData.vertices.Length != sculptSlotVertexCount)
-                return null;
-
-            Vector3[] currentVertices = BakedMesh.vertices;
-            Vector3[] currentNormals = BakedMesh.normals;
-            for (int i = 0; i < sculptSlotVertexCount; i++)
-            {
-                meshData.vertices[i] += currentVertices[sculptSlotStart + i] - sculptOriginalVertices[i];
-                if (meshData.normals != null && i < meshData.normals.Length && sculptOriginalNormals != null &&
-                    i < sculptOriginalNormals.Length && currentNormals != null && sculptSlotStart + i < currentNormals.Length)
-                {
-                    Vector3 adjustedNormal = meshData.normals[i] + currentNormals[sculptSlotStart + i] - sculptOriginalNormals[i];
-                    if (adjustedNormal.sqrMagnitude > 1e-12f) meshData.normals[i] = adjustedNormal.normalized;
-                }
-            }
-            return meshData;
-        }
-
         private void SaveSculptToBaseSlot()
         {
             if (sculptSlot == null || sculptSlot.asset == null) return;
+            // Worked out first, so the warning can name the asset that will change: the slot's asset in
+            // the project, which is not the one the character wears when that is a race-baked or
+            // rig-converted copy.
+            if (!TryBuildSculptedMeshData(true, out SlotDataAsset target, out UMAMeshData modifiedMeshData, out string problem))
+            {
+                EditorUtility.DisplayDialog("Unable to Save Slot", problem, "OK");
+                return;
+            }
             if (!EditorUtility.DisplayDialog(
                 "Warning",
-                "Warning, this will overwrite the MeshData on the slot with the new values!",
+                "Warning, this will overwrite the MeshData on '" + target.name + "' with the new values!",
                 "Overwrite MeshData",
                 "Cancel"))
                 return;
 
-            UMAMeshData modifiedMeshData = BuildSculptedSlotMeshData();
-            if (modifiedMeshData == null)
-            {
-                EditorUtility.DisplayDialog("Unable to Save Slot", "The selected slot's MeshData is unavailable or its topology no longer matches the sculpt preview.", "OK");
-                return;
-            }
-
-            SlotDataAsset target = sculptSlot.asset;
-            Undo.RecordObject(target, "Overwrite Slot MeshData From Sculpt");
-            target.meshData = modifiedMeshData;
-            EditorUtility.SetDirty(target);
-            AssetDatabase.SaveAssetIfDirty(target);
+            WriteSculptedMeshData(target, modifiedMeshData);
             Selection.activeObject = target;
             StageUtility.GoBackToPreviousStage();
         }
@@ -11979,10 +14101,10 @@ namespace UMA
         private void SaveSculptToNewSlot()
         {
             if (sculptSlot == null || sculptSlot.asset == null || string.IsNullOrWhiteSpace(sculptNewSlotName)) return;
-            UMAMeshData modifiedMeshData = BuildSculptedSlotMeshData();
-            if (modifiedMeshData == null)
+            // The new slot is the slot as the character wears it, with the sculpt.
+            if (!TryBuildSculptedMeshData(false, out _, out UMAMeshData modifiedMeshData, out string problem))
             {
-                EditorUtility.DisplayDialog("Unable to Save Slot", "The selected slot's MeshData is unavailable or its topology no longer matches the sculpt preview.", "OK");
+                EditorUtility.DisplayDialog("Unable to Save Slot", problem, "OK");
                 return;
             }
 
@@ -12061,8 +14183,7 @@ namespace UMA
                        (ReferenceEquals(slot, touchupWeightSlot) ||
                         string.Equals(slot.slotName, touchupWeightSlot.slotName, StringComparison.Ordinal));
             }
-            return selectionSlot <= 0 || (selectionSlot < selectFrom.Length &&
-                                          string.Equals(slot.slotName, selectFrom[selectionSlot], StringComparison.Ordinal));
+            return IsSlotEditable(slot);
         }
 
 
@@ -12405,6 +14526,9 @@ namespace UMA
             {
                 return false;
             }
+            // Selecting a vertex selects the vertices that are the same point.
+            candidates = new HashSet<int>(candidates);
+            AddTouchupBuddies(candidates);
 
             bool changed = false;
             if (mode == selectMode.Add && touchupReplaceSelectionOnNextCandidates)
@@ -12985,7 +15109,7 @@ namespace UMA
 
             // This is only called from the MeshModifierEditor being closed
             // so we need to null this out so we don't try to close it again
-            thisDCA.umaData.CharacterUpdated.RemoveAllListeners();
+            thisDCA.umaData.CharacterUpdated?.RemoveAllListeners();
             thisDCA.umaData.ManualMeshModifiers.Clear();
             modifierEditor.DoCharacterRebuild(false, false);
             this.modifierEditor = null;
@@ -13002,7 +15126,7 @@ namespace UMA
             UMAGeneratorBuiltin gb = thisDCA.umaData.umaGenerator as UMAGeneratorBuiltin;
             if (buildCollisionMesh)
             {
-                thisDCA.umaData.CharacterUpdated.AddAction(BuildCollisionMesh);
+                thisDCA.umaData.OnCharacterUpdated += BuildCollisionMesh;
             }
             if (gb != null)
             {
@@ -13021,8 +15145,10 @@ namespace UMA
                     var suppressed = SaveSuppressedSlots();
                     thisDCA.BuildCharacter(true, true);
                     //gb.GenerateSingleUMA(thisDCA.umaData, true);
+                    RestoreTemporarySlots();
                     RestoreSuppressedSlots(suppressed);
                 }
+                KeepTemporaryCharacterPose();
                 // always have to rebuild because the slots are regenerated
                 thisDCA.umaData.Dirty(false, true, true); // have to rebuild materials and mesh if we drop out slots
                 gb.GenerateSingleUMA(thisDCA.umaData, true);
@@ -13055,7 +15181,7 @@ namespace UMA
 
         public void BuildCollisionMesh(UMAData umaData)
         {
-            thisDCA.umaData.CharacterUpdated.RemoveAction(BuildCollisionMesh);
+            thisDCA.umaData.OnCharacterUpdated -= BuildCollisionMesh;
             if (closing || VertexObject == null) return;
             SkinnedMeshRenderer smr = GetCurrentSkinnedMeshRenderer();
             if (smr == null)
@@ -13063,8 +15189,17 @@ namespace UMA
                 Debug.LogError("No SkinnedMeshRenderer found");
                 return;
             }
+            if (ownsTemporaryCharacter)
+            {
+                // The rebuild put the stage's own character back into the race's T-pose.
+                ApplyModelledPose(thisDCA);
+            }
+            // A Touchup Weights pose is kept across the rebuild.
+            ReapplyTouchupPose();
             if (BakedMesh != null) GameObject.DestroyImmediate(BakedMesh);
+            OnBakedMeshRebuiltForBlendshapeEdit();
             sculptSlotStates.Clear();
+            sculptMaskDirty = true;
             ClearCrossSlotSculptSeams();
             activeSculptState = null;
             sculptSlot = null;
@@ -13227,38 +15362,13 @@ namespace UMA
 
         private void RefreshVisibleSlotLists()
         {
-            if (thisDCA == null || thisDCA.umaData == null || thisDCA.umaData.umaRecipe == null)
+            // Raycast selection casts from one editable slot.
+            List<string> sources = new List<string> { "Choose slot..." };
+            foreach (SlotData slot in GetEditableSlots())
             {
-                selectFrom = new string[] { "All Slots" };
-                visibleSelectFrom = new string[] { "All Slots" };
-                selectionSlot = 0;
-                raycastSelectionSlot = 0;
-                return;
+                sources.Add(slot.slotName);
             }
-
-            List<string> all = new List<string>();
-            List<string> visible = new List<string>();
-            all.Add("All Slots");
-            visible.Add("All Slots");
-            foreach (var slot in thisDCA.umaData.umaRecipe.slotDataList)
-            {
-                if (slot == null)
-                {
-                    continue;
-                }
-                all.Add(slot.slotName);
-                if (IsSelectableSlot(slot))
-                {
-                    visible.Add(slot.slotName);
-                }
-            }
-            selectFrom = all.ToArray();
-            visibleSelectFrom = visible.ToArray();
-
-            if (selectionSlot >= selectFrom.Length)
-            {
-                selectionSlot = 0;
-            }
+            visibleSelectFrom = sources.ToArray();
             if (raycastSelectionSlot >= visibleSelectFrom.Length)
             {
                 raycastSelectionSlot = 0;
@@ -13323,7 +15433,10 @@ namespace UMA
                         Material M = UMAUtils.GetDefaultDiffuseMaterial();
                         if (M != null)
                         {
-                            M.SetColor("_Color", defaultColors[colorNo]);
+                            // The default material's shader names its colour _BaseColor; older ones used _Color.
+                            // Setting only _Color left every mesh white.
+                            if (M.HasProperty("_BaseColor")) M.SetColor("_BaseColor", defaultColors[colorNo]);
+                            if (M.HasProperty("_Color")) M.SetColor("_Color", defaultColors[colorNo]);
                             newMaterials.Add(M);
                         }
                         else
@@ -13378,14 +15491,15 @@ namespace UMA
                 applied = new Material[materialCount];
                 for (int i = 0; i < applied.Length; i++)
                 {
-                    applied[i] = weightSubmeshes[i]
+                    // Weight Colors off: the slot keeps its own material.
+                    applied[i] = weightSubmeshes[i] && TouchupShowWeightColors
                         ? previewMaterial
                         : GetOriginalOrPastelMaterial(i);
                 }
             }
-            else if (IsVertexPaintModeEnabled && !showOriginalMaterials)
+            else if (IsVertexColorViewActive)
             {
-                Material previewMaterial = GetVertexColorPreviewMaterial();
+                Material previewMaterial = showVertexColorsView ? GetVertexColorViewMaterial() : GetVertexColorPreviewMaterial();
                 int materialCount = BakedMesh != null ? Mathf.Max(1, BakedMesh.subMeshCount) : 1;
                 applied = new Material[materialCount];
                 for (int i = 0; i < applied.Length; i++)
@@ -13400,6 +15514,12 @@ namespace UMA
                     : pastelVertexMaterials;
                 applied = requested != null ? (Material[])requested.Clone() : new Material[0];
             }
+            // This runs on every Scene view event while Vertex Paint is active; only touch
+            // the renderer when something actually changed.
+            if (!initializeCameraMode && !renderer.HasPropertyBlock() && MaterialsMatch(renderer.sharedMaterials, applied))
+            {
+                return;
+            }
             renderer.sharedMaterials = applied;
             renderer.SetPropertyBlock(null);
             int propertyBlockCount = BakedMesh != null ? Mathf.Max(BakedMesh.subMeshCount, applied.Length) : applied.Length;
@@ -13408,7 +15528,9 @@ namespace UMA
             SceneView sceneView = openedSceneView;
             if (initializeCameraMode && sceneView != null)
             {
-                DrawCameraMode requestedMode = showVertexWireframe ? DrawCameraMode.TexturedWire : DrawCameraMode.Textured;
+                // The stage draws the wireframe itself, on the editable slots only. The Scene view's
+                // Shaded Wireframe mode, which draws it on everything, is the fallback.
+                DrawCameraMode requestedMode = ShowEditableWireframe && !CanDrawEditableWireframe ? DrawCameraMode.TexturedWire : DrawCameraMode.Textured;
                 sceneView.cameraMode = SceneView.GetBuiltinCameraMode(requestedMode);
             }
 
@@ -13417,6 +15539,22 @@ namespace UMA
             // Suppress Unity's separate selection-only wireframe overlay.
             EditorUtility.SetSelectedWireframeHidden(renderer, true);
 #pragma warning restore CS0618
+        }
+
+        private static bool MaterialsMatch(Material[] current, Material[] wanted)
+        {
+            if (current == null || wanted == null || current.Length != wanted.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < current.Length; i++)
+            {
+                if (!ReferenceEquals(current[i], wanted[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private bool[] GetTouchupWeightSubmeshes(int materialCount)
@@ -13502,6 +15640,25 @@ namespace UMA
             {
                 vertexColorPreviewMaterial.SetTexture("_MainTex", Texture2D.whiteTexture);
             }
+            // Draw the preview opaque. Internal-Colored alpha-blends by default, so painted
+            // vertex alpha made the character see-through and showed its back faces.
+            if (vertexColorPreviewMaterial.HasProperty("_SrcBlend"))
+            {
+                vertexColorPreviewMaterial.SetFloat("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            }
+            if (vertexColorPreviewMaterial.HasProperty("_DstBlend"))
+            {
+                vertexColorPreviewMaterial.SetFloat("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+            }
+            if (vertexColorPreviewMaterial.HasProperty("_ZWrite"))
+            {
+                vertexColorPreviewMaterial.SetFloat("_ZWrite", 1);
+            }
+            if (vertexColorPreviewMaterial.HasProperty("_Cull"))
+            {
+                vertexColorPreviewMaterial.SetFloat("_Cull", (int)UnityEngine.Rendering.CullMode.Back);
+            }
+            vertexColorPreviewMaterial.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Geometry;
             return vertexColorPreviewMaterial;
         }
 

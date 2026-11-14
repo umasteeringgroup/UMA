@@ -13,14 +13,14 @@ namespace UMA.TexturePaint.Editor
 
     public sealed partial class TexturePaintStageWindow
     {
-        private void AddPathGeneratorMenu(GenericMenu menu, TextureSet set)
+        private void AddPathGeneratorMenu(GenericMenu menu, TextureSet set, string prefix = "")
         {
-            menu.AddItem(new GUIContent("Generators/Automatic Seams from Boundaries..."),false,()=>OpenAutomaticSeams(set));
-            menu.AddSeparator("Generators/");
+            menu.AddItem(new GUIContent(prefix+"Generators/Automatic Seams from Boundaries..."),false,()=>OpenAutomaticSeams(set));
+            menu.AddSeparator(prefix+"Generators/");
             foreach(var generator in TexturePaintPathGenerators.All)
             {
                 var id=generator.Id;
-                menu.AddItem(new GUIContent("Generators/"+generator.MenuPath),false,()=>CreatePathGeneratorLayer(set,id));
+                menu.AddItem(new GUIContent(prefix+"Generators/"+generator.MenuPath),false,()=>CreatePathGeneratorLayer(set,id));
             }
         }
 

@@ -1,9 +1,10 @@
 #if UNITY_EDITOR
 using System;
-using System.Linq;
+using System.Collections;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace UMA.Tests
 {
@@ -85,13 +86,37 @@ namespace UMA.Tests
             Assert.That(UMAGeneratedResourceCache.Shared.EntryCount, Is.EqualTo(entries));
         }
 
-        [Test]
-        public void ReleasingAnUnresolvedCandidateReleasesItsSourceReferences()
+        [UnityTest]
+        public IEnumerator ReleasingAnUnresolvedCandidateReleasesItsSourceReferences()
         {
+            int entries = UMAGeneratedResourceCache.Shared.EntryCount;
+            int owners = UMAGeneratedResourceCache.Shared.ReferenceCount;
             var references = ReleasedReferences(out var disposedLease);
+            Assert.That(disposedLease.IsReleased, Is.True);
+            Assert.That(UMAGeneratedResourceCache.Shared.EntryCount, Is.EqualTo(entries));
+            Assert.That(UMAGeneratedResourceCache.Shared.ReferenceCount, Is.EqualTo(owners));
+            AssertReleasedEntryCleared(disposedLease);
+
+            // Let the fixture's call stack unwind before collecting. Immediate
+            // collection can retain temporary stack roots in the Editor even
+            // though the disposed cache entry no longer references the source.
+            // The iterator retains the disposed lease across this frame boundary.
+            yield return null;
             GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
-            Assert.That(references.All(reference => !reference.IsAlive), Is.True);
+            Assert.That(references[0].IsAlive, Is.False, "The source mesh must be collectible.");
+            Assert.That(references[1].IsAlive, Is.False, "The source vertices must be collectible.");
             GC.KeepAlive(disposedLease);
+        }
+
+        private static void AssertReleasedEntryCleared(UMAGeneratedResourceCache.Lease<Mesh> lease)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            var entry = lease.GetType().GetField("entry", flags).GetValue(lease);
+            foreach (string field in new[] { "Key", "Resource", "Metadata", "Destroy", "CompleteBuild" })
+                Assert.That(entry.GetType().GetField(field, flags).GetValue(entry), Is.Null,
+                    "A fully released cache entry must clear " + field + ".");
+            var requests = (ICollection)entry.GetType().GetField("Requests", flags).GetValue(entry);
+            Assert.That(requests.Count, Is.Zero, "The released entry must have no remaining owners.");
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]

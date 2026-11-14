@@ -615,6 +615,8 @@ namespace UMA.PoseTools
             disableMirroring = EditorPrefs.GetBool(persistentStateKeyPrefix + ".DisableMirroring", false);
             MirrorAxis = Mathf.Clamp(EditorPrefs.GetInt(persistentStateKeyPrefix + ".MirrorAxis", 0), 0, MirrorAxises.Length - 1);
             displayMode = Mathf.Clamp(EditorPrefs.GetInt(persistentStateKeyPrefix + ".BoneDisplayMode", 0), 0, strings.Length - 1);
+            boneDrawStyle = Mathf.Clamp(EditorPrefs.GetInt(persistentStateKeyPrefix + ".BoneDrawStyle", (int)BoneDrawStyle.Line), 0, boneDrawStyleNames.Length - 1);
+            stickBoneWidth = Mathf.Clamp(EditorPrefs.GetFloat(persistentStateKeyPrefix + ".StickBoneWidth", 5f), StickBoneMinWidth, StickBoneMaxWidth);
             donorTPose = LoadPersistentAssetReference<UmaTPose>(persistentStateKeyPrefix + ".DonorTPose");
             mergeBonePoseSources.Clear();
             mergeBonePoseSources.AddRange(LoadPersistentAssetReferenceList<UMABonePose>(persistentStateKeyPrefix + ".MergeBonePoseSources"));
@@ -644,6 +646,8 @@ namespace UMA.PoseTools
             EditorPrefs.SetBool(persistentStateKeyPrefix + ".DisableMirroring", disableMirroring);
             EditorPrefs.SetInt(persistentStateKeyPrefix + ".MirrorAxis", MirrorAxis);
             EditorPrefs.SetInt(persistentStateKeyPrefix + ".BoneDisplayMode", displayMode);
+            EditorPrefs.SetInt(persistentStateKeyPrefix + ".BoneDrawStyle", boneDrawStyle);
+            EditorPrefs.SetFloat(persistentStateKeyPrefix + ".StickBoneWidth", stickBoneWidth);
             SavePersistentAssetReference(persistentStateKeyPrefix + ".DonorTPose", donorTPose);
             SavePersistentAssetReferenceList(persistentStateKeyPrefix + ".MergeBonePoseSources", mergeBonePoseSources);
             SavePersistentAssetReference(persistentStateKeyPrefix + ".MergeBonePoseSource", mergeBonePoseSources.Count > 0 ? mergeBonePoseSources[0] : null);
@@ -1294,7 +1298,11 @@ namespace UMA.PoseTools
 
             try
             {
-                if (displayMode == (int)DisplayMode.PoseBones)
+                if (UseStickBones)
+                {
+                    DrawStickSkeleton();
+                }
+                else if (displayMode == (int)DisplayMode.PoseBones)
                 {
                     DrawPoseBones();
                 }
@@ -3262,6 +3270,7 @@ namespace UMA.PoseTools
             disableMirroring = EditorGUILayout.Toggle("Disable Mirroring", disableMirroring);
             MirrorAxis = EditorGUILayout.Popup("Mirror Axis", MirrorAxis, MirrorAxises);
             displayMode = EditorGUILayout.Popup("Bone Display Mode", displayMode, strings);
+            DrawStickBoneSettingsGUI();
             if (EditorGUI.EndChangeCheck())
             {
                 persistentSettingsChanged = true;

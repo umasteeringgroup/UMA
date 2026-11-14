@@ -1,5 +1,16 @@
 # Node workspace — preservation and usability review
 
+## Groom Outliner rebuild — 2026-11-09
+
+The IMGUI node list was rebuilt as the **Groom Outliner**, a UI Toolkit `MultiColumnTreeView`. The groom data, evaluation order, selection keys and saved per-groom preferences are unchanged.
+
+- **Window:** toolbar (**Add ▾**, **Issues (N)**, **⋮**), a step bar (Setup, Growth, Guides, Groom, Cards, LODs, Bake), search, and **On** / **Lock** columns. Rows show reference badges (`mask:`, `helper:`, `continues:`, `growth:`, `N forms`, `used by N`, `finishing`) and temporary states (`editing`, `bypassed`, `inspecting`, `mask shown`, `solo`). Step numbers were removed from item names.
+- **Actions:** item management moved to the right-click menu and **Add ▾**: create, Active, Locked, Move Earlier/Later, Duplicate, Remove…, helper constraints, mirrored helpers, form bindings and Organize. Sibling drag and drop and the keys Delete, Ctrl/Cmd+D, Alt+↑/↓ and Ctrl/Cmd+F are also available. Editing tools moved to the selected item's Properties: Edit This Layer / Return to Final Preview, Add Finishing Sculpt Layer, the Generate Hair presets, Inspect Population / Show Mask / Final Hair, Import Authored Guide File and form tools. Helpers and maps list their users under **Used By**.
+- **Code:** one `HairGroomNodeHandler` per node kind owns its Active/Lock state, ordering, duplicate/remove rules, Properties drawer and menu items. `HairGroomNodeCommands` holds the commands and menus; `HairGroomNodeReferences` holds badges and usages. The tree rebuilds only when its structure signature changes, so painting does not rebuild it.
+- **Not changed:** multiple groups (each ponytail, braid or bun as its own group) and shared growth maps work as before. Legacy "Unorganized modifiers" are still migrated only by the explicit Organize command.
+- **Verification:** Unity 6000.3.26f1, UMA 3.1.5, main project. **676 Hair Cards EditMode tests passed, zero failures.** New `HairOutlinerTests` check that the item structure of all 10 packaged example grooms matches the pre-rewrite fingerprints, along with step selection, menus for every node kind, the structure signature, the Lock column, references, drop rules and the live window.
+- **Manual checks still needed:** the outliner's look at narrow docks, drag and drop with a real mouse, and where context menus open.
+
 ## Whole-guide Erase review — 2026-09-12
 
 - Added a distinct **Erase** button below the sculpt brush grid, also routed through the Scene tool selector. Red brush/hover feedback and top-left help distinguish whole-guide deletion from layer-local Cut and the existing reverse/paint-erase toggle. Properties and Scene toolbar hide inapplicable hardness/strength/reverse controls. Radius/scope remain available; saved preferences never rearm Erase on reopening.
@@ -26,27 +37,27 @@ New regressions include 40 successive multi-dab comb strokes with Spline Flow, p
 
 ## Scope and architecture
 
-Hair Nodes is a typed, cached view over the existing groom and the single workflow navigator. Hair Properties is an independently dockable, properties-only editor window following the stage-owned selection. Hair Preview & Settings is a third independent window with Preview & Visibility and Settings tabs. No guide generation, asset conversion, sculpt migration or evaluation rewrite is performed merely by opening or browsing the tree.
+Groom Outliner is a typed, cached view over the existing groom and the single workflow navigator. Hair Properties is an independently dockable, properties-only editor window following the stage-owned selection. Hair Preview & Settings is a third independent window with Preview & Visibility and Settings tabs. No guide generation, asset conversion, sculpt migration or evaluation rewrite is performed merely by opening or browsing the tree.
 
 Sculpt passes are the existing serialized sculpt layers. They now appear in forward evaluation order (top to bottom), followed by their owned modifiers. Dragging only reorders compatible siblings. Resource branches and shared helpers are not extra evaluation passes.
 
 ## Functionality inventory
 
-| Existing capability | Location in the node workspace |
+| Existing capability | Location in the Groom Outliner workspace |
 | --- | --- |
 | Source, topology, reprojection, source/character recovery | Source & Setup; existing groom Inspector repair controls |
-| Group name, role, color, visibility, inclusion, locking, add/remove | Group node; Nodes toolbar |
+| Group name, role, color, visibility, inclusion, locking, add/remove | Group row and Properties; **Add ▾ → Group**, right-click **Remove…**, **On** / **Lock** columns |
 | Growth/density painting, all optional maps, mask display/lock, map clipboard | Growth / Density and Optional Maps → individual map |
 | Mirroring, temporary Shift erase, falloff, vertex selection and map operations | Selected map properties and contextual Scene controls |
 | Guide distribution, deterministic preview, Accept/Replace/Cancel, manual placement | Guides |
 | Guide search, pagination, selection, isolation, batch edits, selected/all deletion | Guides → Authored Guides; Grooming/pass → Guide selection & isolation |
 | Comb, Grab, Smooth, Length, Cut, Width, Clump, Part, Freeze, root influence | Grooming or selected Sculpt Pass |
 | Hold-to-settle gravity, collision, clearance, separation, stretch repair | Grooming or selected Sculpt Pass |
-| Pass opacity, blend, visibility, lock, preview-only Solo | Sculpt Pass properties |
-| Modifier parameters, Active, duplicate/remove, ordering, domains and helper binding | Modifier properties; duplicate/remove and sibling ordering in Hair Nodes |
+| Pass opacity, blend, visibility, lock, preview-only Solo; Edit This Layer; finishing layers | Sculpt Pass properties; **On** / **Lock** columns |
+| Modifier parameters, Active, duplicate/remove, ordering, domains and helper binding | Modifier properties; duplicate/remove and sibling ordering in the Groom Outliner |
 | Spline Flow direction/facing and path drawing/editing/mirroring | Spline Flow modifier properties; contextual Scene controls |
-| Embedded/bound helpers and group constraints | Tree creation/binding actions on Shared Helpers and Constraints; select individual nodes to edit |
-| Child population, surrounding-guide interpolation, variation | Children |
+| Embedded/bound helpers and group constraints | **Add ▾ → Helper**, right-click Shared Helpers, Constraints or a helper; select individual rows to edit; **Used By** in helper Properties |
+| Child population, surrounding-guide interpolation, variation, presets, population inspection | Generate Hair and its population rows (presets, Inspect Population and Show Mask in Properties) |
 | Card/atlas references, making resources unique, preview build | Hair Cards and its resource property panels |
 | Shape, taper, sampling, backfaces, root embedding, vertex RGBA | Hair Cards → Geometry & Vertex Colors |
 | Two material passes, shared color table, texture maps, UV-set management and alpha/checker previews | Hair Cards → Materials & UVs |
@@ -56,10 +67,10 @@ Sculpt passes are the existing serialized sculpt layers. They now appear in forw
 
 ## Single-navigator usability follow-up
 
-The tree and Properties previously duplicated workflow navigation. The current UI uses one ownership rule: select and manage nodes in Hair Nodes; edit the selected item's parameters and data in Hair Properties.
+The tree and Properties previously duplicated workflow navigation. The current UI uses one ownership rule: select and manage nodes in the Groom Outliner; edit the selected item's parameters and data in Hair Properties.
 
 - Removed the Properties workflow shortcut row, stage toolbar, next/back buttons, child-node links, helper selector and dormant map/layer navigators.
-- Hair Nodes owns group/pass/modifier/map creation, helper creation/binding, constraint creation, duplicate/reorder/remove, and Frame/Save/Help/Exit Stage. Validation's Issues menu locates settings or guides; the report and scoped repair actions stay in Properties.
+- The Groom Outliner owns group/pass/modifier/map creation, helper creation/binding, constraint creation, duplicate/reorder/remove (right-click and **Add ▾**), and Frame/Save/Help/Exit Stage (**⋮**). Editing state (Edit This Layer, inspection previews, presets, atlas strips, form tools) belongs to the selected item's Properties. Validation's Issues menu locates settings or guides; the report and scoped repair actions stay in Properties.
 - Preserved painting, map clipboard/fill/reset, guide generation and editing, sculpt brushes/gravity, UV editing, geometry/material controls, validation and baking. Density Multiplier reset is on the selected multiplier's Properties. Constraint helper binding is editable without navigating away.
 - Collection nodes provide counts and guidance. Grooming and Optional Maps do not leave a hidden previous child paint-active; selecting the actual pass/map establishes the editing target.
 - Review covered empty states, selection feedback, locked commands, create/duplicate selection, popup cancellation, Undo and the tree-only route to every former destination. Automated window rendering still exercises every node/modifier at narrow/wide widths. Production artist/visual sign-off remains a manual check.

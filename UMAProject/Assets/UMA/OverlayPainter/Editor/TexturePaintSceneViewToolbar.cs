@@ -121,7 +121,7 @@ namespace UMA.TexturePaint.Editor
             {
                 if (CanRotate()) TexturePaintSceneViewToolbarOverlay.OrbitCamera((SceneView)containerWindow, angle);
             };
-            schedule.Execute(() => SetEnabled(CanRotate())).Every(250L);
+            TexturePaintToolbarRefresher.Register(this, () => SetEnabled(CanRotate()));
             SetEnabled(false);
         }
 

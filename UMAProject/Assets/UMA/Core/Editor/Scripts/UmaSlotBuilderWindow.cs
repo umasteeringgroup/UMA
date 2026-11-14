@@ -499,6 +499,7 @@ namespace UMA.Editors
             public bool nameAfterMaterial;
             public List<string> KeepBones = new List<string>();
             public string BoneStripper;
+            public bool stripBlendShapePrefix;
             public bool useRootFolder;
             public bool keepAllBones;
             public bool rotationEnabled;
@@ -561,6 +562,7 @@ namespace UMA.Editors
         private ReorderableList boneList;
         private bool boneListInitialized;
         public string BoneStripper;
+        public bool stripBlendShapePrefix = false;
         private bool useRootFolder=false;
         public bool keepAllBones = false;
         public bool rotationEnabled = false;
@@ -661,6 +663,7 @@ namespace UMA.Editors
                 state.udimTilesV = udimTilesV;
                 state.nameAfterMaterial = nameAfterMaterial;
                 state.BoneStripper = BoneStripper;
+                state.stripBlendShapePrefix = stripBlendShapePrefix;
                 state.useRootFolder = useRootFolder;
                 state.keepAllBones = keepAllBones;
                 state.rotationEnabled = rotationEnabled;
@@ -742,6 +745,7 @@ namespace UMA.Editors
                 udimTilesV = state.udimTilesV;
                 nameAfterMaterial = state.nameAfterMaterial;
                 BoneStripper = state.BoneStripper;
+                stripBlendShapePrefix = state.stripBlendShapePrefix;
                 useRootFolder = state.useRootFolder;
                 keepAllBones = state.keepAllBones;
                 rotationEnabled = state.rotationEnabled;
@@ -968,6 +972,8 @@ namespace UMA.Editors
             keepAllBones = EditorGUILayout.Toggle("Keep All Bones", keepAllBones);
             EditorGUILayout.EndHorizontal();
             BoneStripper = EditorGUILayout.TextField("Strip from Bones:", BoneStripper);
+            // Keep this label short enough for the default label column, so the checkbox lines up with the others.
+            stripBlendShapePrefix = EditorGUILayout.Toggle(new GUIContent("Strip Blendshape Prefix", "Removes the part of each blendshape name up to and including its first dot. \"Head.BigNose\" becomes \"BigNose\". Names without a dot are left as they are."), stripBlendShapePrefix);
 
             rotationEnabled = EditorGUILayout.Toggle("Enable Rotation", rotationEnabled);
             if (rotationEnabled)
@@ -1920,6 +1926,7 @@ namespace UMA.Editors
             sbp.binarySerialization = binarySerialization;
             sbp.nameByMaterial = nameAfterMaterial;
             sbp.stripBones = BoneStripper;
+            sbp.stripBlendShapePrefix = stripBlendShapePrefix;
             sbp.rootBone = RootBone;
             sbp.assetName = GetAssetName();
             sbp.slotName = GetSlotName(slotMesh);

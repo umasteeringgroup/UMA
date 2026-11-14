@@ -100,7 +100,7 @@ Important fields include:
 - `Down Sample`
 - `Use Existing Texture For Channel`
 - `NonShader Texture`
-- `Overlay Painter Channel Layout` (editor only)
+- `Channel Layout` (editor only; used by Overlay Painter and other texture tools)
 - `Overlay Painter Physical Output / Import` (editor only)
 
 The channel order is also the order used by every assigned `OverlayDataAsset`.

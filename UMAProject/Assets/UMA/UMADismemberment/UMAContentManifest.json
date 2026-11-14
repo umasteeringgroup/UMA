@@ -2,10 +2,10 @@
     "formatVersion": 2,
     "requiredPluginApiVersion": 1,
     "contentId": "dismemberment",
-    "contentVersion": "3.1.5",
-    "umaVersion": "3.1.5",
-    "requiredCoreVersion": "3.1.5",
-    "minimumCoreVersion": "3.1.5",
+    "contentVersion": "3.1.6",
+    "umaVersion": "3.1.6",
+    "requiredCoreVersion": "3.1.6",
+    "minimumCoreVersion": "3.1.6",
     "maximumCoreVersionExclusive": "3.2.0",
     "installRoot": "Assets/UMA/UMADismemberment",
     "dependencies": [
@@ -106,8 +106,8 @@
         {
             "path": "Assets/UMA/UMADismemberment/Editor/UmaDismembermentEditor.cs",
             "guid": "78476e1a835b94749ad29d382a208161",
-            "bytes": 15113,
-            "sha256": "3b03ce112f2dc8e160e80ad12980eeef394a7164fb41e81d691176f6ccbd3d71",
+            "bytes": 15462,
+            "sha256": "821562b4ea05204eea7efbadce3e2e0b68bd6632fa5c198d27a847ee12b9db25",
             "metaBytes": 263,
             "metaSha256": "285df78de9868739fd71a1c5239bfc6329f58a77f65560191f0547838086ef0f"
         },
