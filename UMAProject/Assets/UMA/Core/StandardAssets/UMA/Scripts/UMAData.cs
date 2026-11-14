@@ -3427,8 +3427,16 @@ namespace UMA
 			}
         }
 
+        /// <summary>
+        /// Counts calls to <see cref="SetupEmbeddedPhysics"/>. Components that a bone animator
+        /// added to the skeleton compare this with the value they were set up with, to notice
+        /// that the slot which asked for them is no longer part of the character.
+        /// </summary>
+        public int EmbeddedPhysicsGeneration { get; private set; }
+
         public void SetupEmbeddedPhysics()
         {
+			EmbeddedPhysicsGeneration++;
 			boneAnimators.Clear();
             var slotDataList = umaRecipe.slotDataList;
 			
@@ -3444,6 +3452,12 @@ namespace UMA
                     for (int j = 0; j < slot.asset.animatedBones.Length; j++)
                     {
                         BaseUpdatedObject boneAnimator = slot.asset.animatedBones[j];
+                        if (boneAnimator == null)
+                        {
+                            // An empty entry in the slot's list. Skip it rather than stop the build.
+                            continue;
+                        }
+
                         boneAnimator.Initialize(this,slot);
 						boneAnimators.Add(boneAnimator);
                     }

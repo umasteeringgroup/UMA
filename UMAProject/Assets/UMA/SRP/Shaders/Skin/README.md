@@ -94,6 +94,8 @@ The previous graph mixes a main-light-dependent effect into its base color. This
 | Excessive redness/waxy silhouette | Reduce diffusion strength/radius; avoid saturating Scattering Color |
 | Stronger ears/backlighting | **Backlight Transmission Strength**, plus the control map's blue channel; use a real rear light |
 | Pores too strong | Reduce **Skin Normal Strength** or **Detail Normal Strength**; for diffuse only, reduce **Pore Detail in Diffuse Lighting** |
+| Pores larger on the body than on the face | Bake even detail UVs into the body slots; see [Even pore size across texture tiles](#even-pore-size-across-texture-tiles) |
+| Pores on lips, nails, palms or other areas that should be smooth | Paint the packed mask's blue channel darker there; see [Detail coverage](#detail-coverage) |
 | Oily forehead, less oily cheeks | Paint the control map's green channel; white allows the full oil blend, black disables that lobe |
 | Tint seems to do nothing | **Tint Protection Strength = 0** disables the existing UMA tint-protection mask. White mask pixels protect the original albedo from tint |
 
@@ -121,9 +123,40 @@ The legacy `_DetailNormalMapScale` name actually controls **detail albedo**, not
 
 The red mask is reused as the existing graph's positive scattering signal: higher values permit more scattering/transmission. It is **not** converted to measured physical thickness or interpreted as metallic. Do not supply an ordinary metallic mask here.
 
-All skin input maps share the base-map UV transform. Detail uses that UV plus its independent XY tiling. Mesh vertex RGB multiplies the resulting albedo, including in the lightmapping pass. Skin is opaque; base-map/tint alpha is not cutout coverage.
+All skin input maps share the base-map UV transform. Detail uses its own coordinates (see [Even pore size across texture tiles](#even-pore-size-across-texture-tiles)) times its independent XY tiling. Mesh vertex RGB multiplies the resulting albedo, including in the lightmapping pass. Skin is opaque; base-map/tint alpha is not cutout coverage.
 
 The optional control map is a normal material texture, not a newly added UMA atlas channel. Use it only when it matches the final atlas UVs, or extend your UMAMaterial/overlays to pack that channel deliberately. The shipped examples need no additional maps.
+
+## Detail coverage
+
+The blue channel of `_MaskMap` (times the control map's alpha, when one is assigned) scales all three detail strengths: white shows the detail map in full, black hides it. The UMA 3 body masks (`UMA_F_SSS.AO.Detail.Gloss.1001`–`1005`) are painted by area:
+
+| Area | Coverage |
+|---|---|
+| Fingernails, toenails, lips, areola and nipple, nostrils, ear canals, inner eye rim | 0 |
+| Palms and soles | 0.08–0.10 |
+| Ears | 0.12 |
+| Groin, eyelids | 0.25–0.30 |
+| Breast, toes, buttocks, inner thighs | 0.40–0.52 |
+| Torso, legs, neck, arms, top of the foot | 0.68–0.74 |
+| Face, back of the hand, knees, elbows | 0.80–0.92, rising to 1.0 on the nose and inner cheeks |
+
+Coverage fades the albedo and smoothness detail toward the detail map's own average, not toward zero. The average is read from the map's smallest mip level, so the detail map needs mip maps. A map whose albedo channel is not centered on 0.5 (the shipped `SkinDetail_HDRPStyle` averages 0.68, which brightens skin by up to a third at full **Detail Albedo Strength**) therefore gives the same overall brightness under dark coverage as under white; without this, every low-coverage area would come out darker than the skin around it.
+
+Deep creases also fade where the occlusion channel is dark (on the ears only the canal is cut, because their occlusion is dark in broad bands), and there is no detail where the texture is squeezed into less than half the UV space the rest of its tile gets (the inside of the nostrils and ear canals), because the pattern would be magnified there. The lips are found by their colour in the albedo, and the area extends about 0.7 mm past the lip border and into the corners of the mouth. The red channel is 0.45 on the nails, so they scatter less than skin, and 1 elsewhere. Smoothness (alpha) is lowered by about a quarter on the areola and nipple, which have no pore detail to break up their highlight. Occlusion, detail and scattering are evened out where UV islands and tiles meet: each side moves to the average of the two, fading out over 48 pixels, so ambient light and pore strength do not step at a seam. Lowering a detail strength on the material scales every area together; to change one area, paint the blue channel.
+
+## Even pore size across texture tiles
+
+**Detail Tiling** repeats the detail map over UV space, so a texture tile that covers more of the body shows larger pores. The UMA 3 body uses five tiles: the face tile covers 0.33 mesh units per UV unit, the arms 0.77, the torso 1.12 and the legs 1.22. From the first UV channel alone, pores on the torso and legs come out about 3.5 times larger than on the face.
+
+Both Realistic Skin shaders therefore read the detail map with the mesh's **fourth UV channel** (`uv4`, `TEXCOORD3`) when a mesh has one. The second and third channels are left for lightmaps. Where the fourth channel is missing or (0,0), the shader uses the first channel as before, so other meshes and older slots look unchanged.
+
+- The UMA 3 body slots (`UMA30_Body_UDIM1001`–`1005`) ship with this channel baked. Races that share those slots get it too.
+- For your own skin slots, select them in the Project window and choose **Assets → UMA → Skin → Bake Even Detail UVs On Selected Slots**, then rebuild the characters. **Remove Even Detail UVs From Selected Slots** takes the channel out again.
+- The bake scales each UV island of the first channel as a whole, to 0.33 mesh units per UV unit, so no new seams appear and **Detail Tiling** keeps the pore size it gives on the UMA 3 face. It replaces whatever the slot had in its fourth UV channel. From code, use `UMASkinDetailUVUtility.BakeSlot` (it takes the surface per UV unit as an argument).
+- UMA only rescales the first UV channel when it packs textures into an atlas, so detail from the fourth channel also keeps its size when a skin slot shares an atlas.
+
+The original `UMA3_SkinShader_URP` graph still reads detail from the first channel.
 
 ## Lighting and limitations
 
@@ -142,5 +175,7 @@ Skin is one-sided. Use actual shell geometry for exposed interiors rather than d
 The accompanying `UMARealisticSkinTests` checks the original input contract, non-destructive copying, all three example UMAMaterial channel layouts, and GPU compilation of forward/clustered/shadow/lightmap/probe-volume/instancing variants and all seven passes. Run this fixture with a graphics device, **not `-nographics`**.
 
 `UMARealisticSkinSSSTests` covers the SSS shader: every Realistic Skin input exists with the same type and default, switching a material's shader keeps its inputs, the lookup texture's import settings and shader binding, the lookup values (plain shading without scattering, energy conservation with it), the example assets, and the same pass and variant compilation.
+
+`UMASkinDetailUVTests` covers the detail UV bake: every island reaches the requested surface per UV unit and keeps its shape, no coordinate is (0,0), vertices split at one position stay in one island, only the fourth UV channel of a slot is written, and the five UMA 3 body slots carry the baked channel.
 
 Development validation also renders the standard Human Female 3.0 and Human Male 3.0 with the same textures and lighting for the original, Natural, Matte, and Dewy materials. Lighting probes check unlit darkness, main/additional lights, and received shadows in Forward, Forward+, and Deferred.

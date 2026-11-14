@@ -88,35 +88,95 @@ prefer `UMAChainJiggleAnimator`.
 
 **Menu path:** `Assets → Create → UMA → Physics → UMAChainJiggleAnimator`
 
-A particle-chain solver for ponytails, tails, ropes, skirts, and
-hanging clothing bones. Uses the same stable integrator as `UMA_JiggleBreasts`.
+Bone-chain jiggle for ponytails, pigtails, tails, straps and soft anatomy. Each bone joint is a particle: the first bone of a chain stays attached to its
+parent, the rest lag behind, are pulled back to the authored shape, and the bones are rotated
+to follow. Bones never stretch and are never moved off their bind offsets.
+
+The asset only describes the chains. On every character build it adds one `UMAChainJiggle`
+component to each anchor bone, and that component simulates itself in `LateUpdate`, after
+animation. One asset can therefore be shared by any number of characters. The simulation runs
+at a fixed rate (60 Hz by default) whatever the frame rate is, so a chain looks the same at
+30 fps and at 240 fps.
 
 | Field | Default | Description |
 |---|---|---|
-| `Chains` | empty | One entry per independent chain. Use one entry for a single chain, or two entries for pigtails, left and right hair chains, paired skirt chains, etc. Each entry has an `AnchorBoneName` and optional excluded bone names. |
+| `Chains` | empty | One entry per independent chain: one for a ponytail, one per side for pigtails or anatomy. `AnchorBoneName` is the first bone of the chain; its children are collected automatically. `ExcludedBoneNames` skips a bone and everything under it. |
+| `Colliders` | empty | Spheres and capsules the chains cannot pass through. Each has a `BoneName`, a local `Center`, a `Radius`, and for a capsule a `Height` and `Direction`. A head sphere and a neck capsule are usually enough for hair. |
+| `Excluded Races` | empty | Race names this animator leaves alone. Use it when several races share one base recipe and only some of them should move. |
+| **Motion** | | |
+| `Damping` (0–1) | 0.2 | How quickly motion dies out. 0 keeps swinging, 1 never overshoots. |
+| `Elasticity` (0–1) | 0.1 | How strongly each bone is pulled back to its authored pose. Low is loose and slow, high is springy and quick. |
+| `Stiffness` (0–1) | 0.2 | How much of the authored shape is always kept. 0 swings freely, 1 is rigid. |
+| `Inertia` (0–1) | 0.5 | How much of the character's own travel is ignored. At 0 the chain trails behind a running character like a flag; at 1 it only reacts to the parent bone turning and accelerating. |
+| **Distribution** | empty | One curve per motion value, from chain root (0) to tip (1), multiplied with the value. Leave empty for the same value everywhere. |
+| **Forces** | | |
+| `Gravity` | 9.81 | Downward acceleration in m/s². |
+| `Rest Pose Includes Gravity` | on | The chain was modelled already hanging (true for almost all hair and anatomy). The authored pose then stays exactly as modelled while the character is upright, and gravity only shows when the parent bone tilts. |
+| `Force` | (0,0,0) | Constant world-space acceleration, for wind. |
+| **Limits** | | |
+| `Freeze Axis` | None | Stops bones moving along one axis of their parent bone. |
+| `Radius` | 0.02 | Collision radius of each joint in metres. Only used with colliders. |
 | **Terminal Bones** | | |
-| `End Length` | 0.15 | Virtual tip length so the last real bone can rotate. Set to 0 if your chain already has end bones. |
-| `End Offset` | (0,0,0) | Explicit local offset for the virtual tip. Zero auto-follows the parent-to-leaf direction. |
-| **Physics** | | |
-| `Stiffness` (0–1) | 0.15 | Spring strength pulling particles back to rest. |
-| `Mass` (0.001–5) | 0.9 | Resistance to acceleration. |
-| `Damping` (0–1) | 0.15 | Velocity reduction per step. Higher settles faster. |
-| `Gravity` (0–2) | 0.1 | Downward world-space acceleration. |
-| `Inertia` (0–1) | 0.65 | How much parent movement pushes particles. |
-| `Max Distance` | 0.35 | Maximum world-space distance from rest target. |
-| `Constraint Iterations` (1–8) | 3 | Length-constraint passes. Use 2–4 for longer chains. |
-| **Bone Output** | | |
-| `Rotation Weight` (0–1) | 1 | How much bones rotate toward simulated child positions. Use **1** for normal chains. |
-| `Position Weight` (0–1) | 0 | Direct joint translation. Use **0** for skinned bone chains. |
-| **Freeze Axes** | | |
-| `Freeze X / Y / Z` | off | Prevent movement on that world axis. |
+| `End Length` | 0.15 | Length in metres of a virtual tip added to each leaf bone so the last real bone can rotate. Set to 0 when the chain already ends in an `_end` bone. |
+| `End Offset` | (0,0,0) | Explicit local offset for the virtual tip. Zero continues in the direction of the leaf bone. |
+| **Output** | | |
+| `Blend Weight` (0–1) | 1 | Blend between the authored pose (0) and the simulated pose (1). |
+| **Simulation** | | |
+| `Update Rate` | 60 | Simulation rate in Hz. |
+| `Max Substeps` | 4 | Most simulation steps run in one frame. |
+| `Teleport Distance` | 1 | If the chain root moves further than this in one frame the chain is carried along instead of whipping. 0 disables the check. |
+
+Starting points:
+
+| Use | Damping | Elasticity | Stiffness | Inertia |
+|---|---|---|---|---|
+| Ponytail, pigtails | 0.2 | 0.07 | 0.1 | 0.5 |
+| Heavy braid, tail | 0.25 | 0.05 | 0.3 | 0.5 |
+| Breasts (anchor `LeftOuterBreast` / `RightOuterBreast`, `End Length` 0) | 0.25 | 0.15 | 0.8 | 0.5 |
+
+Values can be changed on the asset while playing and show at once. In a build, call
+`SettingsChanged()` on the `UMAChainJiggle` after changing a distribution curve from code.
+
+Things that take care of themselves:
+
+- Rebuilding the character (wardrobe, DNA, colours) never disturbs the authored pose, and DNA
+  that moves or scales chain bones is picked up.
+- Removing the wardrobe item removes the chain and puts the bones back.
+- `UMAData.SetBoneAnimatorsEnabled(false)` (used by `UMASimpleLOD`) returns the chain to its
+  authored pose until it is enabled again.
+- A zero-length bone, such as `LeftInnerBreast` sitting on `LeftOuterBreast`, stays on its parent,
+  and the parent turns for both. Anchor the chain on the outer bone so all the skin moves.
+
+The chain needs bones in the slot. Two slots ship with them and work as examples:
+
+- `HairPonytail_slot` has one five-bone chain (`Ponytail01`–`Ponytail05`, `Ponytail_end`)
+  driven by `Ponytail_Animator`, with a head and a neck collider.
+- `HairPigtails_slot` has one chain per side (`PigtailL01`–`PigtailL05`, `PigtailL_end`, and the
+  same with `R`) driven by `Pigtails_Animator`, with head, neck and shoulder colliders.
+
+Anatomy works the same way, through a slot that has no mesh. `ChainJiggleBreasts_Slot`
+(in `Core/Physics/UMA_JiggleMaster/ChainJiggleBreasts`) carries `ChainJiggleBreasts_Animator`,
+which anchors one chain on each outer breast bone. The slot is part of the Human Female 3.0
+base race recipe, so Human Female 3.0 and HalfOrcFemale30 characters bounce without any setup.
+The elf and sylvan races share that recipe and are listed in the animator's `Excluded Races`;
+the Anime Elf and Sprite recipes do not contain the slot. To turn it off for another race, add
+its name to `Excluded Races` or remove the `ChainJiggleBreasts` slot from its base recipe. To
+turn it on for a race, add the slot to its base recipe. Do not use it together with the older
+`JiggleBreasts` recipe: both drive the same bones.
+
+A single chain bends the whole tail around its centre line, so strands far from that line
+shear when the chain bends sharply. Raise `Elasticity` or `Stiffness` if a wide tail looks
+stretched in fast motion.
 
 The inspector includes an **Add Chain From Slot** helper. Drop or assign a
 `SlotDataAsset`, choose an anchor bone from the slot's UMA bones, then click
 **Add a chain for this bone** to append a `Chains` entry.
 
+`UMAChainJiggle` can also be used without UMA: add it to the first bone of any chain. Leave
+`Auto Simulate` on, or turn it off and call `Simulate(deltaTime)` yourself after animation.
+
 **Key difference from SwayBoneAnimator:** This simulates particles, enforces bone
-lengths, provides spring-back and gravity, and rotates bones naturally. It is the
+lengths, provides spring-back, gravity and collision, and rotates bones naturally. It is the
 recommended replacement for most use-cases.
 
 ---
@@ -449,7 +509,7 @@ separation; they are not absolute bone lengths.
 
 | Animator | Best for | Physics model |
 |---|---|---|
-| **UMAChainJiggleAnimator** | Ponytails, tails, ropes, skirts | Particle chain + length constraints |
+| **UMAChainJiggleAnimator** | Ponytails, pigtails, tails, soft anatomy | Particle chain: spring-back, gravity, colliders, exact bone lengths |
 | **SwayBoneAnimator** | Lightweight hair sway (legacy) | Position-delta force + clamp |
 | **DynamicBoneAnimator** | DynamicBone users (disabled by default) | DynamicBone (or SwayBone fallback) |
 | **MC2BoneAnimator** | Magica Cloth 2 bone cloth | Magica Cloth 2 solver |

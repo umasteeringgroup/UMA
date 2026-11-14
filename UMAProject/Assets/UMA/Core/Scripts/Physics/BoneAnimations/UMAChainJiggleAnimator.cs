@@ -8,21 +8,46 @@ using UnityEditor;
 namespace UMA
 {
     /// <summary>
-    /// UMA bone animator asset that drives a UMAChainJiggle component at runtime.
-    /// Create via Assets &gt; Create &gt; UMA &gt; Physics &gt; UMAChainJiggleAnimator.
-    /// Assign to a SlotDataAsset's BoneAnimator list to make ponytails, tails,
-    /// ropes, skirts, and hanging clothing bones sway.
+    /// UMA bone animator asset that adds <see cref="UMAChainJiggle"/> chains to a generated
+    /// character. Create via Assets &gt; Create &gt; UMA &gt; Physics &gt; UMAChainJiggleAnimator and
+    /// add it to a SlotDataAsset's bone animator list to make ponytails, pigtails, tails and
+    /// soft anatomy sway and bounce.
+    ///
+    /// The asset only describes the chains. Each character gets its own UMAChainJiggle
+    /// components, which simulate themselves after animation, so one asset can be shared by
+    /// any number of characters.
     /// </summary>
     public class UMAChainJiggleAnimator : BaseUpdatedObject
     {
         [System.Serializable]
         public class ChainDefinition
         {
-            [Tooltip("Name of the root bone for this chain. This bone and all its children will be animated.")]
+            [Tooltip("Name of the first bone of this chain. This bone and all its children are simulated; the bone itself stays attached to its parent.")]
             public string AnchorBoneName;
 
             [Tooltip("Optional bone names to exclude from this chain. Excluded bones and their children are skipped.")]
             public List<string> ExcludedBoneNames = new List<string>();
+        }
+
+        [System.Serializable]
+        public class ColliderDefinition
+        {
+            [Tooltip("Name of the bone the collider follows, for example Head, Neck or LeftShoulder.")]
+            public string BoneName;
+
+            [Tooltip("Centre of the collider in the bone's local space.")]
+            public Vector3 Center = Vector3.zero;
+
+            [Min(0f)]
+            [Tooltip("Radius in metres.")]
+            public float Radius = 0.08f;
+
+            [Min(0f)]
+            [Tooltip("Total height of a capsule in metres. 0 is a sphere.")]
+            public float Height = 0f;
+
+            [Tooltip("Local axis a capsule runs along.")]
+            public UMAChainJiggleCollider.Direction Direction = UMAChainJiggleCollider.Direction.Y;
         }
 
 #if UNITY_EDITOR
@@ -34,111 +59,68 @@ namespace UMA
 #endif
 
         [Header("Chains")]
-        [Tooltip("One entry per independent chain. Use one entry for a single chain, or one entry per side for pigtails.")]
+        [Tooltip("One entry per independent chain. Use one entry for a ponytail, or one entry per side for pigtails and anatomy.")]
         public List<ChainDefinition> Chains = new List<ChainDefinition>();
 
-        [Header("Terminal Bones")]
-        [Tooltip("Virtual child length added to leaf bones so the last real bone can rotate.")]
-        public float endLength = 0.15f;
+        [Tooltip("Optional spheres and capsules the chains cannot pass through.")]
+        public List<ColliderDefinition> Colliders = new List<ColliderDefinition>();
 
-        [Tooltip("Explicit local offset for virtual leaf children. Zero follows the parent-to-leaf direction.")]
-        public Vector3 endOffset = Vector3.zero;
+        [Tooltip("Race names this animator leaves alone. Use it when several races share one base recipe and only some of them should move.")]
+        public List<string> ExcludedRaces = new List<string>();
 
-        [Header("Physics")]
-        [Range(0f, 1f)]
-        [Tooltip("Spring strength pulling particles back to their animated/rest pose.")]
-        public float stiffness = 0.15f;
+        public UMAChainJiggleSettings settings = new UMAChainJiggleSettings();
 
-        [Range(0.001f, 5f)]
-        [Tooltip("Resistance to acceleration.")]
-        public float mass = 0.9f;
+        /// <summary>True when <see cref="ExcludedRaces"/> names the race of this character.</summary>
+        public bool IsExcluded(UMAData umaData)
+        {
+            if (ExcludedRaces == null || ExcludedRaces.Count == 0 || umaData == null || umaData.umaRecipe == null || umaData.umaRecipe.raceData == null)
+            {
+                return false;
+            }
 
-        [Range(0f, 1f)]
-        [Tooltip("Velocity damping. Higher values settle faster.")]
-        public float damping = 0.15f;
-
-        [Range(0f, 2f)]
-        [Tooltip("Downward world-space acceleration.")]
-        public float gravity = 0.1f;
-
-        [Range(0f, 5f)]
-        [Tooltip("How much root/parent movement pushes particles in the opposite direction. Values >1 allow exaggerated lag.")]
-        public float inertia = 0.65f;
-
-        [Range(0f, 25f)]
-        [Tooltip("Global motion multiplier. Scales inertia response and gravity. Increase for more swing. Tunable at runtime.")]
-        public float forceMultiplier = 15f;
-
-        [Tooltip("Maximum world-space distance each particle can move from its rest target.")]
-        public float maxDistance = 0.35f;
-
-        [Range(1, 8)]
-        [Tooltip("Number of length-constraint passes. Longer chains usually need 2-4.")]
-        public int constraintIterations = 3;
-
-        [Header("Smoothing")]
-        [Range(0f, 1f)]
-        [Tooltip("Low-pass for parent motion delta. Higher=smoother.")]
-        public float targetSmoothing = 0.35f;
-
-        [Range(0f, 1f)]
-        [Tooltip("Low-pass for final bone rotation.")]
-        public float rotationSmoothing = 0.5f;
-
-        [Range(0f, 20f)]
-        [Tooltip("Caps velocity to prevent snapping. 0=disabled.")]
-        public float maxVelocity = 5f;
-
-        [Header("Bone Output")]
-        [Range(0f, 1f)]
-        [Tooltip("How much bones rotate toward simulated child particles. Use 1 for normal chains.")]
-        public float rotationWeight = 1f;
-
-        [Range(0f, 1f)]
-        [Tooltip("Optional direct joint translation. Use 0 for normal skinned bone chains.")]
-        public float positionWeight = 0f;
-
-        [Header("Freeze Axes")]
-        [Tooltip("Freeze movement on X axis in world space.")]
-        public bool freezeX;
-
-        [Tooltip("Freeze movement on Y axis in world space.")]
-        public bool freezeY;
-
-        [Tooltip("Freeze movement on Z axis in world space.")]
-        public bool freezeZ;
-
-        private readonly List<UMAChainJiggle> _chainJiggles = new List<UMAChainJiggle>();
+            return ExcludedRaces.Contains(umaData.umaRecipe.raceData.raceName);
+        }
 
         public override void Initialize(UMAData umaData, SlotData sd)
         {
             base.Initialize(umaData, sd);
 
-            _chainJiggles.Clear();
-
-            if (Chains != null)
+            if (IsExcluded(umaData))
             {
+                // Nothing to add for this race. A chain left over from an earlier build of the
+                // same character notices it was not set up again and removes itself.
+                initialized = true;
+                return;
+            }
+
+            int chainCount = 0;
+            if (Chains != null && umaData != null && umaData.skeleton != null)
+            {
+                List<UMAChainJiggleCollider> colliders = ResolveColliders(umaData);
                 for (int i = 0; i < Chains.Count; i++)
                 {
-                    AddChainJiggle(umaData, Chains[i]);
+                    if (AddChainJiggle(umaData, Chains[i], colliders))
+                    {
+                        chainCount++;
+                    }
                 }
             }
 
-            initialized = _chainJiggles.Count > 0;
+            initialized = chainCount > 0;
         }
 
-        private void AddChainJiggle(UMAData umaData, ChainDefinition chain)
+        private bool AddChainJiggle(UMAData umaData, ChainDefinition chain, List<UMAChainJiggleCollider> colliders)
         {
-            if (umaData == null || umaData.skeleton == null || chain == null || string.IsNullOrEmpty(chain.AnchorBoneName))
+            if (chain == null || string.IsNullOrEmpty(chain.AnchorBoneName))
             {
-                return;
+                return false;
             }
 
             Transform anchorTransform = umaData.skeleton.GetBoneTransform(chain.AnchorBoneName);
             if (anchorTransform == null)
             {
-                Debug.LogError($"[UMAChainJiggleAnimator] Anchor bone '{chain.AnchorBoneName}' not found in skeleton.");
-                return;
+                Debug.LogError($"[UMAChainJiggleAnimator] '{name}': anchor bone '{chain.AnchorBoneName}' not found in skeleton.", this);
+                return false;
             }
 
             UMAChainJiggle chainJiggle = anchorTransform.GetComponent<UMAChainJiggle>();
@@ -147,33 +129,45 @@ namespace UMA
                 chainJiggle = anchorTransform.gameObject.AddComponent<UMAChainJiggle>();
             }
 
-            List<Transform> exclusions = ResolveExclusions(umaData, chain);
-            chainJiggle.Setup(
-                chainRoot: anchorTransform,
-                stiffnessValue: stiffness,
-                massValue: mass,
-                dampingValue: damping,
-                gravityValue: gravity,
-                inertiaValue: inertia,
-                maxDistanceValue: maxDistance,
-                constraintIterationsValue: constraintIterations,
-                rotationWeightValue: rotationWeight,
-                positionWeightValue: positionWeight,
-                endLengthValue: endLength,
-                endOffsetValue: endOffset,
-                freezeXValue: freezeX,
-                freezeYValue: freezeY,
-                freezeZValue: freezeZ,
-                exclusionTransforms: exclusions,
-                forceMultiplierValue: forceMultiplier,
-                targetSmoothingValue: targetSmoothing,
-                rotationSmoothingValue: rotationSmoothing,
-                maxVelocityValue: maxVelocity);
+            chainJiggle.Setup(anchorTransform, settings, ResolveExclusions(umaData, chain), colliders, umaData);
+            chainJiggle.enabled = true;
+            return true;
+        }
 
-            if (!_chainJiggles.Contains(chainJiggle))
+        private List<UMAChainJiggleCollider> ResolveColliders(UMAData umaData)
+        {
+            if (Colliders == null || Colliders.Count == 0)
             {
-                _chainJiggles.Add(chainJiggle);
+                return null;
             }
+
+            List<UMAChainJiggleCollider> colliders = new List<UMAChainJiggleCollider>(Colliders.Count);
+            for (int i = 0; i < Colliders.Count; i++)
+            {
+                ColliderDefinition definition = Colliders[i];
+                if (definition == null || string.IsNullOrEmpty(definition.BoneName))
+                {
+                    continue;
+                }
+
+                Transform bone = umaData.skeleton.GetBoneTransform(definition.BoneName);
+                if (bone == null)
+                {
+                    Debug.LogWarning($"[UMAChainJiggleAnimator] '{name}': collider bone '{definition.BoneName}' not found in skeleton.", this);
+                    continue;
+                }
+
+                colliders.Add(new UMAChainJiggleCollider
+                {
+                    bone = bone,
+                    center = definition.Center,
+                    radius = definition.Radius,
+                    height = definition.Height,
+                    direction = definition.Direction
+                });
+            }
+
+            return colliders;
         }
 
         private List<Transform> ResolveExclusions(UMAData umaData, ChainDefinition chain)
@@ -195,7 +189,7 @@ namespace UMA
                 Transform exclusion = umaData.skeleton.GetBoneTransform(boneName);
                 if (exclusion == null)
                 {
-                    Debug.LogWarning($"[UMAChainJiggleAnimator] Excluded bone '{boneName}' not found in skeleton for chain '{chain.AnchorBoneName}'.");
+                    Debug.LogWarning($"[UMAChainJiggleAnimator] '{name}': excluded bone '{boneName}' not found in skeleton for chain '{chain.AnchorBoneName}'.", this);
                     continue;
                 }
 
@@ -211,19 +205,8 @@ namespace UMA
 
         public override void DoUpdate(UMAData umaData, float step)
         {
-            if (!initialized)
-            {
-                return;
-            }
-
-            for (int i = 0; i < _chainJiggles.Count; i++)
-            {
-                UMAChainJiggle chainJiggle = _chainJiggles[i];
-                if (chainJiggle != null)
-                {
-                    chainJiggle.DoSimulateStep(step);
-                }
-            }
+            // Nothing to do here. The physics loop runs before animation and at its own rate,
+            // which made the chains stutter; each UMAChainJiggle steps itself in LateUpdate.
         }
     }
 
