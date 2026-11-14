@@ -26,7 +26,9 @@ namespace UMA.Editors
         {
             get
             {
-                var viewer = (UMANormalViewer)target;
+                // An editor can outlive its target, or be handed another object while Unity rebuilds
+                // inspectors; the Undo callback below can run in either state.
+                var viewer = target as UMANormalViewer;
                 if (viewer == null) return null;
                 if (viewer.avatar != null) return viewer.avatar;
                 return viewer.GetComponentInParent<DynamicCharacterAvatar>() ?? viewer.GetComponentInChildren<DynamicCharacterAvatar>(true);
@@ -49,7 +51,15 @@ namespace UMA.Editors
         }
 
         private void OnPlayModeChanged(PlayModeStateChange state) { Cancel(); }
-        private void OnUndo() { UMANormalRepairSources.RefreshBakedCopies(); Cancel(); if (Avatar != null && !Application.isPlaying) Rebuild(Avatar); DrawPanel(); }
+        private void OnUndo()
+        {
+            if (!(target is UMANormalViewer)) return;
+            UMANormalRepairSources.RefreshBakedCopies();
+            Cancel();
+            var avatar = Avatar;
+            if (avatar != null && !Application.isPlaying) Rebuild(avatar);
+            DrawPanel();
+        }
 
         public override VisualElement CreateInspectorGUI()
         {

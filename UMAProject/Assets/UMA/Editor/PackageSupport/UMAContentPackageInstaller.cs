@@ -116,7 +116,9 @@ namespace UMA.Editors.PackageSupport
             AssetDatabase.importPackageCompleted += OnImportCompleted;
             AssetDatabase.importPackageCancelled += OnImportCancelled;
             AssetDatabase.importPackageFailed += OnImportFailed;
-            EditorApplication.delayCall += ResumePendingImport;
+            // Not delayCall: Unity does not run it while the Editor is in the background, which
+            // stalled Reinstall All after every domain reload until Unity was focused again.
+            UMAEditorKeepTicking.RunWhenEditorReady(ResumePendingImport);
             if (IsInstallingAllPlugins)
                 EditorApplication.update += UpdateAllPluginInstallation;
             if (!string.IsNullOrEmpty(SessionState.GetString(InstallAllReportKey, string.Empty)))
@@ -146,6 +148,9 @@ namespace UMA.Editors.PackageSupport
 
         public static bool IsInstallingAllPlugins =>
             !string.IsNullOrEmpty(SessionState.GetString(InstallAllSessionKey, string.Empty));
+
+        /// <summary>True while an imported package is waiting to be verified, completed or rolled back.</summary>
+        internal static bool HasPendingImport => File.Exists(PendingPath);
 
         public static void InstallAllPlugins() => StartPluginInstallBatch(false);
 
@@ -1296,7 +1301,10 @@ namespace UMA.Editors.PackageSupport
                     out UMAContentManifest manifest, out string error) ||
                 !ValidatePendingArchive(pending, out error) ||
                 !ValidateExpectedManifest(kind, pending, manifest, out error) ||
-                !ValidateInstalledFiles(manifest, out error, progress.Report) ||
+                !ValidateInstalledFiles(manifest, out error, progress.Report,
+                    DateTime.TryParse(pending.startedUtc, null,
+                        System.Globalization.DateTimeStyles.RoundtripKind, out DateTime importStarted)
+                        ? importStarted.ToUniversalTime() : (DateTime?)null) ||
                 !ValidatePreservedRootIdentity(pending, out error))
             {
                 if (DateTime.TryParse(pending.startedUtc, out DateTime started) &&
@@ -1360,8 +1368,25 @@ namespace UMA.Editors.PackageSupport
             return true;
         }
 
+        // Unity's package import can open an imported scene and save it again to upgrade its lighting
+        // settings (Editor.log: "LightingSettings: switching bake backend ..."), so a scene's bytes may
+        // legitimately differ from the archive. Such a scene is accepted only when Unity wrote it during
+        // this import and its .meta (GUID and importer settings) still matches the archive exactly.
+        internal static bool IsSceneUpgradedDuringImport(string assetPath, string absolute,
+            DateTime? importStartedUtc)
+        {
+            if (!importStartedUtc.HasValue ||
+                !string.Equals(Path.GetExtension(assetPath), ".unity", StringComparison.OrdinalIgnoreCase))
+                return false;
+            var info = new FileInfo(absolute);
+            // Allow for file-system timestamp granularity.
+            return info.Exists && info.Length > 0 &&
+                   info.LastWriteTimeUtc >= importStartedUtc.Value.AddSeconds(-2);
+        }
+
         private static bool ValidateInstalledFiles(UMAContentManifest manifest,
-            out string error, Action<string, float> progress = null)
+            out string error, Action<string, float> progress = null,
+            DateTime? importStartedUtc = null)
         {
             foreach (string path in manifest.requiredPaths ?? Array.Empty<string>())
             {
@@ -1387,10 +1412,11 @@ namespace UMA.Editors.PackageSupport
                         return false;
                     }
                 }
-                else if (!File.Exists(absolute) ||
+                else if ((!File.Exists(absolute) ||
                     new FileInfo(absolute).Length != asset.bytes ||
                     !string.Equals(ComputeFileHash(absolute), asset.sha256,
-                        StringComparison.OrdinalIgnoreCase))
+                        StringComparison.OrdinalIgnoreCase)) &&
+                    !IsSceneUpgradedDuringImport(asset.path, absolute, importStartedUtc))
                 {
                     error = "Installed content does not match the archive: " + asset.path;
                     return false;

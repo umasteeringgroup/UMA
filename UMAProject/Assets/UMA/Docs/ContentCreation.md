@@ -209,6 +209,8 @@ Before committing to a blendshape-heavy workflow:
 
 For extracting existing slot blendshapes into Mesh Modifiers, see [MeshModifiers.md](MeshModifiers.md).
 
+Clothing does not have to be authored with every body blendshape. **UMA > Tools > Slot Tools > Transfer Blend Shapes** gives clothing slots the blendshapes of a race's body, following the body surface, with a live preview; see [Blendshape Transfer](BlendshapeTransfer.md). A transferred shape can then be refined by sculpting it in the Vertex Editor; see [Sculpting Mesh Modifiers](MeshModifierSculpting.md#edit-an-existing-blendshape).
+
 ## Export from Blender 4.x
 
 UMA Tools for Blender provides UMA-specific error checking, rigging and weight utilities, UDIM helpers, and a consistent FBX export preset. Download it and follow its preflight workflow in [UMA Tools for Blender](UMAToolsForBlender.md).
@@ -400,7 +402,15 @@ The overlay texture list does not match the assigned `UMAMaterial` channels, or 
 
 ### Clothing fits the neutral body but clips after customization
 
-Test extreme DNA, improve skinning, add mesh hides, author a corrective Mesh Modifier, or use the Clothing Conformer where appropriate.
+Test extreme DNA, improve skinning, add mesh hides, author a corrective Mesh Modifier, transfer the body's blendshapes to the clothing ([Blendshape Transfer](BlendshapeTransfer.md)), or use the Clothing Conformer where appropriate.
+
+### Hair does not sway
+
+UMA hair sways through the **UMA > Hair Control** component, and only on slots marked **Hair Control Ready** whose vertices say where they are along each strand (black at the root, white at the tip, in the red vertex color, or an ID Map). Paint that gradient in your DCC package, or make it in Unity with the Vertex Editor's **Hair Root to Tip**. See [Hair Animation: An Artist's Guide](HairAnimation.md).
+
+### UMA 2 clothing is twisted or offset on a UMA 3 character
+
+UMA 2 slots use a different rig. Slots flagged as legacy are converted automatically for races with a **Legacy Rig**, and the fit is tuned in the Rig Profile Editor. See [Slot Rig Conversion](SlotRigConversion.md).
 
 ## Related Guides
 
@@ -416,3 +426,6 @@ Test extreme DNA, improve skinning, add mesh hides, author a corrective Mesh Mod
 - [MeshModifiers.md](MeshModifiers.md)
 - [MeshHideAssets.md](MeshHideAssets.md)
 - [UMASimpleLOD.md](UMASimpleLOD.md)
+- [Hair Animation](HairAnimation.md)
+- [Blendshape Transfer](BlendshapeTransfer.md)
+- [Slot Rig Conversion](SlotRigConversion.md)

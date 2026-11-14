@@ -146,4 +146,4 @@ MonoBehaviour:
   MaskWithCurrentColor: 0
   maskMultiplier: {r: 1, g: 1, b: 1, a: 1}
   MaterialName: UMA3_SkinRealistic_Matte
-  ShaderName: UMA/URP/Realistic Skin
+  ShaderName: UMA/URP/Realistic Skin SSS

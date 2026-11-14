@@ -6,7 +6,7 @@ UMA can be used for player characters, crowds, character creators, modular NPCs,
 
 ## Current release
 
-**UMA 3.1f5 (package version 3.1.5)** supports **Unity 6.3 and newer**. For the update from 3.1f3 / 3.1.3, use the [What's New overview](!WhatsNewInUMA3.md#uma-31f5--changes-since-31f3) and [complete release changelog](../CHANGELOG.md#31f5-package-version-315). Feature guides below describe the current workflows; the changelog owns the version-by-version history.
+**UMA 3.1f6 (package version 3.1.6)** supports **Unity 6.3 and newer**. Its highlights are hair that sways ([Hair Animation](HairAnimation.md)), UMA 2 clothing on UMA 3 characters ([Slot Rig Conversion](SlotRigConversion.md)), body blend shapes transferred to clothing ([Blendshape Transfer](BlendshapeTransfer.md)), and an opt-in subsurface scattering skin shader. For the update from 3.1f5 / 3.1.5, use the [What's New overview](!WhatsNewInUMA3.md#uma-31f6--changes-since-31f5) and [complete release changelog](../CHANGELOG.md#31f6-package-version-316); the [3.1f5 overview](!WhatsNewInUMA3.md#uma-31f5--changes-since-31f3) covers the update from 3.1f3. Feature guides below describe the current workflows; the changelog owns the version-by-version history.
 
 ## Start Here
 
@@ -42,10 +42,14 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [What's New in UMA 3](!WhatsNewInUMA3.md)
 - [Getting Started](!GettingStarted.md)
 - [Dynamic Character Avatar](DynamicCharacterAvatar.md)
+- [Installing UMA as a Unity Package](PackageInstallation.md) — Package Manager and source-tree installs, render pipeline support, and content packages.
+- [Official Plugins](UMAPlugins.md) — install, update and remove optional plugins and their Examples and Tests companions.
 - [Configure UMA and Generator Setup](UMAGeneratorSetup.md) — Maximum Speed/Fidelity presets, editor rebuilds, atlas sizes, and fitting methods.
 - [Generator Quality Profiles](GeneratorQuality.md)
 - [UMA Asset Indexer and Global Library](UMAAssetIndexer.md)
+- [Avatar Presets](AvatarPresets.md)
 - [Icon Creator and Thumbnail Sprite Atlases](IconCreator.md)
+- [Photobooth Recipe Icon Generation](PhotoboothIconGeneration.MD)
 - [Addressables](Addressables.md)
 
 ### Artist content creation
@@ -55,6 +59,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Bone Pose Builder: An Artist's Guide](BonePoseBuilder.md) - turn posed rigs and supported animation samples into reusable poses.
 - [Bone Pose Editor: An Artist's Guide](BonePoseEditor.md) - shape poses on a built character with direct controls, symmetry, groups, and IK.
 - [Creating a New Race](CreatingANewRace.md)
+- [Model to UMA: Guided Race and Clothing Creation](ModelToRace.md)
 - [RaceData](RaceData.md)
 - [SlotDataAsset](SlotDataAsset.md)
 - [OverlayDataAsset](OverlayDataAsset.md)
@@ -71,12 +76,17 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [UMA Materials](UMAMaterial.md)
 - [Renderer Assets and Cloth](RendererAssetsAndCloth.md)
 - [Textures, UDIMs, and Texture Arrays](Textures-UDIM-Arrays.md)
+- [Realistic Skin and Realistic Skin SSS (URP)](../SRP/Shaders/Skin/README.md)
+- [Hair Cards Quick Start](../HairCards/Documentation/Hair%20Cards%20-%20Quick%20Start.md) — optional Hair Card Editor plugin.
+- [Dismemberment Artist Guide](../UMADismemberment/Documentation/ArtistGuide.md) — optional Dismemberment plugin.
 
 ### Shape, fitting, and visibility
 
 - [Optimizing Blendshapes](OptimizingBlendshapes.MD) — selective shape loading, MeshModifiers, baking, race generation, and performance.
 - [DNA Creation Guide](DNACreationGuide.md)
 - [New DNA System](NewDNASystem.md)
+- [DNA Override Utility Slot](UMADnaOverrideSlot.md)
+- [UMA 3 Viseme Poses](UMA3Visemes.md)
 - [Mesh Modifiers](MeshModifiers.md)
 - [Mesh Modifier Sculpting](MeshModifierSculpting.md)
 - [Clothing Conformer](ClothingConformer.md)
@@ -88,6 +98,10 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 ### Generation, animation, and performance
 
 - [Atlas and Mesh Reuse](AtlasAndMeshReuse.md) - setup, practical sharing examples, and troubleshooting.
+- [Source-UV Cropping](SourceUVCropping.md)
+- [Automatic Slot Preparation](SlotPreparation.md)
+- [Completed NPC Builds](NPCBuilds.md)
+- [Rig Lifetime and Bone Cleanup](BoneLifecycle.md)
 - [Generated Resource Reuse](GeneratedResourceReuse.md) - implementation details and profiling.
 - [Mesh Combiners](MeshCombiners.md)
 - [Incremental Mesh Combiner](IncrementalMeshCombiner.md)
@@ -108,6 +122,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Asset Discovery Utilities](AssetDiscoveryUtilities.md)
 - [Race Utilities](RaceUtilities.md)
 - [Pose Tools](PoseTools.md)
+- [Shader Package Manager](ShaderPackageManager.md)
 - [Animation Utilities](AnimationUtilities.md)
 - [Prefab and Scene-Building Tools](PrefabAndSceneBuildingTools.md)
 - [Testing and Release Utilities](TestingAndReleaseUtilities.md)
@@ -116,8 +131,6 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 
 ### Engineering and implementation notes
 
-- [Incremental Mesh Combiner Baseline](../Plans/IncrementalMeshCombinerBaseline.md)
-- [Dynamic Character Build Optimization Plan](../Plans/DynamicCharacterBuildOptimizationPlan.md)
 - [Mesh Modifier Cloth Brush Plan](../Plans/MeshModifierClothBrushPlan.md)
 - [Wardrobe Recipe Graph Production Readiness](../Plans/UMAWardrobeRecipeGraphProductionReadiness.md)
 

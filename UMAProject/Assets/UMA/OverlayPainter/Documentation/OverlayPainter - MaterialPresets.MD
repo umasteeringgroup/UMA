@@ -330,7 +330,7 @@ Material Presets use semantic channels such as Albedo, Roughness, Metallic, Ambi
 Normal, or Normal Control. The destination `UMAMaterial` decides which semantic channels exist and
 how they are packed into physical textures.
 
-Best results come from targets with correctly configured **Overlay Painter Channel Layout** data.
+Best results come from targets with correctly configured **Channel Layout** data on their UMA Material channels.
 Applying a preset does not repair an incorrect channel layout. Verify custom shaders and packed maps
 before judging a preset.
 
@@ -619,7 +619,7 @@ BrushPreset, exported overlay, or ordinary Unity Material. Allow Unity to finish
 ### A channel was skipped
 
 The destination material does not expose that semantic channel. Inspect the destination
-`UMAMaterial` and its **Overlay Painter Channel Layout**. If the material intentionally lacks the
+`UMAMaterial` and its **Channel Layout**. If the material intentionally lacks the
 channel, the skipped result is expected.
 
 ### Painted details appear on the wrong surface region

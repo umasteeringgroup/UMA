@@ -89,13 +89,14 @@ Select the character. Its Inspector is where you do almost everything. The tabs 
 - **Standard View**: the everyday controls, described below.
 - **Advanced View**: every option, including animation, events, and build settings.
 
-Turn on **Help** to show a short description under each option.
+Each section has a **Help** button that shows a description of every option in that section.
 
 The Standard View sections are:
 
 | Section | What you do there |
 |---|---|
 | **Character & race** | Pick the race. Clothing that doesn't support the new race is not equipped. |
+| **Editing tools** | Open the editors that work on the built character: the **Vertex Editor** (sculpt, vertex paint, Mesh Modifiers), the **Face Editor** (hide the body under clothing), **Touchup Weights**, and **Create Slot From Scene Mesh**. They need **Editor Time Generation** on. |
 | **Generation & avatar definition** | Turn **Editor Time Generation** on or off, **Regenerate Avatar**, and save or load the character's look. |
 | **Default wardrobe** | Choose the clothing for each wardrobe region (hair, chest, legs, feet, and so on). Use **Inspect** to open a recipe. |
 | **Colors** | Edit the shared colors, such as skin, hair and eyes. Click **Edit** for the full color settings, where **Copy** copies them for pasting elsewhere. |
@@ -103,6 +104,7 @@ The Standard View sections are:
 | **Randomize** | Pick a random-avatar setup and click **Randomize** for a quick variation. |
 | **Presets** | Save the current look as a preset (**Create...**), or **Apply** a saved one. |
 | **Animation** | Choose the **Default Animator Controller**, or a different controller per race. |
+| **Generation & resource sharing** | Add utility recipes such as colliders, and choose whether this character shares identical meshes and atlases with others or follows the generator's quality profile. |
 
 Changes rebuild the character automatically while **Editor Time Generation** is on.
 
@@ -140,6 +142,8 @@ After installing render pipeline support (Step 1), example scenes are in `Assets
 - **U3-Generating Random Characters**: crowds of random characters.
 - **U3-How to Construct a DCA from scratch** and **U3-How to Construct and load a DCA from a prefab**: setting up characters.
 - **U3-How to Load and Save a DCA to a string**: saving a character's look.
+- **U3-Decals**, **U3-Ragdolls and Shooting Example** and **U3-Integrating with Timeline**: decals, ragdolls, and characters in Timeline.
+- Also included: **U3-Car Scene**, **U3-Sandbox** and **U3-Tools-Photobooth** (recipe icon generation; see [Photobooth Icon Generation](PhotoboothIconGeneration.MD)).
 
 The Welcome window's **Example Scenes** page lists them too.
 
@@ -153,6 +157,9 @@ The Welcome window's **Example Scenes** page lists them too.
 | Add or change body-shape sliders | [DNA Creation Guide](DNACreationGuide.md) |
 | Create a new race | [Creating a New Race](CreatingANewRace.md) and [Race Data](RaceData.md) |
 | Add tattoos, scars or decals | [Decals](Decals.md) |
+| Make hair sway | [Hair Animation](HairAnimation.md) |
+| Use UMA 2 clothing on UMA 3 characters | [Slot Rig Conversion](SlotRigConversion.md) |
+| Make clothing follow body shapes | [Blendshape Transfer](BlendshapeTransfer.md) |
 | Generate random characters | [Random Avatars](RandomAvatar.md) |
 | Improve quality or performance | [Configure UMA and Generator Setup](UMAGeneratorSetup.md) |
 | Ship characters in a build | [Addressables](Addressables.md) |

@@ -19,7 +19,7 @@ MonoBehaviour:
     Use the project settings instead.\n Modifying settings that need compiler\n directives
     set will NOT work if you\n edit them in the inspector!"
   Initialized: 1
-  UMAVersion: 3.1.5
+  UMAVersion: 3.1.6
   tagLookupValues:
   - Head
   - Hair

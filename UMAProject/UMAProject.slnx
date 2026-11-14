@@ -27,7 +27,7 @@
   <Project Path="UMA.HairCards.Runtime.csproj" />
   <Project Path="UMA3.Samples.Editor.csproj" />
   <Project Path="UMA.SRP.SkyCar.Samples.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="UMA.Timing.csproj" />
   <Project Path="UMA.Dismemberment.Samples.csproj" />
   <Project Path="UMA.TexturePaint.Sprite.Editor.csproj" />
   <Project Path="UMA2Compatibility.Editor.Tests.csproj" />
@@ -40,6 +40,6 @@
   <Project Path="UMA2.Content.Player.csproj" />
   <Project Path="UMA.HairCards.Runtime.Player.csproj" />
   <Project Path="UMA.SRP.SkyCar.Samples.Player.csproj" />
-  <Project Path="Assembly-CSharp.Player.csproj" />
+  <Project Path="UMA.Timing.Player.csproj" />
   <Project Path="UMA.Dismemberment.Samples.Player.csproj" />
 </Solution>

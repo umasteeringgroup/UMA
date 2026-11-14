@@ -89,7 +89,7 @@ Material:
     - _OcclusionInensity: 1
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _RecalcNormalBlend: 0.5
+    - _RecalcNormalBlend: 0.65
     - _RecalculateNormals: 1
     - _ReceiveShadows: 1
     - _Root_Shift: 0.2
@@ -112,6 +112,10 @@ Material:
     - _BaseColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
     - _CenterOffset: {r: 0, g: 0, b: 0, a: 0}
     - _HairCenterWS: {r: 0, g: 0, b: 0, a: 0}
+    - _HairSpinWS: {r: 0, g: 0, b: 0, a: 0}
+    - _HairSwayParams: {r: 0, g: 0, b: 0, a: 0}
+    - _HairSwayShape: {r: 0, g: 0, b: 0, a: 0}
+    - _HairSwayWS: {r: 0, g: 0, b: 0, a: 0}
     - _Normal: {r: 0, g: 0, b: 0, a: 0}
     - _RootColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
     - _SpecularTint: {r: 0.654902, g: 0.24259722, b: 0.00759451, a: 1}

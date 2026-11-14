@@ -196,7 +196,7 @@ Wind Zones are looked up once a second. After adding or removing one from a scri
 - **Slots that share a material are one piece.** UMA builds all slots with the same hair material into one part of the mesh, and the shader gets one set of settings for it. Every slot in that part must be **Hair Control Ready**; slots that share it use the first slot's settings.
 - **Two-pass hair** moves as one; both passes get the same values.
 - **Each character has its own sway**, even when characters share a generated material.
-- **Cost:** one small calculation per character per frame, and a few values per hair material. Characters with Hair Control are drawn outside the SRP Batcher for their hair, because the values are set per renderer.
+- **Cost:** one small calculation per character per frame, and a few values per hair material. Characters with Hair Control are drawn outside the SRP Batcher for their hair, because the values are set per renderer. For crowds, set **Disable Hair Control at LOD** on [UMASimpleLOD](UMASimpleLOD.md) so distant characters turn it off.
 - **Teleporting** a character, or snapping it to a new rotation, does not throw the hair around.
 
 ## Troubleshooting

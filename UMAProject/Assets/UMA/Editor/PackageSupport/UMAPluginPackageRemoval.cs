@@ -28,7 +28,10 @@ namespace UMA.Editors.PackageSupport
             public bool allPlugins;
         }
         private static string Journal => Path.GetFullPath("Library/UMA/PluginRemoval/pending.json");
-        static UMAPluginPackageRemoval() { EditorApplication.delayCall += Resume; }
+        /// <summary>True while a journaled removal still has steps to run.</summary>
+        internal static bool HasPendingRemoval => File.Exists(Journal);
+        // Not delayCall: Unity does not run it while the Editor is in the background.
+        static UMAPluginPackageRemoval() { UMAEditorKeepTicking.RunWhenEditorReady(Resume); }
 
         public static void RemoveInteractive(UMAContentKind kind)
         {

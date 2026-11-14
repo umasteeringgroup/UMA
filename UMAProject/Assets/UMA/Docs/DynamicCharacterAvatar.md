@@ -89,6 +89,8 @@ At runtime, use the wearable APIs rather than editing the generated recipe by ha
 
 Wardrobe collections can apply coordinated groups of recipes. They are useful for complete outfits, but individual recipes still need correct race compatibility and wardrobe-region behavior.
 
+In Standard View, the **Default wardrobe** section lists one card per wardrobe region. **Show regions** chooses **All** regions or **Assigned only** (remembered per project). Click a card to choose a recipe for that region; its **Inspect** button opens the equipped recipe without opening the picker.
+
 ## DNA
 
 DNA controls proportions, facial features, poses, and other race-defined effects. The visible controls come from the active race and its DNA configuration.
@@ -101,6 +103,8 @@ For art review:
 - Check blendshapes and mesh modifiers if the race uses them.
 
 When changing several DNA values from code, defer the build until all values are set. This avoids generating the same character repeatedly.
+
+Each DNA slider row in the Inspector has two small buttons: the magnifier (**Inspect DNA**) opens the DNA asset behind the slider, and the history icon resets that value to its default. DNA labels use the DNA's display name, falling back to its name.
 
 See [New DNA System](NewDNASystem.md) and [DNA Creation Guide](DNACreationGuide.md).
 

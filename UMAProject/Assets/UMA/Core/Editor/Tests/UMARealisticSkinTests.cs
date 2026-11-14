@@ -105,16 +105,21 @@ namespace UMA.Editors.Tests
             Assert.Throws<ArgumentNullException>(()=>UMARealisticSkinUtility.CreateMaterialCopy(null));
         }
 
-        [TestCase("Natural")]
-        [TestCase("Matte")]
-        [TestCase("Dewy")]
-        public void PresetKeepsUmaAtlasChannelsAndReferences(string preset)
+        // Natural and Matte use the subsurface scattering version of the shader; Dewy keeps Realistic Skin.
+        [TestCase("Natural", true)]
+        [TestCase("Matte", true)]
+        [TestCase("Dewy", false)]
+        public void PresetKeepsUmaAtlasChannelsAndReferences(string preset, bool sss)
         {
             var original=AssetDatabase.LoadAssetAtPath<UMAMaterial>("Assets/UMA/SRP/ShaderGraphs/Materials/UMA3_SkinShader_URP.asset");
             if(original==null)Assert.Ignore("Original URP content package is not installed.");
             var uma=AssetDatabase.LoadAssetAtPath<UMAMaterial>(Examples+"UMA3_SkinRealistic_"+preset+".asset");
             Assert.That(uma,Is.Not.Null);
-            Assert.That(uma.material.shader.name,Is.EqualTo(UMARealisticSkinUtility.ShaderName));
+            string shaderName=sss?UMARealisticSkinUtility.SSSShaderName:UMARealisticSkinUtility.ShaderName;
+            Assert.That(uma.material.shader.name,Is.EqualTo(shaderName));
+            // The stored names restore a shader stripped by Addressables, so they must match the material.
+            Assert.That(uma.ShaderName,Is.EqualTo(shaderName));
+            Assert.That(uma.MaterialName,Is.EqualTo(uma.material.name));
             Assert.That(uma.channels.Length,Is.EqualTo(original.channels.Length));
             for(int i=0;i<uma.channels.Length;i++)
             {

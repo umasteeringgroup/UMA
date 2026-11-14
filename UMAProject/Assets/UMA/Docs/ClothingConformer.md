@@ -13,4 +13,4 @@ The conformer detects base and clothing topology changes and refuses to use an i
 
 `Preserve Welded Seams` is enabled by default. It detects nearly coincident UV- or hard-normal-split vertices that are not connected by a triangle edge and gives them a shared conform displacement. This keeps texture-island seams closed without merging their UVs or normals. Increase `Welded Seam Tolerance` only slightly when an exporter has introduced tiny positional differences at a seam.
 
-The menu command **UMA > Clothing Conformer > Demo Bind First Clothing Slot On Selected UMA** configures a built UMA with its first active slot as surface and second as clothing, then runs Bind and Conform. It is intended as a quick smoke test for projects that already have a body-and-clothing avatar scene.
+The menu command **UMA > Avatar > Clothing Conformer > Demo Bind First Clothing Slot On Selected UMA** configures a built UMA with its first active slot as surface and second as clothing, then runs Bind and Conform. It is intended as a quick smoke test for projects that already have a body-and-clothing avatar scene.

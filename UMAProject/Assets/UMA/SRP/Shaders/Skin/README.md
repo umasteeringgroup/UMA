@@ -11,9 +11,11 @@ A separate, opt-in skin shader for Unity 6.3 / URP 17.3 and newer. The original 
 
 Alternatively, start with a matching Material/UMAMaterial pair in `Examples`:
 
-- **Natural:** balanced, restrained skin and oil highlights.
-- **Matte:** broader, quieter highlights for dry skin.
-- **Dewy:** stronger, narrower surface-oil highlights. This is not a metallic or clear-plastic coating.
+- **Natural:** balanced, restrained skin and oil highlights. Uses [Realistic Skin SSS](#realistic-skin-sss); its UMAMaterial shares the `UMA3_SkinRealisticSSS_Natural` material.
+- **Matte:** broader, quieter highlights for dry skin. Uses [Realistic Skin SSS](#realistic-skin-sss).
+- **Dewy:** stronger, narrower surface-oil highlights. This is not a metallic or clear-plastic coating. Uses Realistic Skin.
+
+To compare the two shaders on one look, change the **Shader** of a copied example material; both read the same properties.
 
 The example materials are **atlas templates**. UMA supplies the actual character textures when building its atlas; they are not pre-baked face textures. The sample pore detail uses the existing `SkinDetail_HDRPStyle` texture.
 
@@ -25,7 +27,7 @@ To use it, do one of these:
 
 - Change the **Shader** of an existing Realistic Skin material to **UMA/URP/Realistic Skin SSS**. All inputs keep their values.
 - Select a UMA3 URP skin Material or UMAMaterial and choose **Assets → UMA → Skin → Create Realistic SSS URP Copy**.
-- Start from `Examples/UMA3_SkinRealisticSSS_Natural` (Material and UMAMaterial).
+- Start from `Examples/UMA3_SkinRealisticSSS_Natural` (Material and UMAMaterial), or from the Natural or Matte example, which use this shader.
 
 What it adds over Realistic Skin:
 
@@ -65,7 +67,9 @@ Limits of this version:
 
 ## Release notes
 
-For **3.1f5 / 3.1.5**, the changes since 3.1f3 are the material-wide Metallic control described below and the expanded 0–2 Tint Protection Strength range. The existing realistic-skin lighting model predates this update. See the [release changelog](../../../CHANGELOG.md#shading-content-and-documentation) for versioned details.
+For **3.1f6 / 3.1.6**, the changes since 3.1f5 are the new [Realistic Skin SSS](#realistic-skin-sss) shader and its lookup texture, the Natural and Matte examples moving to it, and corrected UMA 3 skin tint masks, so the face, scalp, neck, shoulders and hips no longer show a seam under a dark Skin Tint. See the [3.1f6 changelog](../../../CHANGELOG.md#shading-content-and-documentation).
+
+For **3.1f5 / 3.1.5**, the changes since 3.1f3 were the material-wide Metallic control described below and the expanded 0–2 Tint Protection Strength range. The Realistic Skin lighting model itself predates both releases. See the [3.1f5 changelog](../../../CHANGELOG.md#shading-content-and-documentation-1).
 
 ## What changed
 

@@ -96,7 +96,7 @@ namespace UMA
             AssetDatabase.importPackageCompleted += OnSrpPackageImportCompleted;
             AssetDatabase.importPackageCancelled += OnSrpPackageImportCancelled;
             AssetDatabase.importPackageFailed += OnSrpPackageImportFailed;
-            EditorApplication.delayCall += ResumePendingSrpImport;
+            ScheduleSrpImportResume();
             EditorApplication.delayCall += DelayedCall;
             EditorApplication.update += EnforceRequiredSrpSelection;
             EditorApplication.projectChanged += SrpProjectChanged;
@@ -828,6 +828,17 @@ namespace UMA
             AddLargeText("What's New in " + GetVersionName());
 
             AddText("UMA NextGen combines a refreshed authoring workflow with faster character builds, expanded deformation tools, and better diagnostics for modern Unity projects.");
+            AddSeperator();
+
+            AddText("<b>New in UMA 3.1</b>");
+            AddText("- Hair that moves: add <b>UMA > Hair Control</b> to a character and hair slots marked Hair Control Ready sway with movement, head turns and wind. All UMA 3 hair slots are ready, and the Vertex Editor can make the root-to-tip vertex colors other hair needs.");
+            AddText("- UMA 2 clothing on UMA 3 characters: Slot Rig Conversion re-targets legacy slots, the Rig Profile Editor tunes the fit against a live preview, and Convert Legacy Content brings a folder of UMA 2 recipes across.");
+            AddText("- Transfer Blend Shapes gives clothing the blend shapes of a race's body, and sculpting can now edit an existing blendshape and heal badly fitted areas.");
+            AddText("- Realistic Skin SSS: an opt-in URP skin shader with subsurface scattering, red shadow edges and backlit ears.");
+            AddText("- The character inspector has an <b>Editing tools</b> section, and Advanced View is organized into foldable panels with their own Help.");
+            AddText("- Faster builds: quicker normal recalculation, reused humanoid Avatars and skeletons, and fixes for slow rendering with Mark Dynamic and for cloth with every mesh combiner.");
+            AddText("- Shared colors can be copied between avatars and tables, and <b>Assets > UMA > Manage Color Parameters</b> changes a shader parameter on every color at once.");
+            AddText("The <b>What's New</b> document and the changelog list every change.");
             AddSeperator();
 
             AddText("<b>Performance and character building</b>");
@@ -3396,8 +3407,19 @@ namespace UMA
         private static void OnSrpPackageImportCompleted(string packageName)
         {
             PendingSrpImport pending = LoadPendingSrpImport();
+            // ResumePendingSrpImport completes the install once compiling and importing are done.
             if (IsPendingPackageEvent(pending, packageName))
-                EditorApplication.delayCall += CompletePendingSrpImport;
+                ScheduleSrpImportResume();
+        }
+
+        // Continues a pending SRP import from the Editor update loop. Not delayCall: Unity only runs
+        // delayCall after the inspectors repaint, which an unfocused Editor does not do, so an SRP
+        // install resumed that way waited until Unity was focused again. ResumePendingSrpImport
+        // unhooks itself when nothing is pending.
+        internal static void ScheduleSrpImportResume()
+        {
+            EditorApplication.update -= ResumePendingSrpImport;
+            EditorApplication.update += ResumePendingSrpImport;
         }
 
         private static void OnSrpPackageImportCancelled(string packageName)

@@ -34,7 +34,7 @@ namespace UMA.TexturePaint.Editor
         }
         public static TexturePaintMaterialPreset Build(int index,PluginHost host)
         {
-            var preset=ScriptableObject.CreateInstance<TexturePaintMaterialPreset>();preset.displayName=Names[index];preset.category=index<6?"Face / Finished Looks":"Coatings / Finished Materials";
+            var preset=ScriptableObject.CreateInstance<TexturePaintMaterialPreset>();preset.name=Names[index];preset.displayName=Names[index];preset.category=index<6?"Face / Finished Looks":"Coatings / Finished Materials";
             preset.author="UMA";preset.includesCachedPluginOutput=false;preset.includesWholeStack=false;
             preset.portability=TexturePaintPresetPortability.RequiresPlugin|(index<6?TexturePaintPresetPortability.MeshDependent:TexturePaintPresetPortability.Portable);
             preset.description=index<6?"Editable cosmetic layers located from posed facial landmarks. Refine boundaries for the face with each layer's controls or mask. No base skin is included.":"Editable foundation, coating damage and finish layers. Damage rims and recessed substrate use Normal Control. Masks keep finishing passes restrained.";

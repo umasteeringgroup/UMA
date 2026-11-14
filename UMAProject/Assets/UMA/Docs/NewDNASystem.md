@@ -319,7 +319,7 @@ Each effect's `enabled` toggle lets you A/B test.
 2. Enable `useNewDNA` in Inspector top.
 3. Find `DNACollection` foldout. Expand `DNAGroups` and increase size, assign your `DNAGroup` assets.
 4. Ensure `disableDNAConverters` is not conflicting (new path ignores converters).
-5. Save. If you use UMA Asset Indexer, rebuild index (`UMA → Rebuild Index`) so validation picks it up.
+5. Save. If you use UMA Asset Indexer, rebuild the library (**UMA > Global Library Maintenance > Rebuild Library From Project**) so validation picks it up.
 
 Validation (`Window → UMA → Race Validation`): warns if `DNACollection` null or empty.
 

@@ -402,9 +402,9 @@ namespace UMA.HairCards
         }
 
         // float.Equals semantics (0 == -0, NaN equals NaN), matching Vector3 dictionary welds.
-        private static bool SameCoordinate(float a, float b) => a == b || (a != a && b != b);
+        private static bool SameCoordinate(float a, float b) => a == b || (float.IsNaN(a) && float.IsNaN(b));
         private static int CoordinateBits(float value) =>
-            value == 0f ? 0 : value != value ? int.MinValue : BitConverter.SingleToInt32Bits(value);
+            value == 0f ? 0 : float.IsNaN(value) ? int.MinValue : BitConverter.SingleToInt32Bits(value);
         private static int WeldHash(Vector3 p)
         {
             unchecked

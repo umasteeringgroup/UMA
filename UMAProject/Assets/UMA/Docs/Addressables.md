@@ -50,7 +50,7 @@ Set up the Addressables profiles, build path, and load path for the project. UMA
 
 Open **Edit > Project Settings > UMA** and enable **Use Addressables** under **Project Build Options**. UMA adds the `UMA_ADDRESSABLES` scripting define and Unity recompiles the project.
 
-You can also open **UMA > Asset Index > Global Library**, open its **Addressables** menu, and choose **Enable Addressables (Package must be installed first)**. It performs the same define-symbol change.
+You can also open **UMA > Global Library**, open its **Addressables** menu, and choose **Enable Addressables (Package must be installed first)**. It performs the same define-symbol change.
 
 Wait for compilation to finish before rebuilding the library. The Global Library's Addressables menu is unavailable until UMA has compiled with `UMA_ADDRESSABLES`.
 
@@ -73,7 +73,7 @@ In **Project Settings > UMA > UMA Addressables Options**, review these settings 
 
 ### Rebuild and inspect the Global Library
 
-Open **UMA > Asset Index > Global Library**. Rebuild or refresh the library after importing, moving, renaming, or deleting content.
+Open **UMA > Global Library**. Rebuild or refresh the library after importing, moving, renaming, or deleting content.
 
 The generator only knows about dependencies that UMA can find through indexed recipe data. An asset absent from the Global Library cannot receive UMA Addressables metadata. After generation, use the library to verify the asset is marked Addressable and has the expected group, address, and labels.
 
@@ -105,7 +105,7 @@ Use it for a branding or local-content substitution pack. Do not enable it for o
 
 ## Generate UMA groups
 
-Open **UMA > Asset Index > Global Library**, then use the **Addressables** drop-down in its toolbar.
+Open **UMA > Global Library**, then use the **Addressables** drop-down in its toolbar.
 
 | Command | Intended use |
 | --- | --- |

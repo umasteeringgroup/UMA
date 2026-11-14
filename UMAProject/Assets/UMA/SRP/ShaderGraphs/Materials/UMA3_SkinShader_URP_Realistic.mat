@@ -49,19 +49,20 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BumpScale: 0.706
-    - _DetailNormalMapScale: 0.024
+    - _BumpScale: 0.5
+    - _DetailNormalMapScale: 1
     - _Detail_Gloss_Scale: 0.595
     - _Detail_Normal_Scale: 0.235
     - _DiffuseNormalStrength: 0.35
     - _DiffusionWrap: 0.12
-    - _OilLobeWeight: 0.09
+    - _Metallic: 0
+    - _OilLobeWeight: 0.14
     - _OilSmoothness: 0.72
     - _SSSBlend: 0.537
     - _ScatterRadiusMM: 2.5
     - _SkinDebug: 0
     - _SkinIOR: 1.43
-    - _Skinmask_Amount: 1
+    - _Skinmask_Amount: 1.8
     - _SpecularAA: 0.525
     - _TransmissionPower: 4
     - _TransmissionStrength: 0.12
@@ -69,7 +70,7 @@ Material:
     - _Ambient_Occlusion_Remap: {r: 0, g: 1, b: 0, a: 0}
     - _Base_Color: {r: 1, g: 1, b: 1, a: 1}
     - _Detail_Tiling: {r: 24, g: 24, b: 0, a: 0}
-    - _Smoothness_Remap: {r: 0, g: 0.58, b: 0, a: 0}
+    - _Smoothness_Remap: {r: 0, g: 0.67, b: 0, a: 0}
     - _SubsurfaceColor: {r: 0.9308176, g: 0.3753064, b: 0.31319955, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

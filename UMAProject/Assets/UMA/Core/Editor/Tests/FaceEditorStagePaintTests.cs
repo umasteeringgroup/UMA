@@ -56,7 +56,9 @@ namespace UMA.Editors.Tests
             var selectedSlots = (HashSet<string>)GetField("selectedSlotNames");
             selectedSlots.Add("Left");
             selectedSlots.Add("Right");
-            SetField("paintBrushRadiusPixels", 8);
+            // The brush radius is a world-space size (meters) since brushes are sized in millimeters.
+            // 75 mm covers about 8 screen pixels at the 6 m camera distance used below.
+            SetField("paintBrushRadius", 0.075f);
 
             view = Track(ScriptableObject.CreateInstance<SceneView>());
             view.camera.transform.SetPositionAndRotation(new Vector3(0f, 0f, -6f), Quaternion.identity);

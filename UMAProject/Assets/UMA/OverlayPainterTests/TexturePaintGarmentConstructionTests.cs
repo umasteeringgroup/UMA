@@ -13,8 +13,15 @@ namespace UMA.TexturePaint.Editor.Tests
     {
         private const BindingFlags Instance=BindingFlags.Instance|BindingFlags.NonPublic;
         private const BindingFlags Static=BindingFlags.Static|BindingFlags.NonPublic;
+        // Reflection does not supply optional parameters, so trailing ones get their declared defaults.
         private static object Invoke(object target,string method,params object[] args)
-            =>typeof(TexturePaintStageWindow).GetMethod(method,Instance).Invoke(target,args);
+        {
+            var info=typeof(TexturePaintStageWindow).GetMethod(method,Instance);
+            var parameters=info.GetParameters();
+            var full=new object[parameters.Length];
+            for(int i=0;i<full.Length;i++)full[i]=i<args.Length?args[i]:parameters[i].DefaultValue;
+            return info.Invoke(target,full);
+        }
         private static object Call(string method,params object[] args)
             =>typeof(TexturePaintStageWindow).GetMethod(method,Static).Invoke(null,args);
         private static void Set(object target,string field,object value)

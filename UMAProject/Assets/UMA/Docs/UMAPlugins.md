@@ -7,7 +7,13 @@ page lists compact, single-line rows with those companions indented immediately 
 parent. Install the parent first. **Remove All** on the parent removes its installed companions first, then the parent; normal
 plugin use does not require examples or Unity Test Framework.
 
-**Install All Plugins** asks once for the entire batch, including Examples and Tests.
+The top of the Plugins page has three batch buttons:
+
+- **Install all plugins** installs every missing or unverified plugin, with its Examples and Tests packages. It is disabled when everything is installed.
+- **Reinstall all plugins** processes every plugin and its Examples and Tests again, including packages already installed, and installs any that are missing. Use it after updating UMA, or to repair a damaged install.
+- **Remove all plugins** removes every installed plugin and its companions. When removal is not possible, the button is disabled and its tooltip says why (for example, unmanaged files that must be adopted first).
+
+**Install all plugins** asks once for the entire batch, including Examples and Tests.
 It skips packages already installed, registers matching unmanaged content, and backs up
 content that needs replacement while preserving extra files and separately installed companions.
 The approval survives script reloads and downloaded-package callbacks. Individual Install/Reinstall
@@ -15,6 +21,11 @@ actions retain their normal confirmations. A final dialog lists every package as
 already installed, failed/cancelled, or not attempted. A failed or cancelled installation stops
 the queue and keeps successful earlier installations. The report is also saved to
 `Library/UMA/ContentInstaller/LastPluginInstallReport.txt`.
+
+You can switch to another application while a batch runs: UMA keeps the Editor updating
+in the background until the installs, downloads or removals finish. Keep at least part of
+the Unity window visible, because a minimized or fully covered Editor may still pause until
+you return to it.
 
 ## Overlay Painter installation and use
 

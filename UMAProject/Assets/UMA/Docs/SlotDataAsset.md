@@ -41,7 +41,7 @@ Use the update workflow when:
 
 Before updating, commit or back up the asset. A changed vertex count, order, triangle layout, submesh layout, or UV layout can invalidate Mesh Hide Assets, Mesh Modifiers, cloth coefficients, decals, and other indexed content even though the slot asset reference itself is preserved.
 
-**Always recreate slots** is a different operation. When enabled, an asset at the intended target path is deleted and recreated instead of updated. It is disabled while **Find and update existing slot** is active. Use recreation when preserving the existing asset is not required, then verify references and metadata afterward.
+**Always recreate slots** is a different operation. When enabled, an asset at the intended target path is deleted and recreated instead of updated. It is disabled while **Update existing slot(s)** is active. Use recreation when preserving the existing asset is not required, then verify references and metadata afterward.
 
 After processing, inspect the **Slot Builder Results** window:
 
@@ -155,9 +155,23 @@ The slot can contain live blendshape frames. The inspector can:
 
 Use live blendshapes when weights change at runtime. Bake or extract permanent forms when the live frame is unnecessary.
 
+Blendshape names come from the source mesh. Some exporters put the mesh or node name in front (`Head.BigNose`). **Strip Blendshape Prefix**, in Slot Builder under **Strip from Bones** and in this inspector under **Force Clear Normals** (for updating the slot from a dropped mesh), removes everything up to and including the first dot, so the shape is stored as `BigNose`. Names without a dot are unchanged; shapes that would end up with the same name on one slot keep their full names, with a warning in the Console. It is off by default.
+
 **Copy blendshapes** copies vertex to vertex from one other slot, which suits parts with matching geometry. To give clothing the blendshapes of a race's body, use [Blendshape Transfer](BlendshapeTransfer.md), which follows the body's surface and works on many slots at once.
 
 See [MeshModifiers.md](MeshModifiers.md).
+
+## Hair Control
+
+The **Hair Control** section prepares a hair slot for the **UMA > Hair Control** component, which sways hair in the shader:
+
+- **Hair Control Ready** lets the slot sway. Off by default; the UMA 3 hair slots have it on.
+- **Hair Control Source** says where each vertex reads its place along the strand: the red vertex color (dark at the scalp, white at the tip), or the hair material's ID Map.
+- **Hair Control Start** is where along the strand the movement starts (0 is the scalp, 1 the tip).
+- **Hair Control Angle** is how far a strand turns at full sway, in degrees.
+- **Hair Control Length** is the strand length in meters; 0 measures it from the mesh.
+
+Every slot built into the same hair submesh must be ready, and the slot needs normals and tangents. See [Hair Animation: An Artist's Guide](HairAnimation.md) for the settings that suit short, medium and long hair, and for making the root-to-tip vertex colors.
 
 ## LOD
 

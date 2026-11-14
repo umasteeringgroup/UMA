@@ -2,10 +2,10 @@
     "formatVersion": 2,
     "requiredPluginApiVersion": 1,
     "contentId": "uma2-compatibility-examples",
-    "contentVersion": "3.1.5",
-    "umaVersion": "3.1.5",
-    "requiredCoreVersion": "3.1.5",
-    "minimumCoreVersion": "3.1.5",
+    "contentVersion": "3.1.6",
+    "umaVersion": "3.1.6",
+    "requiredCoreVersion": "3.1.6",
+    "minimumCoreVersion": "3.1.6",
     "maximumCoreVersionExclusive": "3.2.0",
     "installRoot": "Assets/UMA2CompatibilityExamples",
     "dependencies": [
@@ -4534,8 +4534,8 @@
         {
             "path": "Assets/UMA2CompatibilityExamples/Wearables/MaleShortHair/MaleShortHair_Slot.asset",
             "guid": "6c205402b9dc47943b10ac61ce5639e6",
-            "bytes": 246772,
-            "sha256": "d5403bee73306d97bd94424a74f0ec37f0fd00ee416ea8d7f566777a2cfceb69",
+            "bytes": 254176,
+            "sha256": "ec5cd2c95ec6065c8d26e441ce17e306a1126a9d89d4ee34904270483d3ec502",
             "metaBytes": 197,
             "metaSha256": "4f6c7292902fb1c55622a56d28464e92ba3d09a8ed7e6315a5cc95c2641286c6"
         },

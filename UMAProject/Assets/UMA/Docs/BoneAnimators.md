@@ -6,6 +6,11 @@ skeleton, and drives them each physics step. They handle hair sway, jiggle physi
 simulation, twist chains, and other per-bone animation effects without requiring custom
 MonoBehaviours in your character prefab.
 
+For a light sway of hair cards that needs no bones at all, use the **UMA > Hair Control**
+component instead: it bends the hair in the shader. Bone animators remain the right tool
+for long, heavy motion such as braids, ponytails on bones, capes and tails. See
+[Hair Animation: An Artist's Guide](HairAnimation.md).
+
 ---
 
 ## How they all work (generic)

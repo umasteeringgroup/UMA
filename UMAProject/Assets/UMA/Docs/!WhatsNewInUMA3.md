@@ -1,29 +1,61 @@
 # What's New in UMA 3
 
+## UMA 3.1f6 — changes since 3.1f5
+
+Package version **3.1.6**, for **Unity 6.3 and newer**. This overview covers the update from the `V3.1.5` release (package version 3.1.5). The [3.1.6 changelog](../CHANGELOG.md#31f6-package-version-316) is the complete change list; the 3.1f5 overview and earlier additions remain below.
+
+### Highlights
+
+- **Hair that moves.** Add **UMA > Hair Control** to a character and the hair of slots marked **Hair Control Ready** sways: the tips trail behind when the head moves or turns, swing back, and lean with the wind. The bending happens in the hair shader, so it costs almost nothing and adds no bones. All UMA 3 hair slots are ready to sway, the hair shader gained **Volume Shading**, and the Vertex Editor can make the root-to-tip vertex colors a hair slot needs. Start with [Hair Animation: An Artist's Guide](HairAnimation.md).
+- **UMA 2 clothing on UMA 3 characters.** **Slot Rig Conversion** re-targets slots from the UMA 2 rig to the UMA 3 races, automatically when a character is built or saved as new slots. The **Rig Profile Editor** tunes the fit against a live preview, with per-bone offsets, effectors that reshape cloth or clear it from the body, and automatic Mesh Hide Assets. **Convert Legacy Content** brings a whole folder of UMA 2 wardrobe recipes across. See [Slot Rig Conversion](SlotRigConversion.md).
+- **Clothing that follows body shapes.** **Transfer Blend Shapes** gives clothing slots the blend shapes of a race's body, with a live Scene view preview. See [Blendshape Transfer](BlendshapeTransfer.md).
+- **Higher quality skin.** **Realistic Skin SSS** is an opt-in URP skin shader with subsurface scattering, red shadow edges and backlit ears. The Natural and Matte skin examples use it. See the [skin shader README](../SRP/Shaders/Skin/README.md#realistic-skin-sss).
+
+### Authoring and character customization
+
+- **Character inspector:** a new **Editing tools** section (in Standard and Advanced view) opens the Vertex Editor, Face Editor, Touchup Weights and Create Slot From Scene Mesh. Advanced view is reorganized into foldable panels grouped by job, each with its own **Help**. See [Dynamic Character Avatar](DynamicCharacterAvatar.md).
+- **Shared colors:** **Assets > UMA > Manage Color Parameters** adds or scales a shader parameter on every color of the selected tables at once (for example `_SpecularMultiplier` x 1.2). See [batch utilities](AssetMenuBatchUtilities.md#manage-color-parameters).
+- **Sculpting:** edit an existing blendshape, save sculpts as blendshapes in the slot's own mesh space, **Heal** badly fitted areas in one step, keep a brush working with **Constant Application**, and undo one stroke at a time. See [Sculpting Mesh Modifiers](MeshModifierSculpting.md).
+- **Vertex painting:** Paint lays down the brush color (white lightens), with **Multiply** as an option; a reworked **Noise** brush; **Fill Slot with White**; and **Hair Root to Tip** for hair vertex colors. See [Mesh Modifiers](MeshModifiers.md).
+- **Touchup Weights:** **Pose Mode** turns bones while you paint, **Weight Colors** shows Blender-style weight colors, the skeleton can be drawn, and vertices split along seams are painted as one. See [Weight Touchup](WeightTouchup.md).
+- **Editing stages:** the Face Editor and Mesh Modifier editor have floating icon toolbars, one **Slots** panel with Show/Edit columns for every tool, and brush sizes in millimeters. The UMA Toolbar hides while any UMA editing stage is open. A Mesh Hide Asset that names a base slot now also applies to its race-baked copy. See [Mesh Hide Assets](MeshHideAssets.md) and [Mesh Modifiers](MeshModifiers.md).
+- **Pose authoring:** clickable Blender-style stick bones in the Bone Pose Editor. See [Bone Pose Editor](BonePoseEditor.md).
+- **Slot building:** **Strip Blendshape Prefix** in Slot Builder and the slot inspector, and a quieter canonical-matrix warning that only counts weighted bones. See [Content Creation](ContentCreation.md).
+
+### Runtime, setup, and shipped content
+
+- **Faster builds:** **Recalculate Normals** is about five times faster and is skipped when nothing it reads changed; a rig update keeps its humanoid Avatar when DNA has not changed; repeated skeletons are cloned from a kept copy; and **Reuse Identical Meshes** also covers renderers that recalculate normals. See [generation changes](../CHANGELOG.md#generation-animation-and-physics) and [Atlas and mesh reuse](AtlasAndMeshReuse.md).
+- **Rendering fixes:** characters built with the bone baking combiners no longer render slowly with **Mark Dynamic** on (it is now off in the sample prefabs and scenes), and cloth behaves the same with every mesh combiner. See [Renderer Assets and Cloth](RendererAssetsAndCloth.md).
+- **LOD:** `UMASimpleLOD` can turn Hair Control off for distant characters with **Disable Hair Control at LOD**. See [UMASimpleLOD](UMASimpleLOD.md).
+- **Packaging:** the random-character sample's timing overlay has its own `UMA.Timing` assembly, so a Package Manager install adds nothing to the project's `Assembly-CSharp`.
+- **Skin, hair and character content:** no more seam between face and scalp under dark skin tints; retuned hair colors with a full highlight per color; a fixed hair normal map on front faces; and the rest skeleton of six UMA 3 tops corrected.
+- **Documentation:** the Documentation Browser can sort A to Z, and new guides cover hair animation, slot rig conversion and blendshape transfer.
+
+### Optional Overlay Painter and Hair Card Editor
+
+The Overlay Painter workspace has icon toolbar buttons, preview modes in the **View** menu, a **Paint Target** bar, an **Add Layer** menu for every layer type, **Layer** / **Brush** tabs in Properties, and brush sizes in millimeters. The Hair Card Editor replaces Hair Nodes with the **Groom Outliner** and moves Scene tools to a floating toolbar. Hair Card Tests now installs beside the plugin, in `Assets/UMA/HairCardsTests`. See [optional painter changes](../CHANGELOG.md#optional-overlay-painter-updates); install the separate Examples and Tests companions for sample content and validation.
+
 ## UMA 3.1f5 — changes since 3.1f3
 
 Package version **3.1.5**, for **Unity 6.3 and newer**. This overview covers the update from the `v3.1f3` release (package version 3.1.3). The [3.1.5 changelog](../CHANGELOG.md#31f5-package-version-315) is the complete change list; earlier additions remain in their original sections below.
 
 ### Authoring and character customization
 
-- **Recipe editing:** indexed slot/overlay lookup, shaded overlay previews, readable JSON inspection, wardrobe display-name cleanup, race color palettes, and improved DNA/wardrobe controls. **Convert slot to placeholder** is now near the top of the slot editor and works for shared-overlay slots. The [recipe and character changes](../CHANGELOG.md#recipe-and-character-editing) also cover logical asset-name fixes and shared-color copy/paste.
-- **Editing stages:** the Face Editor and Mesh Modifier editor have floating icon toolbars, one **Slots** panel with Show/Edit columns for every tool, and brush sizes in millimeters. The UMA Toolbar hides while any UMA editing stage is open. See [Mesh Hide Assets](MeshHideAssets.md) and [Mesh Modifiers](MeshModifiers.md).
+- **Recipe editing:** indexed slot/overlay lookup, shaded overlay previews, readable JSON inspection, wardrobe display-name cleanup, race color palettes, and improved DNA/wardrobe controls. **Convert slot to placeholder** is now near the top of the slot editor and works for shared-overlay slots. The [recipe and character changes](../CHANGELOG.md#recipe-and-character-editing-1) also cover logical asset-name fixes and shared-color copy/paste.
 - **Mesh Hide LODs:** paint and retain drafts at each level, recalculate masks from LOD 0 with a chosen matching policy, and save all edited levels together. Read the [Mesh Hide workflow](MeshHideAssets.md).
 - **Pose authoring:** named bone groups, direct race T-pose editing with a temporary preview, and a clear-pose-list action. Start with [Pose Tools](PoseTools.md), then follow the [Builder](BonePoseBuilder.md) or [Editor](BonePoseEditor.md) artist guide.
 - **Mesh and texture repair:** compare/fix normals along slot boundaries, including race-baked slots; preserve imported skeleton roots; and batch-limit texture import sizes without changing source images. See [Normal Viewer Repair](NormalViewerRepair.md) and [Texture Utilities](TextureUtilities.md).
 
 ### Runtime, setup, and shipped content
 
-- **Generation and animation:** faster atlas fitting, less repeated preparation and bone-remapping work, corrected renderer/Animator handoffs, balanced wardrobe DNA overrides, and transient-resource cleanup. The random-character sample adds interactive timing/combiner controls alongside expanded Profiler markers. See [generation changes](../CHANGELOG.md#generation-animation-and-physics).
+- **Generation and animation:** faster atlas fitting, less repeated preparation and bone-remapping work, corrected renderer/Animator handoffs, balanced wardrobe DNA overrides, and transient-resource cleanup. The random-character sample adds interactive timing/combiner controls alongside expanded Profiler markers. See [generation changes](../CHANGELOG.md#generation-animation-and-physics-1).
 - **Ragdoll rest:** settled ragdolls can freeze their simulation and be explicitly woken before another impact. The [physics README](../Core/StandardAssets/Extensions/UMAPhysics/README.md) documents tolerances and custom-force handling.
-- **Setup and release tooling:** Configure UMA presets, Reinstall All Plugins, safer package discovery/recovery, pipeline-specific exports, reviewable scan repairs, and broader recipe validation. See [installation and validation changes](../CHANGELOG.md#installation-configuration-and-validation).
-- **Skin and character content:** material-wide metallic control for URP Realistic Skin, Detailed/Teen Face recipes, and consolidated eyebrow assets. See [shading and content changes](../CHANGELOG.md#shading-content-and-documentation).
+- **Setup and release tooling:** Configure UMA presets, Reinstall All Plugins, safer package discovery/recovery, pipeline-specific exports, reviewable scan repairs, and broader recipe validation. See [installation and validation changes](../CHANGELOG.md#installation-configuration-and-validation-1).
+- **Skin and character content:** material-wide metallic control for URP Realistic Skin, Detailed/Teen Face recipes, and consolidated eyebrow assets. See [shading and content changes](../CHANGELOG.md#shading-content-and-documentation-1).
 
-### Optional Overlay Painter and Hair Card Editor
+### Optional Overlay Painter
 
-The Overlay Painter workspace has icon toolbar buttons, preview modes in the **View** menu, a **Paint Target** bar, an **Add Layer** menu for every layer type, and **Layer** / **Brush** tabs in Properties. The Hair Card Editor replaces Hair Nodes with the **Groom Outliner** and moves Scene tools to a floating toolbar.
-
-The matching Overlay Painter plugin also adds signed **VDM Relief** for Projection/Path Normal Control, inverted mask paste, grouped-UDIM material editing, and tile-update fixes. VDM changes shading, not mesh geometry. See [optional painter changes](../CHANGELOG.md#optional-overlay-painter-updates); install its separate Examples and Tests companions for sample content and validation.
+The matching plugin adds signed **VDM Relief** for Projection/Path Normal Control, inverted mask paste, grouped-UDIM material editing, and tile-update fixes. VDM changes shading, not mesh geometry. See [optional painter changes](../CHANGELOG.md#optional-overlay-painter-updates-1); install its separate Examples and Tests companions for sample content and validation.
 
 ## UMA 3.1f3 additions
 
@@ -209,7 +241,7 @@ See [Source-UV cropping](SourceUVCropping.md) for setup, compatibility fallbacks
 
 ### Guided Model-to-Race and Clothing Creation
 
-- Added **UMA Ã¢â€ â€™ Model to Race & ClothingÃ¢â‚¬Â¦**, a four-step UI Toolkit workflow built on the existing UMA Slot Builder.
+- Added **UMA → Model to Race & Clothing…**, a four-step UI Toolkit workflow built on the existing UMA Slot Builder.
 - Creates a new race, TPose, base recipe, slots, overlays, copied material wrappers, DNA groups, and an optional configured avatar prefab. Clothing-only imports target an existing race without replacing its body.
 - Assigns individual material submeshes to Body, Clothing, or Skip. Groups clothing pieces into wardrobe recipes and assigns supported wardrobe regions.
 - Generates editable local-axis bone-scale DNA and selected blendshape DNA. All blendshapes start selected; included shapes retain their frames and source weight ranges.

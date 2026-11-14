@@ -12,7 +12,7 @@ The Default Combiner is the original, fully-managed implementation. It performs 
 
 - **Pure managed code.** Every step — building combine instances, merging vertex buffers, applying UV atlasing, and assigning materials — runs in plain C#. There is no dependency on the Burst compiler or the Jobs system, so the combiner works in any Unity configuration without additional package setup.
 - **Reliable fallback.** Because it avoids advanced features, the Default Combiner is the most predictable option. If a slot, overlay, or material setup produces unexpected results under another combiner, switching back to Default is a useful diagnostic step.
-- **Full feature parity.** It supports legacy cloth components, second-pass materials, UV recalculation, mesh modifiers, mesh hide masks, and blendshape baking.
+- **Full feature parity.** It supports cloth, second-pass materials, UV recalculation, mesh modifiers, mesh hide masks, and blendshape baking. Cloth follows the same rule with every combiner: a renderer gets a `Cloth` component when its slots carry cloth coefficients, and the renderer asset's cloth properties only tune it (see [Renderer Assets and Cloth](RendererAssetsAndCloth.md)).
 - **Easier to debug.** Stack traces are straightforward and inline; you can step through the entire combine process with a standard debugger.
 
 ### Trade-offs

@@ -120,7 +120,6 @@ namespace UMA.TexturePaint.Editor
         [SerializeField] private int selectedSurface;
         [SerializeField] private string selectedTargetId;
         [SerializeField] private List<string> selectedSlots = new List<string>();
-        [SerializeField] private bool slotTargetsExpanded = true;
         [SerializeField] private TexturePaintChannel selectedChannel = TexturePaintChannel.Albedo;
         [SerializeField] private TexturePaintNormalConvention normalConvention = TexturePaintNormalConvention.OpenGL;
         [SerializeField] private TexturePaintSourceMode sourceMode = TexturePaintSourceMode.SourceOverlay;

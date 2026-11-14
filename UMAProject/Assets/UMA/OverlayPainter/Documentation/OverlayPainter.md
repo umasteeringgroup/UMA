@@ -60,7 +60,7 @@ For the most predictable result, confirm that:
 - The `SlotDataAsset` contains valid mesh data and the intended UV layout.
 - The `UMAMaterial` uses the shader that will be used in production.
 - Every physical texture property is represented by the correct UMA material channel.
-- Packed maps have the correct R, G, B, and A meanings in **Overlay Painter Channel Layout**.
+- Packed maps have the correct R, G, B, and A meanings in the UMA Material channel's **Channel Layout**.
 - Custom shader channels have explicit **Physical Output / Import** settings when automatic inference is not sufficient.
 - Source overlays use that same compatible `UMAMaterial` and channel order.
 - Normal textures use a known OpenGL or DirectX convention.
@@ -1417,8 +1417,8 @@ Stabilization smooths noisy pointer input. Higher values produce steadier lines 
 
 ### Pressure
 
-- **Pressure to Flow** scales deposited strength with tablet pressure.
-- **Pressure to Size** scales brush size with tablet pressure.
+- **Pressure → Flow** scales deposited strength with tablet pressure.
+- **Pressure → Size** scales brush size with tablet pressure.
 
 Test the tablet driver and Unity pressure input before relying on pressure for a production-critical line.
 
@@ -1430,9 +1430,9 @@ Test the tablet driver and Unity pressure input before relying on pressure for a
 
 Use a lower depth and a stricter normal angle around thin clothing, fingers, lips, straps, or nearby body parts to avoid painting through to an unintended surface.
 
-### Mirror Global X
+### Mirror Layer X
 
-Global-X mirroring creates a symmetric counterpart around the stage's global X plane.
+**Mirror Layer X** in the brush settings, and the X button on the Scene view toolbar, turn on the selected layer's own **Mirror X** symmetry; turning it on also enables that layer's symmetry. It replaces the earlier stage-wide Global X mirror, so each layer keeps its own setting. See [Layer Symmetry](#layer-symmetry) for the other planes, the symmetry frame and radial copies.
 
 It is useful for paired details on symmetrically positioned geometry. It is not UV mirroring and does not guarantee useful results on asymmetrical meshes or off-center accessories.
 
@@ -1529,7 +1529,7 @@ an actionable missing-plugin message in the layer properties. The Plugins window
 for discovery diagnostics and non-layer plugin categories; generators and filters are selected on a
 Plugin layer.
 
-The included **Agify â€” Dirt & Edge Wear** generator is the reference mesh-map workflow. It provides:
+The included **Agify — Dirt & Edge Wear** generator is the reference mesh-map workflow. It provides:
 
 - Concave dirt derived from signed curvature and source/generated AO.
 - Convex edge wear derived from signed curvature.
@@ -1551,7 +1551,7 @@ settings persist with the paint document.
 
 Two focused generators provide more direct art control than the combined Agify workflow:
 
-- **Dirtify â€” Gap Dirt** detects concave curvature and source/generated AO. **Gap Size** controls the
+- **Dirtify — Gap Dirt** detects concave curvature and source/generated AO. **Gap Size** controls the
   neighborhood radius, **Gap Detection Level** controls which cavities qualify, and **Dirt Spread**
   controls how strongly nearby gaps expand into the surrounding surface. Fractal Breakup, Scale,
   Levels, Level Strength, and Fractal Edge independently control breakup from broad islands down to
@@ -1704,7 +1704,7 @@ Each Paint, Fill, Path, Projection, Reference, Plugin, or Group layer can own ze
 
 ### Add, select, and remove a mask
 
-1. Open the layer row's `â‹®` menu.
+1. Open the layer row's `⋮` menu.
 2. Choose **Mask > Add Black Mask** or **Mask > Add White Mask**.
 3. Click the new grayscale thumbnail beside the layer thumbnail to enter **LAYER MASK MODE**.
 4. Paint in either the 2D UV canvas or 3D Scene view.
@@ -1863,7 +1863,7 @@ Open **Properties > Selection** to constrain where new painting is allowed witho
 
 A Scene-view reminder identifies active selection constraints. **Clear All Selections** clears every tile, including when the currently displayed tile is unrestricted. A click without a drag leaves an existing rectangle/lasso selection intact. With no previous selection, Subtract cuts from unrestricted coverage; Add and Intersect start with the new region.
 
-Selections constrain brush tools, geometry fills, and path/ribbon painting, including mask painting. They do not continuously clip existing Fill or Projection layers. Use **Selection to Layer Mask** to turn the selected region into coverage for existing layer content. This replaces the selected layer's mask pixels and resets its procedural mask effects on the current material/tile; Undo restores the previous mask.
+Selections constrain brush tools, geometry fills, and path/ribbon painting, including mask painting. They do not continuously clip existing Fill or Projection layers. Use **Convert Selection to Mask** to turn the selected region into coverage for existing layer content. This replaces the selected layer's mask pixels and resets its procedural mask effects on the current material/tile; Undo restores the previous mask.
 
 **Grow / Shrink (px)** ranges from -64 to 64 and **Feather (px)** from 0 to 64. Click **Apply Grow / Feather** to apply them. Invert and clear controls are also available. **Save Region** stores a named region for the current material/tile; click its name to restore it. Active and saved regions persist in documents and recovery. A multi-tile Scene selection is one Undo step.
 
@@ -2453,7 +2453,7 @@ Saving preserves the editable paint project. Exporting creates runtime-ready phy
 
 ### Open export
 
-Click **Export Textures & UMA Assets...**.
+Choose **File > Export...**, or click **Export** on the workspace toolbar.
 
 The dockable export window shows:
 
@@ -2630,7 +2630,7 @@ Use Path layers for long seams, trim, piping, stitches, and repeated details. Tu
 
 ### 7. Mask instead of erasing repeatedly
 
-A layer mask preserves the original material pixels and makes edge revision easier. Combine generator, texture, adjustment, and filter entries in **Mask Effects & Smart Masks**; keep hand-painted corrections as a final Painted Mask input. Use **Fill Polygon**, **Fill UV Island**, or **Selection to Layer Mask** when geometry defines the boundary. Save useful effect stacks as Smart Mask recipes and related layer groups as Material Presets.
+A layer mask preserves the original material pixels and makes edge revision easier. Combine generator, texture, adjustment, and filter entries in **Mask Effects & Smart Masks**; keep hand-painted corrections as a final Painted Mask input. Use **Fill Polygon**, **Fill UV Island**, or **Convert Selection to Mask** when geometry defines the boundary. Save useful effect stacks as Smart Mask recipes and related layer groups as Material Presets.
 
 ### 8. Review in several modes
 
@@ -2751,7 +2751,7 @@ The exported overlay is indexed and recipe-ready, but it is not automatically in
 - Confirm the project uses URP or HDRP.
 - Confirm the selected `UMAMaterial` resolves the active pipeline material.
 - Check every Material Property Name against the shader.
-- Review **Overlay Painter Channel Layout**.
+- Review the UMA Material channel's **Channel Layout**.
 - Correct ambiguous or unsupported custom packed channels.
 - Check whether required compute packing is supported by the current graphics environment.
 

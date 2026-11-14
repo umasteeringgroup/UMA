@@ -51,7 +51,7 @@ From top to bottom the window shows:
 - `N forms`: Grid Panel, Braid or Bun forms bound to a population.
 - `used by N` / `unused`: how many items use a shared helper. Select the helper and Hair Properties lists them under **Used By** with **Select** buttons. Optional maps show the same list.
 
-**Right-click** any row for everything you can do with it: its **Add** submenu, **Active**, **Locked**, **Move Earlier / Move Later**, **Duplicate** and **Remove…**. Helpers add **Constrain Group '<name>' to This Helper** and **Duplicate Mirrored Helper**; form populations add **Create and Edit…**, **Bind Existing Form** and **Remove Form Binding**. Right-click empty space to add a group or helper.
+**Right-click** any row for everything you can do with it: its **Add** submenu, **Active**, **Locked**, **Move Earlier / Move Later**, **Duplicate** and **Remove…**. Helpers add **Constrain Group '<name>' to This Helper** and **Duplicate Mirrored Helper**; form populations add **Create & Edit Bun Helper**, **Create & Edit Braid Rail** or **Create & Edit Grid Panel** (by population source), **Bind Existing Form** and **Remove Form Binding**. Right-click empty space to add a group or helper.
 
 **Drag and drop** reorders sculpt passes, modifiers and clump population stages among their siblings. Drops onto another parent, across groups, or across the finishing-pass boundary are rejected.
 
@@ -145,8 +145,8 @@ The detailed sections below describe these items, shortcuts, safety rules and th
 For a generated UMA character:
 
 1. Select the `DynamicCharacterAvatar`.
-2. In its Inspector, open **Utilities**.
-3. Under **Hair Cards**, click **Open Hair Card System**.
+2. At the top of its Inspector, expand **Plugins** (under **Editors**).
+3. Click **Hair Card Editor**. The character is generated first if needed; the button is unavailable for a prefab asset or a character open in Prefab Mode.
 4. Choose a location and name for the new `HairGroomAsset`.
 
 You can also select a readable Mesh, a `HairGroomAsset`, or a generated avatar and choose **UMA > Hair Cards > Open Hair Card Stage**.
@@ -484,7 +484,7 @@ Open **Validate & Bake**.
 
 **Save** preserves the groom and dirty linked card profiles and atlases, including an atlas/profile edited through the workspace and then unassigned. It does not save unrelated project assets. The header shows unsaved changes, queued saves, or the last save time. Shared profile/atlas edits affect their other users too. Autosave checks every 30 seconds, waits for strokes, gravity holds, UV drags, text editing, and other workspace gestures to finish, and requires a brief idle period. Unchanged assets do not trigger another recovery write. Recovery snapshots live under `Assets/UMAProjectData/HairCards/Recovery`.
 
-The Setup tab exposes the working **Mirror growth paint X** and **Mirror slice cut X** switches. These mirror across source-local X = 0; there is no global comb/Grab symmetry switch. Procedural mirroring is available as a Mirror modifier.
+**Mirror X** on the floating Scene tool toolbar (shortcut **M**) mirrors growth painting and slice cuts across the source mesh's local X = 0 plane; it is available for Paint Growth and Cut, and the Setup tab has the same switch. There is no global comb/Grab symmetry switch. Procedural mirroring is available as a Mirror modifier.
 
 ## Troubleshooting
 

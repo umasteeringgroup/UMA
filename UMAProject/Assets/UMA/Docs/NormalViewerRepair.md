@@ -2,9 +2,9 @@
 
 Select a character with **UMANormalViewer**, assign its built DynamicCharacterAvatar if necessary, and expand **Fix Normals** in the inspector. This tool runs in Edit mode on the equipped slots.
 
-1. Check the slots to compare and click **Scan**. Position tolerance is measured in shared slot bind-pose mesh units; the mismatch threshold is an angle in degrees. Only vertices used by each slot's selected submesh are compared. UV duplicates at the same position count as one shared position.
+1. Check the slots to compare and click **Scan** (**Refresh slots** lists the equipped slots again after a wardrobe change). **Position tolerance** is measured in shared slot bind-pose mesh units (default 0.0001); **Mismatch angle (degrees)** is the smallest normal difference that is reported. Only vertices used by each slot's selected submesh are compared. UV duplicates at the same position count as one shared position.
 2. Each pair of slots with mismatches receives its own box. **Average vertexes** averages their normal directions with equal weighting per slot; it does not move vertices. **Use Normals from** copies the chosen slot's normal direction to both sides.
-3. Enable **Smooth normals** to soften the transition into adjacent triangles on both slots. Neighbour rings control distance along the topology, and strength controls the blend. Shared seam normals remain fixed. Distant vertices are unchanged.
+3. Enable **Smooth normals** to soften the transition into adjacent triangles on both slots. **Neighbour rings** control distance along the topology, and **Smoothing strength** controls the blend. Shared seam normals remain fixed. Distant vertices are unchanged.
 4. Click **Perform fix** for each group to queue its settings. Changing those settings unqueues the group until you click it again.
 5. **View** rebuilds the current recipe using temporary slot copies. Original assets and equipped-slot references remain unchanged; no files are saved. **Apply all changes** saves the affected slot assets and rebuilds the character. **Cancel** discards all queued fixes and rebuilds with the originals. Leaving the inspector or entering Play mode cancels an unsaved preview.
 

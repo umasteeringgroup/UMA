@@ -2,10 +2,10 @@
     "formatVersion": 2,
     "requiredPluginApiVersion": 1,
     "contentId": "hair-cards-tests",
-    "contentVersion": "3.1.5",
-    "umaVersion": "3.1.5",
-    "requiredCoreVersion": "3.1.5",
-    "minimumCoreVersion": "3.1.5",
+    "contentVersion": "3.1.6",
+    "umaVersion": "3.1.6",
+    "requiredCoreVersion": "3.1.6",
+    "minimumCoreVersion": "3.1.6",
     "maximumCoreVersionExclusive": "3.2.0",
     "installRoot": "Assets/UMA/HairCardsTests",
     "dependencies": [
@@ -31,6 +31,7 @@
         "Assets/UMA/HairCardsTests/HairModifierCoordinateTests.cs",
         "Assets/UMA/HairCardsTests/HairNaturalStrandTests.cs",
         "Assets/UMA/HairCardsTests/HairNodeTests.cs",
+        "Assets/UMA/HairCardsTests/HairOutlinerTests.cs",
         "Assets/UMA/HairCardsTests/HairPaintLifecycleTests.cs",
         "Assets/UMA/HairCardsTests/HairPopulationTests.cs",
         "Assets/UMA/HairCardsTests/HairProfileOpacityTests.cs",
@@ -88,8 +89,8 @@
         {
             "path": "Assets/UMA/HairCardsTests/HairCoreTests.cs",
             "guid": "e31f82dbe14af9746b62d4206a0e167d",
-            "bytes": 354560,
-            "sha256": "8393e7dc149db387b9b6ad046296d6bd060552e816068bd5c8d278c74f6e5511",
+            "bytes": 344680,
+            "sha256": "68c0f2c3312f7cf3c0926401f8bb68d1cf02c1c45f42e19987e8454fb5e8aebc",
             "metaBytes": 59,
             "metaSha256": "41e69382049b5fd64bf661a3657382d8e8bbbe69e00c6dcae83c366466fd7cdc"
         },
@@ -105,7 +106,7 @@
             "path": "Assets/UMA/HairCardsTests/HairEraseTests.cs",
             "guid": "83a7f6b781ac4fbc8fce353b0c1ab314",
             "bytes": 16977,
-            "sha256": "64f0153351d78ad882539ae85b42c538d68a870074e0595e0b93e8256a60fbe9",
+            "sha256": "c6295090716807088d4fc27e9babf10df252caa6d3a7f65940ba176c1a89e635",
             "metaBytes": 60,
             "metaSha256": "08247008d67a105afe11ccdacd36b5275604c20c26cdbd2d2accc1bf17b27b52"
         },
@@ -152,10 +153,18 @@
         {
             "path": "Assets/UMA/HairCardsTests/HairNodeTests.cs",
             "guid": "3f7a401fa31e43ee82143465d7d3a9c5",
-            "bytes": 29700,
-            "sha256": "82be63089f3c4229e108c965f2fae94afc6bf0355741d9b9184ed122758f815b",
+            "bytes": 29740,
+            "sha256": "41e8ff5c8b19cea632b2592732975db6c6bb68ba318e15ad816fde87581f24b7",
             "metaBytes": 60,
             "metaSha256": "ca52f325f7af2763991518f45e3f849e4f72291d7384a1cf292b4fe2da39776c"
+        },
+        {
+            "path": "Assets/UMA/HairCardsTests/HairOutlinerTests.cs",
+            "guid": "0425485a749ad1843889d9619587e26a",
+            "bytes": 15900,
+            "sha256": "2ecc5ac307979a776f45d86b532b84d69a5db25e8339bfc3c93f61cef64987c6",
+            "metaBytes": 59,
+            "metaSha256": "b1005620c3e6fcf060ea14bb4e2779594d41f8c46f215db0d4192e16796f52b5"
         },
         {
             "path": "Assets/UMA/HairCardsTests/HairPaintLifecycleTests.cs",
@@ -168,8 +177,8 @@
         {
             "path": "Assets/UMA/HairCardsTests/HairPopulationTests.cs",
             "guid": "13a7128bed4ef8b409c9f02dbc1ba7f1",
-            "bytes": 35485,
-            "sha256": "10420413d9526429264ae39c04a34c9438a97cdda93e1058f5cb18c03273a3d7",
+            "bytes": 35493,
+            "sha256": "8b4df7f89355d399591b4130cce9b30b148c2fe6c669dd829a052ba458824d8e",
             "metaBytes": 60,
             "metaSha256": "aca94a810bd3a615a43e7ac4fa617a7f03fd9e39a529a6eb6ea9271497a175bc"
         },
@@ -216,8 +225,8 @@
         {
             "path": "Assets/UMA/HairCardsTests/HairSculptEditingTests.cs",
             "guid": "3d78e6c1139c475eab663d3d64873504",
-            "bytes": 22180,
-            "sha256": "f9f7b62671b0c0db918a725979d6ff44517003e10e22e8d576c7a320095b92fc",
+            "bytes": 22186,
+            "sha256": "745bf3183bc16d5ff34f687e343cb9a8afd2a2149472f697c8dcfe77553cdcb2",
             "metaBytes": 60,
             "metaSha256": "a24ae9f6f29b07c00ab74ee537e05e90a8d20c19c3c4370f405ed684b9b5d511"
         },

@@ -353,7 +353,7 @@ important scale control. Do not judge it only in the 2D texture: a weave that lo
 100% zoom may be the size of rope on the character.
 
 Use **Thread Aspect** to correct stretched UVs or create deliberately elongated construction.
-**Fabric Rotation** aligns the physical weave independently from stripes and motifs. **Weave
+**Weave Rotation** aligns the physical weave independently from stripes and motifs. **Weave
 Definition** controls over-under separation; **Thread Roundness** changes the crown profile; and
 **Thread Irregularity** breaks sterile computer-perfect spacing. Natural cloth usually benefits from
 some irregularity, but too much makes threads look melted or tangled.
@@ -999,7 +999,7 @@ set to zero independently, leaving a hair-only alpha overlay.
 1. Generate Stubble Maker on a Plugin layer above the existing skin.
 2. Inspect channel thumbnails and confirm empty areas remain transparent rather than skin-colored.
 3. Refine the beard or scalp boundary with the Plugin layer's mask if needed.
-4. Choose **Export Textures & UMA Assets...** and **Runtime Overlay (Transparent)**.
+4. Choose **File > Export...** and **Runtime Overlay (Transparent)**.
 5. Enter an Export Identifier and export. Overlay Painter excludes the reconstructed base, unions
    authored channel alpha into the grayscale coverage texture, and assigns it to the new
    `OverlayDataAsset.alphaMask`.

@@ -17,7 +17,7 @@ MonoBehaviour:
   effects:
   - rid: 7828207344866296468
   - rid: 7828207344866296469
-  displayName: breastSize
+  displayName: breastWidth
   references:
     version: 2
     RefIds:

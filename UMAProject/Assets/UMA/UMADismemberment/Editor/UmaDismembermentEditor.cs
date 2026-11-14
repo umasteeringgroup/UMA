@@ -33,6 +33,10 @@ namespace UMA.Dismemberment
 
         private void OnEnable()
         {
+            // Unity re-enables inspectors after a domain reload, sometimes before (or after losing) their
+            // target, for example while a plugin reinstall swaps scripts. serializedObject throws then.
+            if (target == null)
+                return;
             useEvents = serializedObject.FindProperty("useEvents");
             legacyEvent = serializedObject.FindProperty("DismemberedEvent");
             completedEvent = serializedObject.FindProperty("DismembermentCompleted");
@@ -69,6 +73,8 @@ namespace UMA.Dismemberment
 
         public override void OnInspectorGUI()
         {
+            if (target == null || sliceableList == null)
+                return;
             serializedObject.Update();
             EditorGUILayout.HelpBox(
                 "UMA 3 runtime slicer. Generated UMA meshes are never modified directly; owned " +
