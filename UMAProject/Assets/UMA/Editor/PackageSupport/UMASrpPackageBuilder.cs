@@ -84,6 +84,7 @@ namespace UMA.Editors.PackageSupport
                 EditorUtility.DisplayProgressBar("Build UMA " + pipeline,
                     package ? "Preparing and validating the SRP archive" : "Rebuilding the SRP manifest", 0f);
                 string[] excluded = Array.Empty<string>();
+                IReadOnlyList<MaterialReferenceIssue> manifestIssues = Array.Empty<MaterialReferenceIssue>();
                 string path = package ? Build(pipeline, confirmExclusion: issues =>
                 {
                     EditorUtility.ClearProgressBar();
@@ -96,13 +97,19 @@ namespace UMA.Editors.PackageSupport
                     excluded = issues.Select(issue => issue.Path).ToArray();
                     EditorUtility.DisplayProgressBar("Build UMA " + pipeline, "Building and validating the SRP archive", 0f);
                     return true;
-                }) : RebuildManifest(pipeline);
+                }) : RebuildManifest(pipeline, out manifestIssues);
                 string exclusions = excluded.Length == 0 ? string.Empty :
                     "\n\nExcluded " + excluded.Length + " UMAMaterial(s). Source files were preserved.";
                 Debug.Log("[UMA SRP] Built " + path);
                 if (excluded.Length > 0) Debug.Log("[UMA SRP] Excluded from export:\n" + string.Join("\n", excluded));
                 EditorUtility.ClearProgressBar();
-                if (EditorUtility.DisplayDialog("UMA " + pipeline + " build complete", path + exclusions, "Open Folder", "Close"))
+                if (manifestIssues.Count > 0)
+                {
+                    if (EditorUtility.DisplayDialog("UMA " + pipeline + " manifest rebuilt with warnings",
+                            path + "\n\n" + MaterialReferenceWarning(pipeline, manifestIssues), "Open Folder", "Close"))
+                        EditorUtility.RevealInFinder(path);
+                }
+                else if (EditorUtility.DisplayDialog("UMA " + pipeline + " build complete", path + exclusions, "Open Folder", "Close"))
                     EditorUtility.RevealInFinder(path);
             }
             catch (OperationCanceledException) { }
@@ -114,12 +121,26 @@ namespace UMA.Editors.PackageSupport
             finally { EditorUtility.ClearProgressBar(); }
         }
 
-        public static string RebuildManifest(string pipeline)
+        public static string RebuildManifest(string pipeline) => RebuildManifest(pipeline, out _);
+
+        /// <summary>
+        /// Rebuilds the manifest and reports the UMAMaterials whose active material would not be in the package
+        /// (missing, or outside Assets/UMA/SRP). The manifest only lists files under the SRP folder, so it is
+        /// written either way; a package build stops on these and offers to exclude them.
+        /// </summary>
+        public static string RebuildManifest(string pipeline, out IReadOnlyList<MaterialReferenceIssue> materialIssues)
         {
             Source source = Prepare(pipeline);
+            materialIssues = FindMaterialReferenceIssues(source).AsReadOnly();
             PublishManifest(source, null);
+            if (materialIssues.Count > 0) Debug.LogWarning("[UMA SRP] " + MaterialReferenceWarning(pipeline, materialIssues));
             return Path.GetFullPath(source.manifestPath);
         }
+
+        internal static string MaterialReferenceWarning(string pipeline, IReadOnlyList<MaterialReferenceIssue> issues) =>
+            issues.Count + " UMAMaterial(s) in the " + pipeline + " manifest use a material that is missing or outside " +
+            Root + ", so it is not in the package. Building the package will ask to exclude them. Move the material into " +
+            Root + " (keep its GUID by moving it in Unity) or assign one that is already there.\n\n" + string.Join("\n\n", issues);
 
         public static string Build(string pipeline, string outputDirectory = Root,
             Func<IReadOnlyList<MaterialReferenceIssue>, bool> confirmExclusion = null)

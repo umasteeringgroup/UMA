@@ -108,6 +108,45 @@ namespace UMA.Tests
             Assert.That(File.ReadAllBytes(path), Is.EqualTo(original));
         }
 
+        [Test]
+        public void MaterialOutsideTheSrpFolderIsReportedWithItsPathAndWarned()
+        {
+            // A rebuilt manifest only lists files under Assets/UMA/SRP; a UMAMaterial there that uses a
+            // material elsewhere in the project must be reported, not found only when the package is built.
+            var settings = UMA.UMASettings.GetSettings();
+            string outside = settings == null ? null : UnityEditor.AssetDatabase.GetAssetPath(settings);
+            if (string.IsNullOrEmpty(outside)) Assert.Ignore("An installed UMASettings asset is needed as an outside asset.");
+            string outsideGuid = UnityEditor.AssetDatabase.AssetPathToGUID(outside);
+            var flags = BindingFlags.Static | BindingFlags.NonPublic;
+            var builder = typeof(UMASrpPackageBuilder);
+            var sourceType = builder.GetNestedType("Source", BindingFlags.NonPublic);
+            var manifestType = builder.GetNestedType("Manifest", BindingFlags.NonPublic);
+            var source = Activator.CreateInstance(sourceType, true);
+            var manifest = Activator.CreateInstance(manifestType, true);
+            string yaml = Header + "--- !u!114 &11400000\nMonoBehaviour:\n" +
+                "  _material: {fileID: 2100000, guid: " + outsideGuid + ", type: 2}\n" +
+                "  _HDRPMaterial: {fileID: 0}\n";
+            File.WriteAllText(file, yaml);
+            manifestType.GetField("pipeline").SetValue(manifest, "URP");
+            manifestType.GetField("ownedPaths").SetValue(manifest, new[] { file });
+            sourceType.GetField("manifest").SetValue(source, manifest);
+            sourceType.GetField("guids").SetValue(source, new Dictionary<string, string> { { file, Guid.NewGuid().ToString("N") } });
+            sourceType.GetField("exportedText").SetValue(source, new Dictionary<string, string> { { file, yaml } });
+
+            var issues = (List<UMASrpPackageBuilder.MaterialReferenceIssue>)builder
+                .GetMethod("FindMaterialReferenceIssues", flags).Invoke(null, new[] { source });
+            Assert.That(issues.Count, Is.EqualTo(1));
+            Assert.That(issues[0].Path, Is.EqualTo(file));
+            Assert.That(issues[0].Reason, Is.EqualTo(outside));
+
+            string warning = (string)builder.GetMethod("MaterialReferenceWarning", flags)
+                .Invoke(null, new object[] { "URP", issues.AsReadOnly() });
+            Assert.That(warning, Does.Contain("outside Assets/UMA/SRP"));
+            Assert.That(warning, Does.Contain(file));
+            Assert.That(warning, Does.Contain(outside));
+            Assert.That(File.ReadAllText(file), Is.EqualTo(yaml));
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void ExclusionRequiresConfirmationAndNeverChangesSource(bool accept)
