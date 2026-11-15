@@ -36,6 +36,7 @@ namespace UMA.Editors
             UMAFocusDropdown.Id,
             UMASkeletonDropdown.Id,
             PauseUMAEditorGenerationToggle.Id,
+            UMASkinDebugDropdown.Id,
             UMADiagnosticsButton.Id,
             UMAToolsDropdown.Id)
         {
@@ -419,6 +420,61 @@ namespace UMA.Editors
             tooltip = paused
                 ? "Automatic UMA editor generation is paused; explicit toolbar rebuilds still work"
                 : "Pause automatic UMA editor generation";
+        }
+    }
+
+    [EditorToolbarElement(Id, typeof(SceneView))]
+    public sealed class UMASkinDebugDropdown : EditorToolbarDropdown
+    {
+        public const string Id = "UMA/Toolbar/SkinDebugView";
+
+        public UMASkinDebugDropdown()
+        {
+            icon = EditorGUIUtility.IconContent("d_PreTextureRGB").image as Texture2D;
+            clicked += ShowViewMenu;
+            UpdateDisplay();
+            schedule.Execute(UpdateDisplay).Every(1000L);
+        }
+
+        private void UpdateDisplay()
+        {
+            UMASkinDebugMap view = UMASkinDebugView.Current;
+            if (view == UMASkinDebugMap.Lit)
+            {
+                text = icon == null ? "Skin" : string.Empty;
+                tooltip = "Skin View: show one map, mesh attribute or lighting term of Realistic Skin SSS materials";
+                return;
+            }
+
+            text = UMASkinDebugView.GetShortName(view);
+            tooltip = "Skin View: " + UMASkinDebugView.GetMenuPath(view) + " on " +
+                UMASkinDebugView.ActiveMaterialCount + " skin materials" +
+                (UMASkinDebugView.SkippedAssetCount > 0
+                    ? ". " + UMASkinDebugView.SkippedAssetCount + " material assets used directly in the scene were left alone"
+                    : string.Empty);
+        }
+
+        private void ShowViewMenu()
+        {
+            var menu = new GenericMenu();
+            UMASkinDebugMap current = UMASkinDebugView.Current;
+            foreach (UMASkinDebugMap view in System.Enum.GetValues(typeof(UMASkinDebugMap)))
+            {
+                UMASkinDebugMap choice = view;
+                menu.AddItem(
+                    new GUIContent(UMASkinDebugView.GetMenuPath(view)),
+                    view == current,
+                    () =>
+                    {
+                        UMASkinDebugView.Current = choice;
+                        UpdateDisplay();
+                    });
+                if (view == UMASkinDebugMap.Lit)
+                {
+                    menu.AddSeparator(string.Empty);
+                }
+            }
+            menu.DropDown(worldBound);
         }
     }
 

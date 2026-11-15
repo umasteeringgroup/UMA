@@ -51,7 +51,7 @@ Package version **3.1.5**, for **Unity 6.3 and newer**. This overview covers the
 - **Generation and animation:** faster atlas fitting, less repeated preparation and bone-remapping work, corrected renderer/Animator handoffs, balanced wardrobe DNA overrides, and transient-resource cleanup. The random-character sample adds interactive timing/combiner controls alongside expanded Profiler markers. See [generation changes](../CHANGELOG.md#generation-animation-and-physics-1).
 - **Ragdoll rest:** settled ragdolls can freeze their simulation and be explicitly woken before another impact. The [physics README](../Core/StandardAssets/Extensions/UMAPhysics/README.md) documents tolerances and custom-force handling.
 - **Setup and release tooling:** Configure UMA presets, Reinstall All Plugins, safer package discovery/recovery, pipeline-specific exports, reviewable scan repairs, and broader recipe validation. See [installation and validation changes](../CHANGELOG.md#installation-configuration-and-validation-1).
-- **Skin and character content:** material-wide metallic control for URP Realistic Skin, Detailed/Teen Face recipes, and consolidated eyebrow assets. See [shading and content changes](../CHANGELOG.md#shading-content-and-documentation-1).
+- **Skin and character content:** material-wide metallic control for URP Realistic Skin, Detailed, Teen and Mature Face recipes, and consolidated eyebrow assets. See [shading and content changes](../CHANGELOG.md#shading-content-and-documentation-1).
 
 ### Optional Overlay Painter
 

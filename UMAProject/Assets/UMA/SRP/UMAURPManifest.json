@@ -357,6 +357,7 @@
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinMeta.hlsl",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinRealistic.shader",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinRealisticSSS.shader",
+        "Assets/UMA/SRP/Shaders/Skin/UMA3SkinRealisticSSSDebug.shader",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinSSSInput.hlsl",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinSSSLighting.hlsl",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinScatterLUT.exr",

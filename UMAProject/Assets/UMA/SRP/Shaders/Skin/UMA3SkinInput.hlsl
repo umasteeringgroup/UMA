@@ -29,10 +29,11 @@ struct SkinData
 
 // Detail map coordinates: the mesh's fourth UV channel when it has one, otherwise the base UV.
 // UMASkinDetailUVUtility bakes that channel so pores keep one size on the surface across texture
-// tiles laid out at different scales. It never writes (0,0), which is what a mesh without the channel supplies.
+// tiles laid out at different scales. Baked coordinates are never below 1. A mesh without the channel supplies
+// (0,0), and an ordinary 0..1 layout left in the channel is below 1 too: both keep the base UV.
 float2 SkinDetailUV(float2 baseUV, float2 meshDetailUV)
 {
-    return any(meshDetailUV != 0) ? meshDetailUV : baseUV;
+    return all(meshDetailUV >= 0.999) ? meshDetailUV : baseUV;
 }
 
 SkinData SampleSkin(float2 uv, float2 detailUV)

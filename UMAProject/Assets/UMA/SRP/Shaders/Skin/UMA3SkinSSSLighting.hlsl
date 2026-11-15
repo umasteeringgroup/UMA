@@ -473,6 +473,16 @@ void SkinFragment(SkinVaryings v, out half4 color : SV_Target0
     if (_SkinDebug > 8.5 && _SkinDebug < 9.5) result = ambientSpecular + sum.specular;
     if (_SkinDebug > 9.5 && _SkinDebug < 10.5) result = shading.normalR * 0.5 + 0.5;
     if (_SkinDebug > 10.5) result = saturate(thickness * 20.0).xxx * known;
+    #ifdef UMA_SKIN_DEBUG_MAPS
+    half3 debugColor;
+    if (SkinDebugMapColor(v.uv.xy, v.uv.zw, normalize(v.normalWS), normalize(v.tangentWS.xyz), v.color.rgb, s, inputData.normalWS, debugColor)) result = debugColor;
+    else if (SkinDebugIs(SKIN_DEBUG_DIFFUSE_LIGHT)) result = ambientDiffuse + sum.diffuse + sum.transmission;
+    else if (SkinDebugIs(SKIN_DEBUG_REFLECTION)) result = ambientSpecular + sum.specular;
+    else if (SkinDebugIs(SKIN_DEBUG_TRANSMISSION)) result = mainTransmission;
+    else if (SkinDebugIs(SKIN_DEBUG_CURVATURE)) result = Sq(shading.curvatureRow);
+    else if (SkinDebugIs(SKIN_DEBUG_THICKNESS)) result = saturate(thickness * 20.0).xxx * known;
+    else if (SkinDebugIs(SKIN_DEBUG_DIFFUSE_NORMAL)) result = SkinDebugData(shading.normalR * 0.5 + 0.5);
+    #endif
     color = half4(result, 1);
     #ifdef _WRITE_RENDERING_LAYERS
     renderingLayers = EncodeMeshRenderingLayer();

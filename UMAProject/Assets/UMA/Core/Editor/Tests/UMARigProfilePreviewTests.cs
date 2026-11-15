@@ -13,7 +13,7 @@ namespace UMA.Editors.Tests
     {
         private const string SourceRacePath = "Assets/UMA2/Races/HumanMale/RaceData/Human Male.asset";
         private const string TargetRacePath = "Assets/UMA/UMA3/Races/HumanMale30.asset";
-        private const string BardFolder = "Assets/Content/UMA RPG Starter 1/MB1 Bard refit";
+        private const string BardFolder = UMA2ContentTestAssets.RpgStarter + "/MB1 Bard refit";
 
         private RaceData targetRace;
         private SlotDataAsset jacket;
@@ -23,6 +23,7 @@ namespace UMA.Editors.Tests
         [SetUp]
         public void SetUp()
         {
+            UMA2ContentTestAssets.RequireFolder(BardFolder);
             targetRace = AssetDatabase.LoadAssetAtPath<RaceData>(TargetRacePath);
             Assert.IsNotNull(targetRace, TargetRacePath);
             Assert.IsNotNull(targetRace.legacyRig, "HumanMale30 must name its legacy rig");

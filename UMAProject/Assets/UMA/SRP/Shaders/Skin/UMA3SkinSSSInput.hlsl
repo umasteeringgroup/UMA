@@ -21,6 +21,45 @@ TEXTURE2D(_SkinControlMap); SAMPLER(sampler_SkinControlMap);
 TEXTURE2D(_SkinScatterLUT);
 SAMPLER(sampler_trilinear_repeat);
 
+#ifdef UMA_SKIN_DEBUG_MAPS
+// Compiled only into "UMA/URP/Realistic Skin SSS Debug". The production shader never defines
+// UMA_SKIN_DEBUG_MAPS, so none of this exists in it. Values match UMA.Editors.UMASkinDebugMap.
+// _SkinDebugMap is deliberately outside UnityPerMaterial: the two shaders keep one buffer layout.
+float _SkinDebugMap;
+#define SKIN_DEBUG_LIT 0
+#define SKIN_DEBUG_ALBEDO_MAP 1
+#define SKIN_DEBUG_NORMAL_MAP 2
+#define SKIN_DEBUG_MASK_SCATTERING 3
+#define SKIN_DEBUG_MASK_OCCLUSION 4
+#define SKIN_DEBUG_MASK_DETAIL_COVERAGE 5
+#define SKIN_DEBUG_MASK_SMOOTHNESS 6
+#define SKIN_DEBUG_TINT_PROTECTION 7
+#define SKIN_DEBUG_DETAIL_ALBEDO 8
+#define SKIN_DEBUG_DETAIL_NORMAL 9
+#define SKIN_DEBUG_DETAIL_SMOOTHNESS 10
+#define SKIN_DEBUG_CONTROL_MAP 11
+#define SKIN_DEBUG_CONTROL_PORES 12
+#define SKIN_DEBUG_FINAL_ALBEDO 13
+#define SKIN_DEBUG_FINAL_SMOOTHNESS 14
+#define SKIN_DEBUG_SHADING_NORMAL 15
+#define SKIN_DEBUG_VERTEX_NORMAL 16
+#define SKIN_DEBUG_VERTEX_TANGENT 17
+#define SKIN_DEBUG_UV_CHECKER 18
+#define SKIN_DEBUG_DETAIL_UV_CHECKER 19
+#define SKIN_DEBUG_VERTEX_COLOR 20
+#define SKIN_DEBUG_LIT_WITHOUT_NORMAL_MAP 21
+#define SKIN_DEBUG_LIT_WITHOUT_DETAIL 22
+#define SKIN_DEBUG_LIT_WITHOUT_OCCLUSION 23
+#define SKIN_DEBUG_LIT_WITHOUT_SMOOTHNESS_MAP 24
+#define SKIN_DEBUG_DIFFUSE_LIGHT 25
+#define SKIN_DEBUG_REFLECTION 26
+#define SKIN_DEBUG_TRANSMISSION 27
+#define SKIN_DEBUG_CURVATURE 28
+#define SKIN_DEBUG_THICKNESS 29
+#define SKIN_DEBUG_DIFFUSE_NORMAL 30
+bool SkinDebugIs(float view) { return abs(_SkinDebugMap - view) < 0.5; }
+#endif
+
 // The material's radius is the distance that holds about three quarters of the scattered light.
 // The diffusion profile's own distance parameter is this fraction of it. With the default radius
 // and color this gives 0.76 / 0.29 / 0.17 mm for red / green / blue.
@@ -45,10 +84,11 @@ struct SkinData
 
 // Detail map coordinates: the mesh's fourth UV channel when it has one, otherwise the base UV.
 // UMASkinDetailUVUtility bakes that channel so pores keep one size on the surface across texture
-// tiles laid out at different scales. It never writes (0,0), which is what a mesh without the channel supplies.
+// tiles laid out at different scales. Baked coordinates are never below 1. A mesh without the channel supplies
+// (0,0), and an ordinary 0..1 layout left in the channel is below 1 too: both keep the base UV.
 float2 SkinDetailUV(float2 baseUV, float2 meshDetailUV)
 {
-    return any(meshDetailUV != 0) ? meshDetailUV : baseUV;
+    return all(meshDetailUV >= 0.999) ? meshDetailUV : baseUV;
 }
 
 SkinData SampleSkin(float2 uv, float2 detailUV)
@@ -56,6 +96,11 @@ SkinData SampleSkin(float2 uv, float2 detailUV)
     SkinData s = (SkinData)0;
     half4 mask = SAMPLE_TEXTURE2D(_MaskMap, sampler_MaskMap, uv);
     half4 controls = SAMPLE_TEXTURE2D(_SkinControlMap, sampler_SkinControlMap, uv);
+    #ifdef UMA_SKIN_DEBUG_MAPS
+    if (SkinDebugIs(SKIN_DEBUG_LIT_WITHOUT_OCCLUSION)) mask.g = 1;
+    if (SkinDebugIs(SKIN_DEBUG_LIT_WITHOUT_SMOOTHNESS_MAP)) mask.a = 0.5;
+    if (SkinDebugIs(SKIN_DEBUG_LIT_WITHOUT_DETAIL)) mask.b = 0;
+    #endif
     half3 albedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv).rgb;
     // UMA's skin mask protects eyes/lips/nails from tint; it is NOT a thickness map.
     half3 protection = saturate(SAMPLE_TEXTURE2D(_Skinmask, sampler_Skinmask, uv).rgb * _Skinmask_Amount);
@@ -70,6 +115,9 @@ SkinData SampleSkin(float2 uv, float2 detailUV)
     half2 detailXY = detail.ag * _Detail_Normal_Scale * detailMask;
     half3 detailNormal = half3(detailXY, sqrt(saturate(1 - dot(detailXY, detailXY))));
     half3 macroNormal = SampleNormal(uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
+    #ifdef UMA_SKIN_DEBUG_MAPS
+    if (SkinDebugIs(SKIN_DEBUG_LIT_WITHOUT_NORMAL_MAP)) macroNormal = half3(0, 0, 1);
+    #endif
     s.macroNormalTS = macroNormal;
     s.detailNormalXY = detailXY;
     s.surface.normalTS = normalize(BlendNormalRNM(macroNormal, detailNormal));
@@ -87,12 +135,73 @@ SkinData SampleSkin(float2 uv, float2 detailUV)
     return s;
 }
 
+#ifdef UMA_SKIN_DEBUG_MAPS
+// A stored value, shown so that the gray on screen is the value in the texture.
+half3 SkinDebugData(half3 value)
+{
+    #ifdef UNITY_COLORSPACE_GAMMA
+    return saturate(value);
+    #else
+    return SRGBToLinear(saturate(value));
+    #endif
+}
+
+// One square per unit of the given coordinates; red rises along U and green along V inside each square.
+half3 SkinDebugChecker(float2 coordinates)
+{
+    float2 square = floor(coordinates);
+    half odd = frac((square.x + square.y) * 0.5) * 2.0;
+    float2 inside = frac(coordinates);
+    return SkinDebugData(lerp(0.30, 0.85, odd) * half3(lerp(0.55, 1.0, inside.x), lerp(0.55, 1.0, inside.y), 1.0));
+}
+
+// The views that show one input or one mesh attribute by itself. False for the lit views.
+bool SkinDebugMapColor(float2 uv, float2 detailUV, half3 vertexNormalWS, half3 vertexTangentWS, half3 vertexColor,
+    SkinData s, half3 shadingNormalWS, out half3 color)
+{
+    color = 0;
+    if (_SkinDebugMap < 0.5) return false;
+    half4 mask = SAMPLE_TEXTURE2D(_MaskMap, sampler_MaskMap, uv);
+    half4 controls = SAMPLE_TEXTURE2D(_SkinControlMap, sampler_SkinControlMap, uv);
+    half4 detail = SAMPLE_TEXTURE2D(_DetailNormalMap, sampler_DetailNormalMap, detailUV * _Detail_Tiling.xy);
+    if (SkinDebugIs(SKIN_DEBUG_ALBEDO_MAP)) color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv).rgb;
+    else if (SkinDebugIs(SKIN_DEBUG_NORMAL_MAP)) color = SkinDebugData(SampleNormal(uv, TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), 1.0) * 0.5 + 0.5);
+    else if (SkinDebugIs(SKIN_DEBUG_MASK_SCATTERING)) color = SkinDebugData(mask.rrr);
+    else if (SkinDebugIs(SKIN_DEBUG_MASK_OCCLUSION)) color = SkinDebugData(mask.ggg);
+    else if (SkinDebugIs(SKIN_DEBUG_MASK_DETAIL_COVERAGE)) color = SkinDebugData(mask.bbb);
+    else if (SkinDebugIs(SKIN_DEBUG_MASK_SMOOTHNESS)) color = SkinDebugData(mask.aaa);
+    else if (SkinDebugIs(SKIN_DEBUG_TINT_PROTECTION)) color = SkinDebugData(SAMPLE_TEXTURE2D(_Skinmask, sampler_Skinmask, uv).rgb);
+    else if (SkinDebugIs(SKIN_DEBUG_DETAIL_ALBEDO)) color = SkinDebugData(detail.rrr);
+    else if (SkinDebugIs(SKIN_DEBUG_DETAIL_NORMAL))
+    {
+        half2 xy = detail.ag * 2 - 1;
+        color = SkinDebugData(half3(xy, sqrt(saturate(1 - dot(xy, xy)))) * 0.5 + 0.5);
+    }
+    else if (SkinDebugIs(SKIN_DEBUG_DETAIL_SMOOTHNESS)) color = SkinDebugData(detail.bbb);
+    else if (SkinDebugIs(SKIN_DEBUG_CONTROL_MAP)) color = SkinDebugData(controls.rgb);
+    else if (SkinDebugIs(SKIN_DEBUG_CONTROL_PORES)) color = SkinDebugData(controls.aaa);
+    else if (SkinDebugIs(SKIN_DEBUG_FINAL_ALBEDO)) color = s.surface.albedo;
+    else if (SkinDebugIs(SKIN_DEBUG_FINAL_SMOOTHNESS)) color = SkinDebugData(s.surface.smoothness.xxx);
+    else if (SkinDebugIs(SKIN_DEBUG_SHADING_NORMAL)) color = SkinDebugData(shadingNormalWS * 0.5 + 0.5);
+    else if (SkinDebugIs(SKIN_DEBUG_VERTEX_NORMAL)) color = SkinDebugData(vertexNormalWS * 0.5 + 0.5);
+    else if (SkinDebugIs(SKIN_DEBUG_VERTEX_TANGENT)) color = SkinDebugData(vertexTangentWS * 0.5 + 0.5);
+    else if (SkinDebugIs(SKIN_DEBUG_UV_CHECKER)) color = SkinDebugChecker(uv * 32.0);
+    else if (SkinDebugIs(SKIN_DEBUG_DETAIL_UV_CHECKER)) color = SkinDebugChecker(detailUV * _Detail_Tiling.xy);
+    else if (SkinDebugIs(SKIN_DEBUG_VERTEX_COLOR)) color = vertexColor;
+    else return false;
+    return true;
+}
+#endif
+
 // The macro normal map as diffuse lighting sees it in one color channel: read with a footprint as
 // wide as that channel's scattering, so wrinkles soften in red and stay crisper in blue.
 // uvDx/uvDy are the screen-space UV derivatives already widened to the footprint.
 half3 SampleSkinDiffuseNormal(float2 uv, float2 uvDx, float2 uvDy, half2 detailXY)
 {
     half3 n = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(_BumpMap, sampler_trilinear_repeat, uv, uvDx, uvDy), _BumpScale);
+    #ifdef UMA_SKIN_DEBUG_MAPS
+    if (SkinDebugIs(SKIN_DEBUG_LIT_WITHOUT_NORMAL_MAP)) n = half3(0, 0, 1);
+    #endif
     half3 detailNormal = half3(detailXY, sqrt(saturate(1 - dot(detailXY, detailXY))));
     return normalize(BlendNormalRNM(n, detailNormal));
 }

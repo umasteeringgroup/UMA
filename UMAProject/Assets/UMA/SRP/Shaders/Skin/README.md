@@ -149,14 +149,41 @@ Deep creases also fade where the occlusion channel is dark (on the ears only the
 
 **Detail Tiling** repeats the detail map over UV space, so a texture tile that covers more of the body shows larger pores. The UMA 3 body uses five tiles: the face tile covers 0.33 mesh units per UV unit, the arms 0.77, the torso 1.12 and the legs 1.22. From the first UV channel alone, pores on the torso and legs come out about 3.5 times larger than on the face.
 
-Both Realistic Skin shaders therefore read the detail map with the mesh's **fourth UV channel** (`uv4`, `TEXCOORD3`) when a mesh has one. The second and third channels are left for lightmaps. Where the fourth channel is missing or (0,0), the shader uses the first channel as before, so other meshes and older slots look unchanged.
+Both Realistic Skin shaders, and the `UMA3_SkinShader_URP` graph, therefore read the detail map with the mesh's **fourth UV channel** (`uv4`, `TEXCOORD3`) when it holds baked detail coordinates. The second and third channels are left for lightmaps. Baked coordinates are never below 1. Where the fourth channel is missing (UMA fills it with (0,0)) or holds an ordinary 0..1 layout, the shader uses the first channel as before, so other meshes and older slots look unchanged.
 
 - The UMA 3 body slots (`UMA30_Body_UDIM1001`–`1005`) ship with this channel baked. Races that share those slots get it too.
 - For your own skin slots, select them in the Project window and choose **Assets → UMA → Skin → Bake Even Detail UVs On Selected Slots**, then rebuild the characters. **Remove Even Detail UVs From Selected Slots** takes the channel out again.
 - The bake scales each UV island of the first channel as a whole, to 0.33 mesh units per UV unit, so no new seams appear and **Detail Tiling** keeps the pore size it gives on the UMA 3 face. It replaces whatever the slot had in its fourth UV channel. From code, use `UMASkinDetailUVUtility.BakeSlot` (it takes the surface per UV unit as an argument).
+- Scaling whole islands is enough when the texture layout is even inside each island. Where it is not, use **Bake Even Detail UVs On Selected Slots (Unfold Islands)** (`UMASkinDetailUVUtility.BakeSlotRelaxed`). It also unfolds every island until each triangle is as close as possible to its shape and size on the mesh, giving densely modeled areas (nose, lips, eyes) more say than their surface. The island keeps its seams, so no new seam appears, but the detail coordinates no longer follow the texture layout and may overlap, which a tiled map does not show. The first UV channel is only read, so textures are not affected. A curved surface cannot be laid flat exactly: on a head made of one island the detail size still varies by about 1.3 to 1.45 times (from more than 3), and a nose keeps some stretch.
+- The UMA 2 HumanFemale and HumanMale skin slots (33 slots: body, head, the modular head parts and the high-poly variants) ship baked this way. Their head layout gives the face two to three times less texture per surface than the neck. Both UMA 2 skin materials now use one **Detail Tiling** (16). Their head mask maps keep only about 15% detail coverage on the nose, where the unfolded layout still stretches.
 - UMA only rescales the first UV channel when it packs textures into an atlas, so detail from the fourth channel also keeps its size when a skin slot shares an atlas.
 
-The original `UMA3_SkinShader_URP` graph still reads detail from the first channel.
+In the `UMA3_SkinShader_URP` graph the choice is made by a small custom function (`SkinDetailUV`) in front of the detail map's **Tiling And Offset** node.
+
+That graph also softens the whole normal map by its scattering: normal strength is 1 minus the scatter mask times **SSS Strength**. With a full scatter mask and **SSS Strength** 1, as the UMA 2 mask maps and several of the supplied skin colors have, that used to switch the main normal map and the detail normals off completely. The strength now never drops below one half; settings that left more than half are unchanged.
+
+## Debugging skin in the Scene view
+
+The **UMA Toolbar** has a **Skin View** menu (the texture icon). It shows one input or one part of the shading on every Realistic Skin SSS material in the open scenes:
+
+| Group | Views |
+|---|---|
+| **Maps** | Each texture as stored: Albedo, Normal, the four channels of the packed mask, Tint Protection, the three parts of the detail map, and the control map |
+| **Result** | What the shader makes of them: albedo after tint and detail, smoothness, and the shading normal |
+| **Mesh** | Vertex normal, vertex tangent, vertex color, a UV checker, and a checker of the detail coordinates (one square per detail tile, so squares of one size mean pores of one size) |
+| **Lit Without** | Normal rendering with one input switched off: the normal map, the detail map, occlusion, or the smoothness map |
+| **Lighting** | Diffuse light, reflection, transmission, curvature, thickness, and the softened normal diffuse light uses |
+
+To find which input causes a problem, go through **Lit Without**: the view in which the problem disappears names the input. If it stays in all four, look at **Mesh** and **Lighting**; a problem that is there in **Lighting > Diffuse Light** but in no map and no mesh view comes from the lights or their shadows.
+
+How it works, and why it costs nothing at runtime:
+
+- The views live in a second shader, `UMA/URP/Realistic Skin SSS Debug` (`UMA3SkinRealisticSSSDebug.shader`). It compiles the same code as the production shader with `UMA_SKIN_DEBUG_MAPS` defined, and reuses the production shader's shadow, depth, meta and motion-vector passes. The production shader never defines that symbol, so it contains none of the debug code and no extra texture reads.
+- While a view other than **Lit** is chosen, the material instances in the scene (the ones UMA generates for each character, including after a rebuild) are put on the debug shader. **Lit** puts them back. In its own Lit view the debug shader renders exactly like the production shader.
+- Material assets are never changed: a material asset used directly on a renderer is left alone, and the button's tooltip says how many were. To debug one, give it the debug shader by hand and set **Show** under **Debug Shader**, then set it back.
+- The view lasts for the editor session. Before a scene is saved the materials are put back on the production shader, so the debug shader is not referenced by saved content and is not included in a build.
+
+The debug shader keeps the production shader's inputs, so a material can be switched either way without losing values. The older **View** setting under Diagnostics still works on both shaders.
 
 ## Lighting and limitations
 
@@ -176,6 +203,8 @@ The accompanying `UMARealisticSkinTests` checks the original input contract, non
 
 `UMARealisticSkinSSSTests` covers the SSS shader: every Realistic Skin input exists with the same type and default, switching a material's shader keeps its inputs, the lookup texture's import settings and shader binding, the lookup values (plain shading without scattering, energy conservation with it), the example assets, and the same pass and variant compilation.
 
-`UMASkinDetailUVTests` covers the detail UV bake: every island reaches the requested surface per UV unit and keeps its shape, no coordinate is (0,0), vertices split at one position stay in one island, only the fourth UV channel of a slot is written, and the five UMA 3 body slots carry the baked channel.
+`UMASkinDebugViewTests` covers the debug shader and the Skin View switch: the debug shader has every input of the production shader with the same type and default, the production shader never compiles the debug code, every view has its number in the shader, scene material instances move to the debug shader and back while material assets and other shaders are left alone, and all passes of the debug shader compile.
+
+`UMASkinDetailUVTests` covers the detail UV bake: every island reaches the requested surface per UV unit and keeps its shape, no coordinate is below 1, an island that is uneven inside comes out even from the unfolding bake, a mirrored island stays mirrored, vertices split at one position stay in one island, only the fourth UV channel of a slot is written, and the five UMA 3 body slots carry the baked channel.
 
 Development validation also renders the standard Human Female 3.0 and Human Male 3.0 with the same textures and lighting for the original, Natural, Matte, and Dewy materials. Lighting probes check unlit darkness, main/additional lights, and received shadows in Forward, Forward+, and Deferred.

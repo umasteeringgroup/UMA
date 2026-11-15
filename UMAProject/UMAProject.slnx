@@ -24,13 +24,14 @@
   <Project Path="Shaderpackager-editor.csproj" />
   <Project Path="UMA.TexturePaint.CompanionExamples.Editor.csproj" />
   <Project Path="UMA.Dismemberment.Editor.Tests.csproj" />
+  <Project Path="UMA2Compatibility.Editor.Tests.csproj" />
   <Project Path="UMA.HairCards.Runtime.csproj" />
   <Project Path="UMA3.Samples.Editor.csproj" />
   <Project Path="UMA.SRP.SkyCar.Samples.csproj" />
   <Project Path="UMA.Timing.csproj" />
   <Project Path="UMA.Dismemberment.Samples.csproj" />
   <Project Path="UMA.TexturePaint.Sprite.Editor.csproj" />
-  <Project Path="UMA2Compatibility.Editor.Tests.csproj" />
+  <Project Path="UMA2Content.Editor.csproj" />
   <Project Path="UMA.Eyebrow.Examples.Editor.csproj" />
   <Project Path="UMA_Core.Player.csproj" />
   <Project Path="UMA.Dismemberment.Runtime.Player.csproj" />

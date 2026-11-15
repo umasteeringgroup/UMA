@@ -15,7 +15,7 @@ namespace UMA.Editors.Tests
     public sealed class UMAMeshHideAutoGeneratorTests
     {
         private const string RacePath = "Assets/UMA/UMA3/Races/HumanMale30.asset";
-        private const string RecipePath = "Assets/Content/UMA RPG Starter 1/Wardrobe/Bard/BardShirt.asset";
+        private const string RecipePath = UMA2ContentTestAssets.RpgStarter + "/Wardrobe/Bard/BardShirt.asset";
         private const string TempFolder = "Assets/UMA_MeshHideTestTemp";
 
         [TearDown]
@@ -138,6 +138,7 @@ namespace UMA.Editors.Tests
         [Test]
         public void TheJacketRecipeGetsHidesForTheBodyItCovers()
         {
+            UMA2ContentTestAssets.RequireAsset(RecipePath);
             var race = AssetDatabase.LoadAssetAtPath<RaceData>(RacePath);
             Assert.IsNotNull(race, RacePath);
             Assert.IsNotNull(AssetDatabase.LoadAssetAtPath<UMATextRecipe>(RecipePath), RecipePath);
@@ -295,6 +296,7 @@ namespace UMA.Editors.Tests
         private static UMATextRecipe MakeRecipeWithHides(out RaceData race, out UMARigRestPose rig, out List<UMAMeshHideAutoGenerator.BodySlot> body,
             out UMAMeshHideAutoGenerator.RecipeResult result)
         {
+            UMA2ContentTestAssets.RequireAsset(RecipePath);
             race = AssetDatabase.LoadAssetAtPath<RaceData>(RacePath);
             Assert.IsNotNull(race, RacePath);
             Assert.IsTrue(UMARigRestPose.TryFromRace(race, out rig, out string reason), reason);

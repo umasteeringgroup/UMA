@@ -76,7 +76,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BumpScale: 0.941
+    - _BumpScale: 1.2
     - _DetailNormalMapScale: 0.024
     - _Detail_Gloss_Scale: 0.595
     - _Detail_Normal_Scale: 0.235
@@ -87,7 +87,7 @@ Material:
     m_Colors:
     - _Ambient_Occlusion_Remap: {r: 0, g: 1, b: 0, a: 0}
     - _Base_Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Detail_Tiling: {r: 48, g: 48, b: 0, a: 0}
+    - _Detail_Tiling: {r: 16, g: 16, b: 0, a: 0}
     - _Smoothness_Remap: {r: 0, g: 0.38, b: 0, a: 0}
     - _SubsurfaceColor: {r: 1, g: 0.36862746, b: 0.29803923, a: 0}
   m_BuildTextureStacks: []
