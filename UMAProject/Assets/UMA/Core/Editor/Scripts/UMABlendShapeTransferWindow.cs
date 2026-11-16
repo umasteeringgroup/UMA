@@ -14,13 +14,13 @@ namespace UMA.Editors
     /// </summary>
     public sealed class UMABlendShapeTransferWindow : EditorWindow
     {
-        private enum ColorMode { Shaded, Movement, Influence, UnderTheSurface }
+        private enum ColorMode { Shaded, Movement, Influence, UnderTheSurface, Repair }
 
         private const string MenuPath = "UMA/Tools/Slot Tools/Transfer Blend Shapes";
         private const string SettingsPrefsKey = "UMA.BlendShapeTransfer.Settings";
         private const string RacePrefsKey = "UMA.BlendShapeTransfer.Race";
         private const double AutoUpdateDelay = 0.35;
-        private static readonly string[] ColorModeLabels = { "Shaded", "Movement", "Influence", "Under the surface" };
+        private static readonly string[] ColorModeLabels = { "Shaded", "Movement", "Influence", "Under the surface", "Repair regions" };
         private static readonly string[] OutputLabels = { "The slots themselves", "Copies of the slots" };
         private static readonly Color BodyColor = new Color(0.74f, 0.64f, 0.58f);
         private static readonly Color[] SlotColors =
@@ -864,6 +864,11 @@ namespace UMA.Editors
         {
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Fit", EditorStyles.boldLabel);
+            if (GUILayout.Button(new GUIContent("Clothing", "Smooth surface frames, adaptive Delta Mush, rigid attachments, and a fresh body clearance check. Writes shapes with the Auto suffix."), EditorStyles.miniButton, GUILayout.Width(68f)))
+            {
+                settings = UMABlendShapeTransferSettings.Clothing();
+                MarkChanged();
+            }
             if (GUILayout.Button(new GUIContent("Defaults", "Put every setting in this section back to its default."), EditorStyles.miniButton, GUILayout.Width(64f)))
             {
                 UMABlendShapeExistingMode keep = settings.existing;
@@ -875,7 +880,9 @@ namespace UMA.Editors
             EditorGUI.BeginChangeCheck();
             settings.method = (UMABlendShapeTransferMethod)EditorGUILayout.Popup(new GUIContent("Method",
                 "Follow the surface: a vertex keeps its place relative to the body; its offset turns with the skin, so cloth keeps its distance where the shape tilts the skin. Copy the movement: a vertex takes the movement of the nearest body point as it is."),
-                (int)settings.method, new[] { "Follow the surface", "Copy the movement" });
+                (int)settings.method, new[] { "Follow the surface", "Copy the movement", "Follow smooth frame" });
+            if (settings.method == UMABlendShapeTransferMethod.FollowSmoothFrame)
+                settings.rotationSmoothing = EditorGUILayout.IntSlider(Content("Rotation smoothing", nameof(settings.rotationSmoothing)), settings.rotationSmoothing, 0, 16);
             settings.strength = EditorGUILayout.Slider(Content("Strength", nameof(settings.strength)), settings.strength, 0f, 2f);
 
             settings.useFalloff = EditorGUILayout.Toggle(Content("Fade with distance", nameof(settings.useFalloff)), settings.useFalloff);
@@ -891,15 +898,28 @@ namespace UMA.Editors
                 EditorGUI.indentLevel--;
             }
 
-            settings.smoothingIterations = EditorGUILayout.IntSlider(Content("Smoothing passes", nameof(settings.smoothingIterations)), settings.smoothingIterations, 0, 30);
+            settings.smoothingMode = (UMABlendShapeSmoothingMode)EditorGUILayout.EnumPopup("Smoothing", settings.smoothingMode);
+            settings.smoothingIterations = EditorGUILayout.IntSlider(Content("Smoothing passes", nameof(settings.smoothingIterations)), settings.smoothingIterations, 0, 60);
             using (new EditorGUI.DisabledScope(settings.smoothingIterations == 0))
             {
                 EditorGUI.indentLevel++;
                 settings.smoothingStrength = EditorGUILayout.Slider(Content("Per pass", nameof(settings.smoothingStrength)), settings.smoothingStrength, 0f, 1f);
                 EditorGUI.indentLevel--;
             }
+            if (settings.smoothingMode == UMABlendShapeSmoothingMode.DeltaMush)
+            {
+                settings.adaptiveSmoothing = EditorGUILayout.Toggle(Content("Only distorted regions", nameof(settings.adaptiveSmoothing)), settings.adaptiveSmoothing);
+                if (settings.adaptiveSmoothing)
+                {
+                    settings.repairStart = EditorGUILayout.Slider(Content("Repair starts at", nameof(settings.repairStart)), settings.repairStart, 0f, 1f);
+                    settings.repairFull = EditorGUILayout.Slider(Content("Full repair at", nameof(settings.repairFull)), settings.repairFull, settings.repairStart + 0.01f, 2f);
+                }
+            }
 
             settings.keepClearance = EditorGUILayout.Toggle(Content("Keep clear of the body", nameof(settings.keepClearance)), settings.keepClearance);
+            settings.checkDeformedSurface = EditorGUILayout.Toggle(Content("Recheck moved surface", nameof(settings.checkDeformedSurface)), settings.checkDeformedSurface);
+            if (settings.checkDeformedSurface)
+                settings.checkFaceInteriors = EditorGUILayout.Toggle(Content("Check triangle interiors", nameof(settings.checkFaceInteriors)), settings.checkFaceInteriors);
             using (new EditorGUI.DisabledScope(!settings.keepClearance))
             {
                 EditorGUI.indentLevel++;
@@ -912,6 +932,7 @@ namespace UMA.Editors
             {
                 EditorGUI.indentLevel++;
                 settings.rigidPartMaxSize = Millimetres(Content("Parts up to", nameof(settings.rigidPartMaxSize)), settings.rigidPartMaxSize, 1f, 500f);
+                settings.attachRigidParts = EditorGUILayout.Toggle(Content("Attach and rotate", nameof(settings.attachRigidParts)), settings.attachRigidParts);
                 EditorGUI.indentLevel--;
             }
 
@@ -941,6 +962,9 @@ namespace UMA.Editors
         private void DrawOutput()
         {
             EditorGUILayout.LabelField("Output", EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+            settings.outputSuffix = EditorGUILayout.TextField(Content("Shape name suffix", nameof(settings.outputSuffix)), settings.outputSuffix);
+            if (EditorGUI.EndChangeCheck()) MarkChanged();
             settings.existing = (UMABlendShapeExistingMode)EditorGUILayout.Popup(new GUIContent("A shape the slot already has",
                 "Replace: the transferred shape takes the place of the slot's own shape of that name. Keep: the slot's own shape is left as it is."),
                 (int)settings.existing, new[] { "Replace it", "Keep the slot's own" });
@@ -1072,6 +1096,7 @@ namespace UMA.Editors
                 }
             }
             // What the transfer made for slots that do not have the shape yet.
+            string outputName = shapeName + (settings.outputSuffix ?? string.Empty).Trim();
             var unsaved = new Dictionary<SlotDataAsset, UMABlendShape>();
             var names = new List<string>();
             var slots = new List<SlotDataAsset>();
@@ -1085,7 +1110,7 @@ namespace UMA.Editors
                 names.Add(result.Slot.slotName);
                 UMABlendShapeTransferResult.ShapeResult shape = result.Find(shapeName);
                 UMABlendShape[] existing = result.Slot.meshData.blendShapes;
-                bool has = existing != null && Array.Exists(existing, s => s != null && s.shapeName == shapeName);
+                bool has = existing != null && Array.Exists(existing, s => s != null && s.shapeName == outputName);
                 if (!has && shape != null && shape.Shape != null)
                 {
                     unsaved[result.Slot] = shape.Shape;
@@ -1122,8 +1147,8 @@ namespace UMA.Editors
                 Repaint();
                 return null;
             }
-            stage.RequestBlendshapeEdit(shapeName, unsaved);
-            report = $"Sculpting '{shapeName}' " + (character != null ? $"on '{character.name}'" : "on a temporary character") + ". " +
+            stage.RequestBlendshapeEdit(outputName, unsaved);
+            report = $"Sculpting '{outputName}' " + (character != null ? $"on '{character.name}'" : "on a temporary character") + ". " +
                      (unsaved.Count > 0 ? $"It is not on {unsaved.Count} of the slot(s) yet: Save in the Sculpt panel's Edit Blendshape section writes it. " : string.Empty) +
                      stage.BlendshapeEditStatus + (string.IsNullOrEmpty(note) ? string.Empty : " " + note);
             Repaint();
@@ -1232,7 +1257,8 @@ namespace UMA.Editors
 
         private void RemoveFromTargets()
         {
-            var names = new HashSet<string>(selectedShapes);
+            var names = new HashSet<string>();
+            foreach (string name in selectedShapes) names.Add(name + (settings.outputSuffix ?? string.Empty).Trim());
             List<SlotDataAsset> slots = DistinctTargets();
             int affected = 0;
             foreach (SlotDataAsset slot in slots)
@@ -1717,6 +1743,10 @@ namespace UMA.Editors
                             bool under = shape != null && shape.Under != null && shape.Under[v];
                             bool atRest = part.Result.UnderAtRest != null && part.Result.UnderAtRest[v];
                             color = under ? new Color(1f, 0.15f, 0.1f) : atRest ? new Color(1f, 0.6f, 0.1f) : new Color(0.62f, 0.64f, 0.68f);
+                        }
+                        else if (colorMode == 4)
+                        {
+                            color = Heat(shape != null && shape.RepairMask != null ? shape.RepairMask[v] : 0f);
                         }
                     }
                     // Two-sided headlight shading, so the shape reads without a lit shader.

@@ -305,6 +305,13 @@ namespace UMA.CharacterSystem
         //everytime an avatar changes race a cache state can (optionally) be created so that when the user 
         //switches between races they do not loose their previous changes to the avatar when it was set to be that race
         private Dictionary<string, string> cacheStates = new Dictionary<string, string>();
+        //the wardrobe the generator last built, and the race it was built as. The cache state of the race the avatar leaves takes
+        //its wardrobe from here rather than from the current wardrobe: a script may already have dressed the avatar for the next
+        //race before calling ChangeRace, and that outfit must not be cached (and later restored) as the old race's.
+        //BuildCharacter records its wardrobe as pending; it only counts as built once the generator starts that build
+        //(CharacterBegun). A build replaced before then, such as BuildCharacter followed by ChangeRace in the same frame, never counts.
+        private WardrobeSnapshot pendingWardrobe = new WardrobeSnapshot();
+        private WardrobeSnapshot builtWardrobe = new WardrobeSnapshot();
         //the wardrobe slots that are hidden by the avatars current wardrobe
         //This is so we know if whether to use the 'default' settings as set in the componnt by colors/defaultRecipes/loadString/umaRecipe
         //or if an external script has already overridden these and so we should just build with the settings as they are (i.e. just call BuildCharacter)
@@ -741,6 +748,7 @@ namespace UMA.CharacterSystem
             SuppressedRecipes.Clear();
             HiddenSlots.Clear();
             cacheStates.Clear();
+            ForgetBuiltWardrobe();
             wasCrossCompatibleBuild = false;
             crossCompatibleRaces.Clear();
             forceSuppressedWardrobeSlots.Clear();
@@ -4533,6 +4541,8 @@ namespace UMA.CharacterSystem
             // subscriptions idempotent across sessions.
             umaData.OnCharacterBegun -= this.SetAndSaveOverrideDNA;
             umaData.OnCharacterBegun += this.SetAndSaveOverrideDNA;
+            umaData.OnCharacterBegun -= this.PromotePendingWardrobe;
+            umaData.OnCharacterBegun += this.PromotePendingWardrobe;
             umaData.OnCharacterDnaUpdated -= this.RestoreOverrideDna;
             umaData.OnCharacterDnaUpdated += this.RestoreOverrideDna;
             // Texture-only generations run CharacterBegun and DNA pre-apply, but
@@ -5054,6 +5064,7 @@ namespace UMA.CharacterSystem
             {
                 serializedRecipe = GetBuildBaseRecipe(activeRace.racedata);
             }
+            RecordPendingWardrobe();
             tm.Stop();
             Ticks_InitializeBuild += tm.ElapsedTicks;
 
@@ -7316,7 +7327,7 @@ namespace UMA.CharacterSystem
             {
                 bool wasEnsureSharedColors = ensureSharedColors;
                 ensureSharedColors = true;
-                var currentRecipeForRace = OldGetCurrentRecipe(false);
+                var currentRecipeForRace = GetRaceStateToCache();
                 if (cacheStates.ContainsKey(activeRace.name))
                 {
                     cacheStates[activeRace.name] = currentRecipeForRace;
@@ -7326,6 +7337,114 @@ namespace UMA.CharacterSystem
                     cacheStates.Add(activeRace.name, currentRecipeForRace);
                 }
                 ensureSharedColors = wasEnsureSharedColors;
+            }
+        }
+
+        /// <summary>
+        /// The recipe string cached for the active race when the avatar leaves it. Its wardrobe is the one the generator last built
+        /// as this race, so changes made for the next race before ChangeRace (built or not) are not stored as this race's.
+        /// DNA and colors are the current ones. Without a build as this race the current wardrobe is used, as before.
+        /// </summary>
+        private string GetRaceStateToCache()
+        {
+            if (builtWardrobe.Race == null || builtWardrobe.Race != activeRace.name)
+            {
+                return OldGetCurrentRecipe(false);
+            }
+
+            Dictionary<string, UMATextRecipe> currentWardrobe = _wardrobeRecipes;
+            Dictionary<string, List<UMATextRecipe>> currentAdditive = _additiveRecipes;
+            Dictionary<string, UMAWardrobeCollection> currentCollections = _wardrobeCollections;
+            // Copies: OldGetCurrentRecipe removes collection recipes from the dictionaries while it saves.
+            _wardrobeRecipes = new Dictionary<string, UMATextRecipe>(builtWardrobe.Recipes);
+            _additiveRecipes = new Dictionary<string, List<UMATextRecipe>>(builtWardrobe.Additive);
+            _wardrobeCollections = new Dictionary<string, UMAWardrobeCollection>(builtWardrobe.Collections);
+            try
+            {
+                return OldGetCurrentRecipe(false);
+            }
+            finally
+            {
+                _wardrobeRecipes = currentWardrobe;
+                _additiveRecipes = currentAdditive;
+                _wardrobeCollections = currentCollections;
+            }
+        }
+
+        /// <summary>
+        /// Remembers the wardrobe BuildCharacter is building with, for <see cref="GetRaceStateToCache"/>. It counts as built once
+        /// the generator starts the build (<see cref="PromotePendingWardrobe"/>). Only kept in Play mode while race states are cached.
+        /// </summary>
+        private void RecordPendingWardrobe()
+        {
+            if (!Application.isPlaying || !cacheCurrentState || activeRace.racedata == null)
+            {
+                ForgetBuiltWardrobe();
+                return;
+            }
+
+            pendingWardrobe.Capture(activeRace.name, _wardrobeRecipes, _additiveRecipes, _wardrobeCollections);
+        }
+
+        /// <summary>
+        /// CharacterBegun: the generator has started the build that BuildCharacter last prepared, so its wardrobe is now the built one.
+        /// Generations that did not come from BuildCharacter (a color change, for example) leave the built wardrobe as it is.
+        /// </summary>
+        private void PromotePendingWardrobe(UMAData data)
+        {
+            if (pendingWardrobe.Race == null)
+            {
+                return;
+            }
+
+            WardrobeSnapshot previous = builtWardrobe;
+            builtWardrobe = pendingWardrobe;
+            pendingWardrobe = previous;
+            pendingWardrobe.Clear();
+        }
+
+        private void ForgetBuiltWardrobe()
+        {
+            pendingWardrobe.Clear();
+            builtWardrobe.Clear();
+        }
+
+        /// <summary>
+        /// A copy of the avatar's wardrobe dictionaries and the race they were for. The lists of appended recipes are copied too.
+        /// </summary>
+        private sealed class WardrobeSnapshot
+        {
+            public string Race;
+            public readonly Dictionary<string, UMATextRecipe> Recipes = new Dictionary<string, UMATextRecipe>();
+            public readonly Dictionary<string, List<UMATextRecipe>> Additive = new Dictionary<string, List<UMATextRecipe>>();
+            public readonly Dictionary<string, UMAWardrobeCollection> Collections = new Dictionary<string, UMAWardrobeCollection>();
+
+            public void Capture(string race, Dictionary<string, UMATextRecipe> recipes, Dictionary<string, List<UMATextRecipe>> additive, Dictionary<string, UMAWardrobeCollection> collections)
+            {
+                Race = race;
+                Recipes.Clear();
+                foreach (KeyValuePair<string, UMATextRecipe> kp in recipes)
+                {
+                    Recipes.Add(kp.Key, kp.Value);
+                }
+                Additive.Clear();
+                foreach (KeyValuePair<string, List<UMATextRecipe>> kp in additive)
+                {
+                    Additive.Add(kp.Key, kp.Value != null ? new List<UMATextRecipe>(kp.Value) : new List<UMATextRecipe>());
+                }
+                Collections.Clear();
+                foreach (KeyValuePair<string, UMAWardrobeCollection> kp in collections)
+                {
+                    Collections.Add(kp.Key, kp.Value);
+                }
+            }
+
+            public void Clear()
+            {
+                Race = null;
+                Recipes.Clear();
+                Additive.Clear();
+                Collections.Clear();
             }
         }
 

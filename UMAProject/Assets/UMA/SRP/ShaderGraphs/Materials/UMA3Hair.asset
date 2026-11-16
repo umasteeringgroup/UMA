@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   supportsSourceUVCropping: 0
   _material: {fileID: 2100000, guid: 39055ade9321e8c40b31784cc9332f4e, type: 2}
-  _HDRPMaterial: {fileID: 0}
+  _HDRPMaterial: {fileID: 2100000, guid: 8b9b4b014a6c849478baeb1e9c2c83c3, type: 2}
   _secondPass: {fileID: 2100000, guid: 6eebbc33ce23fd343a1c99344fe0f8ba, type: 2}
-  _HDRPSecondPass: {fileID: 0}
+  _HDRPSecondPass: {fileID: 2100000, guid: 9df89afd7a797d642950572452ab02b5, type: 2}
   _hasSpeedMaterialBackup: 0
   _speedBackupMaterial: {fileID: 0}
   _speedBackupSecondPass: {fileID: 0}

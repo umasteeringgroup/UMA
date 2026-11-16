@@ -40,15 +40,17 @@ Material:
   m_Shader: {fileID: -6465566751694194690, guid: 1344f856965fd9c4a969cf7c91d271b4, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
+  m_ValidKeywords:
   - _DISABLE_SSR_TRANSPARENT
+  - _SURFACE_TYPE_TRANSPARENT
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2225
+  m_CustomRenderQueue: 3000
   stringTagMap:
     MotionVector: User
+    RenderType: Transparent
   disabledShaderPasses:
   - MOTIONVECTORS
   - DepthOnly
@@ -158,7 +160,7 @@ Material:
     - _DoubleSidedEnable: 0
     - _DoubleSidedGIMode: 0
     - _DoubleSidedNormalMode: 2
-    - _DstBlend: 0
+    - _DstBlend: 10
     - _DstBlend2: 0
     - _DstBlendAlpha: 10
     - _EnableBlendModePreserveSpecularLighting: 1
@@ -199,7 +201,7 @@ Material:
     - _SpecularPowerScale: 24
     - _SpecularShiftMax: 0
     - _SpecularShiftMin: 0
-    - _SrcBlend: 1
+    - _SrcBlend: 5
     - _SrcBlendAlpha: 1
     - _StencilRef: 0
     - _StencilRefDepth: 8
@@ -213,7 +215,7 @@ Material:
     - _StencilWriteMaskMV: 41
     - _SupportDecals: 1
     - _Surface: 1
-    - _SurfaceType: 0
+    - _SurfaceType: 1
     - _TextureDetail: 1
     - _Tip_Shift: 1
     - _TransmissionEnable: 1
@@ -232,7 +234,7 @@ Material:
     - _ZTestDepthEqualForOpaque: 3
     - _ZTestGBuffer: 4
     - _ZTestTransparent: 4
-    - _ZWrite: 1
+    - _ZWrite: 0
     - _ZWriteControl: 0
     m_Colors:
     - _AltColor: {r: 1, g: 1, b: 1, a: 1}

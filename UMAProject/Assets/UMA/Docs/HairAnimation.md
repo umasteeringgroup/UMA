@@ -12,7 +12,7 @@ A **Hair Control** component on the character watches the head. When the head mo
 
 ## What You Need
 
-- A **URP** project. The sway is part of the URP hair shader, `UMA3_HairShader_URP`, used by the `UMA3Hair` UMA material. Hair on other shaders does not sway.
+- A **URP** or **HDRP** project. The sway is part of the UMA hair shaders, `UMA3_HairShader_URP` and `UMA3_HairShader_HDRP`, which the `UMA3Hair` UMA material uses in each pipeline. Hair on other shaders does not sway, including HDRP's own `HDRP/Hair` shader.
 - A hair **slot** with normals, tangents, and root-to-tip information: vertex colors, or an ID Map.
 - **Hair Control Ready** ticked on that slot.
 - The **Hair Control** component on the character.
@@ -195,6 +195,7 @@ Wind Zones are looked up once a second. After adding or removing one from a scri
 
 - **Slots that share a material are one piece.** UMA builds all slots with the same hair material into one part of the mesh, and the shader gets one set of settings for it. Every slot in that part must be **Hair Control Ready**; slots that share it use the first slot's settings.
 - **Two-pass hair** moves as one; both passes get the same values.
+- **HDRP** sways the same way: the Hair Control writes the same values in both pipelines, and `UMA3_HairShader_HDRP` bends the strands just as the URP shader does. The HDRP hair materials ship with **Recalculate Normals** and **Center Darkening** off, because HDRP's hair lighting takes its highlights from the card normals; turn them on in a material for the volume look. On HDRP the highlight is set in the hair material (**Smoothness**, **Secondary Smoothness**, **Specular Color**, **Secondary Specular Tint** and the two **Specular Shift** values). The hair colors in `SRP/Colors` change only the base, root and tip colors there, because their highlight values are tuned for the URP shader.
 - **Each character has its own sway**, even when characters share a generated material.
 - **Cost:** one small calculation per character per frame, and a few values per hair material. Characters with Hair Control are drawn outside the SRP Batcher for their hair, because the values are set per renderer. For crowds, set **Disable Hair Control at LOD** on [UMASimpleLOD](UMASimpleLOD.md) so distant characters turn it off.
 - **Teleporting** a character, or snapping it to a new rotation, does not throw the hair around.
@@ -205,7 +206,7 @@ Wind Zones are looked up once a second. After adding or removing one from a scri
 - Check that you are in Play mode.
 - Check that the character has the **Hair Control** component, with **Sway** ticked.
 - Check that the hair slot has **Hair Control Ready** ticked, and that **Hair Control Angle** is above 0.
-- Check that the hair material uses `UMA3_HairShader_URP`.
+- Check that the hair material uses `UMA3_HairShader_URP`, or `UMA3_HairShader_HDRP` in an HDRP project.
 - Look in the Console for one of the messages below.
 
 **"the hair of slot '...' does not sway, because its strands could not be measured"**
