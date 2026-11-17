@@ -33,20 +33,71 @@ namespace UMA
 
 
 
+        /// <summary>
+        /// The window's title. It is the Vertex Editor's companion window: the workflows, the Save panel,
+        /// the build options, and the Advanced and Blendshapes editors.
+        /// </summary>
+        internal const string WindowTitle = "Vertex Editor";
+
         public static MeshModifierEditor GetOrCreateWindow(DynamicCharacterAvatar DCA, VertexEditorStage vstage)
         {
-            MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, "Mesh Modifiers", true);
+            MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, WindowTitle, true);
             wnd.Setup(DCA, vstage, null);
-            wnd.titleContent = new GUIContent("Mesh Modifiers");
+            wnd.titleContent = new GUIContent(WindowTitle);
             return wnd;
         }
 
         public static MeshModifierEditor GetOrCreateWindowFromModifier(MeshModifier modifier, DynamicCharacterAvatar DCA, VertexEditorStage vstage)
         {
-            MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, "Mesh Modifiers", true);
+            MeshModifierEditor wnd = GetWindow<MeshModifierEditor>(true, WindowTitle, true);
             wnd.Setup(DCA, vstage, modifier);
-            wnd.titleContent = new GUIContent("Mesh Modifiers");
+            wnd.titleContent = new GUIContent(WindowTitle);
             return wnd;
+        }
+
+        [SerializeField] private bool showSavePanel = true;
+        [NonSerialized] private string savedModifierSignature = string.Empty;
+        private Vector2 windowScroll;
+
+        /// <summary>Opens the Save panel and brings the window to the front.</summary>
+        internal void ShowSavePanel()
+        {
+            showSavePanel = true;
+            windowScroll = Vector2.zero;
+            Focus();
+            Repaint();
+        }
+
+        /// <summary>True when there are modifiers or Advanced adjustments to save.</summary>
+        internal bool HasModifierContent()
+        {
+            return (Modifiers != null && Modifiers.Count > 0) ||
+                   (vertexEditorStage != null && vertexEditorStage.GetVertexAdjustments().Count > 0);
+        }
+
+        /// <summary>
+        /// True when the modifiers or Advanced adjustments changed since the editor opened or last saved.
+        /// Vertex colors are left out: Vertex Paint keeps track of its own.
+        /// </summary>
+        internal bool HasUnsavedModifierEdits()
+        {
+            return CurrentModifierSignature() != savedModifierSignature;
+        }
+
+        private string CurrentModifierSignature()
+        {
+            List<MeshModifier.Modifier> snapshot = BuildEditorModifierSnapshot(includeBulkModifiers: true, includeAdHocModifiers: true, onlyActiveBulkModifier: false);
+            foreach (MeshModifier.Modifier modifier in snapshot)
+            {
+                if (modifier != null && modifier.adjustments != null && modifier.adjustments.vertexAdjustments != null)
+                {
+                    modifier.adjustments.vertexAdjustments.RemoveAll(adjustment => adjustment is VertexColorAdjustment);
+                }
+            }
+            snapshot.RemoveAll(modifier => modifier == null || modifier.adjustments == null ||
+                                           modifier.adjustments.vertexAdjustments == null ||
+                                           modifier.adjustments.vertexAdjustments.Count == 0);
+            return BuildModifierSignature(snapshot);
         }
 
         public DynamicCharacterAvatar thisDCA;
@@ -69,7 +120,7 @@ namespace UMA
         public enum EditorMode { MeshModifiers, VertexAdjustments, Blendshapes }
         public EditorMode editorMode = EditorMode.MeshModifiers;
 
-        private enum AuthoringWorkflow
+        internal enum AuthoringWorkflow
         {
             Sculpt,
             VertexPaint,
@@ -370,8 +421,8 @@ namespace UMA
                 Debug.Log($"[MeshModifierEditor.Setup] After hydration: Modifiers.Count={Modifiers.Count}");
             }
             // vertexEditorStage = VertexEditorStage.ShowStage(DCA);
-            centeredLabel = EditorStyles.boldLabel;
-            centeredLabel.alignment = TextAnchor.MiddleCenter;
+            // A copy: changing EditorStyles.boldLabel itself centred every bold label in the Editor.
+            centeredLabel = new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter };
             selectedButton = new GUIStyle(EditorStyles.miniButton);
             unselectedButton = new GUIStyle(EditorStyles.miniButton);
             selectedButton.normal.textColor = Color.white;
@@ -387,6 +438,8 @@ namespace UMA
             // when a step changes that.
             characterBuildKind = CharacterBuildKind.Normal;
             NoteCharacterBuilt(CharacterBuildKind.Normal, DoModifierSplit(true));
+            // What was loaded is saved already; leaving asks only about changes from here on.
+            savedModifierSignature = CurrentModifierSignature();
         }
 
         private string GetModifierSlotKey(SlotData slot)
@@ -627,19 +680,21 @@ namespace UMA
             }
 
             SyncWorkflowFromSceneTool();
+            windowScroll = EditorGUILayout.BeginScrollView(windowScroll);
             DrawWorkflowNavigation();
+            DrawSavePanel();
             DrawAssetControls();
 
             switch (authoringWorkflow)
             {
                 case AuthoringWorkflow.Sculpt:
                     EditorGUILayout.HelpBox(
-                        "Sculpt changes vertex positions with a brush in the Scene view. Use the Scene controls to choose the slot, brush, falloff, symmetry, and save target.",
+                        "Sculpt changes vertex positions and normals with brushes in the Scene view. Choose the slots, brush, falloff and symmetry in the Scene view's panel; save in the Save panel above.",
                         MessageType.Info);
                     break;
                 case AuthoringWorkflow.VertexPaint:
                     EditorGUILayout.HelpBox(
-                        "Vertex Paint changes vertex colors with a brush in the Scene view. It creates the existing Set Color adjustments when saved as a MeshModifier.",
+                        "Vertex Paint changes vertex colors with a brush in the Scene view. Save them in the Save panel above: in a Mesh Modifier (as Set Color adjustments) or into the slot.",
                         MessageType.Info);
                     break;
                 case AuthoringWorkflow.AdvancedVertexAdjustments:
@@ -649,8 +704,25 @@ namespace UMA
                     DrawBlendshapeExtractor();
                     break;
             }
+            EditorGUILayout.EndScrollView();
 
             vertexEditorStage.editorMode = editorMode;
+        }
+
+        /// <summary>Every way of saving the Vertex Editor's work, in one place.</summary>
+        private void DrawSavePanel()
+        {
+            if (vertexEditorStage == null)
+            {
+                return;
+            }
+            GUIHelper.BeginVerticalPadded(8, new Color(0.75f, 0.875f, 1f));
+            showSavePanel = EditorGUILayout.Foldout(showSavePanel, "Save", true, EditorStyles.foldoutHeader);
+            if (showSavePanel)
+            {
+                vertexEditorStage.DrawSavePanel();
+            }
+            GUIHelper.EndVerticalPadded(8);
         }
 
         private void SyncWorkflowFromSceneTool()
@@ -692,6 +764,52 @@ namespace UMA
         private void SwitchAuthoringWorkflow(AuthoringWorkflow workflow)
         {
             RegisterUndoSnapshot("Switch Mesh Modifier Workflow");
+            ApplyAuthoringWorkflow(workflow);
+            MarkEditorStateDirty();
+        }
+
+        /// <summary>
+        /// Puts the window and the stage in a workflow without recording an Undo step: used when the
+        /// Vertex Editor opens on the workflow the user last chose, and when another tool asks for one.
+        /// </summary>
+        internal void SetAuthoringWorkflowWithoutUndo(AuthoringWorkflow workflow)
+        {
+            if (vertexEditorStage == null || workflow == authoringWorkflow)
+            {
+                return;
+            }
+            ApplyAuthoringWorkflow(workflow);
+        }
+
+        internal AuthoringWorkflow CurrentAuthoringWorkflow => authoringWorkflow;
+
+        /// <summary>
+        /// The Advanced workflow's tab: Per-Vertex Precision (VertexAdjustments) or Vertex Sets / Bulk
+        /// (MeshModifiers). Setting it records no Undo step; other values are ignored.
+        /// </summary>
+        internal EditorMode AdvancedEditorMode
+        {
+            get => advancedEditorMode;
+            set
+            {
+                if (value != EditorMode.VertexAdjustments && value != EditorMode.MeshModifiers)
+                {
+                    return;
+                }
+                advancedEditorMode = value;
+                if (authoringWorkflow == AuthoringWorkflow.AdvancedVertexAdjustments)
+                {
+                    editorMode = value;
+                    if (vertexEditorStage != null)
+                    {
+                        vertexEditorStage.editorMode = value;
+                    }
+                }
+            }
+        }
+
+        private void ApplyAuthoringWorkflow(AuthoringWorkflow workflow)
+        {
             authoringWorkflow = workflow;
             bulkModifierInteractiveUndoArmed = false;
             activeAdjustmentInteractiveUndoArmed = false;
@@ -721,7 +839,6 @@ namespace UMA
             }
 
             vertexEditorStage.editorMode = editorMode;
-            MarkEditorStateDirty();
         }
 
         internal bool IsAdvancedVertexAdjustmentWorkflow =>
@@ -759,14 +876,8 @@ namespace UMA
 
         private void DrawAssetControls()
         {
-            GUIHelper.BeginVerticalPadded(8, new Color(0.75f, 0.875f, 1f));
-            GUILayout.Label("Mesh Modifier Asset", centeredLabel);
-            if (GUILayout.Button("Save to Asset"))
-            {
-                SaveToAsset();
-            }
-
-            showBuildOptions = EditorGUILayout.Foldout(showBuildOptions, "Build and Preview Options", true);
+            GUIHelper.BeginVerticalPadded(8, new Color(0.82f, 0.86f, 0.9f));
+            showBuildOptions = EditorGUILayout.Foldout(showBuildOptions, "Build and Preview Options", true, EditorStyles.foldoutHeader);
             if (showBuildOptions)
             {
                 bool newIncludeAdHocAdjustments = GUILayout.Toggle(IncludeAdHocAdjustments, "Include Advanced Per-Vertex Adjustments");
@@ -913,7 +1024,9 @@ namespace UMA
             meshModifier.RuntimeModifiers = SplitModifierStacksBySlot(editorSnapshot);
             EditorUtility.SetDirty(meshModifier);
             AssetDatabase.SaveAssetIfDirty(meshModifier);
-            vertexEditorStage?.MarkVertexPaintSaved();
+            savedModifierSignature = CurrentModifierSignature();
+            // The sculpt and the vertex colors are in the asset too.
+            vertexEditorStage?.NoteMeshModifierSaved(meshModifier);
             Selection.activeObject = meshModifier;
             return true;
         }
@@ -2755,28 +2868,15 @@ namespace UMA
 
         private void OnDestroy()
         {
-            // if ModifierEditor is closed before the VertexEditorStage is closed.
+            // The window was closed while the Vertex Editor is still open: leaving it closes the
+            // editor too, so ask how to save what is not saved (the window cannot stay open now).
+            // When the editor is closing already it has asked, and closes this window itself.
             if (vertexEditorStage != null)
             {
-               bool wasChanged = false;
-                if (Modifiers != null)
+                if (!vertexEditorStage.closing)
                 {
-                    if (Modifiers.Count > 0)
-                    {
-                        wasChanged = true;
-                    }
-                    if (vertexEditorStage.Adjustments.Count > 0)
-                    {
-                        wasChanged = true;
-                    }
+                    vertexEditorStage.ResolveUnsavedWorkBeforeLeaving(canStay: false);
                 }
-                if (wasChanged)
-                {
-                    if (EditorUtility.DisplayDialog("ModifierEditor Save Changes", "Do you want to save the changes you made to the modifiers?", "Yes", "No"))
-                    {
-                        SaveToAsset();
-                    }
-                } 
                 vertexEditorStage.hasSaved = true;
                 vertexEditorStage.CloseStage();
             }

@@ -264,6 +264,7 @@ namespace UMA
                 d.Value(convert); d.Value(generator.qualityTextures.Mips(convert ? generator.convertMipMaps : material.generateMipMaps));
                 d.Value(generator.qualityTextures.EffectiveCompression(convert, format, outputWidth, outputHeight));
                 d.Value(generator.useAsyncConversion); d.Value(generator.SharperFitTextures); d.Value(background);
+                d.Value(convert && generator.keepConvertedTexturesReadable);
                 d.Value(QualitySettings.activeColorSpace); d.Value(SystemInfo.graphicsDeviceType);
                 d.Value(generator.qualityTextures.Anisotropy(material)); d.Value(generator.qualityTextures.MipBias(material)); d.Value(generator.qualityTextures.Filter(material));
                 d.Value(material.channels[channel].channelType);

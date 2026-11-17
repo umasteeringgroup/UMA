@@ -18,6 +18,7 @@ namespace UMA.Editors
         SerializedProperty useAsyncConversion;
         SerializedProperty useNewDNA;
         SerializedProperty asyncMipRegen;
+        SerializedProperty keepConvertedTexturesReadable;
         public static bool showAtlasSettings = false;
         public static bool showConversionSettings = false;
 
@@ -39,6 +40,7 @@ namespace UMA.Editors
             SharperFitTextures = serializedObject.FindProperty("SharperFitTextures");
             useAsyncConversion = serializedObject.FindProperty("useAsyncConversion");
             asyncMipRegen = serializedObject.FindProperty("asyncMipRegen");
+            keepConvertedTexturesReadable = serializedObject.FindProperty("keepConvertedTexturesReadable");
         }
 
         public override void OnInspectorGUI()
@@ -78,6 +80,7 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(convertRenderTexture);
                 EditorGUILayout.PropertyField(useAsyncConversion);
                 EditorGUILayout.PropertyField(asyncMipRegen);
+                EditorGUILayout.PropertyField(keepConvertedTexturesReadable);
                 GUIHelper.EndVerticalPadded();
             }
 

@@ -53,7 +53,7 @@ namespace UMA.CharacterSystem.Editors
                     DrawEditingToolButton(
                         "Open Vertex Editor (Sculpt, Paint, Mesh Modifiers)",
                         "Open this character in the Vertex Editor. A new Mesh Modifier is started; nothing is saved until you save it.",
-                        "Sculpt slots, paint vertex colors (including hair root to tip), move vertices, extract blendshapes. Saved as a Mesh Modifier or into a slot.",
+                        "Sculpt slots, paint vertex colors (including hair root to tip), move vertices, extract blendshapes, fix vertex normals. Saved as a Mesh Modifier or into a slot.",
                         () =>
                         {
                             thisDCA.ignoreMeshHideAssets = true;

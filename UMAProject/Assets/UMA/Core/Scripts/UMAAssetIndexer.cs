@@ -1305,7 +1305,7 @@ namespace UMA
                         for (int i1 = 0; i1 < dcas.Length; i1++)
                         {
                             DynamicCharacterAvatar dca = dcas[i1];
-                            if (dca.editorTimeGeneration)
+                            if (dca.editorTimeGeneration && IsSavedWithScene(dca.gameObject))
                             {
                                 dca.GenerateSingleUMA(
                                     false,
@@ -1315,6 +1315,22 @@ namespace UMA
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// False when the object or one of its parents is never written to a scene file
+        /// (<see cref="HideFlags.DontSaveInEditor"/>), as editor tools' temporary characters are.
+        /// </summary>
+        public static bool IsSavedWithScene(GameObject gameObject)
+        {
+            for (Transform t = gameObject != null ? gameObject.transform : null; t != null; t = t.parent)
+            {
+                if ((t.gameObject.hideFlags & HideFlags.DontSaveInEditor) != 0)
+                {
+                    return false;
+                }
+            }
+            return gameObject != null;
         }
 
         public static void CleanupUMAS(Scene scene)
@@ -1330,6 +1346,12 @@ namespace UMA
                     for (int i1 = 0; i1 < dcas.Length; i1++)
                     {
                         DynamicCharacterAvatar dca = dcas[i1];
+                        // A character that is never written to the scene file (an editor tool's
+                        // temporary preview) cannot junk it up, and nothing would build it again.
+                        if (!IsSavedWithScene(dca.gameObject))
+                        {
+                            continue;
+                        }
                         // Free all the generated data so we don't junk up the scene file.
                         // it will be regenerated later.
                         dca.CleanupGeneratedData();

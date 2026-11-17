@@ -262,6 +262,17 @@ This serialized option is exposed by the current Inspector for compatibility wit
 - **Memory, speed, and responsiveness:** no independent effect in the current implementation.
 - **Starting point:** keep it aligned with **Convert Mip Maps** for configuration clarity, but do not count it as a separate optimization control.
 
+#### Keep Converted Textures Readable
+
+Off by default. A Texture2D can hold its pixels twice: on the GPU, where the material samples them, and in a CPU copy in system memory, which `GetPixels`, `SetPixels`, `EncodeToPNG` and runtime compression work on. When this option is off, UMA frees the CPU copy of each converted texture as soon as it is on the GPU (after compressing it, when **Compression** is on). When it is on, the CPU copy stays for as long as the texture does.
+
+- **Memory:** the CPU copy is as large as the texture. Measured in a Windows development player (Direct3D 12): one 2048 RGBA32 atlas channel with mips costs 42.7 MiB readable and 21.4 MiB without the copy; compressed to DXT5, 10.7 MiB and 5.4 MiB. A character with a four-channel 2048 atlas saves about 85 MiB of system memory uncompressed, or about 21 MiB compressed.
+- **Generation speed:** no extra work. Without the copy, the synchronous path fills the Texture2D with a GPU copy and skips the readback.
+- **Who needs it on:** only scripts that read a converted atlas's pixels on the CPU. UMA's save, export and prefab tools read atlases back from the GPU and work either way. A script that calls `GetPixels` on a generated atlas while this is off gets Unity's "texture is not readable" error; turn the option on, or read the texture back with `Graphics.Blit` and `ReadPixels`.
+- **Sharing:** readable and GPU-only atlases are never shared with each other by atlas reuse.
+
+Generator Quality Profiles and **UMA Generator Override** components can override it like the other conversion settings.
+
 ### Generation Settings
 
 #### Max Queued Conversions Per Frame
@@ -620,6 +631,7 @@ Texture objects are Unity engine objects, but the surrounding arrays, requests, 
 ### Minimize texture duplication
 
 - Leave **Convert Render Texture** disabled unless a later workflow needs Texture2D data.
+- When conversion is on, leave **Keep Converted Textures Readable** off unless a script reads atlas pixels on the CPU. A readable texture keeps a second copy of itself in system memory.
 - Review per-channel conversion flags in every production `UMAMaterial`.
 - Use `UseExistingTextures` for fixed texture sets that do not require compositing.
 - Use `UseExistingMaterial` only for truly shared material state.

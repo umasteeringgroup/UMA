@@ -3684,34 +3684,9 @@ namespace UMA
 						{
 							Texture tempTexture = generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex];
                             generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
-                            if (UMAGeneratedResourceCache.IsManagedResource(tempTexture)) continue;
-
-                            if (tempTexture is RenderTexture)
-							{
-								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
-								var entityId = tempRenderTexture.GetUmaObjectId();
-								if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(entityId))
-								{
-                                    // this will be cleared up when the async call is completed.
-                                    tempTexture = null;
-									bool safe = RenderTexToCPU.SafeToFree(tempRenderTexture);
-									if (safe)
-									{
-										UMARenderTextureTracker.Untrack(tempRenderTexture);
-										if (tempRenderTexture.IsCreated())
-										{
-											tempRenderTexture.Release();
-										}
-										RenderTexToCPU.renderTexturesCleanedUMAData++;
-										UMAUtils.DestroySceneObject(tempRenderTexture);
-
-                                    }
-								}
-							}
-							else
-							{
-								UMAUtils.DestroySceneObject(tempTexture);
-							}
+                            // Skips cache-managed textures and pending readbacks (the async copy
+                            // frees those), and never destroys a temporary render texture.
+                            TextureProcessPRO.ReleaseGeneratedTexture(tempTexture);
 						}
 					}
                 }

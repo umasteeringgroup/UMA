@@ -613,6 +613,132 @@ namespace UMA.Editors
             return any;
         }
 
+        /// <summary>
+        /// World-space bounds of the converted slots' vertices that a bone influences, where the
+        /// preview shows them now (rest pose or T-pose). Each slot is skinned through the preview
+        /// skeleton, so it does not depend on the generated mesh. <paramref name="onlySlotName"/>
+        /// limits it to one slot. Returns false when no vertex is weighted to the bone.
+        /// </summary>
+        public bool TryGetBoneVertexBounds(string boneName, string onlySlotName, out Bounds bounds, out int vertexCount,
+            float minimumWeight = 0.01f)
+        {
+            bounds = default;
+            vertexCount = 0;
+            if (!IsBuilt || string.IsNullOrEmpty(boneName))
+            {
+                return false;
+            }
+            int boneHash = UMAUtils.StringToHash(boneName);
+            Matrix4x4 avatarToWorld = AvatarObject.transform.localToWorldMatrix;
+            for (int s = 0; s < slots.Count; s++)
+            {
+                PreviewSlot slot = slots[s];
+                if (!slot.Converted || slot.Copy == null || slot.Original == null
+                    || (onlySlotName != null && slot.Original.slotName != onlySlotName))
+                {
+                    continue;
+                }
+                UMAMeshData mesh = slot.Copy.meshData;
+                if (UMAMeshData.IsNullOrEmptyMeshData(mesh) || mesh.boneNameHashes == null || mesh.bindPoses == null)
+                {
+                    continue;
+                }
+                int influenceCount = Mathf.Min(mesh.bindPoses.Length, mesh.boneNameHashes.Length);
+                int boneIndex = Array.IndexOf(mesh.boneNameHashes, boneHash);
+                if (boneIndex < 0 || boneIndex >= influenceCount)
+                {
+                    continue;
+                }
+                bool[] weighted = FindWeightedVertices(mesh, boneIndex, minimumWeight);
+                if (weighted == null)
+                {
+                    continue;
+                }
+                var skin = new Matrix4x4[influenceCount];
+                for (int i = 0; i < influenceCount; i++)
+                {
+                    Transform bone = GetBone(mesh.boneNameHashes[i]);
+                    skin[i] = bone != null ? bone.localToWorldMatrix * mesh.bindPoses[i] : avatarToWorld;
+                }
+                UMARigBodySurface.Skin(mesh, skin, avatarToWorld, out Vector3[] positions, out _);
+                for (int v = 0; v < weighted.Length; v++)
+                {
+                    if (!weighted[v])
+                    {
+                        continue;
+                    }
+                    if (vertexCount == 0)
+                    {
+                        bounds = new Bounds(positions[v], Vector3.zero);
+                    }
+                    else
+                    {
+                        bounds.Encapsulate(positions[v]);
+                    }
+                    vertexCount++;
+                }
+            }
+            return vertexCount > 0;
+        }
+
+        /// <summary>Marks the vertices with at least <paramref name="minimumWeight"/> on influence <paramref name="boneIndex"/>; null when there are none.</summary>
+        private static bool[] FindWeightedVertices(UMAMeshData mesh, int boneIndex, float minimumWeight)
+        {
+            int count = mesh.vertices.Length;
+            var weighted = new bool[count];
+            bool any = false;
+            if (mesh.ManagedBonesPerVertex != null && mesh.ManagedBonesPerVertex.Length == count &&
+                mesh.ManagedBoneWeights != null && mesh.ManagedBoneWeights.Length > 0)
+            {
+                int cursor = 0;
+                for (int v = 0; v < count; v++)
+                {
+                    int influences = mesh.ManagedBonesPerVertex[v];
+                    for (int k = 0; k < influences && cursor < mesh.ManagedBoneWeights.Length; k++, cursor++)
+                    {
+                        BoneWeight1 weight = mesh.ManagedBoneWeights[cursor];
+                        if (weight.boneIndex == boneIndex && weight.weight >= minimumWeight)
+                        {
+                            weighted[v] = any = true;
+                        }
+                    }
+                }
+            }
+            else if (mesh.boneWeights != null && mesh.boneWeights.Length == count)
+            {
+                for (int v = 0; v < count; v++)
+                {
+                    UMABoneWeight w = mesh.boneWeights[v];
+                    if ((w.boneIndex0 == boneIndex && w.weight0 >= minimumWeight) || (w.boneIndex1 == boneIndex && w.weight1 >= minimumWeight) ||
+                        (w.boneIndex2 == boneIndex && w.weight2 >= minimumWeight) || (w.boneIndex3 == boneIndex && w.weight3 >= minimumWeight))
+                    {
+                        weighted[v] = any = true;
+                    }
+                }
+            }
+            return any ? weighted : null;
+        }
+
+        /// <summary>
+        /// World-space bounds of a bone and its direct children in the preview skeleton, for a bone
+        /// no converted vertex is weighted to. Returns false when the preview has no such bone.
+        /// </summary>
+        public bool TryGetBoneJointBounds(string boneName, out Bounds bounds)
+        {
+            bounds = default;
+            Transform bone = string.IsNullOrEmpty(boneName) ? null : GetBone(UMAUtils.StringToHash(boneName));
+            if (bone == null)
+            {
+                return false;
+            }
+            bounds = new Bounds(bone.position, Vector3.zero);
+            for (int i = 0; i < bone.childCount; i++)
+            {
+                bounds.Encapsulate(bone.GetChild(i).position);
+            }
+            return true;
+        }
+
         public void Dispose()
         {
             if (Avatar != null)

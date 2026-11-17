@@ -84,8 +84,10 @@ For small touch-ups, use **Vertex Paint**'s **Paint** brush with **Blend** set t
 
 ### Saving the Colors
 
-- **Save Colors to SlotDataAsset** (in **Hair Root to Tip**) writes the colors into the slot asset. Every recipe and character that uses the slot gets them. This is usually what you want for hair.
-- **Save as MeshModifier** keeps them in a Mesh Modifier instead, without changing the slot.
+Both are in the **Save** panel of the Vertex Editor window:
+
+- **Save Vertex Colors to Slot** writes the colors into the slot asset. Every recipe and character that uses the slot gets them. This is usually what you want for hair.
+- **Save as Mesh Modifier** keeps them in a Mesh Modifier instead, without changing the slot.
 
 Work under source control, so a saved slot can be restored if needed.
 

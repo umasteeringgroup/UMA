@@ -4,7 +4,6 @@ using System.IO;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
 namespace UMA.Editors.Tests
@@ -163,51 +162,6 @@ namespace UMA.Editors.Tests
             var result = UmaResizeTexturesUtility.Resize(AssetDatabase.AssetPathToGUID(path), 32);
             Assert.That(result.CanResize, Is.False);
             Assert.That(File.ReadAllBytes(path), Is.EqualTo(before));
-        }
-
-        [Test]
-        public void DialogHasLogicalDefaultAndDisablesAnEmptyOperation()
-        {
-            var window = ScriptableObject.CreateInstance<UmaResizeTexturesWindow>();
-            try
-            {
-                window.CreateGUI();
-                Assert.That(window.rootVisualElement.Q<DropdownField>("maximumSize").value, Is.EqualTo("1024"));
-                Assert.That(window.rootVisualElement.Q<Button>("resize").enabledSelf, Is.False);
-                Assert.That(window.rootVisualElement.Q<HelpBox>().text, Does.Contain("Only sizes down"));
-            }
-            finally { Object.DestroyImmediate(window); }
-        }
-
-        [Test]
-        public void DialogChangesOnlySelectedImporterAndPreservesOriginalImages()
-        {
-            string path = CreateImage(".png"), untouched = CreateImage(".jpg");
-            byte[] source = File.ReadAllBytes(path), otherMeta = File.ReadAllBytes(untouched + ".meta");
-            var window = ScriptableObject.CreateInstance<UmaResizeTexturesWindow>();
-            try
-            {
-                var serialized = new SerializedObject(window);
-                var guids = serialized.FindProperty("textureGuids");
-                guids.arraySize = 1;
-                guids.GetArrayElementAtIndex(0).stringValue = AssetDatabase.AssetPathToGUID(path);
-                serialized.ApplyModifiedPropertiesWithoutUndo();
-                window.ShowUtility();
-                window.CreateGUI();
-                window.rootVisualElement.Q<DropdownField>("maximumSize").value = "32";
-                Assert.That(window.rootVisualElement.Q<Button>("resize").enabledSelf, Is.True,
-                    window.rootVisualElement.Q<Label>("summary").text);
-                Assert.That(window.rootVisualElement.Q<ScrollView>("entries").Q<Label>().text, Does.Contain("128 → 32"));
-                const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
-                typeof(UmaResizeTexturesWindow).GetMethod("StartResize", flags).Invoke(window, null);
-                typeof(UmaResizeTexturesWindow).GetMethod("ResizeNext", flags).Invoke(window, null);
-                typeof(UmaResizeTexturesWindow).GetMethod("ResizeNext", flags).Invoke(window, null);
-                Assert.That(window.rootVisualElement.Q<Label>("summary").text, Does.Contain("1 importers updated"));
-                Assert.That(((TextureImporter)AssetImporter.GetAtPath(path)).maxTextureSize, Is.EqualTo(32));
-                Assert.That(File.ReadAllBytes(path), Is.EqualTo(source));
-                Assert.That(File.ReadAllBytes(untouched + ".meta"), Is.EqualTo(otherMeta));
-            }
-            finally { Object.DestroyImmediate(window); }
         }
     }
 }

@@ -35,6 +35,8 @@ namespace UMA
         public bool useAsyncConversion = true;
         [Tooltip("Regenerate Mipmaps on conversion to avoid copying mips from GPU")]
         public bool asyncMipRegen = true;
+        [Tooltip("Keep a CPU copy of converted textures so scripts can call GetPixels or EncodeToPNG on them. Off frees that copy (the size of the texture again, in system memory) once the texture is on the GPU. UMA's own save and export tools do not need it.")]
+        public bool keepConvertedTexturesReadable = false;
 
         [Tooltip("Create Mipmaps for the generated texture. Checking this is a good idea.")]
         public bool convertMipMaps;

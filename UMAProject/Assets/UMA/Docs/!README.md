@@ -67,6 +67,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Examine Slots](ExamineSlots.md)
 - [Overlay Painter](../OverlayPainter/Documentation/OverlayPainter.md)
 - [Overlay Painter Generators and Filters](../OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md)
+- [Texture Tools](TextureTools.md)
 - [Texture Utilities](TextureUtilities.md)
 - [Weight Touchup](WeightTouchup.md)
 - [Hair Animation: An Artist's Guide](HairAnimation.md) - make UMA hair sway, give it root-to-tip vertex colors, and choose settings for short, medium and long hair.

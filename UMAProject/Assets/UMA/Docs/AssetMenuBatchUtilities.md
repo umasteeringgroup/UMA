@@ -130,8 +130,7 @@ Converts selected legacy expression-set assets into the newer expression-group f
 ## Texture Commands
 
 - `Open in Texture Utilities`: loads selected textures into [Texture Utilities](TextureUtilities.md).
-- `Texture Utilities > Resize Selected`: lowers importer Maximum Size, including enabled platform overrides, then reimports. Original image files and smaller limits are preserved. See [Texture Utilities](TextureUtilities.md).
-- `Texture Utilities > Convert selected textures to PNG`: see [Asset Consolidation and Repair](AssetConsolidationAndRepair.md).
+- `Texture Tools`: opens the selected textures in [Texture Tools](TextureTools.md), which lists how overlays use each texture (by UMA Material keyword) and batch-changes import settings, checks them against the UMA Material, lowers Max Size and converts to PNG.
 
 ## Slot and Pose Commands
 

@@ -31,6 +31,7 @@ namespace UMA
         private AsyncGPUReadbackRequest readback;
         private bool readbackRequested;
         private readonly GeneratorRuntimeCompression qualityCompression;
+        private readonly bool keepReadable;
         private readonly FilterMode qualityFilter;
         private readonly int qualityAnisotropy;
         private readonly float qualityMipBias;
@@ -131,6 +132,7 @@ namespace UMA
             this.textureIndex = textureIndex;
             this.recreateMips = basegen.qualityTextures.Mips(basegen.convertMipMaps);
             qualityCompression = basegen.qualityTextures.EffectiveCompression(true, texture.format, texture.width, texture.height);
+            keepReadable = basegen.keepConvertedTexturesReadable;
             qualityFilter = texture.filterMode;
             qualityAnisotropy = texture.anisoLevel;
             qualityMipBias = texture.mipMapBias;
@@ -284,8 +286,7 @@ namespace UMA
             {
                 try
                 {
-                    newTexture.Apply(recreateMips);
-                    GeneratorTextureQuality.Compress(newTexture, qualityCompression);
+                    GeneratorTextureQuality.FinishConvertedTexture(newTexture, recreateMips, qualityCompression, keepReadable);
                     sharedCompletion(newTexture);
                     newTexture = null; // ownership transferred to the atlas cache
                     texturesUploaded++;
@@ -304,8 +305,7 @@ namespace UMA
                         throw new InvalidOperationException("Asynchronous atlas copy target is no longer valid.");
                     }
 
-                    newTexture.Apply(recreateMips);
-                    GeneratorTextureQuality.Compress(newTexture, qualityCompression);
+                    GeneratorTextureQuality.FinishConvertedTexture(newTexture, recreateMips, qualityCompression, keepReadable);
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
                     if (generatedMaterial.skinnedMeshRenderer != null &&
@@ -368,6 +368,15 @@ namespace UMA
             UMAObjectId entityId = texture.GetUmaObjectId();
             renderTexturesToCPU.Remove(entityId);
             renderTexturesToFree.Remove(entityId);
+            // When the copy did not replace the atlas entry (it was cancelled or failed), the
+            // atlas still points at this texture. It is going back to Unity's pool, so the atlas
+            // must forget it, or UMAData teardown would later try to destroy a pooled texture.
+            Texture[] atlas = generatedMaterial?.resultingAtlasList;
+            if (atlas != null && textureIndex >= 0 && textureIndex < atlas.Length &&
+                ReferenceEquals(atlas[textureIndex], texture))
+            {
+                atlas[textureIndex] = null;
+            }
             UMARenderTextureTracker.ReleaseTemporary(texture);
             texture = null;
         }

@@ -416,6 +416,11 @@ namespace UMA
                 if (adjusted.sqrMagnitude > 1e-12f)
                 {
                     meshData.normals[i] = adjusted.normalized;
+                    // Keep the tangent perpendicular to the changed normal, so normal maps still shade right.
+                    if (meshData.tangents != null && i < meshData.tangents.Length)
+                    {
+                        meshData.tangents[i] = OrthogonalTangent(meshData.tangents[i], meshData.normals[i]);
+                    }
                 }
             }
             error = null;
@@ -456,6 +461,8 @@ namespace UMA
                 return null;
             }
             WriteSculptedMeshData(target, meshData);
+            // What was written is the new starting point, so a later save does not apply it again.
+            RebaseSculptState(activeSculptState);
             message = "Saved the sculpt into '" + target.name + "'.";
             return target;
         }
@@ -582,6 +589,7 @@ namespace UMA
             editBlendshapeChoice = blendshapeName;
             if (BakedMesh != null && VertexObject != null)
             {
+                ShowSculptForBlendshapeEdit();
                 BeginBlendshapeEdit(blendshapeName, out _, unsaved);
             }
             else
@@ -601,6 +609,7 @@ namespace UMA
             IDictionary<SlotDataAsset, UMABlendShape> unsaved = pendingUnsavedShapes;
             pendingBlendshapeEdit = null;
             pendingUnsavedShapes = null;
+            ShowSculptForBlendshapeEdit();
             BeginBlendshapeEdit(name, out _, unsaved);
         }
 
@@ -1108,18 +1117,12 @@ namespace UMA
                     MessageType.None);
                 if (unsavedShapes.Count > 0)
                 {
-                    EditorGUILayout.HelpBox($"On {unsavedShapes.Count} slot(s) this shape comes from a transfer preview and is not on the slot yet. Save writes it, with your strokes.", MessageType.Info);
+                    EditorGUILayout.HelpBox($"On {unsavedShapes.Count} slot(s) this shape comes from a transfer preview and is not on the slot yet. Save to '{editBlendshapeName}' writes it, with your strokes.", MessageType.Info);
                 }
                 bool changes = HasSculptChangesForUI() || unsavedShapes.Count > 0;
+                EditorGUILayout.LabelField("Save the strokes with Save to '" + editBlendshapeName + "' in the Save panel of the Vertex Editor window.", EditorStyles.wordWrappedMiniLabel);
                 GUILayout.BeginHorizontal();
-                using (new EditorGUI.DisabledScope(!changes))
-                {
-                    if (GUILayout.Button(new GUIContent("Save to '" + editBlendshapeName + "'", "Add the strokes made since loading to this blendshape, on every slot they touched. A slot that did not have the shape gets it.")))
-                    {
-                        SaveBlendshapeEdit();
-                        GUIUtility.ExitGUI();
-                    }
-                }
+                GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent("Stop Editing", "Show the character at rest again. Strokes that were not saved are dropped."), GUILayout.Width(96f)))
                 {
                     if (!changes || EditorUtility.DisplayDialog("Stop Editing the Blendshape",

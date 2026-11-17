@@ -1149,7 +1149,7 @@ namespace UMA.Editors
             }
             stage.RequestBlendshapeEdit(outputName, unsaved);
             report = $"Sculpting '{outputName}' " + (character != null ? $"on '{character.name}'" : "on a temporary character") + ". " +
-                     (unsaved.Count > 0 ? $"It is not on {unsaved.Count} of the slot(s) yet: Save in the Sculpt panel's Edit Blendshape section writes it. " : string.Empty) +
+                     (unsaved.Count > 0 ? $"It is not on {unsaved.Count} of the slot(s) yet: Save to '{outputName}' in the Save panel of the Vertex Editor window writes it. " : string.Empty) +
                      stage.BlendshapeEditStatus + (string.IsNullOrEmpty(note) ? string.Empty : " " + note);
             Repaint();
             return stage;

@@ -218,11 +218,19 @@ namespace UMA.Controls
         private void OnEnable()
         {
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+            UMAGlobalLibraryAutoRegistration.Changed += OnAutoRegistrationChanged;
         }
 
         private void OnDisable()
         {
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+            UMAGlobalLibraryAutoRegistration.Changed -= OnAutoRegistrationChanged;
+        }
+
+        private void OnAutoRegistrationChanged()
+        {
+            m_Initialized = false; // reload the tree with the added or removed items
+            Repaint();
         }
 
         #region Menus

@@ -33,6 +33,7 @@ namespace UMA
 
 
             EnsureTags();
+            UMAGlobalLibraryAutoRegistration.OnPostprocessAllAssets(importedAssets, deletedAssets, movedAssets, movedFromAssetPaths);
             if (!settings.Initialized)
             {
                 settings.Initialized = true;

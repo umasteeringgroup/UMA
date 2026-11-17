@@ -82,13 +82,13 @@ MonoBehaviour:
     includeChildren: 1
   - boneName: LeftForeArmAdjust
     mode: 0
-    positionOffset: {x: -0.0015080571, y: -0.019626498, z: 0}
+    positionOffset: {x: -0.0063608885, y: -0.02571249, z: 0.00610172}
     rotationOffsetEuler: {x: 0, y: 0, z: 0}
     scaleOffset: {x: 1.1811497, y: 1, z: 1}
     includeChildren: 1
   - boneName: RightForeArmAdjust
     mode: 0
-    positionOffset: {x: 0.0015080571, y: -0.019626498, z: 0}
+    positionOffset: {x: 0.0063608885, y: -0.02571249, z: 0.00610172}
     rotationOffsetEuler: {x: 0, y: -0, z: -0}
     scaleOffset: {x: 1.1811497, y: 1, z: 1}
     includeChildren: 1
@@ -115,6 +115,90 @@ MonoBehaviour:
     positionOffset: {x: -0.00088329613, y: -0.0057883337, z: 0.019824974}
     rotationOffsetEuler: {x: 5.9842606, y: 0, z: 0}
     scaleOffset: {x: 0.99563754, y: 0.96356225, z: 0.97151166}
+    includeChildren: 1
+  - boneName: LeftForeArmTwist
+    mode: 0
+    positionOffset: {x: 0, y: 0, z: 0.008808751}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightForeArmTwist
+    mode: 0
+    positionOffset: {x: -0, y: 0, z: 0.008808751}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftHand
+    mode: 0
+    positionOffset: {x: -0.0024386644, y: -0.004785061, z: 0.0088717565}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightHand
+    mode: 0
+    positionOffset: {x: 0.0024386644, y: -0.004785061, z: 0.0088717565}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftHandFinger05_01
+    mode: 0
+    positionOffset: {x: 0, y: 0, z: -0.0014463067}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightHandFinger05_01
+    mode: 0
+    positionOffset: {x: -0, y: 0, z: -0.0014463067}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftHandFinger04_01
+    mode: 0
+    positionOffset: {x: 0, y: 0, z: -0.0032705069}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightHandFinger04_01
+    mode: 0
+    positionOffset: {x: -0, y: 0, z: -0.0032705069}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftHandFinger03_01
+    mode: 0
+    positionOffset: {x: 0, y: 0, z: -0.0059501976}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightHandFinger03_01
+    mode: 0
+    positionOffset: {x: -0, y: 0, z: -0.0059501976}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftHandFinger02_01
+    mode: 0
+    positionOffset: {x: 0, y: 0, z: -0.0029859468}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightHandFinger02_01
+    mode: 0
+    positionOffset: {x: -0, y: 0, z: -0.0029859468}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: LeftHandFinger01_01
+    mode: 0
+    positionOffset: {x: 0, y: 0, z: -0.008580364}
+    rotationOffsetEuler: {x: 0, y: 0, z: 0}
+    scaleOffset: {x: 1, y: 1, z: 1}
+    includeChildren: 1
+  - boneName: RightHandFinger01_01
+    mode: 0
+    positionOffset: {x: -0, y: 0, z: -0.008580364}
+    rotationOffsetEuler: {x: 0, y: -0, z: -0}
+    scaleOffset: {x: 1, y: 1, z: 1}
     includeChildren: 1
   favoriteBones:
   - Head
@@ -218,3 +302,83 @@ MonoBehaviour:
     scale: {x: 1, y: 1, z: 1}
     reach: 0.08
     smoothing: 4
+  - name: Sphere 2
+    enabled: 1
+    shape: 0
+    boneName: RightEarAdjust
+    position: {x: 0, y: 0.018065214, z: -0.021800123}
+    rotationEuler: {x: 0, y: 0, z: 0}
+    radius: 0.1
+    falloff: 0.6
+    length: 0.2
+    axisCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    mirror: 1
+    action: 1
+    amount: 0.01
+    move: {x: 0, y: 0.003, z: -0.03}
+    scale: {x: 1, y: 1, z: 1}
+    reach: 0.08
+    smoothing: 2
+  - name: Sphere 3
+    enabled: 1
+    shape: 0
+    boneName: RightEarAdjust
+    position: {x: -0.075978145, y: 0.09898269, z: -0.0818839}
+    rotationEuler: {x: 0, y: 0, z: 0}
+    radius: 0.1
+    falloff: 0.898
+    length: 0.2
+    axisCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    mirror: 0
+    action: 0
+    amount: 0.01
+    move: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+    reach: 0.08
+    smoothing: 2

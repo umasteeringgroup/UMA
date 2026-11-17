@@ -12,7 +12,7 @@ namespace UMA.Editors
         private static readonly string[][] Groups =
         {
             new[] { "Atlas", "fitAtlas", "SharperFitTextures", "AtlasOverflowFitMethod", "FitPercentageDecrease", "convertMipMaps", "atlasResolution", "enableSourceUVCropping", "sourceUVCropPadding" },
-            new[] { "Conversion", "convertRenderTexture", "useAsyncConversion", "asyncMipRegen" },
+            new[] { "Conversion", "convertRenderTexture", "useAsyncConversion", "asyncMipRegen", "keepConvertedTexturesReadable" },
             new[] { "Scheduling", "MaxQueuedConversionsPerFrame", "IterationCount", "InterFrameDelay", "MaxMultiStepWorkMilliseconds", "collectGarbage", "garbageCollectionRate", "processAllPending", "applyInline" },
             new[] { "Memory", "InitialScaleFactor", "AutomaticScaling", "ScaleGPUMemoryCutoffMB", "ScaleSystemMemoryCutoffMB" },
             new[] { "Editor preview", "editorAtlasResolution", "editorInitialScaleFactor" },
@@ -23,7 +23,7 @@ namespace UMA.Editors
         private static readonly string[] GroupHelp =
         {
             "Fit Atlas reduces output when content would overflow. Sharper Fit Textures favors sharper downsampling; Atlas Overflow Fit Method and Fit Percentage Decrease control the fitting strategy and step. Convert Mip Maps includes mip levels during conversion. Atlas Resolution is the target atlas size. Source UV Cropping removes unused source texture area using prepared slot bounds, with padding in source texels.",
-            "Convert Render Texture creates Texture2D output when generated textures must be CPU-readable, editable, saved, or compressed. Use Async Conversion avoids a synchronous GPU readback stall. Async Mip Regen rebuilds mip levels after that copy when required. Leave conversion off when RenderTexture output is sufficient.",
+            "Convert Render Texture creates Texture2D output when generated textures must be CPU-readable, editable, saved, or compressed. Use Async Conversion avoids a synchronous GPU readback stall. Async Mip Regen rebuilds mip levels after that copy when required. Keep Converted Textures Readable keeps a CPU copy of each converted texture for scripts that call GetPixels or EncodeToPNG on it; off frees that copy, which is as large as the texture. Leave conversion off when RenderTexture output is sufficient.",
             "Max Queued Conversions Per Frame limits texture readback starts. Iteration Count, Inter Frame Delay, and Max Multi-Step Work distribute generator work across frames. Collect Garbage and Garbage Collection Rate control explicit cleanup. Process All Pending drains queued work, while Apply Inline applies supported conversions immediately. Aggressive values can cause frame hitches.",
             "Initial Scale Factor begins generation at a reduced atlas scale. Automatic Scaling increases reduction when available GPU or system memory falls below the configured cutoffs. These settings trade texture detail for lower peak and resident memory.",
             "Editor Atlas Resolution and Editor Initial Scale Factor are used for edit-time character previews. Lower resolution and a larger scale factor make scene editing faster and reduce scene memory without changing player-build quality settings.",

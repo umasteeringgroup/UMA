@@ -55,7 +55,7 @@ If the generated character is missing slots, fix the DCA recipe first. The Face 
 2. Click `Open Face Editor (Mesh Hide Assets)`.
 3. Unity opens the `Mesh Hide Editor` stage.
 
-To edit an existing Mesh Hide Asset or Mesh Hide Asset Collection, drag it onto the drop area at the bottom of **Editing tools**, labeled `Drag & Drop a MeshModifier, Mesh Hide Asset, or Mesh Hide Collection here to edit`. Dropping a collection opens the same Face Editor Stage with the existing selections loaded.
+To edit an existing Mesh Hide Asset or Mesh Hide Asset Collection, drag it onto the drop area at the bottom of **Editing tools**, labeled `Drag & Drop a MeshModifier, Mesh Hide Asset, or Mesh Hide Collection here to edit`. Dropping a collection opens the same Face Editor Stage with the existing selections loaded. Either way the Scene view opens facing the character and framed on the slots the hide covers; use **Frame Slots** to frame them again later. You can also skip selecting the character: select the Mesh Hide Asset in the Project window and press **Edit with first character in scene** at the bottom of its Inspector. It opens the Face Editor with the first active DynamicCharacterAvatar in the Hierarchy, just as dropping the asset on that character does. With no DynamicCharacterAvatar in the scene, the Inspector says so instead.
 
 Older race-baked masks using an asset filename such as `Body_slot_baked_Race` also load onto the corresponding generated `Body_baked_Race` slot. The editor uses that generated slot's mesh for LOD calculations and records its current name when you save. If a target slot is missing, hidden, or incompatible, the **Mesh Hide Assets** panel shows a warning instead of silently loading an empty selection.
 
@@ -138,7 +138,7 @@ Pick a tool on the floating toolbar. The **Tool** row of the **Face Tools** pane
 - For the circle, square and texture brushes, set **Radius (mm)**. The radius is measured on the model in millimeters, so the brush looks larger on screen as you zoom in.
 - **Mirror X** mirrors strokes across the mesh's local X = 0 plane.
 
-Left-drag over the mesh to paint continuously.
+Left-drag over the mesh to paint continuously. The brushes hide or unhide faces according to **Hide Faces / Unhide Faces** on the toolbar. Hold `Shift` while painting to do the opposite: the brush outline changes colour and the toolbar highlights the other button until you release `Shift`, even in the middle of a stroke.
 
 ### Toolbar actions
 
@@ -176,6 +176,8 @@ For example, saving `Jacket_BodyHides.asset` with hidden faces on `HumanMaleTors
 If the stage was opened by dropping an existing collection, saving updates that collection. If you save over existing generated assets, Unity asks before overwriting.
 
 Close the Face Editor stage using the `Close` button at the top right of the Scene view.
+
+To check a saved Mesh Hide Asset without opening a character, select it in the Project window. The Inspector names its slot and how many of the slot's triangles it hides, and its preview shows the slot standing upright in white with the hidden triangles in red. Drag in the preview to turn it, scroll to zoom, and use **Front**, **Back** and **Side** in the preview toolbar. When the hide no longer matches the slot's mesh (for example after the slot was re-imported with a different triangle count), the Inspector says why and the preview shows the slot without red.
 
 ## 11. Add the Collection to the Wardrobe Recipe
 

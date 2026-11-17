@@ -168,7 +168,8 @@ namespace UMA
 
         /// <summary>
         /// Destroys a private generated atlas texture. Cache-managed textures and
-        /// render textures with a pending asynchronous readback are left alone.
+        /// render textures with a pending asynchronous readback are left alone, and
+        /// temporary render textures go back to Unity's pool instead of being destroyed.
         /// </summary>
         internal static void ReleaseGeneratedTexture(Texture tempTexture)
         {
@@ -182,8 +183,21 @@ namespace UMA
             if (tempRenderTexture != null)
             {
                 var entityId = tempRenderTexture.GetUmaObjectId();
+                if (UMARenderTextureTracker.IsReturnedToPool(tempRenderTexture))
+                {
+                    // Already handed back to Unity's temporary pool (for example by the
+                    // play-mode exit cleanup of pending readbacks). Unity owns it now.
+                    return;
+                }
                 if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(entityId) && RenderTexToCPU.SafeToFree(tempRenderTexture))
                 {
+                    if (UMARenderTextureTracker.IsHeldTemporary(tempRenderTexture))
+                    {
+                        // A pooled texture goes back to the pool; destroying it is not allowed.
+                        UMARenderTextureTracker.ReleaseTemporary(tempRenderTexture);
+                        RenderTexToCPU.renderTexturesCleanedUMAData++;
+                        return;
+                    }
                     UMARenderTextureTracker.Untrack(tempRenderTexture);
                     if (tempRenderTexture.IsCreated())
                     {
@@ -538,11 +552,15 @@ namespace UMA
                                                 : null;
 
                                             bool requiresMipChain = convertedMipMaps && (ww > 1 || hh > 1);
+                                            bool keepReadable = umaGenerator.keepConvertedTexturesReadable;
+                                            // A GPU copy never fills the CPU pixels, so it is only used when nobody will read them.
+                                            bool tryGpuCopy = SupportsRTToTexture2D && compression == GeneratorRuntimeCompression.Disabled && !keepReadable;
 
                                             if (prevTex2D != null && !UMAGeneratedResourceCache.IsManagedResource(prevTex2D) &&
                                                 prevTex2D.width == ww && prevTex2D.height == hh &&
                                                 prevTex2D.format == texFmt &&
-                                                (prevTex2D.mipmapCount > 1) == requiresMipChain)
+                                                (prevTex2D.mipmapCount > 1) == requiresMipChain &&
+                                                prevTex2D.isReadable == !tryGpuCopy)
                                             {
                                                 tempTexture = prevTex2D;
                                             }
@@ -550,10 +568,15 @@ namespace UMA
                                             {
                                                 tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, convertedMipMaps, true);
                                                 pendingTexture2D = tempTexture;
+                                                if (tryGpuCopy)
+                                                {
+                                                    // Free the CPU copy up front; CopyTexture below fills the GPU texture.
+                                                    tempTexture.Apply(false, true);
+                                                }
                                             }
 
                                             bool usedGpuCopy = false;
-                                            if (SupportsRTToTexture2D && compression == GeneratorRuntimeCompression.Disabled)
+                                            if (tryGpuCopy)
                                             {
                                                 try
                                                 {
@@ -578,18 +601,29 @@ namespace UMA
 
                                             if (!usedGpuCopy)
                                             {
-                                                // Fallback: CPU readback, reuse Texture2D memory
-                                                var asyncAction = AsyncGPUReadback.Request(destinationTexture, 0);
+                                                if (!tempTexture.isReadable)
+                                                {
+                                                    // The GPU copy failed on a texture that has no CPU copy left. A reused texture
+                                                    // stays in previousResults and is released with the other replaced results.
+                                                    if (ReferenceEquals(tempTexture, pendingTexture2D))
+                                                    {
+                                                        UMAUtils.DestroySceneObject(tempTexture);
+                                                    }
+                                                    tempTexture = new Texture2D(destinationTexture.width, destinationTexture.height, texFmt, convertedMipMaps, true);
+                                                    pendingTexture2D = tempTexture;
+                                                }
+                                                // Fallback: CPU readback, reuse Texture2D memory. Read back in the Texture2D's own
+                                                // layout: an ARGB32 RenderTexture is RGBA in memory, ARGB32 Texture2D pixel data is not.
+                                                var asyncAction = AsyncGPUReadback.Request(destinationTexture, 0, tempTexture.format);
                                                 asyncAction.WaitForCompletion();
                                                 tempTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
-                                                tempTexture.Apply(convertedMipMaps);
+                                                GeneratorTextureQuality.FinishConvertedTexture(tempTexture, convertedMipMaps, compression, keepReadable);
                                             }
 
                                             UMARenderTextureTracker.ReleaseTemporary(destinationTexture);
                                             pendingTemporaryTexture = null;
 
                                             resultingTextures[textureChannelNumber] = tempTexture as Texture;
-                                            GeneratorTextureQuality.Compress(tempTexture, compression);
                                             SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, tempTexture, umaGenerator);
                                             pendingTexture2D = null;
                                         }

@@ -31,7 +31,7 @@ Build the avatar with every slot you intend to modify. A modifier records slot a
 
 ## Authoring Workflows
 
-The Mesh Modifiers window provides four workflows:
+The Vertex Editor window (the floating window that opens with the Vertex Editor; it used to be called Mesh Modifiers) provides four workflows, and a **Save** panel with every way of saving the work (see [Save your work](MeshModifierSculpting.md#save-your-work)):
 
 - `Sculpt`: brush-based position sculpting.
 - `Vertex Paint`: brush-based vertex color authoring.
@@ -102,11 +102,11 @@ Use the `Smooth` brush to soften blocky vertex-color transitions. `Smooth Amount
 
 The **Whole-Slot Operations** section has `General Smooth`, which applies one simultaneous smoothing pass to the editable slot (**Smooth Slot**) or to every editable slot (**Smooth Editable Slots**). Its independent `Amount %` and `Radius (mm)` controls set the strength and sample area. `Cutoff %` returns results below the threshold to the slot's unmodified color, so imperceptible color spread does not create extra MeshModifier adjustments. **Fill Slot with White** sets every color on a single soloed slot to white; the toolbar's **Clear** instead restores the original colors.
 
-Save with **Modifier Name** and **Save as MeshModifier** at the bottom of the panel; this keeps sculpt work too. **More Save Options** has **Save Colors to SlotDataAsset**, which bakes the colors into one soloed slot's mesh data.
+Save in the **Save** panel of the Vertex Editor window: **Save as Mesh Modifier** keeps the colors (and any sculpt work) in a MeshModifier, and **Save Vertex Colors to Slot** bakes them into one soloed slot's mesh data.
 
 ## Advanced Selection Tools
 
-The `Advanced` workflow selects vertices for the precision and vertex-set editors in the Mesh Modifiers window. Its floating toolbar has three groups:
+The `Advanced` workflow selects vertices for the precision and vertex-set editors in the Vertex Editor window. Its floating toolbar has three groups:
 
 - Tools: **Select** (click a vertex, or drag a rectangle), **Point Brush** and **Circle Brush** (drag; each vertex changes once per stroke).
 - Mode: **Define Set** chooses which vertices belong to the selection; **Define State** marks vertices already in the selection Active or Inactive.
@@ -173,7 +173,7 @@ You can also extract blendshapes from a `SlotDataAsset` inspector with `Extract 
 
 ## Save the Asset
 
-Click `Save to Asset` after authoring. Saving does not automatically decide where the modifier will be used.
+Click **Save as Mesh Modifier...** in the **Save** panel of the Vertex Editor window after authoring. Leaving the Vertex Editor with unsaved work asks how to save it. Saving does not automatically decide where the modifier will be used.
 
 Use a clear name that identifies:
 

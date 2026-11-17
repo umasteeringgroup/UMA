@@ -628,7 +628,10 @@ namespace UMA
             else
             {
                 mesh.normals[vertexIndex] = rotation * normal;
-                mesh.tangents[vertexIndex] = rotation * tangent;
+                // Keep the tangent's handedness (w): a Vector3 stored here would set it to 0.
+                Vector3 newTangent = rotation * tangent;
+                float handedness = mesh.tangents[vertexIndex].w < 0f ? -1f : 1f;
+                mesh.tangents[vertexIndex] = new Vector4(newTangent.x, newTangent.y, newTangent.z, handedness);
             }
         }
 
@@ -640,10 +643,11 @@ namespace UMA
             Vector3 lerpNormal = Vector3.Lerp(startNormal, newNormal, scale);
             mesh.normals[vertexIndex] = lerpNormal;
 
-            Vector3 startTangent = mesh.tangents[vertexIndex];
+            Vector4 startTangent = mesh.tangents[vertexIndex];
             Vector3 newTangent = rotation * tangent;
             Vector3 lerpTangent = Vector3.Lerp(startTangent, newTangent, scale);
-            mesh.tangents[vertexIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, 1);
+            float handedness = startTangent.w < 0f ? -1f : 1f;
+            mesh.tangents[vertexIndex] = new Vector4(lerpTangent.x, lerpTangent.y, lerpTangent.z, handedness);
         }
 
         public Quaternion rotation;

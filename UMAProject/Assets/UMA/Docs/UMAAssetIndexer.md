@@ -16,6 +16,24 @@ An asset that works while directly selected in the editor can still fail in a bu
 
 ## Add New Content
 
+### Automatic registration
+
+New slots, overlays and races are added to the Global Library on their own when they arrive in the project: created, imported (including from a `.unitypackage`), duplicated, or moved in from elsewhere. Deleting one removes it from the library. Moving or renaming an asset that is already in the library keeps its entry and updates its path, or its name when the name comes from the file name.
+
+Once an import has finished (when Unity is no longer importing or compiling), UMA applies the whole import's changes to the library and saves the Global Library asset once, on its own. No other asset is saved, so your unsaved scenes and assets are left alone. The save writes only that import's additions, removals, moves and renames: every other library item is written exactly as the file already stores it, and items that only exist in memory (such as slots UMA bakes while it runs) are not written. Adding an asset and deleting it again leaves the file as it was.
+
+Each import that changes the library is reported in a Console line, listing what was added, removed or moved, and in a short notification in the Scene view. An open Global Library window refreshes its list.
+
+What is skipped:
+
+- assets with **No Auto Add** set (the same flag a library rebuild honours);
+- new assets outside the folders set for their type in `Global Library Filters` (see below), and in folders named "backup" when `Ignore Backup Folders` is on. A Console line lists these;
+- a duplicate whose UMA name (slot, overlay or race name) is already used by another asset in the library. A warning names both assets; give the new one a unique name and add it by hand;
+- anything outside the `Assets` folder;
+- work during Play mode, player builds, batch mode, UMA plugin installs and removals (the installer rebuilds the library itself afterwards), and Unity Test Framework runs.
+
+To turn it off, clear `Auto-add to Global Library` in `Project Settings > UMA` (Editor Settings). Other UMA asset types, such as recipes and materials, are still added with the tools below.
+
 ### Drag and drop
 
 Drag an asset or folder onto:
@@ -92,7 +110,7 @@ Open `UMA > Global Library Filters` to restrict project scans by UMA asset type.
 
 Choose an indexed type and add one or more project paths. When a type has filters, rebuild scans accept only asset paths containing at least one of that type's filter strings. Types with no configured filter continue using their normal project-wide search behavior.
 
-Filters are persisted on the asset index and affect later rebuilds. Adding a filter does not immediately remove existing entries; run a rebuild when the configured scope should become authoritative.
+Filters are persisted on the asset index and affect later rebuilds, and automatic registration of new slots, overlays and races (see [Automatic registration](#automatic-registration)). Adding a filter does not immediately remove existing entries; run a rebuild when the configured scope should become authoritative.
 
 Use `Browse` to choose a folder under the current project's `Assets` directory. `Remove` removes only that type/path rule. Be careful with broad substring filters and similarly named folders, because matching is path-string based.
 
@@ -164,7 +182,7 @@ The Danger Zone command removes every serialized index item but does not delete 
 When adding one clothing item:
 
 1. Create the slot, overlay, and wardrobe recipe.
-2. Add them through Slot Builder or the Project context menu.
+2. Slots and overlays are added (and the library saved) automatically; add the wardrobe recipe through Slot Builder or the Project context menu.
 3. Open Global Library.
 4. Filter for each asset name.
 5. Inspect the wardrobe recipe and verify race compatibility.

@@ -63,11 +63,26 @@ namespace UMA
             texture.mipMapBias = MipBias(material);
             texture.filterMode = Filter(material);
         }
-        internal static void Compress(Texture2D texture, GeneratorRuntimeCompression mode)
+        internal static void Compress(Texture2D texture, GeneratorRuntimeCompression mode, bool makeNoLongerReadable = false)
         {
             if (mode == GeneratorRuntimeCompression.Disabled || texture == null || !texture.isReadable) return;
             texture.Compress(mode == GeneratorRuntimeCompression.HighQuality);
-            texture.Apply(false, false);
+            texture.Apply(false, makeNoLongerReadable);
+        }
+
+        /// <summary>
+        /// Uploads a converted atlas whose CPU pixels are filled, compressing it when asked. Unless
+        /// <paramref name="keepReadable"/> is set, the last upload frees the CPU copy: the GPU
+        /// texture is all a material needs, and the copy is as large as the texture.
+        /// </summary>
+        internal static void FinishConvertedTexture(Texture2D texture, bool updateMipmaps,
+            GeneratorRuntimeCompression mode, bool keepReadable)
+        {
+            if (texture == null) return;
+            bool compress = mode != GeneratorRuntimeCompression.Disabled;
+            // Compression works on the CPU pixels, so they must survive the first upload.
+            texture.Apply(updateMipmaps, !keepReadable && !compress);
+            if (compress) Compress(texture, mode, !keepReadable);
         }
     }
     [Serializable]

@@ -44,15 +44,7 @@ This is destructive to the extra channel entries. It preserves only the existing
 
 ## Convert Selected Textures to PNG
 
-Select textures and choose `Assets > UMA > Texture Utilities > Convert selected textures to PNG`.
-
-The tool converts readable copies to RGBA32 PNG and can:
-
-- Overwrite an existing PNG.
-- Keep the original and create a `_converted.png` result.
-- Replace references in indexed overlays.
-
-Unity's encoder does not expose compression-level or interlace settings. Review alpha, color space, normal-map encoding, and importer settings after conversion.
+Select textures, right-click **UMA > Texture Tools** and use the **Convert to PNG** tab. It can replace each file in place, keeping its GUID, references and import settings, or create PNG copies and point overlays at them. See [Texture Tools](TextureTools.md#convert-to-png).
 
 ## Choosing the Right Tool
 
@@ -63,7 +55,7 @@ Unity's encoder does not expose compression-level or interlace settings. Review 
 | Organize active-scene dependencies into category folders | Consolidate Current Scene Assets |
 | Repair renamed or missing packed slot identifiers | Repair Text Recipe |
 | Remove obsolete overlay channel entries beyond material count | Repair Overlays with too many textures |
-| Create standard PNG files and optionally update overlays | Convert selected textures to PNG |
+| Create standard PNG files and optionally update overlays | Texture Tools > Convert to PNG |
 
 ## Safe Workflow
 

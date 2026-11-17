@@ -48,9 +48,12 @@ namespace UMA
 					if( !IsGeneratedTexture(materialChannel.channelType)) continue;
 					var atlas = generatedMaterial.resultingAtlasList[i];
 					Texture2D tex2D = atlas as Texture2D;
+					Texture2D readableCopy = null;
+					bool linearCopy = PlayerSettings.colorSpace == ColorSpace.Linear || materialChannel.channelType == UMAMaterial.ChannelType.NormalMap;
 					if (tex2D == null)
 					{
-						tex2D = new Texture2D(atlas.width, atlas.height, TextureFormat.ARGB32, false, PlayerSettings.colorSpace == ColorSpace.Linear || materialChannel.channelType == UMAMaterial.ChannelType.NormalMap);
+						tex2D = new Texture2D(atlas.width, atlas.height, TextureFormat.ARGB32, false, linearCopy);
+						readableCopy = tex2D;
 						RenderTexture.active = atlas as RenderTexture;
 						tex2D.ReadPixels(new Rect(0, 0, atlas.width, atlas.height), 0, 0, false);
 						RenderTexture.active = null;
@@ -61,8 +64,18 @@ namespace UMA
 						}
 #endif
 					}
+					else if (!tex2D.isReadable)
+					{
+						// Converted atlases keep no CPU copy unless the generator asks for one, so read the GPU texture back.
+						readableCopy = ReadBack(tex2D, linearCopy);
+						tex2D = readableCopy;
+					}
 					tex2D.name = name + "_" + generatedMaterial.umaMaterial.name + materialChannel.materialPropertyName;
 					WriteAllBytes(GetAssetPath(assetFolder + "/" + tex2D.name + ".png"), tex2D.EncodeToPNG());
+					if (readableCopy != null)
+					{
+						UnityEngine.Object.DestroyImmediate(readableCopy);
+					}
 				}
 			}
 			AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
@@ -191,6 +204,27 @@ namespace UMA
 		{
 			var nameSpace = component.GetType().Namespace;
 			return string.Compare(nameSpace, "UMA", true) == 0 || nameSpace.StartsWith("UMA.", StringComparison.InvariantCultureIgnoreCase);
+		}
+
+		// A readable copy of a texture that has no CPU pixels, read back from the GPU unchanged.
+		private static Texture2D ReadBack(Texture texture, bool linear)
+		{
+			RenderTexture temporary = RenderTexture.GetTemporary(texture.width, texture.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+			RenderTexture previous = RenderTexture.active;
+			try
+			{
+				Graphics.Blit(texture, temporary);
+				RenderTexture.active = temporary;
+				var copy = new Texture2D(texture.width, texture.height, TextureFormat.ARGB32, false, linear);
+				copy.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0, false);
+				copy.Apply(false, false);
+				return copy;
+			}
+			finally
+			{
+				RenderTexture.active = previous;
+				RenderTexture.ReleaseTemporary(temporary);
+			}
 		}
 
 		private static void TransformNormalMap(Texture2D tex2D)

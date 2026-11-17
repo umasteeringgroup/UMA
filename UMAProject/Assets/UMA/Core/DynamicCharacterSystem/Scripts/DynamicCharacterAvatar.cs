@@ -894,9 +894,12 @@ namespace UMA.CharacterSystem
 
         public bool nextBuildSlotsOnly = false;
         private const string EditorGenerationPausedSessionKey = "UMA.Toolbar.EditorGenerationPaused";
-        private int generateWait = 0;
-        private bool editorGenerationQueued;
-        private bool pendingEditorGenerationIgnoresPause;
+        // The queued edit-time build. NonSerialized: Unity keeps private fields through a domain
+        // reload but drops the delayCall that would run the build, and a flag left set blocked
+        // every later edit-time build of the avatar.
+        [NonSerialized] private int generateWait = 0;
+        [NonSerialized] private bool editorGenerationQueued;
+        [NonSerialized] private bool pendingEditorGenerationIgnoresPause;
         const int maxWait = 60;
 
         /// <summary>
@@ -941,12 +944,11 @@ namespace UMA.CharacterSystem
             generateWait = 0;
             nextBuildSlotsOnly = slotsOnly;
             pendingEditorGenerationIgnoresPause |= ignoreEditorPause;
-            if (editorGenerationQueued)
-            {
-                return;
-            }
-
             editorGenerationQueued = true;
+            // Removed first, so exactly one build is pending. The flag alone does not prove the
+            // callback is still queued: a domain reload, or an exception in another delayCall
+            // callback run in the same batch, drops it, and the build would then never happen.
+            EditorApplication.delayCall -= InternalGenerateSingleUMA;
             EditorApplication.delayCall += InternalGenerateSingleUMA;
         }
 

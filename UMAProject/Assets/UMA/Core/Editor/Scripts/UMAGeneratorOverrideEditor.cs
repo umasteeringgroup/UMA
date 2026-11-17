@@ -308,6 +308,7 @@ namespace UMA.Editors
                     using (new EditorGUI.DisabledScope(!asyncEnabled))
                         Field("asyncMipRegen", "Regenerate Async Mips");
                 }
+                Field("keepConvertedTexturesReadable", "Keep Converted Textures Readable");
             }
         }
 

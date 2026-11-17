@@ -52,7 +52,9 @@ namespace UMA.Editors.Tests
         private static List<Vector3> GeneratedVertices(UMARigProfilePreview built)
         {
             var vertices = new List<Vector3>();
-            foreach (SkinnedMeshRenderer renderer in built.Avatar.umaData.GetRenderers())
+            SkinnedMeshRenderer[] renderers = built.Avatar.umaData != null ? built.Avatar.umaData.GetRenderers() : null;
+            if (renderers == null) return vertices;
+            foreach (SkinnedMeshRenderer renderer in renderers)
             {
                 if (renderer != null && renderer.sharedMesh != null) vertices.AddRange(renderer.sharedMesh.vertices);
             }
@@ -267,6 +269,102 @@ namespace UMA.Editors.Tests
             preview.Dispose();
             preview.CollectEffectorVertices(sphere, leftAlone);
             Assert.AreEqual(0, leftAlone.Count, "nothing to list without a built preview");
+        }
+
+        [Test]
+        public void ABonesVertexBoundsCoverTheConvertedVerticesItMovesWhereThePreviewShowsThem()
+        {
+            Assert.IsTrue(preview.Build(targetRace, profile, null, new[] { jacket }), string.Join(" | ", preview.Messages));
+            UMARigProfilePreview.PreviewSlot worn = preview.Slots[0];
+            Assert.IsTrue(worn.Converted, worn.Note);
+            UMAMeshData mesh = worn.Copy.meshData;
+
+            // The arm bone that moves the most jacket vertices, and a toe bone the jacket does not follow.
+            var perInfluence = new int[mesh.boneNameHashes.Length];
+            foreach (BoneWeight1 w in mesh.ManagedBoneWeights) if (w.weight >= 0.01f) perInfluence[w.boneIndex]++;
+            string bone = null, toe = null;
+            int boneIndex = -1;
+            foreach (KeyValuePair<int, UMATransform> entry in preview.TargetRig.Bones)
+            {
+                string name = entry.Value?.name;
+                if (string.IsNullOrEmpty(name)) continue;
+                int index = System.Array.IndexOf(mesh.boneNameHashes, entry.Key);
+                if (name.Contains("Arm") && index >= 0 && (boneIndex < 0 || perInfluence[index] > perInfluence[boneIndex])) { bone = name; boneIndex = index; }
+                if (name.Contains("Toe") && (index < 0 || perInfluence[index] == 0)) toe = name;
+            }
+            Assert.IsNotNull(bone, "the converted jacket must be skinned to an arm bone");
+            Assert.IsNotNull(toe, "the rig must have a toe bone the jacket does not follow");
+
+            // The same vertices, found and placed independently: weights read here, positions from the rest-pose bake.
+            Assert.IsTrue(UMARigBodySurface.TryBakeToAvatar(mesh, preview.TargetRig, out Vector3[] rest, out _));
+            Transform avatar = preview.AvatarObject.transform;
+            Bounds expected = default;
+            int expectedCount = 0, cursor = 0;
+            for (int v = 0; v < mesh.vertices.Length; v++)
+            {
+                bool weighted = false;
+                for (int k = 0; k < mesh.ManagedBonesPerVertex[v]; k++, cursor++)
+                {
+                    weighted |= mesh.ManagedBoneWeights[cursor].boneIndex == boneIndex && mesh.ManagedBoneWeights[cursor].weight >= 0.01f;
+                }
+                if (!weighted) continue;
+                Vector3 world = avatar.TransformPoint(rest[v]);
+                if (expectedCount++ == 0) expected = new Bounds(world, Vector3.zero); else expected.Encapsulate(world);
+            }
+
+            Assert.IsTrue(preview.TryGetBoneVertexBounds(bone, null, out Bounds bounds, out int count));
+            Assert.AreEqual(expectedCount, count);
+            Assert.That(Vector3.Distance(bounds.min, expected.min), Is.LessThan(1e-3f), "placed as the preview shows it at rest");
+            Assert.That(Vector3.Distance(bounds.max, expected.max), Is.LessThan(1e-3f));
+            Assert.IsTrue(preview.TryGetBounds(out Bounds character));
+            Assert.That(bounds.size.magnitude, Is.LessThan(character.size.magnitude * 0.5f), "a sleeve, not the whole character");
+
+            // It follows the pose shown.
+            preview.SetPose(false);
+            Assert.IsTrue(preview.TryGetBoneVertexBounds(bone, null, out Bounds tPose, out int tPoseCount));
+            Assert.AreEqual(count, tPoseCount);
+            Assert.That(Vector3.Distance(tPose.center, bounds.center), Is.GreaterThan(0.01f), bone + " moves between rest pose and T-pose");
+            preview.SetPose(true);
+
+            // Kept to one slot: only that slot's vertices count.
+            Assert.IsTrue(preview.TryGetBoneVertexBounds(bone, jacket.slotName, out _, out int scoped));
+            Assert.AreEqual(count, scoped);
+            Assert.IsFalse(preview.TryGetBoneVertexBounds(bone, "Some other slot", out _, out _));
+
+            // A bone the jacket does not follow has no vertex bounds, but its joint can still be framed.
+            Assert.IsFalse(preview.TryGetBoneVertexBounds(toe, null, out _, out _));
+            Assert.IsTrue(preview.TryGetBoneJointBounds(toe, out Bounds joint));
+            Assert.That(Vector3.Distance(joint.center, preview.GetBone(UMAUtils.StringToHash(toe)).position), Is.LessThan(0.2f));
+            Assert.IsFalse(preview.TryGetBoneJointBounds("NoSuchBone", out _));
+
+            preview.Dispose();
+            Assert.IsFalse(preview.TryGetBoneVertexBounds(bone, null, out _, out _), "nothing to frame without a built preview");
+        }
+
+        [Test]
+        public void SavingTheSceneLeavesThePreviewCharacterBuilt()
+        {
+            // Done in an empty scene of its own, so the scene-save cleanup cannot touch any other character.
+            UnityEngine.SceneManagement.Scene scratch = UnityEditor.SceneManagement.EditorSceneManager.NewScene(
+                UnityEditor.SceneManagement.NewSceneSetup.EmptyScene, UnityEditor.SceneManagement.NewSceneMode.Additive);
+            try
+            {
+                Assert.IsTrue(preview.Build(targetRace, profile, null, new[] { jacket }), string.Join(" | ", preview.Messages));
+                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(preview.AvatarObject, scratch);
+                int before = GeneratedVertices(preview).Count;
+                Assert.That(before, Is.GreaterThan(0));
+
+                // What Unity's sceneSaving runs when "Clean and regenerate on save" is on.
+                UMAAssetIndexer.CleanupUMAS(scratch);
+
+                Assert.IsTrue(preview.IsBuilt);
+                Assert.AreEqual(before, GeneratedVertices(preview).Count, "a character that is not saved with the scene keeps its mesh");
+            }
+            finally
+            {
+                preview.Dispose();
+                UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scratch, true);
+            }
         }
 
         [Test]
