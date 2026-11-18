@@ -15,16 +15,16 @@ MonoBehaviour:
   poses:
   - bone: LeftArmAdjust
     hash: -270431657
-    position: {x: 0, y: 0, z: 0}
+    position: {x: 0.00036629452, y: -0.021193143, z: 0.0002599894}
     rotation: {x: 0, y: 0, z: 0, w: 1}
-    scale: {x: 1, y: 1, z: 1}
+    scale: {x: 0.8315682, y: 0.9999541, z: 1.0000341}
     category: 
     enabled: 1
   - bone: LeftForeArmAdjust
     hash: 923803339
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
-    scale: {x: 1, y: 1, z: 1}
+    scale: {x: 0.7751568, y: 1.0004907, z: 0.99995494}
     category: 
     enabled: 1
   - bone: LeftForeArmTwistAdjust
@@ -78,16 +78,16 @@ MonoBehaviour:
     enabled: 1
   - bone: RightArmAdjust
     hash: -413665443
-    position: {x: 0, y: 0, z: 0}
+    position: {x: -0.00036629452, y: -0.021193143, z: 0.0002599894}
     rotation: {x: 0, y: 0, z: 0, w: 1}
-    scale: {x: 1, y: 1, z: 1}
+    scale: {x: 0.8315682, y: 0.9999541, z: 1.0000341}
     category: 
     enabled: 1
   - bone: RightForeArmAdjust
     hash: -1195342688
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 1}
-    scale: {x: 1, y: 1, z: 1}
+    scale: {x: 0.7751568, y: 1.0004907, z: 0.99995494}
     category: 
     enabled: 1
   - bone: RightForeArmTwistAdjust

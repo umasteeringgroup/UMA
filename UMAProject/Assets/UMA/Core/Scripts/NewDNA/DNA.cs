@@ -51,12 +51,31 @@ namespace UMA
             return updateFlags;
         }
         
-        public DNABuildType AfterRecipeGeneration(UMAData avatar, float value)
+        /// <summary>
+        /// True when an effect takes part in a pass limited to the given build types.
+        /// DNABuildType.All means no limit, so effects that report no build type still run.
+        /// </summary>
+        private static bool InBuildTypes(DNAEffect effect, DNABuildType only)
+        {
+            return only == DNABuildType.All || (effect.AreaEffect & only) != 0;
+        }
+
+        /// <param name="atDefaultValue">True when value is this DNA's default. Only effects that ask for it run then.</param>
+        /// <param name="only">Limits the pass to effects that report one of these build types.</param>
+        public DNABuildType AfterRecipeGeneration(UMAData avatar, float value, bool atDefaultValue = false, DNABuildType only = DNABuildType.All)
         {
             DNABuildType updateFlags = DNABuildType.None;
             foreach (var effect in effects)
             {
                 if (effect == null || !effect.enabled)
+                {
+                    continue;
+                }
+                if (atDefaultValue && !effect.AppliesAtDefaultValue)
+                {
+                    continue;
+                }
+                if (!InBuildTypes(effect, only))
                 {
                     continue;
                 }
@@ -137,12 +156,17 @@ namespace UMA
             return updateFlags;
         }
 
-        public DNABuildType PostApply(UMAData avatar, float value)
+        /// <param name="only">Limits the pass to effects that report one of these build types.</param>
+        public DNABuildType PostApply(UMAData avatar, float value, DNABuildType only = DNABuildType.All)
         {
             DNABuildType updateFlags = DNABuildType.None;
             foreach (var effect in effects)
             {
                 if (effect == null || !effect.enabled)
+                {
+                    continue;
+                }
+                if (!InBuildTypes(effect, only))
                 {
                     continue;
                 }

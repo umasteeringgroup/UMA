@@ -45,8 +45,9 @@ namespace UMA
             colorType = (ColorType)UnityEditor.EditorGUILayout.EnumPopup("Color Type", colorType);
         }
 #endif
-        // Updating a sharedcolor only touches textures
-        public override DNAInstanceCollection.DNABuildType AreaEffect => DNABuildType.Texture;
+        // The color is written while the recipe is loaded, so a DNA change needs that step run again
+        // (SharedColors), not only the textures redrawn from the colors already in place.
+        public override DNAInstanceCollection.DNABuildType AreaEffect => DNABuildType.Texture | DNABuildType.SharedColors;
         public override ExpressionEffectPhase ExpressionPhases =>
             ExpressionEffectPhase.BuildAfterRecipe;
         /// <inheritdoc />

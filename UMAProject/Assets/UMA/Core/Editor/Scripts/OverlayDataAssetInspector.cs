@@ -25,6 +25,7 @@ namespace UMA.Editors
         private SerializedProperty _occlusionEntries;
         private SerializedProperty _noAutoAdd;
         private SerializedProperty _dontMergeDuplicates;
+        private SerializedProperty _ignoreColorAlpha;
         private bool _showOverlayValueCopy;
         private OverlayDataAsset _sourceOverlay;
         private bool _allCutouts;
@@ -57,6 +58,7 @@ namespace UMA.Editors
             _textureNames = serializedObject.FindProperty("textureNames");
             _blendList = serializedObject.FindProperty("overlayBlend");
             _dontMergeDuplicates = serializedObject.FindProperty("dontMergeDuplicates");
+            _ignoreColorAlpha = serializedObject.FindProperty("ignoreColorAlpha");
             _rect = serializedObject.FindProperty("rect");
             _alphaMask = serializedObject.FindProperty("alphaMask");
             _tags = serializedObject.FindProperty("tags");
@@ -189,6 +191,10 @@ namespace UMA.Editors
             if (_dontMergeDuplicates != null)
             {
                 EditorGUILayout.PropertyField(_dontMergeDuplicates, new GUIContent("Don't Merge Duplicates", "If this is true, this overlay will not removed if it's a duplicate"));
+            }
+            if (_ignoreColorAlpha != null)
+            {
+                EditorGUILayout.PropertyField(_ignoreColorAlpha, new GUIContent("Ignore Color Alpha", "Draw this overlay at full strength on Diffuse Texture channels, whatever the alpha of its color. Turn it on for a base overlay that shares its color with an overlay that should fade in above it."));
             }
 
 

@@ -17,10 +17,68 @@ MonoBehaviour:
   effects:
   - rid: 7828207344866296472
   - rid: 7828207344866296474
+  - rid: 4634152745382183398
   displayName: Fitness
   references:
     version: 2
     RefIds:
+    - rid: 4634152745382183398
+      type: {class: DNAEffect_SharedColorChannel, ns: UMA, asm: UMA_Core}
+      data:
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.49923706
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.68826336
+            value: 0.73986703
+            inSlope: 2.336242
+            outSlope: 2.336242
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0.33333334
+            outWeight: 0.11791079
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        minMapping: 0
+        maxMapping: 1
+        enabled: 1
+        expanded: 1
+        selected: 0
+        showHelp: 0
+        EffectName: 
+        ChannelValue: 1
+        SharedColorName: Skin
+        colorComponent: 3
+        TextureNumber: -1
+        colorType: 0
     - rid: 7828207344866296472
       type: {class: DNAEffect_BonePose, ns: UMA, asm: UMA_Core}
       data:

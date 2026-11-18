@@ -94,6 +94,13 @@ namespace UMA
         /// </summary>
         public bool dontMergeDuplicates = false;
         /// <summary>
+        /// When true, this overlay is drawn at full strength on base color (Diffuse Texture) channels,
+        /// whatever the alpha of its color. On those channels the color's alpha fades an overlay,
+        /// so this keeps a base skin in place while another overlay that shares its color fades in above it.
+        /// </summary>
+        [Tooltip("Draw this overlay at full strength on Diffuse Texture channels, whatever the alpha of its color. Turn it on for a base overlay that shares its color with an overlay that should fade in above it.")]
+        public bool ignoreColorAlpha = false;
+        /// <summary>
         /// Destination rectangle for drawing overlay textures.
         /// </summary>
         [Tooltip("Destination rectangle for drawing overlay textures.")]

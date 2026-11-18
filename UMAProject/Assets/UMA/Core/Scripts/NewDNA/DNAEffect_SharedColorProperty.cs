@@ -40,7 +40,10 @@ namespace UMA
         /// </summary>
         public Color oneColorValue;
 
-        public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Texture;
+        // The property is written while the recipe is loaded, so a DNA change needs that step run again
+        // (SharedColors), not only the textures redrawn from the values already in place.
+        public override DNAInstanceCollection.DNABuildType AreaEffect =>
+            DNAInstanceCollection.DNABuildType.Texture | DNAInstanceCollection.DNABuildType.SharedColors;
         public override ExpressionEffectPhase ExpressionPhases =>
             ExpressionEffectPhase.BuildAfterRecipe;
 

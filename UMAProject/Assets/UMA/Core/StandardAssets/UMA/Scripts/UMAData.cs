@@ -147,10 +147,79 @@ namespace UMA
 #endif
 
 
+        // Mesh modifiers that DNA effects added, kept apart so a DNA change can replace them
+        // without touching the ones that came from the recipes.
+        private readonly List<MeshModifier.Modifier> dnaMeshModifiers = new List<MeshModifier.Modifier>();
+        // Where each slot's DNA modifiers sat before they were removed, so their replacements go back
+        // in the same place and the order of modifiers matches a full build.
+        private readonly Dictionary<string, int> dnaMeshModifierInsertIndex = new Dictionary<string, int>();
+
         public void ClearModifiers()
         {
             meshModifiers.Clear();
 			accumulatedModifiers.Clear();
+            dnaMeshModifiers.Clear();
+            dnaMeshModifierInsertIndex.Clear();
+        }
+
+        /// <summary>
+        /// Adds mesh modifiers produced by a DNA effect. They take part in the mesh build like any other
+        /// modifier, and <see cref="RemoveDNAMeshModifiers"/> can take them out again.
+        /// </summary>
+        public void AddDNAMeshModifiers(List<MeshModifier.Modifier> modifiers)
+        {
+            if (modifiers == null)
+            {
+                return;
+            }
+            foreach (MeshModifier.Modifier modifier in modifiers)
+            {
+                if (modifier == null || string.IsNullOrEmpty(modifier.SlotName))
+                {
+                    continue;
+                }
+                if (dnaMeshModifierInsertIndex.TryGetValue(modifier.SlotName, out int index) &&
+                    meshModifiers.TryGetValue(modifier.SlotName, out List<MeshModifier.Modifier> slotModifiers) &&
+                    index <= slotModifiers.Count)
+                {
+                    slotModifiers.Insert(index, modifier);
+                    dnaMeshModifierInsertIndex[modifier.SlotName] = index + 1;
+                }
+                else
+                {
+                    AddMeshModifier(modifier);
+                }
+                dnaMeshModifiers.Add(modifier);
+            }
+        }
+
+        /// <summary>
+        /// Removes the mesh modifiers that DNA effects added, leaving the recipes' own modifiers in place.
+        /// </summary>
+        public void RemoveDNAMeshModifiers()
+        {
+            dnaMeshModifierInsertIndex.Clear();
+            for (int i = 0; i < dnaMeshModifiers.Count; i++)
+            {
+                MeshModifier.Modifier modifier = dnaMeshModifiers[i];
+                if (!meshModifiers.TryGetValue(modifier.SlotName, out List<MeshModifier.Modifier> slotModifiers))
+                {
+                    continue;
+                }
+                int index = slotModifiers.IndexOf(modifier);
+                if (index < 0)
+                {
+                    continue;
+                }
+                slotModifiers.RemoveAt(index);
+                // Modifiers are removed in the order they were added, so the first one found per slot
+                // is where the block started.
+                if (!dnaMeshModifierInsertIndex.ContainsKey(modifier.SlotName))
+                {
+                    dnaMeshModifierInsertIndex.Add(modifier.SlotName, index);
+                }
+            }
+            dnaMeshModifiers.Clear();
         }
 
 		public void AddMeshModifier(MeshModifier.Modifier modifier)
@@ -1813,6 +1882,41 @@ namespace UMA
 			public List<Dictionary<int, Texture>> overrides = new List<Dictionary<int,Texture>>();
 
 			public Color GetMultiplier(int overlay, int textureType)
+			{
+				Color c = GetColorMultiplier(overlay, textureType);
+				if (IgnoresColorAlpha(overlay, textureType))
+				{
+					c.a = 1f;
+				}
+				return c;
+			}
+
+			/// <summary>
+			/// True when the overlay asks to be drawn at full strength on this channel whatever the alpha of its color.
+			/// Only Diffuse Texture channels use the color's alpha as the overlay's strength; on other channel types
+			/// the alpha is data (for example smoothness) and is left alone.
+			/// </summary>
+			private bool IgnoresColorAlpha(int overlay, int textureType)
+			{
+				if (overlayData == null || overlay < 0 || overlay >= overlayData.Length)
+				{
+					return false;
+				}
+				OverlayData data = overlayData[overlay];
+				if (data == null || data.asset == null || !data.asset.ignoreColorAlpha)
+				{
+					return false;
+				}
+				UMAMaterial sourceMaterial = umaMaterial != null ? umaMaterial : slotData?.material;
+				if (sourceMaterial == null || sourceMaterial.channels == null ||
+					textureType < 0 || textureType >= sourceMaterial.channels.Length)
+				{
+					return false;
+				}
+				return sourceMaterial.channels[textureType].channelType == UMAMaterial.ChannelType.DiffuseTexture;
+			}
+
+			private Color GetColorMultiplier(int overlay, int textureType)
 			{
 				var c = Color.white;
 				if (overlay >= overlayData.Length)

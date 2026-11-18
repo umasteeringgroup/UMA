@@ -6098,6 +6098,59 @@ namespace UMA.CharacterSystem
 
 
 
+        /// <summary>
+        /// Applies a change to DNA values on a character that is already loaded, doing only the work the
+        /// build types call for. Pass the build types the changed DNA reports (<see cref="DNA.GetBuildType"/>).
+        /// <para>SharedColors: the color effects write their colors again, the colors go into the recipe, and
+        /// the textures are rebuilt. MeshModifiers: the DNA mesh modifiers are replaced and only the mesh is
+        /// rebuilt. BlendShape: the weights are set on the renderers, with no build. Rig, Texture and Mesh
+        /// mark that part for rebuilding.</para>
+        /// </summary>
+        /// <returns>True when the character was marked dirty and still has to be generated.</returns>
+        public bool ApplyDNABuildType(DNAInstanceCollection.DNABuildType buildType)
+        {
+            if (umaData == null || umaData.umaRecipe == null)
+            {
+                return false;
+            }
+
+            bool rig = (buildType & DNAInstanceCollection.DNABuildType.Rig) != 0;
+            bool texture = (buildType & DNAInstanceCollection.DNABuildType.Texture) != 0;
+            bool mesh = (buildType & DNAInstanceCollection.DNABuildType.Mesh) != 0;
+
+            if ((buildType & DNAInstanceCollection.DNABuildType.SharedColors) != 0)
+            {
+                // The color effects only write the avatar's colors; the textures are drawn from the recipe's.
+                dnaInstanceCollection?.AfterRecipeGenerated(this, DNAInstanceCollection.DNABuildType.SharedColors);
+                UpdateColors();
+                texture = true;
+            }
+
+            if ((buildType & DNAInstanceCollection.DNABuildType.MeshModifiers) != 0)
+            {
+                // Replace what the DNA effects added; the recipes' own modifiers stay as they are.
+                umaData.RemoveDNAMeshModifiers();
+                dnaInstanceCollection?.AfterRecipeGenerated(this, DNAInstanceCollection.DNABuildType.MeshModifiers);
+                // Runtime DNA providers add their modifiers through the same step, so they are put back too.
+                RuntimeDNAsAfterRecipeGenerated(this);
+                ApplyDNAToModifiers();
+                mesh = true;
+            }
+
+            if (rig || texture || mesh)
+            {
+                // The generator sets blendshape weights itself at the end of a build.
+                Dirty(rig, texture, mesh);
+                return true;
+            }
+
+            if ((buildType & DNAInstanceCollection.DNABuildType.BlendShape) != 0)
+            {
+                dnaInstanceCollection?.PostApplyEffects(this, DNAInstanceCollection.DNABuildType.BlendShape);
+            }
+            return false;
+        }
+
         private static bool TryGetLegacyDNAValue(UMADnaBase[] dna, string name, out float value)
         {
             // GetDNA keeps the last exact-name entry across legacy blocks and within a block.

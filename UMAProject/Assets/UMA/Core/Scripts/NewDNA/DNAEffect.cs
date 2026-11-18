@@ -62,6 +62,17 @@ namespace UMA
         }
 
         /// <summary>
+        /// DNA at its default value is normally skipped, because most effects do nothing there.
+        /// Return true for an effect that writes a value outright (for example a shared color component),
+        /// so that going back to the default also writes the value the curve gives for it
+        /// instead of leaving the last one in place.
+        /// </summary>
+        public virtual bool AppliesAtDefaultValue
+        {
+            get { return false; }
+        }
+
+        /// <summary>
         /// Declares where this effect can be evaluated by an expression player.
         /// Build dirtiness remains described separately by <see cref="AreaEffect"/>.
         /// </summary>

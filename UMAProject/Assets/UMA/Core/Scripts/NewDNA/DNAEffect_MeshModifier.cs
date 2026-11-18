@@ -37,7 +37,8 @@ namespace UMA
             base.AfterRecipeGenerated(avatar, dna, value);
             if (avatar != null && meshModifier != null)
             {
-                avatar.AddMeshModifiers(meshModifier.GetScaledRuntimeModifiers(GetMappedValue(value)));
+                // Added as DNA modifiers so a later DNA change can replace them and rebuild only the mesh.
+                avatar.AddDNAMeshModifiers(meshModifier.GetScaledRuntimeModifiers(GetMappedValue(value)));
             }
         }
     }
