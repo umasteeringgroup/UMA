@@ -31,6 +31,7 @@ namespace UMA
         public GeneratorQualityValue<bool> useAsyncConversion = new GeneratorQualityValue<bool>(true);
         public GeneratorQualityValue<bool> asyncMipRegen = new GeneratorQualityValue<bool>(true);
         public GeneratorQualityValue<bool> keepConvertedTexturesReadable = new GeneratorQualityValue<bool>(false);
+        public GeneratorQualityValue<bool> forceGPUTextureCompression = new GeneratorQualityValue<bool>(false);
         [Header("Scheduling")]
         public GeneratorQualityValue<int> MaxQueuedConversionsPerFrame = new GeneratorQualityValue<int>(8);
         public GeneratorQualityValue<int> IterationCount = new GeneratorQualityValue<int>(1);
@@ -96,6 +97,7 @@ namespace UMA
             result.useAsyncConversion = useAsyncConversion.Resolve(result.useAsyncConversion);
             result.asyncMipRegen = asyncMipRegen.Resolve(result.asyncMipRegen);
             result.keepConvertedTexturesReadable = keepConvertedTexturesReadable.Resolve(result.keepConvertedTexturesReadable);
+            result.forceGPUTextureCompression = forceGPUTextureCompression.Resolve(result.forceGPUTextureCompression);
             result.MaxQueuedConversionsPerFrame = MaxQueuedConversionsPerFrame.Resolve(result.MaxQueuedConversionsPerFrame);
             result.IterationCount = IterationCount.Resolve(result.IterationCount);
             result.InterFrameDelay = InterFrameDelay.Resolve(result.InterFrameDelay);

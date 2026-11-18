@@ -19,6 +19,9 @@ namespace UMA.Editors
         SerializedProperty useNewDNA;
         SerializedProperty asyncMipRegen;
         SerializedProperty keepConvertedTexturesReadable;
+        SerializedProperty forceGPUTextureCompression;
+        /// <summary>Inspector label of the forceGPUTextureCompression setting, shared by the generator editors.</summary>
+        public const string ForceGPUTextureCompressionLabel = "Force GPU Texture Compression (Experimental)";
         public static bool showAtlasSettings = false;
         public static bool showConversionSettings = false;
 
@@ -41,6 +44,7 @@ namespace UMA.Editors
             useAsyncConversion = serializedObject.FindProperty("useAsyncConversion");
             asyncMipRegen = serializedObject.FindProperty("asyncMipRegen");
             keepConvertedTexturesReadable = serializedObject.FindProperty("keepConvertedTexturesReadable");
+            forceGPUTextureCompression = serializedObject.FindProperty("forceGPUTextureCompression");
         }
 
         public override void OnInspectorGUI()
@@ -81,6 +85,8 @@ namespace UMA.Editors
                 EditorGUILayout.PropertyField(useAsyncConversion);
                 EditorGUILayout.PropertyField(asyncMipRegen);
                 EditorGUILayout.PropertyField(keepConvertedTexturesReadable);
+                EditorGUILayout.PropertyField(forceGPUTextureCompression,
+                    new GUIContent(ForceGPUTextureCompressionLabel, forceGPUTextureCompression.tooltip));
                 GUIHelper.EndVerticalPadded();
             }
 

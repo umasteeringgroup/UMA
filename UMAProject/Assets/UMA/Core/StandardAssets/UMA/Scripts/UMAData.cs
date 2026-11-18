@@ -246,17 +246,35 @@ namespace UMA
 				var slot = umaRecipe.slotDataList[i];
 				if (slot != null && slot.meshModifiers != null)
 				{
-				slot.meshModifiers.Clear();
-				if (accumulatedModifiers.ContainsKey(slot.asset.sourceSlot))
+					slot.meshModifiers.Clear();
+					if (slot.asset != null)
+					{
+						AddModifiersForSlotKeys(slot);
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Adds the accumulated modifiers whose slot key names this slot: its logical source name, or
+		/// the legacy asset-name form older modifiers were saved with (see MeshModifier.IsLegacySlotKey).
+		/// </summary>
+		private void AddModifiersForSlotKeys(SlotData slot)
+		{
+			string sourceSlot = slot.asset.sourceSlot;
+			if (!string.IsNullOrEmpty(sourceSlot) && accumulatedModifiers.TryGetValue(sourceSlot, out var exact))
+			{
+				slot.meshModifiers.AddRange(exact);
+			}
+			foreach (var kvp in accumulatedModifiers)
+			{
+				if (!string.Equals(kvp.Key, sourceSlot, StringComparison.Ordinal) &&
+					MeshModifier.IsLegacySlotKey(kvp.Key, slot.asset))
 				{
-					var modifiers = accumulatedModifiers[slot.asset.sourceSlot];
-					//Debug.Log($"Adding {modifiers.Count} modifiers to slot {slot.asset.slotName}");
-                        slot.meshModifiers.AddRange(modifiers);
-                }
-            }
-			
-        }
-        }
+					slot.meshModifiers.AddRange(kvp.Value);
+				}
+			}
+		}
         #endregion
 
         #region SAVE RESTORE ITEMS

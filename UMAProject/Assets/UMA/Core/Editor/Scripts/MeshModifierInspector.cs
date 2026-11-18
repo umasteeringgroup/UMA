@@ -7,7 +7,7 @@ using UnityEngine;
 namespace UMA
 {
     [CustomEditor(typeof(MeshModifier))]
-    public class MeshModifierInspector : Editor
+    public partial class MeshModifierInspector : Editor
     {
         private SerializedProperty _runtimeModifiersProp;
         private SerializedProperty _editorModifiersProp;
@@ -270,6 +270,12 @@ namespace UMA
             if (serializedObject.ApplyModifiedProperties())
             {
                 if (mm != null) EditorUtility.SetDirty(mm);
+            }
+
+            if (targets.Length == 1 && mm != null)
+            {
+                GUILayout.Space(10);
+                DrawEditInSceneButton(mm);
             }
         }
 

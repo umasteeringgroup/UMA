@@ -332,9 +332,13 @@ namespace UMA
                                     }
 
                                     RenderTextureFormat channelTextureFormat = UMAMaterial.GetCompatibleChannelTextureFormat(channels[textureChannelNumber].textureFormat);
-                                    bool CopyRTtoTex = SupportsRTToTexture2D && (umaGenerator.convertRenderTexture || channels[textureChannelNumber].ConvertRenderTexture);
+                                    // GPU compression produces its own Texture2D, so it counts as a conversion
+                                    // whatever the conversion settings say.
+                                    GraphicsFormat gpuFormat = UMAGpuTextureCompressor.ResolveFormat(umaGenerator, channelTextureFormat);
+                                    bool gpuCompress = gpuFormat != GraphicsFormat.None;
+                                    bool CopyRTtoTex = gpuCompress || SupportsRTToTexture2D && (umaGenerator.convertRenderTexture || channels[textureChannelNumber].ConvertRenderTexture);
                                     bool convertedMipMaps = umaGenerator.qualityTextures.Mips(umaGenerator.convertMipMaps);
-                                    if (CopyRTtoTex)
+                                    if (CopyRTtoTex && !gpuCompress)
                                     {
                                         TextureFormat ignoredTextureFormat;
                                         if (!TryGetTextureFormat(channelTextureFormat, out ignoredTextureFormat))
@@ -363,7 +367,15 @@ namespace UMA
                                         continue;
                                     }
                                     umaGenerator.qualityTextures.LimitSize(ref ww, ref hh);
-                                    var compression = umaGenerator.qualityTextures.EffectiveCompression(CopyRTtoTex, channelTextureFormat, ww, hh);
+                                    if (gpuCompress)
+                                    {
+                                        // Block formats need whole 4x4 blocks. The UVs span the whole texture, so
+                                        // a few extra texels change nothing but the sampling density.
+                                        ww = UMAGpuTextureCompressor.AlignToBlocks(ww);
+                                        hh = UMAGpuTextureCompressor.AlignToBlocks(hh);
+                                    }
+                                    var compression = gpuCompress ? GeneratorRuntimeCompression.Disabled :
+                                        umaGenerator.qualityTextures.EffectiveCompression(CopyRTtoTex, channelTextureFormat, ww, hh);
 
                                     Color backgroundColor = default;
                                     UMAMaterial.ChannelType channelType = channels[textureChannelNumber].channelType;
@@ -504,10 +516,44 @@ namespace UMA
 
                                     */
 
+                                    bool keepConvertedReadable = umaGenerator.keepConvertedTexturesReadable;
+                                    bool gpuDirectCopy = gpuCompress && UMAGpuTextureCompressor.UsesDirectCopy(keepConvertedReadable);
+                                    if (gpuCompress)
+                                    {
+                                        // The encoder reads the atlas and its mip levels, so both must be complete.
+                                        if (RenderTexture.active == destinationTexture)
+                                        {
+                                            RenderTexture.active = null;
+                                        }
+                                        if (convertedMipMaps && destinationTexture.useMipMap && destinationTexture.mipmapCount > 1 &&
+                                            !destinationTexture.autoGenerateMips)
+                                        {
+                                            destinationTexture.GenerateMips();
+                                        }
+                                    }
+
                                     if (CopyRTtoTex)
                                     {
                                         #region Convert Render Textures
-                                        if (umaGenerator.useAsyncConversion)
+                                        if (gpuDirectCopy || gpuCompress && !umaGenerator.useAsyncConversion)
+                                        {
+                                            // A GPU copy does not wait for the GPU, so there is nothing to defer. Without
+                                            // that copy the blocks are read back, here synchronously as requested.
+                                            Texture2D compressedTexture = UMAGpuTextureCompressor.CompressBlocking(destinationTexture, gpuFormat, convertedMipMaps, keepConvertedReadable);
+                                            if (compressedTexture == null)
+                                            {
+                                                throw new InvalidOperationException("GPU texture compression to " + gpuFormat + " failed.");
+                                            }
+                                            pendingTexture2D = compressedTexture;
+
+                                            UMARenderTextureTracker.ReleaseTemporary(destinationTexture);
+                                            pendingTemporaryTexture = null;
+
+                                            resultingTextures[textureChannelNumber] = compressedTexture;
+                                            SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, compressedTexture, umaGenerator);
+                                            pendingTexture2D = null;
+                                        }
+                                        else if (umaGenerator.useAsyncConversion)
                                         {
                                             // Let it have the RenderTexture now.
                                             SetMaterialTexture(generatedMaterial, slotData, textureChannelNumber, destinationTexture, umaGenerator);
@@ -529,11 +575,11 @@ namespace UMA
                                                 {
                                                     rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName,
                                                         textureChannelNumber, umaGenerator, atlas.CompleteConversion,
-                                                        () => { atlas.ConversionPending = false; readbackHold.Dispose(); });
+                                                        () => { atlas.ConversionPending = false; readbackHold.Dispose(); }, gpuFormat);
                                                 }
                                                 catch { readbackHold.Dispose(); throw; }
                                             }
-                                            else rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName, textureChannelNumber, umaGenerator);
+                                            else rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName, textureChannelNumber, umaGenerator, null, null, gpuFormat);
                                             pendingTemporaryTexture = null;
                                             rt2cpu.DoAsyncCopy();
                                         }
@@ -552,7 +598,7 @@ namespace UMA
                                                 : null;
 
                                             bool requiresMipChain = convertedMipMaps && (ww > 1 || hh > 1);
-                                            bool keepReadable = umaGenerator.keepConvertedTexturesReadable;
+                                            bool keepReadable = keepConvertedReadable;
                                             // A GPU copy never fills the CPU pixels, so it is only used when nobody will read them.
                                             bool tryGpuCopy = SupportsRTToTexture2D && compression == GeneratorRuntimeCompression.Disabled && !keepReadable;
 

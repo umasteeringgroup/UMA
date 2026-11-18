@@ -25,6 +25,7 @@ namespace UMA.Editors.Tests
                 gen.meshCombiner = root.AddComponent<UMADefaultMeshCombiner>();
                 gen.processAllPending = true; gen.MaxMultiStepWorkMilliseconds = 40;
                 gen.convertRenderTexture = true; gen.alwaysRegenerateRenderers = true;
+                gen.forceGPUTextureCompression = true;
                 gen.atlasResolution = 2048; gen.editorAtlasResolution = 512;
                 gen.InitialScaleFactor = 2; gen.editorInitialScaleFactor = 4;
                 gen.keepTag = "CustomKeep"; gen.autoSetRaceBlendshapes = true;
@@ -62,6 +63,7 @@ namespace UMA.Editors.Tests
                     Assert.That(gen.MaxMultiStepWorkMilliseconds, Is.EqualTo(2));
                     Assert.That(gen.garbageCollectionRate, Is.EqualTo(128));
                     Assert.That(gen.convertRenderTexture, Is.False); Assert.That(gen.useAsyncConversion, Is.True);
+                    Assert.That(gen.forceGPUTextureCompression, Is.False, "The experimental GPU compression must be off by default.");
                     Assert.That(gen.alwaysRegenerateRenderers, Is.False);
                     Assert.That(gen.CleanupUnusedBones, Is.EqualTo(speed));
                     Assert.That(gen.enableSourceUVCropping, Is.EqualTo(speed));

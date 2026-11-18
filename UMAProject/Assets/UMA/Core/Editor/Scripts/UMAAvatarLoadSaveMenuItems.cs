@@ -2375,6 +2375,7 @@ namespace UMA.Editors
         {
 			bool wasAsync = false;
 			bool wasConvertRenderTexture = false;
+			bool wasGPUCompression = false;
 
 			var generator = UMAAssetIndexer.Instance.Generator;
 
@@ -2387,6 +2388,7 @@ namespace UMA.Editors
 
 			wasConvertRenderTexture = generator.convertRenderTexture;
 			wasAsync = generator.useAsyncConversion;
+			wasGPUCompression = generator.forceGPUTextureCompression;
 			useBoneBakingCombiner &= !AddStandaloneDNA;
 
 			try
@@ -2395,11 +2397,13 @@ namespace UMA.Editors
 				// This is necessary because the conversion and saving of textures needs to happen synchronously to ensure that all assets are correctly processed before we attempt to save them.
 				// If async conversion were enabled, there could be timing issues where textures are not fully converted before we try to save them, leading to incomplete or corrupted assets.
 
-				bool rebuildCharacter = wasConvertRenderTexture == false || useBoneBakingCombiner;
+				// GPU-compressed atlases cannot be saved as images, so the character is rebuilt without them.
+				bool rebuildCharacter = wasConvertRenderTexture == false || wasGPUCompression || useBoneBakingCombiner;
 				if (rebuildCharacter)
 				{
 					generator.convertRenderTexture = true;
 					generator.useAsyncConversion = false;
+					generator.forceGPUTextureCompression = false;
 
 					if (avatar is DynamicCharacterAvatar dca)
 					{
@@ -2886,7 +2890,8 @@ namespace UMA.Editors
 			{
 				generator.convertRenderTexture = wasConvertRenderTexture;
 				generator.useAsyncConversion = wasAsync;
-				if (wasConvertRenderTexture == false)
+				generator.forceGPUTextureCompression = wasGPUCompression;
+				if (wasConvertRenderTexture == false || wasGPUCompression)
 				{
 					if (avatar is DynamicCharacterAvatar)
 					{

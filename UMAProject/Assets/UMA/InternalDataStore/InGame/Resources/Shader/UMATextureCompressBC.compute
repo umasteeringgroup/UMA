@@ -1,0 +1,224 @@
+// Real-time BC1 (DXT1) and BC3 (DXT5) encoders for UMA generated textures.
+// Both kernels share the colour encoder; BC3 adds an interpolated alpha block.
+#pragma kernel CompressBC1
+#pragma kernel CompressBC3
+#pragma multi_compile __ UMA_BLOCKS_TO_BUFFER
+
+#include "UMATextureCompressCommon.hlsl"
+
+uint To565(float3 c)
+{
+    uint3 q = (uint3)floor(saturate(c) * float3(31.0, 63.0, 31.0) + 0.5);
+    return (q.r << 11) | (q.g << 5) | q.b;
+}
+
+float3 From565(uint c)
+{
+    uint r = (c >> 11) & 31u;
+    uint g = (c >> 5) & 63u;
+    uint b = c & 31u;
+    // The decoder expands by bit replication.
+    return float3((r << 3) | (r >> 2), (g << 2) | (g >> 4), (b << 3) | (b >> 2)) * (1.0 / 255.0);
+}
+
+// Picks the nearest of the four palette colours for every texel.
+// Index 0 = c0, 1 = c1, 2 = (2 c0 + c1) / 3, 3 = (c0 + 2 c1) / 3.
+float SelectIndices(float3 texels[16], uint c0, uint c1, out uint indices)
+{
+    float3 p0 = From565(c0);
+    float3 p1 = From565(c1);
+    float3 p2 = (2.0 * p0 + p1) * (1.0 / 3.0);
+    float3 p3 = (p0 + 2.0 * p1) * (1.0 / 3.0);
+    float error = 0.0;
+    indices = 0u;
+    for (int i = 0; i < 16; i++)
+    {
+        float3 d0 = texels[i] - p0;
+        float3 d1 = texels[i] - p1;
+        float3 d2 = texels[i] - p2;
+        float3 d3 = texels[i] - p3;
+        float best = dot(d0, d0);
+        uint index = 0u;
+        float e = dot(d1, d1);
+        if (e < best) { best = e; index = 1u; }
+        e = dot(d2, d2);
+        if (e < best) { best = e; index = 2u; }
+        e = dot(d3, d3);
+        if (e < best) { best = e; index = 3u; }
+        error += best;
+        indices |= index << (uint)(2 * i);
+    }
+    return error;
+}
+
+// Four-colour block: endpoints on the principal axis of the texels, then one
+// least-squares refinement of the endpoints for the chosen indices.
+uint2 EncodeColorBlock(float3 texels[16])
+{
+    float3 mean = 0.0;
+    int i;
+    for (i = 0; i < 16; i++) mean += texels[i];
+    mean *= 1.0 / 16.0;
+
+    float3 covDiagonal = 0.0;    // xx, yy, zz
+    float3 covOff = 0.0;         // xy, xz, yz
+    for (i = 0; i < 16; i++)
+    {
+        float3 d = texels[i] - mean;
+        covDiagonal += d * d;
+        covOff += float3(d.x * d.y, d.x * d.z, d.y * d.z);
+    }
+    float3 row0 = float3(covDiagonal.x, covOff.x, covOff.y);
+    float3 row1 = float3(covOff.x, covDiagonal.y, covOff.z);
+    float3 row2 = float3(covOff.y, covOff.z, covDiagonal.z);
+
+    // Start from the row of the strongest channel: it is never orthogonal to
+    // the principal axis unless the block is a single colour.
+    float3 axis = row0;
+    if (covDiagonal.y > covDiagonal.x && covDiagonal.y >= covDiagonal.z) axis = row1;
+    else if (covDiagonal.z > covDiagonal.x && covDiagonal.z > covDiagonal.y) axis = row2;
+    for (i = 0; i < 4; i++)
+    {
+        float3 next = float3(dot(row0, axis), dot(row1, axis), dot(row2, axis));
+        float scale = max(max(abs(next.x), abs(next.y)), abs(next.z));
+        if (scale < 1e-12) break;
+        axis = next / scale;
+    }
+
+    float axisLength = dot(axis, axis);
+    uint c0 = To565(mean);
+    uint c1 = c0;
+    if (axisLength > 1e-12)
+    {
+        axis *= rsqrt(axisLength);
+        float low = 0.0;
+        float high = 0.0;
+        for (i = 0; i < 16; i++)
+        {
+            float t = dot(texels[i] - mean, axis);
+            low = min(low, t);
+            high = max(high, t);
+        }
+        c0 = To565(mean + axis * high);
+        c1 = To565(mean + axis * low);
+    }
+
+    uint indices;
+    float error = SelectIndices(texels, c0, c1, indices);
+
+    if (c0 != c1)
+    {
+        // Least squares: texel = w * e0 + (1 - w) * e1 for the palette weight
+        // w of its index.
+        float3 sumW = 0.0;
+        float3 sumV = 0.0;
+        float ww = 0.0;
+        float vv = 0.0;
+        float wv = 0.0;
+        for (i = 0; i < 16; i++)
+        {
+            uint index = (indices >> (uint)(2 * i)) & 3u;
+            float w = index == 0u ? 1.0 : index == 1u ? 0.0 : index == 2u ? (2.0 / 3.0) : (1.0 / 3.0);
+            float v = 1.0 - w;
+            sumW += w * texels[i];
+            sumV += v * texels[i];
+            ww += w * w;
+            vv += v * v;
+            wv += w * v;
+        }
+        float det = ww * vv - wv * wv;
+        if (abs(det) > 1e-4)
+        {
+            uint r0 = To565((sumW * vv - sumV * wv) / det);
+            uint r1 = To565((sumV * ww - sumW * wv) / det);
+            uint refinedIndices;
+            float refinedError = SelectIndices(texels, r0, r1, refinedIndices);
+            if (refinedError < error)
+            {
+                c0 = r0;
+                c1 = r1;
+                indices = refinedIndices;
+            }
+        }
+    }
+
+    // BC1 reads c0 <= c1 as the three-colour mode with a transparent index.
+    // Keep c0 > c1; swapping the endpoints swaps index 0 with 1 and 2 with 3.
+    if (c0 < c1)
+    {
+        uint swap = c0;
+        c0 = c1;
+        c1 = swap;
+        indices ^= 0x55555555u;
+    }
+    else if (c0 == c1)
+    {
+        indices = 0u;
+    }
+    return uint2(c0 | (c1 << 16), indices);
+}
+
+// Eight-step alpha block (the BC4 layout): two endpoints and 3 bits a texel.
+uint2 EncodeAlphaBlock(float alpha[16])
+{
+    float low = alpha[0];
+    float high = alpha[0];
+    int i;
+    for (i = 1; i < 16; i++)
+    {
+        low = min(low, alpha[i]);
+        high = max(high, alpha[i]);
+    }
+    uint a0 = (uint)floor(high * 255.0 + 0.5);
+    uint a1 = (uint)floor(low * 255.0 + 0.5);
+    uint lo = a0 | (a1 << 8);
+    uint hi = 0u;
+    if (a0 != a1)
+    {
+        float scale = 7.0 / (float)(a0 - a1);
+        for (i = 0; i < 16; i++)
+        {
+            // level 0 is a1, level 7 is a0.
+            uint level = (uint)clamp(floor((alpha[i] * 255.0 - (float)a1) * scale + 0.5), 0.0, 7.0);
+            uint index = level == 7u ? 0u : level == 0u ? 1u : 8u - level;
+            uint bit = 16u + 3u * (uint)i;
+            if (bit < 32u)
+            {
+                lo |= index << bit;
+                if (bit > 29u) hi |= index >> (32u - bit);
+            }
+            else
+            {
+                hi |= index << (bit - 32u);
+            }
+        }
+    }
+    return uint2(lo, hi);
+}
+
+[numthreads(8, 8, 1)]
+void CompressBC1(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_BlockCount.x || id.y >= (uint)_BlockCount.y) return;
+    float4 texels[16];
+    LoadBlock(id.xy, texels);
+    float3 colors[16];
+    for (int i = 0; i < 16; i++) colors[i] = texels[i].rgb;
+    StoreBlock8(id.xy, EncodeColorBlock(colors));
+}
+
+[numthreads(8, 8, 1)]
+void CompressBC3(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_BlockCount.x || id.y >= (uint)_BlockCount.y) return;
+    float4 texels[16];
+    LoadBlock(id.xy, texels);
+    float3 colors[16];
+    float alpha[16];
+    for (int i = 0; i < 16; i++)
+    {
+        colors[i] = texels[i].rgb;
+        alpha[i] = texels[i].a;
+    }
+    StoreBlock16(id.xy, uint4(EncodeAlphaBlock(alpha), EncodeColorBlock(colors)));
+}

@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: PigtailsSwayBoneAnimator
   m_EditorClassIdentifier: UMA_Core::UMA.SwayBoneAnimator
   Chains:
-  - AnchorBoneName: Pigtail_l.003
+  - AnchorBoneName: PigtailL03
     ExcludedBoneNames: []
-  - AnchorBoneName: Pigtail_r.003
+  - AnchorBoneName: PigtailR03
     ExcludedBoneNames: []
   AnchorBoneName: 
   inertia: 0.822

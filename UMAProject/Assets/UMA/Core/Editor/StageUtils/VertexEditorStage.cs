@@ -11847,7 +11847,8 @@ namespace UMA
 
             string adjustmentSlot = string.IsNullOrEmpty(adjustment.slotName) ? modifierSlotName : adjustment.slotName;
             return string.Equals(adjustmentSlot, slotKey, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(adjustmentSlot, slot.slotName, StringComparison.OrdinalIgnoreCase);
+                string.Equals(adjustmentSlot, slot.slotName, StringComparison.OrdinalIgnoreCase) ||
+                MeshModifier.IsLegacySlotKey(adjustmentSlot, slot.asset);
         }
 
         private static void FillWhite(Color32[] colors)

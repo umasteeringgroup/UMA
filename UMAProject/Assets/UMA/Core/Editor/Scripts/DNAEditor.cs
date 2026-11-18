@@ -388,7 +388,12 @@ public class DNAEditor : Editor
                 {
                     if (e.selected)
                     {
-                        e.curve = curveToCopy;
+                        // Each effect gets its own copy; a shared curve would make editing one change the others.
+                        e.curve = new AnimationCurve(curveToCopy.keys)
+                        {
+                            preWrapMode = curveToCopy.preWrapMode,
+                            postWrapMode = curveToCopy.postWrapMode
+                        };
                     }
                 }
             }
@@ -679,12 +684,13 @@ public class DNAEditor : Editor
         // Replicate the common fields from DNAEffect.DoGui
         effect.EffectName = EditorGUILayout.DelayedTextField("Effect Name", effect.EffectName);
         GUILayout.BeginHorizontal();
-        effect.curve = EditorGUILayout.CurveField("Curve", effect.curve);
+        effect.DrawCurveField();
         if (effect.curve != null)
         {
             if (GUILayout.Button("Reset", GUILayout.MaxWidth(50)))
             {
-                effect.curve = null;
+                // A null curve is saved as a curve with no keys. Store the straight line itself.
+                effect.curve = AnimationCurve.Linear(0, 0, 1, 1);
             }
             if (GUILayout.Button("Zero", GUILayout.MaxWidth(50)))
             {

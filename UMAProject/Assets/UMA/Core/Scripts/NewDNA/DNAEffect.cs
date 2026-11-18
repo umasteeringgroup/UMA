@@ -28,6 +28,10 @@ namespace UMA
 
 #if UNITY_EDITOR
         private DNACurve _TemplateCurve = null;
+        // Shown in place of a curve that has no keys. Must not be serialized: Unity would
+        // bring it back from a domain reload as another curve with no keys.
+        [NonSerialized]
+        private AnimationCurve _keylessCurveStandIn;
         public bool expanded;
         public bool selected;
         public bool showHelp;
@@ -132,6 +136,37 @@ namespace UMA
         public virtual string Description { get; }
 
 #if UNITY_EDITOR
+        /// <summary>
+        /// Draws the mapping curve field.
+        /// A curve with no keys passes the value straight through (see <see cref="GetMappedValue"/>),
+        /// but Unity draws it as an empty field and opens an empty curve editor. This shows the
+        /// straight 0-1 line such a curve stands for, and stores it only once it has been edited,
+        /// so looking at an effect never changes the asset.
+        /// </summary>
+        public void DrawCurveField(string label = "Curve")
+        {
+            if (curve != null && curve.length > 0)
+            {
+                _keylessCurveStandIn = null;
+                curve = EditorGUILayout.CurveField(label, curve);
+                return;
+            }
+
+            // Keep one stand-in between repaints: the curve editor window edits the object it was given.
+            if (_keylessCurveStandIn == null || _keylessCurveStandIn.length == 0)
+            {
+                _keylessCurveStandIn = AnimationCurve.Linear(0f, 0f, 1f, 1f);
+            }
+
+            EditorGUI.BeginChangeCheck();
+            AnimationCurve edited = EditorGUILayout.CurveField(label, _keylessCurveStandIn);
+            if (EditorGUI.EndChangeCheck() && edited != null)
+            {
+                curve = edited;
+                _keylessCurveStandIn = null;
+            }
+        }
+
         public virtual void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
             this.showHelp = showHelp;
@@ -147,7 +182,7 @@ namespace UMA
             // select: 1,0,1
             EffectName = EditorGUILayout.DelayedTextField("Effect Name", EffectName);
             GUILayout.BeginHorizontal();
-            curve = EditorGUILayout.CurveField("Curve", curve);
+            DrawCurveField();
             if (curve != null)
             {
                 if (GUILayout.Button("Reset", GUILayout.MaxWidth(50)))

@@ -126,6 +126,7 @@ namespace UMA
             d.Add((int)generator.qualityTextures.EffectiveCompression(convert, format, outputWidth, outputHeight));
             d.Add(generator.useAsyncConversion); d.Add(generator.SharperFitTextures);
             d.Add(convert && generator.keepConvertedTexturesReadable);
+            d.Add((int)UMAGpuTextureCompressor.ResolveFormat(generator, format));
             d.Add((int)QualitySettings.activeColorSpace); d.Add((int)SystemInfo.graphicsDeviceType);
             d.Add(generator.qualityTextures.Anisotropy(material)); d.Add(generator.qualityTextures.MipBias(material)); d.Add((int)generator.qualityTextures.Filter(material));
             var channelType = material.channels[channel].channelType;

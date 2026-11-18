@@ -335,20 +335,7 @@ namespace UMA.Editors
 				return;
 			}
 
-			Quaternion upright = Quaternion.identity;
-			foreach (string[] pair in UpBonePairs)
-			{
-				if (rig.TryGetAvatarMatrix(UMAUtils.StringToHash(pair[0]), out Matrix4x4 from) &&
-				    rig.TryGetAvatarMatrix(UMAUtils.StringToHash(pair[1]), out Matrix4x4 to))
-				{
-					Vector3 up = to.GetColumn(3) - from.GetColumn(3);
-					if (up.sqrMagnitude > 1e-6f)
-					{
-						upright = Quaternion.FromToRotation(SnapToAxis(up), Vector3.up);
-						break;
-					}
-				}
-			}
+			Quaternion upright = GetUprightRotation(rig);
 			for (int i = 0; i < positions.Length; i++)
 			{
 				positions[i] = upright * positions[i];
@@ -360,6 +347,31 @@ namespace UMA.Editors
 					normals[i] = upright * normals[i];
 				}
 			}
+		}
+
+		/// <summary>
+		/// The rotation that turns the rig's skeleton upright (its up along +Y). UMA 2 and UMA 3 rigs lie
+		/// along different axes at the rig root; the skeleton says which. Identity when it cannot tell.
+		/// </summary>
+		internal static Quaternion GetUprightRotation(UMARigRestPose rig)
+		{
+			if (rig == null)
+			{
+				return Quaternion.identity;
+			}
+			foreach (string[] pair in UpBonePairs)
+			{
+				if (rig.TryGetAvatarMatrix(UMAUtils.StringToHash(pair[0]), out Matrix4x4 from) &&
+				    rig.TryGetAvatarMatrix(UMAUtils.StringToHash(pair[1]), out Matrix4x4 to))
+				{
+					Vector3 up = to.GetColumn(3) - from.GetColumn(3);
+					if (up.sqrMagnitude > 1e-6f)
+					{
+						return Quaternion.FromToRotation(SnapToAxis(up), Vector3.up);
+					}
+				}
+			}
+			return Quaternion.identity;
 		}
 
 		private static Vector3 SnapToAxis(Vector3 direction)
@@ -389,7 +401,7 @@ namespace UMA.Editors
 		}
 
 		/// <summary>A plain lit material for the active render pipeline, in one color.</summary>
-		private static Material CreatePreviewMaterial(Color color, string name)
+		internal static Material CreatePreviewMaterial(Color color, string name)
 		{
 			Shader shader = null;
 			var pipeline = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline;

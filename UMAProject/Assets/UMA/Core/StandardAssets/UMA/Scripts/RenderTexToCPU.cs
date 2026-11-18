@@ -31,6 +31,11 @@ namespace UMA
         private AsyncGPUReadbackRequest readback;
         private bool readbackRequested;
         private readonly GeneratorRuntimeCompression qualityCompression;
+        // Set when the atlas is compressed on the GPU and its blocks, not its pixels, are read back.
+        private readonly GraphicsFormat gpuFormat;
+        private UMAGpuTextureCompressor.ReadbackJob gpuJob;
+        // What the final upload still has to do. Compressed data arrives with its mip levels.
+        private bool applyMips;
         private readonly bool keepReadable;
         private readonly FilterMode qualityFilter;
         private readonly int qualityAnisotropy;
@@ -98,6 +103,13 @@ namespace UMA
                 // Returning a temporary RT while the GPU still reads it permits
                 // its storage to be reused by an unrelated render operation.
                 if (copy.readbackRequested && !copy.readback.done) copy.readback.WaitForCompletion();
+                if (copy.gpuJob != null)
+                {
+                    // Waits for the block readback, then drops the result with its buffer.
+                    var job = copy.gpuJob;
+                    copy.gpuJob = null;
+                    job.Dispose();
+                }
                 copy.DestroyNewTexture();
                 copy.ReleaseSourceTexture();
             }
@@ -124,14 +136,17 @@ namespace UMA
         }
 
         public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex, UMAGeneratorBase basegen,
-            Action<Texture2D> sharedCompletion = null, Action sharedFinished = null)
+            Action<Texture2D> sharedCompletion = null, Action sharedFinished = null, GraphicsFormat gpuFormat = GraphicsFormat.None)
         {
             this.texture = texture;
             this.generatedMaterial = generatedMaterial;
             this.textureName = textureName;
             this.textureIndex = textureIndex;
             this.recreateMips = basegen.qualityTextures.Mips(basegen.convertMipMaps);
-            qualityCompression = basegen.qualityTextures.EffectiveCompression(true, texture.format, texture.width, texture.height);
+            this.gpuFormat = gpuFormat;
+            applyMips = recreateMips && gpuFormat == GraphicsFormat.None;
+            qualityCompression = gpuFormat != GraphicsFormat.None ? GeneratorRuntimeCompression.Disabled :
+                basegen.qualityTextures.EffectiveCompression(true, texture.format, texture.width, texture.height);
             keepReadable = basegen.keepConvertedTexturesReadable;
             qualityFilter = texture.filterMode;
             qualityAnisotropy = texture.anisoLevel;
@@ -146,6 +161,15 @@ namespace UMA
         {
             try
             {
+                if (gpuFormat != GraphicsFormat.None)
+                {
+                    gpuJob = UMAGpuTextureCompressor.CompressWithReadback(texture, gpuFormat, recreateMips, QueueCompressed);
+                    if (gpuJob == null)
+                    {
+                        throw new InvalidOperationException("GPU texture compression to " + gpuFormat + " is not available.");
+                    }
+                    return;
+                }
                 readback = AsyncGPUReadback.Request(texture, 0, (AsyncGPUReadbackRequest asyncAction) =>
                 {
                     QueueCopy(asyncAction);
@@ -207,25 +231,7 @@ namespace UMA
                     newTexture.wrapMode = TextureWrapMode.Repeat;
 
                     newTexture.SetPixelData(asyncAction.GetData<byte>(), 0);
-#if UNITY_EDITOR
-                    // We can't count on the generator update loop while editing.
-                    if (!Application.isPlaying)
-                    {
-                        ApplyTexture();
-                        return;
-                    }
-#endif
-                    var generator = UMAAssetIndexer.bareInstance != null ? UMAAssetIndexer.bareInstance.bareGenerator : null;
-                    if (ApplyInline || sharedCompletion != null && (generator == null || !generator.isActiveAndEnabled))
-                    {
-                        ApplyTexture();
-                    }
-                    else
-                    {
-                        copiesEnqueued++;
-                        renderTexturesToFree.Add(entityId, texture);
-                        QueuedCopies.Enqueue(this);
-                    }
+                    QueueApply(entityId);
                 }
                 catch
                 {
@@ -240,6 +246,81 @@ namespace UMA
                 unableToQueue++;
                 ReleaseSourceTexture();
                 renderTexturesCleanedMissed++;
+            }
+        }
+
+        // The GPU-compressed counterpart of QueueCopy: the job hands over a texture that
+        // already holds the compressed mip levels and only needs its upload.
+        private void QueueCompressed(UMAGpuTextureCompressor.ReadbackJob job)
+        {
+            Texture2D compressed = job.TakeTexture();
+            gpuJob = null;
+            if (sourceTextureReleased || texture == null)
+            {
+                UMAUtils.DestroySceneObject(compressed);
+                return;
+            }
+
+            var entityId = texture.GetUmaObjectId();
+            renderTexturesToCPU.Remove(entityId);
+
+            if (compressed == null)
+            {
+                errorUploads++;
+                ReleaseSourceTexture();
+                renderTexturesCleanedMissed++;
+                return;
+            }
+
+            newTexture = compressed;
+            if (sharedCompletion != null || (generatedMaterial != null && generatedMaterial.material != null))
+            {
+                try
+                {
+                    newTexture.filterMode = qualityFilter;
+                    newTexture.anisoLevel = qualityAnisotropy;
+                    newTexture.mipMapBias = qualityMipBias;
+                    newTexture.wrapMode = TextureWrapMode.Repeat;
+                    QueueApply(entityId);
+                }
+                catch
+                {
+                    errorUploads++;
+                    DestroyNewTexture();
+                    ReleaseSourceTexture();
+                    renderTexturesCleanedMissed++;
+                }
+            }
+            else
+            {
+                unableToQueue++;
+                DestroyNewTexture();
+                ReleaseSourceTexture();
+                renderTexturesCleanedMissed++;
+            }
+        }
+
+        // Applies the finished texture now, or queues it for the generator's update loop.
+        private void QueueApply(UMAObjectId entityId)
+        {
+#if UNITY_EDITOR
+            // We can't count on the generator update loop while editing.
+            if (!Application.isPlaying)
+            {
+                ApplyTexture();
+                return;
+            }
+#endif
+            var generator = UMAAssetIndexer.bareInstance != null ? UMAAssetIndexer.bareInstance.bareGenerator : null;
+            if (ApplyInline || sharedCompletion != null && (generator == null || !generator.isActiveAndEnabled))
+            {
+                ApplyTexture();
+            }
+            else
+            {
+                copiesEnqueued++;
+                renderTexturesToFree.Add(entityId, texture);
+                QueuedCopies.Enqueue(this);
             }
         }
 
@@ -286,7 +367,7 @@ namespace UMA
             {
                 try
                 {
-                    GeneratorTextureQuality.FinishConvertedTexture(newTexture, recreateMips, qualityCompression, keepReadable);
+                    GeneratorTextureQuality.FinishConvertedTexture(newTexture, applyMips, qualityCompression, keepReadable);
                     sharedCompletion(newTexture);
                     newTexture = null; // ownership transferred to the atlas cache
                     texturesUploaded++;
@@ -305,7 +386,7 @@ namespace UMA
                         throw new InvalidOperationException("Asynchronous atlas copy target is no longer valid.");
                     }
 
-                    GeneratorTextureQuality.FinishConvertedTexture(newTexture, recreateMips, qualityCompression, keepReadable);
+                    GeneratorTextureQuality.FinishConvertedTexture(newTexture, applyMips, qualityCompression, keepReadable);
                     generatedMaterial.material.SetTexture(textureName, newTexture);
                     generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
                     if (generatedMaterial.skinnedMeshRenderer != null &&

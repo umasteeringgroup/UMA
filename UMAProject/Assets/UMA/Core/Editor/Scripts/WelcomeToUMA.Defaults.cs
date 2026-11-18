@@ -285,6 +285,7 @@ namespace UMA
                 generator.MaxMultiStepWorkMilliseconds = 2f;
                 generator.garbageCollectionRate = 128;
                 generator.convertRenderTexture = false;
+                generator.forceGPUTextureCompression = false; // Experimental: never on by default.
                 generator.useAsyncConversion = true;
                 generator.asyncMipRegen = true;
                 generator.MultiThreadTextureConversion = true;

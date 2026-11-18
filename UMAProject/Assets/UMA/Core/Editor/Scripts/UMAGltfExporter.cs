@@ -557,6 +557,7 @@ namespace UMA.Editors
                 UMAGeneratorBase generator = null;
                 bool previousConvertRenderTexture = false;
                 bool previousUseAsyncConversion = false;
+                bool previousGPUCompression = false;
                 bool restoreGeneratorSettings = false;
 
                 if (UMAAssetIndexer.Instance != null)
@@ -568,8 +569,11 @@ namespace UMA.Editors
                 {
                     previousConvertRenderTexture = generator.convertRenderTexture;
                     previousUseAsyncConversion = generator.useAsyncConversion;
+                    previousGPUCompression = generator.forceGPUTextureCompression;
                     generator.convertRenderTexture = true;
                     generator.useAsyncConversion = false;
+                    // The exporter encodes the atlases as images, which needs uncompressed pixels.
+                    generator.forceGPUTextureCompression = false;
                     restoreGeneratorSettings = true;
                 }
 
@@ -583,6 +587,7 @@ namespace UMA.Editors
                     {
                         generator.convertRenderTexture = previousConvertRenderTexture;
                         generator.useAsyncConversion = previousUseAsyncConversion;
+                        generator.forceGPUTextureCompression = previousGPUCompression;
                     }
                 }
             }

@@ -37,6 +37,8 @@ namespace UMA
         public bool asyncMipRegen = true;
         [Tooltip("Keep a CPU copy of converted textures so scripts can call GetPixels or EncodeToPNG on them. Off frees that copy (the size of the texture again, in system memory) once the texture is on the GPU. UMA's own save and export tools do not need it.")]
         public bool keepConvertedTexturesReadable = false;
+        [Tooltip("Experimental. Compress generated Atlas and No Atlas textures on the GPU (BC3 on desktop, ETC2 on mobile), a quarter of the memory of the uncompressed texture. Takes the place of Convert Render Texture and of runtime CPU compression. Ignored on devices without compute shaders, such as WebGL. With Keep Converted Textures Readable the compressed data also stays on the CPU: GetPixels works on it, EncodeToPNG does not.")]
+        public bool forceGPUTextureCompression = false;
 
         [Tooltip("Create Mipmaps for the generated texture. Checking this is a good idea.")]
         public bool convertMipMaps;

@@ -273,6 +273,22 @@ Off by default. A Texture2D can hold its pixels twice: on the GPU, where the mat
 
 Generator Quality Profiles and **UMA Generator Override** components can override it like the other conversion settings.
 
+#### Force GPU Texture Compression (Experimental)
+
+Experimental, and off by default: nothing in UMA turns it on, and **Welcome > Configure UMA** turns it off. When on, every generated Atlas and No Atlas texture is compressed on the GPU as soon as it has been composited, and the uncompressed RenderTexture is released. A compute shader encodes the texture in 4x4 blocks: **BC3 (DXT5)** where the device supports it (desktop and console), otherwise **ETC2 RGBA8** (mobile). Both keep the alpha channel and use 8 bits per pixel, a quarter of an RGBA32 texture.
+
+- **Memory:** measured in a Windows development player (Direct3D 12 and Direct3D 11), eight 2048 atlas channels with mips cost 170.7 MiB as RenderTextures and 43.0 MiB compressed. While a texture is being compressed, the RenderTexture and the compressed texture exist together.
+- **What it replaces:** the switch produces a Texture2D by itself, so **Convert Render Texture** and the runtime **Compression** quality policy are not used for the textures it compresses. **Convert Mip Maps** decides whether mip levels are made; each level is compressed from the RenderTexture's own mip level.
+- **Generation speed:** on devices that can copy the encoded blocks into a compressed texture on the GPU (Direct3D 11 and 12 here; UMA tests the copy once, the first time it is needed), nothing is read back and the build does not wait for the GPU: about 1.5 ms of main-thread time for a 2048 texture with mips, 7 to 13 ms for the first one. On other devices, and always on OpenGL ES, the encoded blocks are read back and uploaded, a quarter of the data that **Convert Render Texture** reads back; **Use Async Conversion** decides whether that waits.
+- **Devices without compute shaders:** WebGL and other devices that cannot run compute shaders, or that support neither format, ignore the switch and build exactly as they do with it off.
+- **Which textures:** 8-bit RGBA channels (the ARGB32 channel format). Channels in other formats, **Use Existing Textures** materials and tinted texture channels are not changed. Texture sizes are rounded up to a multiple of 4.
+- **Quality:** block compression is lossy. On the UMA 3 skin, error was 1.5 to 2.0 of 255 (RMS) on colour maps and 0.6 on normal maps. Smooth gradients can band, and a normal map loses some precision; check close-up characters before shipping.
+- **Reading pixels:** a compressed texture has no CPU copy unless **Keep Converted Textures Readable** is on. With it on, the compressed data stays in system memory and `GetPixels` works; `EncodeToPNG` does not accept a compressed texture, so read it back with `Graphics.Blit` and `ReadPixels`. UMA's save, export and prefab tools build the character without compression while they run.
+- **Sharing:** compressed and uncompressed atlases are never shared with each other by atlas reuse.
+- **Not yet verified on device:** the ETC2 encoder is checked against Unity's own ETC2 decoder on desktop, but UMA has not been run with this switch on Android or iOS hardware.
+
+`UMAGpuTextureCompressor.ModeOverride` forces the readback route, or turns compression off, for a device whose GPU copy misbehaves. Generator Quality Profiles and **UMA Generator Override** components can override the switch like the other conversion settings.
+
 ### Generation Settings
 
 #### Max Queued Conversions Per Frame
@@ -632,6 +648,7 @@ Texture objects are Unity engine objects, but the surrounding arrays, requests, 
 
 - Leave **Convert Render Texture** disabled unless a later workflow needs Texture2D data.
 - When conversion is on, leave **Keep Converted Textures Readable** off unless a script reads atlas pixels on the CPU. A readable texture keeps a second copy of itself in system memory.
+- Turn on **Force GPU Texture Compression** when generated textures do not need to stay RenderTextures: they take a quarter of the memory.
 - Review per-channel conversion flags in every production `UMAMaterial`.
 - Use `UseExistingTextures` for fixed texture sets that do not require compositing.
 - Use `UseExistingMaterial` only for truly shared material state.

@@ -18,6 +18,7 @@ namespace UMA
         public bool useAsyncConversion = true;
         public bool asyncMipRegen = true;
         public bool keepConvertedTexturesReadable = false;
+        public bool forceGPUTextureCompression = false;
         public int MaxQueuedConversionsPerFrame = 8;
         public int IterationCount = 1;
         public int InterFrameDelay = 0;
@@ -59,6 +60,7 @@ namespace UMA
             useAsyncConversion = generator.useAsyncConversion,
             asyncMipRegen = generator.asyncMipRegen,
             keepConvertedTexturesReadable = generator.keepConvertedTexturesReadable,
+            forceGPUTextureCompression = generator.forceGPUTextureCompression,
             MaxQueuedConversionsPerFrame = generator.MaxQueuedConversionsPerFrame,
             IterationCount = generator.IterationCount,
             InterFrameDelay = generator.InterFrameDelay,
@@ -99,6 +101,7 @@ namespace UMA
             generator.useAsyncConversion = useAsyncConversion;
             generator.asyncMipRegen = asyncMipRegen;
             generator.keepConvertedTexturesReadable = keepConvertedTexturesReadable;
+            generator.forceGPUTextureCompression = forceGPUTextureCompression;
             generator.MaxQueuedConversionsPerFrame = MaxQueuedConversionsPerFrame;
             generator.IterationCount = IterationCount;
             generator.InterFrameDelay = InterFrameDelay;
@@ -167,6 +170,7 @@ namespace UMA
                 useAsyncConversion == other.useAsyncConversion &&
                 asyncMipRegen == other.asyncMipRegen &&
                 keepConvertedTexturesReadable == other.keepConvertedTexturesReadable &&
+                forceGPUTextureCompression == other.forceGPUTextureCompression &&
                 InitialScaleFactor == other.InitialScaleFactor &&
                 SaveAndRestoreIgnoredItems == other.SaveAndRestoreIgnoredItems &&
                 CleanupUnusedBones == other.CleanupUnusedBones &&

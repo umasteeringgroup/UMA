@@ -78,7 +78,7 @@ namespace UMA
             public float MultiStepBudgetMilliseconds;
             public float SpawnBudgetMilliseconds;
             public bool UseNPCBuilds;
-            public bool ProcessAllPending, ConvertRenderTextures, AsyncConversion, SampleMemoryDuringGeneration;
+            public bool ProcessAllPending, ConvertRenderTextures, AsyncConversion, GPUTextureCompression, SampleMemoryDuringGeneration;
             public int QualityLevel, VSyncCount, TargetFrameRate;
         }
 
@@ -448,6 +448,7 @@ namespace UMA
             MultiStepBudgetMilliseconds = Generator != null ? Generator.MaxMultiStepWorkMilliseconds : 0,
             ProcessAllPending = Generator != null && Generator.processAllPending, AtlasResolution = Generator != null ? Generator.atlasResolution : 0,
             ConvertRenderTextures = Generator != null && Generator.convertRenderTexture, AsyncConversion = Generator != null && Generator.useAsyncConversion,
+            GPUTextureCompression = Generator != null && Generator.forceGPUTextureCompression,
             SampleMemoryDuringGeneration = SampleMemoryDuringGeneration, QualityLevel = QualitySettings.GetQualityLevel(),
             VSyncCount = QualitySettings.vSyncCount, TargetFrameRate = Application.targetFrameRate
         };

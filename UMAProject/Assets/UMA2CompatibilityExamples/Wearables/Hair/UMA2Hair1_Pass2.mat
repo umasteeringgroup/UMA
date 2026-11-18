@@ -37,11 +37,10 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA2Hair1_Pass2
-  m_Shader: {fileID: -6465566751694194690, guid: 1344f856965fd9c4a969cf7c91d271b4, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 2ead69edbcd1b7642aae643cd21fd604, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
-  - _DISABLE_SSR_TRANSPARENT
   - _SURFACE_TYPE_TRANSPARENT
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -68,7 +67,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: b801212351ee38640ad808ad284e7fa8, type: 3}
+        m_Texture: {fileID: 2800000, guid: 7c38cb845f3bfe847b0f9d0074929d09, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -88,11 +87,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FlowMap:
-        m_Texture: {fileID: 2800000, guid: 9c628de090ca7d248883a8ae223669b4, type: 3}
+        m_Texture: {fileID: 2800000, guid: 614d6a0580b42ed4b96339e535ac0957, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ID_Map:
-        m_Texture: {fileID: 2800000, guid: 2574a135ed7df174bbf2343a7b8d8ed4, type: 3}
+        m_Texture: {fileID: 2800000, guid: ca180d76a84c12d45a5428518d8966e9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -144,6 +143,9 @@ Material:
     - _BlendModePreserveSpecular: 0
     - _BumpScale: 1
     - _CastShadows: 0
+    - _CenterDarken: 0
+    - _CenterDarkenEnd: 0.16
+    - _CenterDarkenStart: 0.08
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
     - _ColorBlendModulation: 1
@@ -182,6 +184,8 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _RayTracing: 0
+    - _RecalcNormalBlend: 1
+    - _RecalculateNormals: 0
     - _ReceiveShadows: 1
     - _ReceivesSSR: 1
     - _ReceivesSSRTransparent: 0
@@ -199,6 +203,7 @@ Material:
     - _SpecularMix: 0.65
     - _SpecularMultiplier: 0.3
     - _SpecularPowerScale: 24
+    - _SpecularShift: 0
     - _SpecularShiftMax: 0
     - _SpecularShiftMin: 0
     - _SrcBlend: 5
@@ -239,9 +244,15 @@ Material:
     m_Colors:
     - _AltColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColor: {r: 0.92941177, g: 0.5548883, b: 0.24536471, a: 1}
+    - _CenterOffset: {r: 0, g: 0, b: 0, a: 0}
     - _Color: {r: 0.92941177, g: 0.55488825, b: 0.24536467, a: 1}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _HairCenterWS: {r: 0, g: 0, b: 0, a: 0}
+    - _HairSpinWS: {r: 0, g: 0, b: 0, a: 0}
+    - _HairSwayParams: {r: 0, g: 0, b: 0, a: 0}
+    - _HairSwayShape: {r: 0, g: 0, b: 0, a: 0}
+    - _HairSwayWS: {r: 0, g: 0, b: 0, a: 0}
     - _Normal: {r: 0, g: 0, b: 0, a: 0}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _RootColor: {r: 0.7169812, g: 0.30188686, b: 0, a: 1}

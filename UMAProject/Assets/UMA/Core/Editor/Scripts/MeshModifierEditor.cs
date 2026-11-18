@@ -487,6 +487,12 @@ namespace UMA
                 {
                     return sourceSlot;
                 }
+
+                // Modifiers saved before October 2026 name the slot by its asset name ("..._slot").
+                if (MeshModifier.IsLegacySlotKey(slotKey, slot.asset))
+                {
+                    return sourceSlot;
+                }
             }
 
             return slotKey;
