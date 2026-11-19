@@ -47,6 +47,10 @@ namespace UMA
         public override ExpressionEffectPhase ExpressionPhases =>
             ExpressionEffectPhase.BuildAfterRecipe;
 
+        // The property is written outright, so the default DNA value must write it too. Otherwise the
+        // value of the last DNA value that was not the default stays in the property block.
+        public override bool AppliesAtDefaultValue => true;
+
         public override string Description => "Sets a shared color property for the avatar. This can be used to modify shader properties or even the UV location of an overlay.";
 
 #if UNITY_EDITOR

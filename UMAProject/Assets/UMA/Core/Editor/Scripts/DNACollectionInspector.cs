@@ -1,6 +1,10 @@
 using UnityEngine;
 
-public class DNACollectionInspector
+namespace UMA
 {
+
+    public class DNACollectionInspector
+    {
     
+    }
 }

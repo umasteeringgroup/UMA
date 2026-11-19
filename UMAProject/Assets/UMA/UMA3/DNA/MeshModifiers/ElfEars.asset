@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ElfEars
   m_EditorClassIdentifier: UMA_Core::UMA.DNA
   description: 
-  defaultValue: 0.5
+  defaultValue: 0
   effects:
   - rid: 4044961854057873585
   displayName: ElfEars

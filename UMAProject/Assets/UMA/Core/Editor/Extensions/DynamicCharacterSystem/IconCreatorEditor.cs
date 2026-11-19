@@ -7,403 +7,407 @@ using UMA;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(IconCreator))]
-public class IconCreatorEditor : Editor
+namespace UMA
 {
-    private SerializedProperty rootFolderProperty;
-    private SerializedProperty regionToCameraListProperty;
-    private readonly List<bool> cameraRegionFoldouts = new List<bool>();
 
-    private void OnEnable()
+    [CustomEditor(typeof(IconCreator))]
+    public class IconCreatorEditor : Editor
     {
-        rootFolderProperty = serializedObject.FindProperty("rootFolder");
-        regionToCameraListProperty = serializedObject.FindProperty("regionToCameraList");
-    }
+        private SerializedProperty rootFolderProperty;
+        private SerializedProperty regionToCameraListProperty;
+        private readonly List<bool> cameraRegionFoldouts = new List<bool>();
 
-    public override void OnInspectorGUI()
-    {
-        serializedObject.Update();
-
-        DrawRootFolder();
-        EditorGUILayout.Space();
-        DrawCameraRegions();
-        EditorGUILayout.Space();
-        DrawPropertiesExcluding(serializedObject, "m_Script", "rootFolder", "regionToCameraList");
-        EditorGUILayout.Space();
-        DrawSpriteAtlasControls();
-
-        serializedObject.ApplyModifiedProperties();
-    }
-
-    private void DrawSpriteAtlasControls()
-    {
-        EditorGUILayout.LabelField("Thumbnail Sprite Atlases", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox(
-            "Optional. Rebuilds Sprite Atlas V2 assets from the Sprites referenced by wardrobe recipes, " +
-            "grouped by race and wardrobe region.",
-            MessageType.Info);
-
-        if (!IconCreatorSpriteAtlasUtility.IsSpriteAtlasV2Enabled())
+        private void OnEnable()
         {
+            rootFolderProperty = serializedObject.FindProperty("rootFolder");
+            regionToCameraListProperty = serializedObject.FindProperty("regionToCameraList");
+        }
+
+        public override void OnInspectorGUI()
+        {
+            serializedObject.Update();
+
+            DrawRootFolder();
+            EditorGUILayout.Space();
+            DrawCameraRegions();
+            EditorGUILayout.Space();
+            DrawPropertiesExcluding(serializedObject, "m_Script", "rootFolder", "regionToCameraList");
+            EditorGUILayout.Space();
+            DrawSpriteAtlasControls();
+
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawSpriteAtlasControls()
+        {
+            EditorGUILayout.LabelField("Thumbnail Sprite Atlases", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage,
+                "Optional. Rebuilds Sprite Atlas V2 assets from the Sprites referenced by wardrobe recipes, " +
+                "grouped by race and wardrobe region.",
                 MessageType.Info);
-        }
 
-        string atlasFolder;
-        try
-        {
-            atlasFolder = IconCreatorSpriteAtlasUtility.GetAtlasFolder(rootFolderProperty.stringValue);
-        }
-        catch (ArgumentException exception)
-        {
-            EditorGUILayout.HelpBox(exception.Message, MessageType.Error);
-            return;
-        }
-        EditorGUILayout.LabelField("Output Folder", atlasFolder);
-
-        using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
-        {
-            if (GUILayout.Button("Rebuild Thumbnail Atlases"))
+            if (!IconCreatorSpriteAtlasUtility.IsSpriteAtlasV2Enabled())
             {
-                serializedObject.ApplyModifiedProperties();
-                RebuildThumbnailAtlases(rootFolderProperty.stringValue);
+                EditorGUILayout.HelpBox(
+                    IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage,
+                    MessageType.Info);
             }
-        }
-    }
 
-    private static void RebuildThumbnailAtlases(string rootFolder)
-    {
-        if (!IconCreatorSpriteAtlasUtility.IsSpriteAtlasV2Enabled())
-        {
-            Debug.LogError(
-                "[IconCreator] " +
-                IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage);
-            EditorUtility.DisplayDialog(
-                "Sprite Atlas V2 Required",
-                IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage,
-                "OK");
-            return;
-        }
-
-        try
-        {
-            IconCreatorSpriteAtlasUtility.RebuildResult result =
-                IconCreatorSpriteAtlasUtility.Rebuild(rootFolder);
-            string message =
-                "Rebuilt " + result.AtlasCount + " atlases from " + result.SpriteCount +
-                " referenced Sprites across " + result.RecipeCount + " wardrobe recipes.";
-            if (result.ClearedAtlasCount > 0)
+            string atlasFolder;
+            try
             {
-                message += "\n\nCleared packables from " + result.ClearedAtlasCount + " obsolete atlases.";
+                atlasFolder = IconCreatorSpriteAtlasUtility.GetAtlasFolder(rootFolderProperty.stringValue);
             }
-            if (result.WarningCount > 0)
+            catch (ArgumentException exception)
             {
-                message += "\n\n" + result.WarningCount + " conflicts were logged as warnings.";
+                EditorGUILayout.HelpBox(exception.Message, MessageType.Error);
+                return;
             }
-            message += "\n\nOutput: " + result.OutputFolder;
-            EditorUtility.DisplayDialog("Thumbnail Sprite Atlases", message, "OK");
-        }
-        catch (Exception exception)
-        {
-            Debug.LogException(exception);
-            EditorUtility.DisplayDialog("Thumbnail Sprite Atlases", exception.Message, "OK");
-        }
-    }
+            EditorGUILayout.LabelField("Output Folder", atlasFolder);
 
-    private void DrawRootFolder()
-    {
-        EditorGUILayout.LabelField("Root Folder");
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            EditorGUILayout.PropertyField(rootFolderProperty, GUIContent.none);
-            if (GUILayout.Button("Browse", GUILayout.Width(70f)))
+            using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
             {
-                string selectedFolder = EditorUtility.OpenFolderPanel("Select Root Folder", GetInitialFolder(rootFolderProperty.stringValue), string.Empty);
-                if (!string.IsNullOrEmpty(selectedFolder))
+                if (GUILayout.Button("Rebuild Thumbnail Atlases"))
                 {
-                    rootFolderProperty.stringValue = selectedFolder;
+                    serializedObject.ApplyModifiedProperties();
+                    RebuildThumbnailAtlases(rootFolderProperty.stringValue);
                 }
             }
         }
-    }
 
-    private void DrawCameraRegions()
-    {
-        EditorGUILayout.LabelField("Camera Regions", EditorStyles.boldLabel);
-        EnsureFoldoutState();
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Expand All", GUILayout.Width(100f)))
+        private static void RebuildThumbnailAtlases(string rootFolder)
         {
-            for (int i = 0; i < cameraRegionFoldouts.Count; i++)
+            if (!IconCreatorSpriteAtlasUtility.IsSpriteAtlasV2Enabled())
             {
-                cameraRegionFoldouts[i] = true;
+                Debug.LogError(
+                    "[IconCreator] " +
+                    IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage);
+                EditorUtility.DisplayDialog(
+                    "Sprite Atlas V2 Required",
+                    IconCreatorSpriteAtlasUtility.SpriteAtlasV2RequiredMessage,
+                    "OK");
+                return;
+            }
+
+            try
+            {
+                IconCreatorSpriteAtlasUtility.RebuildResult result =
+                    IconCreatorSpriteAtlasUtility.Rebuild(rootFolder);
+                string message =
+                    "Rebuilt " + result.AtlasCount + " atlases from " + result.SpriteCount +
+                    " referenced Sprites across " + result.RecipeCount + " wardrobe recipes.";
+                if (result.ClearedAtlasCount > 0)
+                {
+                    message += "\n\nCleared packables from " + result.ClearedAtlasCount + " obsolete atlases.";
+                }
+                if (result.WarningCount > 0)
+                {
+                    message += "\n\n" + result.WarningCount + " conflicts were logged as warnings.";
+                }
+                message += "\n\nOutput: " + result.OutputFolder;
+                EditorUtility.DisplayDialog("Thumbnail Sprite Atlases", message, "OK");
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception);
+                EditorUtility.DisplayDialog("Thumbnail Sprite Atlases", exception.Message, "OK");
             }
         }
-        if (GUILayout.Button("Collapse All", GUILayout.Width(100f)))
+
+        private void DrawRootFolder()
         {
-            for (int i = 0; i < cameraRegionFoldouts.Count; i++)
+            EditorGUILayout.LabelField("Root Folder");
+            using (new EditorGUILayout.HorizontalScope())
             {
-                cameraRegionFoldouts[i] = false;
+                EditorGUILayout.PropertyField(rootFolderProperty, GUIContent.none);
+                if (GUILayout.Button("Browse", GUILayout.Width(70f)))
+                {
+                    string selectedFolder = EditorUtility.OpenFolderPanel("Select Root Folder", GetInitialFolder(rootFolderProperty.stringValue), string.Empty);
+                    if (!string.IsNullOrEmpty(selectedFolder))
+                    {
+                        rootFolderProperty.stringValue = selectedFolder;
+                    }
+                }
             }
         }
-        if (GUILayout.Button("Validate Regions", GUILayout.Width(120f)))
-        {
-            ValidateRegions();
-        }
-        GUILayout.EndHorizontal();
-        for (int i = 0; i < regionToCameraListProperty.arraySize; i++)
-        {
-            SerializedProperty elementProperty = regionToCameraListProperty.GetArrayElementAtIndex(i);
-            SerializedProperty cameraProperty = elementProperty.FindPropertyRelative("camera");
-            SerializedProperty regionsProperty = elementProperty.FindPropertyRelative("regions");
-            string cameraName = cameraProperty.objectReferenceValue != null ? cameraProperty.objectReferenceValue.name : "Unassigned";
 
-            using (new EditorGUILayout.VerticalScope(GUI.skin.box))
+        private void DrawCameraRegions()
+        {
+            EditorGUILayout.LabelField("Camera Regions", EditorStyles.boldLabel);
+            EnsureFoldoutState();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Expand All", GUILayout.Width(100f)))
             {
+                for (int i = 0; i < cameraRegionFoldouts.Count; i++)
+                {
+                    cameraRegionFoldouts[i] = true;
+                }
+            }
+            if (GUILayout.Button("Collapse All", GUILayout.Width(100f)))
+            {
+                for (int i = 0; i < cameraRegionFoldouts.Count; i++)
+                {
+                    cameraRegionFoldouts[i] = false;
+                }
+            }
+            if (GUILayout.Button("Validate Regions", GUILayout.Width(120f)))
+            {
+                ValidateRegions();
+            }
+            GUILayout.EndHorizontal();
+            for (int i = 0; i < regionToCameraListProperty.arraySize; i++)
+            {
+                SerializedProperty elementProperty = regionToCameraListProperty.GetArrayElementAtIndex(i);
+                SerializedProperty cameraProperty = elementProperty.FindPropertyRelative("camera");
+                SerializedProperty regionsProperty = elementProperty.FindPropertyRelative("regions");
+                string cameraName = cameraProperty.objectReferenceValue != null ? cameraProperty.objectReferenceValue.name : "Unassigned";
+
+                using (new EditorGUILayout.VerticalScope(GUI.skin.box))
+                {
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        cameraRegionFoldouts[i] = EditorGUILayout.Foldout(cameraRegionFoldouts[i], $"Camera {i + 1}: {cameraName}", true);
+                        GUILayout.FlexibleSpace();
+                        if (GUILayout.Button("Remove", GUILayout.Width(70f)))
+                        {
+                            regionToCameraListProperty.DeleteArrayElementAtIndex(i);
+                            cameraRegionFoldouts.RemoveAt(i);
+                            break;
+                        }
+                    }
+
+                    if (cameraRegionFoldouts[i])
+                    {
+                        EditorGUILayout.PropertyField(cameraProperty);
+                        DrawAssignedRegions(regionsProperty);
+                        DrawAddRegionButton(i, regionsProperty);
+                    }
+                }
+            }
+
+            if (GUILayout.Button("Add Camera Region"))
+            {
+                AddCameraRegion();
+            }
+        }
+
+        private void ValidateRegions()
+        {
+            IconCreator iconCreator = (IconCreator)target;
+            List<string> rRegions = GetRaceRegions();
+            List<string> raceRegions = new List<string>(rRegions);
+
+            if (raceRegions == null)
+            {
+                EditorUtility.DisplayDialog("Validation Result", "No race regions found.", "OK");
+                return;
+            }
+            IconCreator ic = target as IconCreator;
+            foreach (var cmregion in ic.regionToCameraList)
+            {
+                foreach (var region in cmregion.regions)
+                {
+                    raceRegions.Remove(region);
+                }
+            }
+            // notify that the remaining regions are not assigned to any camera
+            string message = raceRegions.Count > 0 ? $"The following regions are not assigned to any camera:\n- {string.Join("\n- ", raceRegions)}" : "All regions are assigned to cameras.";
+            EditorUtility.DisplayDialog("Validation Result", message, "OK");
+        }
+
+        private void DrawAssignedRegions(SerializedProperty regionsProperty)
+        {
+            EditorGUILayout.LabelField("Regions");
+
+            if (regionsProperty.arraySize == 0)
+            {
+                EditorGUILayout.HelpBox("No regions assigned.", MessageType.Info);
+                return;
+            }
+
+            for (int i = 0; i < regionsProperty.arraySize; i++)
+            {
+                SerializedProperty regionProperty = regionsProperty.GetArrayElementAtIndex(i);
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    cameraRegionFoldouts[i] = EditorGUILayout.Foldout(cameraRegionFoldouts[i], $"Camera {i + 1}: {cameraName}", true);
-                    GUILayout.FlexibleSpace();
-                    if (GUILayout.Button("Remove", GUILayout.Width(70f)))
+                    EditorGUILayout.LabelField(regionProperty.stringValue);
+                    if (GUILayout.Button("X", GUILayout.Width(24f)))
                     {
-                        regionToCameraListProperty.DeleteArrayElementAtIndex(i);
-                        cameraRegionFoldouts.RemoveAt(i);
+                        regionsProperty.DeleteArrayElementAtIndex(i);
                         break;
                     }
                 }
+            }
+        }
 
-                if (cameraRegionFoldouts[i])
+        private void DrawAddRegionButton(int cameraIndex, SerializedProperty regionsProperty)
+        {
+            List<string> availableRegions = GetAvailableRegions(regionsProperty);
+            string unavailableMessage = GetUnavailableRegionsMessage();
+
+            using (new EditorGUI.DisabledScope(availableRegions.Count == 0))
+            {
+                if (GUILayout.Button(availableRegions.Count == 0 ? "No Regions Available" : "Add Region"))
                 {
-                    EditorGUILayout.PropertyField(cameraProperty);
-                    DrawAssignedRegions(regionsProperty);
-                    DrawAddRegionButton(i, regionsProperty);
+                    GenericMenu menu = new GenericMenu();
+                    for (int i = 0; i < availableRegions.Count; i++)
+                    {
+                        string regionName = availableRegions[i];
+                        menu.AddItem(new GUIContent(regionName), false, OnAddRegionSelected, new AddRegionSelection(cameraIndex, regionName));
+                    }
+
+                    menu.ShowAsContext();
                 }
             }
-        }
 
-        if (GUILayout.Button("Add Camera Region"))
-        {
-            AddCameraRegion();
-        }
-    }
-
-    private void ValidateRegions()
-    {
-        IconCreator iconCreator = (IconCreator)target;
-        List<string> rRegions = GetRaceRegions();
-        List<string> raceRegions = new List<string>(rRegions);
-
-        if (raceRegions == null)
-        {
-            EditorUtility.DisplayDialog("Validation Result", "No race regions found.", "OK");
-            return;
-        }
-        IconCreator ic = target as IconCreator;
-        foreach (var cmregion in ic.regionToCameraList)
-        {
-            foreach (var region in cmregion.regions)
+            if (availableRegions.Count == 0)
             {
-                raceRegions.Remove(region);
+                EditorGUILayout.HelpBox(unavailableMessage, MessageType.Info);
             }
         }
-        // notify that the remaining regions are not assigned to any camera
-        string message = raceRegions.Count > 0 ? $"The following regions are not assigned to any camera:\n- {string.Join("\n- ", raceRegions)}" : "All regions are assigned to cameras.";
-        EditorUtility.DisplayDialog("Validation Result", message, "OK");
-    }
 
-    private void DrawAssignedRegions(SerializedProperty regionsProperty)
-    {
-        EditorGUILayout.LabelField("Regions");
-
-        if (regionsProperty.arraySize == 0)
+        private List<string> GetAvailableRegions(SerializedProperty regionsProperty)
         {
-            EditorGUILayout.HelpBox("No regions assigned.", MessageType.Info);
-            return;
-        }
+            HashSet<string> assignedRegions = new HashSet<string>();
+            List<string> availableRegions = new List<string>();
+            List<string> raceRegions = GetRaceRegions();
 
-        for (int i = 0; i < regionsProperty.arraySize; i++)
-        {
-            SerializedProperty regionProperty = regionsProperty.GetArrayElementAtIndex(i);
-            using (new EditorGUILayout.HorizontalScope())
+            for (int i = 0; i < regionsProperty.arraySize; i++)
             {
-                EditorGUILayout.LabelField(regionProperty.stringValue);
-                if (GUILayout.Button("X", GUILayout.Width(24f)))
+                string regionName = regionsProperty.GetArrayElementAtIndex(i).stringValue;
+                if (!string.IsNullOrEmpty(regionName))
                 {
-                    regionsProperty.DeleteArrayElementAtIndex(i);
-                    break;
+                    assignedRegions.Add(regionName);
                 }
             }
-        }
-    }
 
-    private void DrawAddRegionButton(int cameraIndex, SerializedProperty regionsProperty)
-    {
-        List<string> availableRegions = GetAvailableRegions(regionsProperty);
-        string unavailableMessage = GetUnavailableRegionsMessage();
-
-        using (new EditorGUI.DisabledScope(availableRegions.Count == 0))
-        {
-            if (GUILayout.Button(availableRegions.Count == 0 ? "No Regions Available" : "Add Region"))
+            if (raceRegions == null)
             {
-                GenericMenu menu = new GenericMenu();
-                for (int i = 0; i < availableRegions.Count; i++)
+                return availableRegions;
+            }
+
+            for (int i = 0; i < raceRegions.Count; i++)
+            {
+                string regionName = raceRegions[i];
+                if (string.IsNullOrEmpty(regionName) || assignedRegions.Contains(regionName) || availableRegions.Contains(regionName))
                 {
-                    string regionName = availableRegions[i];
-                    menu.AddItem(new GUIContent(regionName), false, OnAddRegionSelected, new AddRegionSelection(cameraIndex, regionName));
+                    continue;
                 }
 
-                menu.ShowAsContext();
+                availableRegions.Add(regionName);
             }
-        }
 
-        if (availableRegions.Count == 0)
-        {
-            EditorGUILayout.HelpBox(unavailableMessage, MessageType.Info);
-        }
-    }
-
-    private List<string> GetAvailableRegions(SerializedProperty regionsProperty)
-    {
-        HashSet<string> assignedRegions = new HashSet<string>();
-        List<string> availableRegions = new List<string>();
-        List<string> raceRegions = GetRaceRegions();
-
-        for (int i = 0; i < regionsProperty.arraySize; i++)
-        {
-            string regionName = regionsProperty.GetArrayElementAtIndex(i).stringValue;
-            if (!string.IsNullOrEmpty(regionName))
-            {
-                assignedRegions.Add(regionName);
-            }
-        }
-
-        if (raceRegions == null)
-        {
             return availableRegions;
         }
 
-        for (int i = 0; i < raceRegions.Count; i++)
+        private List<string> GetRaceRegions()
         {
-            string regionName = raceRegions[i];
-            if (string.IsNullOrEmpty(regionName) || assignedRegions.Contains(regionName) || availableRegions.Contains(regionName))
+            IconCreator iconCreator = (IconCreator)target;
+            RaceData raceData = iconCreator.avatar != null ? iconCreator.avatar.activeRace.data : null;
+            if (raceData != null)
             {
-                continue;
+                return new List<string>(raceData.Regions);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private string GetUnavailableRegionsMessage()
+        {
+            IconCreator iconCreator = (IconCreator)target;
+            if (iconCreator.avatar == null)
+            {
+                return "Assign an Avatar to load regions from its race data.";
             }
 
-            availableRegions.Add(regionName);
+            if (iconCreator.avatar.activeRace.data == null)
+            {
+                return "The assigned Avatar does not have active race data yet.";
+            }
+
+            return "All race regions are already assigned to this camera.";
         }
 
-        return availableRegions;
-    }
-
-    private List<string> GetRaceRegions()
-    {
-        IconCreator iconCreator = (IconCreator)target;
-        RaceData raceData = iconCreator.avatar != null ? iconCreator.avatar.activeRace.data : null;
-        if (raceData != null)
+        private void AddCameraRegion()
         {
-            return new List<string>(raceData.Regions);
-        }
-        else
-        {
-            return null;
-        }
-    }
+            int newIndex = regionToCameraListProperty.arraySize;
+            regionToCameraListProperty.InsertArrayElementAtIndex(newIndex);
 
-    private string GetUnavailableRegionsMessage()
-    {
-        IconCreator iconCreator = (IconCreator)target;
-        if (iconCreator.avatar == null)
-        {
-            return "Assign an Avatar to load regions from its race data.";
-        }
-
-        if (iconCreator.avatar.activeRace.data == null)
-        {
-            return "The assigned Avatar does not have active race data yet.";
-        }
-
-        return "All race regions are already assigned to this camera.";
-    }
-
-    private void AddCameraRegion()
-    {
-        int newIndex = regionToCameraListProperty.arraySize;
-        regionToCameraListProperty.InsertArrayElementAtIndex(newIndex);
-
-        SerializedProperty elementProperty = regionToCameraListProperty.GetArrayElementAtIndex(newIndex);
-        elementProperty.FindPropertyRelative("camera").objectReferenceValue = null;
-        elementProperty.FindPropertyRelative("regions").ClearArray();
-        cameraRegionFoldouts.Add(true);
-    }
-
-    private void EnsureFoldoutState()
-    {
-        while (cameraRegionFoldouts.Count < regionToCameraListProperty.arraySize)
-        {
+            SerializedProperty elementProperty = regionToCameraListProperty.GetArrayElementAtIndex(newIndex);
+            elementProperty.FindPropertyRelative("camera").objectReferenceValue = null;
+            elementProperty.FindPropertyRelative("regions").ClearArray();
             cameraRegionFoldouts.Add(true);
         }
 
-        while (cameraRegionFoldouts.Count > regionToCameraListProperty.arraySize)
+        private void EnsureFoldoutState()
         {
-            cameraRegionFoldouts.RemoveAt(cameraRegionFoldouts.Count - 1);
-        }
-    }
-
-    private void OnAddRegionSelected(object userData)
-    {
-        AddRegionSelection selection = (AddRegionSelection)userData;
-
-        serializedObject.Update();
-
-        if (selection.CameraIndex < 0 || selection.CameraIndex >= regionToCameraListProperty.arraySize)
-        {
-            return;
-        }
-
-        SerializedProperty elementProperty = regionToCameraListProperty.GetArrayElementAtIndex(selection.CameraIndex);
-        SerializedProperty regionsProperty = elementProperty.FindPropertyRelative("regions");
-        int newIndex = regionsProperty.arraySize;
-
-        regionsProperty.InsertArrayElementAtIndex(newIndex);
-        regionsProperty.GetArrayElementAtIndex(newIndex).stringValue = selection.RegionName;
-
-        serializedObject.ApplyModifiedProperties();
-    }
-
-    private static string GetInitialFolder(string currentFolder)
-    {
-        if (!string.IsNullOrEmpty(currentFolder))
-        {
-            if (Directory.Exists(currentFolder))
+            while (cameraRegionFoldouts.Count < regionToCameraListProperty.arraySize)
             {
-                return currentFolder;
+                cameraRegionFoldouts.Add(true);
             }
 
-            string projectFolder = Directory.GetParent(Application.dataPath)?.FullName;
-            if (!string.IsNullOrEmpty(projectFolder))
+            while (cameraRegionFoldouts.Count > regionToCameraListProperty.arraySize)
             {
-                string combinedPath = Path.GetFullPath(Path.Combine(projectFolder, currentFolder));
-                if (Directory.Exists(combinedPath))
+                cameraRegionFoldouts.RemoveAt(cameraRegionFoldouts.Count - 1);
+            }
+        }
+
+        private void OnAddRegionSelected(object userData)
+        {
+            AddRegionSelection selection = (AddRegionSelection)userData;
+
+            serializedObject.Update();
+
+            if (selection.CameraIndex < 0 || selection.CameraIndex >= regionToCameraListProperty.arraySize)
+            {
+                return;
+            }
+
+            SerializedProperty elementProperty = regionToCameraListProperty.GetArrayElementAtIndex(selection.CameraIndex);
+            SerializedProperty regionsProperty = elementProperty.FindPropertyRelative("regions");
+            int newIndex = regionsProperty.arraySize;
+
+            regionsProperty.InsertArrayElementAtIndex(newIndex);
+            regionsProperty.GetArrayElementAtIndex(newIndex).stringValue = selection.RegionName;
+
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        private static string GetInitialFolder(string currentFolder)
+        {
+            if (!string.IsNullOrEmpty(currentFolder))
+            {
+                if (Directory.Exists(currentFolder))
                 {
-                    return combinedPath;
+                    return currentFolder;
+                }
+
+                string projectFolder = Directory.GetParent(Application.dataPath)?.FullName;
+                if (!string.IsNullOrEmpty(projectFolder))
+                {
+                    string combinedPath = Path.GetFullPath(Path.Combine(projectFolder, currentFolder));
+                    if (Directory.Exists(combinedPath))
+                    {
+                        return combinedPath;
+                    }
                 }
             }
+
+            return Application.dataPath;
         }
 
-        return Application.dataPath;
-    }
-
-    private class AddRegionSelection
-    {
-        public int CameraIndex { get; }
-        public string RegionName { get; }
-
-        public AddRegionSelection(int cameraIndex, string regionName)
+        private class AddRegionSelection
         {
-            CameraIndex = cameraIndex;
-            RegionName = regionName;
+            public int CameraIndex { get; }
+            public string RegionName { get; }
+
+            public AddRegionSelection(int cameraIndex, string regionName)
+            {
+                CameraIndex = cameraIndex;
+                RegionName = regionName;
+            }
         }
     }
 }

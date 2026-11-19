@@ -253,7 +253,7 @@ MonoBehaviour:
         enabled: 1
         parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
       - Name: ElfEars
-        Value: 0.5
+        Value: 0
         enabled: 1
         parentGroup: {fileID: 11400000, guid: 03b087bf030777547a3270b711355867, type: 2}
       - Name: EyePosition

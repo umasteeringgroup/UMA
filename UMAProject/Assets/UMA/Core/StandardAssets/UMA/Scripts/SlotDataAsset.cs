@@ -1477,7 +1477,10 @@ namespace UMA
                                 var tris = md.submeshes[i].GetBaseTriangles();
                                 mesh.SetIndices(tris ?? System.Array.Empty<int>(), UnityEngine.MeshTopology.Triangles, i);
                             }
-                            mesh.RecalculateNormals();
+                            // Not Mesh.RecalculateNormals: vertices at one position get one normal (UMABuddyNormals).
+                            var buddyNormals = new UnityEngine.Vector3[md.vertices.Length];
+                            new UMA.UMABuddyNormals(md.vertices, allTriangles).Recalculate(md.vertices, buddyNormals, true);
+                            mesh.normals = buddyNormals;
                             mesh.RecalculateTangents();
                             md.normals = mesh.normals;
                             md.tangents = mesh.tangents;

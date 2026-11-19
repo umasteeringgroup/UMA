@@ -29,7 +29,9 @@ namespace UMA.Editors.Tests
             "vertexPaintStrengthPercent", "vertexPaintFalloff", "vertexPaintSmoothRadius", "vertexPaintSymmetryX",
             "vertexPaintAffectAlpha", "vertexPaintNoiseType", "vertexPaintNoiseScale", "vertexPaintNoiseAmount",
             "vertexPaintNoiseColor", "vertexPaintNoiseRepeat", "vertexPaintNoiseSeed",
-            "sculptFrontFacesOnly", "showSculptNormals", "sculptNormalLength", "sculptNormalSmoothingAngle", "brushIgnoresLockedSlots",
+            "sculptFrontFacesOnly", "showSculptNormals", "sculptNormalLength", "brushIgnoresLockedSlots",
+            "sculptUVLockBorders", "sculptBeautifyEvenSpacing", "sculptBeautifyKeepShape", "sculptBeautifyKeepTexture",
+            "showOriginalMaterials", "showVertexColorsView",
         };
 
         private readonly List<Object> objects = new List<Object>();
@@ -67,8 +69,12 @@ namespace UMA.Editors.Tests
             Set(before, "sculptFrontFacesOnly", true);
             Set(before, "showSculptNormals", true);
             Set(before, "sculptNormalLength", 0.02f);
-            Set(before, "sculptNormalSmoothingAngle", 35f);
             Set(before, "brushIgnoresLockedSlots", false);
+            Set(before, "showOriginalMaterials", true);
+            Set(before, "sculptUVLockBorders", true);
+            Set(before, "sculptBeautifyEvenSpacing", 0.4f);
+            Set(before, "sculptBeautifyKeepShape", false);
+            Set(before, "sculptBeautifyKeepTexture", false);
             SetEnum(before, "sculptFalloff", "UserDefined");
             Set(before, "sculptCustomFalloff", AnimationCurve.Linear(0f, 1f, 1f, 0.25f));
             Set(before, "sculptRadius", 0.12f);

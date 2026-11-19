@@ -194,7 +194,8 @@ namespace UMA
             if (!constructing && avatar != null)
             {
                 avatar.SetDNA(DNAName, value, false);
-                avatar.ForceUpdate(true, true, true);
+                // Build what the DNA's effects call for (a color effect also needs its colors written again).
+                avatar.ApplyDNAChange(DNAName, true);
             }
         }
 
@@ -884,13 +885,22 @@ namespace UMA
             }
 
             Dictionary<string, DnaSetter> currentDna = restoreAvatar.GetDNA();
+            DNAInstanceCollection.DNABuildType restoredTypes = DNAInstanceCollection.DNABuildType.None;
             foreach (KeyValuePair<string, float> savedDna in snapshot)
             {
                 if (currentDna.ContainsKey(savedDna.Key))
                 {
                     restoreAvatar.SetDNA(savedDna.Key, savedDna.Value, false);
+                    if (restoreAvatar.TryGetDNABuildType(savedDna.Key, out DNAInstanceCollection.DNABuildType dnaBuildType))
+                    {
+                        restoredTypes |= dnaBuildType;
+                    }
                 }
             }
+            // This runs from RecipeUpdated, after the build ran the DNA effects that act on the recipe (colors,
+            // overlay transforms, DNA mesh modifiers) with the values from before the restore; run them again.
+            // The build that follows draws and generates everything.
+            restoreAvatar.ReapplyRecipeDNAEffects(restoredTypes, out _, out _);
             //Debug.Log($"Restored {snapshot.Count} DNA values for race {raceName}");
         }
 

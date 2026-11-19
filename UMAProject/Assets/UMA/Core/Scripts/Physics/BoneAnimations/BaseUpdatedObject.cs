@@ -2,40 +2,44 @@ using UMA;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
 
-[System.Serializable]
-public class BaseUpdatedObject : ScriptableObject
+namespace UMA
 {
-    protected bool initialized = false;
-    protected UMAData umaData;
-    protected bool wasWarned = false;
 
-    public virtual void Initialize(UMAData umaData, SlotData sd)
+    [System.Serializable]
+    public class BaseUpdatedObject : ScriptableObject
     {
-        this.umaData = umaData;
-    }
+        protected bool initialized = false;
+        protected UMAData umaData;
+        protected bool wasWarned = false;
 
-    public virtual void DoUpdate(UMAData umaData, float step)
-    {
-        // Default implementation does nothing.
-    }
-
-    public void FixedUpdate()
-    {
-        // This method can be overridden in derived classes if needed.
-        // It is called every fixed frame-rate frame.
-        if (umaData != null && initialized)
+        public virtual void Initialize(UMAData umaData, SlotData sd)
         {
-            DoUpdate(umaData, Time.fixedDeltaTime);
+            this.umaData = umaData;
         }
-#if UNITY_EDITOR
-        else
+
+        public virtual void DoUpdate(UMAData umaData, float step)
         {
-            if (!wasWarned)
+            // Default implementation does nothing.
+        }
+
+        public void FixedUpdate()
+        {
+            // This method can be overridden in derived classes if needed.
+            // It is called every fixed frame-rate frame.
+            if (umaData != null && initialized)
             {
-                Debug.LogWarning("BaseBoneAnimator not initialized or UMAData is null. Please call Initialize() before using DoUpdate().");
-                wasWarned = true;
+                DoUpdate(umaData, Time.fixedDeltaTime);
             }
-        }
+#if UNITY_EDITOR
+            else
+            {
+                if (!wasWarned)
+                {
+                    Debug.LogWarning("BaseBoneAnimator not initialized or UMAData is null. Please call Initialize() before using DoUpdate().");
+                    wasWarned = true;
+                }
+            }
 #endif
+        }
     }
 }

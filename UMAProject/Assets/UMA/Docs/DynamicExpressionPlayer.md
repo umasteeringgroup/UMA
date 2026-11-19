@@ -112,6 +112,10 @@ Use `DNAEffect_RuntimeMaterialProperty` for animated blush, wrinkle strength,
 wrinkle textures, and similar shader controls. It writes through
 `MaterialPropertyBlock` without clearing unrelated properties.
 
+The same effect also works on ordinary character DNA (not driven by this
+player): there it is written at the end of every build and whenever its DNA
+value changes. A texture slot that is left empty leaves the property as it is.
+
 It supports float, color, vector, and texture parameters. A renderer name,
 material index, and/or UMA shared-color name can restrict the target.
 

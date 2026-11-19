@@ -6,7 +6,8 @@ namespace UMA
 {
     /// <summary>
     /// Remembers the Vertex Editor's tool choices: the workflow (Sculpt, Vertex Paint, Advanced or
-    /// Blendshapes), the Sculpt and Vertex Paint brushes with their size, effect, falloff and options,
+    /// Blendshapes), the display options (Original Materials and Vertex Colors; Wireframe keeps its
+    /// own key), the Sculpt and Vertex Paint brushes with their size, effect, falloff and options,
     /// and the Advanced tool, tab, mode and action. They are written to EditorPrefs when they change
     /// and restored every time the Vertex Editor opens, so they last through closing the editor, a
     /// domain reload and an Editor restart.
@@ -47,6 +48,9 @@ namespace UMA
 
             return new VertexEditorToolSettings
             {
+                showOriginalMaterials = VertexEditorToolSettings.WriteBool(showOriginalMaterials),
+                showVertexColors = VertexEditorToolSettings.WriteBool(showVertexColorsView),
+
                 workflow = CurrentAuthoringWorkflow().ToString(),
                 advancedMode = rememberedAdvancedMode.ToString(),
                 advancedTool = rememberedAdvancedTool.ToString(),
@@ -72,7 +76,10 @@ namespace UMA
                 sculptFrontFacesOnly = VertexEditorToolSettings.WriteBool(sculptFrontFacesOnly),
                 showSculptNormals = VertexEditorToolSettings.WriteBool(showSculptNormals),
                 sculptNormalLength = sculptNormalLength,
-                sculptNormalSmoothingAngle = sculptNormalSmoothingAngle,
+                sculptUVLockBorders = VertexEditorToolSettings.WriteBool(sculptUVLockBorders),
+                sculptBeautifyEvenSpacing = sculptBeautifyEvenSpacing,
+                sculptBeautifyKeepShape = VertexEditorToolSettings.WriteBool(sculptBeautifyKeepShape),
+                sculptBeautifyKeepTexture = VertexEditorToolSettings.WriteBool(sculptBeautifyKeepTexture),
                 brushIgnoresLockedSlots = VertexEditorToolSettings.WriteBool(brushIgnoresLockedSlots),
 
                 vertexPaintTool = vertexPaintTool.ToString(),
@@ -111,6 +118,10 @@ namespace UMA
             const float minRadius = StageBrushSize.MinRadiusMm / 1000f;
             const float maxRadius = StageBrushSize.MaxRadiusMm / 1000f;
 
+            // Display: the model is drawn one way or the other, as the two switches enforce.
+            showOriginalMaterials = VertexEditorToolSettings.ReadBool(settings.showOriginalMaterials, showOriginalMaterials);
+            showVertexColorsView = !showOriginalMaterials && VertexEditorToolSettings.ReadBool(settings.showVertexColors, showVertexColorsView);
+
             // Advanced: the action has to belong to the mode (Add/Remove/Invert define a set,
             // Activate/Deactivate/Toggle define a state). Otherwise the mode's first action is used,
             // as when the mode is chosen on the toolbar.
@@ -145,7 +156,10 @@ namespace UMA
             sculptFrontFacesOnly = VertexEditorToolSettings.ReadBool(settings.sculptFrontFacesOnly, sculptFrontFacesOnly);
             showSculptNormals = VertexEditorToolSettings.ReadBool(settings.showSculptNormals, showSculptNormals);
             sculptNormalLength = VertexEditorToolSettings.ReadFloat(settings.sculptNormalLength, MinNormalLength, MaxNormalLength, sculptNormalLength);
-            sculptNormalSmoothingAngle = VertexEditorToolSettings.ReadFloat(settings.sculptNormalSmoothingAngle, 0f, 180f, sculptNormalSmoothingAngle);
+            sculptUVLockBorders = VertexEditorToolSettings.ReadBool(settings.sculptUVLockBorders, sculptUVLockBorders);
+            sculptBeautifyEvenSpacing = VertexEditorToolSettings.ReadFloat(settings.sculptBeautifyEvenSpacing, 0f, 1f, sculptBeautifyEvenSpacing);
+            sculptBeautifyKeepShape = VertexEditorToolSettings.ReadBool(settings.sculptBeautifyKeepShape, sculptBeautifyKeepShape);
+            sculptBeautifyKeepTexture = VertexEditorToolSettings.ReadBool(settings.sculptBeautifyKeepTexture, sculptBeautifyKeepTexture);
             brushIgnoresLockedSlots = VertexEditorToolSettings.ReadBool(settings.brushIgnoresLockedSlots, brushIgnoresLockedSlots);
 
             vertexPaintTool = VertexEditorToolSettings.ReadEnum(settings.vertexPaintTool, vertexPaintTool);
@@ -226,6 +240,12 @@ namespace UMA
                 {
                     SetAdvancedTool(rememberedAdvancedTool);
                 }
+                // Draw the model the way it was left.
+                if (showVertexColorsView && !vertexPaintPreviewInitialized && BakedMesh != null)
+                {
+                    InitializeVertexPaintPreview();
+                }
+                ApplyVertexDisplayOptions();
             }
             // What is stored now; nothing is written until a choice changes.
             savedToolSettingsJson = CaptureToolSettings().ToJson();

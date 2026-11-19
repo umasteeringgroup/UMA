@@ -13,9 +13,9 @@ namespace UMA
     /// <remarks>
     /// The changes are on the stage's mesh, like a sculpt, and are saved the same ways: Save
     /// MeshModifier adds a Vertex Normal modifier per slot, and the slot saves (More Save Options)
-    /// write them into the slot's MeshData. Shape strokes recalculate the mesh's normals when they
-    /// end, so normals are best combed after the shape is done. Tangents are kept perpendicular to
-    /// the changed normals.
+    /// write them into the slot's MeshData. Shape strokes turn the normals with the faces that moved
+    /// (VertexEditorStage.ShapeNormals), so changed normals survive later sculpting. Tangents are
+    /// kept perpendicular to the changed normals.
     /// </remarks>
     public partial class VertexEditorStage
     {
@@ -27,7 +27,6 @@ namespace UMA
         // Remembered with the other tool choices (VertexEditorToolSettings).
         private bool showSculptNormals;
         private float sculptNormalLength = 0.01f;
-        private float sculptNormalSmoothingAngle = 60f;
 
         [SerializeField] private bool showSculptNormalsSection = true;
         [NonSerialized] private string sculptNormalStatusMessage = string.Empty;
@@ -276,9 +275,9 @@ namespace UMA
         // ---- Whole-slot operations ------------------------------------------
 
         /// <summary>
-        /// Recalculates the editable slots' normals from their current shape. Copies of a vertex at one
-        /// position (UV seams) are smoothed together; faces more than Smoothing Angle apart keep a hard
-        /// edge. One Undo step. Returns how many slots changed.
+        /// Recalculates the editable slots' normals from their current shape. Vertices at one position
+        /// (UV seams, slot connections) get one normal; a vertex whose buddy is in a slot that is not
+        /// editable takes that buddy's normal. One Undo step. Returns how many slots changed.
         /// </summary>
         public int RecalculateEditableSlotNormals()
         {
@@ -287,40 +286,42 @@ namespace UMA
             {
                 return 0;
             }
-            List<SlotData> slots = GetEditableSlots();
+            // The slot saves work on the sculpt session's slot, and this can be called from a workflow
+            // that has not started one (the Mesh Modifier editor's Recalculate Normals).
+            EnsureSculptSession();
             Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { this, BakedMesh }, "Recalculate Normals");
-            Vector3[] positions = BakedMesh.vertices;
             Vector3[] normals = BakedMesh.normals;
             Vector4[] tangents = BakedMesh.tangents;
-            int[] triangles = GetBakedTriangles();
-            EnsureBrushTriangleCache(triangles);
-            float cosineLimit = Mathf.Cos(Mathf.Clamp(sculptNormalSmoothingAngle, 0f, 180f) * Mathf.Deg2Rad) - 1e-5f;
-            float tolerance = Mathf.Max(0.000001f, BakedMesh.bounds.size.magnitude * 0.000001f);
-            int changedSlots = 0;
-            foreach (SlotData slot in slots)
+            // Created before the mesh's normals change, so each keeps the slot's own normals.
+            var states = new List<SculptSlotEditState>();
+            foreach (SlotData slot in GetEditableSlots())
             {
-                // Created before the mesh's normals change, so it keeps the slot's own normals.
                 SculptSlotEditState state = GetOrCreateSculptSlotState(slot);
-                if (state == null || !brushTrianglesBySlot.TryGetValue(slot, out int[] slotTriangles) || slotTriangles.Length == 0)
+                if (state != null)
                 {
-                    continue;
+                    states.Add(state);
                 }
-                RecalculateSlotNormals(state.start, state.count, slotTriangles, triangles, positions, normals, cosineLimit, tolerance);
-                if (tangents != null && tangents.Length == normals.Length)
+            }
+            if (states.Count > 0)
+            {
+                GetBuddyNormals().Recalculate(BakedMesh.vertices, normals, false, BuildNormalLocks());
+                foreach (SculptSlotEditState state in states)
                 {
-                    for (int i = state.start; i < state.start + state.count; i++)
+                    if (tangents != null && tangents.Length == normals.Length)
                     {
-                        tangents[i] = OrthogonalTangent(tangents[i], normals[i]);
+                        for (int i = state.start; i < state.start + state.count; i++)
+                        {
+                            tangents[i] = OrthogonalTangent(tangents[i], normals[i]);
+                        }
                     }
+                    state.normalsEdited = true;
                 }
-                state.normalsEdited = true;
-                changedSlots++;
             }
             ApplyEditedNormals(normals, tangents);
-            sculptNormalStatusMessage = changedSlots == 0
+            sculptNormalStatusMessage = states.Count == 0
                 ? "No editable slot to recalculate."
-                : "Recalculated the normals of " + changedSlots + (changedSlots == 1 ? " slot." : " slots.");
-            return changedSlots;
+                : "Recalculated the normals of " + states.Count + (states.Count == 1 ? " slot." : " slots.");
+            return states.Count;
         }
 
         /// <summary>Puts the editable slots' normals back to the slot's own. One Undo step. Returns how many slots changed.</summary>
@@ -375,94 +376,23 @@ namespace UMA
             SceneView.RepaintAll();
         }
 
-        /// <summary>
-        /// Normals for one slot's vertices [start, start + count): the average of the face normals
-        /// around the vertex's position (all welded copies), counting only faces within the smoothing
-        /// angle of the vertex's own faces. Each face counts once, whatever its size, as the UMA slot
-        /// assets' own normals are made, so an unchanged slot keeps (nearly) its normals. The angle
-        /// limit also keeps the two sides of double-sided geometry (a reversed copy at the same
-        /// positions) apart.
-        /// </summary>
-        internal static void RecalculateSlotNormals(
-            int start, int count, int[] slotTriangles, int[] triangles, Vector3[] positions, Vector3[] normals,
-            float cosineLimit, float weldTolerance)
-        {
-            var faceDirections = new Vector3[slotTriangles.Length];
-            var vertexFaces = new List<int>[count];
-            for (int f = 0; f < slotTriangles.Length; f++)
-            {
-                int first = slotTriangles[f];
-                int a = triangles[first], b = triangles[first + 1], c = triangles[first + 2];
-                Vector3 normal = Vector3.Cross(positions[b] - positions[a], positions[c] - positions[a]);
-                faceDirections[f] = normal.sqrMagnitude > 1e-24f ? normal.normalized : Vector3.zero;
-                AddFace(a); AddFace(b); AddFace(c);
-
-                void AddFace(int vertex)
-                {
-                    int local = vertex - start;
-                    if (local < 0 || local >= count) return;
-                    (vertexFaces[local] ?? (vertexFaces[local] = new List<int>(6))).Add(f);
-                }
-            }
-
-            float inverseTolerance = 1f / Mathf.Max(weldTolerance, 1e-9f);
-            var groups = new Dictionary<Vector3Int, List<int>>();
-            var groupOf = new List<int>[count];
-            for (int i = 0; i < count; i++)
-            {
-                Vector3 p = positions[start + i];
-                var key = new Vector3Int(
-                    Mathf.RoundToInt(p.x * inverseTolerance),
-                    Mathf.RoundToInt(p.y * inverseTolerance),
-                    Mathf.RoundToInt(p.z * inverseTolerance));
-                if (!groups.TryGetValue(key, out List<int> group))
-                {
-                    group = new List<int>(2);
-                    groups.Add(key, group);
-                }
-                group.Add(i);
-                groupOf[i] = group;
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                if (vertexFaces[i] == null)
-                {
-                    continue;
-                }
-                Vector3 own = Vector3.zero;
-                foreach (int f in vertexFaces[i]) own += faceDirections[f];
-                if (own.sqrMagnitude < 1e-12f)
-                {
-                    continue;
-                }
-                own.Normalize();
-                Vector3 sum = Vector3.zero;
-                foreach (int member in groupOf[i])
-                {
-                    if (vertexFaces[member] == null) continue;
-                    foreach (int f in vertexFaces[member])
-                    {
-                        if (Vector3.Dot(faceDirections[f], own) >= cosineLimit)
-                        {
-                            sum += faceDirections[f];
-                        }
-                    }
-                }
-                normals[start + i] = sum.sqrMagnitude > 1e-12f ? sum.normalized : own;
-            }
-        }
-
         // ---- Saving ---------------------------------------------------------
 
         /// <summary>
-        /// A Vertex Normal modifier for a slot whose normals a normals tool changed: the new normal and
-        /// tangent of each changed vertex, in the worn slot's mesh space. Null when nothing changed.
+        /// A Vertex Normal modifier for a slot whose normals a normals tool changed, or whose tangents a
+        /// UV tool turned: the new normal and tangent of each changed vertex, in the worn slot's mesh
+        /// space. Null when nothing changed.
         /// </summary>
         private MeshModifier.Modifier CreateSculptNormalModifier(SculptSlotEditState state, bool useSlotSuffix)
         {
-            if (state == null || !state.normalsEdited || !state.hasOriginalNormals || state.originalNormals == null ||
-                state.slot == null || state.slot.asset == null || BakedMesh == null)
+            if (state == null || state.slot == null || state.slot.asset == null || BakedMesh == null)
+            {
+                return null;
+            }
+            bool normalsEdited = state.normalsEdited && state.hasOriginalNormals && state.originalNormals != null;
+            // A UV tool turns tangents with the texture; the normal modifier is what carries tangents.
+            Vector4[] bakedTangents = state.uvEdited && state.originalTangents != null ? BakedMesh.tangents : null;
+            if (!normalsEdited && bakedTangents == null)
             {
                 return null;
             }
@@ -488,14 +418,27 @@ namespace UMA
                 manuallyModified = true,
                 adjustments = new VertexNormalAdjustmentCollection()
             };
+            if (bakedTangents != null && state.start + state.count > bakedTangents.Length)
+            {
+                bakedTangents = null;
+            }
             for (int i = 0; i < state.count; i++)
             {
-                Vector3 delta = normals[state.start + i] - state.originalNormals[i];
-                if (delta.sqrMagnitude <= 1e-10f)
+                Vector3 delta = normalsEdited ? normals[state.start + i] - state.originalNormals[i] : Vector3.zero;
+                bool normalChanged = delta.sqrMagnitude > 1e-10f;
+                float turn = bakedTangents != null
+                    ? TangentTurn(state.originalTangents[i], bakedTangents[state.start + i], normals[state.start + i])
+                    : 0f;
+                bool tangentTurned = Mathf.Abs(turn) >= TangentTurnThreshold;
+                if (!normalChanged && !tangentTurned)
                 {
                     continue;
                 }
-                Vector3 normal = meshData.normals[i] + BakedToWornSpace(state.start + i, delta);
+                Vector3 normal = meshData.normals[i];
+                if (normalChanged)
+                {
+                    normal += BakedToWornSpace(state.start + i, delta);
+                }
                 if (normal.sqrMagnitude < 1e-12f)
                 {
                     continue;
@@ -504,6 +447,10 @@ namespace UMA
                 Vector4 tangent = meshData.tangents != null && i < meshData.tangents.Length
                     ? OrthogonalTangent(meshData.tangents[i], normal)
                     : OrthogonalTangent(Vector4.zero, normal);
+                if (tangentTurned)
+                {
+                    tangent = TurnTangent(tangent, normal, turn);
+                }
                 modifier.adjustments.vertexAdjustments.Add(new VertexNormalAdjustment
                 {
                     vertexIndex = i,
@@ -607,7 +554,7 @@ namespace UMA
                 return;
             }
             GUILayout.Label(
-                "Comb Normals and Smooth Normals (the last two brushes on the toolbar) change normals without moving vertices. " +
+                "Comb Normals and Smooth Normals (in the last group of brushes on the toolbar) change normals without moving vertices. " +
                 "Shape strokes recalculate normals when they end, so change normals after the shape is done. " +
                 "Save them from the Save panel of the Vertex Editor window (Mesh Modifier, or into the slot).",
                 EditorStyles.wordWrappedMiniLabel);
@@ -630,13 +577,8 @@ namespace UMA
                     SceneView.RepaintAll();
                 }
             }
-            sculptNormalSmoothingAngle = EditorGUILayout.Slider(
-                new GUIContent(
-                    "Smoothing Angle",
-                    "Recalculate: faces meeting at a vertex at less than this angle are smoothed together; sharper corners keep a hard edge. 180 smooths everything."),
-                sculptNormalSmoothingAngle, 0f, 180f);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button(new GUIContent("Recalculate", "Work out the editable slots' normals again from their current shape, smoothing across UV seams. One Undo step.")))
+            if (GUILayout.Button(new GUIContent("Recalculate", "Work out the editable slots' normals again from their current shape. Vertices at one position (UV seams, slot connections) get one normal. One Undo step.")))
             {
                 RecalculateEditableSlotNormals();
                 GUIUtility.ExitGUI();

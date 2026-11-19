@@ -478,7 +478,7 @@ MonoBehaviour:
     - Name: BrowPosition
       val: 5000
     - Name: ElfEars
-      val: 5000
+      val: 0
     - Name: EyePosition
       val: 10000
     - Name: armLength

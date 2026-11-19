@@ -1,6 +1,10 @@
 using UnityEngine;
 
-public class RaceCompatibilityModifier
+namespace UMA
 {
+
+    public class RaceCompatibilityModifier
+    {
     
+    }
 }

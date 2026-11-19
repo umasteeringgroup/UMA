@@ -4506,10 +4506,10 @@ namespace UMA
         }
 
         /// <summary>
-        /// releases an asset an asset reference
+        /// Releases the library's reference to an asset, so the next request loads it again. Call this
+        /// after changing an asset the library may be holding. For a slot it also drops the slot's
+        /// race-baked copies (<see cref="DropBakedCopies"/>), which were made from the slot as it was.
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="Name"></param>
         public void ReleaseReference(UnityEngine.Object obj)
         {
             if (obj == null)
@@ -4535,6 +4535,102 @@ namespace UMA
                 AssetItem ai = TypeDic[Name];
                 ai.FreeReference();
             }
+
+            if (obj is SlotDataAsset slot)
+            {
+                DropBakedCopies(slot);
+            }
+        }
+
+        /// <summary>
+        /// Removes the race-baked copies of a slot from the library. A race with prebaked blendshapes
+        /// wears "&lt;slot&gt;_baked_&lt;race&gt;", a copy made in memory by
+        /// <see cref="SlotDataAsset.BakeNewSlotData"/> and found again by that name, so it keeps the
+        /// slot's old mesh after the slot changes. Once dropped, the next character build bakes a
+        /// new copy from the slot as it is now.
+        /// </summary>
+        /// <remarks>
+        /// Only copies that exist in memory are dropped; a baked slot saved as an asset in the project
+        /// is left in the library. The copies themselves are not destroyed, because characters that
+        /// are already built still wear them. The library is not marked as changed.
+        /// </remarks>
+        /// <returns>How many copies were dropped.</returns>
+        public int DropBakedCopies(SlotDataAsset source)
+        {
+            if (source == null || !TypeToLookup.ContainsKey(typeof(SlotDataAsset)))
+            {
+                return 0;
+            }
+            string sourceName = source.slotName;
+            if (string.IsNullOrEmpty(sourceName))
+            {
+                return 0;
+            }
+            string bakedPrefix = sourceName + "_baked_";
+            Dictionary<string, AssetItem> slots = GetAssetDictionary(typeof(SlotDataAsset));
+            List<KeyValuePair<string, AssetItem>> stale = null;
+            foreach (KeyValuePair<string, AssetItem> entry in slots)
+            {
+                AssetItem ai = entry.Value;
+                if (ai == null || !string.IsNullOrEmpty(ai._Guid))
+                {
+                    continue;
+                }
+                SlotDataAsset copy = ai._SerializedItem as SlotDataAsset;
+                bool isCopy;
+                if (copy != null)
+                {
+#if UNITY_EDITOR
+                    if (EditorUtility.IsPersistent(copy))
+                    {
+                        continue;
+                    }
+#endif
+                    isCopy = !ReferenceEquals(copy, source) && copy.isBaked && copy.sourceSlot == sourceName;
+                }
+                else
+                {
+                    // Already released: all that is left to go by is the name baking gives a copy.
+                    isCopy = entry.Key.StartsWith(bakedPrefix, StringComparison.Ordinal);
+                }
+                if (isCopy)
+                {
+                    (stale ?? (stale = new List<KeyValuePair<string, AssetItem>>())).Add(entry);
+                }
+            }
+            if (stale == null)
+            {
+                return 0;
+            }
+            for (int i = 0; i < stale.Count; i++)
+            {
+                slots.Remove(stale[i].Key);
+                RemoveInMemoryItem(stale[i].Value);
+            }
+            return stale.Count;
+        }
+
+        /// <summary>
+        /// Takes an item that was only ever in memory out of the item list, keeping every other
+        /// item's index right. Unlike <see cref="RemoveAsset(AssetItem, bool)"/> it leaves no gap to
+        /// compress and does not save or dirty the library.
+        /// </summary>
+        private void RemoveInMemoryItem(AssetItem ai)
+        {
+            int index = ai.Index;
+            if (index >= 0 && index < SerializedItems.Count && ReferenceEquals(SerializedItems[index], ai))
+            {
+                SerializedItems.RemoveAt(index);
+                for (int i = index; i < SerializedItems.Count; i++)
+                {
+                    if (SerializedItems[i] != null)
+                    {
+                        SerializedItems[i].Index = i;
+                    }
+                }
+            }
+            ai.Index = -1;
+            ai.FreeReference();
         }
 
 

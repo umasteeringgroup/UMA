@@ -11,7 +11,8 @@ namespace UMA
     // painting does.
     public partial class VertexEditorStage
     {
-        [SerializeField] private bool showVertexColorsView;
+        // Not serialized, like the other display options: see showOriginalMaterials.
+        [NonSerialized] private bool showVertexColorsView;
         [SerializeField] private bool showHairRootToTipSection;
         [SerializeField] private HairRootToTip.EndRule hairTieRule = HairRootToTip.EndRule.TextureTop;
         [SerializeField] private List<string> hairHeadSlotNames = new List<string>();

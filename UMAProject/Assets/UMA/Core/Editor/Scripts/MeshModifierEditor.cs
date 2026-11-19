@@ -947,10 +947,15 @@ namespace UMA
                     DoCharacterReset();
                     MarkEditorStateDirty(true);
                 }
-                if (GUILayout.Button("Recalculate Normals"))
+                if (GUILayout.Button(new GUIContent(
+                        "Recalculate Normals",
+                        "Work out the editable slots' normals again from their current shape. Vertices at one position (UV seams, slot connections) get one normal. " +
+                        "The change is an edit like a sculpt: Save as Mesh Modifier, Save to Base Slot and Save as New Slot keep it.")))
                 {
                     RegisterUndoSnapshot("Recalculate Normals");
-                    vertexEditorStage.RecalculateNormals();
+                    // The same edit as Normals > Recalculate in Sculpt, so it can be saved. The stage's
+                    // RecalculateNormals only changes the preview mesh and leaves nothing to save.
+                    vertexEditorStage.RecalculateEditableSlotNormals();
                     MarkEditorStateDirty();
                 }
                 GUILayout.EndHorizontal();
@@ -1023,13 +1028,18 @@ namespace UMA
             EditorPrefs.SetString(MeshModifierSaveFolderKey, folder);
 
             vertexEditorStage?.PrepareVertexPaintAdjustmentsForSave();
-            MeshModifier meshModifier = CustomAssetUtility.ReplaceAsset<MeshModifier>(path, false);
+            // Build the data before touching the asset: overwriting an existing modifier resets it in place.
             List<MeshModifier.Modifier> editorSnapshot = BuildEditorModifierSnapshot(includeBulkModifiers: true, includeAdHocModifiers: true, onlyActiveBulkModifier: false);
             vertexEditorStage?.AppendPendingSculptModifier(editorSnapshot);
+            List<MeshModifier.Modifier> runtimeSnapshot = SplitModifierStacksBySlot(editorSnapshot);
+            // Overwriting keeps the existing asset (and its GUID), so recipes that use it stay linked.
+            MeshModifier meshModifier = CustomAssetUtility.ReplaceAsset<MeshModifier>(path, false);
             meshModifier.EditorModifiers = editorSnapshot;
-            meshModifier.RuntimeModifiers = SplitModifierStacksBySlot(editorSnapshot);
+            meshModifier.RuntimeModifiers = runtimeSnapshot;
             EditorUtility.SetDirty(meshModifier);
             AssetDatabase.SaveAssetIfDirty(meshModifier);
+            // Characters already wearing this modifier rebuild with the new data.
+            UMAResourceReuse.InvalidateMeshInputs();
             savedModifierSignature = CurrentModifierSignature();
             // The sculpt and the vertex colors are in the asset too.
             vertexEditorStage?.NoteMeshModifierSaved(meshModifier);
@@ -1184,11 +1194,6 @@ namespace UMA
             foreach (MeshModifier.Modifier mod in sourceModifiers)
             {
                 SplitModifiersBySlot(result, mod);
-                Debug.Log($"Split modifier {mod.ModifierName} into {result.Count} modifiers");
-                foreach(MeshModifier.Modifier splitMod in result)
-                {
-                    Debug.Log($" - {splitMod.ModifierName} (Slot: {splitMod.SlotName}, Adjustments: {(splitMod.adjustments != null ? splitMod.adjustments.vertexAdjustments.Count : 0)})");
-                }
             }
 
            
@@ -1947,7 +1952,6 @@ namespace UMA
                     newMod.TemplateAdjustment = CloneTemplateAdjustmentForEditing(activeModifier.TemplateAdjustment, newMod.adjustments);
                     target.Add(newMod);
                 }
-                Debug.Log($"Adding adjustment for slot {copiedAdjustment.slotName} to modifier {newMod.ModifierName}");
                 newMod.adjustments.Add(copiedAdjustment);
             }
         }

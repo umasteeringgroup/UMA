@@ -59,6 +59,11 @@ namespace UMA.Tests
         public void SharedColorChannelRunsAtTheDefaultValue()
         {
             Assert.IsTrue(new DNAEffect_SharedColorChannel().AppliesAtDefaultValue);
+            // These write their value outright too: a color worked out from two fixed colors,
+            // a property block value, and an overlay transform.
+            Assert.IsTrue(new DNAEffect_SharedColor().AppliesAtDefaultValue);
+            Assert.IsTrue(new DNAEffect_SharedColorProperty().AppliesAtDefaultValue);
+            Assert.IsTrue(new DNAEffect_OverlayUVTransform().AppliesAtDefaultValue);
         }
 
         [Test]
@@ -101,6 +106,35 @@ namespace UMA.Tests
 
             Assert.AreEqual(0, relative.calls);
             Assert.AreEqual(DNAInstanceCollection.DNABuildType.None, flags);
+        }
+
+        [Test]
+        public void InspectorFlagsAnEffectThatIsSkippedAtTheDefaultButHasAValueThere()
+        {
+            dna.defaultValue = 0.5f;
+            var modifier = new DNAEffect_MeshModifier
+            {
+                curve = AnimationCurve.Linear(0f, 0f, 1f, 1f),
+                minMapping = 0f,
+                maxMapping = 1f
+            };
+
+            // 0..1 with a default of 0.5: nothing at the default, half the effect just beside it.
+            Assert.IsTrue(DNAEditor.IsSkippedAtDefaultWithAValue(dna, modifier, out float mapped));
+            Assert.AreEqual(0.5f, mapped, 0.0001f);
+
+            // -1..1 gives 0 at the default, so skipping it there changes nothing.
+            modifier.minMapping = -1f;
+            Assert.IsFalse(DNAEditor.IsSkippedAtDefaultWithAValue(dna, modifier, out _));
+
+            // An effect that runs at the default, a rig effect and a disabled effect are not skipped wrongly.
+            var color = new DNAEffect_SharedColor { minMapping = 0f, maxMapping = 1f };
+            Assert.IsFalse(DNAEditor.IsSkippedAtDefaultWithAValue(dna, color, out _));
+            var scale = new DNAEffect_BoneScale { minMapping = 0f, maxMapping = 1f };
+            Assert.IsFalse(DNAEditor.IsSkippedAtDefaultWithAValue(dna, scale, out _));
+            modifier.minMapping = 0f;
+            modifier.enabled = false;
+            Assert.IsFalse(DNAEditor.IsSkippedAtDefaultWithAValue(dna, modifier, out _));
         }
     }
 }

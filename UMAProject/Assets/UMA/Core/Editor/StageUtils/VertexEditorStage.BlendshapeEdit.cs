@@ -423,6 +423,8 @@ namespace UMA
                     }
                 }
             }
+            // UVs changed with UV Sculpt or Beautify, and the tangents turned with them.
+            ApplySculptedUVs(activeSculptState, meshData);
             error = null;
             return true;
         }
@@ -445,6 +447,7 @@ namespace UMA
             target.meshData = meshData;
             EditorUtility.SetDirty(target);
             AssetDatabase.SaveAssetIfDirty(target);
+            ReleaseSlotFromLibrary(target);
             // Converted copies of a legacy slot were made from the mesh as it was.
             UMALegacySlotConverter.ClearCache();
         }
@@ -913,9 +916,10 @@ namespace UMA
         private void ApplyBakedVertices(Vector3[] vertices)
         {
             Undo.ClearUndo(BakedMesh);
+            Vector3[] verticesBefore = BakedMesh.vertices;
+            Vector3[] normalsBefore = BakedMesh.normals;
             BakedMesh.vertices = vertices;
-            BakedMesh.RecalculateNormals();
-            SynchronizeCrossSlotSculptNormals();
+            FollowShape(verticesBefore, normalsBefore, vertices);
             BakedMesh.RecalculateBounds();
             Vector3[] normals = BakedMesh.normals;
             foreach (SculptSlotEditState state in sculptSlotStates.Values)
@@ -1024,6 +1028,7 @@ namespace UMA
                 targets[i].meshData.InvalidateBuildData();
                 EditorUtility.SetDirty(targets[i]);
                 AssetDatabase.SaveAssetIfDirty(targets[i]);
+                ReleaseSlotFromLibrary(targets[i]);
             }
             Undo.CollapseUndoOperations(undoGroup);
             // Converted copies of legacy slots were made from the shapes as they were.

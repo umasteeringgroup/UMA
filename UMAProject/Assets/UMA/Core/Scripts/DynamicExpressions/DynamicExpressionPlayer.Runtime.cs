@@ -7,1009 +7,1059 @@ using UnityEngine;
 using UnityEngine.Events;
 using Unity.Profiling;
 
-/// <summary>
-/// Drives transient, race-specific expression DNA without persisting values in
-/// the avatar's body DNA collection.
-/// </summary>
-[DisallowMultipleComponent]
-public sealed partial class DynamicExpressionPlayer
+namespace UMA
 {
-    [Serializable]
-    public struct ExpressionChange
-    {
-        public string id;
-        public float previousValue;
-        public float value;
-        public ExpressionSource source;
-
-        public ExpressionChange(string id, float previousValue, float value,
-            ExpressionSource source)
-        {
-            this.id = id;
-            this.previousValue = previousValue;
-            this.value = value;
-            this.source = source;
-        }
-    }
-
-    [Serializable]
-    public sealed class ExpressionChangedEvent : UnityEvent<ExpressionChange> { }
-
-    [Serializable]
-    public sealed class ExpressionBoneJoint
-    {
-        public string boneName;
-        public ExpressionJoint joint = ExpressionJoint.Other;
-    }
-
-    private sealed class RuntimeExpression
-    {
-        public UMAExpressionDefinition definition;
-        public readonly float[] sourceValues = new float[SourceCount];
-        public readonly bool[] sourceActive = new bool[SourceCount];
-        public float target;
-        public float effective;
-        public float velocity;
-        public ExpressionSource lastSource;
-        public ExpressionEffectPhase phases;
-        public DNAInstanceCollection.DNABuildType buildType;
-        public float previousHeadMotionValue;
-    }
-
-    private struct BuildValue
-    {
-        public DNA dna;
-        public float value;
-    }
-
-    private sealed class SourceSnapshot
-    {
-        public readonly float[] values = new float[SourceCount];
-        public readonly bool[] active = new bool[SourceCount];
-    }
-
-    private struct BlendShapeTarget
-    {
-        public SkinnedMeshRenderer renderer;
-        public int index;
-    }
-
-    private sealed class BlendShapeBinding
-    {
-        public readonly List<BlendShapeTarget> targets =
-            new List<BlendShapeTarget>(2);
-    }
-
-    private struct MaterialTarget
-    {
-        public SkinnedMeshRenderer renderer;
-        public int materialIndex;
-        public MaterialPropertyBlock propertyBlock;
-    }
-
-    private sealed class MaterialBinding
-    {
-        public int propertyId;
-        public readonly List<MaterialTarget> targets =
-            new List<MaterialTarget>(2);
-    }
-
-    private const int SourceCount = 4;
-    private static readonly int[] OverrideSourcePriority = { 0, 1, 3, 2 };
-    private static readonly ProfilerMarker SourceResolutionMarker =
-        new ProfilerMarker("UMA.Expressions.ResolveSources");
-    private static readonly ProfilerMarker RigRestoreMarker =
-        new ProfilerMarker("UMA.Expressions.RestoreRig");
-    private static readonly ProfilerMarker RigApplyMarker =
-        new ProfilerMarker("UMA.Expressions.ApplyRig");
-    private static readonly ProfilerMarker RendererApplyMarker =
-        new ProfilerMarker("UMA.Expressions.ApplyRenderer");
-    private static readonly ProfilerMarker BuildRequestMarker =
-        new ProfilerMarker("UMA.Expressions.RequestBuild");
-
-    [Header("Expression Group")]
-    [Tooltip("Optional override. Otherwise the active race's group is used.")]
-    public UMAExpressionGroup expressionGroupOverride;
-    [Tooltip("Legacy inline definitions, used only when no group is available.")]
-    public List<DynamicExpression> Expressions = new List<DynamicExpression>();
-
-    [Header("Mecanim Overrides")]
-    public bool overrideMecanimEyes = true;
-    public bool overrideMecanimJaw = true;
-    public bool overrideMecanimNeck;
-    public bool overrideMecanimHead;
-    public bool overrideMecanimHands;
-    [Tooltip("Bone classifications for generic/non-humanoid rigs.")]
-    public List<ExpressionBoneJoint> genericBoneJoints =
-        new List<ExpressionBoneJoint>();
-
-    [Header("Natural Head Motion")]
-    [Tooltip("Adds subtle eased head motion while Override Mecanim Head is enabled. Visemes add speech-timed nods, while other active expressions add low-frequency expressive motion.")]
-    public bool EnableNaturalHeadMotion = true;
-    [Range(0f, 3f)]
-    [Tooltip("Maximum low-frequency movement, in degrees, while the face is neutral and silent.")]
-    public float HeadMotionIdleDegrees = 0.2f;
-    [Range(0f, 3f)]
-    [Tooltip("Additional speech-timed movement, in degrees, driven by active viseme channels and viseme transitions.")]
-    public float HeadMotionSpeechDegrees = 0.65f;
-    [Range(0f, 3f)]
-    [Tooltip("Additional low-frequency movement, in degrees, driven by active emotion and custom expression channels.")]
-    public float HeadMotionExpressionDegrees = 0.35f;
-    [Range(0.02f, 1f)]
-    [Tooltip("Cycles per second for the underlying idle and expressive movement.")]
-    public float HeadMotionFrequency = 0.18f;
-    [Min(0.01f)]
-    [Tooltip("Seconds used to ease into and out of the requested head offset.")]
-    public float HeadMotionEaseTime = 0.2f;
-
-    [Header("Eye Movement")]
-    public bool EnableSaccades = true;
-    [Min(0.01f)] public float SaccadeIntervalMin = 0.5f;
-    [Min(0.01f)] public float SaccadeIntervalMax = 1.5f;
-    [Min(0f)] public float SaccadeMaxOffsetDeg = 6f;
-    [Range(0f, 1f)] public float SaccadeVerticalBias = 0.35f;
-
-    [Header("Blink")]
-    public bool EnableBlinking = true;
-    [Min(0.01f)] public float BlinkIntervalMin = 3f;
-    [Min(0.01f)] public float BlinkIntervalMax = 7f;
-    [Min(0.01f)] public float BlinkDuration = 0.15f;
-    public AnimationCurve BlinkCurve = new AnimationCurve(
-        new Keyframe(0f, 0f), new Keyframe(0.05f, 1f),
-        new Keyframe(0.35f, 0f), new Keyframe(1f, 0f));
-
-    [Header("Gaze")]
-    public bool EnableLookAt = true;
-    public Transform LookAtTarget;
-    [Min(0f)] public float LookAtMaxDistance = 25f;
-    [Min(0f)] public float LookAtMinDistance = 0.5f;
-    [Range(0f, 180f)] public float EyeMaxAngle = 30f;
-    [Range(0f, 180f)] public float HeadAssistStartAngle = 15f;
-    [Range(0f, 180f)] public float HeadAssistFullAngle = 35f;
-    [Range(0f, 1f)] public float GazeWeight = 0.75f;
-    [Range(0f, 1f)] public float HeadWeight = 0.5f;
-    [Range(0f, 1f)] public float BodyWeight = 0.1f;
-    [Range(0f, 1f)] public float EyesWeight = 1f;
-    [Range(0f, 90f)] public float ClampVerticalAngle = 20f;
-
-    [Header("Processing")]
-    [Tooltip("Zero disables camera-distance culling.")]
-    [Min(0f)] public float processDistance = 30f;
-    [Min(0f)] public float buildDebounceSeconds = 0.08f;
-    [Min(0.01f)] public float meshBuildMinimumInterval = 0.25f;
-
-    [Header("Events")]
-    public ExpressionChangedEvent ExpressionChanged =
-        new ExpressionChangedEvent();
-    public UnityEvent GroupRebound = new UnityEvent();
-
-    [SerializeField, HideInInspector]
-    public string dnaCreationFolder = "Assets";
-
-    private readonly List<RuntimeExpression> _runtimeExpressions =
-        new List<RuntimeExpression>();
-    private readonly Dictionary<string, int> _expressionLookup =
-        new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<int, ExpressionJoint> _boneJoints =
-        new Dictionary<int, ExpressionJoint>();
-    private readonly List<int> _controlledBones = new List<int>();
-    private readonly HashSet<int> _controlledBoneSet = new HashSet<int>();
-    private readonly List<int> _boneScratch = new List<int>();
-    private readonly List<BuildValue> _buildSnapshot =
-        new List<BuildValue>();
-    private readonly Dictionary<DNAEffect_BlendShape, BlendShapeBinding>
-        _blendShapeBindings =
-            new Dictionary<DNAEffect_BlendShape, BlendShapeBinding>();
-    private readonly Dictionary<DNAEffect_RuntimeMaterialProperty,
-        MaterialBinding> _materialBindings =
-            new Dictionary<DNAEffect_RuntimeMaterialProperty,
-                MaterialBinding>();
-    private readonly List<Material> _materialScratch =
-        new List<Material>(4);
-    private readonly List<UnityEngine.Object> _legacyRuntimeObjects =
-        new List<UnityEngine.Object>();
-
-    private DynamicCharacterAvatar _avatar;
-    private UMAData _umaData;
-    private Animator _animator;
-    private Camera _mainCamera;
-    private UMAExpressionGroup _resolvedGroup;
-    private UMAExpressionSet _resolvedLegacyExpressionSet;
-    private bool _subscribed;
-    private bool _initialized;
-    private bool _bindingsValid;
-    private bool _wasProcessing;
-    private bool _isBuilding;
-    private bool _buildChangedWhileBuilding;
-    private bool _buildPending;
-    private bool _immediateDirty;
-    private int _batchDepth;
-    private bool _batchChanged;
-    private float _buildRequestTime;
-    private float _lastMeshBuildTime = float.NegativeInfinity;
-    private DNAInstanceCollection.DNABuildType _pendingBuildType;
-
-    private int _blinkLeftIndex = -1;
-    private int _blinkRightIndex = -1;
-    private int _eyeHorizontalIndex = -1;
-    private int _eyeVerticalIndex = -1;
-    private int _eyeHorizontalLeftIndex = -1;
-    private int _eyeHorizontalRightIndex = -1;
-    private int _eyeVerticalLeftIndex = -1;
-    private int _eyeVerticalRightIndex = -1;
-    private float _nextBlinkTime;
-    private float _blinkStartTime;
-    private bool _isBlinking;
-    private float _nextSaccadeTime;
-    private float _saccadeStartTime;
-    private float _saccadeDuration;
-    private Vector2 _saccade;
-    private Vector2 _saccadeFrom;
-    private Vector2 _saccadeTo;
-    private Vector3 _ikLookPosition;
-    private float _ikHeadWeight;
-    private float _ikBodyWeight;
-    private float _ikEyesWeight;
-    private bool _ikActive;
-
-    private Transform _naturalHeadTransform;
-    private int _naturalHeadHash;
-    private bool _naturalHeadSeeded;
-    private Vector3 _naturalHeadNoiseOffset;
-    private Vector3 _naturalHeadOffset;
-    private Vector3 _naturalHeadOffsetVelocity;
-    private float _naturalHeadSpeechEnergy;
-    private float _naturalHeadSpeechVelocity;
-    private float _naturalHeadExpressionEnergy;
-    private float _naturalHeadExpressionVelocity;
-    private float _naturalHeadSpeechPhase;
-    private Quaternion _naturalHeadAppliedDelta = Quaternion.identity;
-    private Quaternion _naturalHeadAppliedRotation = Quaternion.identity;
-    private bool _naturalHeadApplied;
-
-    public UMAExpressionGroup ResolvedGroup => _resolvedGroup;
-    public bool UsingTransientLegacyExpressionSet =>
-        _resolvedLegacyExpressionSet != null;
-    public int ExpressionCount => _runtimeExpressions.Count;
-    public bool HasPendingBuild => _buildPending || _isBuilding;
-    public DNAInstanceCollection.DNABuildType PendingBuildType =>
-        _pendingBuildType;
-    public bool AnimatorLookAtActive => _ikActive;
-    public Vector3 AnimatorLookAtPosition => _ikLookPosition;
-    public float AnimatorLookAtEyesWeight => _ikEyesWeight;
-    public Vector3 NaturalHeadMotionOffset => _naturalHeadOffset;
-    public float NaturalHeadMotionSpeechEnergy =>
-        _naturalHeadSpeechEnergy;
-    public float NaturalHeadMotionExpressionEnergy =>
-        _naturalHeadExpressionEnergy;
-    public bool NaturalHeadMotionActive => _naturalHeadApplied;
-
-    public event Action<ExpressionChange> ExpressionChangedAction;
-    public event Action<UMAExpressionGroup> GroupReboundAction;
-
-    private void Awake() => Initialize();
-
-    private void OnEnable()
-    {
-        Initialize();
-        Subscribe();
-        ScheduleNextBlink();
-        ScheduleNextSaccade();
-    }
-
-    private void OnDisable()
-    {
-        RemoveNaturalHeadMotion();
-        RestoreControlledBones();
-        Unsubscribe();
-        ResetProceduralSources();
-        ResetNaturalHeadMotionState();
-    }
-
-    private void OnDestroy()
-    {
-        Unsubscribe();
-        ClearLegacyRuntimeObjects();
-    }
-
-    private void OnValidate()
-    {
-        SaccadeIntervalMin = Mathf.Max(0.01f, SaccadeIntervalMin);
-        SaccadeIntervalMax = Mathf.Max(SaccadeIntervalMin, SaccadeIntervalMax);
-        BlinkIntervalMin = Mathf.Max(0.01f, BlinkIntervalMin);
-        BlinkIntervalMax = Mathf.Max(BlinkIntervalMin, BlinkIntervalMax);
-        BlinkDuration = Mathf.Max(0.01f, BlinkDuration);
-        HeadMotionIdleDegrees = Mathf.Clamp(HeadMotionIdleDegrees, 0f, 3f);
-        HeadMotionSpeechDegrees = Mathf.Clamp(HeadMotionSpeechDegrees, 0f,
-            3f);
-        HeadMotionExpressionDegrees = Mathf.Clamp(
-            HeadMotionExpressionDegrees, 0f, 3f);
-        HeadMotionFrequency = Mathf.Clamp(HeadMotionFrequency, 0.02f, 1f);
-        HeadMotionEaseTime = Mathf.Max(0.01f, HeadMotionEaseTime);
-        buildDebounceSeconds = Mathf.Max(0f, buildDebounceSeconds);
-        meshBuildMinimumInterval = Mathf.Max(0.01f,
-            meshBuildMinimumInterval);
-        if (isActiveAndEnabled)
-        {
-            Initialize();
-            Rebind();
-        }
-    }
-
-    /// <summary>Retries discovery and group resolution at any lifecycle point.</summary>
-    public void Initialize()
-    {
-        DiscoverAvatarContext();
-        if (_initialized && _umaData != null)
-        {
-            UMAExpressionGroup currentGroup = ResolveGroup();
-            UMAExpressionSet currentLegacy =
-                currentGroup == null ? ResolveLegacyExpressionSet() : null;
-            if (currentGroup != _resolvedGroup ||
-                currentLegacy != _resolvedLegacyExpressionSet)
-                BindGroup(currentGroup);
-            return;
-        }
-
-        _animator = GetComponent<Animator>();
-        if (_animator == null) _animator = GetComponentInChildren<Animator>();
-        _mainCamera = Camera.main;
-        Subscribe();
-
-        UMAExpressionGroup group = ResolveGroup();
-        if (!_initialized || group != _resolvedGroup) BindGroup(group);
-        _initialized = true;
-    }
 
     /// <summary>
-    /// Re-resolves the race/group and retains values for IDs in both groups.
+    /// Drives transient, race-specific expression DNA without persisting values in
+    /// the avatar's body DNA collection.
     /// </summary>
-    public void Rebind()
+    [DisallowMultipleComponent]
+    public sealed partial class DynamicExpressionPlayer
     {
-        RemoveNaturalHeadMotion();
-        DiscoverAvatarContext();
-        Dictionary<string, SourceSnapshot> retained = CaptureSources();
-        BindGroup(ResolveGroup());
-        RestoreSources(retained);
-        _bindingsValid = false;
-        RefreshBindings();
-        EvaluateValues(0f, true);
-        ApplyImmediateEffects();
-    }
-
-    private void DiscoverAvatarContext()
-    {
-        DynamicCharacterAvatar avatar =
-            GetComponent<DynamicCharacterAvatar>();
-        if (avatar == null)
-            avatar = GetComponentInParent<DynamicCharacterAvatar>();
-
-        UMAData data = avatar != null ? avatar : GetComponent<UMAData>();
-        if (data == null) data = GetComponentInParent<UMAData>();
-        if (_umaData == data && _avatar == avatar) return;
-
-        Unsubscribe();
-        RemoveNaturalHeadMotion();
-        _avatar = avatar;
-        _umaData = data;
-        _initialized = false;
-        _animator = null;
-        _bindingsValid = false;
-    }
-
-    public string GetExpressionId(int index) =>
-        index >= 0 && index < _runtimeExpressions.Count
-            ? _runtimeExpressions[index].definition.id : null;
-
-    public string[] GetExpressionIds()
-    {
-        string[] result = new string[_runtimeExpressions.Count];
-        for (int i = 0; i < result.Length; i++)
-            result[i] = _runtimeExpressions[i].definition.id;
-        return result;
-    }
-
-    public float[] GetValuesSnapshot()
-    {
-        float[] result = new float[_runtimeExpressions.Count];
-        for (int i = 0; i < result.Length; i++)
-            result[i] = _runtimeExpressions[i].effective;
-        return result;
-    }
-
-    public void SetValuesSnapshot(IReadOnlyList<float> values,
-        ExpressionSource source = ExpressionSource.Manual,
-        bool resetMissing = false)
-    {
-        if (values == null) throw new ArgumentNullException(nameof(values));
-        Initialize();
-        BeginExpressionBatch();
-        try
+        [Serializable]
+        public struct ExpressionChange
         {
-            int count = Mathf.Min(values.Count, _runtimeExpressions.Count);
-            for (int i = 0; i < count; i++)
-                SetExpression(i, values[i], source);
-            if (resetMissing)
-                for (int i = count; i < _runtimeExpressions.Count; i++)
-                    ResetExpression(i, source);
+            public string id;
+            public float previousValue;
+            public float value;
+            public ExpressionSource source;
+
+            public ExpressionChange(string id, float previousValue, float value,
+                ExpressionSource source)
+            {
+                this.id = id;
+                this.previousValue = previousValue;
+                this.value = value;
+                this.source = source;
+            }
         }
-        finally
+
+        [Serializable]
+        public sealed class ExpressionChangedEvent : UnityEvent<ExpressionChange> { }
+
+        [Serializable]
+        public sealed class ExpressionBoneJoint
         {
-            EndExpressionBatch();
+            public string boneName;
+            public ExpressionJoint joint = ExpressionJoint.Other;
         }
-    }
 
-    public bool TryGetExpressionIndex(string id, out int index)
-    {
-        Initialize();
-        index = -1;
-        return !string.IsNullOrWhiteSpace(id) &&
-            _expressionLookup.TryGetValue(id, out index);
-    }
-
-    public bool SetExpression(string id, float value,
-        ExpressionSource source = ExpressionSource.Manual) =>
-        TryGetExpressionIndex(id, out int index) &&
-        SetExpression(index, value, source);
-
-    /// <summary>Allocation-free setter for animation/network systems.</summary>
-    public bool SetExpression(int index, float value,
-        ExpressionSource source = ExpressionSource.Manual)
-    {
-        if (index < 0 || index >= _runtimeExpressions.Count ||
-            !IsValidSource(source)) return false;
-        RuntimeExpression expression = _runtimeExpressions[index];
-        int sourceIndex = (int)source;
-        float clamped = Mathf.Clamp01(value);
-        if (expression.sourceActive[sourceIndex] &&
-            Mathf.Approximately(expression.sourceValues[sourceIndex],
-                clamped)) return true;
-
-        expression.sourceActive[sourceIndex] = true;
-        expression.sourceValues[sourceIndex] = clamped;
-        expression.lastSource = source;
-        ValuesChanged();
-        return true;
-    }
-
-    public bool TryGetExpression(string id, out float value)
-    {
-        if (TryGetExpressionIndex(id, out int index))
+        private sealed class RuntimeExpression
         {
-            value = _runtimeExpressions[index].effective;
-            return true;
+            public UMAExpressionDefinition definition;
+            public readonly float[] sourceValues = new float[SourceCount];
+            public readonly bool[] sourceActive = new bool[SourceCount];
+            public float target;
+            public float effective;
+            public float velocity;
+            public ExpressionSource lastSource;
+            public ExpressionEffectPhase phases;
+            public DNAInstanceCollection.DNABuildType buildType;
+            public float previousHeadMotionValue;
         }
-        value = 0f;
-        return false;
-    }
 
-    public bool TryGetExpression(int index, out float value)
-    {
-        if (index >= 0 && index < _runtimeExpressions.Count)
+        private struct BuildValue
         {
-            value = _runtimeExpressions[index].effective;
-            return true;
+            public DNA dna;
+            public float value;
         }
-        value = 0f;
-        return false;
-    }
 
-    public bool TryGetSourceValue(int index, ExpressionSource source,
-        out float value, out bool active)
-    {
-        if (index >= 0 && index < _runtimeExpressions.Count &&
-            IsValidSource(source))
+        private sealed class SourceSnapshot
         {
-            RuntimeExpression expression = _runtimeExpressions[index];
-            value = expression.sourceValues[(int)source];
-            active = expression.sourceActive[(int)source];
-            return true;
+            public readonly float[] values = new float[SourceCount];
+            public readonly bool[] active = new bool[SourceCount];
         }
-        value = 0f;
-        active = false;
-        return false;
-    }
 
-    public bool ResetExpression(string id, ExpressionSource source) =>
-        TryGetExpressionIndex(id, out int index) &&
-        ResetExpression(index, source);
-
-    public bool ResetExpression(int index, ExpressionSource source)
-    {
-        if (index < 0 || index >= _runtimeExpressions.Count ||
-            !IsValidSource(source)) return false;
-        RuntimeExpression expression = _runtimeExpressions[index];
-        int sourceIndex = (int)source;
-        if (!expression.sourceActive[sourceIndex]) return true;
-        expression.sourceActive[sourceIndex] = false;
-        ValuesChanged();
-        return true;
-    }
-
-    public void ResetAllExpressions(ExpressionSource source)
-    {
-        if (!IsValidSource(source)) return;
-        BeginExpressionBatch();
-        for (int i = 0; i < _runtimeExpressions.Count; i++)
-            ResetExpression(i, source);
-        EndExpressionBatch();
-    }
-
-    public void BeginExpressionBatch() => _batchDepth++;
-
-    public void EndExpressionBatch()
-    {
-        if (_batchDepth <= 0)
-            throw new InvalidOperationException(
-                "EndExpressionBatch has no matching begin.");
-        _batchDepth--;
-        if (_batchDepth == 0 && _batchChanged)
+        private struct BlendShapeTarget
         {
-            _batchChanged = false;
-            EvaluateValues(0f, false);
+            public SkinnedMeshRenderer renderer;
+            public int index;
         }
-    }
 
-    /// <summary>Shared synchronous application path for preview and tests.</summary>
-    public void EvaluateExpressionsNow(float deltaTime = 0f)
-    {
-        Initialize();
-        RefreshBindings();
-        EvaluateValues(Mathf.Max(0f, deltaTime), true);
-        ApplyImmediateEffects();
-    }
+        private sealed class BlendShapeBinding
+        {
+            public readonly List<BlendShapeTarget> targets =
+                new List<BlendShapeTarget>(2);
+        }
 
-    /// <summary>Advances definition response-time smoothing without snapping.</summary>
-    public void AdvanceExpressionSmoothing(float deltaTime)
-    {
-        Initialize();
-        EvaluateValues(Mathf.Max(0f, deltaTime), false);
-        if (_immediateDirty) ApplyImmediateEffects();
-    }
+        private struct MaterialTarget
+        {
+            public SkinnedMeshRenderer renderer;
+            public int materialIndex;
+            public MaterialPropertyBlock propertyBlock;
+        }
 
-    public ExpressionEffectPhase GetExpressionPhases(int index) =>
-        index >= 0 && index < _runtimeExpressions.Count
-            ? _runtimeExpressions[index].phases : ExpressionEffectPhase.None;
+        private sealed class MaterialBinding
+        {
+            public int propertyId;
+            public readonly List<MaterialTarget> targets =
+                new List<MaterialTarget>(2);
+        }
 
-    public ExpressionJoint GetExpressionAffectedJoints(int index) =>
-        index >= 0 && index < _runtimeExpressions.Count
-            ? _runtimeExpressions[index].definition.affectedJoints
-            : ExpressionJoint.None;
+        private const int SourceCount = 4;
+        private static readonly int[] OverrideSourcePriority = { 0, 1, 3, 2 };
+        private static readonly ProfilerMarker SourceResolutionMarker =
+            new ProfilerMarker("UMA.Expressions.ResolveSources");
+        private static readonly ProfilerMarker RigRestoreMarker =
+            new ProfilerMarker("UMA.Expressions.RestoreRig");
+        private static readonly ProfilerMarker RigApplyMarker =
+            new ProfilerMarker("UMA.Expressions.ApplyRig");
+        private static readonly ProfilerMarker RendererApplyMarker =
+            new ProfilerMarker("UMA.Expressions.ApplyRenderer");
+        private static readonly ProfilerMarker BuildRequestMarker =
+            new ProfilerMarker("UMA.Expressions.RequestBuild");
 
-    public DNAInstanceCollection.DNABuildType GetExpressionBuildType(int index)
-        => index >= 0 && index < _runtimeExpressions.Count
-            ? _runtimeExpressions[index].buildType
-            : DNAInstanceCollection.DNABuildType.None;
+        [Header("Expression Group")]
+        [Tooltip("Optional override. Otherwise the active race's group is used.")]
+        public UMAExpressionGroup expressionGroupOverride;
+        [Tooltip("Legacy inline definitions, used only when no group is available.")]
+        public List<DynamicExpression> Expressions = new List<DynamicExpression>();
 
-    private void Update()
-    {
-        Initialize();
-        bool shouldProcess = ShouldProcessFrameLane();
-        if (_wasProcessing)
+        [Header("Mecanim Overrides")]
+        public bool overrideMecanimEyes = true;
+        public bool overrideMecanimJaw = true;
+        public bool overrideMecanimNeck;
+        public bool overrideMecanimHead;
+        public bool overrideMecanimHands;
+        [Tooltip("Bone classifications for generic/non-humanoid rigs.")]
+        public List<ExpressionBoneJoint> genericBoneJoints =
+            new List<ExpressionBoneJoint>();
+
+        [Header("Natural Head Motion")]
+        [Tooltip("Adds subtle eased head motion while Override Mecanim Head is enabled. Visemes add speech-timed nods, while other active expressions add low-frequency expressive motion.")]
+        public bool EnableNaturalHeadMotion = true;
+        [Range(0f, 3f)]
+        [Tooltip("Maximum low-frequency movement, in degrees, while the face is neutral and silent.")]
+        public float HeadMotionIdleDegrees = 0.2f;
+        [Range(0f, 3f)]
+        [Tooltip("Additional speech-timed movement, in degrees, driven by active viseme channels and viseme transitions.")]
+        public float HeadMotionSpeechDegrees = 0.65f;
+        [Range(0f, 3f)]
+        [Tooltip("Additional low-frequency movement, in degrees, driven by active emotion and custom expression channels.")]
+        public float HeadMotionExpressionDegrees = 0.35f;
+        [Range(0.02f, 1f)]
+        [Tooltip("Cycles per second for the underlying idle and expressive movement.")]
+        public float HeadMotionFrequency = 0.18f;
+        [Min(0.01f)]
+        [Tooltip("Seconds used to ease into and out of the requested head offset.")]
+        public float HeadMotionEaseTime = 0.2f;
+
+        [Header("Eye Movement")]
+        public bool EnableSaccades = true;
+        [Min(0.01f)] public float SaccadeIntervalMin = 0.5f;
+        [Min(0.01f)] public float SaccadeIntervalMax = 1.5f;
+        [Min(0f)] public float SaccadeMaxOffsetDeg = 6f;
+        [Range(0f, 1f)] public float SaccadeVerticalBias = 0.35f;
+
+        [Header("Blink")]
+        public bool EnableBlinking = true;
+        [Min(0.01f)] public float BlinkIntervalMin = 3f;
+        [Min(0.01f)] public float BlinkIntervalMax = 7f;
+        [Min(0.01f)] public float BlinkDuration = 0.15f;
+        public AnimationCurve BlinkCurve = new AnimationCurve(
+            new Keyframe(0f, 0f), new Keyframe(0.05f, 1f),
+            new Keyframe(0.35f, 0f), new Keyframe(1f, 0f));
+
+        [Header("Gaze")]
+        public bool EnableLookAt = true;
+        public Transform LookAtTarget;
+        [Min(0f)] public float LookAtMaxDistance = 25f;
+        [Min(0f)] public float LookAtMinDistance = 0.5f;
+        [Range(0f, 180f)] public float EyeMaxAngle = 30f;
+        [Range(0f, 180f)] public float HeadAssistStartAngle = 15f;
+        [Range(0f, 180f)] public float HeadAssistFullAngle = 35f;
+        [Range(0f, 1f)] public float GazeWeight = 0.75f;
+        [Range(0f, 1f)] public float HeadWeight = 0.5f;
+        [Range(0f, 1f)] public float BodyWeight = 0.1f;
+        [Range(0f, 1f)] public float EyesWeight = 1f;
+        [Range(0f, 90f)] public float ClampVerticalAngle = 20f;
+
+        [Header("Processing")]
+        [Tooltip("Zero disables camera-distance culling.")]
+        [Min(0f)] public float processDistance = 30f;
+        [Min(0f)] public float buildDebounceSeconds = 0.08f;
+        [Min(0.01f)] public float meshBuildMinimumInterval = 0.25f;
+
+        [Header("Events")]
+        public ExpressionChangedEvent ExpressionChanged =
+            new ExpressionChangedEvent();
+        public UnityEvent GroupRebound = new UnityEvent();
+
+        [SerializeField, HideInInspector]
+        public string dnaCreationFolder = "Assets";
+
+        private readonly List<RuntimeExpression> _runtimeExpressions =
+            new List<RuntimeExpression>();
+        private readonly Dictionary<string, int> _expressionLookup =
+            new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<int, ExpressionJoint> _boneJoints =
+            new Dictionary<int, ExpressionJoint>();
+        private readonly List<int> _controlledBones = new List<int>();
+        private readonly HashSet<int> _controlledBoneSet = new HashSet<int>();
+        private readonly List<int> _boneScratch = new List<int>();
+        private readonly List<BuildValue> _buildSnapshot =
+            new List<BuildValue>();
+        private readonly Dictionary<DNAEffect_BlendShape, BlendShapeBinding>
+            _blendShapeBindings =
+                new Dictionary<DNAEffect_BlendShape, BlendShapeBinding>();
+        private readonly Dictionary<DNAEffect_RuntimeMaterialProperty,
+            MaterialBinding> _materialBindings =
+                new Dictionary<DNAEffect_RuntimeMaterialProperty,
+                    MaterialBinding>();
+        private readonly List<Material> _materialScratch =
+            new List<Material>(4);
+        private readonly List<UnityEngine.Object> _legacyRuntimeObjects =
+            new List<UnityEngine.Object>();
+
+        private DynamicCharacterAvatar _avatar;
+        private UMAData _umaData;
+        private Animator _animator;
+        private Camera _mainCamera;
+        private UMAExpressionGroup _resolvedGroup;
+        private UMAExpressionSet _resolvedLegacyExpressionSet;
+        private bool _subscribed;
+        private bool _initialized;
+        private bool _bindingsValid;
+        private bool _wasProcessing;
+        private bool _isBuilding;
+        private bool _buildChangedWhileBuilding;
+        private bool _buildPending;
+        private bool _immediateDirty;
+        private int _batchDepth;
+        private bool _batchChanged;
+        private float _buildRequestTime;
+        private float _lastMeshBuildTime = float.NegativeInfinity;
+        private DNAInstanceCollection.DNABuildType _pendingBuildType;
+
+        private int _blinkLeftIndex = -1;
+        private int _blinkRightIndex = -1;
+        private int _eyeHorizontalIndex = -1;
+        private int _eyeVerticalIndex = -1;
+        private int _eyeHorizontalLeftIndex = -1;
+        private int _eyeHorizontalRightIndex = -1;
+        private int _eyeVerticalLeftIndex = -1;
+        private int _eyeVerticalRightIndex = -1;
+        private float _nextBlinkTime;
+        private float _blinkStartTime;
+        private bool _isBlinking;
+        private float _nextSaccadeTime;
+        private float _saccadeStartTime;
+        private float _saccadeDuration;
+        private Vector2 _saccade;
+        private Vector2 _saccadeFrom;
+        private Vector2 _saccadeTo;
+        private Vector3 _ikLookPosition;
+        private float _ikHeadWeight;
+        private float _ikBodyWeight;
+        private float _ikEyesWeight;
+        private bool _ikActive;
+
+        private Transform _naturalHeadTransform;
+        private int _naturalHeadHash;
+        private bool _naturalHeadSeeded;
+        private Vector3 _naturalHeadNoiseOffset;
+        private Vector3 _naturalHeadOffset;
+        private Vector3 _naturalHeadOffsetVelocity;
+        private float _naturalHeadSpeechEnergy;
+        private float _naturalHeadSpeechVelocity;
+        private float _naturalHeadExpressionEnergy;
+        private float _naturalHeadExpressionVelocity;
+        private float _naturalHeadSpeechPhase;
+        private Quaternion _naturalHeadAppliedDelta = Quaternion.identity;
+        private Quaternion _naturalHeadAppliedRotation = Quaternion.identity;
+        private bool _naturalHeadApplied;
+
+        public UMAExpressionGroup ResolvedGroup => _resolvedGroup;
+        public bool UsingTransientLegacyExpressionSet =>
+            _resolvedLegacyExpressionSet != null;
+        public int ExpressionCount => _runtimeExpressions.Count;
+        public bool HasPendingBuild => _buildPending || _isBuilding;
+        public DNAInstanceCollection.DNABuildType PendingBuildType =>
+            _pendingBuildType;
+        public bool AnimatorLookAtActive => _ikActive;
+        public Vector3 AnimatorLookAtPosition => _ikLookPosition;
+        public float AnimatorLookAtEyesWeight => _ikEyesWeight;
+        public Vector3 NaturalHeadMotionOffset => _naturalHeadOffset;
+        public float NaturalHeadMotionSpeechEnergy =>
+            _naturalHeadSpeechEnergy;
+        public float NaturalHeadMotionExpressionEnergy =>
+            _naturalHeadExpressionEnergy;
+        public bool NaturalHeadMotionActive => _naturalHeadApplied;
+
+        public event Action<ExpressionChange> ExpressionChangedAction;
+        public event Action<UMAExpressionGroup> GroupReboundAction;
+
+        private void Awake() => Initialize();
+
+        private void OnEnable()
+        {
+            Initialize();
+            Subscribe();
+            ScheduleNextBlink();
+            ScheduleNextSaccade();
+        }
+
+        private void OnDisable()
+        {
             RemoveNaturalHeadMotion();
-        if (_wasProcessing && !shouldProcess) RestoreControlledBones();
-        _wasProcessing = shouldProcess;
-        if (shouldProcess)
-        {
-            RefreshBindings();
             RestoreControlledBones();
+            Unsubscribe();
+            ResetProceduralSources();
+            ResetNaturalHeadMotionState();
+        }
+
+        private void OnDestroy()
+        {
+            Unsubscribe();
+            ClearLegacyRuntimeObjects();
+        }
+
+        private void OnValidate()
+        {
+            SaccadeIntervalMin = Mathf.Max(0.01f, SaccadeIntervalMin);
+            SaccadeIntervalMax = Mathf.Max(SaccadeIntervalMin, SaccadeIntervalMax);
+            BlinkIntervalMin = Mathf.Max(0.01f, BlinkIntervalMin);
+            BlinkIntervalMax = Mathf.Max(BlinkIntervalMin, BlinkIntervalMax);
+            BlinkDuration = Mathf.Max(0.01f, BlinkDuration);
+            HeadMotionIdleDegrees = Mathf.Clamp(HeadMotionIdleDegrees, 0f, 3f);
+            HeadMotionSpeechDegrees = Mathf.Clamp(HeadMotionSpeechDegrees, 0f,
+                3f);
+            HeadMotionExpressionDegrees = Mathf.Clamp(
+                HeadMotionExpressionDegrees, 0f, 3f);
+            HeadMotionFrequency = Mathf.Clamp(HeadMotionFrequency, 0.02f, 1f);
+            HeadMotionEaseTime = Mathf.Max(0.01f, HeadMotionEaseTime);
+            buildDebounceSeconds = Mathf.Max(0f, buildDebounceSeconds);
+            meshBuildMinimumInterval = Mathf.Max(0.01f,
+                meshBuildMinimumInterval);
+            if (isActiveAndEnabled)
+            {
+                Initialize();
+                Rebind();
+            }
+        }
+
+        /// <summary>Retries discovery and group resolution at any lifecycle point.</summary>
+        public void Initialize()
+        {
+            DiscoverAvatarContext();
+            if (_initialized && _umaData != null)
+            {
+                UMAExpressionGroup currentGroup = ResolveGroup();
+                UMAExpressionSet currentLegacy =
+                    currentGroup == null ? ResolveLegacyExpressionSet() : null;
+                if (currentGroup != _resolvedGroup ||
+                    currentLegacy != _resolvedLegacyExpressionSet)
+                    BindGroup(currentGroup);
+                return;
+            }
+
+            _animator = GetComponent<Animator>();
+            if (_animator == null) _animator = GetComponentInChildren<Animator>();
+            _mainCamera = Camera.main;
+            Subscribe();
+
+            UMAExpressionGroup group = ResolveGroup();
+            if (!_initialized || group != _resolvedGroup) BindGroup(group);
+            _initialized = true;
+        }
+
+        /// <summary>
+        /// Re-resolves the race/group and retains values for IDs in both groups.
+        /// </summary>
+        public void Rebind()
+        {
+            RemoveNaturalHeadMotion();
+            DiscoverAvatarContext();
+            Dictionary<string, SourceSnapshot> retained = CaptureSources();
+            BindGroup(ResolveGroup());
+            RestoreSources(retained);
+            _bindingsValid = false;
+            RefreshBindings();
+            EvaluateValues(0f, true);
+            ApplyImmediateEffects();
+        }
+
+        private void DiscoverAvatarContext()
+        {
+            DynamicCharacterAvatar avatar =
+                GetComponent<DynamicCharacterAvatar>();
+            if (avatar == null)
+                avatar = GetComponentInParent<DynamicCharacterAvatar>();
+
+            UMAData data = avatar != null ? avatar : GetComponent<UMAData>();
+            if (data == null) data = GetComponentInParent<UMAData>();
+            if (_umaData == data && _avatar == avatar) return;
+
+            Unsubscribe();
+            RemoveNaturalHeadMotion();
+            _avatar = avatar;
+            _umaData = data;
+            _initialized = false;
+            _animator = null;
+            _bindingsValid = false;
+        }
+
+        public string GetExpressionId(int index) =>
+            index >= 0 && index < _runtimeExpressions.Count
+                ? _runtimeExpressions[index].definition.id : null;
+
+        public string[] GetExpressionIds()
+        {
+            string[] result = new string[_runtimeExpressions.Count];
+            for (int i = 0; i < result.Length; i++)
+                result[i] = _runtimeExpressions[i].definition.id;
+            return result;
+        }
+
+        public float[] GetValuesSnapshot()
+        {
+            float[] result = new float[_runtimeExpressions.Count];
+            for (int i = 0; i < result.Length; i++)
+                result[i] = _runtimeExpressions[i].effective;
+            return result;
+        }
+
+        public void SetValuesSnapshot(IReadOnlyList<float> values,
+            ExpressionSource source = ExpressionSource.Manual,
+            bool resetMissing = false)
+        {
+            if (values == null) throw new ArgumentNullException(nameof(values));
+            Initialize();
             BeginExpressionBatch();
             try
             {
-                UpdateBlinking();
-                UpdateSaccadesAndGaze();
+                int count = Mathf.Min(values.Count, _runtimeExpressions.Count);
+                for (int i = 0; i < count; i++)
+                    SetExpression(i, values[i], source);
+                if (resetMissing)
+                    for (int i = count; i < _runtimeExpressions.Count; i++)
+                        ResetExpression(i, source);
             }
             finally
             {
                 EndExpressionBatch();
             }
-            EvaluateValues(Time.deltaTime, false);
-            UpdateNaturalHeadMotion(Time.deltaTime, Time.time);
         }
-        ProcessPendingBuild();
-    }
 
-    private void LateUpdate()
-    {
-        if (!_wasProcessing || _isBuilding || _umaData == null) return;
-        ApplyRigEffects();
-        ApplyNaturalHeadMotion();
-        if (_immediateDirty) ApplyImmediateEffects();
-    }
+        public bool TryGetExpressionIndex(string id, out int index)
+        {
+            Initialize();
+            index = -1;
+            return !string.IsNullOrWhiteSpace(id) &&
+                _expressionLookup.TryGetValue(id, out index);
+        }
 
-    private void OnAnimatorIK(int layerIndex)
-    {
-        if (!_ikActive || _animator == null || !_animator.isHuman) return;
-        _animator.SetLookAtPosition(_ikLookPosition);
-        _animator.SetLookAtWeight(GazeWeight, _ikBodyWeight, _ikHeadWeight,
-            _ikEyesWeight, 0.5f);
-    }
+        public bool SetExpression(string id, float value,
+            ExpressionSource source = ExpressionSource.Manual) =>
+            TryGetExpressionIndex(id, out int index) &&
+            SetExpression(index, value, source);
 
-    private bool ShouldProcessFrameLane()
-    {
-        if (!isActiveAndEnabled || _isBuilding || _umaData == null)
+        /// <summary>Allocation-free setter for animation/network systems.</summary>
+        public bool SetExpression(int index, float value,
+            ExpressionSource source = ExpressionSource.Manual)
+        {
+            if (index < 0 || index >= _runtimeExpressions.Count ||
+                !IsValidSource(source)) return false;
+            RuntimeExpression expression = _runtimeExpressions[index];
+            int sourceIndex = (int)source;
+            float clamped = Mathf.Clamp01(value);
+            if (expression.sourceActive[sourceIndex] &&
+                Mathf.Approximately(expression.sourceValues[sourceIndex],
+                    clamped)) return true;
+
+            expression.sourceActive[sourceIndex] = true;
+            expression.sourceValues[sourceIndex] = clamped;
+            expression.lastSource = source;
+            ValuesChanged();
+            return true;
+        }
+
+        public bool TryGetExpression(string id, out float value)
+        {
+            if (TryGetExpressionIndex(id, out int index))
+            {
+                value = _runtimeExpressions[index].effective;
+                return true;
+            }
+            value = 0f;
             return false;
-        if (processDistance <= 0f) return true;
-        if (_mainCamera == null) _mainCamera = Camera.main;
-        return _mainCamera == null ||
-            Vector3.SqrMagnitude(_mainCamera.transform.position -
-                transform.position) <= processDistance * processDistance;
-    }
-
-    private void ValuesChanged()
-    {
-        if (_batchDepth > 0)
-        {
-            _batchChanged = true;
-            return;
         }
-        EvaluateValues(0f, false);
-    }
 
-    private void EvaluateValues(float deltaTime, bool force)
-    {
-        using (SourceResolutionMarker.Auto())
+        public bool TryGetExpression(int index, out float value)
         {
+            if (index >= 0 && index < _runtimeExpressions.Count)
+            {
+                value = _runtimeExpressions[index].effective;
+                return true;
+            }
+            value = 0f;
+            return false;
+        }
+
+        public bool TryGetSourceValue(int index, ExpressionSource source,
+            out float value, out bool active)
+        {
+            if (index >= 0 && index < _runtimeExpressions.Count &&
+                IsValidSource(source))
+            {
+                RuntimeExpression expression = _runtimeExpressions[index];
+                value = expression.sourceValues[(int)source];
+                active = expression.sourceActive[(int)source];
+                return true;
+            }
+            value = 0f;
+            active = false;
+            return false;
+        }
+
+        public bool ResetExpression(string id, ExpressionSource source) =>
+            TryGetExpressionIndex(id, out int index) &&
+            ResetExpression(index, source);
+
+        public bool ResetExpression(int index, ExpressionSource source)
+        {
+            if (index < 0 || index >= _runtimeExpressions.Count ||
+                !IsValidSource(source)) return false;
+            RuntimeExpression expression = _runtimeExpressions[index];
+            int sourceIndex = (int)source;
+            if (!expression.sourceActive[sourceIndex]) return true;
+            expression.sourceActive[sourceIndex] = false;
+            ValuesChanged();
+            return true;
+        }
+
+        public void ResetAllExpressions(ExpressionSource source)
+        {
+            if (!IsValidSource(source)) return;
+            BeginExpressionBatch();
+            for (int i = 0; i < _runtimeExpressions.Count; i++)
+                ResetExpression(i, source);
+            EndExpressionBatch();
+        }
+
+        public void BeginExpressionBatch() => _batchDepth++;
+
+        public void EndExpressionBatch()
+        {
+            if (_batchDepth <= 0)
+                throw new InvalidOperationException(
+                    "EndExpressionBatch has no matching begin.");
+            _batchDepth--;
+            if (_batchDepth == 0 && _batchChanged)
+            {
+                _batchChanged = false;
+                EvaluateValues(0f, false);
+            }
+        }
+
+        /// <summary>Shared synchronous application path for preview and tests.</summary>
+        public void EvaluateExpressionsNow(float deltaTime = 0f)
+        {
+            Initialize();
+            RefreshBindings();
+            EvaluateValues(Mathf.Max(0f, deltaTime), true);
+            ApplyImmediateEffects();
+        }
+
+        /// <summary>Advances definition response-time smoothing without snapping.</summary>
+        public void AdvanceExpressionSmoothing(float deltaTime)
+        {
+            Initialize();
+            EvaluateValues(Mathf.Max(0f, deltaTime), false);
+            if (_immediateDirty) ApplyImmediateEffects();
+        }
+
+        public ExpressionEffectPhase GetExpressionPhases(int index) =>
+            index >= 0 && index < _runtimeExpressions.Count
+                ? _runtimeExpressions[index].phases : ExpressionEffectPhase.None;
+
+        public ExpressionJoint GetExpressionAffectedJoints(int index) =>
+            index >= 0 && index < _runtimeExpressions.Count
+                ? _runtimeExpressions[index].definition.affectedJoints
+                : ExpressionJoint.None;
+
+        public DNAInstanceCollection.DNABuildType GetExpressionBuildType(int index)
+            => index >= 0 && index < _runtimeExpressions.Count
+                ? _runtimeExpressions[index].buildType
+                : DNAInstanceCollection.DNABuildType.None;
+
+        private void Update()
+        {
+            Initialize();
+            bool shouldProcess = ShouldProcessFrameLane();
+            if (_wasProcessing)
+                RemoveNaturalHeadMotion();
+            if (_wasProcessing && !shouldProcess) RestoreControlledBones();
+            _wasProcessing = shouldProcess;
+            if (shouldProcess)
+            {
+                RefreshBindings();
+                RestoreControlledBones();
+                BeginExpressionBatch();
+                try
+                {
+                    UpdateBlinking();
+                    UpdateSaccadesAndGaze();
+                }
+                finally
+                {
+                    EndExpressionBatch();
+                }
+                EvaluateValues(Time.deltaTime, false);
+                UpdateNaturalHeadMotion(Time.deltaTime, Time.time);
+            }
+            ProcessPendingBuild();
+        }
+
+        private void LateUpdate()
+        {
+            if (!_wasProcessing || _isBuilding || _umaData == null) return;
+            ApplyRigEffects();
+            ApplyNaturalHeadMotion();
+            if (_immediateDirty) ApplyImmediateEffects();
+        }
+
+        private void OnAnimatorIK(int layerIndex)
+        {
+            if (!_ikActive || _animator == null || !_animator.isHuman) return;
+            _animator.SetLookAtPosition(_ikLookPosition);
+            _animator.SetLookAtWeight(GazeWeight, _ikBodyWeight, _ikHeadWeight,
+                _ikEyesWeight, 0.5f);
+        }
+
+        private bool ShouldProcessFrameLane()
+        {
+            if (!isActiveAndEnabled || _isBuilding || _umaData == null)
+                return false;
+            if (processDistance <= 0f) return true;
+            if (_mainCamera == null) _mainCamera = Camera.main;
+            return _mainCamera == null ||
+                Vector3.SqrMagnitude(_mainCamera.transform.position -
+                    transform.position) <= processDistance * processDistance;
+        }
+
+        private void ValuesChanged()
+        {
+            if (_batchDepth > 0)
+            {
+                _batchChanged = true;
+                return;
+            }
+            EvaluateValues(0f, false);
+        }
+
+        private void EvaluateValues(float deltaTime, bool force)
+        {
+            using (SourceResolutionMarker.Auto())
+            {
+                for (int i = 0; i < _runtimeExpressions.Count; i++)
+                {
+                    RuntimeExpression expression = _runtimeExpressions[i];
+                    float target = ResolveSources(expression);
+                    expression.target = target;
+                    float previous = expression.effective;
+                    float responseTime = expression.definition.responseTime;
+                    if (force || responseTime <= 0f)
+                    {
+                        expression.effective = target;
+                        expression.velocity = 0f;
+                    }
+                    else if (deltaTime > 0f)
+                    {
+                        expression.effective = Mathf.SmoothDamp(
+                            expression.effective, target,
+                            ref expression.velocity, responseTime,
+                            Mathf.Infinity, deltaTime);
+                    }
+                    if (Mathf.Approximately(previous, expression.effective))
+                        continue;
+                    _immediateDirty = true;
+                    if (HasBuildPhase(expression.phases))
+                        QueueBuild(expression.buildType);
+                    ExpressionChange change = new ExpressionChange(
+                        expression.definition.id, previous,
+                        expression.effective, expression.lastSource);
+                    ExpressionChanged?.Invoke(change);
+                    ExpressionChangedAction?.Invoke(change);
+                }
+            }
+        }
+
+        private static float ResolveSources(RuntimeExpression expression)
+        {
+            float defaultValue = expression.definition.DefaultValue;
+            if (expression.definition.blendMode == ExpressionBlendMode.Additive)
+            {
+                float result = defaultValue;
+                bool active = false;
+                for (int i = 0; i < SourceCount; i++)
+                {
+                    if (!expression.sourceActive[i]) continue;
+                    result += expression.sourceValues[i] - defaultValue;
+                    active = true;
+                }
+                return active ? Mathf.Clamp01(result) : defaultValue;
+            }
+            if (expression.definition.blendMode == ExpressionBlendMode.Maximum)
+            {
+                float result = defaultValue;
+                for (int i = 0; i < SourceCount; i++)
+                    if (expression.sourceActive[i])
+                        result = Mathf.Max(result, expression.sourceValues[i]);
+                return result;
+            }
+
+            // Manual > animation > procedural blink > procedural gaze.
+            for (int i = 0; i < OverrideSourcePriority.Length; i++)
+            {
+                int source = OverrideSourcePriority[i];
+                if (expression.sourceActive[source])
+                    return expression.sourceValues[source];
+            }
+            return defaultValue;
+        }
+
+        private void RestoreControlledBones()
+        {
+            if (_umaData == null || _umaData.skeleton == null) return;
+            using (RigRestoreMarker.Auto())
+            {
+                for (int i = 0; i < _controlledBones.Count; i++)
+                {
+                    int hash = _controlledBones[i];
+                    _umaData.skeleton.Restore(hash);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes the previous frame's expression contribution from all controlled
+        /// bones. Custom player loops can call this before animation evaluation.
+        /// </summary>
+        public void RestoreRigExpressionsNow()
+        {
+            Initialize();
+            RefreshBindings();
+            RemoveNaturalHeadMotion();
+            RestoreControlledBones();
+        }
+
+        /// <summary>
+        /// Applies all active rig expressions without restoring first. Custom
+        /// player loops can call this after animation evaluation.
+        /// </summary>
+        public void ApplyRigExpressionsAfterAnimationNow()
+        {
+            Initialize();
+            RefreshBindings();
+            ApplyRigEffects();
+            ApplyNaturalHeadMotion();
+        }
+
+        /// <summary>
+        /// Restores and applies all active rig expressions synchronously.
+        /// </summary>
+        public void ApplyRigExpressionsNow()
+        {
+            RestoreRigExpressionsNow();
+            ApplyRigExpressionsAfterAnimationNow();
+        }
+
+        private void ApplyRigEffects()
+        {
+            if (_umaData == null || _umaData.skeleton == null) return;
+            using (RigApplyMarker.Auto())
+            {
+                for (int i = 0; i < _runtimeExpressions.Count; i++)
+                {
+                    RuntimeExpression expression = _runtimeExpressions[i];
+                    DNA dna = expression.definition.dna;
+                    if (dna == null || dna.effects == null ||
+                        (expression.phases &
+                         ExpressionEffectPhase.LateRig) == 0) continue;
+                    for (int e = 0; e < dna.effects.Count; e++)
+                    {
+                        DNAEffect effect = dna.effects[e];
+                        if (effect != null && effect.enabled &&
+                            (effect.ExpressionPhases &
+                             ExpressionEffectPhase.LateRig) != 0)
+                            effect.ApplyExpressionRig(_umaData, dna,
+                                expression.effective, ShouldApplyBone);
+                    }
+                }
+            }
+        }
+
+        private void UpdateNaturalHeadMotion(float deltaTime, float time)
+        {
+            float visemeActivity = 0f;
+            float visemeChange = 0f;
+            float expressionActivity = 0f;
+            float authoredHeadActivity = 0f;
+            const ExpressionRole eyeRoles = ExpressionRole.BlinkLeft |
+                ExpressionRole.BlinkRight | ExpressionRole.EyeHorizontal |
+                ExpressionRole.EyeVertical | ExpressionRole.EyeHorizontalLeft |
+                ExpressionRole.EyeHorizontalRight |
+                ExpressionRole.EyeVerticalLeft |
+                ExpressionRole.EyeVerticalRight;
+
             for (int i = 0; i < _runtimeExpressions.Count; i++)
             {
                 RuntimeExpression expression = _runtimeExpressions[i];
-                float target = ResolveSources(expression);
-                expression.target = target;
-                float previous = expression.effective;
-                float responseTime = expression.definition.responseTime;
-                if (force || responseTime <= 0f)
+                float activity = GetNormalizedExpressionActivity(expression);
+                float previous = expression.previousHeadMotionValue;
+                expression.previousHeadMotionValue = expression.effective;
+                if ((expression.definition.roles & ExpressionRole.Viseme) != 0)
                 {
-                    expression.effective = target;
-                    expression.velocity = 0f;
+                    visemeActivity = Mathf.Max(visemeActivity, activity);
+                    float range = Mathf.Max(expression.definition.DefaultValue,
+                        1f - expression.definition.DefaultValue);
+                    visemeChange = Mathf.Max(visemeChange,
+                        Mathf.Abs(expression.effective - previous) /
+                        Mathf.Max(0.001f, range));
                 }
-                else if (deltaTime > 0f)
+                else if ((expression.definition.roles & eyeRoles) == 0)
                 {
-                    expression.effective = Mathf.SmoothDamp(
-                        expression.effective, target,
-                        ref expression.velocity, responseTime,
-                        Mathf.Infinity, deltaTime);
+                    expressionActivity = Mathf.Max(expressionActivity,
+                        activity);
                 }
-                if (Mathf.Approximately(previous, expression.effective))
-                    continue;
-                _immediateDirty = true;
-                if (HasBuildPhase(expression.phases))
-                    QueueBuild(expression.buildType);
-                ExpressionChange change = new ExpressionChange(
-                    expression.definition.id, previous,
-                    expression.effective, expression.lastSource);
-                ExpressionChanged?.Invoke(change);
-                ExpressionChangedAction?.Invoke(change);
+
+                if ((expression.definition.affectedJoints &
+                     ExpressionJoint.Head) != 0)
+                    authoredHeadActivity = Mathf.Max(authoredHeadActivity,
+                        activity);
             }
-        }
-    }
 
-    private static float ResolveSources(RuntimeExpression expression)
-    {
-        float defaultValue = expression.definition.DefaultValue;
-        if (expression.definition.blendMode == ExpressionBlendMode.Additive)
-        {
-            float result = defaultValue;
-            bool active = false;
-            for (int i = 0; i < SourceCount; i++)
+            bool enabled = EnableNaturalHeadMotion && overrideMecanimHead;
+            float speechTarget = enabled
+                ? Mathf.Clamp01(Mathf.Max(visemeActivity,
+                    visemeActivity * 0.65f + visemeChange * 2.5f)) : 0f;
+            float expressionTarget = enabled ? expressionActivity : 0f;
+            if (deltaTime > 0f)
             {
-                if (!expression.sourceActive[i]) continue;
-                result += expression.sourceValues[i] - defaultValue;
-                active = true;
+                float speechEase = speechTarget > _naturalHeadSpeechEnergy
+                    ? 0.055f : 0.22f;
+                float expressionEase =
+                    expressionTarget > _naturalHeadExpressionEnergy
+                        ? 0.12f : 0.32f;
+                _naturalHeadSpeechEnergy = Mathf.SmoothDamp(
+                    _naturalHeadSpeechEnergy, speechTarget,
+                    ref _naturalHeadSpeechVelocity, speechEase,
+                    Mathf.Infinity, deltaTime);
+                _naturalHeadExpressionEnergy = Mathf.SmoothDamp(
+                    _naturalHeadExpressionEnergy, expressionTarget,
+                    ref _naturalHeadExpressionVelocity, expressionEase,
+                    Mathf.Infinity, deltaTime);
             }
-            return active ? Mathf.Clamp01(result) : defaultValue;
-        }
-        if (expression.definition.blendMode == ExpressionBlendMode.Maximum)
-        {
-            float result = defaultValue;
-            for (int i = 0; i < SourceCount; i++)
-                if (expression.sourceActive[i])
-                    result = Mathf.Max(result, expression.sourceValues[i]);
-            return result;
-        }
 
-        // Manual > animation > procedural blink > procedural gaze.
-        for (int i = 0; i < OverrideSourcePriority.Length; i++)
-        {
-            int source = OverrideSourcePriority[i];
-            if (expression.sourceActive[source])
-                return expression.sourceValues[source];
-        }
-        return defaultValue;
-    }
-
-    private void RestoreControlledBones()
-    {
-        if (_umaData == null || _umaData.skeleton == null) return;
-        using (RigRestoreMarker.Auto())
-        {
-            for (int i = 0; i < _controlledBones.Count; i++)
+            EnsureNaturalHeadSeed();
+            Vector3 target = Vector3.zero;
+            if (enabled)
             {
-                int hash = _controlledBones[i];
-                _umaData.skeleton.Restore(hash);
+                float idleTime = time * HeadMotionFrequency;
+                float expressionTime = idleTime * 0.73f;
+                float speechRate = Mathf.Lerp(0.7f, 1.8f,
+                    _naturalHeadSpeechEnergy);
+                _naturalHeadSpeechPhase = Mathf.Repeat(
+                    _naturalHeadSpeechPhase + deltaTime * speechRate *
+                    Mathf.PI * 2f, Mathf.PI * 2f);
+
+                float idle = HeadMotionIdleDegrees;
+                float expressive = HeadMotionExpressionDegrees *
+                    _naturalHeadExpressionEnergy;
+                float speech = HeadMotionSpeechDegrees *
+                    _naturalHeadSpeechEnergy;
+                target.x = Noise(idleTime, _naturalHeadNoiseOffset.x) *
+                    idle * 0.7f +
+                    Noise(expressionTime, _naturalHeadNoiseOffset.z + 19.7f) *
+                    expressive * 0.8f -
+                    Mathf.Sin(_naturalHeadSpeechPhase) * speech;
+                target.y = Noise(idleTime * 0.83f,
+                    _naturalHeadNoiseOffset.y) * idle +
+                    Noise(expressionTime * 0.89f,
+                        _naturalHeadNoiseOffset.x + 41.3f) * expressive +
+                    Mathf.Sin(_naturalHeadSpeechPhase * 0.5f + 0.8f) *
+                    speech * 0.18f;
+                target.z = Noise(idleTime * 0.67f,
+                    _naturalHeadNoiseOffset.z) * idle * 0.55f +
+                    Noise(expressionTime * 1.11f,
+                        _naturalHeadNoiseOffset.y + 67.1f) * expressive * 0.65f +
+                    Mathf.Sin(_naturalHeadSpeechPhase * 0.5f + 2.1f) *
+                    speech * 0.12f;
+
+                float lookAtAttenuation = _ikActive
+                    ? 1f - Mathf.Clamp01(_ikHeadWeight) * 0.9f : 1f;
+                float expressionAttenuation = 1f -
+                    Mathf.Clamp01(authoredHeadActivity) * 0.9f;
+                target *= lookAtAttenuation * expressionAttenuation;
             }
+
+            if (deltaTime > 0f)
+                _naturalHeadOffset = Vector3.SmoothDamp(_naturalHeadOffset,
+                    target, ref _naturalHeadOffsetVelocity,
+                    HeadMotionEaseTime, Mathf.Infinity, deltaTime);
+            else if (!enabled)
+                _naturalHeadOffset = Vector3.zero;
         }
-    }
 
-    /// <summary>
-    /// Removes the previous frame's expression contribution from all controlled
-    /// bones. Custom player loops can call this before animation evaluation.
-    /// </summary>
-    public void RestoreRigExpressionsNow()
-    {
-        Initialize();
-        RefreshBindings();
-        RemoveNaturalHeadMotion();
-        RestoreControlledBones();
-    }
-
-    /// <summary>
-    /// Applies all active rig expressions without restoring first. Custom
-    /// player loops can call this after animation evaluation.
-    /// </summary>
-    public void ApplyRigExpressionsAfterAnimationNow()
-    {
-        Initialize();
-        RefreshBindings();
-        ApplyRigEffects();
-        ApplyNaturalHeadMotion();
-    }
-
-    /// <summary>
-    /// Restores and applies all active rig expressions synchronously.
-    /// </summary>
-    public void ApplyRigExpressionsNow()
-    {
-        RestoreRigExpressionsNow();
-        ApplyRigExpressionsAfterAnimationNow();
-    }
-
-    private void ApplyRigEffects()
-    {
-        if (_umaData == null || _umaData.skeleton == null) return;
-        using (RigApplyMarker.Auto())
+        private static float GetNormalizedExpressionActivity(
+            RuntimeExpression expression)
         {
-            for (int i = 0; i < _runtimeExpressions.Count; i++)
+            float defaultValue = expression.definition.DefaultValue;
+            float range = Mathf.Max(defaultValue, 1f - defaultValue);
+            return Mathf.Clamp01(Mathf.Abs(expression.effective - defaultValue) /
+                Mathf.Max(0.001f, range));
+        }
+
+        private static float Noise(float time, float seed) =>
+            Mathf.PerlinNoise(seed, time) * 2f - 1f;
+
+        private void EnsureNaturalHeadSeed()
+        {
+            if (_naturalHeadSeeded) return;
+            unchecked
             {
-                RuntimeExpression expression = _runtimeExpressions[i];
-                DNA dna = expression.definition.dna;
-                if (dna == null || dna.effects == null ||
-                    (expression.phases &
-                     ExpressionEffectPhase.LateRig) == 0) continue;
-                for (int e = 0; e < dna.effects.Count; e++)
+                int seed = UMAUtils.StringToHash(gameObject.name);
+                Vector3 position = transform.position;
+                seed = seed * 397 ^ Mathf.RoundToInt(position.x * 100f);
+                seed = seed * 397 ^ Mathf.RoundToInt(position.y * 100f);
+                seed = seed * 397 ^ Mathf.RoundToInt(position.z * 100f);
+                Transform current = transform;
+                while (current != null)
                 {
-                    DNAEffect effect = dna.effects[e];
-                    if (effect != null && effect.enabled &&
-                        (effect.ExpressionPhases &
-                         ExpressionEffectPhase.LateRig) != 0)
-                        effect.ApplyExpressionRig(_umaData, dna,
-                            expression.effective, ShouldApplyBone);
+                    seed = seed * 397 ^ current.GetSiblingIndex();
+                    current = current.parent;
                 }
+                uint value = (uint)seed;
+                _naturalHeadNoiseOffset.x = NextNoiseSeed(ref value);
+                _naturalHeadNoiseOffset.y = NextNoiseSeed(ref value);
+                _naturalHeadNoiseOffset.z = NextNoiseSeed(ref value);
             }
+            _naturalHeadSpeechPhase = _naturalHeadNoiseOffset.x * 0.37f;
+            _naturalHeadSeeded = true;
         }
-    }
 
-    private void UpdateNaturalHeadMotion(float deltaTime, float time)
-    {
-        float visemeActivity = 0f;
-        float visemeChange = 0f;
-        float expressionActivity = 0f;
-        float authoredHeadActivity = 0f;
-        const ExpressionRole eyeRoles = ExpressionRole.BlinkLeft |
-            ExpressionRole.BlinkRight | ExpressionRole.EyeHorizontal |
-            ExpressionRole.EyeVertical | ExpressionRole.EyeHorizontalLeft |
-            ExpressionRole.EyeHorizontalRight |
-            ExpressionRole.EyeVerticalLeft |
-            ExpressionRole.EyeVerticalRight;
-
-        for (int i = 0; i < _runtimeExpressions.Count; i++)
+        private static float NextNoiseSeed(ref uint value)
         {
-            RuntimeExpression expression = _runtimeExpressions[i];
-            float activity = GetNormalizedExpressionActivity(expression);
-            float previous = expression.previousHeadMotionValue;
-            expression.previousHeadMotionValue = expression.effective;
-            if ((expression.definition.roles & ExpressionRole.Viseme) != 0)
+            value ^= value << 13;
+            value ^= value >> 17;
+            value ^= value << 5;
+            return (value & 0x00ffffffu) * (100f / 0x00ffffffu);
+        }
+
+        private void ApplyNaturalHeadMotion()
+        {
+            if (!EnableNaturalHeadMotion || !overrideMecanimHead ||
+                _naturalHeadTransform == null ||
+                _naturalHeadOffset.sqrMagnitude < 0.00000001f) return;
+            Quaternion baseRotation = GetNaturalHeadRotation();
+            _naturalHeadAppliedDelta = Quaternion.Euler(_naturalHeadOffset);
+            _naturalHeadAppliedRotation = baseRotation *
+                _naturalHeadAppliedDelta;
+            SetNaturalHeadRotation(_naturalHeadAppliedRotation);
+            _naturalHeadApplied = true;
+        }
+
+        private void RemoveNaturalHeadMotion()
+        {
+            if (!_naturalHeadApplied || _naturalHeadTransform == null)
             {
-                visemeActivity = Mathf.Max(visemeActivity, activity);
-                float range = Mathf.Max(expression.definition.DefaultValue,
-                    1f - expression.definition.DefaultValue);
-                visemeChange = Mathf.Max(visemeChange,
-                    Mathf.Abs(expression.effective - previous) /
-                    Mathf.Max(0.001f, range));
+                _naturalHeadApplied = false;
+                return;
             }
-            else if ((expression.definition.roles & eyeRoles) == 0)
-            {
-                expressionActivity = Mathf.Max(expressionActivity,
-                    activity);
-            }
-
-            if ((expression.definition.affectedJoints &
-                 ExpressionJoint.Head) != 0)
-                authoredHeadActivity = Mathf.Max(authoredHeadActivity,
-                    activity);
-        }
-
-        bool enabled = EnableNaturalHeadMotion && overrideMecanimHead;
-        float speechTarget = enabled
-            ? Mathf.Clamp01(Mathf.Max(visemeActivity,
-                visemeActivity * 0.65f + visemeChange * 2.5f)) : 0f;
-        float expressionTarget = enabled ? expressionActivity : 0f;
-        if (deltaTime > 0f)
-        {
-            float speechEase = speechTarget > _naturalHeadSpeechEnergy
-                ? 0.055f : 0.22f;
-            float expressionEase =
-                expressionTarget > _naturalHeadExpressionEnergy
-                    ? 0.12f : 0.32f;
-            _naturalHeadSpeechEnergy = Mathf.SmoothDamp(
-                _naturalHeadSpeechEnergy, speechTarget,
-                ref _naturalHeadSpeechVelocity, speechEase,
-                Mathf.Infinity, deltaTime);
-            _naturalHeadExpressionEnergy = Mathf.SmoothDamp(
-                _naturalHeadExpressionEnergy, expressionTarget,
-                ref _naturalHeadExpressionVelocity, expressionEase,
-                Mathf.Infinity, deltaTime);
-        }
-
-        EnsureNaturalHeadSeed();
-        Vector3 target = Vector3.zero;
-        if (enabled)
-        {
-            float idleTime = time * HeadMotionFrequency;
-            float expressionTime = idleTime * 0.73f;
-            float speechRate = Mathf.Lerp(0.7f, 1.8f,
-                _naturalHeadSpeechEnergy);
-            _naturalHeadSpeechPhase = Mathf.Repeat(
-                _naturalHeadSpeechPhase + deltaTime * speechRate *
-                Mathf.PI * 2f, Mathf.PI * 2f);
-
-            float idle = HeadMotionIdleDegrees;
-            float expressive = HeadMotionExpressionDegrees *
-                _naturalHeadExpressionEnergy;
-            float speech = HeadMotionSpeechDegrees *
-                _naturalHeadSpeechEnergy;
-            target.x = Noise(idleTime, _naturalHeadNoiseOffset.x) *
-                idle * 0.7f +
-                Noise(expressionTime, _naturalHeadNoiseOffset.z + 19.7f) *
-                expressive * 0.8f -
-                Mathf.Sin(_naturalHeadSpeechPhase) * speech;
-            target.y = Noise(idleTime * 0.83f,
-                _naturalHeadNoiseOffset.y) * idle +
-                Noise(expressionTime * 0.89f,
-                    _naturalHeadNoiseOffset.x + 41.3f) * expressive +
-                Mathf.Sin(_naturalHeadSpeechPhase * 0.5f + 0.8f) *
-                speech * 0.18f;
-            target.z = Noise(idleTime * 0.67f,
-                _naturalHeadNoiseOffset.z) * idle * 0.55f +
-                Noise(expressionTime * 1.11f,
-                    _naturalHeadNoiseOffset.y + 67.1f) * expressive * 0.65f +
-                Mathf.Sin(_naturalHeadSpeechPhase * 0.5f + 2.1f) *
-                speech * 0.12f;
-
-            float lookAtAttenuation = _ikActive
-                ? 1f - Mathf.Clamp01(_ikHeadWeight) * 0.9f : 1f;
-            float expressionAttenuation = 1f -
-                Mathf.Clamp01(authoredHeadActivity) * 0.9f;
-            target *= lookAtAttenuation * expressionAttenuation;
-        }
-
-        if (deltaTime > 0f)
-            _naturalHeadOffset = Vector3.SmoothDamp(_naturalHeadOffset,
-                target, ref _naturalHeadOffsetVelocity,
-                HeadMotionEaseTime, Mathf.Infinity, deltaTime);
-        else if (!enabled)
-            _naturalHeadOffset = Vector3.zero;
-    }
-
-    private static float GetNormalizedExpressionActivity(
-        RuntimeExpression expression)
-    {
-        float defaultValue = expression.definition.DefaultValue;
-        float range = Mathf.Max(defaultValue, 1f - defaultValue);
-        return Mathf.Clamp01(Mathf.Abs(expression.effective - defaultValue) /
-            Mathf.Max(0.001f, range));
-    }
-
-    private static float Noise(float time, float seed) =>
-        Mathf.PerlinNoise(seed, time) * 2f - 1f;
-
-    private void EnsureNaturalHeadSeed()
-    {
-        if (_naturalHeadSeeded) return;
-        unchecked
-        {
-            int seed = UMAUtils.StringToHash(gameObject.name);
-            Vector3 position = transform.position;
-            seed = seed * 397 ^ Mathf.RoundToInt(position.x * 100f);
-            seed = seed * 397 ^ Mathf.RoundToInt(position.y * 100f);
-            seed = seed * 397 ^ Mathf.RoundToInt(position.z * 100f);
-            Transform current = transform;
-            while (current != null)
-            {
-                seed = seed * 397 ^ current.GetSiblingIndex();
-                current = current.parent;
-            }
-            uint value = (uint)seed;
-            _naturalHeadNoiseOffset.x = NextNoiseSeed(ref value);
-            _naturalHeadNoiseOffset.y = NextNoiseSeed(ref value);
-            _naturalHeadNoiseOffset.z = NextNoiseSeed(ref value);
-        }
-        _naturalHeadSpeechPhase = _naturalHeadNoiseOffset.x * 0.37f;
-        _naturalHeadSeeded = true;
-    }
-
-    private static float NextNoiseSeed(ref uint value)
-    {
-        value ^= value << 13;
-        value ^= value >> 17;
-        value ^= value << 5;
-        return (value & 0x00ffffffu) * (100f / 0x00ffffffu);
-    }
-
-    private void ApplyNaturalHeadMotion()
-    {
-        if (!EnableNaturalHeadMotion || !overrideMecanimHead ||
-            _naturalHeadTransform == null ||
-            _naturalHeadOffset.sqrMagnitude < 0.00000001f) return;
-        Quaternion baseRotation = GetNaturalHeadRotation();
-        _naturalHeadAppliedDelta = Quaternion.Euler(_naturalHeadOffset);
-        _naturalHeadAppliedRotation = baseRotation *
-            _naturalHeadAppliedDelta;
-        SetNaturalHeadRotation(_naturalHeadAppliedRotation);
-        _naturalHeadApplied = true;
-    }
-
-    private void RemoveNaturalHeadMotion()
-    {
-        if (!_naturalHeadApplied || _naturalHeadTransform == null)
-        {
+            Quaternion current = GetNaturalHeadRotation();
+            if (Quaternion.Angle(current, _naturalHeadAppliedRotation) <= 0.1f)
+                SetNaturalHeadRotation(current *
+                    Quaternion.Inverse(_naturalHeadAppliedDelta));
             _naturalHeadApplied = false;
-            return;
+            _naturalHeadAppliedDelta = Quaternion.identity;
         }
-        Quaternion current = GetNaturalHeadRotation();
-        if (Quaternion.Angle(current, _naturalHeadAppliedRotation) <= 0.1f)
-            SetNaturalHeadRotation(current *
-                Quaternion.Inverse(_naturalHeadAppliedDelta));
-        _naturalHeadApplied = false;
-        _naturalHeadAppliedDelta = Quaternion.identity;
-    }
 
-    private Quaternion GetNaturalHeadRotation()
-    {
-        UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
-        return skeleton != null && skeleton.HasBone(_naturalHeadHash)
-            ? skeleton.GetRotation(_naturalHeadHash)
-            : _naturalHeadTransform.localRotation;
-    }
-
-    private void SetNaturalHeadRotation(Quaternion rotation)
-    {
-        UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
-        if (skeleton != null && skeleton.HasBone(_naturalHeadHash))
-            skeleton.SetRotation(_naturalHeadHash, rotation);
-        else if (_naturalHeadTransform != null)
-            _naturalHeadTransform.localRotation = rotation;
-    }
-
-    private void ResetNaturalHeadMotionState()
-    {
-        _naturalHeadOffset = Vector3.zero;
-        _naturalHeadOffsetVelocity = Vector3.zero;
-        _naturalHeadSpeechEnergy = 0f;
-        _naturalHeadSpeechVelocity = 0f;
-        _naturalHeadExpressionEnergy = 0f;
-        _naturalHeadExpressionVelocity = 0f;
-        _naturalHeadApplied = false;
-        _naturalHeadAppliedDelta = Quaternion.identity;
-        for (int i = 0; i < _runtimeExpressions.Count; i++)
-            _runtimeExpressions[i].previousHeadMotionValue =
-                _runtimeExpressions[i].effective;
-    }
-
-    private void ApplyImmediateEffects()
-    {
-        if (_umaData == null) return;
-        using (RendererApplyMarker.Auto())
+        private Quaternion GetNaturalHeadRotation()
         {
+            UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
+            return skeleton != null && skeleton.HasBone(_naturalHeadHash)
+                ? skeleton.GetRotation(_naturalHeadHash)
+                : _naturalHeadTransform.localRotation;
+        }
+
+        private void SetNaturalHeadRotation(Quaternion rotation)
+        {
+            UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
+            if (skeleton != null && skeleton.HasBone(_naturalHeadHash))
+                skeleton.SetRotation(_naturalHeadHash, rotation);
+            else if (_naturalHeadTransform != null)
+                _naturalHeadTransform.localRotation = rotation;
+        }
+
+        private void ResetNaturalHeadMotionState()
+        {
+            _naturalHeadOffset = Vector3.zero;
+            _naturalHeadOffsetVelocity = Vector3.zero;
+            _naturalHeadSpeechEnergy = 0f;
+            _naturalHeadSpeechVelocity = 0f;
+            _naturalHeadExpressionEnergy = 0f;
+            _naturalHeadExpressionVelocity = 0f;
+            _naturalHeadApplied = false;
+            _naturalHeadAppliedDelta = Quaternion.identity;
+            for (int i = 0; i < _runtimeExpressions.Count; i++)
+                _runtimeExpressions[i].previousHeadMotionValue =
+                    _runtimeExpressions[i].effective;
+        }
+
+        private void ApplyImmediateEffects()
+        {
+            if (_umaData == null) return;
+            using (RendererApplyMarker.Auto())
+            {
+                for (int i = 0; i < _runtimeExpressions.Count; i++)
+                {
+                    RuntimeExpression expression = _runtimeExpressions[i];
+                    DNA dna = expression.definition.dna;
+                    if (dna == null || dna.effects == null) continue;
+                    for (int e = 0; e < dna.effects.Count; e++)
+                    {
+                        DNAEffect effect = dna.effects[e];
+                        if (effect == null || !effect.enabled) continue;
+                        ExpressionEffectPhase phases = effect.ExpressionPhases;
+                        if ((phases &
+                             ExpressionEffectPhase.LateBlendShape) != 0)
+                        {
+                            if (effect is DNAEffect_BlendShape blendShape)
+                                ApplyCachedBlendShape(blendShape,
+                                    expression.effective);
+                            else
+                                effect.ApplyExpressionBlendShape(_umaData, dna,
+                                    expression.effective);
+                        }
+                        if ((phases &
+                             ExpressionEffectPhase.RuntimeMaterial) != 0)
+                        {
+                            if (effect is DNAEffect_RuntimeMaterialProperty
+                                material)
+                                ApplyCachedMaterialProperty(material,
+                                    expression.effective);
+                            else
+                                effect.ApplyExpressionMaterial(_umaData, dna,
+                                    expression.effective);
+                        }
+                    }
+                }
+            }
+            _immediateDirty = false;
+        }
+
+        private void RefreshBindings()
+        {
+            if (_bindingsValid) return;
+            _controlledBones.Clear();
+            _controlledBoneSet.Clear();
+            _boneJoints.Clear();
+            CacheUmaFacialJoints();
+            CacheHumanoidJoints();
+            CacheGenericJoints();
+            ResolveNaturalHeadBone();
             for (int i = 0; i < _runtimeExpressions.Count; i++)
             {
                 RuntimeExpression expression = _runtimeExpressions[i];
@@ -1018,1197 +1068,1152 @@ public sealed partial class DynamicExpressionPlayer
                 for (int e = 0; e < dna.effects.Count; e++)
                 {
                     DNAEffect effect = dna.effects[e];
+                    if (effect == null || !effect.enabled ||
+                        (effect.ExpressionPhases &
+                         ExpressionEffectPhase.EarlyRestore) == 0) continue;
+                    _boneScratch.Clear();
+                    effect.CollectExpressionBones(_boneScratch);
+                    for (int b = 0; b < _boneScratch.Count; b++)
+                    {
+                        int hash = _boneScratch[b];
+                        if (_controlledBoneSet.Add(hash))
+                            _controlledBones.Add(hash);
+                        if (!_boneJoints.ContainsKey(hash) &&
+                            expression.definition.affectedJoints !=
+                            ExpressionJoint.None)
+                            _boneJoints.Add(hash,
+                                expression.definition.affectedJoints);
+                    }
+                }
+            }
+            RebuildImmediateBindings();
+            _bindingsValid = true;
+        }
+
+        private void ResolveNaturalHeadBone()
+        {
+            _naturalHeadTransform = null;
+            _naturalHeadHash = 0;
+            if (_animator != null && _animator.isHuman)
+                _naturalHeadTransform =
+                    _animator.GetBoneTransform(HumanBodyBones.Head);
+
+            UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
+            if (_naturalHeadTransform == null && skeleton != null)
+                _naturalHeadTransform = skeleton.GetBoneTransform(
+                    UMAUtils.StringToHash("Head"));
+
+            if (_naturalHeadTransform == null && skeleton != null &&
+                genericBoneJoints != null)
+                for (int i = 0; i < genericBoneJoints.Count; i++)
+                {
+                    ExpressionBoneJoint item = genericBoneJoints[i];
+                    if (item == null ||
+                        (item.joint & ExpressionJoint.Head) == 0 ||
+                        string.IsNullOrWhiteSpace(item.boneName)) continue;
+                    Transform candidate = skeleton.GetBoneTransform(
+                        UMAUtils.StringToHash(item.boneName));
+                    if (candidate == null) continue;
+                    _naturalHeadTransform = candidate;
+                    break;
+                }
+
+            if (_naturalHeadTransform != null)
+                _naturalHeadHash = UMAUtils.StringToHash(
+                    _naturalHeadTransform.name);
+        }
+
+        private void RebuildImmediateBindings()
+        {
+            _blendShapeBindings.Clear();
+            _materialBindings.Clear();
+            if (_umaData == null) return;
+
+            SkinnedMeshRenderer[] renderers = _umaData.GetRenderers();
+            if (renderers == null) return;
+
+            for (int expressionIndex = 0;
+                 expressionIndex < _runtimeExpressions.Count;
+                 expressionIndex++)
+            {
+                DNA dna = _runtimeExpressions[expressionIndex].definition.dna;
+                if (dna == null || dna.effects == null) continue;
+                for (int effectIndex = 0;
+                     effectIndex < dna.effects.Count;
+                     effectIndex++)
+                {
+                    DNAEffect effect = dna.effects[effectIndex];
                     if (effect == null || !effect.enabled) continue;
-                    ExpressionEffectPhase phases = effect.ExpressionPhases;
-                    if ((phases &
-                         ExpressionEffectPhase.LateBlendShape) != 0)
+                    if (effect is DNAEffect_BlendShape blendShape &&
+                        !_blendShapeBindings.ContainsKey(blendShape))
                     {
-                        if (effect is DNAEffect_BlendShape blendShape)
-                            ApplyCachedBlendShape(blendShape,
-                                expression.effective);
-                        else
-                            effect.ApplyExpressionBlendShape(_umaData, dna,
-                                expression.effective);
+                        _blendShapeBindings.Add(blendShape,
+                            CreateBlendShapeBinding(blendShape, renderers));
                     }
-                    if ((phases &
-                         ExpressionEffectPhase.RuntimeMaterial) != 0)
+                    else if (effect is DNAEffect_RuntimeMaterialProperty
+                        material &&
+                        !_materialBindings.ContainsKey(material))
                     {
-                        if (effect is DNAEffect_RuntimeMaterialProperty
-                            material)
-                            ApplyCachedMaterialProperty(material,
-                                expression.effective);
-                        else
-                            effect.ApplyExpressionMaterial(_umaData, dna,
-                                expression.effective);
+                        _materialBindings.Add(material,
+                            CreateMaterialBinding(material, renderers));
                     }
                 }
             }
         }
-        _immediateDirty = false;
-    }
 
-    private void RefreshBindings()
-    {
-        if (_bindingsValid) return;
-        _controlledBones.Clear();
-        _controlledBoneSet.Clear();
-        _boneJoints.Clear();
-        CacheUmaFacialJoints();
-        CacheHumanoidJoints();
-        CacheGenericJoints();
-        ResolveNaturalHeadBone();
-        for (int i = 0; i < _runtimeExpressions.Count; i++)
+        private static BlendShapeBinding CreateBlendShapeBinding(
+            DNAEffect_BlendShape effect,
+            SkinnedMeshRenderer[] renderers)
         {
-            RuntimeExpression expression = _runtimeExpressions[i];
-            DNA dna = expression.definition.dna;
-            if (dna == null || dna.effects == null) continue;
-            for (int e = 0; e < dna.effects.Count; e++)
+            BlendShapeBinding binding = new BlendShapeBinding();
+            if (string.IsNullOrEmpty(effect.BlendShapeName)) return binding;
+            for (int i = 0; i < renderers.Length; i++)
             {
-                DNAEffect effect = dna.effects[e];
-                if (effect == null || !effect.enabled ||
-                    (effect.ExpressionPhases &
-                     ExpressionEffectPhase.EarlyRestore) == 0) continue;
-                _boneScratch.Clear();
-                effect.CollectExpressionBones(_boneScratch);
-                for (int b = 0; b < _boneScratch.Count; b++)
-                {
-                    int hash = _boneScratch[b];
-                    if (_controlledBoneSet.Add(hash))
-                        _controlledBones.Add(hash);
-                    if (!_boneJoints.ContainsKey(hash) &&
-                        expression.definition.affectedJoints !=
-                        ExpressionJoint.None)
-                        _boneJoints.Add(hash,
-                            expression.definition.affectedJoints);
-                }
+                SkinnedMeshRenderer renderer = renderers[i];
+                if (renderer == null || renderer.sharedMesh == null) continue;
+                int index = renderer.sharedMesh.GetBlendShapeIndex(
+                    effect.BlendShapeName);
+                if (index >= 0)
+                    binding.targets.Add(new BlendShapeTarget
+                    {
+                        renderer = renderer,
+                        index = index
+                    });
             }
+            return binding;
         }
-        RebuildImmediateBindings();
-        _bindingsValid = true;
-    }
 
-    private void ResolveNaturalHeadBone()
-    {
-        _naturalHeadTransform = null;
-        _naturalHeadHash = 0;
-        if (_animator != null && _animator.isHuman)
-            _naturalHeadTransform =
-                _animator.GetBoneTransform(HumanBodyBones.Head);
-
-        UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
-        if (_naturalHeadTransform == null && skeleton != null)
-            _naturalHeadTransform = skeleton.GetBoneTransform(
-                UMAUtils.StringToHash("Head"));
-
-        if (_naturalHeadTransform == null && skeleton != null &&
-            genericBoneJoints != null)
-            for (int i = 0; i < genericBoneJoints.Count; i++)
-            {
-                ExpressionBoneJoint item = genericBoneJoints[i];
-                if (item == null ||
-                    (item.joint & ExpressionJoint.Head) == 0 ||
-                    string.IsNullOrWhiteSpace(item.boneName)) continue;
-                Transform candidate = skeleton.GetBoneTransform(
-                    UMAUtils.StringToHash(item.boneName));
-                if (candidate == null) continue;
-                _naturalHeadTransform = candidate;
-                break;
-            }
-
-        if (_naturalHeadTransform != null)
-            _naturalHeadHash = UMAUtils.StringToHash(
-                _naturalHeadTransform.name);
-    }
-
-    private void RebuildImmediateBindings()
-    {
-        _blendShapeBindings.Clear();
-        _materialBindings.Clear();
-        if (_umaData == null) return;
-
-        SkinnedMeshRenderer[] renderers = _umaData.GetRenderers();
-        if (renderers == null) return;
-
-        for (int expressionIndex = 0;
-             expressionIndex < _runtimeExpressions.Count;
-             expressionIndex++)
+        private MaterialBinding CreateMaterialBinding(
+            DNAEffect_RuntimeMaterialProperty effect,
+            SkinnedMeshRenderer[] renderers)
         {
-            DNA dna = _runtimeExpressions[expressionIndex].definition.dna;
-            if (dna == null || dna.effects == null) continue;
-            for (int effectIndex = 0;
-                 effectIndex < dna.effects.Count;
-                 effectIndex++)
+            MaterialBinding binding = new MaterialBinding
             {
-                DNAEffect effect = dna.effects[effectIndex];
-                if (effect == null || !effect.enabled) continue;
-                if (effect is DNAEffect_BlendShape blendShape &&
-                    !_blendShapeBindings.ContainsKey(blendShape))
-                {
-                    _blendShapeBindings.Add(blendShape,
-                        CreateBlendShapeBinding(blendShape, renderers));
-                }
-                else if (effect is DNAEffect_RuntimeMaterialProperty
-                    material &&
-                    !_materialBindings.ContainsKey(material))
-                {
-                    _materialBindings.Add(material,
-                        CreateMaterialBinding(material, renderers));
-                }
-            }
-        }
-    }
+                propertyId = Shader.PropertyToID(effect.propertyName)
+            };
+            if (string.IsNullOrEmpty(effect.propertyName)) return binding;
 
-    private static BlendShapeBinding CreateBlendShapeBinding(
-        DNAEffect_BlendShape effect,
-        SkinnedMeshRenderer[] renderers)
-    {
-        BlendShapeBinding binding = new BlendShapeBinding();
-        if (string.IsNullOrEmpty(effect.BlendShapeName)) return binding;
-        for (int i = 0; i < renderers.Length; i++)
-        {
-            SkinnedMeshRenderer renderer = renderers[i];
-            if (renderer == null || renderer.sharedMesh == null) continue;
-            int index = renderer.sharedMesh.GetBlendShapeIndex(
-                effect.BlendShapeName);
-            if (index >= 0)
-                binding.targets.Add(new BlendShapeTarget
-                {
-                    renderer = renderer,
-                    index = index
-                });
-        }
-        return binding;
-    }
-
-    private MaterialBinding CreateMaterialBinding(
-        DNAEffect_RuntimeMaterialProperty effect,
-        SkinnedMeshRenderer[] renderers)
-    {
-        MaterialBinding binding = new MaterialBinding
-        {
-            propertyId = Shader.PropertyToID(effect.propertyName)
-        };
-        if (string.IsNullOrEmpty(effect.propertyName)) return binding;
-
-        for (int rendererIndex = 0;
-             rendererIndex < renderers.Length;
-             rendererIndex++)
-        {
-            SkinnedMeshRenderer renderer = renderers[rendererIndex];
-            if (renderer == null ||
-                (!string.IsNullOrEmpty(effect.rendererName) &&
-                 !string.Equals(renderer.gameObject.name,
-                     effect.rendererName,
-                     StringComparison.OrdinalIgnoreCase)))
+            for (int rendererIndex = 0;
+                 rendererIndex < renderers.Length;
+                 rendererIndex++)
             {
-                continue;
-            }
-
-            _materialScratch.Clear();
-            renderer.GetSharedMaterials(_materialScratch);
-            int first = effect.materialIndex >= 0
-                ? effect.materialIndex : 0;
-            int last = effect.materialIndex >= 0
-                ? effect.materialIndex : _materialScratch.Count - 1;
-            for (int materialIndex = first;
-                 materialIndex <= last;
-                 materialIndex++)
-            {
-                if (materialIndex < 0 ||
-                    materialIndex >= _materialScratch.Count ||
-                    !effect.MatchesSharedColor(_umaData, renderer,
-                        materialIndex))
+                SkinnedMeshRenderer renderer = renderers[rendererIndex];
+                if (renderer == null ||
+                    (!string.IsNullOrEmpty(effect.rendererName) &&
+                     !string.Equals(renderer.gameObject.name,
+                         effect.rendererName,
+                         StringComparison.OrdinalIgnoreCase)))
                 {
                     continue;
                 }
-                binding.targets.Add(new MaterialTarget
+
+                _materialScratch.Clear();
+                renderer.GetSharedMaterials(_materialScratch);
+                int first = effect.materialIndex >= 0
+                    ? effect.materialIndex : 0;
+                int last = effect.materialIndex >= 0
+                    ? effect.materialIndex : _materialScratch.Count - 1;
+                for (int materialIndex = first;
+                     materialIndex <= last;
+                     materialIndex++)
                 {
-                    renderer = renderer,
-                    materialIndex = materialIndex,
-                    propertyBlock = new MaterialPropertyBlock()
-                });
+                    if (materialIndex < 0 ||
+                        materialIndex >= _materialScratch.Count ||
+                        !effect.MatchesSharedColor(_umaData, renderer,
+                            materialIndex))
+                    {
+                        continue;
+                    }
+                    binding.targets.Add(new MaterialTarget
+                    {
+                        renderer = renderer,
+                        materialIndex = materialIndex,
+                        propertyBlock = new MaterialPropertyBlock()
+                    });
+                }
+            }
+            return binding;
+        }
+
+        private void ApplyCachedBlendShape(
+            DNAEffect_BlendShape effect,
+            float value)
+        {
+            if (!_blendShapeBindings.TryGetValue(effect,
+                out BlendShapeBinding binding)) return;
+            float weight = effect.GetMappedValue(value) * 100f;
+            for (int i = 0; i < binding.targets.Count; i++)
+            {
+                BlendShapeTarget target = binding.targets[i];
+                if (target.renderer != null &&
+                    target.renderer.sharedMesh != null &&
+                    target.index < target.renderer.sharedMesh.blendShapeCount)
+                    target.renderer.SetBlendShapeWeight(target.index, weight);
             }
         }
-        return binding;
-    }
 
-    private void ApplyCachedBlendShape(
-        DNAEffect_BlendShape effect,
-        float value)
-    {
-        if (!_blendShapeBindings.TryGetValue(effect,
-            out BlendShapeBinding binding)) return;
-        float weight = effect.GetMappedValue(value) * 100f;
-        for (int i = 0; i < binding.targets.Count; i++)
+        private void ApplyCachedMaterialProperty(
+            DNAEffect_RuntimeMaterialProperty effect,
+            float value)
         {
-            BlendShapeTarget target = binding.targets[i];
-            if (target.renderer != null &&
-                target.renderer.sharedMesh != null &&
-                target.index < target.renderer.sharedMesh.blendShapeCount)
-                target.renderer.SetBlendShapeWeight(target.index, weight);
-        }
-    }
+            if (!_materialBindings.TryGetValue(effect,
+                out MaterialBinding binding)) return;
+            float mapped = effect.GetMappedValue(value);
+            float floatValue = Mathf.LerpUnclamped(effect.zeroFloatValue,
+                effect.oneFloatValue, mapped);
+            Color colorValue = Color.LerpUnclamped(effect.zeroColorValue,
+                effect.oneColorValue, mapped);
+            Vector4 vectorValue = Vector4.LerpUnclamped(effect.zeroVectorValue,
+                effect.oneVectorValue, mapped);
+            Texture textureValue = mapped < 0.5f
+                ? effect.zeroTextureValue : effect.oneTextureValue;
 
-    private void ApplyCachedMaterialProperty(
-        DNAEffect_RuntimeMaterialProperty effect,
-        float value)
-    {
-        if (!_materialBindings.TryGetValue(effect,
-            out MaterialBinding binding)) return;
-        float mapped = effect.GetMappedValue(value);
-        float floatValue = Mathf.LerpUnclamped(effect.zeroFloatValue,
-            effect.oneFloatValue, mapped);
-        Color colorValue = Color.LerpUnclamped(effect.zeroColorValue,
-            effect.oneColorValue, mapped);
-        Vector4 vectorValue = Vector4.LerpUnclamped(effect.zeroVectorValue,
-            effect.oneVectorValue, mapped);
-        Texture textureValue = mapped < 0.5f
-            ? effect.zeroTextureValue : effect.oneTextureValue;
-
-        for (int i = 0; i < binding.targets.Count; i++)
-        {
-            MaterialTarget target = binding.targets[i];
-            if (target.renderer == null) continue;
-            target.renderer.GetPropertyBlock(target.propertyBlock,
-                target.materialIndex);
-            if ((effect.parameterType &
-                 DNAEffect_RuntimeMaterialProperty.ParameterType.Float) != 0)
-                target.propertyBlock.SetFloat(binding.propertyId, floatValue);
-            if ((effect.parameterType &
-                 DNAEffect_RuntimeMaterialProperty.ParameterType.Color) != 0)
-                target.propertyBlock.SetColor(binding.propertyId, colorValue);
-            if ((effect.parameterType &
-                 DNAEffect_RuntimeMaterialProperty.ParameterType.Vector) != 0)
-                target.propertyBlock.SetVector(binding.propertyId, vectorValue);
-            if ((effect.parameterType &
-                 DNAEffect_RuntimeMaterialProperty.ParameterType.Texture) != 0)
-                target.propertyBlock.SetTexture(binding.propertyId,
-                    textureValue);
-            target.renderer.SetPropertyBlock(target.propertyBlock,
-                target.materialIndex);
-        }
-    }
-
-    private void CacheUmaFacialJoints()
-    {
-        // A compound pose's affectedJoints describes the expression, not every
-        // bone it contains. Older head poses can include lip/tongue transforms;
-        // letting the first such expression classify them as Head silently
-        // disables speech when Mecanim owns the head. Recognize UMA's facial
-        // rig before falling back to expression metadata. Explicit generic and
-        // humanoid mappings (cached next) still take precedence.
-        UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
-        if (skeleton == null || !skeleton.HasBone("Mandible") ||
-            !skeleton.HasBone("LipsSuperior")) return;
-        foreach (int hash in skeleton.BoneHashes)
-        {
-            Transform bone = skeleton.GetBoneTransform(hash);
-            if (bone == null) continue;
-            string name = bone.name;
-            if (name == "Mandible") _boneJoints[hash] = ExpressionJoint.Jaw;
-            else if (name == "Head") _boneJoints[hash] = ExpressionJoint.Head;
-            else if (name == "Neck") _boneJoints[hash] = ExpressionJoint.Neck;
-            else if (name.IndexOf("Lips", StringComparison.Ordinal) >= 0 ||
-                     name.StartsWith("Tongue", StringComparison.Ordinal))
-                _boneJoints[hash] = ExpressionJoint.Other;
-        }
-    }
-
-    private void CacheHumanoidJoints()
-    {
-        if (_animator == null || !_animator.isHuman) return;
-        AddHumanJoint(HumanBodyBones.Head, ExpressionJoint.Head);
-        AddHumanJoint(HumanBodyBones.Neck, ExpressionJoint.Neck);
-        AddHumanJoint(HumanBodyBones.Jaw, ExpressionJoint.Jaw);
-        AddHumanJoint(HumanBodyBones.LeftEye, ExpressionJoint.Eyes);
-        AddHumanJoint(HumanBodyBones.RightEye, ExpressionJoint.Eyes);
-        AddHumanJoint(HumanBodyBones.LeftHand, ExpressionJoint.Hands);
-        AddHumanJoint(HumanBodyBones.RightHand, ExpressionJoint.Hands);
-        HumanBodyBones[] fingers =
-        {
-            HumanBodyBones.LeftThumbProximal,
-            HumanBodyBones.LeftThumbIntermediate,
-            HumanBodyBones.LeftThumbDistal,
-            HumanBodyBones.LeftIndexProximal,
-            HumanBodyBones.LeftIndexIntermediate,
-            HumanBodyBones.LeftIndexDistal,
-            HumanBodyBones.LeftMiddleProximal,
-            HumanBodyBones.LeftMiddleIntermediate,
-            HumanBodyBones.LeftMiddleDistal,
-            HumanBodyBones.LeftRingProximal,
-            HumanBodyBones.LeftRingIntermediate,
-            HumanBodyBones.LeftRingDistal,
-            HumanBodyBones.LeftLittleProximal,
-            HumanBodyBones.LeftLittleIntermediate,
-            HumanBodyBones.LeftLittleDistal,
-            HumanBodyBones.RightThumbProximal,
-            HumanBodyBones.RightThumbIntermediate,
-            HumanBodyBones.RightThumbDistal,
-            HumanBodyBones.RightIndexProximal,
-            HumanBodyBones.RightIndexIntermediate,
-            HumanBodyBones.RightIndexDistal,
-            HumanBodyBones.RightMiddleProximal,
-            HumanBodyBones.RightMiddleIntermediate,
-            HumanBodyBones.RightMiddleDistal,
-            HumanBodyBones.RightRingProximal,
-            HumanBodyBones.RightRingIntermediate,
-            HumanBodyBones.RightRingDistal,
-            HumanBodyBones.RightLittleProximal,
-            HumanBodyBones.RightLittleIntermediate,
-            HumanBodyBones.RightLittleDistal
-        };
-        for (int i = 0; i < fingers.Length; i++)
-            AddHumanJoint(fingers[i], ExpressionJoint.Hands);
-    }
-
-    private void AddHumanJoint(HumanBodyBones bone, ExpressionJoint joint)
-    {
-        Transform target = _animator.GetBoneTransform(bone);
-        if (target != null)
-            _boneJoints[UMAUtils.StringToHash(target.name)] = joint;
-    }
-
-    private void CacheGenericJoints()
-    {
-        if (genericBoneJoints == null) return;
-        for (int i = 0; i < genericBoneJoints.Count; i++)
-        {
-            ExpressionBoneJoint item = genericBoneJoints[i];
-            if (item != null && !string.IsNullOrWhiteSpace(item.boneName))
-                _boneJoints[UMAUtils.StringToHash(item.boneName)] =
-                    item.joint;
-        }
-    }
-
-    private bool ShouldApplyBone(int hash)
-    {
-        if (!_boneJoints.TryGetValue(hash, out ExpressionJoint joints))
-            return true;
-        if ((joints & ExpressionJoint.Eyes) != 0 &&
-            !overrideMecanimEyes) return false;
-        if ((joints & ExpressionJoint.Jaw) != 0 &&
-            !overrideMecanimJaw) return false;
-        if ((joints & ExpressionJoint.Neck) != 0 &&
-            !overrideMecanimNeck) return false;
-        if ((joints & ExpressionJoint.Head) != 0 &&
-            !overrideMecanimHead) return false;
-        if ((joints & ExpressionJoint.Hands) != 0 &&
-            !overrideMecanimHands) return false;
-        return true;
-    }
-
-    private UMAExpressionGroup ResolveGroup()
-    {
-        if (expressionGroupOverride != null) return expressionGroupOverride;
-        RaceData race = ResolveRace();
-        return race != null ? race.expressionGroup : null;
-    }
-
-    private RaceData ResolveRace()
-    {
-        RaceData race = null;
-        if (_avatar != null && _avatar.activeRace != null)
-            race = _avatar.activeRace.racedata;
-        if (race == null && _umaData != null && _umaData.umaRecipe != null)
-            race = _umaData.umaRecipe.raceData;
-        if (race == null && _avatar != null &&
-            _avatar.activeRace != null &&
-            !string.IsNullOrWhiteSpace(_avatar.activeRace.name))
-        {
-            // RaceSetter.racedata is only a fast, nonserialized cache. It is
-            // normally empty after a domain reload and before the first avatar
-            // build. The data property performs the indexed lookup used by DCA.
-            race = _avatar.activeRace.data;
-        }
-        return race;
-    }
-
-    private UMAExpressionSet ResolveLegacyExpressionSet()
-    {
-        if (expressionGroupOverride != null) return null;
-        RaceData race = ResolveRace();
-        return race != null && race.expressionGroup == null
-            ? race.expressionSet : null;
-    }
-
-    private void BindGroup(UMAExpressionGroup group)
-    {
-        Dictionary<string, SourceSnapshot> retained = CaptureSources();
-        ClearLegacyRuntimeObjects();
-        _runtimeExpressions.Clear();
-        _expressionLookup.Clear();
-        _resolvedGroup = group;
-        _resolvedLegacyExpressionSet =
-            group == null ? ResolveLegacyExpressionSet() : null;
-        if (group != null && group.expressions != null)
-            for (int i = 0; i < group.expressions.Count; i++)
-                AddDefinition(group.expressions[i]);
-        else if (_resolvedLegacyExpressionSet != null)
-            AddLegacyExpressionSetDefinitions(
-                _resolvedLegacyExpressionSet);
-        else AddLegacyDefinitions();
-        _runtimeExpressions.Sort(CompareExpressions);
-        RebuildLookup();
-        RestoreSources(retained);
-        ResolveRoleIndices();
-        _bindingsValid = false;
-        _immediateDirty = true;
-        GroupRebound?.Invoke();
-        GroupReboundAction?.Invoke(_resolvedGroup);
-    }
-
-    private void AddLegacyExpressionSetDefinitions(
-        UMAExpressionSet expressionSet)
-    {
-        for (int i = 0; i < ExpressionPlayer.PoseCount; i++)
-        {
-            string id = ExpressionPlayer.PoseNames[i];
-            DNA dna = ScriptableObject.CreateInstance<DNA>();
-            dna.hideFlags = HideFlags.DontSave;
-            dna.name = id + "_RuntimeExpressionDNA";
-            dna.displayName = id.Replace('_', ' ');
-            dna.description = "Transient compatibility DNA generated from " +
-                expressionSet.name + ".";
-            dna.defaultValue = 0.5f;
-            _legacyRuntimeObjects.Add(dna);
-
-            UMAExpressionSet.PosePair pair =
-                expressionSet.posePairs != null &&
-                i < expressionSet.posePairs.Length
-                    ? expressionSet.posePairs[i] : null;
-            if (pair != null)
+            for (int i = 0; i < binding.targets.Count; i++)
             {
-                if (pair.primary != null)
-                    dna.effects.Add(CreateLegacyPoseEffect(
-                        pair.primary, false));
-                if (pair.inverse != null)
-                    dna.effects.Add(CreateLegacyPoseEffect(
-                        pair.inverse, true));
+                MaterialTarget target = binding.targets[i];
+                if (target.renderer == null) continue;
+                target.renderer.GetPropertyBlock(target.propertyBlock,
+                    target.materialIndex);
+                if ((effect.parameterType &
+                     DNAEffect_RuntimeMaterialProperty.ParameterType.Float) != 0)
+                    target.propertyBlock.SetFloat(binding.propertyId, floatValue);
+                if ((effect.parameterType &
+                     DNAEffect_RuntimeMaterialProperty.ParameterType.Color) != 0)
+                    target.propertyBlock.SetColor(binding.propertyId, colorValue);
+                if ((effect.parameterType &
+                     DNAEffect_RuntimeMaterialProperty.ParameterType.Vector) != 0)
+                    target.propertyBlock.SetVector(binding.propertyId, vectorValue);
+                // SetTexture throws on null; an unset texture leaves the property as it is.
+                if ((effect.parameterType &
+                     DNAEffect_RuntimeMaterialProperty.ParameterType.Texture) != 0 &&
+                    textureValue != null)
+                    target.propertyBlock.SetTexture(binding.propertyId,
+                        textureValue);
+                target.renderer.SetPropertyBlock(target.propertyBlock,
+                    target.materialIndex);
             }
+        }
 
-            AddDefinition(new UMAExpressionDefinition
+        private void CacheUmaFacialJoints()
+        {
+            // A compound pose's affectedJoints describes the expression, not every
+            // bone it contains. Older head poses can include lip/tongue transforms;
+            // letting the first such expression classify them as Head silently
+            // disables speech when Mecanim owns the head. Recognize UMA's facial
+            // rig before falling back to expression metadata. Explicit generic and
+            // humanoid mappings (cached next) still take precedence.
+            UMASkeleton skeleton = _umaData != null ? _umaData.skeleton : null;
+            if (skeleton == null || !skeleton.HasBone("Mandible") ||
+                !skeleton.HasBone("LipsSuperior")) return;
+            foreach (int hash in skeleton.BoneHashes)
             {
-                id = id,
-                displayName = id.Replace('_', ' '),
-                dna = dna,
-                roles = GetLegacyRoles(i),
-                affectedJoints = GetLegacyJoints(i),
-                priority = i,
-                blendMode = ExpressionBlendMode.Override,
-                blinkClosedValue = 0f
-            });
-        }
-    }
-
-    private static DNAEffect_BonePose CreateLegacyPoseEffect(
-        UMABonePose pose,
-        bool inverse)
-    {
-        return new DNAEffect_BonePose
-        {
-            EffectName = inverse ? "Inverse Pose" : "Primary Pose",
-            bonePose = pose,
-            minMapping = 0f,
-            maxMapping = 1f,
-            curve = inverse
-                ? new AnimationCurve(
-                    new Keyframe(0f, 1f, -2f, -2f),
-                    new Keyframe(0.5f, 0f, -2f, 0f),
-                    new Keyframe(1f, 0f, 0f, 0f))
-                : new AnimationCurve(
-                    new Keyframe(0f, 0f, 0f, 0f),
-                    new Keyframe(0.5f, 0f, 0f, 2f),
-                    new Keyframe(1f, 1f, 2f, 2f))
-        };
-    }
-
-    private static ExpressionRole GetLegacyRoles(int index)
-    {
-        switch (index)
-        {
-            case 26: return ExpressionRole.BlinkLeft;
-            case 27: return ExpressionRole.BlinkRight;
-            case 28: return ExpressionRole.EyeVerticalLeft;
-            case 29: return ExpressionRole.EyeVerticalRight;
-            case 30: return ExpressionRole.EyeHorizontalLeft;
-            case 31: return ExpressionRole.EyeHorizontalRight;
-        }
-        if (index >= 44) return ExpressionRole.Emotion;
-        if (index >= 6 && index <= 35) return ExpressionRole.Viseme;
-        return ExpressionRole.Custom;
-    }
-
-    private static ExpressionJoint GetLegacyJoints(int index)
-    {
-        ExpressionPlayer.MecanimJoint legacy =
-            index >= 0 &&
-            index < ExpressionPlayer.MecanimAlternate.Length
-                ? ExpressionPlayer.MecanimAlternate[index]
-                : ExpressionPlayer.MecanimJoint.None;
-        ExpressionJoint result = ExpressionJoint.None;
-        if ((legacy & ExpressionPlayer.MecanimJoint.Head) != 0)
-            result |= ExpressionJoint.Head;
-        if ((legacy & ExpressionPlayer.MecanimJoint.Neck) != 0)
-            result |= ExpressionJoint.Neck;
-        if ((legacy & ExpressionPlayer.MecanimJoint.Jaw) != 0)
-            result |= ExpressionJoint.Jaw;
-        if ((legacy & ExpressionPlayer.MecanimJoint.Eye) != 0)
-            result |= ExpressionJoint.Eyes;
-        if ((legacy & ExpressionPlayer.MecanimJoint.Hands) != 0)
-            result |= ExpressionJoint.Hands;
-        return result == ExpressionJoint.None
-            ? ExpressionJoint.Other : result;
-    }
-
-    private void ClearLegacyRuntimeObjects()
-    {
-        for (int i = 0; i < _legacyRuntimeObjects.Count; i++)
-        {
-            UnityEngine.Object item = _legacyRuntimeObjects[i];
-            if (item == null) continue;
-            if (Application.isPlaying) Destroy(item);
-            else DestroyImmediate(item);
-        }
-        _legacyRuntimeObjects.Clear();
-        _resolvedLegacyExpressionSet = null;
-    }
-
-    private void AddDefinition(UMAExpressionDefinition definition)
-    {
-        if (definition == null || string.IsNullOrWhiteSpace(definition.id) ||
-            definition.dna == null ||
-            _expressionLookup.ContainsKey(definition.id)) return;
-        RuntimeExpression runtime = new RuntimeExpression
-        {
-            definition = definition,
-            target = definition.DefaultValue,
-            effective = definition.DefaultValue,
-            previousHeadMotionValue = definition.DefaultValue,
-            lastSource = ExpressionSource.Manual
-        };
-        if (definition.dna.effects != null)
-            for (int i = 0; i < definition.dna.effects.Count; i++)
-            {
-                DNAEffect effect = definition.dna.effects[i];
-                if (effect == null || !effect.enabled) continue;
-                runtime.phases |= effect.ExpressionPhases;
-                if (effect.RequiresExpressionBuild)
-                    runtime.buildType |= effect.AreaEffect;
+                Transform bone = skeleton.GetBoneTransform(hash);
+                if (bone == null) continue;
+                string name = bone.name;
+                if (name == "Mandible") _boneJoints[hash] = ExpressionJoint.Jaw;
+                else if (name == "Head") _boneJoints[hash] = ExpressionJoint.Head;
+                else if (name == "Neck") _boneJoints[hash] = ExpressionJoint.Neck;
+                else if (name.IndexOf("Lips", StringComparison.Ordinal) >= 0 ||
+                         name.StartsWith("Tongue", StringComparison.Ordinal))
+                    _boneJoints[hash] = ExpressionJoint.Other;
             }
-        _expressionLookup.Add(definition.id, _runtimeExpressions.Count);
-        _runtimeExpressions.Add(runtime);
-    }
+        }
 
-    private void AddLegacyDefinitions()
-    {
-        if (Expressions == null) return;
-        for (int i = 0; i < Expressions.Count; i++)
+        private void CacheHumanoidJoints()
         {
-            DynamicExpression legacy = Expressions[i];
-            if (legacy == null || legacy.ExpressionDNA == null) continue;
-            string id = !string.IsNullOrWhiteSpace(legacy.Name)
-                ? legacy.Name : legacy.ExpressionDNA.displayName;
-            UMAExpressionDefinition definition = new UMAExpressionDefinition
+            if (_animator == null || !_animator.isHuman) return;
+            AddHumanJoint(HumanBodyBones.Head, ExpressionJoint.Head);
+            AddHumanJoint(HumanBodyBones.Neck, ExpressionJoint.Neck);
+            AddHumanJoint(HumanBodyBones.Jaw, ExpressionJoint.Jaw);
+            AddHumanJoint(HumanBodyBones.LeftEye, ExpressionJoint.Eyes);
+            AddHumanJoint(HumanBodyBones.RightEye, ExpressionJoint.Eyes);
+            AddHumanJoint(HumanBodyBones.LeftHand, ExpressionJoint.Hands);
+            AddHumanJoint(HumanBodyBones.RightHand, ExpressionJoint.Hands);
+            HumanBodyBones[] fingers =
             {
-                id = id,
-                displayName = id,
-                dna = legacy.ExpressionDNA,
-                affectedJoints = ExpressionJoint.Other
+                HumanBodyBones.LeftThumbProximal,
+                HumanBodyBones.LeftThumbIntermediate,
+                HumanBodyBones.LeftThumbDistal,
+                HumanBodyBones.LeftIndexProximal,
+                HumanBodyBones.LeftIndexIntermediate,
+                HumanBodyBones.LeftIndexDistal,
+                HumanBodyBones.LeftMiddleProximal,
+                HumanBodyBones.LeftMiddleIntermediate,
+                HumanBodyBones.LeftMiddleDistal,
+                HumanBodyBones.LeftRingProximal,
+                HumanBodyBones.LeftRingIntermediate,
+                HumanBodyBones.LeftRingDistal,
+                HumanBodyBones.LeftLittleProximal,
+                HumanBodyBones.LeftLittleIntermediate,
+                HumanBodyBones.LeftLittleDistal,
+                HumanBodyBones.RightThumbProximal,
+                HumanBodyBones.RightThumbIntermediate,
+                HumanBodyBones.RightThumbDistal,
+                HumanBodyBones.RightIndexProximal,
+                HumanBodyBones.RightIndexIntermediate,
+                HumanBodyBones.RightIndexDistal,
+                HumanBodyBones.RightMiddleProximal,
+                HumanBodyBones.RightMiddleIntermediate,
+                HumanBodyBones.RightMiddleDistal,
+                HumanBodyBones.RightRingProximal,
+                HumanBodyBones.RightRingIntermediate,
+                HumanBodyBones.RightRingDistal,
+                HumanBodyBones.RightLittleProximal,
+                HumanBodyBones.RightLittleIntermediate,
+                HumanBodyBones.RightLittleDistal
             };
-            AddDefinition(definition);
-            if (legacy.ExpressionValue != null &&
-                _expressionLookup.TryGetValue(id, out int index))
+            for (int i = 0; i < fingers.Length; i++)
+                AddHumanJoint(fingers[i], ExpressionJoint.Hands);
+        }
+
+        private void AddHumanJoint(HumanBodyBones bone, ExpressionJoint joint)
+        {
+            Transform target = _animator.GetBoneTransform(bone);
+            if (target != null)
+                _boneJoints[UMAUtils.StringToHash(target.name)] = joint;
+        }
+
+        private void CacheGenericJoints()
+        {
+            if (genericBoneJoints == null) return;
+            for (int i = 0; i < genericBoneJoints.Count; i++)
             {
-                RuntimeExpression runtime = _runtimeExpressions[index];
-                runtime.sourceValues[(int)ExpressionSource.Manual] =
-                    Mathf.Clamp01(legacy.ExpressionValue.Value);
-                runtime.sourceActive[(int)ExpressionSource.Manual] = true;
-            }
-        }
-    }
-
-    private static int CompareExpressions(RuntimeExpression left,
-        RuntimeExpression right)
-    {
-        int priority = left.definition.priority.CompareTo(
-            right.definition.priority);
-        return priority != 0 ? priority : string.Compare(left.definition.id,
-            right.definition.id, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private void RebuildLookup()
-    {
-        _expressionLookup.Clear();
-        for (int i = 0; i < _runtimeExpressions.Count; i++)
-        {
-            string id = _runtimeExpressions[i].definition.id;
-            if (!_expressionLookup.ContainsKey(id))
-                _expressionLookup.Add(id, i);
-        }
-    }
-
-    private void ResolveRoleIndices()
-    {
-        _blinkLeftIndex = FindRole(ExpressionRole.BlinkLeft);
-        _blinkRightIndex = FindRole(ExpressionRole.BlinkRight);
-        _eyeHorizontalIndex = FindRole(ExpressionRole.EyeHorizontal);
-        _eyeVerticalIndex = FindRole(ExpressionRole.EyeVertical);
-        _eyeHorizontalLeftIndex =
-            FindRole(ExpressionRole.EyeHorizontalLeft);
-        _eyeHorizontalRightIndex =
-            FindRole(ExpressionRole.EyeHorizontalRight);
-        _eyeVerticalLeftIndex = FindRole(ExpressionRole.EyeVerticalLeft);
-        _eyeVerticalRightIndex =
-            FindRole(ExpressionRole.EyeVerticalRight);
-    }
-
-    private int FindRole(ExpressionRole role)
-    {
-        for (int i = 0; i < _runtimeExpressions.Count; i++)
-            if ((_runtimeExpressions[i].definition.roles & role) != 0)
-                return i;
-        return -1;
-    }
-
-    private void UpdateBlinking()
-    {
-        if (!EnableBlinking ||
-            (_blinkLeftIndex < 0 && _blinkRightIndex < 0))
-        {
-            if (_isBlinking) EndBlink();
-            return;
-        }
-        if (!_isBlinking && Time.time >= _nextBlinkTime)
-        {
-            _isBlinking = true;
-            _blinkStartTime = Time.time;
-        }
-        if (!_isBlinking) return;
-        float progress = (Time.time - _blinkStartTime) / BlinkDuration;
-        if (progress >= 1f)
-        {
-            EndBlink();
-            return;
-        }
-        float amount = BlinkCurve != null
-            ? Mathf.Clamp01(BlinkCurve.Evaluate(progress))
-            : Mathf.Sin(progress * Mathf.PI);
-        SetProceduralBlinkAmount(amount);
-    }
-
-    private void EndBlink()
-    {
-        _isBlinking = false;
-        ResetRoleSource(_blinkLeftIndex, ExpressionSource.ProceduralBlink);
-        if (_blinkRightIndex != _blinkLeftIndex)
-            ResetRoleSource(_blinkRightIndex,
-                ExpressionSource.ProceduralBlink);
-        ScheduleNextBlink();
-    }
-
-    private void ScheduleNextBlink() =>
-        _nextBlinkTime = Time.time + UnityEngine.Random.Range(
-            Mathf.Min(BlinkIntervalMin, BlinkIntervalMax),
-            Mathf.Max(BlinkIntervalMin, BlinkIntervalMax));
-
-    private void UpdateSaccadesAndGaze()
-    {
-        UpdateSaccade();
-        _ikActive = false;
-        _ikEyesWeight = 0f;
-        Vector2 gaze = Vector2.zero;
-        Transform origin = GetGazeOrigin();
-        Vector3 animatorDirection = origin.forward;
-        float animatorDistance = 10f;
-        bool validGazeTarget = false;
-        if (EnableLookAt && LookAtTarget != null)
-        {
-            Vector3 toTarget = LookAtTarget.position - origin.position;
-            float distance = toTarget.magnitude;
-            if (distance >= LookAtMinDistance &&
-                distance <= LookAtMaxDistance &&
-                Vector3.Dot(origin.forward, toTarget) > 0f)
-            {
-                Vector3 local = origin.InverseTransformDirection(
-                    toTarget.normalized);
-                float horizontal = Mathf.Atan2(local.x, local.z) *
-                    Mathf.Rad2Deg;
-                float vertical = -Mathf.Asin(Mathf.Clamp(local.y, -1f, 1f)) *
-                    Mathf.Rad2Deg;
-                gaze.x = Mathf.Clamp(horizontal /
-                    Mathf.Max(0.01f, EyeMaxAngle), -1f, 1f);
-                gaze.y = Mathf.Clamp(vertical /
-                    Mathf.Max(0.01f, ClampVerticalAngle), -1f, 1f);
-                float angle = Vector3.Angle(origin.forward, toTarget);
-                float assist = Mathf.InverseLerp(HeadAssistStartAngle,
-                    Mathf.Max(HeadAssistStartAngle + 0.01f,
-                        HeadAssistFullAngle), angle);
-                _ikLookPosition = LookAtTarget.position;
-                _ikHeadWeight = HeadWeight * assist;
-                _ikBodyWeight = BodyWeight * assist;
-                animatorDirection = toTarget.normalized;
-                animatorDistance = distance;
-                validGazeTarget = true;
+                ExpressionBoneJoint item = genericBoneJoints[i];
+                if (item != null && !string.IsNullOrWhiteSpace(item.boneName))
+                    _boneJoints[UMAUtils.StringToHash(item.boneName)] =
+                        item.joint;
             }
         }
 
-        Vector2 combined = Vector2.ClampMagnitude(gaze + _saccade, 1f);
-        bool hasDNAEyeDirection =
-            _eyeHorizontalIndex >= 0 || _eyeVerticalIndex >= 0 ||
-            _eyeHorizontalLeftIndex >= 0 ||
-            _eyeHorizontalRightIndex >= 0 ||
-            _eyeVerticalLeftIndex >= 0 ||
-            _eyeVerticalRightIndex >= 0;
-        if (hasDNAEyeDirection)
+        private bool ShouldApplyBone(int hash)
         {
-            SetProceduralGazeDirection(combined);
+            if (!_boneJoints.TryGetValue(hash, out ExpressionJoint joints))
+                return true;
+            if ((joints & ExpressionJoint.Eyes) != 0 &&
+                !overrideMecanimEyes) return false;
+            if ((joints & ExpressionJoint.Jaw) != 0 &&
+                !overrideMecanimJaw) return false;
+            if ((joints & ExpressionJoint.Neck) != 0 &&
+                !overrideMecanimNeck) return false;
+            if ((joints & ExpressionJoint.Head) != 0 &&
+                !overrideMecanimHead) return false;
+            if ((joints & ExpressionJoint.Hands) != 0 &&
+                !overrideMecanimHands) return false;
+            return true;
         }
 
-        if (_animator == null || !_animator.isHuman) return;
-        if (validGazeTarget)
+        private UMAExpressionGroup ResolveGroup()
         {
-            _ikActive = true;
-            if (hasDNAEyeDirection)
+            if (expressionGroupOverride != null) return expressionGroupOverride;
+            RaceData race = ResolveRace();
+            return race != null ? race.expressionGroup : null;
+        }
+
+        private RaceData ResolveRace()
+        {
+            RaceData race = null;
+            if (_avatar != null && _avatar.activeRace != null)
+                race = _avatar.activeRace.racedata;
+            if (race == null && _umaData != null && _umaData.umaRecipe != null)
+                race = _umaData.umaRecipe.raceData;
+            if (race == null && _avatar != null &&
+                _avatar.activeRace != null &&
+                !string.IsNullOrWhiteSpace(_avatar.activeRace.name))
             {
-                // DNA owns the eyes; Animator IK remains head/body assistance.
-                _ikEyesWeight = 0f;
+                // RaceSetter.racedata is only a fast, nonserialized cache. It is
+                // normally empty after a domain reload and before the first avatar
+                // build. The data property performs the indexed lookup used by DCA.
+                race = _avatar.activeRace.data;
             }
-            else
-            {
-                SetAnimatorSaccadeTarget(origin, animatorDirection,
-                    animatorDistance);
-                _ikEyesWeight = EyesWeight;
-            }
+            return race;
         }
-        else if (!hasDNAEyeDirection && EnableSaccades)
+
+        private UMAExpressionSet ResolveLegacyExpressionSet()
         {
-            // A humanoid without DNA eye roles still receives autonomous eye
-            // movement, even when no explicit look-at target is assigned.
-            _ikHeadWeight = 0f;
-            _ikBodyWeight = 0f;
-            SetAnimatorSaccadeTarget(origin, origin.forward, 10f);
-            _ikEyesWeight = EyesWeight;
-            _ikActive = true;
+            if (expressionGroupOverride != null) return null;
+            RaceData race = ResolveRace();
+            return race != null && race.expressionGroup == null
+                ? race.expressionSet : null;
         }
-    }
 
-    private void SetAnimatorSaccadeTarget(
-        Transform origin,
-        Vector3 worldDirection,
-        float distance)
-    {
-        Vector3 localDirection =
-            origin.InverseTransformDirection(worldDirection);
-        Quaternion offset = Quaternion.Euler(
-            _saccade.y * SaccadeMaxOffsetDeg,
-            _saccade.x * SaccadeMaxOffsetDeg,
-            0f);
-        Vector3 adjusted = origin.TransformDirection(
-            offset * localDirection).normalized;
-        _ikLookPosition = origin.position +
-            adjusted * Mathf.Max(0.5f, distance);
-    }
-
-    private float GetBlinkValue(int index, float amount)
-    {
-        if (index < 0 || index >= _runtimeExpressions.Count)
-            return 0f;
-        UMAExpressionDefinition definition =
-            _runtimeExpressions[index].definition;
-        return Mathf.Lerp(definition.DefaultValue,
-            definition.blinkClosedValue, amount);
-    }
-
-    /// <summary>
-    /// Writes a normalized blink amount through the role-based procedural
-    /// source. Zero releases the procedural source; one is fully closed.
-    /// </summary>
-    public void SetProceduralBlinkAmount(float amount)
-    {
-        Initialize();
-        amount = Mathf.Clamp01(amount);
-        BeginExpressionBatch();
-        try
+        private void BindGroup(UMAExpressionGroup group)
         {
-            if (amount <= 0f)
-            {
-                ResetRoleSource(_blinkLeftIndex,
-                    ExpressionSource.ProceduralBlink);
-                if (_blinkRightIndex != _blinkLeftIndex)
-                    ResetRoleSource(_blinkRightIndex,
-                        ExpressionSource.ProceduralBlink);
-                return;
-            }
-            SetProceduralRoleValue(_blinkLeftIndex,
-                GetBlinkValue(_blinkLeftIndex, amount),
-                ExpressionSource.ProceduralBlink);
-            if (_blinkRightIndex != _blinkLeftIndex)
-                SetProceduralRoleValue(_blinkRightIndex,
-                    GetBlinkValue(_blinkRightIndex, amount),
-                    ExpressionSource.ProceduralBlink);
-        }
-        finally
-        {
-            EndExpressionBatch();
-        }
-    }
-
-    private void SetEyeDirection(int sharedIndex, int leftIndex,
-        int rightIndex, float normalizedDirection, bool invertRight)
-    {
-        if (sharedIndex >= 0)
-        {
-            SetDirectionalRoleValue(sharedIndex, normalizedDirection);
-            return;
-        }
-        SetDirectionalRoleValue(leftIndex, normalizedDirection);
-        if (rightIndex != leftIndex)
-            SetDirectionalRoleValue(rightIndex, invertRight
-                ? -normalizedDirection
-                : normalizedDirection);
-    }
-
-    private void SetDirectionalRoleValue(
-        int index,
-        float normalizedDirection)
-    {
-        if (index < 0 || index >= _runtimeExpressions.Count) return;
-        float neutral = _runtimeExpressions[index].definition.DefaultValue;
-        float value = normalizedDirection < 0f
-            ? Mathf.Lerp(neutral, 0f, -normalizedDirection)
-            : Mathf.Lerp(neutral, 1f, normalizedDirection);
-        SetProceduralRoleValue(index, value,
-            ExpressionSource.ProceduralGaze);
-    }
-
-    /// <summary>
-    /// Writes normalized horizontal and vertical eye directions through
-    /// shared or sided expression roles.
-    /// </summary>
-    public void SetProceduralGazeDirection(Vector2 direction)
-    {
-        Initialize();
-        direction.x = Mathf.Clamp(direction.x, -1f, 1f);
-        direction.y = Mathf.Clamp(direction.y, -1f, 1f);
-        BeginExpressionBatch();
-        try
-        {
-            SetEyeDirection(_eyeHorizontalIndex,
-                _eyeHorizontalLeftIndex, _eyeHorizontalRightIndex,
-                direction.x, true);
-            SetEyeDirection(_eyeVerticalIndex,
-                _eyeVerticalLeftIndex, _eyeVerticalRightIndex,
-                direction.y, false);
-        }
-        finally
-        {
-            EndExpressionBatch();
-        }
-    }
-
-    private Transform GetGazeOrigin()
-    {
-        if (_animator != null && _animator.isHuman)
-        {
-            Transform head = _animator.GetBoneTransform(HumanBodyBones.Head);
-            if (head != null) return head;
-        }
-        return transform;
-    }
-
-    private void UpdateSaccade()
-    {
-        if (!EnableSaccades)
-        {
-            _saccade = Vector2.zero;
-            return;
-        }
-        if (Time.time >= _nextSaccadeTime)
-        {
-            _saccadeFrom = _saccade;
-            float scale = Mathf.Clamp01(SaccadeMaxOffsetDeg /
-                Mathf.Max(0.01f, EyeMaxAngle));
-            _saccadeTo = new Vector2(
-                UnityEngine.Random.Range(-1f, 1f),
-                UnityEngine.Random.Range(-1f, 1f) *
-                SaccadeVerticalBias) * scale;
-            _saccadeStartTime = Time.time;
-            _saccadeDuration = UnityEngine.Random.Range(0.025f, 0.08f);
-            ScheduleNextSaccade();
-        }
-        float p = Mathf.Clamp01((Time.time - _saccadeStartTime) /
-            Mathf.Max(0.001f, _saccadeDuration));
-        _saccade = Vector2.Lerp(_saccadeFrom, _saccadeTo,
-            p * p * (3f - 2f * p));
-    }
-
-    private void ScheduleNextSaccade() =>
-        _nextSaccadeTime = Time.time + UnityEngine.Random.Range(
-            Mathf.Min(SaccadeIntervalMin, SaccadeIntervalMax),
-            Mathf.Max(SaccadeIntervalMin, SaccadeIntervalMax));
-
-    private void SetProceduralRoleValue(int index, float value,
-        ExpressionSource source)
-    {
-        if (index >= 0) SetExpression(index, value, source);
-    }
-
-    private void ResetRoleSource(int index, ExpressionSource source)
-    {
-        if (index >= 0) ResetExpression(index, source);
-    }
-
-    private void ResetProceduralSources()
-    {
-        BeginExpressionBatch();
-        ResetAllExpressions(ExpressionSource.ProceduralBlink);
-        ResetAllExpressions(ExpressionSource.ProceduralGaze);
-        EndExpressionBatch();
-    }
-
-    private void QueueBuild(DNAInstanceCollection.DNABuildType buildType)
-    {
-        _pendingBuildType |= buildType;
-        _buildRequestTime = Time.unscaledTime;
-        if (_isBuilding) _buildChangedWhileBuilding = true;
-        else _buildPending = true;
-    }
-
-    private void ProcessPendingBuild()
-    {
-        if (!_buildPending || _isBuilding || _avatar == null ||
-            !_avatar.BuildCharacterEnabled) return;
-        if (Time.unscaledTime - _buildRequestTime <
-            buildDebounceSeconds) return;
-        bool mesh = (_pendingBuildType &
-            (DNAInstanceCollection.DNABuildType.Mesh |
-             DNAInstanceCollection.DNABuildType.MeshModifiers)) != 0;
-        if (mesh && Time.unscaledTime - _lastMeshBuildTime <
-            meshBuildMinimumInterval) return;
-        bool texture = (_pendingBuildType &
-            (DNAInstanceCollection.DNABuildType.Texture |
-             DNAInstanceCollection.DNABuildType.SharedColors)) != 0;
-        if (mesh) _lastMeshBuildTime = Time.unscaledTime;
-        _buildPending = false;
-        CaptureBuildSnapshot();
-        using (BuildRequestMarker.Auto())
-            _avatar.ForceUpdate(true, texture, mesh);
-    }
-
-    private void CaptureBuildSnapshot()
-    {
-        _buildSnapshot.Clear();
-        for (int i = 0; i < _runtimeExpressions.Count; i++)
-        {
-            RuntimeExpression expression = _runtimeExpressions[i];
-            if (expression.definition.dna != null &&
-                HasBuildPhase(expression.phases))
-                _buildSnapshot.Add(new BuildValue
-                {
-                    dna = expression.definition.dna,
-                    value = expression.effective
-                });
-        }
-    }
-
-    private void Subscribe()
-    {
-        if (_subscribed || _umaData == null) return;
-        _umaData.RegisterRuntimeDNAProvider(this);
-        _umaData.OnCharacterBegun += OnCharacterBegun;
-        _umaData.OnCharacterUpdated += OnCharacterUpdated;
-        if (_avatar != null)
-            _avatar.BuildCharacterBegun.AddListener(OnBuildCharacterBegun);
-        _subscribed = true;
-    }
-
-    private void Unsubscribe()
-    {
-        if (!_subscribed) return;
-        if (_umaData != null)
-        {
-            _umaData.UnregisterRuntimeDNAProvider(this);
-            _umaData.OnCharacterBegun -= OnCharacterBegun;
-            _umaData.OnCharacterUpdated -= OnCharacterUpdated;
-        }
-        if (_avatar != null)
-            _avatar.BuildCharacterBegun.RemoveListener(OnBuildCharacterBegun);
-        _subscribed = false;
-    }
-
-    private void OnBuildCharacterBegun(UMAData data) => BeginBuild(data);
-    private void OnCharacterBegun(UMAData data) => BeginBuild(data);
-
-    private void BeginBuild(UMAData data)
-    {
-        _umaData = data != null ? data : _umaData;
-        if (_isBuilding)
-        {
-            return;
-        }
-        _isBuilding = true;
-        _buildChangedWhileBuilding = false;
-        _bindingsValid = false;
-        RemoveNaturalHeadMotion();
-        RestoreControlledBones();
-        CaptureBuildSnapshot();
-        _pendingBuildType = DNAInstanceCollection.DNABuildType.None;
-    }
-
-    private void OnCharacterUpdated(UMAData data)
-    {
-        _umaData = data != null ? data : _umaData;
-        _animator = GetComponent<Animator>();
-        if (_animator == null) _animator = GetComponentInChildren<Animator>();
-        Dictionary<string, SourceSnapshot> retained = CaptureSources();
-        UMAExpressionGroup group = ResolveGroup();
-        UMAExpressionSet legacy =
-            group == null ? ResolveLegacyExpressionSet() : null;
-        if (group != _resolvedGroup ||
-            legacy != _resolvedLegacyExpressionSet)
-        {
-            BindGroup(group);
+            Dictionary<string, SourceSnapshot> retained = CaptureSources();
+            ClearLegacyRuntimeObjects();
+            _runtimeExpressions.Clear();
+            _expressionLookup.Clear();
+            _resolvedGroup = group;
+            _resolvedLegacyExpressionSet =
+                group == null ? ResolveLegacyExpressionSet() : null;
+            if (group != null && group.expressions != null)
+                for (int i = 0; i < group.expressions.Count; i++)
+                    AddDefinition(group.expressions[i]);
+            else if (_resolvedLegacyExpressionSet != null)
+                AddLegacyExpressionSetDefinitions(
+                    _resolvedLegacyExpressionSet);
+            else AddLegacyDefinitions();
+            _runtimeExpressions.Sort(CompareExpressions);
+            RebuildLookup();
             RestoreSources(retained);
+            ResolveRoleIndices();
+            _bindingsValid = false;
+            _immediateDirty = true;
+            GroupRebound?.Invoke();
+            GroupReboundAction?.Invoke(_resolvedGroup);
         }
-        _isBuilding = false;
-        _bindingsValid = false;
-        RefreshBindings();
-        EvaluateValues(0f, true);
-        _immediateDirty = true;
-        ApplyImmediateEffects();
-        if (_buildChangedWhileBuilding)
-        {
-            _buildPending = true;
-            _buildRequestTime = Time.unscaledTime;
-        }
-        else
-        {
-            _buildPending = false;
-            _pendingBuildType = DNAInstanceCollection.DNABuildType.None;
-        }
-    }
 
-    public DNAInstanceCollection.DNABuildType AfterRecipeGenerated(
-        DynamicCharacterAvatar avatar) => ApplyBuildPhase(
-            avatar != null ? avatar : _umaData,
-            ExpressionEffectPhase.BuildAfterRecipe);
-    public DNAInstanceCollection.DNABuildType PreApply(UMAData data) =>
-        ApplyBuildPhase(data, ExpressionEffectPhase.BuildPreApply);
-    public DNAInstanceCollection.DNABuildType Apply(UMAData data) =>
-        ApplyBuildPhase(data, ExpressionEffectPhase.BuildApply);
-    public DNAInstanceCollection.DNABuildType PostApply(UMAData data) =>
-        ApplyBuildPhase(data, ExpressionEffectPhase.BuildPostApply);
-
-    private DNAInstanceCollection.DNABuildType ApplyBuildPhase(UMAData data,
-        ExpressionEffectPhase phase)
-    {
-        DNAInstanceCollection.DNABuildType flags =
-            DNAInstanceCollection.DNABuildType.None;
-        if (data == null) return flags;
-        if (_buildSnapshot.Count == 0) CaptureBuildSnapshot();
-        for (int i = 0; i < _buildSnapshot.Count; i++)
+        private void AddLegacyExpressionSetDefinitions(
+            UMAExpressionSet expressionSet)
         {
-            BuildValue build = _buildSnapshot[i];
-            if (build.dna == null || build.dna.effects == null) continue;
-            for (int e = 0; e < build.dna.effects.Count; e++)
+            for (int i = 0; i < ExpressionPlayer.PoseCount; i++)
             {
-                DNAEffect effect = build.dna.effects[e];
-                if (effect == null || !effect.enabled ||
-                    (effect.ExpressionPhases & phase) == 0) continue;
-                flags |= effect.AreaEffect;
-                switch (phase)
+                string id = ExpressionPlayer.PoseNames[i];
+                DNA dna = ScriptableObject.CreateInstance<DNA>();
+                dna.hideFlags = HideFlags.DontSave;
+                dna.name = id + "_RuntimeExpressionDNA";
+                dna.displayName = id.Replace('_', ' ');
+                dna.description = "Transient compatibility DNA generated from " +
+                    expressionSet.name + ".";
+                dna.defaultValue = 0.5f;
+                _legacyRuntimeObjects.Add(dna);
+
+                UMAExpressionSet.PosePair pair =
+                    expressionSet.posePairs != null &&
+                    i < expressionSet.posePairs.Length
+                        ? expressionSet.posePairs[i] : null;
+                if (pair != null)
                 {
-                    case ExpressionEffectPhase.BuildAfterRecipe:
-                        effect.AfterRecipeGenerated(data, build.dna,
-                            build.value);
-                        break;
-                    case ExpressionEffectPhase.BuildPreApply:
-                        effect.PreApply(data, build.dna, build.value);
-                        break;
-                    case ExpressionEffectPhase.BuildApply:
-                        effect.Apply(data, build.dna, build.value);
-                        break;
-                    case ExpressionEffectPhase.BuildPostApply:
-                        effect.PostApply(data, build.dna, build.value);
-                        break;
+                    if (pair.primary != null)
+                        dna.effects.Add(CreateLegacyPoseEffect(
+                            pair.primary, false));
+                    if (pair.inverse != null)
+                        dna.effects.Add(CreateLegacyPoseEffect(
+                            pair.inverse, true));
+                }
+
+                AddDefinition(new UMAExpressionDefinition
+                {
+                    id = id,
+                    displayName = id.Replace('_', ' '),
+                    dna = dna,
+                    roles = GetLegacyRoles(i),
+                    affectedJoints = GetLegacyJoints(i),
+                    priority = i,
+                    blendMode = ExpressionBlendMode.Override,
+                    blinkClosedValue = 0f
+                });
+            }
+        }
+
+        private static DNAEffect_BonePose CreateLegacyPoseEffect(
+            UMABonePose pose,
+            bool inverse)
+        {
+            return new DNAEffect_BonePose
+            {
+                EffectName = inverse ? "Inverse Pose" : "Primary Pose",
+                bonePose = pose,
+                minMapping = 0f,
+                maxMapping = 1f,
+                curve = inverse
+                    ? new AnimationCurve(
+                        new Keyframe(0f, 1f, -2f, -2f),
+                        new Keyframe(0.5f, 0f, -2f, 0f),
+                        new Keyframe(1f, 0f, 0f, 0f))
+                    : new AnimationCurve(
+                        new Keyframe(0f, 0f, 0f, 0f),
+                        new Keyframe(0.5f, 0f, 0f, 2f),
+                        new Keyframe(1f, 1f, 2f, 2f))
+            };
+        }
+
+        private static ExpressionRole GetLegacyRoles(int index)
+        {
+            switch (index)
+            {
+                case 26: return ExpressionRole.BlinkLeft;
+                case 27: return ExpressionRole.BlinkRight;
+                case 28: return ExpressionRole.EyeVerticalLeft;
+                case 29: return ExpressionRole.EyeVerticalRight;
+                case 30: return ExpressionRole.EyeHorizontalLeft;
+                case 31: return ExpressionRole.EyeHorizontalRight;
+            }
+            if (index >= 44) return ExpressionRole.Emotion;
+            if (index >= 6 && index <= 35) return ExpressionRole.Viseme;
+            return ExpressionRole.Custom;
+        }
+
+        private static ExpressionJoint GetLegacyJoints(int index)
+        {
+            ExpressionPlayer.MecanimJoint legacy =
+                index >= 0 &&
+                index < ExpressionPlayer.MecanimAlternate.Length
+                    ? ExpressionPlayer.MecanimAlternate[index]
+                    : ExpressionPlayer.MecanimJoint.None;
+            ExpressionJoint result = ExpressionJoint.None;
+            if ((legacy & ExpressionPlayer.MecanimJoint.Head) != 0)
+                result |= ExpressionJoint.Head;
+            if ((legacy & ExpressionPlayer.MecanimJoint.Neck) != 0)
+                result |= ExpressionJoint.Neck;
+            if ((legacy & ExpressionPlayer.MecanimJoint.Jaw) != 0)
+                result |= ExpressionJoint.Jaw;
+            if ((legacy & ExpressionPlayer.MecanimJoint.Eye) != 0)
+                result |= ExpressionJoint.Eyes;
+            if ((legacy & ExpressionPlayer.MecanimJoint.Hands) != 0)
+                result |= ExpressionJoint.Hands;
+            return result == ExpressionJoint.None
+                ? ExpressionJoint.Other : result;
+        }
+
+        private void ClearLegacyRuntimeObjects()
+        {
+            for (int i = 0; i < _legacyRuntimeObjects.Count; i++)
+            {
+                UnityEngine.Object item = _legacyRuntimeObjects[i];
+                if (item == null) continue;
+                if (Application.isPlaying) Destroy(item);
+                else DestroyImmediate(item);
+            }
+            _legacyRuntimeObjects.Clear();
+            _resolvedLegacyExpressionSet = null;
+        }
+
+        private void AddDefinition(UMAExpressionDefinition definition)
+        {
+            if (definition == null || string.IsNullOrWhiteSpace(definition.id) ||
+                definition.dna == null ||
+                _expressionLookup.ContainsKey(definition.id)) return;
+            RuntimeExpression runtime = new RuntimeExpression
+            {
+                definition = definition,
+                target = definition.DefaultValue,
+                effective = definition.DefaultValue,
+                previousHeadMotionValue = definition.DefaultValue,
+                lastSource = ExpressionSource.Manual
+            };
+            if (definition.dna.effects != null)
+                for (int i = 0; i < definition.dna.effects.Count; i++)
+                {
+                    DNAEffect effect = definition.dna.effects[i];
+                    if (effect == null || !effect.enabled) continue;
+                    runtime.phases |= effect.ExpressionPhases;
+                    if (effect.RequiresExpressionBuild)
+                        runtime.buildType |= effect.AreaEffect;
+                }
+            _expressionLookup.Add(definition.id, _runtimeExpressions.Count);
+            _runtimeExpressions.Add(runtime);
+        }
+
+        private void AddLegacyDefinitions()
+        {
+            if (Expressions == null) return;
+            for (int i = 0; i < Expressions.Count; i++)
+            {
+                DynamicExpression legacy = Expressions[i];
+                if (legacy == null || legacy.ExpressionDNA == null) continue;
+                string id = !string.IsNullOrWhiteSpace(legacy.Name)
+                    ? legacy.Name : legacy.ExpressionDNA.displayName;
+                UMAExpressionDefinition definition = new UMAExpressionDefinition
+                {
+                    id = id,
+                    displayName = id,
+                    dna = legacy.ExpressionDNA,
+                    affectedJoints = ExpressionJoint.Other
+                };
+                AddDefinition(definition);
+                if (legacy.ExpressionValue != null &&
+                    _expressionLookup.TryGetValue(id, out int index))
+                {
+                    RuntimeExpression runtime = _runtimeExpressions[index];
+                    runtime.sourceValues[(int)ExpressionSource.Manual] =
+                        Mathf.Clamp01(legacy.ExpressionValue.Value);
+                    runtime.sourceActive[(int)ExpressionSource.Manual] = true;
                 }
             }
         }
-        return flags;
-    }
 
-    private static bool HasBuildPhase(ExpressionEffectPhase phases)
-    {
-        const ExpressionEffectPhase build =
-            ExpressionEffectPhase.BuildAfterRecipe |
-            ExpressionEffectPhase.BuildPreApply |
-            ExpressionEffectPhase.BuildApply |
-            ExpressionEffectPhase.BuildPostApply;
-        return (phases & build) != 0;
-    }
-
-    private static bool IsValidSource(ExpressionSource source) =>
-        (int)source >= 0 && (int)source < SourceCount;
-
-    private Dictionary<string, SourceSnapshot> CaptureSources()
-    {
-        Dictionary<string, SourceSnapshot> result =
-            new Dictionary<string, SourceSnapshot>(
-                StringComparer.OrdinalIgnoreCase);
-        for (int i = 0; i < _runtimeExpressions.Count; i++)
+        private static int CompareExpressions(RuntimeExpression left,
+            RuntimeExpression right)
         {
-            RuntimeExpression runtime = _runtimeExpressions[i];
-            SourceSnapshot snapshot = new SourceSnapshot();
-            Array.Copy(runtime.sourceValues, snapshot.values, SourceCount);
-            Array.Copy(runtime.sourceActive, snapshot.active, SourceCount);
-            result[runtime.definition.id] = snapshot;
+            int priority = left.definition.priority.CompareTo(
+                right.definition.priority);
+            return priority != 0 ? priority : string.Compare(left.definition.id,
+                right.definition.id, StringComparison.OrdinalIgnoreCase);
         }
-        return result;
-    }
 
-    private void RestoreSources(
-        Dictionary<string, SourceSnapshot> snapshots)
-    {
-        if (snapshots == null) return;
-        for (int i = 0; i < _runtimeExpressions.Count; i++)
+        private void RebuildLookup()
         {
-            RuntimeExpression runtime = _runtimeExpressions[i];
-            if (!snapshots.TryGetValue(runtime.definition.id,
-                out SourceSnapshot snapshot)) continue;
-            Array.Copy(snapshot.values, runtime.sourceValues, SourceCount);
-            Array.Copy(snapshot.active, runtime.sourceActive, SourceCount);
-            runtime.target = ResolveSources(runtime);
-            runtime.effective = runtime.target;
-            runtime.previousHeadMotionValue = runtime.effective;
+            _expressionLookup.Clear();
+            for (int i = 0; i < _runtimeExpressions.Count; i++)
+            {
+                string id = _runtimeExpressions[i].definition.id;
+                if (!_expressionLookup.ContainsKey(id))
+                    _expressionLookup.Add(id, i);
+            }
         }
-    }
 
-    public float GetBlinkAmount()
-    {
-        if (!_isBlinking) return 0f;
-        float p = Mathf.Clamp01(
-            (Time.time - _blinkStartTime) / BlinkDuration);
-        return BlinkCurve != null ? Mathf.Clamp01(BlinkCurve.Evaluate(p))
-            : Mathf.Sin(p * Mathf.PI);
-    }
+        private void ResolveRoleIndices()
+        {
+            _blinkLeftIndex = FindRole(ExpressionRole.BlinkLeft);
+            _blinkRightIndex = FindRole(ExpressionRole.BlinkRight);
+            _eyeHorizontalIndex = FindRole(ExpressionRole.EyeHorizontal);
+            _eyeVerticalIndex = FindRole(ExpressionRole.EyeVertical);
+            _eyeHorizontalLeftIndex =
+                FindRole(ExpressionRole.EyeHorizontalLeft);
+            _eyeHorizontalRightIndex =
+                FindRole(ExpressionRole.EyeHorizontalRight);
+            _eyeVerticalLeftIndex = FindRole(ExpressionRole.EyeVerticalLeft);
+            _eyeVerticalRightIndex =
+                FindRole(ExpressionRole.EyeVerticalRight);
+        }
 
-    public Vector2 GetSaccadeOffset() => _saccade;
+        private int FindRole(ExpressionRole role)
+        {
+            for (int i = 0; i < _runtimeExpressions.Count; i++)
+                if ((_runtimeExpressions[i].definition.roles & role) != 0)
+                    return i;
+            return -1;
+        }
+
+        private void UpdateBlinking()
+        {
+            if (!EnableBlinking ||
+                (_blinkLeftIndex < 0 && _blinkRightIndex < 0))
+            {
+                if (_isBlinking) EndBlink();
+                return;
+            }
+            if (!_isBlinking && Time.time >= _nextBlinkTime)
+            {
+                _isBlinking = true;
+                _blinkStartTime = Time.time;
+            }
+            if (!_isBlinking) return;
+            float progress = (Time.time - _blinkStartTime) / BlinkDuration;
+            if (progress >= 1f)
+            {
+                EndBlink();
+                return;
+            }
+            float amount = BlinkCurve != null
+                ? Mathf.Clamp01(BlinkCurve.Evaluate(progress))
+                : Mathf.Sin(progress * Mathf.PI);
+            SetProceduralBlinkAmount(amount);
+        }
+
+        private void EndBlink()
+        {
+            _isBlinking = false;
+            ResetRoleSource(_blinkLeftIndex, ExpressionSource.ProceduralBlink);
+            if (_blinkRightIndex != _blinkLeftIndex)
+                ResetRoleSource(_blinkRightIndex,
+                    ExpressionSource.ProceduralBlink);
+            ScheduleNextBlink();
+        }
+
+        private void ScheduleNextBlink() =>
+            _nextBlinkTime = Time.time + UnityEngine.Random.Range(
+                Mathf.Min(BlinkIntervalMin, BlinkIntervalMax),
+                Mathf.Max(BlinkIntervalMin, BlinkIntervalMax));
+
+        private void UpdateSaccadesAndGaze()
+        {
+            UpdateSaccade();
+            _ikActive = false;
+            _ikEyesWeight = 0f;
+            Vector2 gaze = Vector2.zero;
+            Transform origin = GetGazeOrigin();
+            Vector3 animatorDirection = origin.forward;
+            float animatorDistance = 10f;
+            bool validGazeTarget = false;
+            if (EnableLookAt && LookAtTarget != null)
+            {
+                Vector3 toTarget = LookAtTarget.position - origin.position;
+                float distance = toTarget.magnitude;
+                if (distance >= LookAtMinDistance &&
+                    distance <= LookAtMaxDistance &&
+                    Vector3.Dot(origin.forward, toTarget) > 0f)
+                {
+                    Vector3 local = origin.InverseTransformDirection(
+                        toTarget.normalized);
+                    float horizontal = Mathf.Atan2(local.x, local.z) *
+                        Mathf.Rad2Deg;
+                    float vertical = -Mathf.Asin(Mathf.Clamp(local.y, -1f, 1f)) *
+                        Mathf.Rad2Deg;
+                    gaze.x = Mathf.Clamp(horizontal /
+                        Mathf.Max(0.01f, EyeMaxAngle), -1f, 1f);
+                    gaze.y = Mathf.Clamp(vertical /
+                        Mathf.Max(0.01f, ClampVerticalAngle), -1f, 1f);
+                    float angle = Vector3.Angle(origin.forward, toTarget);
+                    float assist = Mathf.InverseLerp(HeadAssistStartAngle,
+                        Mathf.Max(HeadAssistStartAngle + 0.01f,
+                            HeadAssistFullAngle), angle);
+                    _ikLookPosition = LookAtTarget.position;
+                    _ikHeadWeight = HeadWeight * assist;
+                    _ikBodyWeight = BodyWeight * assist;
+                    animatorDirection = toTarget.normalized;
+                    animatorDistance = distance;
+                    validGazeTarget = true;
+                }
+            }
+
+            Vector2 combined = Vector2.ClampMagnitude(gaze + _saccade, 1f);
+            bool hasDNAEyeDirection =
+                _eyeHorizontalIndex >= 0 || _eyeVerticalIndex >= 0 ||
+                _eyeHorizontalLeftIndex >= 0 ||
+                _eyeHorizontalRightIndex >= 0 ||
+                _eyeVerticalLeftIndex >= 0 ||
+                _eyeVerticalRightIndex >= 0;
+            if (hasDNAEyeDirection)
+            {
+                SetProceduralGazeDirection(combined);
+            }
+
+            if (_animator == null || !_animator.isHuman) return;
+            if (validGazeTarget)
+            {
+                _ikActive = true;
+                if (hasDNAEyeDirection)
+                {
+                    // DNA owns the eyes; Animator IK remains head/body assistance.
+                    _ikEyesWeight = 0f;
+                }
+                else
+                {
+                    SetAnimatorSaccadeTarget(origin, animatorDirection,
+                        animatorDistance);
+                    _ikEyesWeight = EyesWeight;
+                }
+            }
+            else if (!hasDNAEyeDirection && EnableSaccades)
+            {
+                // A humanoid without DNA eye roles still receives autonomous eye
+                // movement, even when no explicit look-at target is assigned.
+                _ikHeadWeight = 0f;
+                _ikBodyWeight = 0f;
+                SetAnimatorSaccadeTarget(origin, origin.forward, 10f);
+                _ikEyesWeight = EyesWeight;
+                _ikActive = true;
+            }
+        }
+
+        private void SetAnimatorSaccadeTarget(
+            Transform origin,
+            Vector3 worldDirection,
+            float distance)
+        {
+            Vector3 localDirection =
+                origin.InverseTransformDirection(worldDirection);
+            Quaternion offset = Quaternion.Euler(
+                _saccade.y * SaccadeMaxOffsetDeg,
+                _saccade.x * SaccadeMaxOffsetDeg,
+                0f);
+            Vector3 adjusted = origin.TransformDirection(
+                offset * localDirection).normalized;
+            _ikLookPosition = origin.position +
+                adjusted * Mathf.Max(0.5f, distance);
+        }
+
+        private float GetBlinkValue(int index, float amount)
+        {
+            if (index < 0 || index >= _runtimeExpressions.Count)
+                return 0f;
+            UMAExpressionDefinition definition =
+                _runtimeExpressions[index].definition;
+            return Mathf.Lerp(definition.DefaultValue,
+                definition.blinkClosedValue, amount);
+        }
+
+        /// <summary>
+        /// Writes a normalized blink amount through the role-based procedural
+        /// source. Zero releases the procedural source; one is fully closed.
+        /// </summary>
+        public void SetProceduralBlinkAmount(float amount)
+        {
+            Initialize();
+            amount = Mathf.Clamp01(amount);
+            BeginExpressionBatch();
+            try
+            {
+                if (amount <= 0f)
+                {
+                    ResetRoleSource(_blinkLeftIndex,
+                        ExpressionSource.ProceduralBlink);
+                    if (_blinkRightIndex != _blinkLeftIndex)
+                        ResetRoleSource(_blinkRightIndex,
+                            ExpressionSource.ProceduralBlink);
+                    return;
+                }
+                SetProceduralRoleValue(_blinkLeftIndex,
+                    GetBlinkValue(_blinkLeftIndex, amount),
+                    ExpressionSource.ProceduralBlink);
+                if (_blinkRightIndex != _blinkLeftIndex)
+                    SetProceduralRoleValue(_blinkRightIndex,
+                        GetBlinkValue(_blinkRightIndex, amount),
+                        ExpressionSource.ProceduralBlink);
+            }
+            finally
+            {
+                EndExpressionBatch();
+            }
+        }
+
+        private void SetEyeDirection(int sharedIndex, int leftIndex,
+            int rightIndex, float normalizedDirection, bool invertRight)
+        {
+            if (sharedIndex >= 0)
+            {
+                SetDirectionalRoleValue(sharedIndex, normalizedDirection);
+                return;
+            }
+            SetDirectionalRoleValue(leftIndex, normalizedDirection);
+            if (rightIndex != leftIndex)
+                SetDirectionalRoleValue(rightIndex, invertRight
+                    ? -normalizedDirection
+                    : normalizedDirection);
+        }
+
+        private void SetDirectionalRoleValue(
+            int index,
+            float normalizedDirection)
+        {
+            if (index < 0 || index >= _runtimeExpressions.Count) return;
+            float neutral = _runtimeExpressions[index].definition.DefaultValue;
+            float value = normalizedDirection < 0f
+                ? Mathf.Lerp(neutral, 0f, -normalizedDirection)
+                : Mathf.Lerp(neutral, 1f, normalizedDirection);
+            SetProceduralRoleValue(index, value,
+                ExpressionSource.ProceduralGaze);
+        }
+
+        /// <summary>
+        /// Writes normalized horizontal and vertical eye directions through
+        /// shared or sided expression roles.
+        /// </summary>
+        public void SetProceduralGazeDirection(Vector2 direction)
+        {
+            Initialize();
+            direction.x = Mathf.Clamp(direction.x, -1f, 1f);
+            direction.y = Mathf.Clamp(direction.y, -1f, 1f);
+            BeginExpressionBatch();
+            try
+            {
+                SetEyeDirection(_eyeHorizontalIndex,
+                    _eyeHorizontalLeftIndex, _eyeHorizontalRightIndex,
+                    direction.x, true);
+                SetEyeDirection(_eyeVerticalIndex,
+                    _eyeVerticalLeftIndex, _eyeVerticalRightIndex,
+                    direction.y, false);
+            }
+            finally
+            {
+                EndExpressionBatch();
+            }
+        }
+
+        private Transform GetGazeOrigin()
+        {
+            if (_animator != null && _animator.isHuman)
+            {
+                Transform head = _animator.GetBoneTransform(HumanBodyBones.Head);
+                if (head != null) return head;
+            }
+            return transform;
+        }
+
+        private void UpdateSaccade()
+        {
+            if (!EnableSaccades)
+            {
+                _saccade = Vector2.zero;
+                return;
+            }
+            if (Time.time >= _nextSaccadeTime)
+            {
+                _saccadeFrom = _saccade;
+                float scale = Mathf.Clamp01(SaccadeMaxOffsetDeg /
+                    Mathf.Max(0.01f, EyeMaxAngle));
+                _saccadeTo = new Vector2(
+                    UnityEngine.Random.Range(-1f, 1f),
+                    UnityEngine.Random.Range(-1f, 1f) *
+                    SaccadeVerticalBias) * scale;
+                _saccadeStartTime = Time.time;
+                _saccadeDuration = UnityEngine.Random.Range(0.025f, 0.08f);
+                ScheduleNextSaccade();
+            }
+            float p = Mathf.Clamp01((Time.time - _saccadeStartTime) /
+                Mathf.Max(0.001f, _saccadeDuration));
+            _saccade = Vector2.Lerp(_saccadeFrom, _saccadeTo,
+                p * p * (3f - 2f * p));
+        }
+
+        private void ScheduleNextSaccade() =>
+            _nextSaccadeTime = Time.time + UnityEngine.Random.Range(
+                Mathf.Min(SaccadeIntervalMin, SaccadeIntervalMax),
+                Mathf.Max(SaccadeIntervalMin, SaccadeIntervalMax));
+
+        private void SetProceduralRoleValue(int index, float value,
+            ExpressionSource source)
+        {
+            if (index >= 0) SetExpression(index, value, source);
+        }
+
+        private void ResetRoleSource(int index, ExpressionSource source)
+        {
+            if (index >= 0) ResetExpression(index, source);
+        }
+
+        private void ResetProceduralSources()
+        {
+            BeginExpressionBatch();
+            ResetAllExpressions(ExpressionSource.ProceduralBlink);
+            ResetAllExpressions(ExpressionSource.ProceduralGaze);
+            EndExpressionBatch();
+        }
+
+        private void QueueBuild(DNAInstanceCollection.DNABuildType buildType)
+        {
+            _pendingBuildType |= buildType;
+            _buildRequestTime = Time.unscaledTime;
+            if (_isBuilding) _buildChangedWhileBuilding = true;
+            else _buildPending = true;
+        }
+
+        private void ProcessPendingBuild()
+        {
+            if (!_buildPending || _isBuilding || _avatar == null ||
+                !_avatar.BuildCharacterEnabled) return;
+            if (Time.unscaledTime - _buildRequestTime <
+                buildDebounceSeconds) return;
+            bool mesh = (_pendingBuildType &
+                (DNAInstanceCollection.DNABuildType.Mesh |
+                 DNAInstanceCollection.DNABuildType.MeshModifiers)) != 0;
+            if (mesh && Time.unscaledTime - _lastMeshBuildTime <
+                meshBuildMinimumInterval) return;
+            if (mesh) _lastMeshBuildTime = Time.unscaledTime;
+            _buildPending = false;
+            CaptureBuildSnapshot();
+            // Apply by build type, so color effects write their colors again and DNA mesh modifiers are
+            // replaced; the DNA itself is always marked dirty (Rig), as before.
+            using (BuildRequestMarker.Auto())
+                _avatar.ApplyDNABuildType(_pendingBuildType | DNAInstanceCollection.DNABuildType.Rig);
+        }
+
+        private void CaptureBuildSnapshot()
+        {
+            _buildSnapshot.Clear();
+            for (int i = 0; i < _runtimeExpressions.Count; i++)
+            {
+                RuntimeExpression expression = _runtimeExpressions[i];
+                if (expression.definition.dna != null &&
+                    HasBuildPhase(expression.phases))
+                    _buildSnapshot.Add(new BuildValue
+                    {
+                        dna = expression.definition.dna,
+                        value = expression.effective
+                    });
+            }
+        }
+
+        private void Subscribe()
+        {
+            if (_subscribed || _umaData == null) return;
+            _umaData.RegisterRuntimeDNAProvider(this);
+            _umaData.OnCharacterBegun += OnCharacterBegun;
+            _umaData.OnCharacterUpdated += OnCharacterUpdated;
+            if (_avatar != null)
+                _avatar.BuildCharacterBegun.AddListener(OnBuildCharacterBegun);
+            _subscribed = true;
+        }
+
+        private void Unsubscribe()
+        {
+            if (!_subscribed) return;
+            if (_umaData != null)
+            {
+                _umaData.UnregisterRuntimeDNAProvider(this);
+                _umaData.OnCharacterBegun -= OnCharacterBegun;
+                _umaData.OnCharacterUpdated -= OnCharacterUpdated;
+            }
+            if (_avatar != null)
+                _avatar.BuildCharacterBegun.RemoveListener(OnBuildCharacterBegun);
+            _subscribed = false;
+        }
+
+        private void OnBuildCharacterBegun(UMAData data) => BeginBuild(data);
+        private void OnCharacterBegun(UMAData data) => BeginBuild(data);
+
+        private void BeginBuild(UMAData data)
+        {
+            _umaData = data != null ? data : _umaData;
+            if (_isBuilding)
+            {
+                return;
+            }
+            _isBuilding = true;
+            _buildChangedWhileBuilding = false;
+            _bindingsValid = false;
+            RemoveNaturalHeadMotion();
+            RestoreControlledBones();
+            CaptureBuildSnapshot();
+            _pendingBuildType = DNAInstanceCollection.DNABuildType.None;
+        }
+
+        private void OnCharacterUpdated(UMAData data)
+        {
+            _umaData = data != null ? data : _umaData;
+            _animator = GetComponent<Animator>();
+            if (_animator == null) _animator = GetComponentInChildren<Animator>();
+            Dictionary<string, SourceSnapshot> retained = CaptureSources();
+            UMAExpressionGroup group = ResolveGroup();
+            UMAExpressionSet legacy =
+                group == null ? ResolveLegacyExpressionSet() : null;
+            if (group != _resolvedGroup ||
+                legacy != _resolvedLegacyExpressionSet)
+            {
+                BindGroup(group);
+                RestoreSources(retained);
+            }
+            _isBuilding = false;
+            _bindingsValid = false;
+            RefreshBindings();
+            EvaluateValues(0f, true);
+            _immediateDirty = true;
+            ApplyImmediateEffects();
+            if (_buildChangedWhileBuilding)
+            {
+                _buildPending = true;
+                _buildRequestTime = Time.unscaledTime;
+            }
+            else
+            {
+                _buildPending = false;
+                _pendingBuildType = DNAInstanceCollection.DNABuildType.None;
+            }
+        }
+
+        public DNAInstanceCollection.DNABuildType AfterRecipeGenerated(
+            DynamicCharacterAvatar avatar) => ApplyBuildPhase(
+                avatar != null ? avatar : _umaData,
+                ExpressionEffectPhase.BuildAfterRecipe);
+        public DNAInstanceCollection.DNABuildType PreApply(UMAData data) =>
+            ApplyBuildPhase(data, ExpressionEffectPhase.BuildPreApply);
+        public DNAInstanceCollection.DNABuildType Apply(UMAData data) =>
+            ApplyBuildPhase(data, ExpressionEffectPhase.BuildApply);
+        public DNAInstanceCollection.DNABuildType PostApply(UMAData data) =>
+            ApplyBuildPhase(data, ExpressionEffectPhase.BuildPostApply);
+
+        private DNAInstanceCollection.DNABuildType ApplyBuildPhase(UMAData data,
+            ExpressionEffectPhase phase)
+        {
+            DNAInstanceCollection.DNABuildType flags =
+                DNAInstanceCollection.DNABuildType.None;
+            if (data == null) return flags;
+            if (_buildSnapshot.Count == 0) CaptureBuildSnapshot();
+            for (int i = 0; i < _buildSnapshot.Count; i++)
+            {
+                BuildValue build = _buildSnapshot[i];
+                if (build.dna == null || build.dna.effects == null) continue;
+                for (int e = 0; e < build.dna.effects.Count; e++)
+                {
+                    DNAEffect effect = build.dna.effects[e];
+                    if (effect == null || !effect.enabled ||
+                        (effect.ExpressionPhases & phase) == 0) continue;
+                    flags |= effect.AreaEffect;
+                    switch (phase)
+                    {
+                        case ExpressionEffectPhase.BuildAfterRecipe:
+                            effect.AfterRecipeGenerated(data, build.dna,
+                                build.value);
+                            break;
+                        case ExpressionEffectPhase.BuildPreApply:
+                            effect.PreApply(data, build.dna, build.value);
+                            break;
+                        case ExpressionEffectPhase.BuildApply:
+                            effect.Apply(data, build.dna, build.value);
+                            break;
+                        case ExpressionEffectPhase.BuildPostApply:
+                            effect.PostApply(data, build.dna, build.value);
+                            break;
+                    }
+                }
+            }
+            return flags;
+        }
+
+        private static bool HasBuildPhase(ExpressionEffectPhase phases)
+        {
+            const ExpressionEffectPhase build =
+                ExpressionEffectPhase.BuildAfterRecipe |
+                ExpressionEffectPhase.BuildPreApply |
+                ExpressionEffectPhase.BuildApply |
+                ExpressionEffectPhase.BuildPostApply;
+            return (phases & build) != 0;
+        }
+
+        private static bool IsValidSource(ExpressionSource source) =>
+            (int)source >= 0 && (int)source < SourceCount;
+
+        private Dictionary<string, SourceSnapshot> CaptureSources()
+        {
+            Dictionary<string, SourceSnapshot> result =
+                new Dictionary<string, SourceSnapshot>(
+                    StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < _runtimeExpressions.Count; i++)
+            {
+                RuntimeExpression runtime = _runtimeExpressions[i];
+                SourceSnapshot snapshot = new SourceSnapshot();
+                Array.Copy(runtime.sourceValues, snapshot.values, SourceCount);
+                Array.Copy(runtime.sourceActive, snapshot.active, SourceCount);
+                result[runtime.definition.id] = snapshot;
+            }
+            return result;
+        }
+
+        private void RestoreSources(
+            Dictionary<string, SourceSnapshot> snapshots)
+        {
+            if (snapshots == null) return;
+            for (int i = 0; i < _runtimeExpressions.Count; i++)
+            {
+                RuntimeExpression runtime = _runtimeExpressions[i];
+                if (!snapshots.TryGetValue(runtime.definition.id,
+                    out SourceSnapshot snapshot)) continue;
+                Array.Copy(snapshot.values, runtime.sourceValues, SourceCount);
+                Array.Copy(snapshot.active, runtime.sourceActive, SourceCount);
+                runtime.target = ResolveSources(runtime);
+                runtime.effective = runtime.target;
+                runtime.previousHeadMotionValue = runtime.effective;
+            }
+        }
+
+        public float GetBlinkAmount()
+        {
+            if (!_isBlinking) return 0f;
+            float p = Mathf.Clamp01(
+                (Time.time - _blinkStartTime) / BlinkDuration);
+            return BlinkCurve != null ? Mathf.Clamp01(BlinkCurve.Evaluate(p))
+                : Mathf.Sin(p * Mathf.PI);
+        }
+
+        public Vector2 GetSaccadeOffset() => _saccade;
 
 #if UNITY_EDITOR
-    public void EditorSimulateOnce()
-    {
-        if (Application.isPlaying) return;
-        EvaluateExpressionsNow();
-        RestoreControlledBones();
-        ApplyRigEffects();
-        UnityEditor.SceneView.RepaintAll();
-    }
+        public void EditorSimulateOnce()
+        {
+            if (Application.isPlaying) return;
+            EvaluateExpressionsNow();
+            RestoreControlledBones();
+            ApplyRigEffects();
+            UnityEditor.SceneView.RepaintAll();
+        }
 
-    private void OnDrawGizmos()
-    {
-        if (!EnableLookAt || LookAtTarget == null) return;
-        Gizmos.color = _ikActive ? Color.green : Color.yellow;
-        Gizmos.DrawLine(transform.position, LookAtTarget.position);
-    }
+        private void OnDrawGizmos()
+        {
+            if (!EnableLookAt || LookAtTarget == null) return;
+            Gizmos.color = _ikActive ? Color.green : Color.yellow;
+            Gizmos.DrawLine(transform.position, LookAtTarget.position);
+        }
 #endif
+    }
 }

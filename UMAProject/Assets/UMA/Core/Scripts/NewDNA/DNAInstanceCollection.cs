@@ -22,8 +22,15 @@ namespace UMA
             BlendShape = 1 << 3,
             SharedColors = 1 << 4,
             MeshModifiers = 1 << 5,
+            /// <summary>A shader property written through a renderer's property block. Like BlendShape, it needs no build.</summary>
+            MaterialProperty = 1 << 6,
             Base = Mesh | Rig | Texture,
-            All = Texture | Mesh | Rig | BlendShape | SharedColors | MeshModifiers
+            All = Texture | Mesh | Rig | BlendShape | SharedColors | MeshModifiers | MaterialProperty,
+            /// <summary>
+            /// The types that are set on the renderers and need no build. They are set again at the
+            /// end of every build, because a build can replace the renderers' meshes and materials.
+            /// </summary>
+            RendererOnly = BlendShape | MaterialProperty
         }
 
         private DNACollection _DNACollection;
@@ -450,6 +457,11 @@ namespace UMA
         public DNABuildType PostApplyEffects(UMAData umaData, DNABuildType only)
         {
             DNABuildType flags = DNABuildType.None;
+
+            if (dnaInstances == null || dnaInstances.Count == 0)
+            {
+                return flags;
+            }
 
             if (!ValidateCollection())
             {

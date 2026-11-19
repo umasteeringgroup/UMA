@@ -48,7 +48,8 @@ namespace UMA.Examples
             if (DNA != null)
             {
                 DNA.Set(val);
-                avatar.ForceUpdate(true, false, false);
+                // Build what the DNA's effects call for (a color effect also needs its colors written again).
+                avatar.ApplyDNAChange(dnaName, false);
             }
             else
             {

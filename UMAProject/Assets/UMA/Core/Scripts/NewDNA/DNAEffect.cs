@@ -143,6 +143,31 @@ namespace UMA
             return minMapping + (value * (maxMapping - minMapping));
         }
 
+        /// <summary>
+        /// The scale this effect multiplies its target by at a DNA value, per axis, for
+        /// <see cref="DNA.ReverseInterpolate(float, float)"/>.
+        /// Effects that do not scale anything return false (the default).
+        /// </summary>
+        /// <param name="value">Raw DNA value, 0..1.</param>
+        /// <param name="factor">The multiplier at that value. Vector3.one means no change.</param>
+        public virtual bool TryGetScaleFactor(float value, out Vector3 factor)
+        {
+            factor = Vector3.one;
+            return false;
+        }
+
+        /// <summary>
+        /// The DNA value (0..1) at which this effect's mapped value (curve, then min/max) equals
+        /// <paramref name="mappedValue"/>. The curve is inverted numerically, see <see cref="DNAReverseInterpolation"/>.
+        /// </summary>
+        /// <param name="mappedValue">The mapped value wanted.</param>
+        /// <param name="preferredValue">Used when a curve that turns back reaches the target twice: the
+        /// value nearest this wins.</param>
+        public DNAReverseInterpolation.Result GetValueForMappedValue(float mappedValue, float preferredValue = 0.5f)
+        {
+            return DNAReverseInterpolation.SolveMappedValue(this, mappedValue, preferredValue);
+        }
+
         public string EffectName;
         public virtual string Description { get; }
 

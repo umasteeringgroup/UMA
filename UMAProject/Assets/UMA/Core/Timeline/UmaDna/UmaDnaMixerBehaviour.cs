@@ -20,6 +20,9 @@ namespace UMA.Timeline
             }
 
             Dictionary<string, DnaSetter> allDNA = avatar.GetDNA();
+            // What the changed DNA's effects call for; DNA without build types (older DNA) marks the DNA dirty.
+            DNAInstanceCollection.DNABuildType buildType = DNAInstanceCollection.DNABuildType.None;
+            bool otherDnaChanged = false;
 
             int inputCount = playable.GetInputCount();
             for (int i = 0; i < inputCount; i++)
@@ -39,14 +42,27 @@ namespace UMA.Timeline
                         if (originalValue != allDNA[dna.Name].Value)
                         {
                             needRebuild = true;
+                            if (avatar.TryGetDNABuildType(dna.Name, out DNAInstanceCollection.DNABuildType dnaBuildType))
+                            {
+                                buildType |= dnaBuildType;
+                            }
+                            else
+                            {
+                                otherDnaChanged = true;
+                            }
                         }
                     }
                 }
+            }
 
-                if (needRebuild)
+            // One update for the frame, after every input has been mixed in.
+            if (needRebuild)
+            {
+                if (otherDnaChanged)
                 {
-                    avatar.ForceUpdate(true, false, false);
+                    buildType |= DNAInstanceCollection.DNABuildType.Rig;
                 }
+                avatar.ApplyDNABuildType(buildType);
             }
         }
     }

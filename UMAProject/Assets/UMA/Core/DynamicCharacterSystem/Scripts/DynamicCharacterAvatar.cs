@@ -3329,6 +3329,12 @@ namespace UMA.CharacterSystem
             var tempColor = colorData.Clone();
             tempColor.name = Name;
             characterColors.SetRawColor(Name, tempColor);
+            // DNA color effects write into the avatar's colors (Fitness fades the muscle overlays through the
+            // Skin alpha). Run them again on a loaded character, or the new color would undo what the DNA set.
+            if (umaData != null && umaData.umaRecipe != null)
+            {
+                dnaInstanceCollection?.AfterRecipeGenerated(this, DNAInstanceCollection.DNABuildType.SharedColors);
+            }
             if (UpdateTexture)
             {
                 UpdateColors();
@@ -3931,9 +3937,45 @@ namespace UMA.CharacterSystem
 #endif
             }
             if (rebuild)
-            { 
-                ForceUpdate(true); 
+            {
+                ApplyDNAChange(DNAName, false);
             }
+        }
+
+        /// <summary>
+        /// Finds the build types the effects of a DNA report (<see cref="DNA.GetBuildType"/>), for a race
+        /// that uses the new DNA system. False when the DNA is not found there or reports no build type.
+        /// </summary>
+        public bool TryGetDNABuildType(string DNAName, out DNAInstanceCollection.DNABuildType buildType)
+        {
+            buildType = DNAInstanceCollection.DNABuildType.None;
+            RaceData race = activeRace != null ? activeRace.data : null;
+            if (race == null || !race.useNewDNA || race.DNACollection == null || string.IsNullOrEmpty(DNAName))
+            {
+                return false;
+            }
+            if (!race.DNACollection.dnaDictionary.TryGetValue(DNAName, out DNA dna) || dna == null)
+            {
+                return false;
+            }
+            buildType = dna.GetBuildType();
+            return buildType != DNAInstanceCollection.DNABuildType.None;
+        }
+
+        /// <summary>
+        /// Updates a loaded character after a DNA value was set. A DNA of the new DNA system is applied by the
+        /// build types its effects report (<see cref="ApplyDNABuildType"/>), so effects that write colors, such as
+        /// a fade driven by a color's alpha, run again. Any other DNA marks the DNA dirty, and also the textures
+        /// and mesh when <paramref name="textureAndMeshForOtherDNA"/> is set.
+        /// </summary>
+        public void ApplyDNAChange(string DNAName, bool textureAndMeshForOtherDNA)
+        {
+            if (TryGetDNABuildType(DNAName, out DNAInstanceCollection.DNABuildType buildType))
+            {
+                ApplyDNABuildType(buildType);
+                return;
+            }
+            ForceUpdate(true, textureAndMeshForOtherDNA, textureAndMeshForOtherDNA);
         }
 
         public UMADnaBase[] GetAllDNA()
@@ -6099,12 +6141,53 @@ namespace UMA.CharacterSystem
 
 
         /// <summary>
+        /// Runs again the DNA effects that act while the recipe is loaded, for the given build types: the effects
+        /// that change what is drawn (overlay transforms and colors, which then go into the recipe) and the DNA
+        /// mesh modifiers. Use it for DNA values changed after that step of a build, for example from a
+        /// <see cref="RecipeUpdated"/> handler. It marks nothing dirty; on a loaded character use
+        /// <see cref="ApplyDNABuildType"/>, which calls this and then marks what has to be rebuilt.
+        /// </summary>
+        public void ReapplyRecipeDNAEffects(DNAInstanceCollection.DNABuildType buildType, out bool drawnChanged, out bool meshChanged)
+        {
+            drawnChanged = false;
+            meshChanged = false;
+            if (umaData == null || umaData.umaRecipe == null)
+            {
+                return;
+            }
+
+            const DNAInstanceCollection.DNABuildType drawnTypes =
+                DNAInstanceCollection.DNABuildType.Texture | DNAInstanceCollection.DNABuildType.SharedColors;
+            if ((buildType & drawnTypes) != 0)
+            {
+                // What these effects write (an overlay's transform, the avatar's colors) is only read when
+                // the recipe is loaded, so they run again here. The color effects only write the avatar's
+                // colors; the textures are drawn from the recipe's.
+                dnaInstanceCollection?.AfterRecipeGenerated(this, drawnTypes);
+                UpdateColors();
+                drawnChanged = true;
+            }
+
+            if ((buildType & DNAInstanceCollection.DNABuildType.MeshModifiers) != 0)
+            {
+                // Replace what the DNA effects added; the recipes' own modifiers stay as they are.
+                umaData.RemoveDNAMeshModifiers();
+                dnaInstanceCollection?.AfterRecipeGenerated(this, DNAInstanceCollection.DNABuildType.MeshModifiers);
+                // Runtime DNA providers add their modifiers through the same step, so they are put back too.
+                RuntimeDNAsAfterRecipeGenerated(this);
+                ApplyDNAToModifiers();
+                meshChanged = true;
+            }
+        }
+
+        /// <summary>
         /// Applies a change to DNA values on a character that is already loaded, doing only the work the
         /// build types call for. Pass the build types the changed DNA reports (<see cref="DNA.GetBuildType"/>).
-        /// <para>SharedColors: the color effects write their colors again, the colors go into the recipe, and
-        /// the textures are rebuilt. MeshModifiers: the DNA mesh modifiers are replaced and only the mesh is
-        /// rebuilt. BlendShape: the weights are set on the renderers, with no build. Rig, Texture and Mesh
-        /// mark that part for rebuilding.</para>
+        /// <para>Texture and SharedColors: the effects that change what is drawn (overlay transforms and the
+        /// color effects) run again, the colors go into the recipe, and the textures are rebuilt.
+        /// MeshModifiers: the DNA mesh modifiers are replaced and only the mesh is rebuilt. BlendShape and
+        /// MaterialProperty: the values are set on the renderers, with no build. Rig and Mesh mark that
+        /// part for rebuilding.</para>
         /// </summary>
         /// <returns>True when the character was marked dirty and still has to be generated.</returns>
         public bool ApplyDNABuildType(DNAInstanceCollection.DNABuildType buildType)
@@ -6118,35 +6201,21 @@ namespace UMA.CharacterSystem
             bool texture = (buildType & DNAInstanceCollection.DNABuildType.Texture) != 0;
             bool mesh = (buildType & DNAInstanceCollection.DNABuildType.Mesh) != 0;
 
-            if ((buildType & DNAInstanceCollection.DNABuildType.SharedColors) != 0)
-            {
-                // The color effects only write the avatar's colors; the textures are drawn from the recipe's.
-                dnaInstanceCollection?.AfterRecipeGenerated(this, DNAInstanceCollection.DNABuildType.SharedColors);
-                UpdateColors();
-                texture = true;
-            }
-
-            if ((buildType & DNAInstanceCollection.DNABuildType.MeshModifiers) != 0)
-            {
-                // Replace what the DNA effects added; the recipes' own modifiers stay as they are.
-                umaData.RemoveDNAMeshModifiers();
-                dnaInstanceCollection?.AfterRecipeGenerated(this, DNAInstanceCollection.DNABuildType.MeshModifiers);
-                // Runtime DNA providers add their modifiers through the same step, so they are put back too.
-                RuntimeDNAsAfterRecipeGenerated(this);
-                ApplyDNAToModifiers();
-                mesh = true;
-            }
+            ReapplyRecipeDNAEffects(buildType, out bool drawnChanged, out bool meshChanged);
+            texture |= drawnChanged;
+            mesh |= meshChanged;
 
             if (rig || texture || mesh)
             {
-                // The generator sets blendshape weights itself at the end of a build.
+                // The generator sets blendshape weights and material properties itself at the end of
+                // every build, whether or not the rig is part of it.
                 Dirty(rig, texture, mesh);
                 return true;
             }
 
-            if ((buildType & DNAInstanceCollection.DNABuildType.BlendShape) != 0)
+            if ((buildType & DNAInstanceCollection.DNABuildType.RendererOnly) != 0)
             {
-                dnaInstanceCollection?.PostApplyEffects(this, DNAInstanceCollection.DNABuildType.BlendShape);
+                dnaInstanceCollection?.PostApplyEffects(this, buildType & DNAInstanceCollection.DNABuildType.RendererOnly);
             }
             return false;
         }

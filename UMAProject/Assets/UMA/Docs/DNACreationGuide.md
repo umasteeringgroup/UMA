@@ -273,10 +273,10 @@ Use Bone Transform when one DNA effect needs position, rotation, and scale toget
 
 1. Choose `DNAEffect_BoneTransform`.
 2. Pick the bone.
-3. Enter the local `Position`, `Rotation`, and `Scale` values.
+3. Enter `Position Offset`, `Rotation Offset`, and `Scale Multiplier`. These are changes from the bone's current state, not a target: the position is added, the rotation is applied on top of the current rotation, and the scale is multiplied. Leave a part at its default (position `0,0,0`, rotation `0,0,0`, scale `1,1,1`) to leave that part alone.
 4. Test at several slider positions.
 
-This effect is less forgiving than the separate Scale, Translate, and Rotate effects. Bone values are local to the rig, and several transforms can interact. Prefer separate effects when you only need one kind of change.
+The effect uses the same math as a Bone Pose for a single bone, so it stacks with Bone Pose and the separate Scale, Translate, and Rotate effects in the order the effects run. Bone values are local to the rig. Prefer the separate effects when you only need one kind of change.
 
 ### Bone Pose
 
@@ -322,7 +322,7 @@ Use Overlay UV Transform to reposition tattoos, makeup, scars, decals, or patter
 3. Set `Offset`, `Scale`, and `Rotation`.
 4. Use the curve and Min/Max to control the strength.
 
-Only the first matching overlay is changed. The overlay must be present in the character's final recipe. Test the low end carefully: the Scale values are multiplied by the mapped DNA strength, so values near zero can shrink the overlay dramatically.
+Only the first matching overlay is changed. The overlay must be present in the character's final recipe, and it must be drawn on top of another overlay: a slot's base overlay cannot be transformed. A mapped strength of 0 leaves the overlay where it is and at its own size; 1 gives the full Offset, Scale and Rotation. The effect replaces any transform the recipe itself stores for that overlay.
 
 ### Shared Color
 

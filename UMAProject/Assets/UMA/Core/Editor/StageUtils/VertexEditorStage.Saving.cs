@@ -45,7 +45,7 @@ namespace UMA
             {
                 var parts = new List<string>();
                 if (blendshapeEdit) parts.Add("changes to the blendshape '" + blendshapeName + "'");
-                else if (sculptSlots.Count > 0) parts.Add("sculpt or normals on " + ListNames(sculptSlots));
+                else if (sculptSlots.Count > 0) parts.Add("sculpt, normals or UVs on " + ListNames(sculptSlots));
                 if (paintSlots.Count > 0) parts.Add("vertex colors on " + ListNames(paintSlots));
                 if (advanced) parts.Add("Advanced adjustments or vertex-set modifiers");
                 if (selection) parts.Add("the vertex selection");
@@ -92,9 +92,10 @@ namespace UMA
             {
                 BakedMesh.GetVertices(sculptChangeVertices);
                 List<Vector3> normals = GetSculptChangeNormals();
+                List<Vector2> uvs = GetSculptChangeUVs();
                 foreach (SculptSlotEditState state in sculptSlotStates.Values)
                 {
-                    if (state != null && state.slot != null && IsSculptStateUnsaved(state, sculptChangeVertices, normals))
+                    if (state != null && state.slot != null && IsSculptStateUnsaved(state, sculptChangeVertices, normals, uvs))
                     {
                         work.sculptSlots.Add(state.slot.slotName);
                     }
@@ -119,16 +120,16 @@ namespace UMA
             return work;
         }
 
-        private bool IsSculptStateUnsaved(SculptSlotEditState state, List<Vector3> vertices, List<Vector3> normals)
+        private bool IsSculptStateUnsaved(SculptSlotEditState state, List<Vector3> vertices, List<Vector3> normals, List<Vector2> uvs)
         {
-            if (!HasSculptChanges(state, vertices, normals))
+            if (!HasSculptChanges(state, vertices, normals, uvs))
             {
                 return false;
             }
-            return !state.hasSavedChecksum || SculptStateChecksum(state, vertices, normals) != state.savedChecksum;
+            return !state.hasSavedChecksum || SculptStateChecksum(state, vertices, normals, uvs) != state.savedChecksum;
         }
 
-        private static long SculptStateChecksum(SculptSlotEditState state, List<Vector3> vertices, List<Vector3> normals)
+        private static long SculptStateChecksum(SculptSlotEditState state, List<Vector3> vertices, List<Vector3> normals, List<Vector2> uvs)
         {
             unchecked
             {
@@ -146,6 +147,14 @@ namespace UMA
                         hash = (hash ^ normals[i].GetHashCode()) * 1099511628211L;
                     }
                 }
+                if (state.uvEdited && uvs != null)
+                {
+                    end = Mathf.Min(state.start + state.count, uvs.Count);
+                    for (int i = state.start; i < end; i++)
+                    {
+                        hash = (hash ^ uvs[i].GetHashCode()) * 1099511628211L;
+                    }
+                }
                 return hash;
             }
         }
@@ -159,10 +168,11 @@ namespace UMA
             }
             BakedMesh.GetVertices(sculptChangeVertices);
             BakedMesh.GetNormals(sculptChangeNormals);
+            BakedMesh.GetUVs(0, sculptChangeUVs);
             foreach (SculptSlotEditState state in states)
             {
                 if (state == null) continue;
-                state.savedChecksum = SculptStateChecksum(state, sculptChangeVertices, sculptChangeNormals);
+                state.savedChecksum = SculptStateChecksum(state, sculptChangeVertices, sculptChangeNormals, sculptChangeUVs);
                 state.hasSavedChecksum = true;
             }
             unsavedWorkCache = null;
@@ -187,6 +197,17 @@ namespace UMA
                 state.hasOriginalNormals = true;
             }
             state.normalsEdited = false;
+            Vector2[] uvs = BakedMesh.uv;
+            if (state.originalUVs != null && uvs != null && state.start + state.count <= uvs.Length)
+            {
+                Array.Copy(uvs, state.start, state.originalUVs, 0, state.count);
+            }
+            Vector4[] tangents = BakedMesh.tangents;
+            if (state.originalTangents != null && tangents != null && state.start + state.count <= tangents.Length)
+            {
+                Array.Copy(tangents, state.start, state.originalTangents, 0, state.count);
+            }
+            state.uvEdited = false;
             state.hasSavedChecksum = false;
             unsavedWorkCache = null;
             sculptChangesUiDirty = true;
@@ -210,6 +231,26 @@ namespace UMA
                    (modifierEditor != null && modifierEditor.HasModifierContent());
         }
 
+        /// <summary>
+        /// Call after writing a slot asset. The Global Library lets go of what it holds for the slot
+        /// and drops the slot's race-baked copies, which were made from the slot as it was, so the next
+        /// character build uses the slot as saved. Without this a race with prebaked blendshapes keeps
+        /// wearing the old mesh until the Editor restarts.
+        /// </summary>
+        private static void ReleaseSlotFromLibrary(SlotDataAsset slot)
+        {
+            // A copy that only exists in memory has nothing behind it to load again.
+            if (slot == null || !EditorUtility.IsPersistent(slot))
+            {
+                return;
+            }
+            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+            if (indexer != null)
+            {
+                indexer.ReleaseReference(slot);
+            }
+        }
+
         /// <summary>Whether a way of saving can be used now, and if not, why.</summary>
         internal bool CanSave(SaveMethod method, out string reason)
         {
@@ -224,6 +265,9 @@ namespace UMA
                 case SaveMethod.BaseSlot:
                 case SaveMethod.NewSlot:
                     if (IsEditingBlendshape) { reason = "A blendshape is loaded: its strokes are saved to the blendshape."; return false; }
+                    // Outside Sculpt nothing keeps the sculpt session in step with the Slots panel, and
+                    // these saves work on its slot.
+                    EnsureSculptSession();
                     if (IsSculptMultiSlotMode) { reason = "Solo one slot in the Slots panel (S): this saves one slot."; return false; }
                     if (activeSculptState == null || sculptSlot == null || !HasSculptChanges(activeSculptState))
                     {
@@ -236,6 +280,7 @@ namespace UMA
                 case SaveMethod.Blendshape:
                     if (string.IsNullOrWhiteSpace(sculptBlendshapeName)) { reason = "Enter a blendshape name."; return false; }
                     if (!HasSculptChanges()) { reason = "Nothing has been sculpted."; return false; }
+                    if (!HasSculptPositionChanges()) { reason = "No vertex has moved. A blendshape holds movement, not UV or normal changes."; return false; }
                     return true;
 
                 case SaveMethod.BlendshapeEdit:
@@ -336,7 +381,7 @@ namespace UMA
 
             DrawSaveEntry(
                 "Save as Mesh Modifier",
-                "Writes a MeshModifier asset with everything changed in this session: sculpted positions, changed normals, painted vertex colors, and the Advanced adjustments and vertex-set modifiers. " +
+                "Writes a MeshModifier asset with everything changed in this session: sculpted positions, changed normals and UVs, painted vertex colors, and the Advanced adjustments and vertex-set modifiers. " +
                 "Nothing else is changed: add the asset to a wardrobe recipe or a character to apply it. It covers every slot you changed, also slots you have since locked.",
                 SaveMethod.MeshModifier, "Save as Mesh Modifier...",
                 () =>
@@ -361,7 +406,7 @@ namespace UMA
 
             DrawSaveEntry(
                 "Save to Base Slot",
-                SoloSlotsOnly + "Writes the sculpt (positions and normals) of the one editable slot into its SlotDataAsset in the project: the base slot behind a race-baked copy, the original behind a slot worn through legacy rig conversion. " +
+                SoloSlotsOnly + "Writes the sculpt (positions, normals and UVs) of the one editable slot into its SlotDataAsset in the project: the base slot behind a race-baked copy, the original behind a slot worn through legacy rig conversion. " +
                 "Every character wearing the slot changes. Undo puts it back. The editor stays open; later saves add only what you sculpt after this.",
                 SaveMethod.BaseSlot, "Save to Base Slot");
 
@@ -374,6 +419,7 @@ namespace UMA
             DrawSaveEntry(
                 "Save as Blendshape",
                 "Adds the sculpt as a blendshape at 100% on every slot asset it changed, or replaces a blendshape of that name. The rest shape of the slots is not changed. " +
+                "A blendshape holds movement only: UV changes are not in it. " +
                 "Regenerate the character to dial the blendshape in.",
                 SaveMethod.Blendshape, "Save as Blendshape",
                 () => sculptBlendshapeName = EditorGUILayout.TextField(new GUIContent("Blendshape Name", "The blendshape to add or replace."), sculptBlendshapeName));

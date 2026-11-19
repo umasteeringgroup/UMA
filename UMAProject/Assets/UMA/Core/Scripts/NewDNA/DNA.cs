@@ -37,6 +37,107 @@ namespace UMA
             return displayName;
         }
 
+        /// <summary>
+        /// Reverse interpolation: the DNA value (0..1) that turns <paramref name="baseMeasurement"/>,
+        /// taken with this DNA at its <see cref="defaultValue"/>, into <paramref name="projectedMeasurement"/>.
+        /// See <see cref="SolveReverseInterpolation"/> for the assumptions, and to learn whether the
+        /// target was in reach (this returns the closest value, 0 or 1, when it is not).
+        /// </summary>
+        /// <example>
+        /// A character is 2.0 m tall with height at its default of 0.5. To make it 1.6 m:
+        /// <code>float value = heightDna.ReverseInterpolate(2.0f, 1.6f);</code>
+        /// </example>
+        /// <param name="baseMeasurement">The measurement now (height, width, ...), any unit.</param>
+        /// <param name="projectedMeasurement">The measurement wanted, same unit.</param>
+        public float ReverseInterpolate(float baseMeasurement, float projectedMeasurement)
+        {
+            return SolveReverseInterpolation(baseMeasurement, projectedMeasurement, defaultValue).Value;
+        }
+
+        /// <summary>
+        /// Reverse interpolation from a measurement taken with this DNA at <paramref name="baseValue"/>
+        /// (for example the character's current value rather than the default).
+        /// See <see cref="ReverseInterpolate(float, float)"/>.
+        /// </summary>
+        public float ReverseInterpolate(float baseMeasurement, float projectedMeasurement, float baseValue)
+        {
+            return SolveReverseInterpolation(baseMeasurement, projectedMeasurement, baseValue).Value;
+        }
+
+        /// <summary>
+        /// Reverse interpolation with the full answer: the value, whether the target is in reach,
+        /// the measurement that value gives, and the range the DNA can reach from this base.
+        /// <para>
+        /// Assumptions: the measurement is proportional to the scale this DNA's effects apply, i.e.
+        /// measurement(v) = baseMeasurement * factor(v) / factor(baseValue), where factor is the product of
+        /// the scale factors of the enabled effects (<see cref="DNAEffect.TryGetScaleFactor"/>; bone scale
+        /// and bone transform effects report one). That holds when the scaled bone carries the whole
+        /// measured span and its pivot is where the measurement starts: UMA 3 height scales the
+        /// Position bone, which every bone hangs from, at the feet. It does not hold for offsets
+        /// (bone translate, the position part of a bone transform), blendshapes, or several effects on
+        /// bones along the measured span; use <see cref="DNAReverseInterpolation.Solve"/> with your own
+        /// forward function for those.
+        /// </para>
+        /// <para>
+        /// The curve and min/max mapping are inverted numerically, so any curve shape works. When a curve
+        /// turns back and two values reach the target, the one nearest <paramref name="baseValue"/> is returned.
+        /// </para>
+        /// </summary>
+        /// <param name="baseMeasurement">The measurement taken with this DNA at <paramref name="baseValue"/>.</param>
+        /// <param name="projectedMeasurement">The measurement wanted.</param>
+        /// <param name="baseValue">The DNA value in use when <paramref name="baseMeasurement"/> was taken.</param>
+        /// <param name="axis">Which scale axis the measurement runs along, in the scaled bone's local
+        /// space (0 = x, 1 = y, 2 = z). Y is up for the UMA 3 Position bone.</param>
+        public DNAReverseInterpolation.Result SolveReverseInterpolation(float baseMeasurement, float projectedMeasurement, float baseValue, int axis = 1)
+        {
+            if (axis < 0 || axis > 2)
+            {
+                throw new ArgumentOutOfRangeException(nameof(axis), "axis must be 0 (x), 1 (y) or 2 (z).");
+            }
+            if (!TryGetScaleFactor(baseValue, out _))
+            {
+                return new DNAReverseInterpolation.Result
+                {
+                    Solvable = false,
+                    Value = Mathf.Clamp01(baseValue),
+                    Achieved = baseMeasurement,
+                    Minimum = baseMeasurement,
+                    Maximum = baseMeasurement,
+                };
+            }
+            return DNAReverseInterpolation.SolveProportional(
+                v =>
+                {
+                    TryGetScaleFactor(v, out Vector3 factor);
+                    return factor[axis];
+                },
+                baseMeasurement, baseValue, projectedMeasurement);
+        }
+
+        /// <summary>
+        /// The combined scale factor of the enabled effects that scale (the product of each one's
+        /// <see cref="DNAEffect.TryGetScaleFactor"/>). False when no effect scales anything.
+        /// </summary>
+        /// <param name="value">Raw DNA value, 0..1.</param>
+        public bool TryGetScaleFactor(float value, out Vector3 factor)
+        {
+            factor = Vector3.one;
+            bool any = false;
+            foreach (var effect in effects)
+            {
+                if (effect == null || !effect.enabled)
+                {
+                    continue;
+                }
+                if (effect.TryGetScaleFactor(value, out Vector3 effectFactor))
+                {
+                    factor = Vector3.Scale(factor, effectFactor);
+                    any = true;
+                }
+            }
+            return any;
+        }
+
         public DNABuildType GetBuildType()
         {
             DNABuildType updateFlags = DNABuildType.None;

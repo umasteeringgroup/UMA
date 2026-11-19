@@ -63,6 +63,8 @@ The `Build and Preview Options` foldout controls what is included while authorin
 
 Use `Only Active Vertex-Set Modifier` when isolating one correction. Disable `Rebuild on changes` when a character is expensive to generate, then rebuild manually after several edits.
 
+`Recalculate Normals` works out the normals of the editable slots again from their current shape, the same as **Recalculate** in Sculpt's Normals section. It is an edit like a sculpt: **Save as Mesh Modifier** keeps it, and with one slot soloed so do **Save to Base Slot** and **Save as New Slot**. Slots that are not editable are left alone. See [battle buddies](MeshModifierSculpting.md#battle-buddies) for how vertices at one position are handled.
+
 ## Sculpt
 
 Sculpt is the preferred workflow for organic position changes.

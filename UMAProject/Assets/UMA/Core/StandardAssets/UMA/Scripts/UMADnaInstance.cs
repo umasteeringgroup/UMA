@@ -25,12 +25,42 @@ namespace UMA
         public static UMADnaInstance LoadInstance(string data)
         {
             var dnac = UnityEngine.JsonUtility.FromJson<DNAInstanceCollection>(data);
+            // Text saved by older versions can hold a group written as an instance ID. That number only
+            // meant something in the session that wrote it; here it would point at nothing, or at some
+            // other object. Groups are found again by DNA name.
+            if (dnac != null && dnac.dnaInstances != null)
+            {
+                for (int i = 0; i < dnac.dnaInstances.Count; i++)
+                {
+                    if (dnac.dnaInstances[i] != null)
+                    {
+                        dnac.dnaInstances[i].parentGroup = null;
+                    }
+                }
+            }
 			return new UMADnaInstance(dnac);
         }
 
         public static string SaveInstance(UMADnaInstance instance)
         {
-            return UnityEngine.JsonUtility.ToJson(instance.DNAInstances);
+            // Save names, values and enabled flags only. JsonUtility writes an object reference as an
+            // instance ID, so a group saved here would make the same character save differently in
+            // every session and could not be read back in another one.
+            var saved = new DNAInstanceCollection();
+            var source = instance != null && instance.DNAInstances != null ? instance.DNAInstances.dnaInstances : null;
+            if (source != null)
+            {
+                saved.dnaInstances.Capacity = source.Count;
+                for (int i = 0; i < source.Count; i++)
+                {
+                    DNAInstance dna = source[i];
+                    if (dna != null)
+                    {
+                        saved.dnaInstances.Add(new DNAInstance(dna.Name, dna.Value, null) { enabled = dna.enabled });
+                    }
+                }
+            }
+            return UnityEngine.JsonUtility.ToJson(saved);
         }
 
         public override float[] Values

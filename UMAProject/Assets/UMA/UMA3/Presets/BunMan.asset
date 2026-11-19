@@ -513,7 +513,7 @@ MonoBehaviour:
     - Name: BrowPosition
       val: 5000
     - Name: ElfEars
-      val: 5000
+      val: 0
     - Name: EyePosition
       val: 10000
   Icon: {fileID: 2800000, guid: e76270e7a5fc8c042b2f1dd02595c51b, type: 3}

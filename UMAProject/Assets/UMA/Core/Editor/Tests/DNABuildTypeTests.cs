@@ -114,6 +114,49 @@ namespace UMA.Tests
             Assert.AreEqual(DNAInstanceCollection.DNABuildType.MeshModifiers, new DNAEffect_MeshModifier().AreaEffect);
             Assert.AreEqual(DNAInstanceCollection.DNABuildType.BlendShape, new DNAEffect_BlendShape().AreaEffect);
             Assert.AreEqual(DNAInstanceCollection.DNABuildType.Rig, new DNAEffect_BonePose().AreaEffect);
+            Assert.AreEqual(DNAInstanceCollection.DNABuildType.MaterialProperty, new DNAEffect_RuntimeMaterialProperty().AreaEffect);
+        }
+
+        [Test]
+        public void RendererOnlyPassRunsBlendShapeAndMaterialPropertyEffectsOnly()
+        {
+            TypedEffect blendShape = Effect(DNAInstanceCollection.DNABuildType.BlendShape);
+            TypedEffect material = Effect(DNAInstanceCollection.DNABuildType.MaterialProperty);
+            TypedEffect rig = Effect(DNAInstanceCollection.DNABuildType.Rig);
+            TypedEffect color = Effect(DNAInstanceCollection.DNABuildType.Texture | DNAInstanceCollection.DNABuildType.SharedColors);
+            dna.effects.Add(blendShape);
+            dna.effects.Add(material);
+            dna.effects.Add(rig);
+            dna.effects.Add(color);
+
+            dna.PostApply(null, 0.5f, DNAInstanceCollection.DNABuildType.RendererOnly);
+
+            Assert.AreEqual(1, blendShape.postApplyCalls);
+            Assert.AreEqual(1, material.postApplyCalls);
+            Assert.AreEqual(0, rig.postApplyCalls);
+            Assert.AreEqual(0, color.postApplyCalls);
+        }
+
+        [Test]
+        public void TextureEffectsRunInTheSameAfterRecipePassAsColorEffects()
+        {
+            // An overlay transform reports Texture only. A DNA change must still run it again,
+            // in the pass a color effect takes part in.
+            const DNAInstanceCollection.DNABuildType drawn =
+                DNAInstanceCollection.DNABuildType.Texture | DNAInstanceCollection.DNABuildType.SharedColors;
+            TypedEffect overlay = Effect(DNAInstanceCollection.DNABuildType.Texture);
+            TypedEffect color = Effect(drawn);
+            TypedEffect modifier = Effect(DNAInstanceCollection.DNABuildType.MeshModifiers);
+            dna.effects.Add(overlay);
+            dna.effects.Add(color);
+            dna.effects.Add(modifier);
+
+            dna.AfterRecipeGeneration(null, 0.75f, false, drawn);
+
+            Assert.AreEqual(1, overlay.afterRecipeCalls);
+            Assert.AreEqual(1, color.afterRecipeCalls);
+            Assert.AreEqual(0, modifier.afterRecipeCalls);
+            Assert.AreNotEqual(0, (int)(new DNAEffect_OverlayUVTransform().AreaEffect & drawn));
         }
 
         [Test]

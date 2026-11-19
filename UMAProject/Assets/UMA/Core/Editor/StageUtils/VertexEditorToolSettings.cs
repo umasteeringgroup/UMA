@@ -6,8 +6,9 @@ namespace UMA
 {
     /// <summary>
     /// The Vertex Editor's tool choices, as they are remembered between sessions: the workflow,
-    /// the Sculpt and Vertex Paint brushes with their settings, and the Advanced selection tool,
-    /// mode and action. Kept per user in EditorPrefs as one JSON string.
+    /// the display options (Original Materials, Vertex Colors), the Sculpt and Vertex Paint brushes
+    /// with their settings, and the Advanced selection tool, mode and action. Kept per user in
+    /// EditorPrefs as one JSON string.
     /// </summary>
     /// <remarks>
     /// Choices are stored by name, so a reordered list still restores the right one. Every value is
@@ -26,6 +27,10 @@ namespace UMA
         public const int CurrentVersion = 1;
 
         public int version = CurrentVersion;
+
+        // Display. Wireframe is not here: it has its own key, which the weight editors share.
+        public int showOriginalMaterials = -1;
+        public int showVertexColors = -1;
 
         // Workflow and Advanced
         public string workflow;
@@ -54,7 +59,10 @@ namespace UMA
         public int sculptFrontFacesOnly = -1;
         public int showSculptNormals = -1;
         public float sculptNormalLength = float.NaN;
-        public float sculptNormalSmoothingAngle = float.NaN;
+        public int sculptUVLockBorders = -1;
+        public float sculptBeautifyEvenSpacing = float.NaN;
+        public int sculptBeautifyKeepShape = -1;
+        public int sculptBeautifyKeepTexture = -1;
 
         // Sculpt and Vertex Paint
         public int brushIgnoresLockedSlots = -1;

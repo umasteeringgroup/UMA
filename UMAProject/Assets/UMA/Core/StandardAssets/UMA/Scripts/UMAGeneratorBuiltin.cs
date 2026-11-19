@@ -752,8 +752,10 @@ namespace UMA
 			var rt = data.GetFirstRenderTexture();
 			if (rt != null && !rt.IsCreated())
 			{
+				// Rebuild this character's own atlases. The umaData field is whichever
+				// character the generator worked on last, not the one that lost its textures.
 				UMAGeneratorPro ugp = new UMAGeneratorPro();
-				ugp.ProcessTexture(this, umaData, true, InitialScaleFactor);
+				ugp.ProcessTexture(this, data, true, InitialScaleFactor);
 				TextureChanged++;
 			}
 		}
@@ -994,10 +996,14 @@ namespace UMA
 				umaData.isShapeDirty = false;
 				DnaChanged++; 
             }
-			else if (umaData.skeleton.isUpdating)
+			else
 			{
-                umaData.skeleton.EndSkeletonUpdate();
-            }
+				if (umaData.skeleton.isUpdating)
+				{
+					umaData.skeleton.EndSkeletonUpdate();
+				}
+				ApplyRendererOnlyDNA(umaData);
+			}
 #if DEBUG_TIMING
             long skeletonUpdates = gstopWatch.ElapsedTicks;
             skeletonUpdatesTicks += skeletonUpdates;
@@ -2159,9 +2165,13 @@ namespace UMA
                     data.isShapeDirty = false;
                     DnaChanged++;
                 }
-                else if (data.skeleton.isUpdating)
+                else
                 {
-                    data.skeleton.EndSkeletonUpdate();
+                    if (data.skeleton.isUpdating)
+                    {
+                        data.skeleton.EndSkeletonUpdate();
+                    }
+                    ApplyRendererOnlyDNA(data);
                 }
                 skeletonUpdatesTicks += stageStopwatch.ElapsedTicks;
                 stageStopwatch.Restart();
@@ -3074,6 +3084,26 @@ namespace UMA
                     }
                 }
 #endif
+			}
+		}
+
+		/// <summary>
+		/// Sets what DNA puts straight on the renderers (blendshape weights, material properties) after a
+		/// build that left the body alone. A body update does this itself, through NewDNAPostApply.
+		/// Without it a texture-only or mesh-only build would leave those values at the old DNA.
+		/// </summary>
+		protected void ApplyRendererOnlyDNA(UMAData umaData)
+		{
+			if (umaData == null || umaData.umaRecipe == null || umaData.umaRecipe.raceData == null ||
+				!umaData.umaRecipe.raceData.useNewDNA)
+			{
+				return;
+			}
+
+			DNAInstanceCollection dna = umaData.umaRecipe.dnaInstanceCollection;
+			if (dna != null && dna.dnaCollection != null)
+			{
+				dna.PostApplyEffects(umaData, DNABuildType.RendererOnly);
 			}
 		}
 

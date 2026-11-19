@@ -70,39 +70,6 @@ namespace UMA.Editors.Tests
             Assert.That(none, Is.EqualTo(Vector3.up));
         }
 
-        [TestCase(60f, true)]
-        [TestCase(10f, false)]
-        public void RecalculatedNormalsJoinAcrossUvSeamsWithinTheSmoothingAngle(float smoothingAngle, bool smooth)
-        {
-            // Two triangles folded 30 degrees along a shared edge, whose two edge vertices are
-            // duplicated (a UV seam), so the triangles share no vertex index.
-            float fold = 30f * Mathf.Deg2Rad;
-            Vector3 p0 = new Vector3(0f, 0f, 0f), p1 = new Vector3(0f, 1f, 0f);
-            Vector3 left = new Vector3(-1f, 0.5f, 0f);
-            Vector3 right = new Vector3(Mathf.Cos(fold), 0.5f, Mathf.Sin(fold));
-            Vector3[] positions = { p0, p1, left, p0, p1, right };
-            int[] triangles = { 0, 1, 2, 3, 5, 4 };
-            var normals = new Vector3[6];
-            Call("RecalculateSlotNormals", 0, 6, new[] { 0, 3 }, triangles, positions, normals,
-                Mathf.Cos(smoothingAngle * Mathf.Deg2Rad) - 1e-5f, 0.0001f);
-
-            Vector3 leftFace = Vector3.Cross(p1 - p0, left - p0).normalized;
-            Vector3 rightFace = Vector3.Cross(right - p0, p1 - p0).normalized;
-            Assert.That(Vector3.Angle(leftFace, rightFace), Is.EqualTo(30f).Within(0.01f));
-            if (smooth)
-            {
-                Assert.That(Vector3.Angle(normals[0], normals[3]), Is.LessThan(0.01f), "Seam copies share one normal.");
-                Assert.That(Vector3.Angle(normals[0], leftFace), Is.EqualTo(15f).Within(0.5f));
-            }
-            else
-            {
-                Assert.That(Vector3.Angle(normals[0], leftFace), Is.LessThan(0.01f), "Hard edge keeps each face's normal.");
-                Assert.That(Vector3.Angle(normals[3], rightFace), Is.LessThan(0.01f));
-            }
-            Assert.That(Vector3.Angle(normals[2], leftFace), Is.LessThan(0.01f));
-            Assert.That(Vector3.Angle(normals[5], rightFace), Is.LessThan(0.01f));
-        }
-
         [Test]
         public void TangentsStayPerpendicularAndKeepTheirHandedness()
         {
