@@ -646,8 +646,13 @@ namespace UMA.Editors
         /// Updates an Existing SlotDataAsset.
         /// </summary>
         /// <param name="stripBlendShapePrefix">Removes the part of each blendshape name up to and including its first dot, as Slot Builder's "Strip Blendshape Prefix" does.</param>
-        public static void UpdateSlotData(SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents, bool clearNormals, bool clearTangents, bool stripBlendShapePrefix = false)
+        /// <returns>False when the slot was not updated (the reason is logged).</returns>
+        public static bool UpdateSlotData(SlotDataAsset slot, SkinnedMeshRenderer mesh, UMAMaterial material, SkinnedMeshRenderer prefabMesh, string rootBone, bool calcTangents, bool clearNormals, bool clearTangents, bool stripBlendShapePrefix = false)
         {
+            if (ReportMissingSkinnedBones(mesh))
+            {
+                return false;
+            }
 #if UNITY_EDITOR
             // If this slot was built with Slot Builder LOD settings, reuse those defaults on update.
             // This keeps updates consistent even when called from other tools.
@@ -681,7 +686,7 @@ namespace UMA.Editors
             if (path.Length <= 0)
             {
                 Debug.LogWarning("CreateSlotData: Path to existing asset is empty!");
-                return;
+                return false;
             }
 
             GameObject tempGameObject = null;
@@ -751,7 +756,7 @@ namespace UMA.Editors
                 string keptRoot = KeepSkinnedBones(resultingSkinnedMesh, newObject.transform, rootBone, tempGameObject.name);
                 if (keptRoot == null)
                 {
-                    return;
+                    return false;
                 }
                 rootBone = keptRoot;
 
@@ -855,6 +860,7 @@ namespace UMA.Editors
                     }
                 }
             }
+            return true;
         }
 
         /// <summary>
@@ -978,6 +984,10 @@ namespace UMA.Editors
 
         public static SlotBuildResult CreateSlotData(SlotBuilderParameters sbp)
         {
+            if (ReportMissingSkinnedBones(sbp.slotMesh))
+            {
+                return null;
+            }
             ExistingSlotAssetLookup existingSlotLookup =
                 sbp.findAndUpdateExistingSlot ? new ExistingSlotAssetLookup() : null;
 
@@ -1678,6 +1688,120 @@ namespace UMA.Editors
             }
             var weightsArray = new NativeArray<BoneWeight1>(newBoneWeights, Allocator.Temp);
             return weightsArray;
+        }
+
+        /// <summary>
+        /// The model files among these objects (a model, a renderer or object inside one, or a folder of them) that are
+        /// imported with Optimize Game Objects on and an Avatar made from the model (Generic or Humanoid rig). That removes
+        /// the bone transforms (the renderer is left with no bones), so the Slot Builder cannot build slots from the model.
+        /// </summary>
+        internal static List<string> ModelsWithOptimizedGameObjects(IEnumerable<UnityEngine.Object> objects)
+        {
+            var paths = new List<string>();
+            if (objects == null)
+            {
+                return paths;
+            }
+            void Check(string path)
+            {
+                if (string.IsNullOrEmpty(path) || paths.Contains(path))
+                {
+                    return;
+                }
+                // Unity removes the bones only when the import also makes an Avatar (measured on Unity 6.3: with
+                // No Avatar the setting changes nothing).
+                if (AssetImporter.GetAtPath(path) is ModelImporter importer && importer.optimizeGameObjects &&
+                    importer.avatarSetup != ModelImporterAvatarSetup.NoAvatar &&
+                    (importer.animationType == ModelImporterAnimationType.Generic || importer.animationType == ModelImporterAnimationType.Human))
+                {
+                    paths.Add(path);
+                }
+            }
+            foreach (UnityEngine.Object obj in objects)
+            {
+                if (obj == null)
+                {
+                    continue;
+                }
+                string path = AssetDatabase.GetAssetPath(obj);
+                if (!string.IsNullOrEmpty(path) && AssetDatabase.IsValidFolder(path))
+                {
+                    foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { path }))
+                    {
+                        Check(AssetDatabase.GUIDToAssetPath(guid));
+                    }
+                }
+                else
+                {
+                    Check(path);
+                }
+            }
+            return paths;
+        }
+
+        /// <summary>
+        /// Warns when a model given to the Slot Builder is imported with Optimize Game Objects on, and offers to turn it
+        /// off. Returns true when it did, and reimported those models: objects from them must be loaded again.
+        /// </summary>
+        internal static bool OfferToKeepModelBones(IEnumerable<UnityEngine.Object> objects)
+        {
+            List<string> paths = ModelsWithOptimizedGameObjects(objects);
+            if (paths.Count == 0)
+            {
+                return false;
+            }
+            string list = string.Join("\n", paths.GetRange(0, Math.Min(paths.Count, 8))) + (paths.Count > 8 ? "\n..." : "");
+            if (!EditorUtility.DisplayDialog("Slot Builder",
+                (paths.Count == 1 ? "This model is" : "These models are") + " imported with 'Optimize Game Objects' on (Rig tab of the import settings):\n\n" +
+                list + "\n\nThat removes the bones, so the Slot Builder cannot build slots from " + (paths.Count == 1 ? "it" : "them") +
+                ". Turn it off and reimport?", "Turn Off and Reimport", "Leave As Is"))
+            {
+                return false;
+            }
+            foreach (string path in paths)
+            {
+                if (AssetImporter.GetAtPath(path) is ModelImporter importer)
+                {
+                    importer.optimizeGameObjects = false;
+                    importer.SaveAndReimport();
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Logs an error and returns true when bones the mesh is weighted to have no transform in the model. Importing
+        /// with Optimize Game Objects removes the bone transforms (the renderer then lists empty bones), and the build
+        /// failed later with a NullReferenceException or in UMAMeshData.FindRoot, with no hint of the cause.
+        /// </summary>
+        internal static bool ReportMissingSkinnedBones(SkinnedMeshRenderer renderer)
+        {
+            Mesh mesh = renderer != null ? renderer.sharedMesh : null;
+            if (mesh == null)
+            {
+                return false;
+            }
+            Transform[] bones = renderer.bones ?? new Transform[0];
+            var weights = mesh.GetAllBoneWeights();
+            var missing = new HashSet<int>();
+            for (int i = 0; i < weights.Length; i++)
+            {
+                int index = weights[i].boneIndex;
+                if (weights[i].weight > 0f && (index < 0 || index >= bones.Length || bones[index] == null))
+                {
+                    missing.Add(index);
+                }
+            }
+            if (missing.Count == 0)
+            {
+                return false;
+            }
+            string model = renderer.transform.root != null ? renderer.transform.root.name : renderer.name;
+            Debug.LogError("UMA Slot Builder: '" + renderer.name + "' in '" + model + "' is weighted to " + missing.Count +
+                " bone(s) that are not in the model (its Skinned Mesh Renderer lists empty bones). This usually means the model " +
+                "was imported with 'Optimize Game Objects' on, which removes the bones: select the model, turn it off on the Rig tab " +
+                "of its import settings, press Apply, and build the slot again.", renderer);
+            return true;
         }
 
         /// <summary>

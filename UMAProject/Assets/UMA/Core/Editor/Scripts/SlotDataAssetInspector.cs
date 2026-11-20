@@ -2551,13 +2551,38 @@ namespace UMA.Editors
             GameObject obj = DropAreaGUI(dropArea);
             if (obj != null)
             {
+                // A model imported with Optimize Game Objects has no bones to update the slot from.
+                string modelPath = AssetDatabase.GetAssetPath(obj);
+                string objectName = obj.name;
+                if (UMASlotProcessingUtil.OfferToKeepModelBones(new UnityEngine.Object[] { obj }) && obj == null)
+                {
+                    foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(modelPath))
+                    {
+                        if (asset is GameObject reloaded && reloaded.name == objectName)
+                        {
+                            obj = reloaded;
+                            break;
+                        }
+                    }
+                    if (obj == null)
+                    {
+                        return;
+                    }
+                }
                 SkinnedMeshRenderer skinnedMesh = obj.GetComponent<SkinnedMeshRenderer>();
                 if (skinnedMesh != null)
                 {
                     // normalReferenceMesh may be null. It's OK to pass null seams mesh.
-                    UpdateSlotData(slot != null ? slot.normalReferenceMesh : null, skinnedMesh);
-                    GUI.changed = true;
-                    EditorUtility.DisplayDialog("Complete", "Update completed", "OK");
+                    // It said "Update completed" also when the update was refused (the reason is in the Console).
+                    if (UpdateSlotData(slot != null ? slot.normalReferenceMesh : null, skinnedMesh))
+                    {
+                        GUI.changed = true;
+                        EditorUtility.DisplayDialog("Complete", "Update completed", "OK");
+                    }
+                    else
+                    {
+                        EditorUtility.DisplayDialog("Error", "The slot was not updated. The Console says why.", "OK");
+                    }
                 }
                 else
                 {
@@ -2603,21 +2628,25 @@ namespace UMA.Editors
             return null;
         }
 
-        private void UpdateSlotData(SkinnedMeshRenderer seamsMesh, SkinnedMeshRenderer skinnedMesh)
+        private bool UpdateSlotData(SkinnedMeshRenderer seamsMesh, SkinnedMeshRenderer skinnedMesh)
         {
             SlotDataAsset s = target as SlotDataAsset;
             if (s == null)
             {
                 EditorUtility.DisplayDialog("Error", "Target slot is not available.", "OK");
-                return;
+                return false;
             }
 
             string existingRootBone = !UMAMeshData.IsNullOrEmptyMeshData(s.meshData) ? s.meshData.RootBoneName : string.Empty;
 
-            UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, null, seamsMesh, existingRootBone, true, clearNormals, clearTangents, stripBlendShapePrefix);
+            if (!UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, null, seamsMesh, existingRootBone, true, clearNormals, clearTangents, stripBlendShapePrefix))
+            {
+                return false;
+            }
             string path = AssetDatabase.GetAssetPath(target.GetEntityId());
             AssetDatabase.ImportAsset(path);
             UMAUpdateProcessor.UpdateSlot(s);
+            return true;
         }
 
         /// <summary>

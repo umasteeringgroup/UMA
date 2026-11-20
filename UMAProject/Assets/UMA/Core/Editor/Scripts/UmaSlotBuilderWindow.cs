@@ -1187,8 +1187,26 @@ namespace UMA.Editors
                 if (newslotMesh != slotMesh)
                 {
                     errmsg = "";
+                    bool reimported = false;
+                    if (newslotMesh != null)
+                    {
+                        // A model imported with Optimize Game Objects has no bones to build the slot from.
+                        string modelPath = AssetDatabase.GetAssetPath(newslotMesh);
+                        string rendererName = newslotMesh.name;
+                        reimported = UMASlotProcessingUtil.OfferToKeepModelBones(new UnityEngine.Object[] { newslotMesh });
+                        if (reimported)
+                        {
+                            newslotMesh = FindRendererInModel(modelPath, rendererName) ?? newslotMesh;
+                        }
+                    }
                     slotMesh = newslotMesh;
-                    slotName = newslotMesh.name;
+                    // Clearing the field set a null renderer's name.
+                    slotName = newslotMesh != null ? newslotMesh.name : slotName;
+                    if (reimported)
+                    {
+                        // The model was reimported in the middle of drawing: draw again with the reloaded one.
+                        GUIUtility.ExitGUI();
+                    }
                 }
 
                 slotName = EditorGUILayout.TextField("Slot Name", slotName);
@@ -1328,6 +1346,22 @@ namespace UMA.Editors
         }
 
         private static bool dragDropOpen = false;
+
+        private static SkinnedMeshRenderer FindRendererInModel(string modelPath, string rendererName)
+        {
+            if (string.IsNullOrEmpty(modelPath))
+            {
+                return null;
+            }
+            foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(modelPath))
+            {
+                if (asset is SkinnedMeshRenderer renderer && renderer.name == rendererName)
+                {
+                    return renderer;
+                }
+            }
+            return null;
+        }
 
         private void RebuildPendingSmrsFromObjects(UnityEngine.Object[] sourceObjects)
         {
@@ -2330,6 +2364,24 @@ namespace UMA.Editors
                         }
                     }
 
+                    // A model imported with Optimize Game Objects has no bones to build slots from.
+                    bool reimported = false;
+                    if (draggedObjects != null)
+                    {
+                        string[] draggedPaths = System.Array.ConvertAll(draggedObjects, AssetDatabase.GetAssetPath);
+                        reimported = UMASlotProcessingUtil.OfferToKeepModelBones(draggedObjects);
+                        if (reimported)
+                        {
+                            for (int i = 0; i < draggedObjects.Length; i++)
+                            {
+                                if (draggedObjects[i] == null && !string.IsNullOrEmpty(draggedPaths[i]))
+                                {
+                                    draggedObjects[i] = AssetDatabase.LoadMainAssetAtPath(draggedPaths[i]);
+                                }
+                            }
+                        }
+                    }
+
                     RebuildPendingSmrsFromObjects(draggedObjects);
 
                     if (_pendingSmrs.Count == 0)
@@ -2337,6 +2389,10 @@ namespace UMA.Editors
                         EditorUtility.DisplayDialog("Slot Builder", "No SkinnedMeshRenderers found in dropped objects. Check your filters to ensure the SMR you want is not skipped.", "OK");
                     }
                     Repaint();
+                    if (reimported)
+                    {
+                        GUIUtility.ExitGUI();
+                    }
                 }
             }
         }
