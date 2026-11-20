@@ -141,6 +141,9 @@ namespace UMA.Editors
                 EditorUtility.SetDirty(copy);
                 result = copy;
             }
+            // Save the converted slot itself. A replaced slot was only marked changed before, and was
+            // written only if something later saved the whole project.
+            AssetDatabase.SaveAssetIfDirty(result);
 
             UMAAssetIndexer index = addToIndex ? UMAAssetIndexer.Instance : null;
             if (index != null)
@@ -363,7 +366,7 @@ namespace UMA.Editors
                 {
                     UMAAssetIndexer.Instance.ForceSave();
                 }
-                AssetDatabase.SaveAssets();
+                // Each converted slot was saved by ConvertAndSaveCore; nothing else in the project is saved.
             }
 
             log.Insert(0, $"{created.Count} converted, {skipped} skipped, {failed} failed.\n");

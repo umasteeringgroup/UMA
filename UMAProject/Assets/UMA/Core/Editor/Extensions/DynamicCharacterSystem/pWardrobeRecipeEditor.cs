@@ -23,8 +23,122 @@ namespace UMA.Editors
 
 
         // Drop area for compatible Races
+        /// <summary>
+        /// One thumbnail per distinct compatible race, in race order: the last stored entry for that race
+        /// that has a sprite (the one characters use), else its first entry, else a new empty one. A race
+        /// listed twice used to add every matching thumbnail once per listing, so the stored list doubled
+        /// (and was saved) on every inspector draw.
+        /// </summary>
+        /// <summary>A placeholder slot name not used by another placeholder in the recipe: the name, then "name 2", "name 3"...</summary>
+        public static string UniquePlaceholderName(UMAData.UMARecipe recipe, string baseName)
+        {
+            var used = new HashSet<string>();
+            if (recipe != null && recipe.slotDataList != null)
+            {
+                foreach (SlotData existing in recipe.slotDataList)
+                {
+                    if (existing != null && existing.isPlaceholderSlot && existing.placeholderSlotName != null)
+                    {
+                        used.Add(existing.placeholderSlotName);
+                    }
+                }
+            }
+            string name = baseName;
+            for (int suffix = 2; used.Contains(name); suffix++)
+            {
+                name = baseName + " " + suffix;
+            }
+            return name;
+        }
+
+        public static List<WardrobeRecipeThumb> BuildRaceThumbs(IList<string> compatibleRaces, IList<WardrobeRecipeThumb> storedThumbs)
+        {
+            var result = new List<WardrobeRecipeThumb>();
+            if (compatibleRaces == null)
+            {
+                return result;
+            }
+            var seen = new HashSet<string>();
+            foreach (string race in compatibleRaces)
+            {
+                if (race == null || !seen.Add(race))
+                {
+                    continue;
+                }
+                WardrobeRecipeThumb match = null;
+                if (storedThumbs != null)
+                {
+                    foreach (WardrobeRecipeThumb thumb in storedThumbs)
+                    {
+                        if (thumb != null && thumb.race == race)
+                        {
+                            // Characters take the last entry with a sprite for a race
+                            // (GetWardrobeRecipeThumbFor), so the inspector keeps that one.
+                            if (match == null || thumb.thumb != null)
+                            {
+                                match = thumb;
+                            }
+                        }
+                    }
+                }
+                result.Add(match ?? new WardrobeRecipeThumb(race));
+            }
+
+            // A race with no sprite of its own shows the first sprite in the list (GetWardrobeRecipeThumbFor),
+            // which can be on an entry for a race that is no longer compatible. Dropping that entry took the
+            // thumbnail away from those races, so it is kept first in the list while a race still uses it.
+            Sprite fallback = null;
+            WardrobeRecipeThumb fallbackEntry = null;
+            if (storedThumbs != null)
+            {
+                foreach (WardrobeRecipeThumb thumb in storedThumbs)
+                {
+                    if (thumb != null && thumb.thumb != null)
+                    {
+                        fallback = thumb.thumb;
+                        fallbackEntry = thumb;
+                        break;
+                    }
+                }
+            }
+            if (fallback != null && result.Exists(t => t.thumb == null))
+            {
+                WardrobeRecipeThumb firstWithSprite = result.Find(t => t.thumb != null);
+                if (firstWithSprite == null || firstWithSprite.thumb != fallback)
+                {
+                    result.Insert(0, fallbackEntry);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// The thumbnail list's label for an entry: its race, or for the entry kept only as the default for
+        /// races without a sprite of their own (see BuildRaceThumbs), the race marked as the default.
+        /// </summary>
+        public static string RaceThumbLabel(IList<WardrobeRecipeThumb> thumbs, IList<string> compatibleRaces, int index)
+        {
+            WardrobeRecipeThumb entry = thumbs[index];
+            bool repeated = false;
+            for (int i = index + 1; i < thumbs.Count; i++)
+            {
+                if (thumbs[i] != null && thumbs[i].race == entry.race)
+                {
+                    repeated = true;
+                    break;
+                }
+            }
+            if (repeated || compatibleRaces == null || !compatibleRaces.Contains(entry.race))
+            {
+                return (string.IsNullOrEmpty(entry.race) ? "(no race)" : entry.race) + " (default for races without their own)";
+            }
+            return entry.race;
+        }
+
         private void CompatibleRacesDropArea(Rect dropArea, List<string> compatibleRaces)
 		{
+			// Drag events reach a disabled (locked) inspector too.
+			if (!GUI.enabled) return;
 			Event evt = Event.current;
 			//make the box clickable so that the user can select raceData assets from the asset selection window
 			if (evt.type == EventType.MouseUp)
@@ -37,7 +151,9 @@ namespace UMA.Editors
 					return;
 				}
 			}
-			if (evt.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == compatibleRacePickerID)
+			// Act when the picker closes, not on every highlight (ObjectSelectorUpdated), so browsing
+			// does not add each race looked at. A cancelled picker returns nothing.
+			if (evt.commandName == "ObjectSelectorClosed" && EditorGUIUtility.GetObjectPickerControlID() == compatibleRacePickerID)
 			{
 				RaceData tempRaceDataAsset = EditorGUIUtility.GetObjectPickerObject() as RaceData;
 				if (tempRaceDataAsset)
@@ -257,9 +373,26 @@ namespace UMA.Editors
 
 			return slotName;
 		}
+		// The compatible races each cached menu was built for. The menus are rebuilt when the races differ,
+		// whoever changed them (Copy Selected Values, Standard View): a cached menu could offer the old
+		// races' regions and base slots.
+		private string wardrobeSlotOptionsRaces;
+		private string baseSlotOptionsRaces;
+
+		private static string RaceListKey(List<string> compatibleRaces)
+		{
+			return compatibleRaces == null ? null : string.Join("|", compatibleRaces);
+		}
+
 		//this needs to generate labels too because the values are not the same as the labels
 		private int GenerateWardrobeSlotsEnum(string selectedOption, List<string> compatibleRaces = null, bool forceUpdate = false)
 		{
+			string raceKey = RaceListKey(compatibleRaces);
+			if (raceKey != wardrobeSlotOptionsRaces)
+			{
+				forceUpdate = true;
+				wardrobeSlotOptionsRaces = raceKey;
+			}
 			int selectedIndex = 0;
 			if (compatibleRaces == null)
 			{
@@ -374,6 +507,12 @@ namespace UMA.Editors
 		//generate an option list for the BaseSlots that are available to hide for each race so we can make this a mask field too
 		private void GenerateBaseSlotsEnum(List<string> compatibleRaces, bool forceUpdate = false, List<string> hides = null)
 		{
+			string raceKey = RaceListKey(compatibleRaces);
+			if (raceKey != baseSlotOptionsRaces)
+			{
+				forceUpdate = true;
+				baseSlotOptionsRaces = raceKey;
+			}
             List<string> Unfound = new List<string>();
             Unfound.AddRange(hides);
 
@@ -447,6 +586,11 @@ namespace UMA.Editors
 			Dictionary<string, RaceData> newDict = new Dictionary<string, RaceData>();
 			for (int i = 0; i < compatibleRaces.Count; i++)
 			{
+				if (newDict.ContainsKey(compatibleRaces[i]))
+				{
+					// The same race listed twice (Standard View allows it): one entry is enough.
+					continue;
+				}
 				if (_compatibleRaceDatas.ContainsKey(compatibleRaces[i]))
                 {
                     newDict.Add(compatibleRaces[i], _compatibleRaceDatas[compatibleRaces[i]]);
@@ -489,27 +633,18 @@ namespace UMA.Editors
 
 			UpdateCompatibleRacesDict(compatibleRaces);
 
+			if (compatibleRaces.Count == 0)
+			{
+				// Nothing to sort by race: keep the stored thumbnails (a fallback thumbnail was cleared
+				// just by opening this section).
+				newWardrobeThumbs = new List<WardrobeRecipeThumb>(wardrobeThumbs);
+			}
 			if (compatibleRaces.Count > 0)
 			{
-				foreach (string cr in compatibleRaces)
+				newWardrobeThumbs = BuildRaceThumbs(compatibleRaces, wardrobeThumbs);
+				for (int thumbIndex = 0; thumbIndex < newWardrobeThumbs.Count; thumbIndex++)
 				{
-                    bool wrtFound = false;
-					foreach (WardrobeRecipeThumb wrt in wardrobeThumbs)
-					{
-                        if (wrt.race == cr)
-						{
-							newWardrobeThumbs.Add(wrt);
-							wrtFound = true;
-						}
-					}
-					if (wrtFound == false)
-					{
-						newWardrobeThumbs.Add(new WardrobeRecipeThumb(cr));
-					}
-				}
-				foreach (WardrobeRecipeThumb wrt in newWardrobeThumbs)
-				{
-                    wardrobeThumbsDropDown.Add(wrt.race);
+                    wardrobeThumbsDropDown.Add(RaceThumbLabel(newWardrobeThumbs, compatibleRaces, thumbIndex));
 				}
 			}
 
@@ -572,13 +707,17 @@ namespace UMA.Editors
 							butIndex.width = (addButsRect.width / 3f)*2;
 							if (GUI.Button(butIndex,"Add to Index", EditorStyles.miniButton))
 							{
-								UMAAssetIndexer.Instance.EvilAddAsset(typeof(RaceData), _compatibleRaceDatas[compatibleRaces[i]]);
+								// Saves the library alone, not the project's other unsaved assets.
+								UMAGlobalLibraryAutoRegistration.AddAndSave(_compatibleRaceDatas[compatibleRaces[i]]);
 							}
 						}
 					}
-					GUI.enabled = false; //we readonly to prevent typos
-					EditorGUI.TextField(crfRect, compatibleRaces[i]);
-					GUI.enabled = true;
+					// Read only to prevent typos. A scope, not GUI.enabled = true afterwards: that turned
+					// the rest of a locked (incompletely loaded) inspector back on.
+					using (new EditorGUI.DisabledScope(true))
+					{
+						EditorGUI.TextField(crfRect, compatibleRaces[i]);
+					}
 					if (GUI.Button(crfDelRect, "X"))
 					{
 						newCompatibleRaces.RemoveAt(i);
@@ -598,12 +737,16 @@ namespace UMA.Editors
 
 				DDRect.y = DDRect.y + EditorGUIUtility.singleLineHeight;
 				SpriteRect.y = DDRect.y + EditorGUIUtility.singleLineHeight;
-				if (newCompatibleRaces.Count > 1)
+				// One row per thumbnail: one race can have two (its own and the default kept for races
+				// without their own), and its own row could not be chosen.
+				if (newWardrobeThumbs.Count > 1)
 				{
 					SpriteRect.y = SpriteRect.y + EditorGUIUtility.singleLineHeight + padding;
 					selectedWardrobeThumb = EditorGUI.Popup(DDRect, selectedWardrobeThumb, wardrobeThumbsDropDown.ToArray());
 				}
-				if (newWardrobeThumbs.Count != newCompatibleRaces.Count)
+				// One thumbnail per distinct race, so a race listed twice must not reset the selection
+				// on every draw.
+				if (selectedWardrobeThumb < 0 || selectedWardrobeThumb >= newWardrobeThumbs.Count)
 				{
 					selectedWardrobeThumb = 0;
 				}
@@ -743,38 +886,33 @@ namespace UMA.Editors
 		private string[] rawcachedRaceDNA = { };
 		protected List<MeshHideAsset> DraggedMHA = new List<MeshHideAsset>();
 		protected List<MeshModifier> Modifiers = new List<MeshModifier>();
+		protected List<MeshHideAssetCollection> DraggedCollections = new List<MeshHideAssetCollection>();
 
 		protected void AddDraggedFiles()
 		{
-			bool found = false;
 			UMAWardrobeRecipe recipe = target as UMAWardrobeRecipe;
+			Undo.RecordObject(target, "Add Mesh Modifications");
 
+			// Each dragged item is checked on its own. Comparing the objects directly also copes with
+			// empty entries already in the lists.
 			foreach (MeshHideAsset mha in DraggedMHA)
 			{
-				foreach (MeshHideAsset theAsset in recipe.MeshHideAssets)
+				if (mha != null && !recipe.MeshHideAssets.Contains(mha))
 				{
-					if (theAsset.GetUmaObjectId() == mha.GetUmaObjectId())
-					{
-						found = true;
-						break;
-					}
+					recipe.MeshHideAssets.Add(mha);
 				}
-				if (!found)
-                {
-                    recipe.MeshHideAssets.Add(mha);
-                }
-            }
+			}
+			// Collections are kept as collections, so later changes to a collection reach this recipe.
+			foreach (MeshHideAssetCollection mhac in DraggedCollections)
+			{
+				if (mhac != null && !recipe.MeshHideAssetCollections.Contains(mhac))
+				{
+					recipe.MeshHideAssetCollections.Add(mhac);
+				}
+			}
 			foreach (MeshModifier mm in Modifiers)
 			{
-				foreach (MeshModifier theMM in recipe.MeshModifiers)
-				{
-					if (theMM.GetUmaObjectId() == mm.GetUmaObjectId())
-					{
-						found = true;
-						break;
-					}
-				}
-				if (!found)
+				if (mm != null && !recipe.MeshModifiers.Contains(mm))
 				{
 					recipe.MeshModifiers.Add(mm);
 				}
@@ -783,6 +921,8 @@ namespace UMA.Editors
 
 		protected bool DropAreaGUI(Rect dropArea)
 		{
+			// Drag events reach a disabled (locked) inspector too.
+			if (!GUI.enabled) return false;
 			var evt = Event.current;
 
 			if (evt.type == EventType.DragUpdated)
@@ -798,35 +938,35 @@ namespace UMA.Editors
 				if (dropArea.Contains(evt.mousePosition))
 				{
 					DraggedMHA.Clear();
+					DraggedCollections.Clear();
 					DragAndDrop.AcceptDrag();
 
 					UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
 					for (int i = 0; i < draggedObjects.Length; i++)
 					{
-						if (draggedObjects[i] is MeshHideAssetCollection)
+						if (draggedObjects[i] is MeshHideAssetCollection mhac)
 						{
-							MeshHideAssetCollection mhac = draggedObjects[i] as MeshHideAssetCollection;
-							foreach (MeshHideAsset mha in mhac.Assets)
-							{
-								DraggedMHA.Add(mha);
-							}
+							// Add the collection itself, not a copy of its current members.
+							DraggedCollections.Add(mhac);
 						}
-						if (draggedObjects[i] is MeshHideAsset)
+						else if (draggedObjects[i] is MeshHideAsset mha)
 						{
-							MeshHideAsset mha = draggedObjects[i] as MeshHideAsset;
 							DraggedMHA.Add(mha);
-
+						}
+						else if (draggedObjects[i] is MeshModifier mm)
+                        {
+                            Modifiers.Add(mm);
+                        }
+						else if (draggedObjects[i] != null)
+						{
+							// A folder: add what it contains. (This check used to sit inside the
+							// MeshHideAsset case, which a folder never is, so folders added nothing.)
 							var path = AssetDatabase.GetAssetPath(draggedObjects[i]);
-							if (System.IO.Directory.Exists(path))
+							if (AssetDatabase.IsValidFolder(path))
 							{
 								RecursiveScanFoldersForAssets(path);
 							}
 						}
-						if (draggedObjects[i] is MeshModifier)
-                        {
-                            MeshModifier mm = draggedObjects[i] as MeshModifier;
-                            Modifiers.Add(mm);
-                        }
                     }
 				}
 			}
@@ -838,10 +978,18 @@ namespace UMA.Editors
 			var assetFiles = System.IO.Directory.GetFiles(path, "*.asset");
 			foreach (var assetFile in assetFiles)
 			{
-                var mha = AssetDatabase.LoadAssetAtPath(assetFile, typeof(MeshHideAsset)) as MeshHideAsset;
-				if (mha)
+				var asset = AssetDatabase.LoadMainAssetAtPath(assetFile.Replace('\\', '/'));
+				if (asset is MeshHideAsset mha)
 				{
 					DraggedMHA.Add(mha);
+				}
+				else if (asset is MeshHideAssetCollection mhac)
+				{
+					DraggedCollections.Add(mhac);
+				}
+				else if (asset is MeshModifier mm)
+				{
+					Modifiers.Add(mm);
 				}
 			}
 			foreach (var subFolder in System.IO.Directory.GetDirectories(path))
@@ -938,15 +1086,19 @@ namespace UMA.Editors
 			string newWardrobeSlot;
 
 			List<string> newSuppressWardrobeSlot = new List<string>();
+			// When the region list cannot be built, show the stored region and keep it. (Setting it to
+			// None here used to change the recipe just by drawing this section.)
 			if (selectedWardrobeSlotIndex == -1)
 			{
 				EditorGUILayout.LabelField("No Compatible Races set. You need to select a compatible race in order to set a wardrobe region");
-				newWardrobeSlot = "None";
+				EditorGUILayout.LabelField("Wardrobe Region", string.IsNullOrEmpty(wardrobeSlot) ? "None" : wardrobeSlot);
+				newWardrobeSlot = wardrobeSlot;
 			}
 			else if (selectedWardrobeSlotIndex == -2)
 			{
 				EditorGUILayout.LabelField("Not all compatible races found. Do you have the all correct Race(s) available Locally?");
-				newWardrobeSlot = "None";
+				EditorGUILayout.LabelField("Wardrobe Region", string.IsNullOrEmpty(wardrobeSlot) ? "None" : wardrobeSlot);
+				newWardrobeSlot = wardrobeSlot;
 			}
 			else
 			{
@@ -977,8 +1129,9 @@ namespace UMA.Editors
 					}
 					GUILayout.EndHorizontal();
 
-					foreach (string lbl in generatedWardrobeSlotOptionsLabels)
+					for (int optionIndex = 0; optionIndex < generatedWardrobeSlotOptionsLabels.Count; optionIndex++)
 					{
+						string lbl = generatedWardrobeSlotOptionsLabels[optionIndex];
 						if (!string.IsNullOrEmpty(slotFilter))
 						{
 							if (!lbl.ToLower().Contains(slotFilter.ToLower()))
@@ -990,8 +1143,11 @@ namespace UMA.Editors
 						GUILayout.Space(20);
 						if (GUILayout.Button(lbl, EditorStyles.miniButton))
 						{
-							newWardrobeSlot = lbl;
-							WardrobeSlotField.SetValue(target, lbl);
+							// Save the race's region key ("Tail"), not the label ("Tail  (Dragon Only)"):
+							// characters look the region up by its exact key.
+							string region = optionIndex < generatedWardrobeSlotOptions.Count ? generatedWardrobeSlotOptions[optionIndex] : lbl;
+							newWardrobeSlot = region;
+							WardrobeSlotField.SetValue(target, region);
 							doUpdate = true;
 							SelectingSlot = false;
 						}
@@ -1054,7 +1210,7 @@ namespace UMA.Editors
 			List<string> newHides = hides != null ? new List<string>(hides) : new List<string>();
 			bool hideBaseSlotsChanged = false;
 
-			if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == slotHidePickerID)
+			if (Event.current.commandName == "ObjectSelectorClosed" && EditorGUIUtility.GetObjectPickerControlID() == slotHidePickerID)
 			{
 				SlotDataAsset sda = EditorGUIUtility.GetObjectPickerObject() as SlotDataAsset;
 				if (sda != null && !string.IsNullOrEmpty(sda.slotName))
@@ -1145,17 +1301,23 @@ namespace UMA.Editors
 			{
 				List<string> ReplacesSlots = new List<string>(generatedBaseSlotOptions);
 				ReplacesSlots.Insert(0, "Nothing");
-				int selectedIndex = ReplacesSlots.IndexOf(replaces);
+				List<string> ReplacesLabels = new List<string>(ReplacesSlots);
+				int selectedIndex = string.IsNullOrEmpty(replaces) ? 0 : ReplacesSlots.IndexOf(replaces);
 				if (selectedIndex < 0)
 				{
-					selectedIndex = 0; // not found, point at "nothing"
+					// The stored slot is not in the base slots found for the compatible races (a race or
+					// base recipe may be missing). Keep it as a choice instead of falling back to Nothing,
+					// which used to clear the value just by drawing this section.
+					ReplacesSlots.Insert(1, replaces);
+					ReplacesLabels.Insert(1, replaces + " (not in the base recipes found)");
+					selectedIndex = 1;
 				}
 
-				selectedIndex = EditorGUILayout.Popup("Replaces", selectedIndex, ReplacesSlots.ToArray());
-
-				ReplacesField.SetValue(target, ReplacesSlots[selectedIndex]);
-				if (ReplacesSlots[selectedIndex] != replaces)
+				EditorGUI.BeginChangeCheck();
+				int newIndex = EditorGUILayout.Popup("Replaces", selectedIndex, ReplacesLabels.ToArray());
+				if (EditorGUI.EndChangeCheck() && newIndex != selectedIndex)
 				{
+					ReplacesField.SetValue(target, ReplacesSlots[newIndex]);
 					doUpdate = true;
 				}
 			}
@@ -1184,6 +1346,11 @@ namespace UMA.Editors
 					meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
 					EditorGUIUtility.ShowObjectPicker<MeshHideAsset>(null, false, "", meshHideAssetPickerID);
 				}
+				if (GUILayout.Button("Add Mesh Hide Collection"))
+				{
+					meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
+					EditorGUIUtility.ShowObjectPicker<MeshHideAssetCollection>(null, false, "", meshHideAssetPickerID);
+				}
 				if (GUILayout.Button("Add Mesh Modifier"))
 				{
 					meshHideAssetPickerID = EditorGUIUtility.GetControlID(FocusType.Passive) + 100;
@@ -1191,25 +1358,24 @@ namespace UMA.Editors
 				}
 				GUILayout.EndHorizontal();
 
-				if (Event.current.commandName == "ObjectSelectorUpdated" && EditorGUIUtility.GetObjectPickerControlID() == meshHideAssetPickerID)
+				// On close, not on every highlight: browsing the picker must not add each asset looked at.
+				if (Event.current.commandName == "ObjectSelectorClosed" && EditorGUIUtility.GetObjectPickerControlID() == meshHideAssetPickerID)
 				{
+					meshHideAssetPickerID = -1;
 					if (recipe != null)
 					{
-						MeshHideAssetCollection mhac = EditorGUIUtility.GetObjectPickerObject() as MeshHideAssetCollection;
-						if (mhac != null)
+						UnityEngine.Object picked = EditorGUIUtility.GetObjectPickerObject();
+						if (picked is MeshHideAssetCollection mhac)
 						{
-							AddMeshHideAssetCollection(recipe, mhac);
+							doUpdate |= AddMeshHideAssetCollection(recipe, mhac);
 						}
-						MeshHideAsset mha = EditorGUIUtility.GetObjectPickerObject() as MeshHideAsset;
-						if (mha != null)
+						else if (picked is MeshHideAsset mha)
 						{
-							AddMeshHideAsset(recipe, mha);
+							doUpdate |= AddMeshHideAsset(recipe, mha);
 						}
-						MeshModifier mm = EditorGUIUtility.GetObjectPickerObject() as MeshModifier;
-						if (mm != null)
+						else if (picked is MeshModifier mm)
 						{
-							//Debug.Log("Dropped Mesh Modifier");
-							AddMeshModifier(recipe, mm);
+							doUpdate |= AddMeshModifier(recipe, mm);
 						}
 					}
 				}
@@ -1269,7 +1435,7 @@ namespace UMA.Editors
 
 
 				MeshHideAssetCollection collectiondeleteme = null;
-				deleteNulls = false;
+				bool deleteNullCollections = false;
 				GUILayout.Label("Mesh Hide Asset Collections", EditorStyles.boldLabel);
 				count = 0;
 				foreach (MeshHideAssetCollection mhac in recipe.MeshHideAssetCollections)
@@ -1291,7 +1457,7 @@ namespace UMA.Editors
 					}
 					else
 					{
-						deleteNulls = true;
+						deleteNullCollections = true;
 					}
 					EditorGUILayout.EndHorizontal();
 				}
@@ -1343,7 +1509,11 @@ namespace UMA.Editors
 
 				if (delPos > -1)
 				{
+					// Report the change so the recipe is saved, as every other edit in this inspector is.
+					Undo.RecordObject(target, "Remove Mesh Modifier");
 					recipe.MeshModifiers.RemoveAt(delPos);
+					EditorUtility.SetDirty(target);
+					doUpdate = true;
 				}
 				if (count == 0)
 				{
@@ -1364,15 +1534,28 @@ namespace UMA.Editors
 				{
 					recipe.MeshHideAssets.RemoveAll(x => x == null);
 					EditorUtility.SetDirty(target);
-					string path = AssetDatabase.GetAssetPath(target.GetEntityId());
-					AssetDatabase.ImportAsset(path);
+					doUpdate = true;
 				}
 				if (deleteme != null)
 				{
+					Undo.RecordObject(target, "Remove Mesh Hide Asset");
 					recipe.MeshHideAssets.Remove(deleteme);
 					EditorUtility.SetDirty(target);
-					string path = AssetDatabase.GetAssetPath(target.GetEntityId());
-					AssetDatabase.ImportAsset(path);
+					doUpdate = true;
+				}
+				if (deleteNullCollections || collectiondeleteme != null)
+				{
+					Undo.RecordObject(target, "Remove Mesh Hide Asset Collection");
+					if (deleteNullCollections)
+					{
+						recipe.MeshHideAssetCollections.RemoveAll(x => x == null);
+					}
+					if (collectiondeleteme != null)
+					{
+						recipe.MeshHideAssetCollections.Remove(collectiondeleteme);
+					}
+					EditorUtility.SetDirty(target);
+					doUpdate = true;
 				}
 				// EditorGUILayout.PropertyField(meshHides, true);
 				if (EditorGUI.EndChangeCheck())
@@ -1468,14 +1651,16 @@ namespace UMA.Editors
 				{
 					EditorGUILayout.HelpBox("You can add Override DNA that is applied during the build process. It will only be applied while this wardrobe recipe is equipped.", MessageType.Info);
 
-					if (currentRace >= _compatibleRaceDatas.Count)
+					// Only races that were found can list DNA (a missing race has no entry here).
+					List<string> availableRaces = new List<string>(_compatibleRaceDatas.Keys);
+					if (currentRace >= availableRaces.Count)
 					{
 						currentRace = 0;
 					}
 
 					EditorGUILayout.BeginHorizontal();
-					currentRace = EditorGUILayout.Popup(currentRace, compatibleRaces.ToArray());
-					string raceName = compatibleRaces[currentRace];
+					currentRace = EditorGUILayout.Popup(currentRace, availableRaces.ToArray());
+					string raceName = availableRaces[currentRace];
 
 					if (cachedRace != raceName)
 					{
@@ -1490,12 +1675,22 @@ namespace UMA.Editors
 						cachedRaceDNA = MenuDNA.ToArray();
 					}
 
+					if (currentDNA >= rawcachedRaceDNA.Length)
+					{
+						currentDNA = 0;
+					}
 					currentDNA = EditorGUILayout.Popup(currentDNA, cachedRaceDNA);
 					if (recipe.OverrideDNA == null)
 					{
 						recipe.OverrideDNA = new UMAPredefinedDNA();
 					}
-					if (GUILayout.Button("Add DNA"))
+					bool raceHasDna = rawcachedRaceDNA.Length > 0;
+					bool addDna;
+					using (new EditorGUI.DisabledScope(!raceHasDna))
+					{
+						addDna = GUILayout.Button(new GUIContent("Add DNA", raceHasDna ? "" : "This race has no DNA names."));
+					}
+					if (addDna && raceHasDna)
 					{
 						string theDna = rawcachedRaceDNA[currentDNA];
 
@@ -1595,11 +1790,12 @@ namespace UMA.Editors
 			}
 			#endregion
 
-			if (DraggedMHA.Count > 0 || Modifiers.Count > 0)
+			if (DraggedMHA.Count > 0 || Modifiers.Count > 0 || DraggedCollections.Count > 0)
 			{
 				AddDraggedFiles();
 				DraggedMHA.Clear();
 				Modifiers.Clear();
+				DraggedCollections.Clear();
 				return true;
 			}
 
@@ -1607,104 +1803,45 @@ namespace UMA.Editors
 			return doUpdate;
 		}
 
-        private void AddMeshModifier(UMAWardrobeRecipe recipe, MeshModifier mm)
+        // The picker adds below change the recipe in memory and report it; the inspector then saves it
+        // like any other edit (straight away with Automatic Updates on, on Save Recipe with it off).
+        private bool AddMeshModifier(UMAWardrobeRecipe recipe, MeshModifier mm)
         {
-			bool found = false;
-            if (mm != null)
+            if (mm == null || recipe.MeshModifiers.Contains(mm))
             {
-                foreach (MeshModifier theMM in recipe.MeshModifiers)
-                {
-                    if (theMM.GetUmaObjectId() == mm.GetUmaObjectId())
-                    {
-                        found = true;
-                        break;
-                    }
-                }
+                return false;
             }
-            if (!found)
-            {
-                recipe.MeshModifiers.Add(mm);
-                EditorUtility.SetDirty(target);
-                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
-                AssetDatabase.ImportAsset(path);
-                Repaint();
-            }
+            Undo.RecordObject(target, "Add Mesh Modifier");
+            recipe.MeshModifiers.Add(mm);
+            EditorUtility.SetDirty(target);
+            Repaint();
+            return true;
         }
 
-		private bool AddMeshHideAssetCollection(UMAWardrobeRecipe recipe, MeshHideAssetCollection mhac)
-		{
-            bool found = false;
-            if (mhac != null)
+        private bool AddMeshHideAssetCollection(UMAWardrobeRecipe recipe, MeshHideAssetCollection mhac)
+        {
+            if (mhac == null || recipe.MeshHideAssetCollections.Contains(mhac))
             {
-                foreach (MeshHideAssetCollection theAsset in recipe.MeshHideAssetCollections)
-                {
-                    if (theAsset.GetUmaObjectId() == mhac.GetUmaObjectId())
-                    {
-                        found = true;
-                        break;
-                    }
-                }
+                return false;
             }
-            if (!found)
-            {
-                recipe.MeshHideAssetCollections.Add(mhac);
-                EditorUtility.SetDirty(target);
-#if UNITY_6000_3_OR_NEWER
-                AssetDatabase.SaveAssetIfDirty(target);
-                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
-                AssetDatabase.ImportAsset(path);
-#else
-				AssetDatabase.SaveAssets();
-				string path = AssetDatabase.GetAssetPath(target.GetEntityId());
-                AssetDatabase.ImportAsset(path);
-#endif
-                Repaint();
-                /*
-                meshHides.InsertArrayElementAtIndex(0);
-                SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
-                element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
-                meshHideAssetPickerID = -1;
-                Repaint();
-                */
-            }
-
-            return found;
+            Undo.RecordObject(target, "Add Mesh Hide Asset Collection");
+            recipe.MeshHideAssetCollections.Add(mhac);
+            EditorUtility.SetDirty(target);
+            Repaint();
+            return true;
         }
 
         private bool AddMeshHideAsset(UMAWardrobeRecipe recipe, MeshHideAsset mha)
         {
-			bool found = false;
-            if (mha != null)
+            if (mha == null || recipe.MeshHideAssets.Contains(mha))
             {
-                foreach (MeshHideAsset theAsset in recipe.MeshHideAssets)
-                {
-					if (theAsset!=null)
-					{
-						if (theAsset.GetUmaObjectId() == mha.GetUmaObjectId())
-						{
-							found = true;
-							break;
-						}
-					}
-                }
+                return false;
             }
-            if (!found)
-            {
-                recipe.MeshHideAssets.Add(mha);
-                EditorUtility.SetDirty(target);
-                string path = AssetDatabase.GetAssetPath(target.GetEntityId());
-                AssetDatabase.ImportAsset(path);
-                Repaint();
-                /*
-                meshHides.InsertArrayElementAtIndex(0);
-                SerializedProperty element = meshHides.GetArrayElementAtIndex(0);
-                element.objectReferenceValue = EditorGUIUtility.GetObjectPickerObject();
-                meshHideAssetPickerID = -1;
-                Repaint();
-                */
-            }
-
-            return found;
+            Undo.RecordObject(target, "Add Mesh Hide Asset");
+            recipe.MeshHideAssets.Add(mha);
+            EditorUtility.SetDirty(target);
+            Repaint();
+            return true;
         }
 
         /// <summary>
@@ -1763,6 +1900,12 @@ namespace UMA.Editors
 							LastSlot = slotName;
 							//we know there should be one because we created a virtual one when we unpacked the recipe if it didn't exist
 							var slotToAdd = UMAAssetIndexer.Instance.InstantiateSlot(slotName);
+							// The slot goes into the working copy; the recipe is written after this draw, so Undo is
+							// recorded now (Add Slot had no Undo entry).
+							if (_recipeContext != null)
+							{
+								Undo.RecordObject(_recipeContext, "Add Base Slot");
+							}
 							_recipe.MergeSlot(slotToAdd, false);
 							changed |= true;
 							_dnaDirty |= true;
@@ -1779,6 +1922,10 @@ namespace UMA.Editors
 				{
 					LastSlot = added.slotName;
 					var slot = new SlotData(added);
+					if (_recipeContext != null)
+					{
+						Undo.RecordObject(_recipeContext, "Add Slot");
+					}
 					_recipe.MergeSlot(slot, false);
 					changed |= true;
 					_dnaDirty |= true;
@@ -1788,8 +1935,14 @@ namespace UMA.Editors
 
 				if (GUILayout.Button("Add Placeholder Slot", GUILayout.Width(160)))
 				{
-					string placeholderName = "NewPlaceholderSlot";
+					// A new name each time: placeholders with the same name are one slot, so a second press
+					// silently gave back the first placeholder.
+					string placeholderName = UniquePlaceholderName(_recipe, "NewPlaceholderSlot");
 					var placeholder = SlotData.CreatePlaceholder(placeholderName, new string[0]);
+					if (_recipeContext != null)
+					{
+						Undo.RecordObject(_recipeContext, "Add Placeholder Slot");
+					}
 					_recipe.MergeSlot(placeholder, false);
 					LastSlot = placeholderName;
 					changed |= true;
@@ -1805,6 +1958,11 @@ namespace UMA.Editors
                 {
 					if (EditorUtility.DisplayDialog("Clear recipe", "Are you sure?", "OK", "Cancel") == true)
 					{
+						// Undo restores the saved recipe; the inspector reloads it from there.
+						if (_recipeContext != null)
+						{
+							Undo.RecordObject(_recipeContext, "Clear Recipe");
+						}
 						_recipe.slotDataList = new SlotData[0];
 						changed |= true;
 						_dnaDirty |= true;
@@ -1814,6 +1972,10 @@ namespace UMA.Editors
                 }
                 if (GUILayout.Button("Remove Nulls"))
 				{
+					if (_recipeContext != null)
+					{
+						Undo.RecordObject(_recipeContext, "Remove Empty Slots");
+					}
 					var newList = new List<SlotData>(_recipe.slotDataList.Length);
 					foreach (var slotData in _recipe.slotDataList)
                         {
@@ -1877,8 +2039,12 @@ namespace UMA.Editors
 						_textureDirty = true;
 						_meshDirty = true;
 
+						if (_recipeContext != null)
+						{
+							Undo.RecordObject(_recipeContext, "Remove Slot");
+						}
 						_slotEditors.RemoveAt(i);
-						_recipe.SetSlot(editor.idx, null);
+						RemoveEditedSlot(editor);
 						i--;
 						changed = true;
 					}

@@ -262,6 +262,63 @@ namespace UMA
         }
 
         /// <summary>
+        /// True when two colors carry the same shader properties and update flags, as a recipe stores
+        /// them. The == operator leaves shader properties out, so code that decides whether two colors
+        /// can be stored or shared as one (recipe packing, overlay merging) checks this as well.
+        /// </summary>
+        public static bool SameShaderProperties(OverlayColorData a, OverlayColorData b)
+        {
+            if (ReferenceEquals(a, b))
+            {
+                return true;
+            }
+            if (a is null || b is null)
+            {
+                return false;
+            }
+            bool aHas = a.HasProperties;
+            bool bHas = b.HasProperties;
+            if (aHas != bHas)
+            {
+                return false;
+            }
+            // The update flags count even without parameters (a missing block has neither flag), as the
+            // packer stores them: a flag-only block is not the same as no block.
+            bool aUpdate = a.PropertyBlock != null && a.PropertyBlock.alwaysUpdate;
+            bool bUpdate = b.PropertyBlock != null && b.PropertyBlock.alwaysUpdate;
+            bool aUpdateParms = a.PropertyBlock != null && a.PropertyBlock.alwaysUpdateParms;
+            bool bUpdateParms = b.PropertyBlock != null && b.PropertyBlock.alwaysUpdateParms;
+            if (aUpdate != bUpdate || aUpdateParms != bUpdateParms)
+            {
+                return false;
+            }
+            if (!aHas || ReferenceEquals(a.PropertyBlock, b.PropertyBlock))
+            {
+                return true;
+            }
+            var pa = a.PropertyBlock.shaderProperties;
+            var pb = b.PropertyBlock.shaderProperties;
+            if (pa.Count != pb.Count)
+            {
+                return false;
+            }
+            for (int i = 0; i < pa.Count; i++)
+            {
+                if (ReferenceEquals(pa[i], pb[i]))
+                {
+                    continue;
+                }
+                string sa = pa[i] != null ? pa[i].ToString() : null;
+                string sb = pb[i] != null ? pb[i].ToString() : null;
+                if (!string.Equals(sa, sb, StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
         /// True if only colors exist (no properties).
         /// </summary>
         public bool isOnlyColors

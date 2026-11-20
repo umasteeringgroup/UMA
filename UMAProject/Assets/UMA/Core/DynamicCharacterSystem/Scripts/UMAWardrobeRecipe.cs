@@ -1,13 +1,14 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-#if UNITY_EDITOR
-#endif
-
 namespace UMA.CharacterSystem
 {
     public partial class UMAWardrobeRecipe : UMATextRecipe
 	{
+#if UNITY_EDITOR
+        // Authored node positions, notes and detached overlays. The runtime recipe only contains equipped slots.
+        [HideInInspector] public string editorGraphData;
+#endif
 		[SerializeField]
 		[Tooltip("For tracking incompatible items. Not automatic.")]
 		public List<UMAWardrobeRecipe> IncompatibleRecipes = new List<UMAWardrobeRecipe>();

@@ -5884,6 +5884,14 @@ namespace UMA
             }
             else
             {
+                // The editor applies the modifier it opens on itself (through ManualMeshModifiers). A worn
+                // recipe that carries it must not apply it as well, or every rebuild here showed it twice
+                // (a scalp shadow at 86% instead of 62%, a sculpt moved twice as far). Cleared on close.
+                if (Currentmodifier != null && thisDCA != null && thisDCA.umaData != null &&
+                    !thisDCA.umaData.EditorSessionMeshModifiers.Contains(Currentmodifier))
+                {
+                    thisDCA.umaData.EditorSessionMeshModifiers.Add(Currentmodifier);
+                }
                 modifierEditor = MeshModifierEditor.GetOrCreateWindowFromModifier(Currentmodifier, thisDCA, this);
                 if (Currentmodifier != null)
                 {
@@ -6097,6 +6105,9 @@ namespace UMA
                 if (thisDCA.umaData != null)
                 {
                     thisDCA.umaData.ManualMeshModifiers = new List<MeshModifier.Modifier>();
+                    // The session's edits go with it: the modifiers it added to recipes apply through
+                    // those recipes again.
+                    thisDCA.umaData.EditorSessionMeshModifiers.Clear();
                 }
                 if (!ownsSlotWeightPreviewAvatar && thisDCA.editorTimeGeneration)
                 {
@@ -6222,6 +6233,7 @@ namespace UMA
             {
                 InitialSetup(view);
             }
+            RecoverDestroyedPreviewMaterials();
             DrawRaycastDebugRaysHandles();
          if (raycastDrawDebugRays && raycastDebugRays.Count > 0)
             {
@@ -11308,6 +11320,7 @@ namespace UMA
                 EditorGUILayout.HelpBox("The editable slots have no paintable vertices on this renderer.", MessageType.Warning);
                 return;
             }
+            DrawWornColorModifiers();
 
             // The brush, its shape and its color are chosen on the floating toolbar.
             DrawCurrentVertexPaintToolSummary();
@@ -11813,7 +11826,7 @@ namespace UMA
             EditorUtility.SetDirty(BakedMesh);
         }
 
-        private Color32[] BuildVertexPaintColors(SlotData slot, bool includeAdHoc)
+        private Color32[] BuildVertexPaintColors(SlotData slot, bool includeAdHoc, bool includeWorn = true)
         {
             int count = slot != null && slot.asset != null ? slot.asset.meshData.vertexCount : 0;
             Color32[] colors = new Color32[count];
@@ -11833,6 +11846,14 @@ namespace UMA
             }
 
             string slotKey = GetVertexPaintSlotKey(slot);
+            // What the character's worn recipes (and DNA) color on this slot comes next, in the order a
+            // build applies it: painting starts from what the character shows, and a save writes only
+            // what is painted on top. Before, a recipe's color modifier (a hair's scalp shading) vanished
+            // from the preview when Vertex Paint started.
+            if (includeWorn)
+            {
+                ApplyWornModifierColors(colors, slot, slotKey);
+            }
             if (modifierEditor != null && modifierEditor.Modifiers != null)
             {
                 for (int modifierIndex = 0; modifierIndex < modifierEditor.Modifiers.Count; modifierIndex++)
@@ -11870,6 +11891,250 @@ namespace UMA
             }
 
             return colors;
+        }
+
+        /// <summary>
+        /// Applies the color changes of the worn recipes' Mesh Modifiers (the race's base recipe first, then
+        /// the wardrobe, as a build applies them), leaving out every modifier this session holds (see
+        /// <see cref="UMAData.EditorSessionMeshModifiers"/>): those colors are the session's own and are
+        /// applied after this. Read from the recipes, not from the character's last build: that build ran
+        /// before the editor opened on a modifier, so it still held the opened modifier's colors. They then
+        /// counted as the starting colors, and a save kept only the vertices painted since, dropping the rest.
+        /// </summary>
+        private void ApplyWornModifierColors(Color32[] colors, SlotData slot, string slotKey)
+        {
+            if (thisDCA == null)
+            {
+                return;
+            }
+            var recipes = new List<UMATextRecipe>();
+            if (thisDCA.activeRace != null && thisDCA.activeRace.racedata != null &&
+                thisDCA.activeRace.racedata.baseRaceRecipe is UMATextRecipe baseRecipe)
+            {
+                recipes.Add(baseRecipe);
+            }
+            if (thisDCA.WardrobeRecipes != null)
+            {
+                recipes.AddRange(thisDCA.WardrobeRecipes.Values);
+            }
+            foreach (UMATextRecipe recipe in recipes)
+            {
+                if (recipe == null || recipe.MeshModifiers == null)
+                {
+                    continue;
+                }
+                foreach (MeshModifier asset in recipe.MeshModifiers)
+                {
+                    if (asset == null || asset.RuntimeModifiers == null ||
+                        (thisDCA.umaData != null && thisDCA.umaData.EditorSessionMeshModifiers.Contains(asset)))
+                    {
+                        continue;
+                    }
+                    ApplyModifierColors(colors, asset.RuntimeModifiers, slot, slotKey);
+                }
+            }
+        }
+
+        private static void ApplyModifierColors(Color32[] colors, List<MeshModifier.Modifier> modifiers, SlotData slot, string slotKey)
+        {
+            foreach (MeshModifier.Modifier modifier in modifiers)
+            {
+                if (modifier == null || !(modifier.adjustments is VertexColorAdjustmentCollection) ||
+                    modifier.adjustments.vertexAdjustments == null)
+                {
+                    continue;
+                }
+                foreach (VertexAdjustment candidate in modifier.adjustments.vertexAdjustments)
+                {
+                    if (candidate is VertexColorAdjustment adjustment &&
+                        VertexPaintAdjustmentMatchesSlot(adjustment, modifier.SlotName, slot, slotKey))
+                    {
+                        ApplyVertexColorAdjustment(colors, adjustment, modifier.Scale);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// The Mesh Modifier assets of the character's worn recipes (and its race's base recipe) that color
+        /// this slot, with the recipe that carries each. A modifier this session already holds is left out.
+        /// </summary>
+        private List<KeyValuePair<MeshModifier, UMATextRecipe>> FindWornColorModifiers(SlotData slot)
+        {
+            var found = new List<KeyValuePair<MeshModifier, UMATextRecipe>>();
+            if (thisDCA == null || slot == null)
+            {
+                return found;
+            }
+            var recipes = new List<UMATextRecipe>();
+            if (thisDCA.activeRace != null && thisDCA.activeRace.racedata != null &&
+                thisDCA.activeRace.racedata.baseRaceRecipe is UMATextRecipe baseRecipe)
+            {
+                recipes.Add(baseRecipe);
+            }
+            if (thisDCA.WardrobeRecipes != null)
+            {
+                recipes.AddRange(thisDCA.WardrobeRecipes.Values);
+            }
+            string slotKey = GetVertexPaintSlotKey(slot);
+            foreach (UMATextRecipe recipe in recipes)
+            {
+                if (recipe == null || recipe.MeshModifiers == null)
+                {
+                    continue;
+                }
+                foreach (MeshModifier asset in recipe.MeshModifiers)
+                {
+                    if (asset == null || asset.RuntimeModifiers == null || found.Exists(f => ReferenceEquals(f.Key, asset)) ||
+                        (thisDCA.umaData != null && thisDCA.umaData.EditorSessionMeshModifiers.Contains(asset)))
+                    {
+                        continue;
+                    }
+                    if (ColorsSlot(asset, slot, slotKey))
+                    {
+                        found.Add(new KeyValuePair<MeshModifier, UMATextRecipe>(asset, recipe));
+                    }
+                }
+            }
+            return found;
+        }
+
+        private static bool ColorsSlot(MeshModifier asset, SlotData slot, string slotKey)
+        {
+            foreach (MeshModifier.Modifier modifier in asset.RuntimeModifiers)
+            {
+                if (modifier == null || !(modifier.adjustments is VertexColorAdjustmentCollection) ||
+                    modifier.adjustments.vertexAdjustments == null)
+                {
+                    continue;
+                }
+                // One modifier entry is for one slot: its first color change says which.
+                foreach (VertexAdjustment candidate in modifier.adjustments.vertexAdjustments)
+                {
+                    if (candidate is VertexColorAdjustment adjustment)
+                    {
+                        if (VertexPaintAdjustmentMatchesSlot(adjustment, modifier.SlotName, slot, slotKey))
+                        {
+                            return true;
+                        }
+                        break;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Names the worn recipes' Mesh Modifiers that color any editable slot, and offers to edit each: their
+        /// colors are shown, but painting here goes in this session's modifier, on top of them. All editable
+        /// slots, not only the one being painted: with several editable slots that one follows the pointer,
+        /// so the offer came and went as the pointer crossed the character and could hardly be clicked.
+        /// </summary>
+        private void DrawWornColorModifiers()
+        {
+            var assets = new List<MeshModifier>();
+            var recipes = new List<UMATextRecipe>();
+            var slotNames = new List<List<string>>();
+            foreach (SlotData slot in vertexPaintSlots)
+            {
+                foreach (KeyValuePair<MeshModifier, UMATextRecipe> found in FindWornColorModifiers(slot))
+                {
+                    int index = assets.FindIndex(a => ReferenceEquals(a, found.Key));
+                    if (index < 0)
+                    {
+                        assets.Add(found.Key);
+                        recipes.Add(found.Value);
+                        slotNames.Add(new List<string>());
+                        index = assets.Count - 1;
+                    }
+                    if (!slotNames[index].Contains(slot.slotName))
+                    {
+                        slotNames[index].Add(slot.slotName);
+                    }
+                }
+            }
+            for (int i = 0; i < assets.Count; i++)
+            {
+                var entry = new KeyValuePair<MeshModifier, UMATextRecipe>(assets[i], recipes[i]);
+                EditorGUILayout.HelpBox(
+                    "'" + entry.Key.name + "', from the worn recipe '" + entry.Value.name + "', also colors " + string.Join(", ", slotNames[i]) +
+                    ". Its colors are shown; what you paint here is saved in this session's Mesh Modifier, on top of them. To change its colors, edit it.",
+                    MessageType.Info);
+                if (GUILayout.Button(new GUIContent("Edit '" + entry.Key.name + "'",
+                        "Leave the Vertex Editor (asking about unsaved work first) and open it again with this Mesh Modifier loaded, " +
+                        "so its colors can be painted. Saving it updates the asset in place, so the recipe stays linked.")))
+                {
+                    ReopenOnModifier(entry.Key);
+                    GUIUtility.ExitGUI();
+                }
+            }
+        }
+
+        /// <summary>Leaves the Vertex Editor, after asking about unsaved work, and opens it again on a Mesh Modifier.</summary>
+        private void ReopenOnModifier(MeshModifier modifier)
+        {
+            DynamicCharacterAvatar avatar = thisDCA;
+            if (modifier == null || avatar == null || !ResolveUnsavedWorkBeforeLeaving(canStay: true))
+            {
+                return;
+            }
+            LeaveAndOpenOnModifier(avatar, modifier);
+        }
+
+        /// <summary>
+        /// Leaves the Vertex Editor and opens it on a Mesh Modifier once the avatar has finished the build
+        /// that leaving queued. Opening at once let that build run after the new editor had taken the
+        /// avatar's materials; the build replaced them, and the new editor showed the character magenta.
+        /// Driven by Editor updates, not delayCall: Unity runs no delayCall while it is in the background.
+        /// </summary>
+        private static void LeaveAndOpenOnModifier(DynamicCharacterAvatar avatar, MeshModifier modifier)
+        {
+            double giveUpAt = EditorApplication.timeSinceStartup + 10.0;
+            bool left = false;
+            int idleUpdates = 0;
+            EditorApplication.CallbackFunction wait = null;
+            wait = () =>
+            {
+                if (!left)
+                {
+                    // Outside the GUI event that asked for it: changing stage inside one is not safe.
+                    left = true;
+                    if (!(StageUtility.GetCurrentStage() is MainStage))
+                    {
+                        StageUtility.GoBackToPreviousStage();
+                    }
+                    return;
+                }
+                if (avatar == null || modifier == null || EditorApplication.timeSinceStartup > giveUpAt)
+                {
+                    EditorApplication.update -= wait;
+                    if (avatar != null && modifier != null)
+                    {
+                        Debug.LogWarning("The Vertex Editor did not open on '" + modifier.name + "': the character was still building. Open it again from the character.");
+                    }
+                    return;
+                }
+                if (avatar.EditorGenerationQueued)
+                {
+                    // The build leaving queued: run it now, so it cannot replace the materials of the
+                    // editor about to open.
+                    avatar.RunQueuedEditorGeneration();
+                }
+                bool busy = !(StageUtility.GetCurrentStage() is MainStage) || avatar.EditorGenerationQueued || avatar.UpdatePending() ||
+                            EditorApplication.isCompiling || EditorApplication.isUpdating;
+                // Two quiet updates in a row: nothing queued in the first is still waiting to run.
+                idleUpdates = busy ? 0 : idleUpdates + 1;
+                if (idleUpdates < 2)
+                {
+                    return;
+                }
+                EditorApplication.update -= wait;
+                // As the avatar inspector opens the Vertex Editor on a Mesh Modifier.
+                avatar.ignoreMeshHideAssets = true;
+                avatar.GenerateNow();
+                ShowStage(avatar, modifier);
+            };
+            EditorApplication.update += wait;
         }
 
         private static void ApplyVertexColorAdjustment(Color32[] colors, VertexColorAdjustment adjustment, float modifierScale)
@@ -12379,7 +12644,7 @@ namespace UMA
                 undoTargets.Add(modifierEditor);
             }
             Undo.RegisterCompleteObjectUndo(undoTargets.ToArray(), "Save Vertex Colors to SlotDataAsset");
-            target.meshData.colors32 = (Color32[])vertexPaintColors.Clone();
+            target.meshData.colors32 = SlotColorsToSave();
             RemoveBakedVertexColorAdjustmentsForSlot();
             EditorUtility.SetDirty(target);
             AssetDatabase.SaveAssetIfDirty(target);
@@ -12392,6 +12657,25 @@ namespace UMA
             SceneView.RepaintAll();
             SetSaveStatus("Saved the vertex colors into '" + target.name + "'.", MessageType.Info, target);
             return true;
+        }
+
+        /// <summary>
+        /// The colors written into the slot asset: the painted vertices as painted, every other vertex
+        /// without the worn recipes' color changes. Those reach the character through the recipes; baked
+        /// into the slot as well, they would be applied twice (and stay on the slot when the item is off).
+        /// </summary>
+        private Color32[] SlotColorsToSave()
+        {
+            Color32[] result = BuildVertexPaintColors(vertexPaintSlot, true, includeWorn: false);
+            int count = Mathf.Min(result.Length, Mathf.Min(vertexPaintColors.Length, vertexPaintBaseColors.Length));
+            for (int i = 0; i < count; i++)
+            {
+                if (!ColorsEqual(vertexPaintColors[i], vertexPaintBaseColors[i]))
+                {
+                    result[i] = vertexPaintColors[i];
+                }
+            }
+            return result;
         }
 
         private void RemoveBakedVertexColorAdjustmentsForSlot()
@@ -15466,6 +15750,47 @@ namespace UMA
             // atlas/array materials may contain state that is not safe to reconstruct on
             // clones or transfer through another renderer's property blocks.
             originalVertexMaterials = source != null ? (Material[])source.Clone() : new Material[0];
+        }
+
+        /// <summary>
+        /// The avatar can be built again while the editor is open (an edit-time build queued before it
+        /// opened, or one an inspector starts). The build destroys the generated materials the preview
+        /// holds, and the character showed magenta. Take the avatar's new materials instead.
+        /// </summary>
+        private void RecoverDestroyedPreviewMaterials()
+        {
+            if (originalVertexMaterials == null || closing)
+            {
+                return;
+            }
+            bool lost = false;
+            for (int i = 0; i < originalVertexMaterials.Length; i++)
+            {
+                // Unity's == is true for a destroyed object; ReferenceEquals tells it from an empty entry.
+                if (!ReferenceEquals(originalVertexMaterials[i], null) && originalVertexMaterials[i] == null)
+                {
+                    lost = true;
+                    break;
+                }
+            }
+            if (!lost)
+            {
+                return;
+            }
+            SkinnedMeshRenderer source = stageSkinnedMeshRenderer != null ? stageSkinnedMeshRenderer : GetCurrentSkinnedMeshRenderer();
+            if (source == null)
+            {
+                return;
+            }
+            CaptureOriginalVertexMaterials(source);
+            ApplyVertexDisplayOptions();
+            // The build may have replaced the avatar's renderer, and shows it again; the editor keeps it
+            // hidden while open, as it does when it opens.
+            if (stageSkinnedMeshRenderer == null)
+            {
+                stageSkinnedMeshRenderer = source;
+            }
+            source.enabled = false;
         }
 
         private void DestroyOriginalVertexMaterialCopies()

@@ -322,6 +322,29 @@ namespace UMA
             return batch.Count;
         }
 
+        /// <summary>
+        /// Adds one slot, overlay or race to the Global Library on request (an inspector's "Add to Global
+        /// Index" button) and saves the library alone, writing only that item. Unlike
+        /// <see cref="UMAAssetIndexer.ForceSave"/> this never saves the project's other unsaved assets.
+        /// Works whether or not automatic registration is turned on.
+        /// </summary>
+        /// <returns>True when the asset was added and the library saved.</returns>
+        public static bool AddAndSave(UnityEngine.Object asset)
+        {
+            if (asset == null) return false;
+            Type lookupType = GetLookupType(asset.GetType());
+            if (lookupType == null) return false;
+            UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+            if (indexer == null) return false;
+
+            var ai = new AssetItem(lookupType, asset);
+            if (!indexer.AddAssetItem(ai, noDirty: true)) return false;
+
+            SaveIndexer(indexer, new HashSet<string> { ItemKey(ai) });
+            Changed?.Invoke();
+            return true;
+        }
+
         static bool AddOrUpdate(UMAAssetIndexer indexer, string path, List<Change> batch, List<string> outsideSearchFolders)
         {
             Type mainType = AssetDatabase.GetMainAssetTypeAtPath(path);

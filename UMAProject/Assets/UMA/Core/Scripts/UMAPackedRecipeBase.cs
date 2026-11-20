@@ -63,6 +63,8 @@ namespace UMA
 		public static void UnpackRecipe(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, bool loadSlots = true, RaceData race = null)
 		{
             using var profile = UMACharacterBuildProfiler.UnpackRecipe.Auto();
+			umaRecipe.missingAssets = null;
+			umaRecipe.unreadDna = null;
 			switch (umaPackRecipe.version)
 			{
 				case 3:
@@ -443,6 +445,8 @@ namespace UMA
 			public bool alwaysUpdateParms;
 			public bool isBaseColor;
 			public int displayColor;
+			// Whether the swatch shows displayColor rather than the first channel's color (editor setting).
+			public bool showDisplayColor;
 			public PackedOverlayColorDataV3()
 			{
 				name = "";
@@ -452,6 +456,37 @@ namespace UMA
 				alwaysUpdate = false;
 				isBaseColor = false;
 #endif
+			}
+
+			/// <summary>
+			/// The swatch color a color is packed with: channel 0 for a color with channels (as before); a color
+			/// with no channels has no channel 0 (its color reads as white), so its own display color is stored,
+			/// as it is when the swatch was chosen apart from the first channel's color (Show Display Color).
+			/// </summary>
+			internal static int PackedSwatch(OverlayColorData colorData)
+			{
+				bool ownSwatch = !UMAPackRecipe.ArrayHasData(colorData.channelMask);
+#if UNITY_EDITOR
+				ownSwatch |= colorData.showDisplayColor;
+#endif
+				Color32 color32 = ownSwatch ? (Color32)colorData.displayColor : (Color32)colorData.color;
+				return color32.r | (color32.g << 8) | (color32.b << 16) | (color32.a << 24);
+			}
+
+			/// <summary>
+			/// Whether two colors pack to the same swatch and swatch setting. OverlayColorData equality leaves
+			/// these out, so two local colors that differ only there were packed as one entry, and the second
+			/// overlay came back with the first one's swatch.
+			/// </summary>
+			internal static bool SamePackedSwatch(OverlayColorData a, OverlayColorData b)
+			{
+#if UNITY_EDITOR
+				if (a.showDisplayColor != b.showDisplayColor)
+				{
+					return false;
+				}
+#endif
+				return PackedSwatch(a) == PackedSwatch(b);
 			}
 
 			public PackedOverlayColorDataV3(OverlayColorData colorData)
@@ -476,8 +511,10 @@ namespace UMA
 						colors[colorIndex++] = (short)Mathf.FloorToInt(additiveMaskColor.a * 255f);
 					}
 				}
-				Color32 color32 = colorData.color;
-				displayColor = color32.r | (color32.g << 8) | (color32.b << 16) | (color32.a << 24);
+#if UNITY_EDITOR
+				showDisplayColor = colorData.showDisplayColor;
+#endif
+				displayColor = PackedSwatch(colorData);
 				if (colorData.HasPropertyBlock)
 				{
 					alwaysUpdate = colorData.PropertyBlock.alwaysUpdate;
@@ -503,15 +540,19 @@ namespace UMA
 			public void SetOverlayColorData(OverlayColorData overlayColorData)
 			{
 				overlayColorData.name = name;
+				// Restored for every color. These (and the shader settings below) used to be restored only
+				// for a color with channels, so a shader-parameter-only color (Add Shared Color Parms makes
+				// one with no channels) lost its parameters on reload.
+				overlayColorData.displayColor = new Color32((byte)(displayColor & 0xFF), (byte)((displayColor >> 8) & 0xFF), (byte)((displayColor >> 16) & 0xFF), (byte)((displayColor >> 24) & 0xFF));
+#if UNITY_EDITOR
+				overlayColorData.isBaseColor = isBaseColor;
+				overlayColorData.showDisplayColor = showDisplayColor;
+#endif
 				if (UMAPackRecipe.ArrayHasData(colors))
 				{
 					int channelCount = colors.Length / 8;
 					overlayColorData.channelMask = new Color[channelCount];
 					overlayColorData.channelAdditiveMask = new Color[channelCount];
-					overlayColorData.displayColor = new Color32((byte)(displayColor & 0xFF), (byte)((displayColor >> 8) & 0xFF), (byte)((displayColor >> 16) & 0xFF), (byte)((displayColor >> 24) & 0xFF));
-#if UNITY_EDITOR
-					overlayColorData.isBaseColor = isBaseColor;
-#endif
 					int colorIndex = 0;
 					for (int channel = 0; channel < channelCount; channel++)
 					{
@@ -524,12 +565,25 @@ namespace UMA
 						overlayColorData.channelAdditiveMask[channel].b = colors[colorIndex++] / 255f;
 						overlayColorData.channelAdditiveMask[channel].a = colors[colorIndex++] / 255f;
 					}
-					overlayColorData.PropertyBlock = null;
-					if (ShaderParms.Length > 0)
+				}
+				else
+				{
+					// A color saved with no channels comes back with none, as it was made.
+					overlayColorData.channelMask = new Color[0];
+					overlayColorData.channelAdditiveMask = new Color[0];
+				}
+
+				// The packer writes the update flags whenever the color had a property block, with or
+				// without parameters, so a block is restored when either is present.
+				overlayColorData.PropertyBlock = null;
+				bool hasParms = ShaderParms != null && ShaderParms.Length > 0;
+				if (hasParms || alwaysUpdate || alwaysUpdateParms)
+				{
+					overlayColorData.PropertyBlock = new UMAMaterialPropertyBlock();
+					overlayColorData.PropertyBlock.alwaysUpdate = alwaysUpdate;
+					overlayColorData.PropertyBlock.alwaysUpdateParms = alwaysUpdateParms;
+					if (hasParms)
 					{
-						overlayColorData.PropertyBlock = new UMAMaterialPropertyBlock();
-						overlayColorData.PropertyBlock.alwaysUpdate = alwaysUpdate;
-						overlayColorData.PropertyBlock.alwaysUpdateParms = alwaysUpdateParms;
 						for (int i = 0; i < ShaderParms.Length; i++)
 						{
                             overlayColorData.PropertyBlock.shaderProperties.Add(UnpackProperty(i));
@@ -650,6 +704,18 @@ namespace UMA
 				packedDna.packedDna = UMA.UMADna.SaveInstance(dna);
 				PackedDNAlist.Add(packedDna);
 			}
+			// DNA the load could not read goes back unchanged (unless DNA of that type was added since).
+			if (umaRecipe.unreadDna != null)
+			{
+				for (int i = 0; i < umaRecipe.unreadDna.Count; i++)
+				{
+					UMAPackedDna unread = umaRecipe.unreadDna[i];
+					if (unread != null && !PackedDNAlist.Exists(p => p.dnaType == unread.dnaType && p.dnaTypeHash == unread.dnaTypeHash))
+					{
+						PackedDNAlist.Add(unread);
+					}
+				}
+			}
 			return PackedDNAlist;
 		}
 
@@ -659,7 +725,8 @@ namespace UMA
 			UMAPackRecipe umaPackRecipe = new UMAPackRecipe();
 			umaPackRecipe.version = 3;
 
-			int slotCount = umaRecipe.slotDataList.Length;
+			// A new recipe that has never had a slot has no slot list yet: pack it as empty.
+			int slotCount = umaRecipe.slotDataList != null ? umaRecipe.slotDataList.Length : 0;
 			umaPackRecipe.slotsV3 = new PackedSlotDataV3[slotCount];
 			if (UMAPackRecipe.RaceIsValid(umaRecipe.raceData))
 			{
@@ -699,7 +766,9 @@ namespace UMA
 					{
 						tempPackedSlotData.id = umaRecipe.slotDataList[i].asset.slotName;
 					}
-					tempPackedSlotData.scale = Mathf.FloorToInt(umaRecipe.slotDataList[i].overlayScale * 100);
+					// Rounded: the scale is stored as a percentage and read back as percent * 0.01, so 53% is
+					// 0.52999997 in memory; truncating saved it as 52%.
+					tempPackedSlotData.scale = Mathf.RoundToInt(umaRecipe.slotDataList[i].overlayScale * 100);
 					tempPackedSlotData.Tags = umaRecipe.slotDataList[i].tags.Clone() as string[];
 					tempPackedSlotData.Races = umaRecipe.slotDataList[i].Races;
 					tempPackedSlotData.blendShapeTarget = umaRecipe.slotDataList[i].blendShapeTargetSlot;
@@ -791,17 +860,25 @@ namespace UMA
 #endif
 
 						OverlayColorData colorData = overlayData.colorData;
-						int colorIndex = -1;
-						int cIndex = 0;
-						for (int i1 = 0; i1 < colorEntries.Count; i1++)
+						// The color the overlay is linked to, first: matching by name and value linked it to the
+						// first entry that looked the same (another shared color with the same name and values).
+						int colorIndex = colorEntries.FindIndex(entry => ReferenceEquals(entry, colorData));
+						// Otherwise a named copy of a shared color links to that shared color by name and value (as
+						// before), and a local color matches only another local color, never a shared one.
+						bool namedShared = colorData.IsASharedColor;
+						int firstEntry = namedShared ? 0 : umaPackRecipe.sharedColorCount;
+						int lastEntry = colorEntries.Count;
+						for (int i1 = firstEntry; colorIndex < 0 && i1 < lastEntry && i1 < colorEntries.Count; i1++)
 						{
 							OverlayColorData cData = colorEntries[i1];
-							if (cData.name != null && cData.name.Equals(colorData.name) && cData.Equals(colorData))
+							// Shader properties count too: OverlayColorData equality leaves them out, and two
+							// local colors that differ only in shader tint must not be packed as one entry.
+							if (cData.name != null && cData.name.Equals(colorData.name) && cData.Equals(colorData) &&
+								OverlayColorData.SameShaderProperties(cData, colorData) &&
+								PackedOverlayColorDataV3.SamePackedSwatch(cData, colorData))
 							{
-								colorIndex = cIndex;
-								break;
+								colorIndex = i1;
 							}
-							cIndex++;
 						}
 
 						if (colorIndex < 0)
@@ -851,42 +928,65 @@ namespace UMA
 
 			umaRecipe.SetRace(context.GetRace(umaPackRecipe.race));
 			umaRecipe.ClearDna();
-			for (int dna = 0; dna < umaPackRecipe.packedDna.Count; dna++)
-			{
-				Type dnaType = UMADna.GetType(umaPackRecipe.packedDna[dna].dnaType);
-				umaRecipe.AddDna(UMADna.LoadInstance(dnaType, umaPackRecipe.packedDna[dna].packedDna, context.GetRace(umaPackRecipe.race)));
+			UnpackDnaInto(umaRecipe, umaPackRecipe.packedDna, context.GetRace(umaPackRecipe.race));
 
-			}
-
+			Dictionary<int, SlotData> v1StandIns = null;
 			for (int i = 0; i < umaPackRecipe.packedSlotDataList.Length; i++)
 			{
 				if (UMAPackRecipe.SlotIsValid(umaPackRecipe.packedSlotDataList[i]))
 				{
 					var tempSlotData = context.InstantiateSlot(umaPackRecipe.packedSlotDataList[i].slotID);
+					if (tempSlotData == null)
+					{
+						NoteMissingAsset(umaRecipe, $"Slot '{umaPackRecipe.packedSlotDataList[i].slotID}'");
+						continue;
+					}
 					tempSlotData.overlayScale = umaPackRecipe.packedSlotDataList[i].overlayScale * 0.01f;
 					umaRecipe.slotDataList[i] = tempSlotData;
 
-					if (umaPackRecipe.packedSlotDataList[i].copyOverlayIndex == -1)
+					// As in later versions: when the slot whose overlays this one shares is missing, the
+					// overlays stored with that slot are loaded here, and later slots sharing them share this list.
+					int overlaySlot = i;
+					int v1CopyIdx = umaPackRecipe.packedSlotDataList[i].copyOverlayIndex;
+					SlotData v1CopySource = null;
+					if (v1CopyIdx != -1)
+					{
+						v1CopySource = SharedOverlaySource(umaRecipe, v1CopyIdx, v1StandIns);
+						if (v1CopySource == null && v1CopyIdx >= 0 && v1CopyIdx < umaPackRecipe.packedSlotDataList.Length &&
+							umaPackRecipe.packedSlotDataList[v1CopyIdx] != null && umaPackRecipe.packedSlotDataList[v1CopyIdx].OverlayDataList != null)
+						{
+							overlaySlot = v1CopyIdx;
+							if (v1StandIns == null) v1StandIns = new Dictionary<int, SlotData>();
+							v1StandIns[v1CopyIdx] = tempSlotData;
+						}
+					}
+					if (v1CopyIdx == -1 || overlaySlot != i)
 					{
 
-						for (int overlay = 0; overlay < umaPackRecipe.packedSlotDataList[i].OverlayDataList.Length; overlay++)
+						for (int overlay = 0; overlay < umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList.Length; overlay++)
 						{
 							Color tempColor;
 							Rect tempRect;
-
-							if (UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].colorList))
+							OverlayData v1Overlay = TryInstantiateOverlay(context, umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].overlayID);
+							if (v1Overlay == null)
 							{
-								tempColor = new Color(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].colorList[0] / 255.0f, umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].colorList[1] / 255.0f, umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].colorList[2] / 255.0f, umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].colorList[3] / 255.0f);
+								NoteMissingAsset(umaRecipe, $"Overlay '{umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].overlayID}' (on slot '{umaPackRecipe.packedSlotDataList[i].slotID}')");
+								continue;
+							}
+
+							if (UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].colorList))
+							{
+								tempColor = new Color(umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].colorList[0] / 255.0f, umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].colorList[1] / 255.0f, umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].colorList[2] / 255.0f, umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].colorList[3] / 255.0f);
 							}
 							else
 							{
 								tempColor = new Color(1.0f, 1.0f, 1.0f, 1.0f);
 							}
 
-							if (UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList))
+							if (UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].rectList))
 							{
-								Rect originalRect = context.InstantiateOverlay(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].overlayID).rect;
-								tempRect = new Rect(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[0], umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[1], umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[2], umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].rectList[3]);
+								Rect originalRect = v1Overlay.rect;
+								tempRect = new Rect(umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].rectList[0], umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].rectList[1], umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].rectList[2], umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].rectList[3]);
 
 								Vector2 aspectRatio = new Vector2(tempRect.width / originalRect.width, tempRect.height / originalRect.height);
 
@@ -898,15 +998,15 @@ namespace UMA
 								tempRect = new Rect(0, 0, 0, 0);
 							}
 
-							tempSlotData.AddOverlay(context.InstantiateOverlay(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].overlayID));
+							tempSlotData.AddOverlay(v1Overlay);
 							tempSlotData.GetOverlay(tempSlotData.OverlayCount - 1).colorData.color = tempColor;
 							tempSlotData.GetOverlay(tempSlotData.OverlayCount - 1).rect = tempRect;
 
-							if (UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].channelMaskList))
+							if (UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].channelMaskList))
 							{
-								for (int channelAdjust = 0; channelAdjust < umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].channelMaskList.Length; channelAdjust++)
+								for (int channelAdjust = 0; channelAdjust < umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].channelMaskList.Length; channelAdjust++)
 								{
-									packedOverlayData tempData = umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay];
+									packedOverlayData tempData = umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay];
 									tempSlotData.GetOverlay(tempSlotData.OverlayCount - 1).SetColor(channelAdjust, new Color32((byte)tempData.channelMaskList[channelAdjust][0],
 										(byte)tempData.channelMaskList[channelAdjust][1],
 										(byte)tempData.channelMaskList[channelAdjust][2],
@@ -914,11 +1014,11 @@ namespace UMA
 								}
 							}
 
-							if (UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].channelAdditiveMaskList))
+							if (UMAPackRecipe.ArrayHasData(umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].channelAdditiveMaskList))
 							{
-								for (int channelAdjust = 0; channelAdjust < umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay].channelAdditiveMaskList.Length; channelAdjust++)
+								for (int channelAdjust = 0; channelAdjust < umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay].channelAdditiveMaskList.Length; channelAdjust++)
 								{
-									packedOverlayData tempData = umaPackRecipe.packedSlotDataList[i].OverlayDataList[overlay];
+									packedOverlayData tempData = umaPackRecipe.packedSlotDataList[overlaySlot].OverlayDataList[overlay];
 									tempSlotData.GetOverlay(tempSlotData.OverlayCount - 1).SetAdditive(channelAdjust, new Color32((byte)tempData.channelAdditiveMaskList[channelAdjust][0],
 										(byte)tempData.channelAdditiveMaskList[channelAdjust][1],
 										(byte)tempData.channelAdditiveMaskList[channelAdjust][2],
@@ -928,13 +1028,57 @@ namespace UMA
 
 						}
 					}
-					else
+					else if (v1CopySource != null)
 					{
-						tempSlotData.SetOverlayList(umaRecipe.slotDataList[umaPackRecipe.packedSlotDataList[i].copyOverlayIndex].GetOverlayList());
+						tempSlotData.SetOverlayList(v1CopySource.GetOverlayList());
 					}
 				}
 			}
 			return true;
+		}
+
+		/// <summary>
+		/// Adds the recipe's packed DNA to the recipe. An entry whose type cannot be read is kept in
+		/// unreadDna, so a save writes it back instead of dropping it.
+		/// </summary>
+		static void UnpackDnaInto(UMA.UMAData.UMARecipe umaRecipe, List<UMAPackedDna> DNA, RaceData race)
+		{
+			if (DNA == null)
+			{
+				return;
+			}
+			for (int i = 0; i < DNA.Count; i++)
+			{
+				UMAPackedDna packedDna = DNA[i];
+				if (packedDna == null || packedDna.dnaType == "uma3")
+				{
+					continue;
+				}
+				UMADnaBase dna = null;
+				try
+				{
+					dna = packedDna.Unpack(race);
+				}
+				catch (Exception e)
+				{
+					if (Debug.isDebugBuild)
+					{
+						Debug.LogWarning("UMA: could not read DNA '" + packedDna.dnaType + "' in a recipe; it is kept as it was. " + e.Message);
+					}
+				}
+				if (dna != null)
+				{
+					umaRecipe.AddDna(dna);
+				}
+				else
+				{
+					if (umaRecipe.unreadDna == null)
+					{
+						umaRecipe.unreadDna = new List<UMAPackedDna>();
+					}
+					umaRecipe.unreadDna.Add(packedDna);
+				}
+			}
 		}
 
 		public static List<UMADnaBase> UnPackDNA(List<UMAPackedRecipeBase.UMAPackedDna> DNA)
@@ -992,13 +1136,7 @@ namespace UMA
 				}
 			}
 			umaRecipe.ClearDna();
-			List<UMADnaBase> packedDna = UnPackDNA(umaPackRecipe.packedDna);
-
-			for (int i = 0; i < packedDna.Count; i++)
-			{
-				UMADnaBase umd = packedDna[i];
-				umaRecipe.AddDna(umd);
-			}
+			UnpackDnaInto(umaRecipe, umaPackRecipe.packedDna, null);
 
 			OverlayColorData[] colorData;
 			if (UMAPackRecipe.ArrayHasData(umaPackRecipe.fColors))
@@ -1030,21 +1168,54 @@ namespace UMA
 				umaRecipe.sharedColors[i] = colorData[i];
 			}
 
+			// As in version 3: a missing slot's shared overlays are loaded by the first slot sharing them.
+			Dictionary<int, SlotData> sharedOverlayStandIns = null;
 			for (int i = 0; i < umaPackRecipe.slotsV2.Length; i++)
 			{
 				PackedSlotDataV2 packedSlot = umaPackRecipe.slotsV2[i];
 				if (UMAPackRecipe.SlotIsValid(packedSlot))
 				{
 					var tempSlotData = context.InstantiateSlot(packedSlot.id);
+					if (tempSlotData == null)
+					{
+						NoteMissingAsset(umaRecipe, $"Slot '{packedSlot.id}'");
+						continue;
+					}
 					tempSlotData.overlayScale = packedSlot.scale * 0.01f;
 					umaRecipe.slotDataList[i] = tempSlotData;
 
-					if (packedSlot.copyIdx == -1)
+					PackedOverlayDataV2[] v2Overlays = packedSlot.overlays;
+					if (packedSlot.copyIdx != -1)
 					{
-						for (int i2 = 0; i2 < packedSlot.overlays.Length; i2++)
+						SlotData copySource = SharedOverlaySource(umaRecipe, packedSlot.copyIdx, sharedOverlayStandIns);
+						if (copySource != null)
 						{
-							PackedOverlayDataV2 packedOverlay = packedSlot.overlays[i2];
-							OverlayData overlayData = context.InstantiateOverlay(packedOverlay.id);
+							tempSlotData.SetOverlayList(copySource.GetOverlayList());
+							v2Overlays = null;
+						}
+						else if (packedSlot.copyIdx >= 0 && packedSlot.copyIdx < umaPackRecipe.slotsV2.Length && umaPackRecipe.slotsV2[packedSlot.copyIdx] != null)
+						{
+							// The slot it copies from is missing: load the overlays stored with that slot.
+							v2Overlays = umaPackRecipe.slotsV2[packedSlot.copyIdx].overlays;
+							if (sharedOverlayStandIns == null) sharedOverlayStandIns = new Dictionary<int, SlotData>();
+							sharedOverlayStandIns[packedSlot.copyIdx] = tempSlotData;
+						}
+						else
+						{
+							v2Overlays = null;
+						}
+					}
+					if (v2Overlays != null)
+					{
+						for (int i2 = 0; i2 < v2Overlays.Length; i2++)
+						{
+							PackedOverlayDataV2 packedOverlay = v2Overlays[i2];
+							OverlayData overlayData = TryInstantiateOverlay(context, packedOverlay.id);
+							if (overlayData == null)
+							{
+								NoteMissingAsset(umaRecipe, $"Overlay '{packedOverlay.id}' (on slot '{packedSlot.id}')");
+								continue;
+							}
 							overlayData.rect = new Rect(packedOverlay.rect[0],
 								packedOverlay.rect[1],
 								packedOverlay.rect[2],
@@ -1058,17 +1229,16 @@ namespace UMA
 								overlayData.colorData = colorData[packedOverlay.colorIdx].Clone();
 								overlayData.colorData.name = OverlayColorData.UNSHARED;
 							}
-							if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material))
+							// Not for a shared color with no channels (shader parameters only), as in version 3:
+							// expanding it changed the shared color itself.
+							if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material) &&
+								!(packedOverlay.colorIdx < umaPackRecipe.sharedColorCount && overlayData.colorData != null && overlayData.colorData.channelCount == 0))
 							{
 								overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
 							}
 
 							tempSlotData.AddOverlay(overlayData);
 						}
-					}
-					else
-					{
-						tempSlotData.SetOverlayList(umaRecipe.slotDataList[packedSlot.copyIdx].GetOverlayList());
 					}
 				}
 			}
@@ -1109,6 +1279,140 @@ namespace UMA
 			return umaRecipe;
 		}
 
+		/// <summary>
+		/// Records a slot or overlay the load left out, so editors can refuse to save the partial recipe.
+		/// </summary>
+		static void NoteMissingAsset(UMA.UMAData.UMARecipe umaRecipe, string description)
+		{
+			if (umaRecipe.missingAssets == null)
+			{
+				umaRecipe.missingAssets = new List<string>();
+			}
+			umaRecipe.missingAssets.Add(description);
+		}
+
+		/// <summary>
+		/// The library throws for an overlay it does not have (it returns null for a missing slot). The
+		/// loader treats both the same way: it records the missing asset and keeps loading the rest of
+		/// the recipe. Stopping at the first missing overlay dropped every slot and overlay after it,
+		/// and an editor that saved that copy removed them from the asset.
+		/// </summary>
+		/// <summary>
+		/// The loaded slot whose overlay list a copyIdx slot shares: the slot at copyIdx, or the slot that
+		/// stood in for it when it did not load. Null when neither exists yet.
+		/// </summary>
+		static SlotData SharedOverlaySource(UMA.UMAData.UMARecipe umaRecipe, int copyIdx, Dictionary<int, SlotData> standIns)
+		{
+			if (copyIdx < 0 || umaRecipe.slotDataList == null || copyIdx >= umaRecipe.slotDataList.Length)
+			{
+				return null;
+			}
+			SlotData source = umaRecipe.slotDataList[copyIdx];
+			if (source == null && standIns != null)
+			{
+				standIns.TryGetValue(copyIdx, out source);
+			}
+			return source;
+		}
+
+		/// <summary>
+		/// The slot at copyIdx did not load: this slot loads the overlays stored with it, and later slots
+		/// sharing them share this slot's list.
+		/// </summary>
+		static PackedOverlayDataV3[] StandInForSharedOverlays(PackedSlotDataV3[] packedSlots, int copyIdx, SlotData standIn, ref Dictionary<int, SlotData> standIns)
+		{
+			if (copyIdx < 0 || copyIdx >= packedSlots.Length || packedSlots[copyIdx] == null)
+			{
+				return null;
+			}
+			if (standIns == null)
+			{
+				standIns = new Dictionary<int, SlotData>();
+			}
+			standIns[copyIdx] = standIn;
+			return packedSlots[copyIdx].overlays;
+		}
+
+		static OverlayData TryInstantiateOverlay(UMAAssetIndexer context, string overlayId)
+		{
+			try
+			{
+				return context.InstantiateOverlay(overlayId);
+			}
+			catch (UMAResourceNotFoundException)
+			{
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Restores everything the packer writes for one overlay: transparent multiplier, rect, transform,
+		/// UV set, color, blend modes, tags, channels and tiling. Ordinary and placeholder slots both use it,
+		/// so a reload followed by a save keeps every value.
+		/// </summary>
+		public static void ApplyPackedOverlay(OverlayData overlayData, PackedOverlayDataV3 po, int sharedCount,
+			OverlayColorData[] sharedColorsRef, OverlayColorData[] allColorsRef)
+		{
+			ApplyPackedTransparentMultiplier(overlayData, po);
+
+			// Rect & transform
+			if (po.rect != null && po.rect.Length == 4)
+			{
+				overlayData.rect = new Rect(po.rect[0], po.rect[1], po.rect[2], po.rect[3]);
+			}
+			overlayData.instanceTransformed = po.isTransformed;
+			overlayData.Scale = po.scale;
+			overlayData.Rotation = po.rotation;
+			overlayData.Translate = po.translate;
+			// The overlay's own UV set. (It used to take the slot's, which is a different setting.)
+			overlayData.UVSet = po.uvOverride;
+
+			// Color
+			int cIdx = po.colorIdx;
+			if (cIdx >= 0 && cIdx < sharedCount)
+			{
+				overlayData.colorData = sharedColorsRef[cIdx];
+			}
+			else if (cIdx >= 0 && cIdx < allColorsRef.Length)
+			{
+				// Unshared duplicate
+				var dup = allColorsRef[cIdx].Clone();
+				dup.name = OverlayColorData.UNSHARED;
+				overlayData.colorData = dup;
+			}
+
+			// Blend modes
+			if (po.blendModes != null && po.blendModes.Length > 0)
+			{
+				overlayData.SetOverlayBlendsLength(po.blendModes.Length);
+				for (int b = 0; b < po.blendModes.Length; b++)
+					overlayData.SetOverlayBlend(b, (OverlayDataAsset.OverlayBlend)po.blendModes[b]);
+			}
+
+			// Tags
+			overlayData.tags = po.Tags != null ? (string[])po.Tags.Clone() : Array.Empty<string>();
+
+			// Channels ensure only if counts differ. Not for a shared color with no channels: that is a
+			// shader-parameter-only color (linked to an empty overlay). Expanding it to the material's
+			// channel count changed the shared color itself, and it dropped out of the property picker.
+			var mat = overlayData.asset != null ? overlayData.asset.material : null;
+			bool propertyOnlySharedColor = cIdx >= 0 && cIdx < sharedCount && overlayData.colorData != null &&
+				overlayData.colorData.channelCount == 0;
+			if (mat != null && !propertyOnlySharedColor)
+			{
+				int needed = mat.channels.Length;
+				if (overlayData.ChannelCount != needed)
+					overlayData.EnsureChannels(needed);
+			}
+
+			// Tiling flags
+			if (po.tiling != null)
+			{
+				for (int ch = 0; ch < po.tiling.Length && ch < overlayData.ChannelCount; ch++)
+					overlayData.SetTextureTiling(ch, po.tiling[ch]);
+			}
+		}
+
 #if UMA_UNPACK_OPTIMIZED
 		public static void UnpackRecipeVersion3(UMA.UMAData.UMARecipe umaRecipe, UMAPackRecipe umaPackRecipe, bool loadSlots = true, RaceData race = null)
 		{
@@ -1127,17 +1431,7 @@ namespace UMA
 
 			// DNA
 			umaRecipe.ClearDna();
-			var packedDna = UnPackDNA(umaPackRecipe.packedDna, race);
-			if (packedDna != null)
-			{
-				for (int d = 0; d < packedDna.Count; d++)
-				{
-					if (packedDna[d] != null)
-					{
-						umaRecipe.AddDna(packedDna[d]);
-					}
-				}
-			}
+			UnpackDnaInto(umaRecipe, umaPackRecipe.packedDna, race);
 
 			// Colors
 			var allColors = UnpackColors(umaPackRecipe);
@@ -1154,6 +1448,11 @@ namespace UMA
 			// Local refs for speed
 			var sharedColorsRef = umaRecipe.sharedColors;
 			var allColorsRef = allColors;
+			// A slot that shares another slot's overlays (copyIdx) normally takes that slot's list. When that
+			// slot did not load (missing asset), its overlays are still stored with it: the first slot sharing
+			// them loads them, and later ones share that slot's list. Before, they all loaded with no overlays,
+			// and saving then removed the overlays from the recipe.
+			Dictionary<int, SlotData> sharedOverlayStandIns = null;
 
 			for (int i = 0; i < slotCount; i++)
 			{
@@ -1188,15 +1487,18 @@ namespace UMA
 					umaRecipe.slotDataList[i] = slotData;
 
 					// Unpack overlays for the placeholder slot (it carries overlays for wildcard matching)
+					var phOverlays = packedSlot.overlays;
 					if (packedSlot.copyIdx != -1)
 					{
-						var src = umaRecipe.slotDataList[packedSlot.copyIdx];
+						var src = SharedOverlaySource(umaRecipe, packedSlot.copyIdx, sharedOverlayStandIns);
 						if (src != null)
+						{
 							slotData.SetOverlayList(src.GetOverlayList());
-						continue;
+							continue;
+						}
+						phOverlays = StandInForSharedOverlays(packedSlots, packedSlot.copyIdx, slotData, ref sharedOverlayStandIns);
 					}
 
-					var phOverlays = packedSlot.overlays;
 					if (phOverlays == null || phOverlays.Length == 0)
 						continue;
 
@@ -1212,18 +1514,17 @@ namespace UMA
 						OverlayData overlayData;
 						if (!_overlayAssetCache.TryGetValue(po.id, out oAsset))
 						{
-							oAsset = context.InstantiateOverlay(po.id)?.asset;
-							if (oAsset == null) continue;
+							oAsset = TryInstantiateOverlay(context, po.id)?.asset;
+							if (oAsset == null)
+							{
+								NoteMissingAsset(umaRecipe, $"Overlay '{po.id}' (on placeholder slot '{packedSlot.id}')");
+								continue;
+							}
 							_overlayAssetCache.Add(po.id, oAsset);
 						}
 						overlayData = new OverlayData(oAsset);
-						ApplyPackedTransparentMultiplier(overlayData, po);
-						if (po.rect != null && po.rect.Length == 4)
-							overlayData.rect = new Rect(po.rect[0], po.rect[1], po.rect[2], po.rect[3]);
-						if (po.Tags != null)
-							overlayData.tags = (string[])po.Tags.Clone();
-						if (po.colorIdx >= 0 && po.colorIdx < allColorsRef.Length)
-							overlayData.colorData = allColorsRef[po.colorIdx];
+						// Same as ordinary overlays: keep the transform, UV set, blend modes and tiling too.
+						ApplyPackedOverlay(overlayData, po, sharedCount, sharedColorsRef, allColorsRef);
 						phOverlayList.Add(overlayData);
 					}
 					continue;
@@ -1241,6 +1542,7 @@ namespace UMA
 						if (Debug.isDebugBuild)
 							Debug.LogWarning($"Slot '{packedSlot.id}' not found. Skipping.");
 #endif
+						NoteMissingAsset(umaRecipe, $"Slot '{packedSlot.id}'");
 						continue;
 					}
 					_slotAssetCache.Add(packedSlot.id, sAsset);
@@ -1272,16 +1574,19 @@ namespace UMA
 
 				umaRecipe.slotDataList[i] = slotData;
 
+				var packedOverlays = packedSlot.overlays;
 				if (packedSlot.copyIdx != -1)
 				{
 					// Reuse overlay list reference
-					var src = umaRecipe.slotDataList[packedSlot.copyIdx];
+					var src = SharedOverlaySource(umaRecipe, packedSlot.copyIdx, sharedOverlayStandIns);
 					if (src != null)
+					{
 						slotData.SetOverlayList(src.GetOverlayList());
-					continue;
+						continue;
+					}
+					packedOverlays = StandInForSharedOverlays(packedSlots, packedSlot.copyIdx, slotData, ref sharedOverlayStandIns);
 				}
 
-				var packedOverlays = packedSlot.overlays;
 				if (packedOverlays == null || packedOverlays.Length == 0)
 					continue;
 
@@ -1305,13 +1610,14 @@ namespace UMA
 					{
 						// Fallback to full instantiate (creates OverlayData) then cache asset for next time
 						//Debug.Log("Cache miss for overlay '" + po.id + "'. Instantiating to get asset reference.");
-                        overlayData = context.InstantiateOverlay(po.id);
+                        overlayData = TryInstantiateOverlay(context, po.id);
 						if (overlayData == null)
 						{
 #if UNITY_EDITOR
 							if (Debug.isDebugBuild)
 								Debug.LogWarning($"Overlay '{po.id}' not found. Skipping.");
 #endif
+							NoteMissingAsset(umaRecipe, $"Overlay '{po.id}' (on slot '{packedSlot.id}')");
 							continue;
 						}
 						oAsset = overlayData.asset;
@@ -1322,56 +1628,7 @@ namespace UMA
 						// Fast construct new OverlayData from asset
 						overlayData = new OverlayData(oAsset);
 					}
-					ApplyPackedTransparentMultiplier(overlayData, po);
-
-					// Rect & transform
-					overlayData.rect = new Rect(po.rect[0], po.rect[1], po.rect[2], po.rect[3]);
-					overlayData.instanceTransformed = po.isTransformed;
-					overlayData.Scale = po.scale;
-					overlayData.Rotation = po.rotation;
-					overlayData.Translate = po.translate;
-					overlayData.UVSet = packedSlot.uvOverride;
-
-					// Color
-					int cIdx = po.colorIdx;
-					if (cIdx < sharedCount)
-					{
-						overlayData.colorData = sharedColorsRef[cIdx];
-					}
-					else
-					{
-						// Unshared duplicate
-						var dup = allColorsRef[cIdx].Clone();
-						dup.name = OverlayColorData.UNSHARED;
-						overlayData.colorData = dup;
-					}
-
-					// Blend modes
-					if (po.blendModes != null && po.blendModes.Length > 0)
-					{
-						overlayData.SetOverlayBlendsLength(po.blendModes.Length);
-						for (int b = 0; b < po.blendModes.Length; b++)
-							overlayData.SetOverlayBlend(b, (OverlayDataAsset.OverlayBlend)po.blendModes[b]);
-					}
-
-					// Tags
-					overlayData.tags = po.Tags != null ? (string[])po.Tags.Clone() : Array.Empty<string>();
-
-					// Channels ensure only if counts differ
-					var mat = overlayData.asset.material;
-					if (mat != null)
-					{
-						int needed = mat.channels.Length;
-						if (overlayData.ChannelCount != needed)
-							overlayData.EnsureChannels(needed);
-					}
-
-					// Tiling flags
-					if (po.tiling != null)
-					{
-						for (int ch = 0; ch < po.tiling.Length && ch < overlayData.ChannelCount; ch++)
-							overlayData.SetTextureTiling(ch, po.tiling[ch]);
-					}
+					ApplyPackedOverlay(overlayData, po, sharedCount, sharedColorsRef, allColorsRef);
 
 					// Add
 					overlayList.Add(overlayData);
@@ -1401,13 +1658,7 @@ namespace UMA
 			}
  
 			umaRecipe.ClearDna();
-            List<UMADnaBase> packedDna = UnPackDNA(umaPackRecipe.packedDna);
-
-            for (int i = 0; i < packedDna.Count; i++)
-            {
-                UMADnaBase umd = packedDna[i];
-                umaRecipe.AddDna(umd);
-            }
+			UnpackDnaInto(umaRecipe, umaPackRecipe.packedDna, null);
 
             OverlayColorData[] colorData = UnpackColors(umaPackRecipe);
 
@@ -1554,7 +1805,7 @@ namespace UMA
 								overlayData.Scale = new Vector2(packedOverlay.scale.x, packedOverlay.scale.y);
 								overlayData.Rotation = packedOverlay.rotation;
 								overlayData.Translate = new Vector2(packedOverlay.translate.x, packedOverlay.translate.y);
-								overlayData.UVSet = packedSlot.uvOverride;
+								overlayData.UVSet = packedOverlay.uvOverride;
 
 								if (packedOverlay.colorIdx < umaPackRecipe.sharedColorCount)
 								{
@@ -1584,7 +1835,8 @@ namespace UMA
 									overlayData.tags = new string[0];
 								}
 
-								if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material))
+								if (UMAPackRecipe.MaterialIsValid(overlayData.asset.material) &&
+									!(packedOverlay.colorIdx < umaPackRecipe.sharedColorCount && overlayData.colorData != null && overlayData.colorData.channelCount == 0))
 								{
 									overlayData.EnsureChannels(overlayData.asset.material.channels.Length);
 								}

@@ -167,9 +167,10 @@ internal class UmaAddRacesToRecipesWindow : EditorWindow
 					}
 				}
 				EditorUtility.SetDirty(recipe);
+				// Save each changed recipe alone, not the project's other unsaved assets.
+				AssetDatabase.SaveAssetIfDirty(recipe);
 			}
 
-			AssetDatabase.SaveAssets();
 			var idx = UMAAssetIndexer.Instance;
 			if (idx != null)
 			{

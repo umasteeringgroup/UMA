@@ -318,6 +318,9 @@ namespace UMA
 			res.Scale = new Vector2(Scale.x,Scale.y) ;
 			res.Translate = new Vector2(Translate.x, Translate.y);
 			res.TransparentMultiplier = TransparentMultiplier;
+			// Also stored in recipes: a recipe merged by dropping it lost them.
+			res.UVSet = UVSet;
+			res.tiling = tiling == null ? null : (bool[])tiling.Clone();
             if (tags == null)
             {
                 res.tags = new string[0];
@@ -421,13 +424,12 @@ namespace UMA
 					if (UMAAssetIndexer.Instance != null)
 					{
 						asset.material = UMAAssetIndexer.Instance.GetAsset<UMAMaterial>(asset.materialName);
-						if (asset.material == null)
+						// Only when the overlay has no colors: replacing them reset the overlay's colors (and
+						// a save then stored that) whenever its material had to be looked up or was missing.
+						if (!colorData)
 						{
-							this.colorData = new OverlayColorData(3); // Don't know. Just create it for standard PBR material size. 
-						}
-						else
-						{
-							this.colorData = new OverlayColorData(asset.material.channels.Length);
+							// Without a material, the standard PBR channel count.
+							this.colorData = new OverlayColorData(asset.material == null ? 3 : asset.material.channels.Length);
 						}
 					}
 				}
@@ -634,6 +636,23 @@ namespace UMA
 			colorData = overlay.colorData.Clone();
 		}
 
+		/// <summary>
+		/// Takes the other overlay's stored settings (transform, UV set, tiling, tags, blend modes), as CopyColors
+		/// takes its colors: merging a recipe into a slot that already had the overlay kept only the colors.
+		/// </summary>
+		public void CopyStoredSettings(OverlayData overlay)
+		{
+			instanceTransformed = overlay.instanceTransformed;
+			Rotation = overlay.Rotation;
+			Scale = overlay.Scale;
+			Translate = overlay.Translate;
+			UVSet = overlay.UVSet;
+			TransparentMultiplier = overlay.TransparentMultiplier;
+			tiling = overlay.tiling == null ? null : (bool[])overlay.tiling.Clone();
+			tags = overlay.tags == null ? new string[0] : (string[])overlay.tags.Clone();
+			blendOverrides = overlay.blendOverrides == null ? null : (OverlayBlend[])overlay.blendOverrides.Clone();
+		}
+
 		#if (UNITY_STANDALONE || UNITY_IOS || UNITY_ANDROID || UNITY_PS4 || UNITY_XBOXONE) && !UNITY_2017_3_OR_NEWER //supported platforms for procedural materials
 		public void GenerateProceduralTextures()
 		{
@@ -719,6 +738,66 @@ namespace UMA
 			colorData.EnsureChannels(channels);
 		}
 
+		static bool SameTiling(OverlayData overlay1, OverlayData overlay2)
+		{
+			int count = Math.Max(overlay1.tiling != null ? overlay1.tiling.Length : 0, overlay2.tiling != null ? overlay2.tiling.Length : 0);
+			for (int i = 0; i < count; i++)
+			{
+				if (overlay1.IsTextureTiled(i) != overlay2.IsTextureTiled(i))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		static bool SameBlendModes(OverlayData overlay1, OverlayData overlay2)
+		{
+			// Both overlays use the same asset here, so only per-overlay overrides can differ.
+			if (overlay1.blendOverrides == null && overlay2.blendOverrides == null)
+			{
+				return true;
+			}
+			if (overlay1.asset == null)
+			{
+				return false;
+			}
+			OverlayBlend[] blends1 = overlay1.textureBlendArray;
+			OverlayBlend[] blends2 = overlay2.textureBlendArray;
+			int length1 = blends1 != null ? blends1.Length : 0;
+			int length2 = blends2 != null ? blends2.Length : 0;
+			if (length1 != length2)
+			{
+				return false;
+			}
+			for (int i = 0; i < length1; i++)
+			{
+				if (blends1[i] != blends2[i])
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		static bool SameTags(string[] tags1, string[] tags2)
+		{
+			int length1 = tags1 != null ? tags1.Length : 0;
+			int length2 = tags2 != null ? tags2.Length : 0;
+			if (length1 != length2)
+			{
+				return false;
+			}
+			for (int i = 0; i < length1; i++)
+			{
+				if (!string.Equals(tags1[i], tags2[i], StringComparison.Ordinal))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool Equivalent(OverlayData overlay1, OverlayData overlay2)
 		{
@@ -734,10 +813,31 @@ namespace UMA
 						(overlay1.TransparentMultiplier != overlay2.TransparentMultiplier) ||
 						(overlay1.colorData != overlay2.colorData) ||
 						(overlay1HasSharedColor != overlay2HasSharedColor) ||  
-						(overlay1HasSharedColor && (overlay1.colorData.name != overlay2.colorData.name)))
+						// The same shared color, not one with the same name: two shared colors that look the same
+						// are still two colors, and a save linked one overlay's slot to the other's.
+						(overlay1HasSharedColor && !ReferenceEquals(overlay1.colorData, overlay2.colorData)))
                     {
 						return false;
                     }
+					// Everything else a recipe stores per overlay. Overlays that match here share one
+					// list (MergeMatchingOverlays), so a difference left out would be overwritten by the
+					// first overlay's value when the recipe is saved or the character built.
+					if ((overlay1.instanceTransformed != overlay2.instanceTransformed) ||
+						(overlay1.Rotation != overlay2.Rotation) ||
+						(overlay1.Scale != overlay2.Scale) ||
+						(overlay1.Translate != overlay2.Translate) ||
+						(overlay1.UVSet != overlay2.UVSet) ||
+						!OverlayColorData.SameShaderProperties(overlay1.colorData, overlay2.colorData) ||
+						// The swatch a local color is saved with (Show Display Color and its color): two
+						// stacks that differed only there were linked by a save and took one swatch.
+						(!overlay1HasSharedColor && overlay1.colorData != null && overlay2.colorData != null &&
+							!UMAPackedRecipeBase.PackedOverlayColorDataV3.SamePackedSwatch(overlay1.colorData, overlay2.colorData)) ||
+						!SameTiling(overlay1, overlay2) ||
+						!SameBlendModes(overlay1, overlay2) ||
+						!SameTags(overlay1.tags, overlay2.tags))
+					{
+						return false;
+					}
 					return true;
 				}
 				return false;
@@ -765,8 +865,9 @@ namespace UMA
 			{
 				if (overlay2)
 				{
+					// Equals(a, b): an overlay without a material threw here when a recipe was merged.
 					return ((overlay1.asset.overlayName == overlay2.asset.overlayName) &&
-							(overlay1.asset.material.Equals(overlay2.asset.material)) &&
+							Equals(overlay1.asset.material, overlay2.asset.material) &&
 							(overlay1.rect == overlay2.rect) &&
 							(overlay1.TransparentMultiplier == overlay2.TransparentMultiplier));
 				}

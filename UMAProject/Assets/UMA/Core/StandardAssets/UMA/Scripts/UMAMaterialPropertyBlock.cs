@@ -19,6 +19,21 @@ namespace UMA
         public const string transformprecision = "{0:F4},{1:F4},{2:F4},{3:F4},{4:F4}";
         public string stringRepresentation = "";
 
+        /// <summary>
+        /// Writes a float with four decimals when that reads back as the same value (the form recipes have
+        /// always used, so their text does not change), and in full otherwise: a small value such as
+        /// 0.00004 was written as 0.0000.
+        /// </summary>
+        public static string FormatFloat(float value)
+        {
+            string fixedForm = value.ToString(precision, CultureInfo.InvariantCulture);
+            if (float.TryParse(fixedForm, NumberStyles.Float, CultureInfo.InvariantCulture, out float readBack) && readBack == value)
+            {
+                return fixedForm;
+            }
+            return value.ToString("R", CultureInfo.InvariantCulture);
+        }
+
         public string name;
         public abstract void Apply(Material mpb, int overlayNumber);
 
@@ -40,6 +55,9 @@ namespace UMA
             char[] split = { splitter[0] };
 
             string[] str  = serializedString.Split(split,StringSplitOptions.RemoveEmptyEntries);
+            // Texture, array, matrix and buffer properties are written as "type;name" (their values are set
+            // at runtime), so their name is the second field. Reading the third gave every one the name "0".
+            string nameOnly = str.Length == 2 ? str[1] : (str.Length > 2 ? str[2] : "0");
 
             if (str.Length < 3)
             {
@@ -53,10 +71,30 @@ namespace UMA
                 case "Float":
                     return new UMAFloatProperty() {Value = Convert.ToSingle(str[1], CultureInfo.InvariantCulture), name = str[2] };
                 case "Int":
-                    return new UMAIntProperty() { Value = Convert.ToInt32(str[1],CultureInfo.InvariantCulture), name = str[2] };
+                    // Integer properties used to be written with "***" after the name, and every load and
+                    // save added another, so "_Mode" became "_Mode***", "_Mode******" and so on and no
+                    // longer matched the shader. Shader property names never end in '*'.
+                    return new UMAIntProperty() { Value = Convert.ToInt32(str[1],CultureInfo.InvariantCulture), name = str[2].TrimEnd('*') };
                 case "Color":
                     Color c = Color.white;
-                    ColorUtility.TryParseHtmlString(str[1], out c);
+                    if (str[1].StartsWith("#", StringComparison.Ordinal))
+                    {
+                        ColorUtility.TryParseHtmlString(str[1], out c);
+                    }
+                    else
+                    {
+                        // An HDR color (a component outside 0-1, such as emission), written as four floats.
+                        string[] rgba = str[1].Split(',');
+                        if (rgba.Length == 4)
+                        {
+                            c = new Color(Convert.ToSingle(rgba[0], CultureInfo.InvariantCulture), Convert.ToSingle(rgba[1], CultureInfo.InvariantCulture),
+                                Convert.ToSingle(rgba[2], CultureInfo.InvariantCulture), Convert.ToSingle(rgba[3], CultureInfo.InvariantCulture));
+                        }
+                        else
+                        {
+                            ColorUtility.TryParseHtmlString(str[1], out c);
+                        }
+                    }
 
                     return new UMAColorProperty() { Value = c, name = str[2] };
                 case "Vector":
@@ -68,19 +106,19 @@ namespace UMA
                     return new UMAVectorProperty() { Value = new Vector4(x, y, z, w), name = str[2] };
                 /// The rest of these are only programmable at runtime.
                 case "VectorArray":
-                    return new UMAVectorArrayProperty() { name = str[2] };
+                    return new UMAVectorArrayProperty() { name = nameOnly };
                 case "Texture":
-                    return new UMATextureProperty() { name = str[2] };
+                    return new UMATextureProperty() { name = nameOnly };
                 case "FloatArray":
-                    return new UMAFloatArrayProperty() { name = str[2] };
+                    return new UMAFloatArrayProperty() { name = nameOnly };
                 case "Matrix":
-                    return new UMAMatrixProperty() { name = str[2] };
+                    return new UMAMatrixProperty() { name = nameOnly };
                 case "MatrixArray":
-                    return new UMAMatrixArrayProperty() { name = str[2] };
+                    return new UMAMatrixArrayProperty() { name = nameOnly };
                 case "ComputeBuffer":
-                    return new UMAComputeBufferProperty() { name = str[2] };
+                    return new UMAComputeBufferProperty() { name = nameOnly };
                 case "ConstantComputeBuffer":
-                    return new UMAConstantComputeBufferProperty() { name = str[2] };
+                    return new UMAConstantComputeBufferProperty() { name = nameOnly };
                 case "OverlayTransform":
                     string[] transform = str[1].Split(',');
 
@@ -156,7 +194,7 @@ namespace UMA
         }
         public override string ToString()
         {
-            return "OverlayTransform" + splitter + Translate.x.ToString(precision, CultureInfo.InvariantCulture) + "," + Translate.y.ToString(precision, CultureInfo.InvariantCulture) + "," + Rotate.ToString(precision, CultureInfo.InvariantCulture) + "," + Scale.x.ToString(precision, CultureInfo.InvariantCulture) + "," + Scale.y.ToString(precision, CultureInfo.InvariantCulture)+splitter+name;
+            return "OverlayTransform" + splitter + FormatFloat(Translate.x) + "," + FormatFloat(Translate.y) + "," + FormatFloat(Rotate) + "," + FormatFloat(Scale.x) + "," + FormatFloat(Scale.y) + splitter + name;
         }
 
 #if UNITY_EDITOR
@@ -200,7 +238,7 @@ namespace UMA
 
         public override string ToString()
         {
-            return "Float" + splitter + Value.ToString(precision, CultureInfo.InvariantCulture) + splitter + name;
+            return "Float" + splitter + FormatFloat(Value) + splitter + name;
         }
 
 
@@ -234,7 +272,19 @@ namespace UMA
         }
         public override string ToString()
         {
+            // A color within 0-1 keeps the 8-bit hex form recipes have always used. An HDR color (emission
+            // values above 1) is written as four floats: the hex form clamped it to 1.
+            if (IsHdr(Value))
+            {
+                return "Color" + splitter + Value.r.ToString("R", CultureInfo.InvariantCulture) + "," + Value.g.ToString("R", CultureInfo.InvariantCulture) + "," +
+                    Value.b.ToString("R", CultureInfo.InvariantCulture) + "," + Value.a.ToString("R", CultureInfo.InvariantCulture) + splitter + name;
+            }
             return "Color"+splitter+"#"+ColorUtility.ToHtmlStringRGBA(Value) + splitter + name;
+        }
+
+        private static bool IsHdr(Color color)
+        {
+            return color.r < 0f || color.r > 1f || color.g < 0f || color.g > 1f || color.b < 0f || color.b > 1f || color.a < 0f || color.a > 1f;
         }
 #if UNITY_EDITOR
         public override bool OnGUI()
@@ -285,10 +335,10 @@ namespace UMA
         public override string ToString()
         {
             return "Vector" + splitter
-                + Value.x.ToString("F4", CultureInfo.InvariantCulture) + ","
-                + Value.y.ToString("F4", CultureInfo.InvariantCulture) + ","
-                + Value.z.ToString("F4", CultureInfo.InvariantCulture) + ","
-                + Value.w.ToString("F4", CultureInfo.InvariantCulture)
+                + FormatFloat(Value.x) + ","
+                + FormatFloat(Value.y) + ","
+                + FormatFloat(Value.z) + ","
+                + FormatFloat(Value.w)
                 + ";" + name;
         }
 #if UNITY_EDITOR
@@ -320,7 +370,7 @@ namespace UMA
         {
             UMAVectorArrayProperty UVAP = new UMAVectorArrayProperty();
             UVAP.name = name;
-            UVAP.Value = Value.Clone() as Vector4[];
+            UVAP.Value = Value?.Clone() as Vector4[];
 
             return UVAP; ;
         }
@@ -402,7 +452,7 @@ namespace UMA
         {
             UMAFloatArrayProperty UVAP = new UMAFloatArrayProperty();
             UVAP.name = name;
-            UVAP.Value = Value.Clone() as float[];
+            UVAP.Value = Value?.Clone() as float[];
 
             return UVAP; ;
         }
@@ -440,7 +490,7 @@ namespace UMA
 
         public override string ToString()
         {
-            return "Int"+splitter+Value.ToString(CultureInfo.InvariantCulture) + splitter + name+"***";
+            return "Int"+splitter+Value.ToString(CultureInfo.InvariantCulture) + splitter + name;
         }
 #if UNITY_EDITOR
         public override bool OnGUI()
@@ -502,7 +552,7 @@ namespace UMA
         {
             UMAMatrixArrayProperty UVAP = new UMAMatrixArrayProperty();
             UVAP.name = name;
-            UVAP.Value = Value.Clone() as Matrix4x4[];
+            UVAP.Value = Value?.Clone() as Matrix4x4[];
 
             return UVAP; ;
         }

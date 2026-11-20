@@ -369,7 +369,7 @@ namespace UMA.Editors
                     createdRecipe = CreateWardrobeRecipeAsset(createdSlot, source, sourceGeometry, target);
                 }
 
-                AssetDatabase.SaveAssets();
+                // Each created asset was saved where it was made; nothing else in the project is saved.
                 AssetDatabase.Refresh();
 
                 if (createdRecipe != null)
@@ -459,6 +459,7 @@ namespace UMA.Editors
             UMASlotPreparationUtility.PrepareSlot(slot);
             AssetDatabase.CreateAsset(slot, assetPath);
             EditorUtility.SetDirty(slot);
+            AssetDatabase.SaveAssetIfDirty(slot);
 
             if (addToGlobalLibrary)
             {
@@ -523,6 +524,7 @@ namespace UMA.Editors
 
             AssetDatabase.CreateAsset(wardrobeRecipe, recipePath);
             EditorUtility.SetDirty(wardrobeRecipe);
+            AssetDatabase.SaveAssetIfDirty(wardrobeRecipe);
 
             if (addToGlobalLibrary)
             {
@@ -582,6 +584,7 @@ namespace UMA.Editors
             AssetDatabase.CreateAsset(overlayAsset, overlayPath);
             EditorUtility.SetDirty(overlayAsset);
             UMAUpdateProcessor.UpdateOverlay(overlayAsset);
+            AssetDatabase.SaveAssetIfDirty(overlayAsset);
             AddOverlayToIndex(overlayAsset);
             return overlayAsset;
         }

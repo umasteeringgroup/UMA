@@ -231,7 +231,7 @@ namespace UMA
                         foreach (var property in block.shaderProperties)
                         {
                             var type = property?.GetType();
-                            if (property == null) { Value(null); continue; }
+                            if (property == null) { Value((string)null); continue; } // typed: on Unity 6.6 null also converts to Vector2
                             if (type == typeof(UMAFloatProperty) || type == typeof(UMAColorProperty) ||
                                 type == typeof(UMAVectorProperty) || type == typeof(UMAVectorArrayProperty) ||
                                 type == typeof(UMAFloatArrayProperty) || type == typeof(UMAIntProperty) ||

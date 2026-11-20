@@ -27,6 +27,13 @@ namespace UMA.Editors
                 .Distinct().OrderBy(LookupName, StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
+        internal static bool IsIndexed(T asset)
+        {
+            UMAAssetIndexer index = UMAAssetIndexer.Instance;
+            return asset != null && index != null && !string.IsNullOrEmpty(LookupName(asset)) &&
+                index.GetAssetItem<T>(LookupName(asset))?.Item == asset;
+        }
+
         internal T Draw(string label)
         {
             var rect = EditorGUILayout.GetControlRect();
@@ -43,9 +50,21 @@ namespace UMA.Editors
                 (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform))
             {
                 var dropped = DragAndDrop.objectReferences.OfType<T>().FirstOrDefault(asset => asset != null);
-                DragAndDrop.visualMode = dropped != null ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.Rejected;
-                bool accept = dropped != null && currentEvent.type == EventType.DragPerform;
+                // The same check as the dropdown: the recipe stores the asset's UMA name, and a reload finds
+                // whatever the Global Library has under that name. Another asset with the same name (or one
+                // not in the library) looked right until the recipe was reopened.
+                bool indexed = dropped != null && IsIndexed(dropped);
+                DragAndDrop.visualMode = indexed ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.Rejected;
+                bool accept = indexed && currentEvent.type == EventType.DragPerform;
                 if (accept) DragAndDrop.AcceptDrag();
+                else if (dropped != null && currentEvent.type == EventType.DragPerform)
+                {
+                    Debug.LogWarning("'" + dropped.name + "' was not added: the UMA Global Library has " +
+                        (UMAAssetIndexer.Instance != null && UMAAssetIndexer.Instance.GetAssetItem<T>(LookupName(dropped)) != null
+                            ? "a different asset named '" + LookupName(dropped) + "'"
+                            : "no " + typeof(T).Name + " named '" + LookupName(dropped) + "'") +
+                        ", and that is what the recipe would load. Add the asset to the library first.", dropped);
+                }
                 currentEvent.Use();
                 if (accept)
                 {

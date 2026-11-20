@@ -45,6 +45,12 @@ MonoBehaviour:
   asyncMipRegen:
     overrideValue: 0
     value: 1
+  keepConvertedTexturesReadable:
+    overrideValue: 0
+    value: 0
+  forceGPUTextureCompression:
+    overrideValue: 0
+    value: 0
   MaxQueuedConversionsPerFrame:
     overrideValue: 0
     value: 8
@@ -88,7 +94,7 @@ MonoBehaviour:
     overrideValue: 1
     value: 2
   SaveAndRestoreIgnoredItems:
-    overrideValue: 1
+    overrideValue: 0
     value: 0
   CleanupUnusedBones:
     overrideValue: 0

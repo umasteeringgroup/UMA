@@ -1031,20 +1031,110 @@ namespace UMA
             // Build the data before touching the asset: overwriting an existing modifier resets it in place.
             List<MeshModifier.Modifier> editorSnapshot = BuildEditorModifierSnapshot(includeBulkModifiers: true, includeAdHocModifiers: true, onlyActiveBulkModifier: false);
             vertexEditorStage?.AppendPendingSculptModifier(editorSnapshot);
-            List<MeshModifier.Modifier> runtimeSnapshot = SplitModifierStacksBySlot(editorSnapshot);
-            // Overwriting keeps the existing asset (and its GUID), so recipes that use it stay linked.
-            MeshModifier meshModifier = CustomAssetUtility.ReplaceAsset<MeshModifier>(path, false);
-            meshModifier.EditorModifiers = editorSnapshot;
-            meshModifier.RuntimeModifiers = runtimeSnapshot;
-            EditorUtility.SetDirty(meshModifier);
-            AssetDatabase.SaveAssetIfDirty(meshModifier);
-            // Characters already wearing this modifier rebuild with the new data.
+
+            List<MeshModifierRecipeSavePlanner.Plan> plans;
+            if (vertexEditorStage != null && vertexEditorStage.Currentmodifier != null)
+            {
+                // Opened on an existing Mesh Modifier: it stays one asset, as it was, and no recipe changes.
+                // Recipes that use it keep it. Splitting it by the recipes of the slots it changes broke
+                // modifiers that one recipe carries for other recipes' slots (a hair's scalp shading on the
+                // body): the body's part left the hair recipe.
+                var whole = new MeshModifierRecipeSavePlanner.Plan { path = path };
+                whole.modifiers.AddRange(editorSnapshot);
+                plans = new List<MeshModifierRecipeSavePlanner.Plan> { whole };
+            }
+            else
+            {
+                // A new modifier: one per worn wardrobe recipe whose slots were edited, so each recipe can
+                // carry the changes to its own slots, plus one for slots no worn wardrobe recipe has (the body).
+                Func<string, UMAWardrobeRecipe> ownerOf = MeshModifierRecipeSavePlanner.SlotOwnerLookup(
+                    thisDCA != null && thisDCA.WardrobeRecipes != null ? thisDCA.WardrobeRecipes.Values : null);
+                plans = MeshModifierRecipeSavePlanner.PlanSaves(editorSnapshot, ownerOf, path);
+            }
+            bool addToRecipes = false;
+            if (plans.Exists(p => p.recipe != null))
+            {
+                int choice = EditorUtility.DisplayDialogComplex(dialogTitle, DescribeRecipeSavePlans(plans),
+                    "Save and Add to Recipes", "Cancel", "Save Only");
+                if (choice == 1)
+                {
+                    return false;
+                }
+                addToRecipes = choice == 0;
+            }
+
+            var saved = new List<MeshModifier>();
+            foreach (MeshModifierRecipeSavePlanner.Plan plan in plans)
+            {
+                // Overwriting keeps the existing asset (and its GUID), so recipes that use it stay linked.
+                MeshModifier meshModifier = CustomAssetUtility.ReplaceAsset<MeshModifier>(plan.path, false);
+                meshModifier.EditorModifiers = new List<MeshModifier.Modifier>(plan.modifiers);
+                meshModifier.RuntimeModifiers = SplitModifierStacksBySlot(meshModifier.EditorModifiers);
+                EditorUtility.SetDirty(meshModifier);
+                AssetDatabase.SaveAssetIfDirty(meshModifier);
+                saved.Add(meshModifier);
+                if (addToRecipes && plan.recipe != null)
+                {
+                    AddSavedModifierToRecipe(plan.recipe, meshModifier);
+                }
+            }
+            // Characters already wearing these modifiers rebuild with the new data.
             UMAResourceReuse.InvalidateMeshInputs();
             savedModifierSignature = CurrentModifierSignature();
-            // The sculpt and the vertex colors are in the asset too.
-            vertexEditorStage?.NoteMeshModifierSaved(meshModifier);
-            Selection.activeObject = meshModifier;
+            // The sculpt and the vertex colors are in the assets too.
+            vertexEditorStage?.NoteMeshModifiersSaved(saved, addToRecipes);
+            Selection.objects = saved.ToArray();
             return true;
+        }
+
+        /// <summary>The question asked before a save that touches wardrobe recipes' slots.</summary>
+        private string DescribeRecipeSavePlans(List<MeshModifierRecipeSavePlanner.Plan> plans)
+        {
+            int recipeCount = plans.FindAll(p => p.recipe != null).Count;
+            var text = new System.Text.StringBuilder();
+            text.Append(recipeCount == 1
+                ? "The changes are on slots of a wardrobe recipe the character wears. Save the Mesh Modifier and add it to that recipe?"
+                : "The changes are on slots of " + recipeCount + " wardrobe recipes the character wears. Save one Mesh Modifier for each, and add each to its recipe?");
+            text.Append("\n");
+            foreach (MeshModifierRecipeSavePlanner.Plan plan in plans)
+            {
+                text.Append("\n• ").Append(System.IO.Path.GetFileName(plan.path));
+                text.Append(plan.recipe != null ? " → " + plan.recipe.name : " → no wardrobe recipe (not added to one)");
+                if (AssetDatabase.LoadAssetAtPath<MeshModifier>(plan.path) != null)
+                {
+                    text.Append(" (replaces the existing file)");
+                }
+            }
+            text.Append("\n\nSave Only writes the files and changes no recipe.");
+            return text.ToString();
+        }
+
+        /// <summary>
+        /// Adds a just-saved modifier to the wardrobe recipe whose slots it changes, and saves the recipe.
+        /// Only for a new modifier: one the Vertex Editor opened on is saved whole and changes no recipe.
+        /// </summary>
+        private void AddSavedModifierToRecipe(UMAWardrobeRecipe recipe, MeshModifier saved)
+        {
+            if (recipe == null || saved == null)
+            {
+                return;
+            }
+            Undo.RecordObject(recipe, "Add Mesh Modifier to Recipe");
+            if (recipe.MeshModifiers == null)
+            {
+                recipe.MeshModifiers = new List<MeshModifier>();
+            }
+            if (!recipe.MeshModifiers.Contains(saved))
+            {
+                recipe.MeshModifiers.Add(saved);
+            }
+            EditorUtility.SetDirty(recipe);
+            AssetDatabase.SaveAssetIfDirty(recipe);
+            // This session already applies these edits; the recipe applies them once the editor closes.
+            if (thisDCA != null && thisDCA.umaData != null && !thisDCA.umaData.EditorSessionMeshModifiers.Contains(saved))
+            {
+                thisDCA.umaData.EditorSessionMeshModifiers.Add(saved);
+            }
         }
 
         private void HydrateAdHocAdjustmentsFromEditorModifiers()

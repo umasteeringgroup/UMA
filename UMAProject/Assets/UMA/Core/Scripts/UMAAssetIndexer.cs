@@ -1847,7 +1847,9 @@ namespace UMA
         */
 
         /// <summary>
-        /// Force the Index to save and reload
+        /// Saves the Global Library asset, and only that asset. It used to call AssetDatabase.SaveAssets,
+        /// which also wrote every other unsaved asset in the project; code that changes other assets saves
+        /// them itself (AssetDatabase.SaveAssetIfDirty).
         /// </summary>
         public void ForceSave()
         {
@@ -1863,9 +1865,8 @@ namespace UMA
             }
 #endif
             EditorUtility.SetDirty(this);
-            // Save all assets
-            //AssetDatabase.SaveAssetIfDirty(this);
-            AssetDatabase.SaveAssets();
+            // The library alone: never the project's other unsaved assets.
+            AssetDatabase.SaveAssetIfDirty(this);
             StopTimer(st, "ForceSave");
         }
 #endif
@@ -4017,6 +4018,8 @@ namespace UMA
             var slots = GetAllAssets<SlotDataAsset>();
             var overlays = GetAllAssets<OverlayDataAsset>();
             var umaMaterials = GetAllAssets<UMAMaterial>();
+            // The assets repaired here are saved one by one below; ForceSave saves only the library.
+            var repaired = new List<UnityEngine.Object>();
 
             // if we stripped the shaders from the materials, we need to look them up
             // and reassign them here.
@@ -4033,6 +4036,7 @@ namespace UMA
                             string assetPath = AssetDatabase.GUIDToAssetPath(guids[0]);
                             um.material = AssetDatabase.LoadAssetAtPath<Material>(assetPath);
                             EditorUtility.SetDirty(um);
+                            repaired.Add(um);
                         }
                     }
                 }
@@ -4048,6 +4052,9 @@ namespace UMA
                         {
                             // Shader was found. We need to resave the material with the correct shader
                             EditorUtility.SetDirty(um);
+                            EditorUtility.SetDirty(um.material);
+                            repaired.Add(um);
+                            repaired.Add(um.material);
                         }
                     }
                 }
@@ -4069,11 +4076,19 @@ namespace UMA
                             Debug.LogWarning("Unable to find material '" + od.materialName + "' for overlay: " + od.name);
                         }
                         EditorUtility.SetDirty(od);
+                        repaired.Add(od);
                     }
                     else
                     {
                         Debug.LogWarning("Material name is null on overlay: " + od.name);
                     }
+                }
+            }
+            for (int i = 0; i < repaired.Count; i++)
+            {
+                if (repaired[i] != null && EditorUtility.IsPersistent(repaired[i]))
+                {
+                    AssetDatabase.SaveAssetIfDirty(repaired[i]);
                 }
             }
             ForceSave();

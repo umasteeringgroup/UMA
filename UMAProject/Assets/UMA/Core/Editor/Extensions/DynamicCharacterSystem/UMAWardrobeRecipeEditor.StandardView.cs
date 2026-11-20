@@ -19,6 +19,10 @@ namespace UMA.Editors
         private readonly Dictionary<SlotData, IndexedRecipeAssetPicker<OverlayDataAsset>> standardOverlayPickers = new Dictionary<SlotData, IndexedRecipeAssetPicker<OverlayDataAsset>>();
         private string standardLoadedRecipe;
         private bool standardNeedsLoad = true;
+        // A metadata-only edit (display name, region, thumbnails) with Automatic Updates off. Those fields are
+        // set on the asset directly, so it is pending only while the asset has unsaved changes, and closing
+        // the inspector must not re-pack the recipe for it (that rewrote older recipe data during a rename).
+        private bool standardMetadataPending;
 
         public override void OnInspectorGUI()
         {
@@ -54,6 +58,26 @@ namespace UMA.Editors
                 return;
             }
 
+            // Automatic Updates is shared with Advanced View. Shown here too, because with it off neither
+            // view writes the file until Save Recipe (or File > Save Project).
+            if (HostAutoSave == null)
+                _AutomaticUpdates = EditorGUILayout.ToggleLeft("Automatic Updates", _AutomaticUpdates);
+            if (!ProcessEditsImmediately)
+            {
+                EditorGUILayout.HelpBox("Automatic Updates are off: edits stay unsaved until you click Save Recipe (or File > Save Project).", MessageType.Warning);
+                if (GUILayout.Button("Save Recipe"))
+                {
+                    EditorUtility.SetDirty(target);
+                    AssetDatabase.SaveAssetIfDirty(target);
+                    UMAUpdateProcessor.UpdateRecipe(wardrobe);
+                    // Saved: nothing is pending any more, from either view. A flag left from an Advanced
+                    // View edit made a later outside save look like a conflict.
+                    _needsUpdate = false;
+                    _forceUpdate = false;
+                    standardMetadataPending = false;
+                }
+            }
+
             serializedObject.Update();
             standardEdits.Clear();
             using (wardrobeView.Section("Wardrobe & presentation",
@@ -80,7 +104,7 @@ namespace UMA.Editors
                 if (GUILayout.Button("Refresh race choices")) standardRaces = null;
             }
             using (wardrobeView.Section("Hiding & suppression",
-                "Hides removes body or clothing slots by slot name while this recipe is worn. Hide tags remove slots carrying a matching tag. Suppresses prevents recipes in the listed wardrobe regions from being equipped with this item. Incompatible recipes blocks specific recipe assets. These controls hide or exclude content; they do not alter the source assets."))
+                "Hides removes body or clothing slots by slot name while this recipe is worn. Hide tags remove slots carrying a matching tag. Suppresses prevents recipes in the listed wardrobe regions from being equipped with this item. Incompatible recipes lists recipe assets that do not work with this one; UMA only stores the list, and it is up to your application to enforce it. These controls do not alter the source assets."))
             {
                 EditorGUILayout.LabelField("Hides (slot names)", EditorStyles.boldLabel);
                 DrawStandardStrings(serializedObject.FindProperty("Hides"), null, false);
@@ -123,19 +147,41 @@ namespace UMA.Editors
             if (standardEdits.Count != 0)
             {
                 foreach (var edit in standardEdits) edit();
-                DoUpdate();
+                if (ProcessEditsImmediately)
+                {
+                    DoUpdate();
+                }
+                else
+                {
+                    // Automatic Updates off: the edit stays an unsaved change, like one made in Advanced View,
+                    // and counts as pending, so an outside save of the recipe is offered as a conflict instead
+                    // of silently replacing it.
+                    wardrobe.Save(_recipe);
+                    EditorUtility.SetDirty(target);
+                    _needsUpdate = true;
+                }
                 standardLoadedRecipe = wardrobe.recipeString;
             }
             else
             {
                 EditorUtility.SetDirty(target);
-                AssetDatabase.SaveAssetIfDirty(target);
-                UMAUpdateProcessor.UpdateRecipe(wardrobe);
+                // With Automatic Updates off this must not write the file: that would also save the
+                // Advanced View edits still waiting for Save Recipe.
+                if (!ProcessEditsImmediately)
+                {
+                    standardMetadataPending = true;
+                }
+                else
+                {
+                    if (SaveEditsToDisk) AssetDatabase.SaveAssetIfDirty(target);
+                    UMAUpdateProcessor.UpdateRecipe(wardrobe);
+                }
             }
             standardEdits.Clear();
         }
 
-        protected override bool HasPendingPluginEdits => base.HasPendingPluginEdits || standardEdits.Count != 0;
+        protected override bool HasPendingPluginEdits => base.HasPendingPluginEdits || standardEdits.Count != 0 ||
+            (standardMetadataPending && target != null && EditorUtility.IsDirty(target));
 
         public override bool TryPreparePluginAction()
         {
@@ -156,8 +202,14 @@ namespace UMA.Editors
         private void ReloadStandardRecipe(UMAWardrobeRecipe wardrobe)
         {
             var loaded = new UMAData.UMARecipe();
-            _errorMessage = null;
-            try { wardrobe.Load(loaded); }
+            ResetLoadState();
+            try
+            {
+                wardrobe.Load(loaded);
+                // A slot or overlay the loader could not find is left out, not reported by an
+                // exception. Treat it as a failed load so no edit saves the partial recipe.
+                _errorMessage = MissingAssetsMessage(loaded);
+            }
             catch (UMAResourceNotFoundException ex) { _errorMessage = ex.Message; }
             _recipe = loaded;
             standardLoadedRecipe = wardrobe.recipeString;
@@ -225,7 +277,22 @@ namespace UMA.Editors
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     var item = list.GetArrayElementAtIndex(i);
-                    DrawStandardStringChoice(item, "", choices);
+                    if (races)
+                    {
+                        // A race may be listed once; a second copy breaks the Advanced View race settings.
+                        string value = StandardStringChoice("", item.stringValue, choices);
+                        if (value != item.stringValue)
+                        {
+                            if (StandardListContains(list, value, i))
+                                Debug.LogWarning("'" + value + "' is already a compatible race of this recipe.", target);
+                            else
+                                item.stringValue = value;
+                        }
+                    }
+                    else
+                    {
+                        DrawStandardStringChoice(item, "", choices);
+                    }
                     Object asset = races ? (Object)FindStandardRace(item.stringValue) :
                         UMAAssetIndexer.Instance?.RawGetAsset<SlotDataAsset>(item.stringValue);
                     if (races || choices == null) StandardInspect(asset);
@@ -237,6 +304,13 @@ namespace UMA.Editors
                 int index = list.arraySize++;
                 list.GetArrayElementAtIndex(index).stringValue = "";
             }
+        }
+
+        private static bool StandardListContains(SerializedProperty list, string value, int exceptIndex)
+        {
+            for (int i = 0; i < list.arraySize; i++)
+                if (i != exceptIndex && list.GetArrayElementAtIndex(i).stringValue == value) return true;
+            return false;
         }
 
         private RaceData FindStandardRace(string name)

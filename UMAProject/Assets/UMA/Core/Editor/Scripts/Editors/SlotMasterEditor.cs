@@ -28,9 +28,46 @@ namespace UMA.Editors
         protected List<SlotDataAsset> DraggedSlots = new List<SlotDataAsset>();
         protected List<OverlayDataAsset> DraggedOverlays = new List<OverlayDataAsset>();
 
-        protected void AddDraggedFiles()
+        /// <returns>Whether anything was added (a drop of refused assets only changes nothing).</returns>
+        protected bool AddDraggedFiles()
         {
             SlotData FirstSlot = null;
+
+            // The same check as the indexed pickers: the recipe stores each asset's UMA name, and a reload
+            // finds whatever the Global Library has under that name. Another asset with the same name (or
+            // one not in the library) looked right until the recipe was reopened.
+            List<string> refused = new List<string>();
+            DraggedSlots.RemoveAll(s =>
+            {
+                if (IndexedRecipeAssetPicker<SlotDataAsset>.IsIndexed(s)) return false;
+                refused.Add(s != null ? s.name : "(missing slot)");
+                return true;
+            });
+            bool slotRefused = refused.Count > 0;
+            List<string> leftWithSlot = new List<string>();
+            DraggedOverlays.RemoveAll(o =>
+            {
+                // Overlays dropped with a slot that was refused were meant for that slot: without it they
+                // would go on whatever slot comes first in the recipe.
+                if (!IndexedRecipeAssetPicker<OverlayDataAsset>.IsIndexed(o))
+                {
+                    refused.Add(o != null ? o.name : "(missing overlay)");
+                    return true;
+                }
+                if (slotRefused)
+                {
+                    leftWithSlot.Add(o.name);
+                    return true;
+                }
+                return false;
+            });
+            if (refused.Count > 0)
+            {
+                Debug.LogWarning("Not added to the recipe: " + string.Join(", ", refused) + ". The UMA Global Library does not have " +
+                    (refused.Count == 1 ? "this asset" : "these assets") + " under " + (refused.Count == 1 ? "its" : "their") +
+                    " name (it has none, or a different asset with that name), and that is what the recipe would load. Add them to the library first." +
+                    (leftWithSlot.Count > 0 ? " Also not added, as they were dropped with that slot: " + string.Join(", ", leftWithSlot) + "." : ""));
+            }
 
             if (DraggedSlots.Count >= 1 && DraggedOverlays.Count == 1)
             {
@@ -40,9 +77,13 @@ namespace UMA.Editors
                     slot.AddOverlay(new OverlayData(DraggedOverlays[0]));
                     slot = _recipe.MergeSlot(slot, false); 
                 }
-                return;
+                // Cleared like the other drops, or the next drop would add these again.
+                DraggedSlots.Clear();
+                DraggedOverlays.Clear();
+                return true;
             }
 
+            bool added = DraggedSlots.Count > 0;
             foreach (SlotDataAsset sd in DraggedSlots)
             {
                 SlotData slot = new SlotData(sd);
@@ -74,6 +115,7 @@ namespace UMA.Editors
                     {
                         FirstSlot.AddOverlay(new OverlayData(od));
                     }
+                    added = true;
                 }
                 else
                 {
@@ -84,10 +126,13 @@ namespace UMA.Editors
                 }
                 DraggedOverlays.Clear();
             }
+            return added;
         }
 
         protected bool DropAreaGUI(Rect dropArea)
         {
+            // Drag events reach a disabled (locked) inspector too.
+            if (!GUI.enabled) return false;
             var evt = Event.current;
             int pickedCount = 0;
             bool recipesMerged = false;
@@ -103,6 +148,7 @@ namespace UMA.Editors
             if (pickedSlot != null)
             {
                 LastSlot = pickedSlot.slotName;
+                RecordRecipeUndo("Add Slot");
                 AddSlotDataAsset(pickedSlot);
                 pickedCount++;
             }
@@ -119,6 +165,8 @@ namespace UMA.Editors
                 if (dropArea.Contains(evt.mousePosition))
                 {
                     DragAndDrop.AcceptDrag();
+                    // The drop changes this working copy; the inspector writes it into the recipe after this.
+                    RecordRecipeUndo("Drop Into Recipe");
 
                     UnityEngine.Object[] draggedObjects = DragAndDrop.objectReferences as UnityEngine.Object[];
                     for (int i = 0; i < draggedObjects.Length; i++)
@@ -140,6 +188,14 @@ namespace UMA.Editors
                             {
                                 var textRecipe = draggedObjects[i] as UMATextRecipe;
                                 var recipe = textRecipe.GetCachedRecipe();
+                                // A recipe that did not load completely would merge only part of itself.
+                                if (recipe != null && recipe.missingAssets != null && recipe.missingAssets.Count > 0 &&
+                                    !EditorUtility.DisplayDialog("Recipe not fully loaded",
+                                        textRecipe.name + " uses assets that could not be found: " + string.Join(", ", recipe.missingAssets) +
+                                        ".\n\nMerging adds only the parts that loaded.", "Merge what loaded", "Cancel"))
+                                {
+                                    recipe = null;
+                                }
                                 if (recipe != null)
                                 {
                                     _recipe.Merge(recipe, false);
@@ -156,8 +212,9 @@ namespace UMA.Editors
                     }
                     if (DraggedSlots.Count > 0 || DraggedOverlays.Count > 0 || recipesMerged == true)
                     {
-                        AddDraggedFiles();
-                        return true;
+                        // A drop whose assets were all refused changes nothing, so nothing is saved.
+                        bool added = AddDraggedFiles();
+                        return added || recipesMerged;
                     }
                 }
             }
@@ -177,35 +234,39 @@ namespace UMA.Editors
             _recipe.MergeSlot(slot, false);
         }
 
-        private void SaveRecipeContext()
+        /// <summary>
+        /// Removes the slot a slot editor shows. Finds the slot itself: Remove Nulls and Clear Recipe
+        /// change slot positions without rebuilding the editors, so the position the editor was built
+        /// with can belong to a different slot by now.
+        /// </summary>
+        protected void RemoveEditedSlot(SlotEditor editor)
         {
-            if (_recipeContext == null)
+            SlotData[] slots = _recipe != null ? _recipe.slotDataList : null;
+            if (editor == null || editor.Slot == null || slots == null)
             {
                 return;
             }
-
-            if (_recipeContext is UMARecipeBase recipeBase)
+            int index = System.Array.IndexOf(slots, editor.Slot);
+            if (index >= 0)
             {
-                recipeBase.Save(_recipe);
-                EditorUtility.SetDirty(recipeBase);
-                if (EditorUtility.IsPersistent(recipeBase))
-                {
-                    AssetDatabase.SaveAssetIfDirty(recipeBase);
-                }
-
-                if (recipeBase is UMATextRecipe textRecipe)
-                {
-                    UMAUpdateProcessor.UpdateRecipe(textRecipe);
-                }
-
-                return;
+                _recipe.SetSlot(index, null);
             }
+        }
 
-            EditorUtility.SetDirty(_recipeContext);
-            if (EditorUtility.IsPersistent(_recipeContext))
+        /// <summary>Records Undo on the recipe asset before a change to the working copy that the inspector then writes into it.</summary>
+        protected void RecordRecipeUndo(string undoName)
+        {
+            if (_recipeContext != null)
             {
-                AssetDatabase.SaveAssetIfDirty(_recipeContext);
+                Undo.RecordObject(_recipeContext, undoName);
             }
+        }
+
+        private void SaveRecipeContext(string undoName = "Edit Recipe")
+        {
+            // Checks the incomplete-load lock and whether the recipe changed elsewhere since the open
+            // inspector or graph loaded it; with Automatic Updates off the edit stays pending there.
+            CharacterBaseEditor.WriteWorkingCopy(_recipeContext, _recipe, undoName);
         }
 
         protected void RecursiveScanFoldersForAssets(string path)
@@ -487,8 +548,8 @@ namespace UMA.Editors
 
                 if (GUILayout.Button("Add to Global Index (Recommended)"))
                 {
-                    UMAAssetIndexer.Instance.EvilAddAsset(typeof(RaceData), _recipe.raceData);
-                    UMAAssetIndexer.Instance.ForceSave();
+                    // Saves the library alone, not the project's other unsaved assets.
+                    UMAGlobalLibraryAutoRegistration.AddAndSave(_recipe.raceData);
                 }
                 GUILayout.EndHorizontal();
             }
@@ -564,6 +625,7 @@ namespace UMA.Editors
             {
                 LastSlot = added.slotName;
                 var slot = new SlotData(added);
+                RecordRecipeUndo("Add Slot");
                 _recipe.MergeSlot(slot, false);
                 changed |= true;
                 _dnaDirty |= true;
@@ -573,8 +635,10 @@ namespace UMA.Editors
 
             if (GUILayout.Button("Add Placeholder Slot", GUILayout.Width(160)))
             {
-                string placeholderName = "NewPlaceholderSlot";
+                // A new name each time: placeholders with the same name are one slot.
+                string placeholderName = RecipeEditor.UniquePlaceholderName(_recipe, "NewPlaceholderSlot");
                 var placeholder = SlotData.CreatePlaceholder(placeholderName, new string[0]);
+                RecordRecipeUndo("Add Placeholder Slot");
                 _recipe.MergeSlot(placeholder, false);
                 LastSlot = placeholderName;
                 changed |= true;
@@ -589,6 +653,11 @@ namespace UMA.Editors
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Clear"))
             {
+                // Undo restores the saved recipe; the inspector reloads it from there.
+                if (_recipeContext != null)
+                {
+                    Undo.RecordObject(_recipeContext, "Clear Recipe");
+                }
                 _recipe.slotDataList = new SlotData[0];
                 changed |= true;
                 _dnaDirty |= true;
@@ -597,6 +666,10 @@ namespace UMA.Editors
             }
             if (GUILayout.Button("Remove Nulls"))
             {
+                if (_recipeContext != null)
+                {
+                    Undo.RecordObject(_recipeContext, "Remove Empty Slots");
+                }
                 var newList = new List<SlotData>(_recipe.slotDataList.Length);
                 foreach (var slotData in _recipe.slotDataList)
                 {
@@ -697,8 +770,12 @@ namespace UMA.Editors
                     _textureDirty = true;
                     _meshDirty = true;
 
+                    if (_recipeContext != null)
+                    {
+                        Undo.RecordObject(_recipeContext, "Remove Slot");
+                    }
                     _slotEditors.RemoveAt(i);
-                    _recipe.SetSlot(editor.idx, null);
+                    RemoveEditedSlot(editor);
                     SaveRecipeContext();
                     i--;
                     changed = true;

@@ -903,6 +903,26 @@ namespace UMA.CharacterSystem
         const int maxWait = 60;
 
         /// <summary>
+        /// True while an edit-time build of this avatar is queued (GenerateSingleUMA) and has not run yet.
+        /// Editor tools that take the avatar's generated materials wait for it: the build replaces them.
+        /// </summary>
+        public bool EditorGenerationQueued => editorGenerationQueued;
+
+        /// <summary>
+        /// Runs a queued edit-time build now instead of in the next delayCall batch, which Unity does not
+        /// run while the Editor is in the background. Does nothing when no build is queued.
+        /// </summary>
+        public void RunQueuedEditorGeneration()
+        {
+            if (!editorGenerationQueued)
+            {
+                return;
+            }
+            EditorApplication.delayCall -= InternalGenerateSingleUMA;
+            InternalGenerateSingleUMA();
+        }
+
+        /// <summary>
         /// Temporarily suppresses editor-time generation requests made through
         /// GenerateSingleUMA and RegenerateNow. Explicit editor tools can opt out
         /// of the pause for user-requested rebuilds.

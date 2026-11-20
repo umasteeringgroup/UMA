@@ -1131,6 +1131,7 @@ namespace UMA.Controls
                     }
                     uwr.wardrobeSlot = source.wardrobeSlot;
                     EditorUtility.SetDirty(uwr);
+                    AssetDatabase.SaveAssetIfDirty(uwr);
                 }
             }
             if (UAI != null) UAI.ForceSave();
@@ -1182,40 +1183,44 @@ namespace UMA.Controls
                     UMAPackedRecipeBase.UMAPackRecipe dest = utr.PackedLoad();
                     if (dest.fColors == null)
                     {
+                        // No shared colors yet: take the source's. (This used to skip the save below,
+                        // so these recipes never got the colors.)
                         dest.fColors = sourceColors;
-                        continue;
                     }
-
-                    List<UMAPackedRecipeBase.PackedOverlayColorDataV3> currentColors = new List<UMAPackedRecipeBase.PackedOverlayColorDataV3>();
-                    currentColors.AddRange(dest.fColors);
-                    foreach (var color in sourceColors)
+                    else
                     {
-                        if (string.IsNullOrEmpty(color.name))
-                            continue;
-                        if (color.name.StartsWith("-"))
-                            continue;
-                        bool found = false;
-                        foreach (var ocd in currentColors)
+                        List<UMAPackedRecipeBase.PackedOverlayColorDataV3> currentColors = new List<UMAPackedRecipeBase.PackedOverlayColorDataV3>();
+                        currentColors.AddRange(dest.fColors);
+                        foreach (var color in sourceColors)
                         {
-                            if (ocd.name == color.name)
+                            if (string.IsNullOrEmpty(color.name))
+                                continue;
+                            if (color.name.StartsWith("-"))
+                                continue;
+                            bool found = false;
+                            foreach (var ocd in currentColors)
                             {
-                                ocd.colors = color.colors;
-                                ocd.ShaderParms = color.ShaderParms;
-                                found = true;
+                                if (ocd.name == color.name)
+                                {
+                                    ocd.colors = color.colors;
+                                    ocd.ShaderParms = color.ShaderParms;
+                                    found = true;
+                                }
+                            }
+                            if (!found)
+                            {
+                                currentColors.Add(color);
                             }
                         }
-                        if (!found)
-                        {
-                            currentColors.Add(color);
-                        }
+                        dest.fColors = currentColors.ToArray();
                     }
 
-                    dest.fColors = currentColors.ToArray();
                     dest.sharedColorCount = dest.fColors.Length;
                     utr.PackedSave(dest);
                     UMAData.UMARecipe ur = new UMAData.UMARecipe();
                     utr.Load(ur);
                     EditorUtility.SetDirty(utr);
+                    AssetDatabase.SaveAssetIfDirty(utr);
                     ate.ai._SerializedItem = null;
                 }
             }
@@ -1268,6 +1273,7 @@ namespace UMA.Controls
                         uwr.compatibleRaces.Add(race.raceName);
                     }
                     EditorUtility.SetDirty(uwr);
+                    AssetDatabase.SaveAssetIfDirty(uwr);
                 }
                 if (UAI != null) UAI.ForceSave();
                 EditorUtility.DisplayDialog("Update Races", "Races assigned and index saved", "OK");
@@ -2253,14 +2259,18 @@ namespace UMA.Controls
                     if (tr.ai != null && tr.Checked)
                     {
 
-                        EditorUtility.DisplayProgressBar("Marking Assets", "Marking Item: " + tr.ai.EvilName, current / total);
-                        EditorUtility.SetDirty(tr.ai.Item);
+                        EditorUtility.DisplayProgressBar("Saving Assets", "Saving Item: " + tr.ai.EvilName, current / total);
+                        UnityEngine.Object item = tr.ai.Item;
+                        if (item != null)
+                        {
+                            // Saves each checked item alone, not the project's other unsaved assets.
+                            EditorUtility.SetDirty(item);
+                            AssetDatabase.SaveAssetIfDirty(item);
+                        }
                         current += 1.0f;
                     }
                 }
             }
-            EditorUtility.DisplayProgressBar("Saving Assets", "Save Assets to Disk", 1.0f);
-            AssetDatabase.SaveAssets();
             EditorUtility.ClearProgressBar();
         }
 

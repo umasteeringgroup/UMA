@@ -764,6 +764,11 @@ namespace UMA
         {
 			if (!SaveAndRestoreIgnoredItems && !CleanupUnusedBones)
             {
+                // Called only when the skeleton is about to be destroyed. Active UMAIgnore objects (a weapon in the
+                // hand) are kept anyway, through Unity's tag list instead of a walk over the bones; they were
+                // destroyed with the skeleton. Save And Restore Ignored Items walks the bones and also finds
+                // inactive ones.
+                umaData.SaveTaggedItems();
                 return;
             }
 			umaData.SaveMountedItems(this);
@@ -3141,8 +3146,8 @@ namespace UMA
                 umaData.skeleton.EnsureBoneHierarchy();
             }
 
-            // Only restore items if enabled, as this can be expensive
-            if (SaveAndRestoreIgnoredItems || CleanupUnusedBones)
+            // Restore whatever was saved: with the option off, the tag lookup still saves active UMAIgnore items.
+            if (SaveAndRestoreIgnoredItems || CleanupUnusedBones || umaData.HasSavedItems)
             {
                 umaData.RestoreSavedItems();
             }

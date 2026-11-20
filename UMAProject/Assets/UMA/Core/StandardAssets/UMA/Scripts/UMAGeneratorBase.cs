@@ -91,6 +91,9 @@ namespace UMA
         // skeleton with a retargeted animation pose.
         protected bool evaluateAnimatorPoseAfterAvatarUpdate = true;
 
+        [Tooltip("Active objects tagged UMAIgnore under a character's bones (a weapon in the hand) are always kept when the skeleton is rebuilt. " +
+            "On: also keeps inactive ones and UMAKeepChain chains, by walking the bones when the skeleton is rebuilt (a race change, a new rig). " +
+            "Off: to hide a mounted item, keep its tagged object active and disable its child objects or its renderer instead.")]
         public bool SaveAndRestoreIgnoredItems;
 
         [Tooltip("After a successful rig build, remove unused non-T-pose bones. Keeps current slot/renderer dependencies and UMAIgnore subtrees. External skeletons are never pruned. Off preserves legacy behavior.")]

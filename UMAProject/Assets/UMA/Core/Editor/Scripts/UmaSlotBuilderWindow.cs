@@ -363,7 +363,8 @@ namespace UMA.Editors
                 }
             }
 
-            AssetDatabase.SaveAssets();
+            // The recipes this build wrote, not the project's other unsaved assets.
+            result.SaveWrittenAssets(false);
             AssetDatabase.Refresh();
         }
 
@@ -452,7 +453,7 @@ namespace UMA.Editors
                 UMAAssetIndexer.Instance.EvilAddAsset(typeof(UMAWardrobeRecipe), uwr);
             }
 
-            AssetDatabase.SaveAssets();
+            result.SaveWrittenAssets(false);
         }
 
         private static UMA.OverlayColorData GetOrCreateSharedColor(UMA.UMAData.UMARecipe umaRecipe, string sharedColorName, int channels)
@@ -1238,6 +1239,7 @@ namespace UMA.Editors
                         if (addToGlobalLibrary)
                         {
                             UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), sd);
+                            UMAAssetIndexer.Instance.ForceSave();
                         }
                         // Overlay and Recipe creation moved to UMASlotProcessingUtil via SlotBuilderParameters flags
                     }
@@ -1724,7 +1726,8 @@ namespace UMA.Editors
                     }
                 }
 
-                AssetDatabase.SaveAssets();
+                // Only what the batch wrote. The library was saved above when items were added to it.
+                aggregate.SaveWrittenAssets(false);
                 AssetDatabase.Refresh();
                 var updatedSlots = new HashSet<SlotDataAsset>(aggregate.Slots);
                 foreach (SlotDataAsset updatedSlot in updatedSlots)
@@ -1871,6 +1874,9 @@ namespace UMA.Editors
             {
                 CreateAdditionalWearableRecipesForSlots(result);
             }
+
+            // The slots, overlays and recipes this build wrote, and the library they were added to.
+            result.SaveWrittenAssets(addToGlobalLibrary);
 
             ShowSlotBuildResults(result);
 
@@ -2036,7 +2042,7 @@ namespace UMA.Editors
                     sd.tags = Tags.ToArray();
                     EditorUtility.SetDirty(sd);
                 }
-                AssetDatabase.SaveAssets();
+                result.SaveWrittenAssets(false);
             }
             return result;
         }
@@ -2104,7 +2110,7 @@ namespace UMA.Editors
                     UMAAssetIndexer.Instance.EvilAddAsset(typeof(UMAWardrobeRecipe), uwr);
                 }
             }
-            AssetDatabase.SaveAssets();
+            result.SaveWrittenAssets(false);
         }
 
         private static int GetCreatedLodLevelCount(SlotDataAsset slot)

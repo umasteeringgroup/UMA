@@ -1,17 +1,20 @@
 #if UNITY_EDITOR
-#if UNITY_6000_4_OR_NEWER
+#if UNITY_6000_4_OR_NEWER || UNITY_INCLUDE_TESTS
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using UMA.CharacterSystem;
+#if UNITY_6000_4_OR_NEWER
 using Unity.GraphToolkit.Editor;
+#endif
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace UMA.Editors
 {
+#if UNITY_6000_4_OR_NEWER
     [Graph("umawardroberecipegraph", GraphOptions.DisableAutoInclusionOfNodesFromGraphAssembly)]
     internal sealed class UMAWardrobeRecipeGraph : Graph
     {
@@ -55,7 +58,8 @@ namespace UMA.Editors
         }
     }
 
-    public sealed class UMAWardrobeRecipeGraphEditorWindow : EditorWindow
+#endif
+    public sealed class UMAWardrobeRecipeGraphEditorWindow : EditorWindow, CharacterBaseEditor.IRecipeWorkingCopyOwner, CharacterBaseEditor.IRecipeWorkingCopySerializer
     {
         private const float NodeWidth = 230f;
         private const float NodeHeight = 64f;
@@ -147,6 +151,7 @@ namespace UMA.Editors
         {
             public NodeKind Kind;
             public string Key;
+            public string AssetKey;
             public string Title;
             public string Subtitle;
             public Rect Rect;
@@ -212,41 +217,78 @@ namespace UMA.Editors
         }
 
         [Serializable]
-        private sealed class LayoutData
+        private sealed class ViewData
         {
             public float zoom = 1f;
             public Vector2 pan = Vector2.zero;
             public float inspectorWidth;
-            public List<string> keys = new List<string>();
-            public List<Vector2> positions = new List<Vector2>();
-            public List<NoteData> notes = new List<NoteData>();
         }
 
         [Serializable]
-        private sealed class NoteData
+        private sealed class LayoutData
+        {
+            public List<string> keys = new List<string>();
+            public List<Vector2> positions = new List<Vector2>();
+            public List<NoteData> notes = new List<NoteData>();
+            public List<DetachedLayer> detached = new List<DetachedLayer>();
+        }
+
+        [Serializable]
+        private sealed class DetachedLayer
+        {
+            public string assetId;
+            public UMAPackedRecipeBase.PackedOverlayDataV3 overlay;
+            public UMAPackedRecipeBase.PackedOverlayColorDataV3 color;
+            public int sharedIndex = -1;
+        }
+
+        [Serializable]
+        internal sealed class NoteData
         {
             public string id;
             public string text;
             public Rect rect;
         }
 
-        private UMAWardrobeRecipe _asset;
-        private UMAData.UMARecipe _recipe;
+        [SerializeField] private UMAWardrobeRecipe _asset;
+        // A decoded view of the asset. Every recipe edit is packed back into the asset in the same Undo group.
+        [NonSerialized] private UMAData.UMARecipe _recipe;
         private SerializedObject _serializedRecipe;
         private DNAMasterEditor _dnaEditor;
         private SharedColorsCollectionEditor _sharedColorsEditor;
         private Editor _legacyInspector;
         private string _errorMessage;
+        // The recipe did not load completely (a missing slot or overlay): saving it would remove those for good.
+        private bool _loadIncomplete;
+        // The recipe text the graph loaded or last saved. A different text in the asset means it was
+        // changed outside the graph (the Inspector, Undo, another tool).
+        private string _loadedRevision;
+        private string _loadedGraphData;
+        // The slot and overlay editors of the selected node, kept between draws: an asset picker they
+        // open reports its pick to the editor that opened it.
+        private SlotEditor _slotEditor;
+        private SlotData _slotEditorSlot;
+        private UMAData.UMARecipe _slotEditorRecipe;
+        private OverlayEditor _overlayEditor;
+        private OverlayData _overlayEditorOverlay;
+        private UMAData.UMARecipe _overlayEditorRecipe;
+        // The overlay list (and its order) the cached slot editor was built from. A reorder in the graph
+        // left the editor's rows in the old order, and Remove on a row then removed another overlay.
+        private List<OverlayData> _slotEditorOverlays;
+        private readonly List<OverlayData> _slotEditorOverlayOrder = new List<OverlayData>();
+        private int _assetDirtyCount;
 
         private readonly List<GraphNode> _nodes = new List<GraphNode>();
         private readonly List<GraphEdge> _edges = new List<GraphEdge>();
         private readonly Dictionary<string, Vector2> _layoutPositions = new Dictionary<string, Vector2>();
         private readonly Dictionary<SlotData, GraphNode> _slotNodes = new Dictionary<SlotData, GraphNode>();
         private readonly Dictionary<OverlayData, GraphNode> _overlayNodes = new Dictionary<OverlayData, GraphNode>(ReferenceComparer<OverlayData>.Instance);
-        private readonly Dictionary<OverlayData, string> _overlayNodeKeys = new Dictionary<OverlayData, string>(ReferenceComparer<OverlayData>.Instance);
-        private readonly Dictionary<OverlayColorData, GraphNode> _sharedColorNodes = new Dictionary<OverlayColorData, GraphNode>();
+        private readonly Dictionary<object, string> _nodeKeys = new Dictionary<object, string>(ReferenceComparer<object>.Instance);
+        private readonly Dictionary<OverlayColorData, GraphNode> _sharedColorNodes = new Dictionary<OverlayColorData, GraphNode>(ReferenceComparer<OverlayColorData>.Instance);
         private readonly List<NoteData> _notes = new List<NoteData>();
         private readonly List<OverlayData> _detachedOverlays = new List<OverlayData>();
+        internal IReadOnlyList<OverlayData> DetachedOverlays => _detachedOverlays;
+        internal IReadOnlyList<NoteData> Notes => _notes;
         private readonly HashSet<string> _selectedKeys = new HashSet<string>();
         private readonly HashSet<string> _selectionBoxInitialKeys = new HashSet<string>();
         private readonly Dictionary<string, Vector2> _dragStartPositions = new Dictionary<string, Vector2>();
@@ -276,9 +318,17 @@ namespace UMA.Editors
         private Vector2 _selectionCurrentGraph;
         private bool _draggingCanvas;
         private bool _resizingInspector;
-        private bool _autoSave = true;
-        private bool _needsSave;
-        private bool _suppressAutoSave;
+        [SerializeField] private bool _autoSave = CharacterBaseEditor._AutomaticUpdates;
+        internal bool AutoSave
+        {
+            get => _autoSave;
+            set
+            {
+                if (_autoSave == value) return;
+                _autoSave = value;
+                if (value) SaveAssetToDisk();
+            }
+        }
         private InspectorMode _inspectorMode = InspectorMode.Selection;
         private int _selectedSharedColorForOverlay = -1;
         private int _selectedSuppressedSlot;
@@ -295,6 +345,7 @@ namespace UMA.Editors
         private SlotData _pendingOverlayTargetSlot;
         private string _focusedSharedColorInspectorKey;
 
+#if UNITY_6000_4_OR_NEWER
         [MenuItem("Assets/Edit in Node Graph", true)]
         private static bool ValidateEditInNodeGraph()
         {
@@ -315,40 +366,158 @@ namespace UMA.Editors
             window.Show();
             window.Focus();
         }
+#endif
+
+        // The slot and overlay controls in the inspector panel write the graph's working recipe themselves.
+        Object CharacterBaseEditor.IRecipeWorkingCopyOwner.WorkingCopyAsset => _asset;
+        UMAData.UMARecipe CharacterBaseEditor.IRecipeWorkingCopyOwner.WorkingCopy => _recipe;
+        bool CharacterBaseEditor.IRecipeWorkingCopyOwner.WorkingCopyInSync =>
+            _asset != null && !_loadIncomplete && _loadedRevision == _asset.recipeString && _loadedGraphData == _asset.editorGraphData;
+
+        bool CharacterBaseEditor.IRecipeWorkingCopyOwner.WritesToDisk => _autoSave;
+
+        void CharacterBaseEditor.IRecipeWorkingCopySerializer.PackWorkingCopy()
+        {
+            BuildGraph();
+            string graphData = SerializeGraphData();
+            SaveKeepingOverlayLists(_asset, _recipe);
+            _asset.editorGraphData = graphData;
+        }
+
+        /// <summary>
+        /// Saves the recipe into <paramref name="target"/>, leaving its slots with their own overlay lists. Saving
+        /// stores slots whose overlays all match as one stack, and gave those slots one shared list in memory too:
+        /// with every graph edit saved, the second slot's overlay nodes vanished as soon as the stacks matched, and
+        /// editing one slot then changed both. The file is the same; the graph keeps the stacks apart while editing.
+        /// </summary>
+        private static void SaveKeepingOverlayLists(UMARecipeBase target, UMAData.UMARecipe recipe)
+        {
+            SlotData[] slots = recipe.slotDataList;
+            List<OverlayData>[] lists = null;
+            if (slots != null)
+            {
+                lists = new List<OverlayData>[slots.Length];
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    lists[i] = slots[i]?.GetOverlayList();
+                }
+            }
+            try
+            {
+                target.Save(recipe);
+            }
+            finally
+            {
+                for (int i = 0; slots != null && i < slots.Length; i++)
+                {
+                    if (slots[i] != null && lists[i] != null)
+                    {
+                        slots[i].SetOverlayList(lists[i]);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gives a slot that shares another slot's overlay stack its own copy of those overlays (linked to the same
+        /// shared colors), so its overlays can be edited without changing the other slot. While the two stacks still
+        /// match, the recipe file keeps storing them once.
+        /// </summary>
+        internal bool GiveSlotItsOwnOverlays(SlotData slot)
+        {
+            if (slot == null || _recipe == null || !IsSharedOverlayStackSecondary(slot))
+            {
+                return false;
+            }
+            var own = new List<OverlayData>();
+            foreach (OverlayData overlay in slot.GetOverlayList())
+            {
+                if (overlay == null) continue;
+                OverlayData copy = overlay.Duplicate();
+                if (overlay.colorData != null && _recipe.sharedColors != null &&
+                    Array.Exists(_recipe.sharedColors, color => ReferenceEquals(color, overlay.colorData)))
+                {
+                    copy.colorData = overlay.colorData;
+                }
+                own.Add(copy);
+            }
+            slot.SetOverlayList(own);
+            CommitRecipeEdit("Give Wardrobe Slot Its Own Overlays");
+            return true;
+        }
+
+        void CharacterBaseEditor.IRecipeWorkingCopyOwner.OnWorkingCopyWritten(bool saved)
+        {
+            _loadedRevision = _asset.recipeString;
+            _loadedGraphData = _asset.editorGraphData;
+            _assetDirtyCount = EditorUtility.GetDirtyCount(_asset);
+            if (!_autoSave)
+            {
+                UMAUpdateProcessor.UpdateRecipe(_asset);
+            }
+            Repaint();
+        }
+
+        void CharacterBaseEditor.IRecipeWorkingCopyOwner.OnWorkingCopyEditPending()
+        {
+            // An asynchronous control still held an older view. Keep the asset's current contents.
+            ReloadRecipeData();
+            ShowNotification(new GUIContent("The recipe changed. Please repeat that edit."));
+        }
 
         private void OnEnable()
         {
-            _autoSave = CharacterBaseEditor._AutomaticUpdates;
-            _sharedColorsEditor = new SharedColorsCollectionEditor();
-            if (_asset == null && Selection.activeObject is UMAWardrobeRecipe selectedRecipe)
-            {
-                LoadRecipe(selectedRecipe);
-            }
+            CharacterBaseEditor.RegisterWorkingCopyOwner(this);
+            Undo.undoRedoPerformed -= OnUndoRedoGraphEdit;
+            Undo.undoRedoPerformed += OnUndoRedoGraphEdit;
+            LoadRecipe(_asset != null ? _asset : Selection.activeObject as UMAWardrobeRecipe);
         }
 
         private void OnDisable()
         {
-            if (_needsSave && _autoSave)
-            {
-                SaveRecipe();
-            }
-
-            SaveLayout();
+            FinishNoteTyping();
+            CharacterBaseEditor.UnregisterWorkingCopyOwner(this);
+            Undo.undoRedoPerformed -= OnUndoRedoGraphEdit;
+            CharacterBaseEditor.SetRecipeSaveBlocked(_asset, false, this);
+            SaveView();
             DestroyLegacyInspector();
+            _serializedRecipe?.Dispose();
+            _serializedRecipe = null;
+            _recipe = null;
+        }
+
+        private void OnLostFocus()
+        {
+            FinishNoteTyping();
         }
 
         private void OnGUI()
         {
-            HandleObjectPickerEvents();
-
             if (EditorApplication.isCompiling || EditorApplication.isUpdating)
             {
                 EditorGUILayout.HelpBox("Unity is compiling/updating. Please wait before editing wardrobe recipes.", MessageType.Info);
                 return;
             }
-
+            if (_typingNoteId != null && GUIUtility.keyboardControl != _typingKeyboardControl)
+            {
+                FinishNoteTyping();
+            }
+            if (_asset != null && (_asset.recipeString != _loadedRevision || _asset.editorGraphData != _loadedGraphData))
+            {
+                ReloadRecipeData();
+            }
+            if (_asset != null)
+            {
+                _assetDirtyCount = EditorUtility.GetDirtyCount(_asset);
+            }
+            HandleObjectPickerEvents();
             DrawToolbar();
 
+            if (_asset != null && _loadIncomplete)
+            {
+                EditorGUILayout.HelpBox(_errorMessage + " Restore the missing data and refresh, or use Save As to edit a copy of the parts that loaded.", MessageType.Error);
+                return;
+            }
             if (_asset == null || _recipe == null)
             {
                 DrawEmptyState();
@@ -373,11 +542,6 @@ namespace UMA.Editors
             DrawGraph(graphRect);
             DrawInspectorSplitter(splitterRect);
             DrawInspector(inspectorRect);
-
-            if (_needsSave && _autoSave && !_suppressAutoSave)
-            {
-                SaveRecipe();
-            }
         }
 
         private static float GetNodeListWidth(float bodyWidth)
@@ -445,7 +609,7 @@ namespace UMA.Editors
                     {
                         _resizingInspector = false;
                         GUIUtility.hotControl = 0;
-                        SaveLayout();
+                        SaveView();
                         Repaint();
                         current.Use();
                     }
@@ -619,7 +783,7 @@ namespace UMA.Editors
             {
                 if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(60f)))
                 {
-                    SaveRecipe();
+                    SaveAssetToDisk(importLegacyLayout: true);
                 }
 
                 if (GUILayout.Button("Save As", EditorStyles.toolbarButton, GUILayout.Width(74f)))
@@ -629,7 +793,8 @@ namespace UMA.Editors
 
                 if (GUILayout.Button("Refresh", EditorStyles.toolbarButton, GUILayout.Width(74f)))
                 {
-                    ReloadRecipeFromAsset();
+                    ReloadRecipeData();
+                    GUIUtility.ExitGUI();
                 }
 
                 if (GUILayout.Button("Frame", EditorStyles.toolbarButton, GUILayout.Width(58f)))
@@ -638,8 +803,9 @@ namespace UMA.Editors
                 }
             }
 
-            _autoSave = GUILayout.Toggle(_autoSave, "Auto Save", EditorStyles.toolbarButton, GUILayout.Width(82f));
-            CharacterBaseEditor._AutomaticUpdates = _autoSave;
+            // The graph's own setting. Copying it into the inspectors' shared Automatic Updates on every repaint
+            // switched them back on after they had been turned off in an inspector.
+            AutoSave = GUILayout.Toggle(AutoSave, "Auto Save", EditorStyles.toolbarButton, GUILayout.Width(82f));
 
             GUILayout.Space(8f);
             GUILayout.Label("Graph Toolkit", EditorStyles.miniLabel, GUILayout.Width(86f));
@@ -647,7 +813,7 @@ namespace UMA.Editors
 
             GUILayout.FlexibleSpace();
 
-            if (_needsSave)
+            if (_asset != null && EditorUtility.IsDirty(_asset))
             {
                 GUILayout.Label("Unsaved", EditorStyles.miniBoldLabel, GUILayout.Width(62f));
             }
@@ -665,95 +831,154 @@ namespace UMA.Editors
             HandleRecipeDrop(dropRect);
         }
 
-        private void LoadRecipe(UMAWardrobeRecipe recipe)
+        internal void LoadRecipe(UMAWardrobeRecipe recipe)
         {
             if (_asset == recipe && _recipe != null)
             {
                 return;
             }
 
-            if (_needsSave && _autoSave)
+            if (_asset != recipe)
             {
-                SaveRecipe();
+                FinishNoteTyping();
+                SaveView();
+                DestroyLegacyInspector();
+                CharacterBaseEditor.SetRecipeSaveBlocked(_asset, false, this);
+                ClearSelection();
+                _detachedOverlays.Clear();
+                _focusedSharedColorInspectorKey = null;
             }
-
-            SaveLayout();
-            DestroyLegacyInspector();
 
             _asset = recipe;
-            _recipe = null;
+            string path = _asset != null ? AssetDatabase.GetAssetPath(_asset) : null;
+            _layoutPrefsKey = string.IsNullOrEmpty(path) ? null : "UMA_WardrobeGraphLayout_" + AssetDatabase.AssetPathToGUID(path);
+            LoadView();
+            ReloadRecipeData();
+        }
+
+        private void ReloadRecipeData()
+        {
+            _serializedRecipe?.Dispose();
             _serializedRecipe = null;
+            _recipe = null;
             _dnaEditor = null;
-            _selectedKey = null;
+            _slotEditor = null;
+            _overlayEditor = null;
+            _slotEditorSlot = null;
+            _overlayEditorOverlay = null;
+            _slotEditorRecipe = null;
+            _overlayEditorRecipe = null;
+            _slotEditorOverlays = null;
+            _slotEditorOverlayOrder.Clear();
+            _nodeKeys.Clear();
             _selectedNode = null;
-            _selectedKeys.Clear();
-            _focusedSharedColorInspectorKey = null;
-            _needsSave = false;
+            _pendingObjectPickerKind = PendingObjectPickerKind.None;
+            _pendingOverlayTargetSlot = null;
+            // The notes were replaced (an Undo, or a change made elsewhere): a later keystroke starts a new Undo step.
+            _typingNoteId = null;
+            _typingNoteUndoGroup = -1;
+            ResetConnectionDrag();
+            _loadIncomplete = false;
             _errorMessage = null;
-            _layoutPositions.Clear();
-            _notes.Clear();
-            _detachedOverlays.Clear();
-            _inspectorWidth = 0f;
-
-            if (_asset == null)
+            if (_asset != null)
             {
-                Repaint();
-                return;
+                _loadedRevision = _asset.recipeString;
+                _loadedGraphData = _asset.editorGraphData;
+                _assetDirtyCount = EditorUtility.GetDirtyCount(_asset);
+                try
+                {
+                    var recipe = new UMAData.UMARecipe();
+                    _asset.Load(recipe);
+                    EnsureRecipeEditorDefaults(recipe);
+                    _recipe = recipe;
+                    _errorMessage = CharacterBaseEditor.MissingAssetsMessage(recipe);
+                    string graphError = LoadGraphData();
+                    if (graphError != null)
+                        _errorMessage = string.IsNullOrEmpty(_errorMessage) ? graphError : _errorMessage + "\n" + graphError;
+                    _serializedRecipe = new SerializedObject(_asset);
+                    _dnaEditor = new DNAMasterEditor(recipe);
+                    _sharedColorsEditor = new SharedColorsCollectionEditor();
+                    BuildGraph();
+                }
+                catch (Exception e)
+                {
+                    _errorMessage = e.Message;
+                    Debug.LogException(e, _asset);
+                }
+                _loadIncomplete = _errorMessage != null;
+                CharacterBaseEditor.SetRecipeSaveBlocked(_asset, _loadIncomplete, this);
             }
-
-            try
-            {
-                _recipe = new UMAData.UMARecipe();
-                _asset.Load(_recipe);
-                EnsureRecipeEditorDefaults(_recipe);
-                _serializedRecipe = new SerializedObject(_asset);
-                _dnaEditor = new DNAMasterEditor(_recipe);
-                _sharedColorsEditor = new SharedColorsCollectionEditor();
-                _layoutPrefsKey = "UMA_WardrobeGraphLayout_" + AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(_asset));
-                LoadLayout();
-                BuildGraph();
-            }
-            catch (Exception e)
-            {
-                _errorMessage = e.Message;
-                Debug.LogError("UMA Wardrobe Graph: Failed to load recipe " + _asset.name + ": " + e.Message);
-            }
-
             Repaint();
         }
 
-        private void ReloadRecipeFromAsset()
+        // Import an older, per-user layout on its first explicit save.
+        internal void SaveAssetToDisk(bool importLegacyLayout = false)
         {
-            UMAWardrobeRecipe asset = _asset;
-            _asset = null;
-            LoadRecipe(asset);
+            if (_asset != null && !_loadIncomplete && EditorUtility.IsPersistent(_asset))
+            {
+                if (importLegacyLayout && HasLegacyLayout && _recipe != null)
+                {
+                    Undo.RecordObject(_asset, "Import Wardrobe Graph Layout");
+                    _asset.editorGraphData = _loadedGraphData = SerializeGraphData();
+                    EditorUtility.SetDirty(_asset);
+                }
+                AssetDatabase.SaveAssetIfDirty(_asset);
+                _assetDirtyCount = EditorUtility.GetDirtyCount(_asset);
+            }
         }
 
-        private void SaveRecipe()
+        /// <summary>Saves the graph's recipe (with the asset's other fields) as a new asset at <paramref name="assetPath"/>.</summary>
+        internal UMARecipeBase CreateRecipeCopy(string assetPath)
         {
-            if (_asset == null || _recipe == null)
+            // A new asset only. Choosing the recipe itself wrote the graph's copy over it, a partial one too when
+            // the load was incomplete; any other existing asset would be replaced with a new one (new GUID).
+            if (AssetDatabase.LoadMainAssetAtPath(assetPath) != null || File.Exists(assetPath))
             {
-                return;
+                bool self = assetPath == AssetDatabase.GetAssetPath(_asset);
+                EditorUtility.DisplayDialog("UMA Wardrobe Graph",
+                    (self ? "Save As makes a new recipe, so it cannot be saved over '" + _asset.name + "' itself" + (_loadIncomplete ? " (it did not load completely, and this copy is missing those assets)." : "; use Save.") :
+                    "'" + assetPath + "' already exists. Save As makes a new recipe: choose a new name."), "OK");
+                return null;
             }
+            Type targetType = _asset.GetType();
+            UMARecipeBase newRecipe = ScriptableObject.CreateInstance(targetType) as UMARecipeBase;
+            if (newRecipe == null)
+            {
+                Debug.LogError("Unable to create the selected recipe type for Save As.");
+                return null;
+            }
+
+            EditorUtility.CopySerialized(_asset, newRecipe);
+            newRecipe.name = Path.GetFileNameWithoutExtension(assetPath);
 
             try
             {
-                EnsureRecipeEditorDefaults(_recipe);
-                _asset.recipeType = "Wardrobe";
-                _asset.Save(_recipe);
-                EditorUtility.SetDirty(_asset);
-                if (EditorUtility.IsPersistent(_asset))
+                if (_loadIncomplete)
                 {
-                    AssetDatabase.SaveAssetIfDirty(_asset);
+                    // Save As explicitly makes a copy of the parts that loaded.
+                    SaveKeepingOverlayLists(newRecipe, _recipe);
+                    BuildGraph();
+                    ((UMAWardrobeRecipe)newRecipe).editorGraphData = SerializeGraphData();
                 }
-                UMAUpdateProcessor.UpdateRecipe(_asset);
-                _needsSave = false;
-                BuildGraph();
+                else if (HasLegacyLayout && newRecipe is UMAWardrobeRecipe copy)
+                {
+                    copy.editorGraphData = SerializeGraphData();
+                }
             }
-            catch (Exception e)
+            catch
             {
-                Debug.LogError("UMA Wardrobe Graph: Failed to save recipe " + _asset.name + ": " + e.Message);
+                DestroyImmediate(newRecipe);
+                throw;
             }
+            AssetDatabase.CreateAsset(newRecipe, assetPath);
+            EditorUtility.SetDirty(newRecipe);
+            AssetDatabase.SaveAssetIfDirty(newRecipe);
+
+            if (newRecipe is UMATextRecipe textRecipe)
+            {
+                UMAUpdateProcessor.UpdateRecipe(textRecipe);
+            }
+            return newRecipe;
         }
 
         private void SaveAsRecipe()
@@ -782,26 +1007,10 @@ namespace UMA.Editors
                 return;
             }
 
-            Type targetType = _asset.GetType();
-            UMARecipeBase newRecipe = ScriptableObject.CreateInstance(targetType) as UMARecipeBase;
+            UMARecipeBase newRecipe = CreateRecipeCopy(assetPath);
             if (newRecipe == null)
             {
-                Debug.LogError("Unable to create the selected recipe type for Save As.");
                 return;
-            }
-
-            EditorUtility.CopySerialized(_asset, newRecipe);
-            newRecipe.name = Path.GetFileNameWithoutExtension(assetPath);
-
-            AssetDatabase.CreateAsset(newRecipe, assetPath);
-            EnsureRecipeEditorDefaults(_recipe);
-            newRecipe.Save(_recipe);
-            EditorUtility.SetDirty(newRecipe);
-            AssetDatabase.SaveAssetIfDirty(newRecipe);
-
-            if (newRecipe is UMATextRecipe textRecipe)
-            {
-                UMAUpdateProcessor.UpdateRecipe(textRecipe);
             }
 
             AssetDatabase.Refresh();
@@ -811,39 +1020,57 @@ namespace UMA.Editors
             LoadRecipe(newRecipe as UMAWardrobeRecipe);
         }
 
-        private void MarkRecipeDirty(string undoName)
+        private void CommitRecipeEdit(string undoName)
         {
-            if (_asset != null)
+            FinishNoteTyping();
+            try
             {
-                Undo.RecordObject(_asset, undoName);
+                // Slot and overlay controls use this same path. It records Undo on the asset before packing.
+                if (CharacterBaseEditor.WriteWorkingCopy(_asset, _recipe, undoName))
+                {
+                    BuildGraph();
+                }
             }
-
-            _needsSave = true;
-            BuildGraph();
-            Repaint();
+            catch (Exception e)
+            {
+                ReloadRecipeData();
+                Debug.LogException(e, _asset);
+            }
         }
 
-        private void MarkAssetFieldsDirty(string undoName)
+        // Metadata already lives on the asset. Never repack its slots or DNA for a metadata edit.
+        private void FinishAssetEdit()
         {
-            if (_asset == null)
-            {
-                return;
-            }
-
-            Undo.RecordObject(_asset, undoName);
+            FinishNoteTyping();
             EditorUtility.SetDirty(_asset);
             if (_autoSave)
             {
-                SaveRecipe();
+                SaveAssetToDisk();
             }
-            else
-            {
-                _needsSave = true;
-            }
-
-            BuildGraph();
+            _assetDirtyCount = EditorUtility.GetDirtyCount(_asset);
+            UMAUpdateProcessor.UpdateRecipe(_asset);
             Repaint();
         }
+
+        private void OnUndoRedoGraphEdit()
+        {
+            if (_asset == null) return;
+            bool recipeChanged = _asset.recipeString != _loadedRevision || _asset.editorGraphData != _loadedGraphData;
+            if (!recipeChanged && _assetDirtyCount == EditorUtility.GetDirtyCount(_asset)) return;
+
+            if (recipeChanged)
+            {
+                ReloadRecipeData();
+            }
+            if (_autoSave)
+            {
+                SaveAssetToDisk();
+            }
+            _assetDirtyCount = EditorUtility.GetDirtyCount(_asset);
+            UMAUpdateProcessor.UpdateRecipe(_asset);
+            Repaint();
+        }
+
 
         private static void EnsureRecipeEditorDefaults(UMAData.UMARecipe recipe)
         {
@@ -898,7 +1125,7 @@ namespace UMA.Editors
             {
                 OverlayColorData colorData = _recipe.sharedColors[i];
                 string colorName = colorData != null && !string.IsNullOrEmpty(colorData.name) ? colorData.name : "Shared Color " + (i + 1);
-                GraphNode colorNode = CreateNode(NodeKind.SharedColor, GetSharedColorNodeKey(i, colorName), colorName, colorData != null ? colorData.channelCount + " channel(s)" : "Missing color", new Rect(24f, sharedY, NodeWidth, NodeHeight), SharedColorTint);
+                GraphNode colorNode = CreateNode(NodeKind.SharedColor, GetSharedColorNodeKey(i, colorName), colorName, colorData != null ? colorData.channelCount + " channel(s)" : "Missing color", new Rect(24f, sharedY, NodeWidth, NodeHeight), SharedColorTint, colorData);
                 colorNode.SharedColor = colorData;
                 colorNode.SharedColorIndex = i;
                 if (colorData == null)
@@ -925,7 +1152,7 @@ namespace UMA.Editors
                 }
 
                 string slotName = GetSlotDisplayName(slot);
-                GraphNode slotNode = CreateNode(NodeKind.Slot, GetSlotNodeKey(slotIndex, slotName), slotName, slot.isPlaceholderSlot ? "Placeholder wildcard" : "SlotDataAsset", new Rect(24f + ColumnSpacing * 2f, slotY, NodeWidth, GetSlotNodeHeight(slot)), SlotTint);
+                GraphNode slotNode = CreateNode(NodeKind.Slot, GetSlotNodeKey(slotIndex, slotName), slotName, slot.isPlaceholderSlot ? "Placeholder wildcard" : "SlotDataAsset", new Rect(24f + ColumnSpacing * 2f, slotY, NodeWidth, GetSlotNodeHeight(slot)), SlotTint, slot);
                 slotNode.Slot = slot;
                 slotNode.SlotIndex = slotIndex;
                 if (slot.isPlaceholderSlot && (slot.tags == null || slot.tags.Length == 0))
@@ -1007,12 +1234,13 @@ namespace UMA.Editors
             PruneSelectionToVisibleNodes();
         }
 
-        private GraphNode CreateNode(NodeKind kind, string key, string title, string subtitle, Rect defaultRect, Color tint)
+        private GraphNode CreateNode(NodeKind kind, string key, string title, string subtitle, Rect defaultRect, Color tint, object subject = null)
         {
             return new GraphNode
             {
                 Kind = kind,
-                Key = key,
+                Key = GetNodeKey(subject, key),
+                AssetKey = key,
                 Title = title,
                 Subtitle = subtitle,
                 Rect = defaultRect,
@@ -1027,8 +1255,8 @@ namespace UMA.Editors
                 return overlayNode;
             }
 
-            string overlayKey = GetOverlayNodeKey(overlay, slotIndex, overlayIndex, overlayName);
-            overlayNode = CreateNode(NodeKind.Overlay, overlayKey, overlayName, slotName + " [" + overlayIndex + "]", new Rect(24f + ColumnSpacing, overlayY, NodeWidth, NodeHeight), OverlayTint);
+            string overlayKey = GetOverlayNodeKey(slotIndex, overlayIndex, overlayName);
+            overlayNode = CreateNode(NodeKind.Overlay, overlayKey, overlayName, slotName + " [" + overlayIndex + "]", new Rect(24f + ColumnSpacing, overlayY, NodeWidth, NodeHeight), OverlayTint, overlay);
             overlayNode.Slot = slot;
             overlayNode.SlotIndex = slotIndex;
             overlayNode.Overlay = overlay;
@@ -1200,10 +1428,7 @@ namespace UMA.Editors
             if (_layoutPositions.TryGetValue(node.Key, out Vector2 positionValue))
             {
                 node.Rect.position = positionValue;
-                return;
             }
-
-            _layoutPositions[node.Key] = node.Rect.position;
         }
 
         private GraphNode FindSharedColorNode(OverlayColorData colorData)
@@ -1245,19 +1470,13 @@ namespace UMA.Editors
             return "Overlay:" + slotIndex + ":" + overlayIndex + ":" + overlayName;
         }
 
-        private string GetOverlayNodeKey(OverlayData overlay, int slotIndex, int overlayIndex, string overlayName)
+        // Keep the node's position and selection while its name, slot or layer index changes.
+        private string GetNodeKey(object subject, string assetKey)
         {
-            if (overlay != null && _overlayNodeKeys.TryGetValue(overlay, out string key))
-            {
-                return key;
-            }
-
-            key = GetOverlayNodeKey(slotIndex, overlayIndex, overlayName);
-            if (overlay != null)
-            {
-                _overlayNodeKeys[overlay] = key;
-            }
-
+            if (subject == null) return assetKey;
+            if (_nodeKeys.TryGetValue(subject, out string key)) return key;
+            key = _nodeKeys.ContainsValue(assetKey) ? assetKey + ":" + Guid.NewGuid().ToString("N") : assetKey;
+            _nodeKeys.Add(subject, key);
             return key;
         }
 
@@ -1512,8 +1731,7 @@ namespace UMA.Editors
             string text = GUI.TextArea(textRect, node.Note.text, style);
             if (EditorGUI.EndChangeCheck())
             {
-                node.Note.text = text;
-                SaveLayout();
+                SetNoteText(node.Note, text);
                 Repaint();
             }
         }
@@ -1747,7 +1965,7 @@ namespace UMA.Editors
                 {
                     Vector2 graphMouseAfter = ScreenToGraph(canvasRect, current.mousePosition);
                     _pan += graphMouseAfter - graphMouseBefore;
-                    SaveLayout();
+                    SaveView();
                     Repaint();
                 }
                 current.Use();
@@ -1764,7 +1982,7 @@ namespace UMA.Editors
             if (_draggingCanvas && current.type == EventType.MouseDrag && current.button == 2)
             {
                 _pan += current.delta / _zoom;
-                SaveLayout();
+                SaveView();
                 Repaint();
                 current.Use();
                 return;
@@ -1811,8 +2029,8 @@ namespace UMA.Editors
 
             if (!string.IsNullOrEmpty(_resizingNoteKey) && current.type == EventType.MouseUp && current.button == 0)
             {
+                if (FindNodeByKey(_resizingNoteKey)?.Note?.rect != _resizeStartRect) SaveLayout("Resize Wardrobe Graph Note");
                 _resizingNoteKey = null;
-                SaveLayout();
                 current.Use();
                 return;
             }
@@ -1936,7 +2154,12 @@ namespace UMA.Editors
 
             if (!string.IsNullOrEmpty(_draggingNodeKey) && current.type == EventType.MouseUp && current.button == 0)
             {
-                SaveLayout();
+                foreach (var initial in _dragStartPositions)
+                {
+                    if (FindNodeByKey(initial.Key)?.Rect.position == initial.Value) continue;
+                    SaveLayout("Move Wardrobe Graph Nodes");
+                    break;
+                }
                 _draggingNodeKey = null;
                 _dragStartPositions.Clear();
                 current.Use();
@@ -2612,7 +2835,7 @@ namespace UMA.Editors
                         {
                             EditorApplication.delayCall += () =>
                             {
-                                if (this != null)
+                                if (this != null && _recipe != null && Array.IndexOf(_recipe.slotDataList, slot) >= 0)
                                 {
                                     ShowOverlayPicker(slot, addPosition);
                                 }
@@ -2650,9 +2873,9 @@ namespace UMA.Editors
             current.Use();
         }
 
-        private OverlayData AddDetachedOverlayNode(OverlayDataAsset overlayAsset, Vector2 graphPosition)
+        internal OverlayData AddDetachedOverlayNode(OverlayDataAsset overlayAsset, Vector2 graphPosition)
         {
-            if (overlayAsset == null)
+            if (overlayAsset == null || !AcceptLibraryAsset(overlayAsset))
             {
                 return null;
             }
@@ -2662,12 +2885,12 @@ namespace UMA.Editors
             SetDetachedOverlayLayoutPosition(overlay, graphPosition);
             BuildGraph();
             SelectNodeForOverlay(null, overlay);
-            SaveLayout();
+            SaveLayout("Add Detached Wardrobe Overlay");
             Repaint();
             return overlay;
         }
 
-        private void AddNoteNodeAt(Vector2 graphPosition)
+        internal void AddNoteNodeAt(Vector2 graphPosition)
         {
             NoteData note = new NoteData
             {
@@ -2676,7 +2899,7 @@ namespace UMA.Editors
                 rect = new Rect(graphPosition.x, graphPosition.y, NoteDefaultWidth, NoteDefaultHeight)
             };
             _notes.Add(note);
-            SaveLayout();
+            SaveLayout("Add Wardrobe Graph Note");
             BuildGraph();
             SelectNodeByKey(GetNoteNodeKey(note));
             Repaint();
@@ -2696,7 +2919,7 @@ namespace UMA.Editors
             {
                 SetPrimarySelection(GetFirstSelectedNode());
             }
-            SaveLayout();
+            SaveLayout("Remove Wardrobe Graph Note");
             BuildGraph();
             Repaint();
         }
@@ -2708,7 +2931,6 @@ namespace UMA.Editors
                 return;
             }
 
-            Undo.RecordObject(_asset, "Add Wardrobe Shared Color Node");
             OverlayColorData sharedColor = new OverlayColorData(3)
             {
                 name = GetUniqueSharedColorName(),
@@ -2720,10 +2942,10 @@ namespace UMA.Editors
             colors[colors.Length - 1] = sharedColor;
             _recipe.sharedColors = colors;
 
-            _layoutPositions[GetSharedColorNodeKey(colors.Length - 1, sharedColor.name)] = graphPosition;
-            MarkRecipeDirty("Add Wardrobe Shared Color Node");
-            SelectNodeByKey(GetSharedColorNodeKey(colors.Length - 1, sharedColor.name));
-            SaveLayout();
+            string key = GetNodeKey(sharedColor, GetSharedColorNodeKey(colors.Length - 1, sharedColor.name));
+            _layoutPositions[key] = graphPosition;
+            CommitRecipeEdit("Add Wardrobe Shared Color Node");
+            SelectNodeByKey(key);
         }
 
         private string GetUniqueSharedColorName()
@@ -2824,14 +3046,13 @@ namespace UMA.Editors
                 return;
             }
 
-            Undo.RecordObject(_asset, "Reconnect Wardrobe Overlay Color");
             if (_disconnectConnectionOnCancel && _connectionDragOriginalTargetNode != null && _connectionDragOriginalTargetNode.Overlay != null)
             {
                 SetOverlayColorUnshared(_connectionDragOriginalTargetNode.Overlay);
             }
 
             targetNode.Overlay.colorData = sourceNode.SharedColor;
-            MarkRecipeDirty("Reconnect Wardrobe Overlay Color");
+            CommitRecipeEdit("Reconnect Wardrobe Overlay Color");
             SelectNodeForOverlay(targetNode.Slot, targetNode.Overlay);
         }
 
@@ -2878,9 +3099,8 @@ namespace UMA.Editors
                 return;
             }
 
-            Undo.RecordObject(_asset, "Disconnect Wardrobe Overlay Color");
             SetOverlayColorUnshared(overlayNode.Overlay);
-            MarkRecipeDirty("Disconnect Wardrobe Overlay Color");
+            CommitRecipeEdit("Disconnect Wardrobe Overlay Color");
             SelectNodeForOverlay(overlayNode.Slot, overlayNode.Overlay);
         }
 
@@ -2894,7 +3114,7 @@ namespace UMA.Editors
             RemoveOverlay(slotNode.Slot, overlay);
         }
 
-        private bool ShareOverlayToSlot(OverlayData overlay, SlotData targetSlot, int targetIndex)
+        internal bool ShareOverlayToSlot(OverlayData overlay, SlotData targetSlot, int targetIndex)
         {
             if (overlay == null || targetSlot == null)
             {
@@ -2912,14 +3132,31 @@ namespace UMA.Editors
                     return false;
                 }
 
-                Undo.RecordObject(_asset, "Share Wardrobe Overlay Stack");
-                targetSlot.SetOverlayList(sourceOverlays);
-                _detachedOverlays.RemoveAll(detachedOverlay => ReferenceEquals(detachedOverlay, overlay));
-                MarkRecipeDirty("Share Wardrobe Overlay Stack");
+                if (targetOverlays == null || targetOverlays.Count == 0)
+                {
+                    // A slot with no overlays of its own shares the whole stack.
+                    targetSlot.SetOverlayList(sourceOverlays);
+                    CommitRecipeEdit("Share Wardrobe Overlay Stack");
+                    return true;
+                }
+
+                // A slot with its own overlays keeps them: sharing the stack replaced them all. A recipe can
+                // only share whole stacks, so the slot gets a copy of this one overlay (linked to the same
+                // shared color, if any).
+                OverlayData copy = overlay.Duplicate();
+                if (overlay.colorData != null && _recipe.sharedColors != null &&
+                    Array.Exists(_recipe.sharedColors, color => ReferenceEquals(color, overlay.colorData)))
+                {
+                    copy.colorData = overlay.colorData;
+                }
+                targetOverlays = new List<OverlayData>(targetOverlays);
+                InsertOverlayAt(targetOverlays, copy, targetIndex);
+                targetSlot.SetOverlayList(targetOverlays);
+                CommitRecipeEdit("Copy Wardrobe Overlay Node");
+                ShowNotification(new GUIContent("Added a copy of the overlay. Connect it to a slot with no overlays to share the whole stack."));
                 return true;
             }
 
-            Undo.RecordObject(_asset, "Share Wardrobe Overlay Node");
             targetOverlays = new List<OverlayData>(targetOverlays);
             if (ContainsOverlayReference(targetOverlays, overlay))
             {
@@ -2930,18 +3167,17 @@ namespace UMA.Editors
             InsertOverlayAt(targetOverlays, overlay, targetIndex);
             targetSlot.SetOverlayList(targetOverlays);
             _detachedOverlays.RemoveAll(detachedOverlay => ReferenceEquals(detachedOverlay, overlay));
-            MarkRecipeDirty("Share Wardrobe Overlay Node");
+            CommitRecipeEdit("Share Wardrobe Overlay Node");
             return true;
         }
 
-        private bool MoveOverlayConnection(SlotData sourceSlot, OverlayData overlay, SlotData targetSlot, int targetIndex, Vector2 graphPosition)
+        internal bool MoveOverlayConnection(SlotData sourceSlot, OverlayData overlay, SlotData targetSlot, int targetIndex, Vector2 graphPosition)
         {
             if (sourceSlot == null || overlay == null || targetSlot == null)
             {
                 return false;
             }
 
-            Undo.RecordObject(_asset, "Reconnect Wardrobe Overlay Node");
             List<OverlayData> sourceOverlays = sourceSlot.GetOverlayList();
             int sourceIndex = IndexOfOverlayReference(sourceOverlays, overlay);
             if (sourceIndex < 0)
@@ -2955,7 +3191,7 @@ namespace UMA.Editors
                 InsertOverlayAt(sourceOverlays, overlay, targetIndex);
                 sourceSlot.SetOverlayList(sourceOverlays);
                 SetOverlayLayoutPosition(targetSlot, overlay, graphPosition);
-                MarkRecipeDirty("Reorder Wardrobe Overlay Node");
+                CommitRecipeEdit("Reorder Wardrobe Overlay Node");
                 return true;
             }
 
@@ -2966,12 +3202,21 @@ namespace UMA.Editors
                 return false;
             }
 
+            // Moves this one overlay. The target slot was given the source's whole list (the moved overlay and
+            // the ones left behind) in place of its own overlays.
+            List<OverlayData> targetSlotOverlays = targetOverlays != null ? new List<OverlayData>(targetOverlays) : new List<OverlayData>();
+            if (ContainsOverlayReference(targetSlotOverlays, overlay))
+            {
+                ShowNotification(new GUIContent("That slot already uses this overlay."));
+                return false;
+            }
             List<OverlayData> sourceSlotOverlays = new List<OverlayData>(sourceOverlays);
             sourceSlotOverlays.RemoveAt(sourceIndex);
             sourceSlot.SetOverlayList(sourceSlotOverlays);
-            targetSlot.SetOverlayList(sourceOverlays);
+            InsertOverlayAt(targetSlotOverlays, overlay, targetIndex);
+            targetSlot.SetOverlayList(targetSlotOverlays);
             SetOverlayLayoutPosition(targetSlot, overlay, graphPosition);
-            MarkRecipeDirty("Reconnect Wardrobe Overlay Node");
+            CommitRecipeEdit("Reconnect Wardrobe Overlay Node");
             return true;
         }
 
@@ -3028,10 +3273,6 @@ namespace UMA.Editors
             _inspectorMode = (InspectorMode)GUILayout.Toolbar((int)_inspectorMode, new[] { "Selection", "Recipe", "Legacy Inspector" });
             GUILayout.Space(6f);
 
-            if (!string.IsNullOrEmpty(_errorMessage))
-            {
-                EditorGUILayout.HelpBox(_errorMessage, MessageType.Error);
-            }
 
             switch (_inspectorMode)
             {
@@ -3106,11 +3347,10 @@ namespace UMA.Editors
             Vector2 size = EditorGUILayout.Vector2Field("Size", node.Note.rect.size);
             if (EditorGUI.EndChangeCheck())
             {
-                node.Note.text = text;
                 Rect rect = node.Note.rect;
                 rect.size = new Vector2(Mathf.Max(NoteMinWidth, size.x), Mathf.Max(NoteMinHeight, size.y));
                 UpdateNodeRect(node, rect);
-                SaveLayout();
+                SetNoteText(node.Note, text);
                 Repaint();
             }
 
@@ -3134,13 +3374,34 @@ namespace UMA.Editors
             bool textureDirty = false;
             bool meshDirty = false;
             bool sharedOverlayStackSecondary = IsSharedOverlayStackSecondary(node.Slot);
-            SlotEditor slotEditor = new SlotEditor(_recipe, node.Slot, node.SlotIndex, _asset);
+            List<OverlayData> slotOverlays = node.Slot.GetOverlayList();
+            if (_slotEditor == null || !ReferenceEquals(_slotEditorSlot, node.Slot) || !ReferenceEquals(_slotEditorRecipe, _recipe) ||
+                !SameOverlayOrder(slotOverlays))
+            {
+                _slotEditor = new SlotEditor(_recipe, node.Slot, node.SlotIndex, _asset);
+                _slotEditorSlot = node.Slot;
+                _slotEditorRecipe = _recipe;
+                _slotEditorOverlays = slotOverlays;
+                _slotEditorOverlayOrder.Clear();
+                _slotEditorOverlayOrder.AddRange(slotOverlays);
+            }
+            SlotEditor slotEditor = _slotEditor;
             slotEditor.sharedOverlays = sharedOverlayStackSecondary;
             if (slotEditor.OnGUI(ref dnaDirty, ref textureDirty, ref meshDirty))
             {
-                MarkRecipeDirty("Edit Wardrobe Slot Node");
+                CommitRecipeEdit("Edit Wardrobe Slot Node");
             }
 
+            if (sharedOverlayStackSecondary)
+            {
+                GUILayout.Space(8f);
+                EditorGUILayout.HelpBox("This slot shares another slot's overlays: editing them changes both slots. Slots whose overlays all match are stored as one stack.", MessageType.Info);
+                if (GUILayout.Button("Give This Slot Its Own Overlays"))
+                {
+                    GiveSlotItsOwnOverlays(node.Slot);
+                    GUIUtility.ExitGUI();
+                }
+            }
             if (!sharedOverlayStackSecondary)
             {
                 GUILayout.Space(8f);
@@ -3201,10 +3462,16 @@ namespace UMA.Editors
             }
 
             GUILayout.Space(6f);
-            OverlayEditor overlayEditor = new OverlayEditor(_recipe, node.Slot, node.Overlay, null, _asset);
+            if (_overlayEditor == null || !ReferenceEquals(_overlayEditorOverlay, node.Overlay) || !ReferenceEquals(_overlayEditorRecipe, _recipe))
+            {
+                _overlayEditor = new OverlayEditor(_recipe, node.Slot, node.Overlay, null, _asset);
+                _overlayEditorOverlay = node.Overlay;
+                _overlayEditorRecipe = _recipe;
+            }
+            OverlayEditor overlayEditor = _overlayEditor;
             if (overlayEditor.OnGUI())
             {
-                MarkRecipeDirty("Edit Wardrobe Overlay Node");
+                CommitRecipeEdit("Edit Wardrobe Overlay Node");
             }
         }
 
@@ -3220,7 +3487,7 @@ namespace UMA.Editors
 
             if (_sharedColorsEditor.OnGUI(_recipe))
             {
-                MarkRecipeDirty("Edit Wardrobe Shared Color Node");
+                CommitRecipeEdit("Edit Wardrobe Shared Color Node");
             }
         }
 
@@ -3264,7 +3531,8 @@ namespace UMA.Editors
                     node.Overlay.colorData = _recipe.sharedColors[newSelection - 1];
                 }
 
-                MarkRecipeDirty("Connect Wardrobe Overlay Color");
+                if (node.Slot == null) SaveLayout("Connect Detached Overlay Color");
+                else CommitRecipeEdit("Connect Wardrobe Overlay Color");
             }
         }
 
@@ -3310,6 +3578,23 @@ namespace UMA.Editors
             return -1;
         }
 
+        /// <summary>Whether the slot's overlay list is still the one, in the same order, the cached slot editor was built from.</summary>
+        private bool SameOverlayOrder(List<OverlayData> overlays)
+        {
+            if (!ReferenceEquals(overlays, _slotEditorOverlays) || overlays.Count != _slotEditorOverlayOrder.Count)
+            {
+                return false;
+            }
+            for (int i = 0; i < overlays.Count; i++)
+            {
+                if (!ReferenceEquals(overlays[i], _slotEditorOverlayOrder[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         private void DrawRecipeInspector()
         {
             if (_asset == null)
@@ -3319,12 +3604,16 @@ namespace UMA.Editors
 
             EditorGUILayout.LabelField("Wardrobe Recipe", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
-            _asset.DisplayValue = EditorGUILayout.DelayedTextField("Display Value", _asset.DisplayValue);
-            _asset.UserField = EditorGUILayout.DelayedTextField("User Field", _asset.UserField);
-            _asset.Appended = EditorGUILayout.Toggle("Is Appended", _asset.Appended);
+            string displayValue = EditorGUILayout.DelayedTextField("Display Value", _asset.DisplayValue);
+            string userField = EditorGUILayout.DelayedTextField("User Field", _asset.UserField);
+            bool appended = EditorGUILayout.Toggle("Is Appended", _asset.Appended);
             if (EditorGUI.EndChangeCheck())
             {
-                MarkAssetFieldsDirty("Edit Wardrobe Recipe Metadata");
+                Undo.RecordObject(_asset, "Edit Wardrobe Recipe Metadata");
+                _asset.DisplayValue = displayValue;
+                _asset.UserField = userField;
+                _asset.Appended = appended;
+                FinishAssetEdit();
             }
 
             GUILayout.Space(8f);
@@ -3350,23 +3639,13 @@ namespace UMA.Editors
         {
             EditorGUILayout.LabelField("Compatible Races", EditorStyles.boldLabel);
 
-            if (_asset.compatibleRaces == null)
-            {
-                _asset.compatibleRaces = new List<string>();
-            }
-
-            if (_asset.wardrobeRecipeThumbs == null)
-            {
-                _asset.wardrobeRecipeThumbs = new List<WardrobeRecipeThumb>();
-            }
-
             RaceData raceToAdd = (RaceData)EditorGUILayout.ObjectField("Add Race", null, typeof(RaceData), false);
             if (raceToAdd != null)
             {
                 AddRaceDataAsset(raceToAdd);
             }
 
-            for (int i = 0; i < _asset.compatibleRaces.Count; i++)
+            for (int i = 0; i < (_asset.compatibleRaces?.Count ?? 0); i++)
             {
                 string raceName = _asset.compatibleRaces[i];
                 RaceData raceData = UMAAssetIndexer.Instance.GetAsset<RaceData>(raceName);
@@ -3397,13 +3676,14 @@ namespace UMA.Editors
                     }
                 }
 
-                WardrobeRecipeThumb thumb = GetOrCreateThumb(raceName);
+                WardrobeRecipeThumb thumb = _asset.wardrobeRecipeThumbs?.Find(entry => entry != null && entry.race == raceName);
                 EditorGUI.BeginChangeCheck();
-                Sprite newThumb = (Sprite)EditorGUILayout.ObjectField("Thumbnail", thumb.thumb, typeof(Sprite), false);
+                Sprite newThumb = (Sprite)EditorGUILayout.ObjectField("Thumbnail", thumb?.thumb, typeof(Sprite), false);
                 if (EditorGUI.EndChangeCheck())
                 {
-                    thumb.thumb = newThumb;
-                    MarkAssetFieldsDirty("Edit Wardrobe Race Thumbnail");
+                    Undo.RecordObject(_asset, "Edit Wardrobe Race Thumbnail");
+                    GetOrCreateThumb(raceName).thumb = newThumb;
+                    FinishAssetEdit();
                 }
             }
         }
@@ -3422,21 +3702,23 @@ namespace UMA.Editors
             int newWardrobeIndex = EditorGUILayout.Popup("Wardrobe Region", _selectedWardrobeSlot, wardrobeSlots.ToArray());
             if (EditorGUI.EndChangeCheck())
             {
+                Undo.RecordObject(_asset, "Edit Wardrobe Slot");
                 _asset.wardrobeSlot = wardrobeSlots[newWardrobeIndex];
-                MarkAssetFieldsDirty("Edit Wardrobe Slot");
+                FinishAssetEdit();
             }
 
-            List<string> suppressSlots = _asset.suppressWardrobeSlots ?? (_asset.suppressWardrobeSlots = new List<string>());
+            List<string> suppressSlots = _asset.suppressWardrobeSlots;
             EditorGUILayout.LabelField("Suppress Wardrobe Slots", EditorStyles.miniBoldLabel);
-            for (int i = 0; i < suppressSlots.Count; i++)
+            for (int i = 0; i < (suppressSlots?.Count ?? 0); i++)
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     EditorGUILayout.LabelField(suppressSlots[i]);
                     if (GUILayout.Button("X", GUILayout.Width(24f)))
                     {
+                        Undo.RecordObject(_asset, "Remove Suppressed Wardrobe Slot");
                         suppressSlots.RemoveAt(i);
-                        MarkAssetFieldsDirty("Remove Suppressed Wardrobe Slot");
+                        FinishAssetEdit();
                         GUIUtility.ExitGUI();
                     }
                 }
@@ -3448,10 +3730,11 @@ namespace UMA.Editors
                 if (GUILayout.Button("Add", GUILayout.Width(60f)) && wardrobeSlots.Count > 0)
                 {
                     string slot = wardrobeSlots[Mathf.Clamp(_selectedSuppressedSlot, 0, wardrobeSlots.Count - 1)];
-                    if (!suppressSlots.Contains(slot))
+                    if (suppressSlots == null || !suppressSlots.Contains(slot))
                     {
-                        suppressSlots.Add(slot);
-                        MarkAssetFieldsDirty("Add Suppressed Wardrobe Slot");
+                        Undo.RecordObject(_asset, "Add Suppressed Wardrobe Slot");
+                        (_asset.suppressWardrobeSlots ??= new List<string>()).Add(slot);
+                        FinishAssetEdit();
                     }
                 }
             }
@@ -3462,16 +3745,17 @@ namespace UMA.Editors
             List<string> baseSlots = GetBaseSlotOptions();
 
             EditorGUILayout.LabelField("Hide Base Slots", EditorStyles.boldLabel);
-            List<string> hides = _asset.Hides ?? (_asset.Hides = new List<string>());
-            for (int i = 0; i < hides.Count; i++)
+            List<string> hides = _asset.Hides;
+            for (int i = 0; i < (hides?.Count ?? 0); i++)
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     EditorGUILayout.LabelField(hides[i]);
                     if (GUILayout.Button("X", GUILayout.Width(24f)))
                     {
+                        Undo.RecordObject(_asset, "Remove Hidden Base Slot");
                         hides.RemoveAt(i);
-                        MarkAssetFieldsDirty("Remove Hidden Base Slot");
+                        FinishAssetEdit();
                         GUIUtility.ExitGUI();
                     }
                 }
@@ -3483,10 +3767,11 @@ namespace UMA.Editors
                 if (GUILayout.Button("Add", GUILayout.Width(60f)) && baseSlots.Count > 0)
                 {
                     string slot = baseSlots[Mathf.Clamp(_selectedHideSlot, 0, baseSlots.Count - 1)];
-                    if (!hides.Contains(slot))
+                    if (hides == null || !hides.Contains(slot))
                     {
-                        hides.Add(slot);
-                        MarkAssetFieldsDirty("Add Hidden Base Slot");
+                        Undo.RecordObject(_asset, "Add Hidden Base Slot");
+                        (_asset.Hides ??= new List<string>()).Add(slot);
+                        FinishAssetEdit();
                     }
                 }
             }
@@ -3498,17 +3783,13 @@ namespace UMA.Editors
             int newReplaceIndex = EditorGUILayout.Popup("Replaces", _selectedReplaceSlot, replaces.ToArray());
             if (EditorGUI.EndChangeCheck())
             {
+                Undo.RecordObject(_asset, "Edit Replaced Base Slot");
                 _asset.replaces = replaces[newReplaceIndex];
-                MarkAssetFieldsDirty("Edit Replaced Base Slot");
+                FinishAssetEdit();
             }
 
             EditorGUILayout.LabelField("Incompatible Recipes", EditorStyles.boldLabel);
-            if (_asset.IncompatibleRecipes == null)
-            {
-                _asset.IncompatibleRecipes = new List<UMAWardrobeRecipe>();
-            }
-
-            for (int i = 0; i < _asset.IncompatibleRecipes.Count; i++)
+            for (int i = 0; i < (_asset.IncompatibleRecipes?.Count ?? 0); i++)
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
@@ -3516,24 +3797,27 @@ namespace UMA.Editors
                     UMAWardrobeRecipe newRecipe = (UMAWardrobeRecipe)EditorGUILayout.ObjectField(_asset.IncompatibleRecipes[i], typeof(UMAWardrobeRecipe), false);
                     if (EditorGUI.EndChangeCheck())
                     {
+                        Undo.RecordObject(_asset, "Edit Incompatible Wardrobe Recipe");
                         _asset.IncompatibleRecipes[i] = newRecipe;
-                        MarkAssetFieldsDirty("Edit Incompatible Wardrobe Recipe");
+                        FinishAssetEdit();
                     }
 
                     if (GUILayout.Button("X", GUILayout.Width(24f)))
                     {
+                        Undo.RecordObject(_asset, "Remove Incompatible Wardrobe Recipe");
                         _asset.IncompatibleRecipes.RemoveAt(i);
-                        MarkAssetFieldsDirty("Remove Incompatible Wardrobe Recipe");
+                        FinishAssetEdit();
                         GUIUtility.ExitGUI();
                     }
                 }
             }
 
             UMAWardrobeRecipe incompatibleToAdd = (UMAWardrobeRecipe)EditorGUILayout.ObjectField("Add Incompatible", null, typeof(UMAWardrobeRecipe), false);
-            if (incompatibleToAdd != null && !_asset.IncompatibleRecipes.Contains(incompatibleToAdd))
+            if (incompatibleToAdd != null && (_asset.IncompatibleRecipes == null || !_asset.IncompatibleRecipes.Contains(incompatibleToAdd)))
             {
-                _asset.IncompatibleRecipes.Add(incompatibleToAdd);
-                MarkAssetFieldsDirty("Add Incompatible Wardrobe Recipe");
+                Undo.RecordObject(_asset, "Add Incompatible Wardrobe Recipe");
+                (_asset.IncompatibleRecipes ??= new List<UMAWardrobeRecipe>()).Add(incompatibleToAdd);
+                FinishAssetEdit();
             }
         }
 
@@ -3542,7 +3826,7 @@ namespace UMA.Editors
             EditorGUILayout.LabelField("Shared Colors", EditorStyles.boldLabel);
             if (_sharedColorsEditor.OnGUI(_recipe))
             {
-                MarkRecipeDirty("Edit Wardrobe Shared Colors");
+                CommitRecipeEdit("Edit Wardrobe Shared Colors");
             }
 
             GUILayout.Space(8f);
@@ -3557,7 +3841,7 @@ namespace UMA.Editors
             bool meshDirty = false;
             if (_dnaEditor.OnGUI(ref dnaDirty, ref textureDirty, ref meshDirty))
             {
-                MarkRecipeDirty("Edit Wardrobe Recipe DNA");
+                CommitRecipeEdit("Edit Wardrobe Recipe DNA");
             }
 
             DrawOverrideDnaInspector();
@@ -3566,11 +3850,6 @@ namespace UMA.Editors
         private void DrawOverrideDnaInspector()
         {
             EditorGUILayout.LabelField("Override DNA", EditorStyles.boldLabel);
-            if (_asset.OverrideDNA == null)
-            {
-                _asset.OverrideDNA = new UMAPredefinedDNA();
-            }
-
             List<RaceData> races = GetCompatibleRaceDatas();
             if (races.Count == 0)
             {
@@ -3591,23 +3870,31 @@ namespace UMA.Editors
                     if (GUILayout.Button("Add DNA", GUILayout.Width(80f)))
                     {
                         string dnaName = dnaNames[Mathf.Clamp(_selectedDna, 0, dnaNames.Count - 1)];
-                        if (!_asset.OverrideDNA.ContainsName(dnaName))
+                        if (_asset.OverrideDNA == null || !_asset.OverrideDNA.ContainsName(dnaName))
                         {
-                            _asset.OverrideDNA.AddDNA(dnaName, 0.5f);
-                            MarkAssetFieldsDirty("Add Wardrobe Override DNA");
+                            Undo.RecordObject(_asset, "Add Wardrobe Override DNA");
+                            (_asset.OverrideDNA ??= new UMAPredefinedDNA()).AddDNA(dnaName, 0.5f);
+                            FinishAssetEdit();
                         }
                     }
                 }
             }
 
             string dnaToRemove = null;
-            EditorGUI.BeginChangeCheck();
+            if (_asset.OverrideDNA == null) return;
             foreach (DnaValue dnaData in _asset.OverrideDNA.PreloadValues)
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     GUILayout.Label(ObjectNames.NicifyVariableName(dnaData.Name), GUILayout.Width(120f));
-                    dnaData.Value = EditorGUILayout.Slider(dnaData.Value, 0f, 1f);
+                    EditorGUI.BeginChangeCheck();
+                    float value = EditorGUILayout.Slider(dnaData.Value, 0f, 1f);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        Undo.RecordObject(_asset, "Edit Wardrobe Override DNA");
+                        dnaData.Value = value;
+                        FinishAssetEdit();
+                    }
                     if (GUILayout.Button("X", GUILayout.Width(24f)))
                     {
                         dnaToRemove = dnaData.Name;
@@ -3615,15 +3902,11 @@ namespace UMA.Editors
                 }
             }
 
-            if (EditorGUI.EndChangeCheck())
-            {
-                MarkAssetFieldsDirty("Edit Wardrobe Override DNA");
-            }
-
             if (!string.IsNullOrEmpty(dnaToRemove))
             {
+                Undo.RecordObject(_asset, "Remove Wardrobe Override DNA");
                 _asset.OverrideDNA.RemoveDNA(dnaToRemove);
-                MarkAssetFieldsDirty("Remove Wardrobe Override DNA");
+                FinishAssetEdit();
             }
         }
 
@@ -3641,7 +3924,7 @@ namespace UMA.Editors
             DrawSerializedProperty("MeshModifiers", "Mesh Modifiers");
             if (_serializedRecipe.ApplyModifiedProperties())
             {
-                MarkAssetFieldsDirty("Edit Wardrobe Serialized Fields");
+                FinishAssetEdit();
             }
         }
 
@@ -3665,6 +3948,8 @@ namespace UMA.Editors
             {
                 DestroyLegacyInspector();
                 _legacyInspector = Editor.CreateEditor(_asset);
+                if (_legacyInspector is CharacterBaseEditor recipeInspector)
+                    recipeInspector.HostAutoSave = () => _autoSave;
             }
 
             if (_legacyInspector == null)
@@ -3675,15 +3960,10 @@ namespace UMA.Editors
 
             EditorGUILayout.HelpBox("This is the existing UMAWardrobeRecipe inspector embedded here for full feature parity. It is also still available as the normal asset inspector.", MessageType.Info);
 
-            EditorGUI.BeginChangeCheck();
-            _suppressAutoSave = true;
+            // Some Advanced controls change recipe fields directly, including during ExitGUI.
+            if (Event.current.type != EventType.Layout && Event.current.type != EventType.Repaint)
+                Undo.RecordObject(_asset, "Edit Wardrobe Recipe");
             _legacyInspector.OnInspectorGUI();
-            _suppressAutoSave = false;
-            if (EditorGUI.EndChangeCheck())
-            {
-                EditorApplication.delayCall -= ReloadRecipeFromAsset;
-                EditorApplication.delayCall += ReloadRecipeFromAsset;
-            }
         }
 
         private void DestroyLegacyInspector()
@@ -3695,14 +3975,30 @@ namespace UMA.Editors
             }
         }
 
+        /// <summary>
+        /// Whether the Global Library finds this same asset under its name, as the recipe inspector checks: the
+        /// recipe stores the name, and a reload finds whatever the library has under it. The object pickers and
+        /// the Stack Overlay field offered any asset of the type.
+        /// </summary>
+        private bool AcceptLibraryAsset<T>(T asset) where T : Object
+        {
+            if (asset == null || IndexedRecipeAssetPicker<T>.IsIndexed(asset))
+            {
+                return asset != null;
+            }
+            Debug.LogWarning("UMA Wardrobe Graph: '" + asset.name + "' was not added. The UMA Global Library does not have it under its name '" +
+                IndexedRecipeAssetPicker<T>.LookupName(asset) + "' (it has none, or a different asset with that name), and that is what the recipe would load. Add it to the library first.", asset);
+            return false;
+        }
+
         private SlotData AddSlotDataAsset(SlotDataAsset slotAsset, OverlayDataAsset initialOverlay = null, Vector2? graphPosition = null)
         {
-            if (slotAsset == null || _recipe == null)
+            if (slotAsset == null || _recipe == null || !AcceptLibraryAsset(slotAsset) ||
+                (initialOverlay != null && !AcceptLibraryAsset(initialOverlay)))
             {
                 return null;
             }
 
-            Undo.RecordObject(_asset, "Add Wardrobe Slot Node");
             SlotData slot = new SlotData(slotAsset);
             OverlayData overlay = null;
             if (initialOverlay != null)
@@ -3722,22 +4018,21 @@ namespace UMA.Editors
                 }
             }
 
-            MarkRecipeDirty("Add Wardrobe Slot Node");
+            CommitRecipeEdit("Add Wardrobe Slot Node");
             return recipeSlot;
         }
 
-        private SlotData AddPlaceholderSlotAt(Vector2 graphPosition)
+        internal SlotData AddPlaceholderSlotAt(Vector2 graphPosition)
         {
             if (_recipe == null)
             {
                 return null;
             }
 
-            Undo.RecordObject(_asset, "Add Wardrobe Placeholder Slot Node");
             SlotData slot = SlotData.CreatePlaceholder(GetUniquePlaceholderSlotName(), new string[0]);
             SlotData recipeSlot = _recipe.MergeSlot(slot, false) ?? slot;
             SetSlotLayoutPosition(recipeSlot, graphPosition);
-            MarkRecipeDirty("Add Wardrobe Placeholder Slot Node");
+            CommitRecipeEdit("Add Wardrobe Placeholder Slot Node");
             SelectNodeForSlot(recipeSlot);
             return recipeSlot;
         }
@@ -3777,19 +4072,18 @@ namespace UMA.Editors
 
         private OverlayData AddOverlayToSlot(SlotData slot, OverlayDataAsset overlayAsset, Vector2? graphPosition = null)
         {
-            if (slot == null || overlayAsset == null)
+            if (slot == null || overlayAsset == null || !AcceptLibraryAsset(overlayAsset))
             {
                 return null;
             }
 
-            Undo.RecordObject(_asset, "Stack Wardrobe Overlay Node");
             OverlayData overlay = new OverlayData(overlayAsset);
             slot.AddOverlay(overlay);
             if (graphPosition.HasValue)
             {
                 SetOverlayLayoutPosition(slot, overlay, graphPosition.Value);
             }
-            MarkRecipeDirty("Stack Wardrobe Overlay Node");
+            CommitRecipeEdit("Stack Wardrobe Overlay Node");
             return overlay;
         }
 
@@ -3834,7 +4128,7 @@ namespace UMA.Editors
             {
                 if (ReferenceEquals(slots[i], slot))
                 {
-                    _layoutPositions[GetSlotNodeKey(i, GetSlotDisplayName(slot))] = graphPosition;
+                    _layoutPositions[GetNodeKey(slot, GetSlotNodeKey(i, GetSlotDisplayName(slot)))] = graphPosition;
                     return;
                 }
             }
@@ -3861,7 +4155,7 @@ namespace UMA.Editors
                     if (ReferenceEquals(overlays[overlayIndex], overlay))
                     {
                         string overlayName = overlay.asset != null && !string.IsNullOrEmpty(overlay.asset.overlayName) ? overlay.asset.overlayName : "Missing Overlay";
-                        _layoutPositions[GetOverlayNodeKey(overlay, slotIndex, overlayIndex, overlayName)] = graphPosition;
+                        _layoutPositions[GetNodeKey(overlay, GetOverlayNodeKey(slotIndex, overlayIndex, overlayName))] = graphPosition;
                         return;
                     }
                 }
@@ -3876,8 +4170,8 @@ namespace UMA.Editors
             }
 
             string overlayName = overlay.asset != null && !string.IsNullOrEmpty(overlay.asset.overlayName) ? overlay.asset.overlayName : "Missing Overlay";
-            int detachedIndex = Mathf.Max(0, _detachedOverlays.IndexOf(overlay));
-            _layoutPositions[GetOverlayNodeKey(overlay, -1, detachedIndex, overlayName)] = graphPosition;
+            int detachedIndex = IndexOfOverlayReference(_detachedOverlays, overlay);
+            _layoutPositions[GetNodeKey(overlay, GetOverlayNodeKey(-1, detachedIndex, overlayName))] = graphPosition;
         }
 
         private void AddDetachedOverlay(OverlayData overlay)
@@ -3897,10 +4191,9 @@ namespace UMA.Editors
                 return;
             }
 
-            Undo.RecordObject(_asset, "Remove Wardrobe Slot Node");
             _recipe.RemoveSlot(slot);
             ClearSelection();
-            MarkRecipeDirty("Remove Wardrobe Slot Node");
+            CommitRecipeEdit("Remove Wardrobe Slot Node");
         }
 
         private void RemoveOverlay(SlotData slot, OverlayData overlay)
@@ -3910,7 +4203,6 @@ namespace UMA.Editors
                 return;
             }
 
-            Undo.RecordObject(_asset, "Remove Wardrobe Overlay Node");
             List<OverlayData> overlays = slot.GetOverlayList();
             int overlayIndex = IndexOfOverlayReference(overlays, overlay);
             if (overlayIndex < 0)
@@ -3926,7 +4218,7 @@ namespace UMA.Editors
                 AddDetachedOverlay(overlay);
             }
 
-            MarkRecipeDirty("Remove Wardrobe Overlay Node");
+            CommitRecipeEdit("Remove Wardrobe Overlay Node");
             SelectNodeForOverlay(null, overlay);
         }
 
@@ -3938,10 +4230,10 @@ namespace UMA.Editors
             }
 
             _detachedOverlays.RemoveAll(detachedOverlay => ReferenceEquals(detachedOverlay, overlay));
-            _overlayNodeKeys.Remove(overlay);
+            _nodeKeys.Remove(overlay);
             ClearSelection();
             BuildGraph();
-            SaveLayout();
+            SaveLayout("Remove Detached Wardrobe Overlay");
             Repaint();
         }
 
@@ -3952,7 +4244,6 @@ namespace UMA.Editors
                 return;
             }
 
-            Undo.RecordObject(_asset, "Delete Wardrobe Overlay Node");
             bool removed = false;
             SlotData[] slots = _recipe.GetAllSlots() ?? new SlotData[0];
             for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
@@ -3991,9 +4282,9 @@ namespace UMA.Editors
             }
 
             _detachedOverlays.RemoveAll(detachedOverlay => ReferenceEquals(detachedOverlay, overlay));
-            _overlayNodeKeys.Remove(overlay);
+            _nodeKeys.Remove(overlay);
             ClearSelection();
-            MarkRecipeDirty("Delete Wardrobe Overlay Node");
+            CommitRecipeEdit("Delete Wardrobe Overlay Node");
         }
 
         private void RemoveSharedColorNode(OverlayColorData sharedColor, int sharedColorIndex)
@@ -4003,104 +4294,27 @@ namespace UMA.Editors
                 return;
             }
 
-            int removeIndex = FindSharedColorIndex(sharedColor, sharedColorIndex);
-            if (removeIndex < 0)
+            if (sharedColorIndex < 0 || sharedColorIndex >= _recipe.sharedColors.Length ||
+                !ReferenceEquals(_recipe.sharedColors[sharedColorIndex], sharedColor))
             {
                 return;
             }
 
-            Undo.RecordObject(_asset, "Delete Wardrobe Shared Color Node");
-            OverlayColorData removedColor = _recipe.sharedColors[removeIndex];
-            DetachSharedColorReferences(removedColor);
+            foreach (OverlayData layer in _overlayNodes.Keys)
+            {
+                if (GetSharedColorIndex(layer.colorData) == sharedColorIndex)
+                    SetOverlayColorUnshared(layer);
+            }
 
             List<OverlayColorData> colors = new List<OverlayColorData>(_recipe.sharedColors);
-            colors.RemoveAt(removeIndex);
+            colors.RemoveAt(sharedColorIndex);
             _recipe.sharedColors = colors.ToArray();
 
             _focusedSharedColorInspectorKey = null;
             ClearSelection();
-            MarkRecipeDirty("Delete Wardrobe Shared Color Node");
+            CommitRecipeEdit("Delete Wardrobe Shared Color Node");
         }
 
-        private int FindSharedColorIndex(OverlayColorData sharedColor, int preferredIndex)
-        {
-            if (_recipe == null || _recipe.sharedColors == null)
-            {
-                return -1;
-            }
-
-            OverlayColorData[] colors = _recipe.sharedColors;
-            if (preferredIndex >= 0 && preferredIndex < colors.Length && (sharedColor == null || ReferenceEquals(colors[preferredIndex], sharedColor)))
-            {
-                return preferredIndex;
-            }
-
-            if (sharedColor == null)
-            {
-                return -1;
-            }
-
-            for (int i = 0; i < colors.Length; i++)
-            {
-                if (ReferenceEquals(colors[i], sharedColor))
-                {
-                    return i;
-                }
-            }
-
-            for (int i = 0; i < colors.Length; i++)
-            {
-                if (IsSharedColorReference(colors[i], sharedColor))
-                {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
-        private void DetachSharedColorReferences(OverlayColorData sharedColor)
-        {
-            if (sharedColor == null || _recipe == null)
-            {
-                return;
-            }
-
-            SlotData[] slots = _recipe.GetAllSlots() ?? new SlotData[0];
-            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
-            {
-                SlotData slot = slots[slotIndex];
-                if (slot == null)
-                {
-                    continue;
-                }
-
-                List<OverlayData> overlays = slot.GetOverlayList();
-                for (int overlayIndex = 0; overlayIndex < overlays.Count; overlayIndex++)
-                {
-                    OverlayData overlay = overlays[overlayIndex];
-                    if (overlay != null && IsSharedColorReference(overlay.colorData, sharedColor))
-                    {
-                        SetOverlayColorUnshared(overlay);
-                    }
-                }
-            }
-        }
-
-        private static bool IsSharedColorReference(OverlayColorData colorData, OverlayColorData sharedColor)
-        {
-            if (colorData == null || sharedColor == null)
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(colorData, sharedColor))
-            {
-                return true;
-            }
-
-            return colorData.IsASharedColor && colorData.name == sharedColor.name && colorData.Equals(sharedColor);
-        }
 
         private void MoveOverlay(SlotData slot, int overlayIndex, int direction)
         {
@@ -4116,12 +4330,11 @@ namespace UMA.Editors
                 return;
             }
 
-            Undo.RecordObject(_asset, "Reorder Wardrobe Overlay Nodes");
             OverlayData overlay = overlays[overlayIndex];
             overlays.RemoveAt(overlayIndex);
             overlays.Insert(newIndex, overlay);
             slot.SetOverlayList(overlays);
-            MarkRecipeDirty("Reorder Wardrobe Overlay Nodes");
+            CommitRecipeEdit("Reorder Wardrobe Overlay Nodes");
         }
 
         private SlotData GetPreferredSlotForOverlayDrop()
@@ -4251,14 +4464,44 @@ namespace UMA.Editors
                 AddRaceDataAsset(races[i]);
             }
 
+            // The same checks as the recipe inspector's drop area: the recipe stores each slot's and overlay's
+            // UMA name, and a reload finds whatever the Global Library has under that name; a recipe that did
+            // not load completely would merge only part of itself.
+            List<string> refused = new List<string>();
+            slots.RemoveAll(slot =>
+            {
+                if (IndexedRecipeAssetPicker<SlotDataAsset>.IsIndexed(slot)) return false;
+                refused.Add(slot.name);
+                return true;
+            });
+            bool slotRefused = refused.Count > 0;
+            overlays.RemoveAll(overlay =>
+            {
+                // Overlays dropped with a refused slot were meant for it, not for another slot.
+                if (!slotRefused && IndexedRecipeAssetPicker<OverlayDataAsset>.IsIndexed(overlay)) return false;
+                refused.Add(overlay.name);
+                return true;
+            });
+            if (refused.Count > 0)
+            {
+                Debug.LogWarning("UMA Wardrobe Graph: not added: " + string.Join(", ", refused) +
+                    ". The UMA Global Library does not have a slot or overlay under that name (or has a different asset with it), or it was dropped with such a slot. Add them to the library first.", _asset);
+            }
+
             for (int i = 0; i < recipes.Count; i++)
             {
                 UMAData.UMARecipe recipeToMerge = recipes[i].GetCachedRecipe();
+                if (recipeToMerge != null && recipeToMerge.missingAssets != null && recipeToMerge.missingAssets.Count > 0 &&
+                    !EditorUtility.DisplayDialog("Recipe not fully loaded",
+                        recipes[i].name + " uses assets that could not be found: " + string.Join(", ", recipeToMerge.missingAssets) +
+                        ".\n\nMerging adds only the parts that loaded.", "Merge what loaded", "Cancel"))
+                {
+                    recipeToMerge = null;
+                }
                 if (recipeToMerge != null)
                 {
-                    Undo.RecordObject(_asset, "Merge UMA Recipe Into Wardrobe Graph");
                     _recipe.Merge(recipeToMerge, false);
-                    _needsSave = true;
+                    CommitRecipeEdit("Merge UMA Recipe Into Wardrobe Graph");
                 }
             }
 
@@ -4280,28 +4523,39 @@ namespace UMA.Editors
                 return;
             }
 
+            // The overlays go on the first slot this drop added. They went on the selected (or first) slot, an
+            // existing one, whenever the recipe already had a slot; when every dropped slot was already in the
+            // recipe, they become detached overlay nodes instead of changing an existing slot.
+            var slotsBefore = new HashSet<SlotData>(ReferenceComparer<SlotData>.Instance);
+            if (_recipe.slotDataList != null)
+            {
+                foreach (SlotData existing in _recipe.slotDataList)
+                {
+                    if (existing != null) slotsBefore.Add(existing);
+                }
+            }
             SlotData firstAddedSlot = null;
             for (int i = 0; i < slots.Count; i++)
             {
-                SlotData before = GetPreferredSlotForOverlayDrop();
-                AddSlotDataAsset(slots[i]);
-                firstAddedSlot = before == null ? GetPreferredSlotForOverlayDrop() : firstAddedSlot;
-            }
-
-            SlotData overlayTargetSlot = firstAddedSlot ?? GetPreferredSlotForOverlayDrop();
-            if (overlayTargetSlot != null)
-            {
-                for (int i = 0; i < overlays.Count; i++)
+                SlotData added = AddSlotDataAsset(slots[i]);
+                if (firstAddedSlot == null && added != null && !slotsBefore.Contains(added))
                 {
-                    AddOverlayToSlot(overlayTargetSlot, overlays[i]);
+                    firstAddedSlot = added;
                 }
             }
 
-            if (_needsSave)
+            for (int i = 0; i < overlays.Count; i++)
             {
-                BuildGraph();
-                Repaint();
+                if (firstAddedSlot != null)
+                {
+                    AddOverlayToSlot(firstAddedSlot, overlays[i]);
+                }
+                else
+                {
+                    AddDetachedOverlayNode(overlays[i], graphPosition + new Vector2(0f, i * (NodeHeight + RowSpacing)));
+                }
             }
+
         }
 
         private static void RecursiveScanFoldersForAssets(string path, List<SlotDataAsset> slots, List<OverlayDataAsset> overlays, List<RaceData> races, List<UMATextRecipe> recipes)
@@ -4349,33 +4603,30 @@ namespace UMA.Editors
                 return;
             }
 
-            if (_asset.compatibleRaces == null)
+            if (_asset.compatibleRaces == null || !_asset.compatibleRaces.Contains(raceData.raceName))
             {
-                _asset.compatibleRaces = new List<string>();
-            }
-
-            if (!_asset.compatibleRaces.Contains(raceData.raceName))
-            {
-                _asset.compatibleRaces.Add(raceData.raceName);
+                Undo.RecordObject(_asset, "Add Compatible Wardrobe Race");
+                (_asset.compatibleRaces ??= new List<string>()).Add(raceData.raceName);
                 GetOrCreateThumb(raceData.raceName);
-                MarkAssetFieldsDirty("Add Compatible Wardrobe Race");
+                FinishAssetEdit();
             }
         }
 
-        private void RemoveCompatibleRaceAt(int index)
+        internal void RemoveCompatibleRaceAt(int index)
         {
             if (_asset == null || _asset.compatibleRaces == null || index < 0 || index >= _asset.compatibleRaces.Count)
             {
                 return;
             }
 
+            Undo.RecordObject(_asset, "Remove Compatible Wardrobe Race");
             string raceName = _asset.compatibleRaces[index];
             _asset.compatibleRaces.RemoveAt(index);
             if (_asset.wardrobeRecipeThumbs != null)
             {
                 _asset.wardrobeRecipeThumbs.RemoveAll(thumb => thumb != null && thumb.race == raceName);
             }
-            MarkAssetFieldsDirty("Remove Compatible Wardrobe Race");
+            FinishAssetEdit();
         }
 
         private WardrobeRecipeThumb GetOrCreateThumb(string raceName)
@@ -4506,106 +4757,183 @@ namespace UMA.Editors
         {
             _pan = Vector2.zero;
             _zoom = 1f;
-            SaveLayout();
+            SaveView();
             Repaint();
         }
 
-        private void SaveLayout()
+        private bool HasLegacyLayout => string.IsNullOrEmpty(_asset.editorGraphData) &&
+            !string.IsNullOrEmpty(_layoutPrefsKey) && EditorPrefs.HasKey(_layoutPrefsKey);
+
+        // Typing in a note: every keystroke went in as its own Undo step and, with Auto Save, its own disk write.
+        // The keystrokes typed into one note are now one Undo step, written to disk when the typing ends (the note
+        // loses keyboard focus, another edit, a recipe switch, or the window closing).
+        private string _typingNoteId;
+        private int _typingNoteUndoGroup = -1;
+        private int _typingKeyboardControl;
+
+        internal void SetNoteText(NoteData note, string text)
         {
-            if (string.IsNullOrEmpty(_layoutPrefsKey))
+            if (note == null || _asset == null) return;
+            if (_typingNoteId != note.id || _typingNoteUndoGroup < 0)
             {
+                FinishNoteTyping();
+                Undo.IncrementCurrentGroup();
+                _typingNoteUndoGroup = Undo.GetCurrentGroup();
+                _typingNoteId = note.id;
+            }
+            _typingKeyboardControl = GUIUtility.keyboardControl;
+            note.text = text;
+            SaveLayout("Edit Wardrobe Graph Note", writeToDisk: false);
+            Undo.CollapseUndoOperations(_typingNoteUndoGroup);
+        }
+
+        /// <summary>Ends a note typing session: with Auto Save on, writes the asset to disk.</summary>
+        internal void FinishNoteTyping()
+        {
+            if (_typingNoteId == null) return;
+            _typingNoteId = null;
+            _typingNoteUndoGroup = -1;
+            if (_autoSave && _asset != null) SaveAssetToDisk();
+        }
+
+        private void SaveLayout(string undoName = "Edit Wardrobe Graph Layout", bool writeToDisk = true)
+        {
+            if (_asset == null || _recipe == null || _loadIncomplete) return;
+            if (writeToDisk)
+            {
+                // Another layout edit ends a note typing session, so it gets its own Undo step.
+                FinishNoteTyping();
+            }
+            if (_loadedRevision != _asset.recipeString || _loadedGraphData != _asset.editorGraphData)
+            {
+                ReloadRecipeData();
                 return;
             }
 
-            LayoutData data = new LayoutData
-            {
-                pan = _pan,
-                zoom = _zoom,
-                inspectorWidth = _inspectorWidth
-            };
-
-            foreach (KeyValuePair<string, Vector2> pair in _layoutPositions)
-            {
-                data.keys.Add(pair.Key);
-                data.positions.Add(pair.Value);
-            }
-
-            for (int i = 0; i < _notes.Count; i++)
-            {
-                NoteData note = _notes[i];
-                if (note == null)
-                {
-                    continue;
-                }
-
-                EnsureNoteDefaults(note);
-                data.notes.Add(new NoteData
-                {
-                    id = note.id,
-                    text = note.text,
-                    rect = note.rect
-                });
-            }
-
-            EditorPrefs.SetString(_layoutPrefsKey, JsonUtility.ToJson(data));
+            BuildGraph();
+            string json = SerializeGraphData();
+            if (json == _asset.editorGraphData) return;
+            Undo.RecordObject(_asset, undoName);
+            _asset.editorGraphData = _loadedGraphData = json;
+            EditorUtility.SetDirty(_asset);
+            if (_autoSave && writeToDisk) SaveAssetToDisk();
+            _assetDirtyCount = EditorUtility.GetDirtyCount(_asset);
+            Repaint();
         }
 
-        private void LoadLayout()
+        private string SerializeGraphData()
+        {
+            var data = new LayoutData { notes = _notes };
+            foreach (GraphNode node in _nodes)
+            {
+                if (node.Kind == NodeKind.Note || !_layoutPositions.TryGetValue(node.Key, out Vector2 position)) continue;
+                data.keys.Add(node.AssetKey);
+                data.positions.Add(position);
+            }
+
+            if (_detachedOverlays.Count > 0)
+            {
+                var slot = SlotData.CreatePlaceholder("Detached", Array.Empty<string>());
+                slot.SetOverlayList(_detachedOverlays);
+                var packed = UMAPackedRecipeBase.PackRecipeV3(new UMAData.UMARecipe { slotDataList = new[] { slot } });
+                for (int i = 0; i < _detachedOverlays.Count; i++)
+                {
+                    OverlayData layer = _detachedOverlays[i];
+                    var settings = packed.slotsV3[0].overlays[i];
+                    var color = packed.fColors[settings.colorIdx];
+                    settings.colorIdx = 0;
+                    data.detached.Add(new DetachedLayer
+                    {
+                        assetId = GlobalObjectId.GetGlobalObjectIdSlow(layer.asset).ToString(),
+                        overlay = settings,
+                        color = color,
+                        sharedIndex = Array.FindIndex(_recipe.sharedColors, c => ReferenceEquals(c, layer.colorData))
+                    });
+                }
+            }
+            return JsonUtility.ToJson(data);
+        }
+
+        private string LoadGraphData()
         {
             _layoutPositions.Clear();
             _notes.Clear();
-            _pan = Vector2.zero;
-            _zoom = 1f;
-            _inspectorWidth = 0f;
+            _detachedOverlays.Clear();
+            string json = HasLegacyLayout ? EditorPrefs.GetString(_layoutPrefsKey) : _asset.editorGraphData;
+            if (string.IsNullOrEmpty(json)) return null;
 
-            if (string.IsNullOrEmpty(_layoutPrefsKey))
+            var data = JsonUtility.FromJson<LayoutData>(json);
+            if (data.keys != null && data.positions != null && data.keys.Count == data.positions.Count)
             {
-                return;
+                for (int i = 0; i < data.keys.Count; i++) _layoutPositions[data.keys[i]] = data.positions[i];
             }
-
-            string json = EditorPrefs.GetString(_layoutPrefsKey, string.Empty);
-            if (string.IsNullOrEmpty(json))
+            if (data.notes != null)
             {
-                return;
-            }
-
-            try
-            {
-                LayoutData data = JsonUtility.FromJson<LayoutData>(json);
-                _pan = data.pan;
-                _zoom = Mathf.Clamp(data.zoom, 0.35f, 2.2f);
-                _inspectorWidth = data.inspectorWidth > 0f ? data.inspectorWidth : 0f;
-                if (data.keys != null && data.positions != null && data.keys.Count == data.positions.Count)
+                foreach (var note in data.notes)
                 {
-                    for (int i = 0; i < data.keys.Count; i++)
-                    {
-                        _layoutPositions[data.keys[i]] = data.positions[i];
-                    }
-                }
-
-                if (data.notes != null)
-                {
-                    for (int i = 0; i < data.notes.Count; i++)
-                    {
-                        NoteData note = data.notes[i];
-                        if (note == null)
-                        {
-                            continue;
-                        }
-
-                        EnsureNoteDefaults(note);
-                        _notes.Add(note);
-                    }
+                    if (note == null) continue;
+                    EnsureNoteDefaults(note);
+                    _notes.Add(note);
                 }
             }
-            catch
+            if (data.detached == null) return null;
+            var missing = new List<string>();
+            foreach (DetachedLayer row in data.detached)
             {
-                _layoutPositions.Clear();
-                _notes.Clear();
-                _pan = Vector2.zero;
-                _zoom = 1f;
-                _inspectorWidth = 0f;
+                if (row == null || row.overlay == null || row.color == null)
+                {
+                    missing.Add("(incomplete layer)");
+                    continue;
+                }
+                var asset = GlobalObjectId.TryParse(row.assetId, out var id)
+                    ? GlobalObjectId.GlobalObjectIdentifierToObjectSlow(id) as OverlayDataAsset : null;
+                if (asset == null)
+                {
+                    missing.Add(row.overlay.id);
+                    continue;
+                }
+
+                var overlay = new OverlayData(asset);
+                var color = new OverlayColorData();
+                row.color.SetOverlayColorData(color);
+                var colors = _recipe.sharedColors;
+                OverlayColorData shared = null;
+                if (row.sharedIndex >= 0)
+                {
+                    if (row.sharedIndex < colors.Length && colors[row.sharedIndex]?.name == color.name)
+                        shared = colors[row.sharedIndex];
+                    else
+                        shared = Array.Find(colors, candidate => candidate != null && candidate.name == color.name);
+                }
+                var palette = new[] { shared ?? color };
+                UMAPackedRecipeBase.ApplyPackedOverlay(overlay, row.overlay, shared != null ? 1 : 0, palette, palette);
+                _detachedOverlays.Add(overlay);
             }
+            return missing.Count == 0 ? null : "Could not load detached overlays: " + string.Join(", ", missing);
+        }
+
+        private void SaveView()
+        {
+            if (string.IsNullOrEmpty(_layoutPrefsKey)) return;
+            var view = new ViewData { pan = _pan, zoom = _zoom, inspectorWidth = _inspectorWidth };
+            EditorPrefs.SetString(_layoutPrefsKey + "_View", JsonUtility.ToJson(view));
+        }
+
+        private void LoadView()
+        {
+            var view = new ViewData();
+            if (!string.IsNullOrEmpty(_layoutPrefsKey))
+            {
+                string json = EditorPrefs.GetString(_layoutPrefsKey + "_View", EditorPrefs.GetString(_layoutPrefsKey, string.Empty));
+                if (!string.IsNullOrEmpty(json))
+                {
+                    try { JsonUtility.FromJsonOverwrite(json, view); }
+                    catch (ArgumentException) { view = new ViewData(); }
+                }
+            }
+            _pan = view.pan;
+            _zoom = Mathf.Clamp(view.zoom, 0.35f, 2.2f);
+            _inspectorWidth = Mathf.Max(0f, view.inspectorWidth);
         }
     }
 }

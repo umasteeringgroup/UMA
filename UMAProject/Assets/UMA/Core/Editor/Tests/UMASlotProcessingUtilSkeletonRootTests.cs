@@ -98,6 +98,62 @@ namespace UMA.Editors.Tests
             Assert.That(sourceMesh.boneWeights.All(w => w.boneIndex0 == 2 && w.weight0 == 1f), Is.True);
         }
 
+        // A weapon or prop skinned to a hand bone, in a skeleton without the Root Bone ("Global"): the builder
+        // kept only the Root Bone's hierarchy, lost the hand bone, and failed in UMAMeshData.FindRoot.
+        [TestCase(true, true)]
+        [TestCase(false, true)]
+        [TestCase(true, false)]
+        [TestCase(false, false)]
+        public void AWeaponSkinnedToAHandBoneWithoutTheRootBoneStillBuilds(bool batchMode, bool withArmature)
+        {
+            sourceObject = new GameObject("Sword Model");
+            Transform top = withArmature ? AddChild(sourceObject.transform, "Armature") : sourceObject.transform;
+            Transform hand = AddChild(top, "hand_R");
+            hand.localPosition = Vector3.up;
+
+            var renderer = AddChild(sourceObject.transform, "Sword").gameObject.AddComponent<SkinnedMeshRenderer>();
+            renderer.rootBone = hand;
+            renderer.bones = new[] { hand };
+            sourceMesh = new Mesh
+            {
+                name = "Sword mesh",
+                vertices = new[] { Vector3.zero, Vector3.right, Vector3.up },
+                uv = new[] { Vector2.zero, Vector2.right, Vector2.up },
+                triangles = new[] { 0, 1, 2 },
+                bindposes = new[] { hand.worldToLocalMatrix * renderer.transform.localToWorldMatrix },
+                boneWeights = Enumerable.Repeat(new BoneWeight { boneIndex0 = 0, weight0 = 1f }, 3).ToArray()
+            };
+            sourceMesh.RecalculateNormals();
+            sourceMesh.RecalculateTangents();
+            renderer.sharedMesh = sourceMesh;
+
+            var parameters = new SlotBuilderParameters
+            {
+                slotMesh = renderer,
+                rootBone = "Global",
+                slotName = "Sword",
+                assetName = "Sword",
+                assetFolder = "Sword",
+                slotFolder = testFolder,
+                useRootFolder = true,
+                keepList = new List<string>(),
+                batchMode = batchMode
+            };
+
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("Root Bone 'Global' is not in"));
+            var result = UMASlotProcessingUtil.CreateSlotData(parameters);
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Slots, Has.Count.EqualTo(1));
+            var data = result.Slots[0].meshData;
+            Assert.That(data.boneNameHashes, Is.EqualTo(new[] { UMAUtils.StringToHash("hand_R") }), "the sword follows the character's hand bone");
+            Assert.That(data.rootBoneHash, Is.EqualTo(UMAUtils.StringToHash(withArmature ? "Armature" : "hand_R")));
+            Assert.That(data.ManagedBoneWeights.All(w => w.boneIndex == 0 && w.weight == 1f), Is.True);
+            // Only the temporary clone was changed.
+            Assert.That(hand.parent, Is.SameAs(top));
+            Assert.That(renderer.bones, Is.EqualTo(new[] { hand }));
+        }
+
         private static Transform AddChild(Transform parent, string name)
         {
             var child = new GameObject(name).transform;

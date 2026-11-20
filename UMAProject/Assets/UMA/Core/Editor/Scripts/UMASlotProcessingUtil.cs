@@ -360,6 +360,52 @@ namespace UMA.Editors
                     recipes.Add(recipe);
                 }
             }
+
+            /// <summary>
+            /// Writes the slots, overlays and recipes this build created or changed, and the Global Library
+            /// when saveLibrary is true. It never calls AssetDatabase.SaveAssets, which would also write
+            /// every other unsaved asset in the project.
+            /// </summary>
+            public void SaveWrittenAssets(bool saveLibrary)
+            {
+                if (Slots != null)
+                {
+                    foreach (var slot in Slots)
+                    {
+                        SaveIfAsset(slot);
+                    }
+                }
+                if (SlotToOverlay != null)
+                {
+                    foreach (var overlay in SlotToOverlay.Values)
+                    {
+                        SaveIfAsset(overlay);
+                    }
+                }
+                if (SlotToRecipes != null)
+                {
+                    foreach (var recipes in SlotToRecipes.Values)
+                    {
+                        if (recipes == null) continue;
+                        foreach (var recipe in recipes)
+                        {
+                            SaveIfAsset(recipe);
+                        }
+                    }
+                }
+                if (saveLibrary)
+                {
+                    UMAAssetIndexer.Instance.ForceSave();
+                }
+            }
+
+            private static void SaveIfAsset(UnityEngine.Object asset)
+            {
+                if (asset != null && EditorUtility.IsPersistent(asset))
+                {
+                    AssetDatabase.SaveAssetIfDirty(asset);
+                }
+            }
         }
 
         private class SlotPreserveData
@@ -702,6 +748,13 @@ namespace UMA.Editors
                     }
                 }
 
+                string keptRoot = KeepSkinnedBones(resultingSkinnedMesh, newObject.transform, rootBone, tempGameObject.name);
+                if (keptRoot == null)
+                {
+                    return;
+                }
+                rootBone = keptRoot;
+
                 DestroyTemporarySceneObject(ref tempGameObject);
                 resultingSkinnedMesh = newObject.GetComponentInChildren<SkinnedMeshRenderer>();
                 if (resultingSkinnedMesh)
@@ -765,7 +818,9 @@ namespace UMA.Editors
                 catch { }
 #endif
                 UMASlotPreparationUtility.PrepareSlot(slot);
-                AssetDatabase.SaveAssets();
+                // The updated slot alone: never the project's other unsaved assets.
+                EditorUtility.SetDirty(slot);
+                AssetDatabase.SaveAssetIfDirty(slot);
             }
             finally
             {
@@ -1051,6 +1106,15 @@ namespace UMA.Editors
                 }
             }
 
+            string keptRootBone = KeepSkinnedBones(resultingSkinnedMesh, newObject.transform, sbp.rootBone, tempGameObject.name);
+            if (keptRootBone == null)
+            {
+                GameObject.DestroyImmediate(tempGameObject);
+                GameObject.DestroyImmediate(newObject);
+                return null;
+            }
+            sbp.rootBone = keptRootBone;
+
             resultingSkinnedMesh = newObject.GetComponentInChildren<SkinnedMeshRenderer>();
             if (resultingSkinnedMesh == null)
             {
@@ -1135,7 +1199,7 @@ namespace UMA.Editors
                 var result = GenerateUDIMSlotsResult(sbp, finalMeshRenderer, existingSlotLookup);
                 if (!sbp.batchMode)
                 {
-                    AssetDatabase.SaveAssets();
+                    result.SaveWrittenAssets(sbp.addToGlobalLibrary);
                 }
                 GameObject.DestroyImmediate(tempGameObject);
                 GameObject.DestroyImmediate(newObject);
@@ -1422,7 +1486,7 @@ namespace UMA.Editors
             foreach (var preparedSlot in createdSlots) UMASlotPreparationUtility.PrepareSlot(preparedSlot);
             if (!sbp.batchMode)
             {
-                AssetDatabase.SaveAssets();
+                nonUdimResult.SaveWrittenAssets(sbp.addToGlobalLibrary);
             }
             GameObject.DestroyImmediate(tempGameObject);
             GameObject.DestroyImmediate(newObject);
@@ -1614,6 +1678,96 @@ namespace UMA.Editors
             }
             var weightsArray = new NativeArray<BoneWeight1>(newBoneWeights, Allocator.Temp);
             return weightsArray;
+        }
+
+        /// <summary>
+        /// The slot keeps only the hierarchy under the Root Bone (with the mesh) in its temporary prefab, so every
+        /// bone the mesh is skinned to must be in it. A model whose skeleton has no bone with the Root Bone's
+        /// name (a weapon or prop skinned to a hand bone, for example "Armature/hand_R" or "hand_R" alone) lost
+        /// all its bones that way, and building the slot failed with a NullReferenceException in
+        /// UMAMeshData.FindRoot. Then the top of the skeleton the mesh is skinned to is kept and used as the
+        /// root, with a warning. Returns the root bone name to build with, or null (error logged) when the
+        /// skinned bones are not under the Root Bone that was found.
+        /// </summary>
+        internal static string KeepSkinnedBones(SkinnedMeshRenderer renderer, Transform keptParent, string rootBoneName, string modelName)
+        {
+            Transform[] bones = renderer != null ? renderer.bones : null;
+            if (bones == null || keptParent == null)
+            {
+                return rootBoneName;
+            }
+            // Only the bones the mesh has weights on: a renderer can list others (an armature above the root).
+            bool[] used = new bool[bones.Length];
+            bool anyWeights = false;
+            Mesh skinnedMesh = renderer.sharedMesh;
+            if (skinnedMesh != null)
+            {
+                var weights = skinnedMesh.GetAllBoneWeights();
+                for (int i = 0; i < weights.Length; i++)
+                {
+                    int index = weights[i].boneIndex;
+                    if (weights[i].weight > 0f && index >= 0 && index < used.Length)
+                    {
+                        used[index] = true;
+                        anyWeights = true;
+                    }
+                }
+            }
+            if (!anyWeights)
+            {
+                for (int i = 0; i < used.Length; i++) used[i] = true;
+            }
+            Transform outside = null;
+            for (int i = 0; i < bones.Length; i++)
+            {
+                if (used[i] && bones[i] != null && !bones[i].IsChildOf(keptParent))
+                {
+                    outside = bones[i];
+                    break;
+                }
+            }
+            if (outside == null)
+            {
+                return rootBoneName;
+            }
+
+            bool rootFound = false;
+            for (int i = 0; i < keptParent.childCount; i++)
+            {
+                if (keptParent.GetChild(i).name == rootBoneName)
+                {
+                    rootFound = true;
+                    break;
+                }
+            }
+            if (rootFound)
+            {
+                Debug.LogError("UMA Slot Builder: '" + renderer.name + "' in '" + modelName + "' is skinned to bone '" + outside.name +
+                    "', which is not under the Root Bone '" + rootBoneName + "'. Every bone the mesh uses must be under the Root Bone; " +
+                    "set Root Bone to the top bone of the skeleton the mesh is skinned to.");
+                return null;
+            }
+
+            // The top of the skeleton the mesh is skinned to (below the model's own root object).
+            Transform top = outside;
+            while (top.parent != null && top.parent.parent != null)
+            {
+                top = top.parent;
+            }
+            for (int i = 0; i < bones.Length; i++)
+            {
+                if (used[i] && bones[i] != null && !bones[i].IsChildOf(keptParent) && !bones[i].IsChildOf(top))
+                {
+                    Debug.LogError("UMA Slot Builder: the Root Bone '" + rootBoneName + "' is not in '" + modelName + "', and the bones '" + renderer.name +
+                        "' is skinned to are not in one skeleton (for example '" + outside.name + "' and '" + bones[i].name + "'). Set Root Bone to the top bone of its skeleton.");
+                    return null;
+                }
+            }
+            top.SetParent(keptParent, true);
+            renderer.rootBone = top;
+            Debug.LogWarning("UMA Slot Builder: the Root Bone '" + rootBoneName + "' is not in '" + modelName + "', so '" + top.name +
+                "' (the top of the skeleton '" + renderer.name + "' is skinned to) is used as the slot's root bone. Set Root Bone to '" + top.name + "' to build this model without this warning.");
+            return top.name;
         }
 
         private static Transform[] BuildNewReducedBonesList(Transform[] bones, Dictionary<int, int> usedBonesDictionary)

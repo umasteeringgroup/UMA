@@ -223,6 +223,33 @@ namespace UMA
                 MessageType.Info, asset);
         }
 
+        /// <summary>
+        /// Called by the Vertex Editor window after it saved the session as one Mesh Modifier per wardrobe
+        /// recipe (and one for slots no recipe has): everything is in them.
+        /// </summary>
+        internal void NoteMeshModifiersSaved(List<MeshModifier> assets, bool addedToRecipes)
+        {
+            if (assets == null || assets.Count == 0)
+            {
+                return;
+            }
+            if (assets.Count == 1 && !addedToRecipes)
+            {
+                NoteMeshModifierSaved(assets[0]);
+                return;
+            }
+            MarkSculptStatesSaved(sculptSlotStates.Values);
+            MarkVertexPaintSaved();
+            var names = new List<string>();
+            foreach (MeshModifier asset in assets)
+            {
+                if (asset != null) names.Add("'" + asset.name + "'");
+            }
+            SetSaveStatus("Saved the Mesh Modifier" + (names.Count == 1 ? " " : "s ") + string.Join(", ", names) +
+                          (addedToRecipes ? " and added each to its wardrobe recipe. The character wears them through the recipes when you leave the editor." : "."),
+                MessageType.Info, assets[0]);
+        }
+
         // ---- Save methods -----------------------------------------------------------
 
         private bool HasMeshModifierContent()
@@ -382,7 +409,8 @@ namespace UMA
             DrawSaveEntry(
                 "Save as Mesh Modifier",
                 "Writes a MeshModifier asset with everything changed in this session: sculpted positions, changed normals and UVs, painted vertex colors, and the Advanced adjustments and vertex-set modifiers. " +
-                "Nothing else is changed: add the asset to a wardrobe recipe or a character to apply it. It covers every slot you changed, also slots you have since locked.",
+                "It covers every slot you changed, also slots you have since locked. When the changed slots belong to wardrobe recipes the character wears, there is one Mesh Modifier per recipe " +
+                "(named after the file you choose, plus the recipe's name), and you are asked whether to add each to its recipe. Slots no wardrobe recipe has (the body) go in the file you choose.",
                 SaveMethod.MeshModifier, "Save as Mesh Modifier...",
                 () =>
                 {
@@ -527,7 +555,7 @@ namespace UMA
             }
             if (work.sculptSlots.Count > 0 || work.paintSlots.Count > 0 || work.advanced)
             {
-                Add(SaveMethod.MeshModifier, "Save as Mesh Modifier...", "Everything in one MeshModifier asset. The slots are not changed.");
+                Add(SaveMethod.MeshModifier, "Save as Mesh Modifier...", "MeshModifier assets, one per wardrobe recipe whose slots changed, which can be added to those recipes. The slots are not changed.");
             }
             if (work.sculptSlots.Count > 0 && !work.blendshapeEdit)
             {
