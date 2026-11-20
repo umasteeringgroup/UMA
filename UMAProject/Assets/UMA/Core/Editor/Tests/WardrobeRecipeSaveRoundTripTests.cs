@@ -1320,6 +1320,56 @@ namespace UMA.Editors.Tests
         }
 
         [Test]
+        public void UndoKeysWhileTypingInAGraphNoteUndoTheTyping()
+        {
+            var asset = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+            asset.recipeType = "Wardrobe";
+            asset.Save(new UMAData.UMARecipe());
+            string path = "Assets/GraphNoteKeysTest_" + Guid.NewGuid().ToString("N") + ".asset";
+            UMAWardrobeRecipeGraphEditorWindow graph = null;
+            try
+            {
+                AssetDatabase.CreateAsset(asset, path);
+                graph = ScriptableObject.CreateInstance<UMAWardrobeRecipeGraphEditorWindow>();
+                graph.LoadRecipe(asset);
+                graph.AutoSave = true;
+                Undo.IncrementCurrentGroup();
+                graph.AddNoteNodeAt(new Vector2(10, 20));
+                Undo.FlushUndoRecordObjects();
+                string empty = asset.editorGraphData;
+                var note = graph.Notes[0];
+                foreach (string text in new[] { "A", "A s", "A sentence." })
+                {
+                    Undo.IncrementCurrentGroup();
+                    graph.SetNoteText(note, text);
+                    Undo.FlushUndoRecordObjects();
+                }
+
+                const string noteControl = "UMAWardrobeGraphNoteText";
+                var ctrlZ = new Event { type = EventType.KeyDown, keyCode = KeyCode.Z, control = true };
+                Assert.IsFalse(graph.HandleNoteUndoShortcut(ctrlZ, "SomeOtherField"), "only while a note's text has focus");
+                Assert.IsFalse(graph.HandleNoteUndoShortcut(new Event { type = EventType.KeyDown, keyCode = KeyCode.Z }, noteControl), "a plain Z is typing");
+
+                Assert.IsTrue(graph.HandleNoteUndoShortcut(ctrlZ, noteControl));
+                Assert.AreEqual(EventType.Used, ctrlZ.type);
+                Assert.AreEqual(empty, asset.editorGraphData, "Ctrl+Z in the note's text undid nothing");
+                Assert.AreEqual(0, GUIUtility.keyboardControl, "the text lets go, so it shows the restored note");
+                StringAssert.DoesNotContain("A sentence.", File.ReadAllText(path), "Auto Save writes the undone state");
+
+                Assert.IsTrue(graph.HandleNoteUndoShortcut(new Event { type = EventType.KeyDown, keyCode = KeyCode.Y, control = true }, noteControl));
+                StringAssert.Contains("A sentence.", asset.editorGraphData);
+                Assert.IsTrue(graph.HandleNoteUndoShortcut(new Event { type = EventType.KeyDown, keyCode = KeyCode.Z, control = true, shift = true }, noteControl), "Ctrl+Shift+Z is Redo too");
+            }
+            finally
+            {
+                if (graph != null) UnityEngine.Object.DestroyImmediate(graph);
+                Undo.ClearUndo(asset);
+                EditorPrefs.DeleteKey("UMA_WardrobeGraphLayout_" + AssetDatabase.AssetPathToGUID(path) + "_View");
+                if (!AssetDatabase.DeleteAsset(path) && asset != null) UnityEngine.Object.DestroyImmediate(asset);
+            }
+        }
+
+        [Test]
         public void ASlotSharingAStackCanBeGivenItsOwnOverlays()
         {
             if (!FindRealSlotAndOverlay(out _, out var overlayAsset)) Assert.Ignore("Requires an indexed wardrobe overlay.");

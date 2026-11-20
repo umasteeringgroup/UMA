@@ -498,6 +498,14 @@ namespace UMA.Editors
                 EditorGUILayout.HelpBox("Unity is compiling/updating. Please wait before editing wardrobe recipes.", MessageType.Info);
                 return;
             }
+            // Control names are registered as controls are drawn, so whether a note's text has focus is read at
+            // the end of the previous pass; asked here, before anything is drawn, it never matched.
+            bool noteTextFocused = _noteTextFocused;
+            _noteTextFocused = false;
+            if (HandleNoteUndoShortcut(Event.current, noteTextFocused ? NoteTextControlName : null))
+            {
+                GUIUtility.ExitGUI();
+            }
             if (_typingNoteId != null && GUIUtility.keyboardControl != _typingKeyboardControl)
             {
                 FinishNoteTyping();
@@ -542,6 +550,7 @@ namespace UMA.Editors
             DrawGraph(graphRect);
             DrawInspectorSplitter(splitterRect);
             DrawInspector(inspectorRect);
+            _noteTextFocused = IsNoteTextControl(GUI.GetNameOfFocusedControl());
         }
 
         private static float GetNodeListWidth(float bodyWidth)
@@ -1728,6 +1737,9 @@ namespace UMA.Editors
             style.margin = new RectOffset();
 
             EditorGUI.BeginChangeCheck();
+            // Each note text box has its own name: Unity keeps one control per name, so with the panel's text box
+            // also named the same, the canvas note was never seen as focused.
+            GUI.SetNextControlName(NoteTextControlName + ".Canvas." + node.Note.id);
             string text = GUI.TextArea(textRect, node.Note.text, style);
             if (EditorGUI.EndChangeCheck())
             {
@@ -2040,6 +2052,15 @@ namespace UMA.Editors
                 if (!inCanvas)
                 {
                     return;
+                }
+
+                // A click anywhere else on the canvas ends editing a note's text (focus stayed in the text, so Undo
+                // still went to it).
+                GraphNode clickedNode = HitTestNode(canvasRect, current.mousePosition);
+                if (!(clickedNode != null && clickedNode.Kind == NodeKind.Note && IsNoteBodyHit(canvasRect, clickedNode, current.mousePosition)))
+                {
+                    ReleaseNoteFocus();
+                    FinishNoteTyping();
                 }
 
                 GraphNode resizeNode = HitTestNoteResizeHandle(canvasRect, current.mousePosition);
@@ -3343,6 +3364,7 @@ namespace UMA.Editors
             }
 
             EditorGUI.BeginChangeCheck();
+            GUI.SetNextControlName(NoteTextControlName + ".Panel");
             string text = EditorGUILayout.TextArea(node.Note.text, GUILayout.MinHeight(120f));
             Vector2 size = EditorGUILayout.Vector2Field("Size", node.Note.rect.size);
             if (EditorGUI.EndChangeCheck())
@@ -4785,6 +4807,44 @@ namespace UMA.Editors
             note.text = text;
             SaveLayout("Edit Wardrobe Graph Note", writeToDisk: false);
             Undo.CollapseUndoOperations(_typingNoteUndoGroup);
+        }
+
+        private const string NoteTextControlName = "UMAWardrobeGraphNoteText";
+        private bool _noteTextFocused;
+
+        private static bool IsNoteTextControl(string controlName) =>
+            controlName != null && controlName.StartsWith(NoteTextControlName, StringComparison.Ordinal);
+
+        /// <summary>
+        /// Undo and Redo pressed while a note's text has keyboard focus. The text box took the keys and does not undo,
+        /// so nothing happened until the note was deselected. Ends the typing, lets go of the text (so it shows the
+        /// restored note) and runs Unity's Undo or Redo. Returns true when it handled the event.
+        /// </summary>
+        internal bool HandleNoteUndoShortcut(Event current, string focusedControl)
+        {
+            if (current == null || current.type != EventType.KeyDown || !IsNoteTextControl(focusedControl) ||
+                !(current.control || current.command) || current.alt)
+            {
+                return false;
+            }
+            bool redo;
+            if (current.keyCode == KeyCode.Z) redo = current.shift;
+            else if (current.keyCode == KeyCode.Y && !current.shift) redo = true;
+            else return false;
+
+            current.Use();
+            FinishNoteTyping();
+            ReleaseNoteFocus();
+            if (redo) Undo.PerformRedo();
+            else Undo.PerformUndo();
+            Repaint();
+            return true;
+        }
+
+        private void ReleaseNoteFocus()
+        {
+            GUIUtility.keyboardControl = 0;
+            EditorGUIUtility.editingTextField = false;
         }
 
         /// <summary>Ends a note typing session: with Auto Save on, writes the asset to disk.</summary>
