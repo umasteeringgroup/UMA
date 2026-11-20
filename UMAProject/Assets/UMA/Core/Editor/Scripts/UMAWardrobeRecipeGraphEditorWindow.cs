@@ -1,20 +1,17 @@
 #if UNITY_EDITOR
-#if UNITY_6000_4_OR_NEWER || UNITY_INCLUDE_TESTS
+#if UNITY_6000_4_OR_NEWER
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using UMA.CharacterSystem;
-#if UNITY_6000_4_OR_NEWER
 using Unity.GraphToolkit.Editor;
-#endif
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace UMA.Editors
 {
-#if UNITY_6000_4_OR_NEWER
     [Graph("umawardroberecipegraph", GraphOptions.DisableAutoInclusionOfNodesFromGraphAssembly)]
     internal sealed class UMAWardrobeRecipeGraph : Graph
     {
@@ -58,7 +55,6 @@ namespace UMA.Editors
         }
     }
 
-#endif
     public sealed class UMAWardrobeRecipeGraphEditorWindow : EditorWindow, CharacterBaseEditor.IRecipeWorkingCopyOwner, CharacterBaseEditor.IRecipeWorkingCopySerializer
     {
         private const float NodeWidth = 230f;
@@ -345,7 +341,6 @@ namespace UMA.Editors
         private SlotData _pendingOverlayTargetSlot;
         private string _focusedSharedColorInspectorKey;
 
-#if UNITY_6000_4_OR_NEWER
         [MenuItem("Assets/Edit in Node Graph", true)]
         private static bool ValidateEditInNodeGraph()
         {
@@ -366,7 +361,6 @@ namespace UMA.Editors
             window.Show();
             window.Focus();
         }
-#endif
 
         // The slot and overlay controls in the inspector panel write the graph's working recipe themselves.
         Object CharacterBaseEditor.IRecipeWorkingCopyOwner.WorkingCopyAsset => _asset;
@@ -1547,7 +1541,7 @@ namespace UMA.Editors
                 DrawSelectionBox(localCanvasRect);
 
                 Rect hintRect = new Rect(12f, localCanvasRect.yMax - 44f, localCanvasRect.width - 24f, 32f);
-                GUI.Label(hintRect, "Drop SlotDataAsset, OverlayDataAsset, RaceData, UMATextRecipe, or folders. Middle-drag pans. Ctrl+wheel zooms.", EditorStyles.centeredGreyMiniLabel);
+                GUI.Label(hintRect, "Drop SlotDataAsset, OverlayDataAsset, RaceData, UMATextRecipe, or folders. Middle-drag pans. Mouse wheel zooms.", EditorStyles.centeredGreyMiniLabel);
             }
             finally
             {
@@ -1968,7 +1962,9 @@ namespace UMA.Editors
                 return;
             }
 
-            if (inCanvas && current.type == EventType.ScrollWheel && (current.control || current.command))
+            // The mouse wheel zooms around the pointer, as in other node editors (it needed Ctrl, and the wheel alone
+            // did nothing on the canvas). Ctrl+wheel still zooms.
+            if (inCanvas && current.type == EventType.ScrollWheel)
             {
                 float oldZoom = _zoom;
                 Vector2 graphMouseBefore = ScreenToGraph(canvasRect, current.mousePosition);
@@ -3858,12 +3854,30 @@ namespace UMA.Editors
                 _dnaEditor = new DNAMasterEditor(_recipe);
             }
 
-            bool dnaDirty = false;
-            bool textureDirty = false;
-            bool meshDirty = false;
-            if (_dnaEditor.OnGUI(ref dnaDirty, ref textureDirty, ref meshDirty))
+            // A wardrobe recipe usually has no DNA of its own. Drawing the DNA editor then threw (it read the first
+            // entry of an empty list), which left the GUI layout unbalanced: the Recipe tab was drawn over the
+            // toolbar and the node list instead of in its panel.
+            if (!_dnaEditor.IsValid)
             {
-                CommitRecipeEdit("Edit Wardrobe Recipe DNA");
+                EditorGUILayout.HelpBox("This recipe has no DNA of its own.", MessageType.None);
+            }
+            else
+            {
+                bool dnaDirty = false;
+                bool textureDirty = false;
+                bool meshDirty = false;
+                int dnaCount = _recipe.GetAllDna().Length;
+                if (_dnaEditor.OnGUI(ref dnaDirty, ref textureDirty, ref meshDirty))
+                {
+                    if (_recipe.GetAllDna().Length != dnaCount)
+                    {
+                        // A DNA entry was removed: the editor's list of entries is out of date.
+                        int view = _dnaEditor.viewDna;
+                        _dnaEditor = new DNAMasterEditor(_recipe);
+                        _dnaEditor.viewDna = Mathf.Min(view, _recipe.GetAllDna().Length - 1);
+                    }
+                    CommitRecipeEdit("Edit Wardrobe Recipe DNA");
+                }
             }
 
             DrawOverrideDnaInspector();

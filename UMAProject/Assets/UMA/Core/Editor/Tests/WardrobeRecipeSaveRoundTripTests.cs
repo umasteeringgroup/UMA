@@ -1123,6 +1123,63 @@ namespace UMA.Editors.Tests
         }
 
         [Test]
+        public void ThePositionerFindsItsLayerAfterTwoLayersOfOneOverlaySwapPlaces()
+        {
+            if (!FindRealSlotAndOverlay(out var slotAsset, out var overlayAsset)) Assert.Ignore("Requires an indexed slot and overlay.");
+            var asset = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
+            try
+            {
+                asset.recipeType = "Wardrobe";
+                int channels = overlayAsset.material.channels.Length;
+                var slot = new SlotData(slotAsset);
+                var start = new Rect(0, 0, 64, 64);
+                var red = new OverlayData(overlayAsset) { rect = start, colorData = new OverlayColorData(channels) };
+                red.colorData.channelMask[0] = Color.red;
+                var blue = new OverlayData(overlayAsset) { rect = start, colorData = new OverlayColorData(channels) };
+                blue.colorData.channelMask[0] = Color.blue;
+                slot.SetOverlayList(new System.Collections.Generic.List<OverlayData> { red, blue });
+                asset.Save(new UMAData.UMARecipe { slotDataList = new[] { slot }, sharedColors = new OverlayColorData[0] });
+
+                var working = new UMAData.UMARecipe();
+                asset.Load(working);
+                OverlayData edited = working.slotDataList[0].GetOverlay(1);
+                Assert.AreEqual(Color.blue, edited.colorData.channelMask[0]);
+                var editor = new OverlayEditor(working, working.slotDataList[0], edited, null, asset);
+                var expected = OverlayEditor.PopupState.Of(edited);
+
+                // Elsewhere, the two layers swap places.
+                var outside = new UMAData.UMARecipe();
+                asset.Load(outside);
+                var layers = outside.slotDataList[0].GetOverlayList();
+                layers.Reverse();
+                outside.slotDataList[0].SetOverlayList(layers);
+                asset.Save(outside);
+
+                edited.rect = new Rect(64, 64, 32, 32);
+                var check = new UMAData.UMARecipe();
+                asset.Load(check);
+                Assert.IsTrue(editor.SameUnwrittenSettings(check.slotDataList[0].GetOverlay(0), OverlayEditor.PopupFields.Rect), "the moved layer must be recognised (else a dialog would open)");
+                Assert.IsFalse(editor.SameUnwrittenSettings(check.slotDataList[0].GetOverlay(1), OverlayEditor.PopupFields.Rect));
+
+                Assert.IsTrue(editor.WritePositionIntoCurrentRecipe(OverlayEditor.PopupFields.Rect, expected, null));
+
+                var result = new UMAData.UMARecipe();
+                asset.Load(result);
+                OverlayData nowFirst = result.slotDataList[0].GetOverlay(0);
+                OverlayData nowSecond = result.slotDataList[0].GetOverlay(1);
+                Assert.AreEqual(Color.blue, nowFirst.colorData.channelMask[0]);
+                Assert.AreEqual(new Rect(64, 64, 32, 32), nowFirst.rect, "the positioned layer");
+                Assert.AreEqual(start, nowSecond.rect, "the layer now in the old place is the other one");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(asset);
+            }
+        }
+
+#if UNITY_6000_4_OR_NEWER
+        // The wardrobe graph window exists on Unity 6.4 and newer only.
+        [Test]
         public void ConnectingAnOverlayKeepsTheTargetSlotsOwnOverlays()
         {
             if (!FindRealSlotAndOverlay(out _, out var overlayAsset)) Assert.Ignore("Requires an indexed wardrobe overlay.");
@@ -1214,61 +1271,6 @@ namespace UMA.Editors.Tests
                 Undo.ClearUndo(asset);
                 EditorPrefs.DeleteKey("UMA_WardrobeGraphLayout_" + AssetDatabase.AssetPathToGUID(path) + "_View");
                 if (!AssetDatabase.DeleteAsset(path) && asset != null) UnityEngine.Object.DestroyImmediate(asset);
-            }
-        }
-
-        [Test]
-        public void ThePositionerFindsItsLayerAfterTwoLayersOfOneOverlaySwapPlaces()
-        {
-            if (!FindRealSlotAndOverlay(out var slotAsset, out var overlayAsset)) Assert.Ignore("Requires an indexed slot and overlay.");
-            var asset = ScriptableObject.CreateInstance<UMAWardrobeRecipe>();
-            try
-            {
-                asset.recipeType = "Wardrobe";
-                int channels = overlayAsset.material.channels.Length;
-                var slot = new SlotData(slotAsset);
-                var start = new Rect(0, 0, 64, 64);
-                var red = new OverlayData(overlayAsset) { rect = start, colorData = new OverlayColorData(channels) };
-                red.colorData.channelMask[0] = Color.red;
-                var blue = new OverlayData(overlayAsset) { rect = start, colorData = new OverlayColorData(channels) };
-                blue.colorData.channelMask[0] = Color.blue;
-                slot.SetOverlayList(new System.Collections.Generic.List<OverlayData> { red, blue });
-                asset.Save(new UMAData.UMARecipe { slotDataList = new[] { slot }, sharedColors = new OverlayColorData[0] });
-
-                var working = new UMAData.UMARecipe();
-                asset.Load(working);
-                OverlayData edited = working.slotDataList[0].GetOverlay(1);
-                Assert.AreEqual(Color.blue, edited.colorData.channelMask[0]);
-                var editor = new OverlayEditor(working, working.slotDataList[0], edited, null, asset);
-                var expected = OverlayEditor.PopupState.Of(edited);
-
-                // Elsewhere, the two layers swap places.
-                var outside = new UMAData.UMARecipe();
-                asset.Load(outside);
-                var layers = outside.slotDataList[0].GetOverlayList();
-                layers.Reverse();
-                outside.slotDataList[0].SetOverlayList(layers);
-                asset.Save(outside);
-
-                edited.rect = new Rect(64, 64, 32, 32);
-                var check = new UMAData.UMARecipe();
-                asset.Load(check);
-                Assert.IsTrue(editor.SameUnwrittenSettings(check.slotDataList[0].GetOverlay(0), OverlayEditor.PopupFields.Rect), "the moved layer must be recognised (else a dialog would open)");
-                Assert.IsFalse(editor.SameUnwrittenSettings(check.slotDataList[0].GetOverlay(1), OverlayEditor.PopupFields.Rect));
-
-                Assert.IsTrue(editor.WritePositionIntoCurrentRecipe(OverlayEditor.PopupFields.Rect, expected, null));
-
-                var result = new UMAData.UMARecipe();
-                asset.Load(result);
-                OverlayData nowFirst = result.slotDataList[0].GetOverlay(0);
-                OverlayData nowSecond = result.slotDataList[0].GetOverlay(1);
-                Assert.AreEqual(Color.blue, nowFirst.colorData.channelMask[0]);
-                Assert.AreEqual(new Rect(64, 64, 32, 32), nowFirst.rect, "the positioned layer");
-                Assert.AreEqual(start, nowSecond.rect, "the layer now in the old place is the other one");
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(asset);
             }
         }
 
@@ -1576,5 +1578,6 @@ namespace UMA.Editors.Tests
                 if (!AssetDatabase.DeleteAsset(path) && asset != null) UnityEngine.Object.DestroyImmediate(asset);
             }
         }
+#endif
     }
 }
