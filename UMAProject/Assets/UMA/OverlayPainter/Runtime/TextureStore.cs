@@ -134,6 +134,33 @@ namespace UMA.TexturePaint
         public RenderTexture Texture => editable?.Front;
         public RenderTexture PreviewTexture => composite != null ? composite : Texture;
 
+        /// <summary>
+        /// The editable base as it was before it was first painted: what Erase on the base restores, and what
+        /// clearing all painting returns to. Kept only for channels whose base has been painted or restored from a
+        /// document, so untouched channels cost no memory.
+        /// </summary>
+        internal RenderTexture original;
+
+        /// <summary>Keeps a copy of the base before its first edit. Call before anything writes the editable base.</summary>
+        internal RenderTexture CaptureOriginal()
+        {
+            if (original != null || editable?.Front == null) return original;
+            original = EditableTextureTarget.Create((editable.Front.name ?? channel.ToString()) + " Original",
+                editable.Width, editable.Height, editable.Front.format);
+            Graphics.CopyTexture(editable.Front, original);
+            return original;
+        }
+
+        internal void DropOriginal()
+        {
+            if (original == null) return;
+            if (RenderTexture.active == original) RenderTexture.active = null;
+            original.Release();
+            if (Application.isPlaying) UnityEngine.Object.Destroy(original);
+            else UnityEngine.Object.DestroyImmediate(original);
+            original = null;
+        }
+
         public Texture ResolveEditableSource(Texture source)
         {
             return channel == TexturePaintChannel.Normal
@@ -144,12 +171,14 @@ namespace UMA.TexturePaint
 
         public void ResetToSource(Texture source)
         {
+            DropOriginal();
             sourceTexture = source;
             editable?.Reset(ResolveEditableSource(source), TextureSet.DefaultColor(channel));
         }
 
         public void Dispose()
         {
+            DropOriginal();
             editable?.Dispose();
             if (composite == null) return;
             if (RenderTexture.active == composite) RenderTexture.active = null;
@@ -168,6 +197,11 @@ namespace UMA.TexturePaint
         public readonly TextureChannelTarget[] componentTargets = new TextureChannelTarget[4];
         public readonly int[] sourceComponents = { 0, 1, 2, 3 };
         public readonly bool[] inverted = new bool[4];
+        /// <summary>
+        /// Per component, a derived texture that supplies the same component instead of a logical target, such as the
+        /// expression wrinkle slope that Wrinkle Height produces for _WrinkleMap red and green.
+        /// </summary>
+        public readonly Texture[] componentOverrides = new Texture[4];
         public void Dispose()
         {
             if (packed == null) return;
@@ -373,6 +407,11 @@ namespace UMA.TexturePaint
                 proceduralGroupKey = null;
         }
 
+        /// <summary>True when new channel settings for this layer should blend Wrinkle Height with Overlay (Paint and Path layers).</summary>
+        public bool UsesRelativeWrinkleHeight(TexturePaintChannel channel) =>
+            channel == TexturePaintChannel.WrinkleHeight &&
+            (kind == TexturePaintLayerKind.Paint || kind == TexturePaintLayerKind.Spline);
+
         public TexturePaintLayerChannelSettings GetChannelSettings(TexturePaintChannel channel, bool create = true)
         {
             if (channelSettings.TryGetValue(channel, out TexturePaintLayerChannelSettings result))
@@ -388,7 +427,9 @@ namespace UMA.TexturePaint
             {
                 channel = channel,
                 opacity = 1f,
-                blendMode = blendMode,
+                // Painted Wrinkle Height is relative: Overlay keeps the wrinkles below and mid gray changes nothing.
+                // Plugin and Fill layers write a complete height (a filter reads the composite below), so they replace.
+                blendMode = UsesRelativeWrinkleHeight(channel) ? TexturePaintBlendMode.Overlay : blendMode,
                 sourceSettings = new TexturePaintChannelSourceSettings()
             };
             channelSettings[channel] = result;
@@ -637,6 +678,12 @@ namespace UMA.TexturePaint
         private bool effectiveNormalInvert;
         private long selectedGroupPreviewRevision = -1;
         public bool LayerEffectsAvailable => compositor?.EffectsAvailable == true;
+        // Expression wrinkles: Wrinkle Height drives the red and green of the physical wrinkle map.
+        internal string wrinkleProperty;
+        internal RenderTexture wrinkleHeightBase;
+        internal RenderTexture wrinkleSlope;
+        internal Texture2D wrinkleFrame;
+        internal Texture2D wrinkleAux;
         [Range(0f, 16f)] public float normalControlStrength = 2f;
         [Range(1, 16)] public int normalControlRadius = 1;
         public bool normalControlInvert;
@@ -705,7 +752,12 @@ namespace UMA.TexturePaint
         {
             TextureChannelTarget baseChannel = GetChannel(channel);
             if (baseChannel == null) return null;
-            if (mode == TexturePaintSourceMode.SourceTexture) return baseChannel.editable;
+            if (mode == TexturePaintSourceMode.SourceTexture)
+            {
+                // Painting the base: keep its original so Erase can bring it back.
+                baseChannel.CaptureOriginal();
+                return baseChannel.editable;
+            }
             TexturePaintLayer layer = EnsureActiveLayer();
             if (!layer.channels.TryGetValue(channel, out EditableTextureTarget target))
             {
@@ -1203,6 +1255,9 @@ namespace UMA.TexturePaint
                             break;
                         }
                         if (index >= 0) break;
+                        // Wrinkle textures resolve only through their declared meanings: the zone map is exact data
+                        // and must not fall back to a name match such as Custom.
+                        if (TexturePaintWrinkles.IsWrinkleLayout(layout)) continue;
                         if (TextureStore.ResolveChannel(materialChannel, material) == channel)
                         {
                             index = sourceIndex;
@@ -1957,6 +2012,8 @@ namespace UMA.TexturePaint
             RefreshOutdatedFillLayers();
             if (recompose) RecomposeAll();
             RectInt physicalDirtyRect = UpdateEffectiveNormal(dirtyRect);
+            // The wrinkle slope of a padding texel comes from a texel that can be far away: refresh it whole.
+            if (UpdateWrinkleSlope()) physicalDirtyRect = default;
             PackPhysicalChannels(physicalDirtyRect);
             compositeRevision++;
             // Composite and packed textures are also consumed by the 2D view and export. They must
@@ -2043,6 +2100,15 @@ namespace UMA.TexturePaint
         private void BindPackComponent(ComputeShader shader, int kernel, TexturePhysicalChannelGroup group,
             int component, string suffix)
         {
+            Texture derived = group.componentOverrides[component];
+            if (derived != null)
+            {
+                shader.SetInt("_Has" + suffix, 1);
+                shader.SetInt("_" + suffix + "SourceComponent", component);
+                shader.SetInt("_" + suffix + "Invert", 0);
+                shader.SetTexture(kernel, "_" + suffix, derived);
+                return;
+            }
             TextureChannelTarget target = group.componentTargets[component];
             RenderTexture visible = target != null ? GetVisibleTexture(target.channel) : null;
             bool valid = visible != null;
@@ -2096,6 +2162,55 @@ namespace UMA.TexturePaint
                     effectiveNormal.width, effectiveNormal.height)
                 : default;
         }
+
+        /// <summary>
+        /// Recomputes the expression wrinkle slope (red and green of _WrinkleMap) from Wrinkle Height. Only the change
+        /// from the height the session started with is added to the source map's slope, so untouched texels keep their
+        /// exact source values. Returns false when this surface has no Wrinkle Height.
+        /// </summary>
+        internal bool UpdateWrinkleSlope()
+        {
+            if (wrinkleSlope == null || wrinkleFrame == null || wrinkleAux == null || wrinkleHeightBase == null) return false;
+            if (!physicalChannelGroups.TryGetValue(wrinkleProperty ?? string.Empty, out TexturePhysicalChannelGroup group)) return false;
+            TextureChannelTarget height = GetChannel(TexturePaintChannel.WrinkleHeight);
+            if (height?.PreviewTexture == null) return false;
+            return ApplyWrinkleHeight(group.source, height.PreviewTexture, wrinkleSlope);
+        }
+
+        /// <summary>Writes the wrinkle slope for a height (gray, same size as the map) into destination's red and green.</summary>
+        internal bool ApplyWrinkleHeight(Texture sourceMap, Texture height, RenderTexture destination)
+        {
+            if (sourceMap == null || height == null || destination == null || channelPackShader == null ||
+                !SystemInfo.supportsComputeShaders || !channelPackShader.HasKernel("CSApplyWrinkleHeight")) return false;
+            int kernel = channelPackShader.FindKernel("CSApplyWrinkleHeight");
+            if (!channelPackShader.IsSupported(kernel)) return false;
+            channelPackShader.SetInts("_TextureSize", destination.width, destination.height);
+            channelPackShader.SetInts("_TileOffset", 0, 0);
+            channelPackShader.SetInts("_DispatchSize", destination.width, destination.height);
+            channelPackShader.SetFloat("_WrinkleHeightScale", 2f * TexturePaintWrinkles.HeightRangeMM);
+            channelPackShader.SetFloat("_WrinkleMaxSlope", TexturePaintWrinkles.MaxSlope);
+            channelPackShader.SetTexture(kernel, "_Source", sourceMap);
+            channelPackShader.SetTexture(kernel, "_WrinkleHeight", height);
+            channelPackShader.SetTexture(kernel, "_WrinkleHeightBase", wrinkleHeightBase);
+            channelPackShader.SetTexture(kernel, "_WrinkleFrame", wrinkleFrame);
+            channelPackShader.SetTexture(kernel, "_WrinkleAux", wrinkleAux);
+            channelPackShader.SetTexture(kernel, "_Destination", destination);
+            channelPackShader.Dispatch(kernel, Mathf.CeilToInt(destination.width / 16f),
+                Mathf.CeilToInt(destination.height / 16f), 1);
+            return true;
+        }
+
+        /// <summary>True when this surface edits an expression wrinkle map through Wrinkle Height.</summary>
+        public bool HasWrinkleHeight => wrinkleSlope != null;
+
+        /// <summary>The physical wrinkle map property (normally "_WrinkleMap") when <see cref="HasWrinkleHeight"/>.</summary>
+        public string WrinkleMapProperty => wrinkleProperty;
+
+        /// <summary>Why this wrinkle material has no Wrinkle Height channel, or null.</summary>
+        public string WrinkleStatus { get; internal set; }
+
+        /// <summary>The wrinkle slope currently derived from Wrinkle Height (red and green), for previews and tests.</summary>
+        public RenderTexture WrinkleSlopeTexture => wrinkleSlope;
 
         internal bool ApplyNormalControl(Texture normalBase, Texture control, RenderTexture destination,
             bool authoredOnly, RectInt dirtyRect = default)
@@ -2253,6 +2368,33 @@ namespace UMA.TexturePaint
             }
         }
 
+        /// <summary>
+        /// Fills a layer channel texture with the result of everything below a layer: the source texture and the
+        /// layers under it. A Paint layer started this way has pixels for Blur, Smear and Clone to work on.
+        /// The Normal channel is copied before Normal Control bends it, because the copy is bent again when the
+        /// layer is composited.
+        /// </summary>
+        internal bool CopyBelowLayerInto(TexturePaintChannel channel, TexturePaintLayer boundaryLayer,
+            EditableTextureTarget destination)
+        {
+            TextureChannelTarget baseChannel = GetChannel(channel);
+            if (compositor == null || baseChannel == null || destination?.Front == null ||
+                !layers.Contains(boundaryLayer)) return false;
+            // Compose in the precision the live composite uses, then store it in the layer texture.
+            RenderTextureFormat format = baseChannel.composite != null ? baseChannel.composite.format : baseChannel.format;
+            var descriptor = new RenderTextureDescriptor(destination.Width, destination.Height, format, 0)
+                { enableRandomWrite = true, sRGB = false };
+            RenderTexture scratch = RenderTexture.GetTemporary(descriptor);
+            try
+            {
+                NormalizeLayerHierarchy();
+                if (!compositor.ComposeBelowLayer(this, channel, boundaryLayer, scratch)) return false;
+                destination.Reset(scratch, Color.clear);
+                return true;
+            }
+            finally { RenderTexture.ReleaseTemporary(scratch); }
+        }
+
         public void RecomposeAll()
         {
             foreach (TextureChannelTarget target in channels.Values) CompositeChannel(target.channel);
@@ -2274,7 +2416,14 @@ namespace UMA.TexturePaint
                 {
                     channel.adjustments ??= new TexturePaintChannelAdjustments();
                     channel.adjustments.Reset();
-                    channel.ResetToSource(channel.sourceTexture);
+                    // A painted base returns to the copy kept before its first edit: that is exactly what the
+                    // session started with, also for channels unpacked from a shared texture.
+                    if (channel.original != null && channel.editable != null)
+                    {
+                        channel.editable.Reset(channel.original, TextureSet.DefaultColor(channel.channel));
+                        channel.DropOriginal();
+                    }
+                    else channel.ResetToSource(channel.sourceTexture);
                 }
             BindPreviewTextures();
         }
@@ -2290,6 +2439,11 @@ namespace UMA.TexturePaint
             selectedGroupPreview = null;
             DestroyPreview(effectiveNormal);
             effectiveNormal = null;
+            DestroyPreview(wrinkleSlope); wrinkleSlope = null;
+            DestroyPreview(wrinkleHeightBase); wrinkleHeightBase = null;
+            if (wrinkleFrame != null) UnityEngine.Object.DestroyImmediate(wrinkleFrame);
+            if (wrinkleAux != null) UnityEngine.Object.DestroyImmediate(wrinkleAux);
+            wrinkleFrame = null; wrinkleAux = null;
             tangentSpaceMaps?.Dispose();
             proceduralMeshMaps?.Dispose();
             channels.Clear(); physicalChannelGroups.Clear(); layers.Clear(); sources.Clear(); baseStrokes.Clear();
@@ -2314,12 +2468,69 @@ namespace UMA.TexturePaint
                 case TexturePaintChannel.Albedo: return Color.white;
                 case TexturePaintChannel.Normal: return new Color(0.5f, 0.5f, 1f, 1f);
                 case TexturePaintChannel.NormalControl: return new Color(0.5f, 0.5f, 0.5f, 1f);
+                case TexturePaintChannel.WrinkleHeight: return new Color(0.5f, 0.5f, 0.5f, 1f);
                 case TexturePaintChannel.Roughness: return Color.white;
                 case TexturePaintChannel.AmbientOcclusion: return Color.white;
                 case TexturePaintChannel.DetailMask: return Color.white;
                 case TexturePaintChannel.SkinColorMask: return Color.clear;
                 default: return Color.black;
             }
+        }
+    }
+
+    /// <summary>
+    /// Editor services for expression wrinkle maps, registered by the Overlay Painter editor (which can use UMA's
+    /// wrinkle baker): the per-texel slope frame of a surface's slot mesh and the height a wrinkle map was made from.
+    /// </summary>
+    public interface ITexturePaintWrinkleSupport
+    {
+        /// <summary>
+        /// Builds, for a surface's slot mesh at the given size, the slope frame (RGBA float: tangent slope = r * dx + g * dy,
+        /// bitangent slope = b * dx + a * dy for height changes in mm per texel along +x and +y, texture rows bottom
+        /// first) and the coverage (R 1 on the mesh; for padding texels G and B the covered texel they copy, A 1).
+        /// </summary>
+        bool TryBuildSlopeFrame(TextureSet set, int width, int height, out Texture2D frame, out Texture2D coverage, out string error);
+
+        /// <summary>The wrinkle height (gray in red, mid gray flat) the surface's wrinkle map was made from, or null for flat.</summary>
+        Texture ResolveHeightSource(TextureSet set, TexturePaintMaterialChannelCapability wrinkleChannel);
+
+        /// <summary>
+        /// A lossless copy of a wrinkle texture source read from its file (the imported texture is block compressed),
+        /// or null to keep <paramref name="current"/>. Register copies with <see cref="TexturePaintWrinkles.RegisterLosslessCopy"/>.
+        /// </summary>
+        Texture ResolveLosslessSource(ReconstructedSurface surface, int channelIndex, Texture current);
+    }
+
+    public static class TexturePaintWrinkles
+    {
+        /// <summary>Height of full white above mid gray in Wrinkle Height, mm (UMAWrinkleSourceMaps.HeightRangeMM).</summary>
+        public const float HeightRangeMM = 2.5f;
+        /// <summary>Steepest slope a wrinkle map stores (UMAWrinkleProceduralGenerator.MaxSlope).</summary>
+        public const float MaxSlope = 3.5f;
+        /// <summary>Set by the Overlay Painter editor.</summary>
+        public static ITexturePaintWrinkleSupport Support;
+
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Texture, Texture> originals =
+            new System.Runtime.CompilerServices.ConditionalWeakTable<Texture, Texture>();
+
+        /// <summary>Remembers which project texture a lossless working copy was read from.</summary>
+        public static void RegisterLosslessCopy(Texture copy, Texture original)
+        {
+            if (copy != null && original != null) originals.AddOrUpdate(copy, original);
+        }
+
+        /// <summary>The project texture a lossless working copy was read from, or the texture itself.</summary>
+        public static Texture Original(Texture texture)
+        {
+            return texture != null && originals.TryGetValue(texture, out Texture original) && original != null
+                ? original : texture;
+        }
+
+        /// <summary>True when a material channel's layout carries any expression wrinkle meaning.</summary>
+        public static bool IsWrinkleLayout(UMAMaterial.TextureChannelLayout layout)
+        {
+            return layout.Uses(UMAMaterial.TextureChannelUsage.WrinkleSlope | UMAMaterial.TextureChannelUsage.WrinkleCrease |
+                UMAMaterial.TextureChannelUsage.WrinkleFlush | UMAMaterial.TextureChannelUsage.WrinkleZone);
         }
     }
 
@@ -2534,6 +2745,7 @@ namespace UMA.TexturePaint
         {
             error = binding?.error;
             if (binding == null || !binding.complete) return false;
+            bool anyMemberHasChannel = false;
             for (int i = 0; i < binding.members.Count; i++)
             {
                 TexturePaintLogicalLayerMember member = binding.members[i];
@@ -2542,16 +2754,20 @@ namespace UMA.TexturePaint
                     error = $"Logical layer '{member.layer.name}' is not a Paint layer on '{member.targetMember.slotName}'.";
                     return false;
                 }
-                if (member.textureSet.GetChannel(channel) == null)
-                {
-                    error = $"Target member '{member.targetMember.slotName}' does not support {channel}.";
-                    return false;
-                }
+                // UDIM tiles of a generated character can use different materials: only the head tile has the
+                // expression wrinkle channels, for example. A member without the channel takes no part in the
+                // stroke; the stroke needs one member that has it.
+                anyMemberHasChannel |= member.textureSet.GetChannel(channel) != null;
                 if (member.textureSet.activeLayerIndex != member.textureSet.layers.IndexOf(member.layer))
                 {
                     error = $"Logical layer is not active on target member '{member.targetMember.slotName}'.";
                     return false;
                 }
+            }
+            if (!anyMemberHasChannel)
+            {
+                error = $"This paint target has no {TexturePaintChannelUtility.DisplayName(channel)} channel.";
+                return false;
             }
             error = null;
             return true;
@@ -2846,7 +3062,14 @@ namespace UMA.TexturePaint
             this.channelPackShader = channelPackShader;
             fillGenerator = new TexturePaintFillGenerator(fillShader);
             DefaultResolution = Mathf.Clamp(defaultResolution, 128, 4096);
-            for (int i = 0; i < reconstruction.surfaces.Count; i++) sets.Add(BuildSet(reconstruction.surfaces[i]));
+            int count = reconstruction.surfaces.Count;
+            for (int i = 0; i < count; i++)
+            {
+                ReconstructedSurface surface = reconstruction.surfaces[i];
+                TexturePaintOpenProgress.Report($"Reading textures: {SurfaceLabel(surface)} ({i + 1} of {count})",
+                    0.15f + 0.65f * i / Mathf.Max(1, count));
+                sets.Add(BuildSet(surface));
+            }
             foreach (TextureSet set in sets) set.ownerStore = this;
         }
 
@@ -2866,6 +3089,14 @@ namespace UMA.TexturePaint
             fillGenerator?.Dispose();
             fillGenerator = null;
             channelPackShader = null;
+        }
+
+        private static string SurfaceLabel(ReconstructedSurface surface)
+        {
+            if (surface == null) return "surface";
+            string slot = surface.slotNames != null && surface.slotNames.Count > 0
+                ? string.Join(", ", surface.slotNames) : surface.slotName;
+            return string.IsNullOrEmpty(slot) ? "surface " + surface.index : slot;
         }
 
         private TextureSet BuildSet(ReconstructedSurface surface)
@@ -2896,6 +3127,17 @@ namespace UMA.TexturePaint
                         : generated == null
                             ? GetMaterialTexture(surface.previewMaterial, declared.materialPropertyName)
                             : null;
+                    // Expression wrinkle maps are exact data (zone ids, slopes a few levels deep): read their source
+                    // files losslessly instead of the block-compressed import, so untouched texels export unchanged.
+                    ITexturePaintWrinkleSupport wrinkleSupport = TexturePaintWrinkles.Support;
+                    if (wrinkleSupport == null || !TexturePaintWrinkles.IsWrinkleLayout(
+                            UMAMaterial.GetTextureChannelLayout(declared, surface.previewMaterial))) continue;
+                    Texture lossless = wrinkleSupport.ResolveLosslessSource(surface, channelIndex, declaredSources[channelIndex]);
+                    if (lossless == null || ReferenceEquals(lossless, declaredSources[channelIndex])) continue;
+                    declaredSources[channelIndex] = lossless;
+                    if (surface.sourceTextures != null && channelIndex < surface.sourceTextures.Length)
+                        surface.sourceTextures[channelIndex] = lossless;
+                    (surface.ownedSourceTextures ??= new List<Texture>()).Add(lossless);
                 }
                 set.materialCapability = TexturePaintMaterialCapabilityService.Compile(surface.umaMaterial,
                     surface.previewMaterial, declaredSources, surface.allowMissingSourceTextures);
@@ -2948,6 +3190,8 @@ namespace UMA.TexturePaint
             EnsureNormalControlChannel(set);
             EnsureCustomGuideChannel(set);
             BuildSourceBindings(set, generated, surface);
+            // After the source bindings: a generated character's wrinkle height is found through its overlays.
+            EnsureWrinkleHeightChannel(set);
             TextureChannelTarget normal = set.GetChannel(TexturePaintChannel.Normal);
             int mapResolution = normal != null ? Mathf.Min(normal.Texture.width, 2048) : Mathf.Min(DefaultResolution, 2048);
             set.tangentSpaceMaps = TangentSpaceMapBuilder.Build(surface.mesh, mapResolution, mapResolution);
@@ -3005,7 +3249,10 @@ namespace UMA.TexturePaint
 
             if (mappings.Count == 0)
             {
-                bool hasAuthoredMeaning = layout.red != UMAMaterial.TextureChannelUsage.Unused ||
+                // Wrinkle zone ids are exact data, not paint: keep the control map as it is (preview and export use
+                // the source texture) instead of exposing it as an editable Custom texture.
+                if (layout.Uses(UMAMaterial.TextureChannelUsage.WrinkleZone)) return true;
+                bool hasAuthoredMeaning =layout.red != UMAMaterial.TextureChannelUsage.Unused ||
                                           layout.green != UMAMaterial.TextureChannelUsage.Unused ||
                                           layout.blue != UMAMaterial.TextureChannelUsage.Unused ||
                                           layout.alpha != UMAMaterial.TextureChannelUsage.Unused;
@@ -3208,7 +3455,11 @@ namespace UMA.TexturePaint
                 AddChannel(set, semantic, property, property, -1, extracted, RenderTextureFormat.ARGB32);
                 target = set.GetChannel(semantic);
             }
-            else target.editable.Reset(extracted, TextureSet.DefaultColor(semantic));
+            else
+            {
+                target.DropOriginal();
+                target.editable.Reset(extracted, TextureSet.DefaultColor(semantic));
+            }
             target.sourceTexture = source;
             target.physicalProperty = property;
             target.packedComponent = component;
@@ -3312,6 +3563,113 @@ namespace UMA.TexturePaint
             control.composite = EditableTextureTarget.Create(set.Name + " Normal Control Composite",
                 normal.Texture.width, normal.Texture.height, format);
             set.channels.Add(TexturePaintChannel.NormalControl, control);
+        }
+
+        /// <summary>
+        /// For a material with an expression wrinkle map (_WrinkleMap: RG slope, B crease, A flush), adds the painter-owned
+        /// Wrinkle Height channel. It starts from the height the map was made from (the "_height" texture next to the
+        /// map, or flat), and its changes become the map's red and green through <see cref="TextureSet.UpdateWrinkleSlope"/>.
+        /// </summary>
+        private void EnsureWrinkleHeightChannel(TextureSet set)
+        {
+#if UNITY_EDITOR
+            if (set.channels.ContainsKey(TexturePaintChannel.WrinkleHeight) || set.materialCapability == null) return;
+            TexturePaintMaterialChannelCapability slope = null;
+            foreach (TexturePaintMaterialChannelCapability candidate in set.materialCapability.Channels)
+                if (TexturePaintMaterialCapabilityService.HasWrinkleSlope(candidate)) { slope = candidate; break; }
+            if (slope == null || string.IsNullOrEmpty(slope.materialProperty)) return;
+            if (!set.physicalChannelGroups.TryGetValue(slope.materialProperty, out TexturePhysicalChannelGroup group) ||
+                group.packed == null)
+            {
+                set.WrinkleStatus = $"'{slope.materialProperty}' has no packed preview texture, so Wrinkle Height is unavailable.";
+                return;
+            }
+            if (channelPackShader == null || !SystemInfo.supportsComputeShaders ||
+                !channelPackShader.HasKernel("CSApplyWrinkleHeight"))
+            {
+                set.WrinkleStatus = "Wrinkle Height needs compute shaders.";
+                return;
+            }
+            ITexturePaintWrinkleSupport support = TexturePaintWrinkles.Support;
+            if (support == null)
+            {
+                set.WrinkleStatus = "Wrinkle Height needs the Overlay Painter editor scripts.";
+                return;
+            }
+            int width = group.packed.width, height = group.packed.height;
+            if (!support.TryBuildSlopeFrame(set, width, height, out Texture2D frame, out Texture2D coverage, out string error))
+            {
+                set.WrinkleStatus = error;
+                return;
+            }
+
+            // Height steps are far smaller than one 8-bit level: keep at least half precision.
+            RenderTextureFormat format = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBHalf)
+                ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGBFloat;
+            RenderTexture heightBase = EditableTextureTarget.Create(set.Name + " Wrinkle Height Source", width, height, format);
+            Texture source = support.ResolveHeightSource(set, slope);
+            if (source != null && channelPackShader.HasKernel("CSGrayFromRed"))
+            {
+                // The stored height is a single-channel texture; the painter works on gray RGB.
+                int kernel = channelPackShader.FindKernel("CSGrayFromRed");
+                channelPackShader.SetInts("_TextureSize", width, height);
+                channelPackShader.SetInts("_DispatchSize", width, height);
+                channelPackShader.SetTexture(kernel, "_Source", source);
+                channelPackShader.SetTexture(kernel, "_Destination", heightBase);
+                channelPackShader.Dispatch(kernel, Mathf.CeilToInt(width / 16f), Mathf.CeilToInt(height / 16f), 1);
+            }
+            else
+            {
+                RenderTexture previous = RenderTexture.active;
+                RenderTexture.active = heightBase;
+                GL.Clear(false, true, TextureSet.DefaultColor(TexturePaintChannel.WrinkleHeight));
+                RenderTexture.active = previous;
+            }
+
+            TextureChannelTarget target = new TextureChannelTarget
+            {
+                channel = TexturePaintChannel.WrinkleHeight,
+                materialProperty = null,
+                sourceKeyword = null,
+                umaChannelIndex = -1,
+                sourceTexture = heightBase,
+                sRGB = false,
+                format = format,
+                editable = new EditableTextureTarget(set.Name + " Wrinkle Height", width, height, format, heightBase,
+                    TextureSet.DefaultColor(TexturePaintChannel.WrinkleHeight))
+            };
+            target.composite = EditableTextureTarget.Create(set.Name + " Wrinkle Height Composite", width, height, format);
+            set.channels.Add(TexturePaintChannel.WrinkleHeight, target);
+            if (set.sources.Count > 0) set.sources[0].textures[TexturePaintChannel.WrinkleHeight] = heightBase;
+
+            set.wrinkleProperty = slope.materialProperty;
+            set.wrinkleHeightBase = heightBase;
+            set.wrinkleFrame = frame;
+            set.wrinkleAux = coverage;
+            set.wrinkleSlope = EditableTextureTarget.Create(set.Name + " Wrinkle Slope", width, height, format);
+            group.componentOverrides[0] = set.wrinkleSlope;
+            group.componentOverrides[1] = set.wrinkleSlope;
+            set.WrinkleStatus = null;
+
+            // The wrinkle shader shows nothing while every zone weight is 0 (the face at rest). Show the wrinkles in
+            // the painter preview; the exported material is not affected.
+            Material preview = set.previewMaterial;
+            if (preview != null && preview.HasProperty("_WrinkleZone01"))
+            {
+                bool atRest = true;
+                for (int zone = 1; zone <= 15; zone++)
+                {
+                    string property = "_WrinkleZone" + zone.ToString("00");
+                    if (preview.HasProperty(property) && Mathf.Abs(preview.GetFloat(property)) > 0.0001f) atRest = false;
+                }
+                if (atRest)
+                    for (int zone = 1; zone <= 15; zone++)
+                    {
+                        string property = "_WrinkleZone" + zone.ToString("00");
+                        if (preview.HasProperty(property)) preview.SetFloat(property, 1f);
+                    }
+            }
+#endif
         }
 
         private void EnsureCustomGuideChannel(TextureSet set)

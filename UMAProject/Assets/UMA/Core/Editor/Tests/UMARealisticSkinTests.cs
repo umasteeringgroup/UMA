@@ -125,6 +125,9 @@ namespace UMA.Editors.Tests
             {
                 Assert.That(JsonUtility.ToJson(uma.channels[i]),Is.EqualTo(JsonUtility.ToJson(original.channels[i])));
             }
+            // Overlays on top (UMA 3 Fitness muscle maps) fade by their color's alpha, which only a Diffuse Texture channel uses.
+            Assert.That(uma.channels[0].materialPropertyName,Is.EqualTo("_BaseMap"));
+            Assert.That(uma.channels[0].channelType,Is.EqualTo(UMAMaterial.ChannelType.DiffuseTexture));
             foreach(string property in new[]{"_BaseMap","_BumpMap","_MaskMap","_Skinmask","_DetailNormalMap"})
                 Assert.That(uma.material.GetTexture(property),Is.Not.Null,property);
             Assert.That(uma.materialType,Is.EqualTo(original.materialType));

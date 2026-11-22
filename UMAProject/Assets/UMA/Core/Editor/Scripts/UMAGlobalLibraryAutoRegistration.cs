@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using UMA.CharacterSystem;
 using UMA.Editors.PackageSupport;
 using UnityEditor;
 using UnityEngine;
@@ -18,6 +19,9 @@ namespace UMA
     /// The save writes the real additions and removals and keeps every other library item as the file
     /// stores it (with or without an object reference); items that exist only in memory are not written.
     /// Each batch is reported in the Console and in a short Scene view notification.
+    /// UMA 2 wardrobe recipes (compatible with a UMA 2 race that a UMA 3 race replaces) are added too, after
+    /// <see cref="UMA.Editors.UMALegacyRecipeLibraryHook"/> has brought them to the UMA 3 races; other recipes are not.
+    /// A deleted wardrobe recipe (UMA 2 or UMA 3) is removed from the library.
     /// Turned on and off with the "Auto-add to Global Library" setting in Project Settings > UMA.
     /// Assets whose "No Auto Add" flag is set are left alone.
     /// </summary>
@@ -28,6 +32,10 @@ namespace UMA
         public const string StateKey = "UMA.GlobalLibraryAutoRegistration.State";
 
         static readonly Type[] HandledTypes = { typeof(SlotDataAsset), typeof(OverlayDataAsset), typeof(RaceData) };
+
+        // Deleted assets of these types are removed from the library. Wardrobe recipes are included: once the
+        // file is gone it can no longer be read to tell a UMA 2 recipe from a UMA 3 one, and the entry is dead either way.
+        static readonly Type[] RemovedTypes = { typeof(SlotDataAsset), typeof(OverlayDataAsset), typeof(RaceData), typeof(UMAWardrobeRecipe) };
 
         const int Added = 0, Removed = 1, Moved = 2;
 
@@ -217,7 +225,7 @@ namespace UMA
         static MethodInfo isRunActive;
         static bool isRunActiveLooked;
 
-        static bool IsTestRunActive()
+        internal static bool IsTestRunActive()
         {
             try
             {
@@ -348,6 +356,10 @@ namespace UMA
         static bool AddOrUpdate(UMAAssetIndexer indexer, string path, List<Change> batch, List<string> outsideSearchFolders)
         {
             Type mainType = AssetDatabase.GetMainAssetTypeAtPath(path);
+            if (mainType == typeof(UMAWardrobeRecipe))
+            {
+                return AddLegacyWardrobeRecipe(indexer, path, batch, outsideSearchFolders);
+            }
             Type lookupType = GetLookupType(mainType);
             if (lookupType == null) return false;
 
@@ -412,12 +424,58 @@ namespace UMA
             return rebuild;
         }
 
+        /// <summary>
+        /// A newly imported UMA 2 wardrobe recipe (compatible with a UMA 2 race that a UMA 3 race replaces) is
+        /// brought to the UMA 3 races by <see cref="UMA.Editors.UMALegacyRecipeLibraryHook"/>, saved, and added to
+        /// the library. Other wardrobe recipes, and recipes already in the library, are left alone.
+        /// </summary>
+        static bool AddLegacyWardrobeRecipe(UMAAssetIndexer indexer, string path, List<Change> batch, List<string> outsideSearchFolders)
+        {
+            Type lookupType = typeof(UMAWardrobeRecipe);
+            string guid = AssetDatabase.AssetPathToGUID(path);
+            Dictionary<string, AssetItem> dic = indexer.GetAssetDictionary(lookupType);
+            if (FindByGuid(dic, guid) != null) return false;
+
+            var recipe = AssetDatabase.LoadAssetAtPath<UMAWardrobeRecipe>(path);
+            if (recipe == null || recipe.NoAutoAdd) return false;
+            if (!UMA.Editors.UMALegacyRecipeLibraryHook.IsLegacyRecipe(recipe)) return false;
+            if (!PassesLibraryFilters(indexer, lookupType, path))
+            {
+                outsideSearchFolders.Add(path);
+                return false;
+            }
+
+            string name = AssetItem.GetEvilName(recipe);
+            if (string.IsNullOrWhiteSpace(name)) return false;
+
+            bool rebuild = false;
+            if (dic.TryGetValue(name, out AssetItem sameName) && sameName != null)
+            {
+                string otherPath = string.IsNullOrEmpty(sameName._Guid) ? string.Empty : AssetDatabase.GUIDToAssetPath(sameName._Guid);
+                bool otherExists = !string.IsNullOrEmpty(otherPath) && AssetDatabase.GetMainAssetTypeAtPath(otherPath) != null;
+                if (otherExists)
+                {
+                    Debug.LogWarning($"UMA: '{path}' was not added to the Global Library because the wardrobe recipe name '{name}' is already used by '{otherPath}'. Give it a unique name, then add it from the Global Library window.", recipe);
+                    return false;
+                }
+                RemoveItem(indexer, lookupType, sameName, batch);
+                rebuild = true;
+            }
+
+            UMA.Editors.UMALegacyRecipeLibraryHook.ApplyAndReport(recipe);
+
+            var ai = new AssetItem(lookupType, recipe);
+            if (!indexer.AddAssetItem(ai, noDirty: true)) return rebuild;
+            batch.Add(new Change { typeName = lookupType.Name, name = ai._Name, path = ai._Path, kind = Added, key = ItemKey(ai) });
+            return rebuild;
+        }
+
         static bool RemoveItemsAtPath(UMAAssetIndexer indexer, string path, List<Change> batch)
         {
             bool removed = false;
-            for (int t = 0; t < HandledTypes.Length; t++)
+            for (int t = 0; t < RemovedTypes.Length; t++)
             {
-                Type lookupType = HandledTypes[t];
+                Type lookupType = RemovedTypes[t];
                 Dictionary<string, AssetItem> dic = indexer.GetAssetDictionary(lookupType);
                 var matches = new List<AssetItem>();
                 foreach (AssetItem ai in dic.Values)
@@ -430,7 +488,29 @@ namespace UMA
                     removed = true;
                 }
             }
+
+            // The library can hold the same asset more than once (only one entry is in the lookup), and the
+            // rebuild that follows would bring a leftover copy back. Drop every remaining entry for the path.
+            List<AssetItem> items = indexer.SerializedItems;
+            for (int i = 0; i < items.Count; i++)
+            {
+                AssetItem ai = items[i];
+                if (ai == null || !string.Equals(ai._Path, path, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!IsRemovedTypeName(ai._BaseTypeName)) continue;
+                items[i] = null;
+                if (!removed) batch.Add(new Change { typeName = ai._BaseTypeName, name = ai._Name, path = ai._Path, kind = Removed });
+                removed = true;
+            }
             return removed;
+        }
+
+        static bool IsRemovedTypeName(string typeName)
+        {
+            for (int i = 0; i < RemovedTypes.Length; i++)
+            {
+                if (RemovedTypes[i].Name == typeName) return true;
+            }
+            return false;
         }
 
         static void RemoveItem(UMAAssetIndexer indexer, Type lookupType, AssetItem ai, List<Change> batch)
@@ -682,7 +762,8 @@ namespace UMA
 
         static string Describe(string typeName, int count)
         {
-            string word = typeName == nameof(SlotDataAsset) ? "slot" : typeName == nameof(OverlayDataAsset) ? "overlay" : typeName == nameof(RaceData) ? "race" : typeName;
+            string word = typeName == nameof(SlotDataAsset) ? "slot" : typeName == nameof(OverlayDataAsset) ? "overlay" : typeName == nameof(RaceData) ? "race" :
+                typeName == nameof(UMAWardrobeRecipe) ? "wardrobe recipe" : typeName;
             return count == 1 ? word : word + "s";
         }
 

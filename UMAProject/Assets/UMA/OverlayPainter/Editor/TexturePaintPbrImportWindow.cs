@@ -185,7 +185,7 @@ namespace UMA.TexturePaint.Editor
                 preset.layers.Add(layer);preset.includesWholeStack=false;preset.includesCachedPluginOutput=false;
                 AssetDatabase.CreateAsset(set,destination);created.Add(destination);
                 string presetPath=AssetDatabase.GenerateUniqueAssetPath(parent+"/"+name+" Material.asset");AssetDatabase.CreateAsset(preset,presetPath);created.Add(presetPath);
-                AssetDatabase.SaveAssets();Selection.activeObject=preset;EditorGUIUtility.PingObject(preset);
+                AssetDatabase.SaveAssetIfDirty(set);AssetDatabase.SaveAssetIfDirty(preset);Selection.activeObject=preset;EditorGUIUtility.PingObject(preset);
                 Report("Created "+destination+" and "+presetPath+". Apply the preset from Material Presets or use the Sprite Set.");
                 return true;
             }

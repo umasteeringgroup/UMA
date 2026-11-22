@@ -252,7 +252,10 @@ namespace UMA
 				"Use the MeshData API based combiner. When disabled, UMA uses the managed combiner."
 			);
 
-			
+			GUILayout.Space(6);
+			EditorGUILayout.LabelField("Expression Wrinkles", EditorStyles.boldLabel);
+			DrawPropertiesIncluding(m_CustomSettings, new string[] { "expressionWrinkles", "wrinkleOverlay", "wrinkleProfile" });
+
 
 
 			EndVerticalPadded(10);

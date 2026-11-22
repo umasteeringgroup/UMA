@@ -56,12 +56,13 @@ namespace UMA.TexturePaint.Editor.Tests
         private static float Difference(Color[] a,Color[] b)=>a.Zip(b,(x,y)=>Mathf.Abs(x.r-y.r)+Mathf.Abs(x.g-y.g)+Mathf.Abs(x.b-y.b)+Mathf.Abs(x.a-y.a)).Average();
 
         [TestCase(false)] [TestCase(true)]
-        public void TattooAllElevenChannelsShareGlyphAlphaAndScalarValues(bool directUV)
+        public void TattooAllChannelsShareGlyphAlphaAndScalarValues(bool directUV)
         {
             using var r=new Ribbon(TexturePaintPathGenerators.TextId);
             r.context.pathGenerator.text="O A";r.context.pathGenerator.preserveTextAspect=false;
             var output=r.Render(directUV);var albedo=output[TexturePaintChannel.Albedo];
-            Assert.That(output.Count,Is.EqualTo(11));
+            // Every logical channel, the expression wrinkle channels included.
+            Assert.That(output.Count,Is.EqualTo(Enum.GetValues(typeof(TexturePaintChannel)).Length));
             Assert.That(albedo.Count(c=>c.a>.5f),Is.GreaterThan(100));
             Assert.That(albedo.Count(c=>c.a<.001f),Is.GreaterThan(5000),"Glyph counters, spaces and margins stay transparent.");
             foreach(var pair in output)

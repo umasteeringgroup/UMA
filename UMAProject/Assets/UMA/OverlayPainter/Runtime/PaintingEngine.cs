@@ -104,6 +104,9 @@ namespace UMA.TexturePaint
             public float contribution = 1f;
             public bool isLayerMask;
             public float maskBaseValue = 1f;
+            // The base before it was first painted, when this target is the editable base: what Erase brings back.
+            public RenderTexture eraseOriginal;
+            public Color[] eraseOriginalPixels;
             public readonly Dictionary<Vector2Int, CoverageTile> coverageTiles = new Dictionary<Vector2Int, CoverageTile>();
             public readonly Dictionary<int, Color> cpuStrokeBase = new Dictionary<int, Color>();
             public readonly Dictionary<int, float> cpuStrokeCoverage = new Dictionary<int, float>();
@@ -342,6 +345,13 @@ namespace UMA.TexturePaint
             diagnostics.SetActiveTargets(activeTargets.Count);
             if (activeTargets.Count == 0)
                 return FailStrokeStart("The stroke has no writable paint targets for the selected channel and source.");
+            for (int i = 0; i < activeTargets.Count; i++)
+            {
+                ActiveTarget active = activeTargets[i];
+                TextureChannelTarget baseChannel = active.isLayerMask ? null : active.textures?.GetChannel(active.channel);
+                active.eraseOriginal = baseChannel != null && ReferenceEquals(baseChannel.editable, active.target)
+                    ? baseChannel.CaptureOriginal() : null;
+            }
             if (textureSets != null)
             {
                 for (int i = 0; i < textureSets.Count; i++)
@@ -354,6 +364,9 @@ namespace UMA.TexturePaint
                     if (context.garment?.enabled == true && !context.garment.SupportsAnyOutput(required)) continue;
                     if (context.pathGenerator?.enabled == true &&
                         !context.channelSources.Keys.Any(channel => required.GetChannel(channel) != null)) continue;
+                    // The same holds for hand-painted channels: a member whose material has none of the stroke's
+                    // channels (the wrinkle channels exist only on the head tile) takes no part in the stroke.
+                    if (!HasAnyStrokeChannel(context, required)) continue;
                     string targetName = !string.IsNullOrEmpty(required.Name)
                         ? required.Name
                         : !string.IsNullOrEmpty(required.persistentId)
@@ -1383,6 +1396,8 @@ namespace UMA.TexturePaint
             strokeShader.SetInt("_Shape", (int)activeContext.brush.shape);
             strokeShader.SetInt("_LimitStrokeCoverage", activeContext.limitStrokeCoverage ? 1 : 0);
             strokeShader.SetInt("_Operation", ToShaderOperation(activeContext.tool));
+            strokeShader.SetInt("_LayerTarget", IsLayerTarget(active) ? 1 : 0);
+            BindEraseOriginal(strokeShader, kernel, active);
             strokeShader.SetInt("_BlendMode", (int)activeContext.brush.blendMode);
             strokeShader.SetInt("_PaintSourceKind", (int)active.sourceKind);
             strokeShader.SetVector("_SourceMultiplier", active.multiplier);
@@ -1859,6 +1874,17 @@ namespace UMA.TexturePaint
             if (source.source == TexturePaintBrushSource.Color) return true;
             paintTexture = ResolveChannelPaintSource(textures, channel, source);
             return paintTexture != null;
+        }
+
+        /// <summary>True when the material of a texture set has a channel this stroke writes.</summary>
+        private static bool HasAnyStrokeChannel(StrokeContext context, TextureSet set)
+        {
+            if (context.editLayerMask) return true;
+            if (context.channelSources.Count == 0 || context.tool == TexturePaintTool.NormalTouchup)
+                return set.GetChannel(context.channel) != null;
+            foreach (TexturePaintChannel channel in context.channelSources.Keys)
+                if (set.GetChannel(channel) != null) return true;
+            return false;
         }
 
         private bool FailStrokeStart(string error)
@@ -2338,6 +2364,12 @@ namespace UMA.TexturePaint
             shader.SetTexture(kernel, "_PaintMask", StrokeStencil(active));
             shader.SetTexture(kernel, "_GeometryMask", geometryMask != null ? geometryMask : Texture2D.whiteTexture);
             shader.SetTexture(kernel, "_RegionMask", StrokeRegionTexture(active.textures) ?? Texture2D.whiteTexture);
+            if (shader == blurShader)
+            {
+                float blurScale = BlurScale(active.target.Width, active.target.Height, rect, MaximumGpuBlurTaps);
+                shader.SetFloat("_BlurScale", blurScale);
+                shader.SetInt("_BlurRadius", BlurRadius(blurScale));
+            }
             if (shader == strokeShader)
             {
                 Vector2 sourceUVScale = EffectiveScale(sample.sourceUVScale);
@@ -2346,6 +2378,8 @@ namespace UMA.TexturePaint
                 shader.SetVector("_PreviousUV", sample.previousUV);
                 shader.SetVector("_CloneSourceUV", activeContext.cloneSourceUV);
                 shader.SetInt("_Operation", ToShaderOperation(activeContext.tool));
+                shader.SetInt("_LayerTarget", IsLayerTarget(active) ? 1 : 0);
+                BindEraseOriginal(shader, kernel, active);
                 shader.SetInt("_BlendMode", (int)activeContext.brush.blendMode);
                 shader.SetVector("_PaintColor", TexturePaintChannelUtility.WorkingColor(active.channel,
                     sample.hasColor ? sample.color : active.color));
@@ -2416,10 +2450,38 @@ namespace UMA.TexturePaint
             return textures?.RegionTexture;
         }
 
+        private const long MaximumGpuBlurTaps = 256L * 1024L * 1024L;
+        private const long MaximumCpuBlurTaps = 8L * 1024L * 1024L;
+        private float cpuBlurScale = 1f;
+
+        /// <summary>
+        /// How far one Blur stamp reaches, as a multiple of its 3x3 kernel. The kernel is measured in texels, so
+        /// without this a 4096 map would be softened a quarter as far as a 1024 map by the same stroke. The reach
+        /// grows with the texture (1 up to 1024, 4 at 4096). A very large brush footprint gets a smaller reach so
+        /// one stamp stays within the given number of texture reads.
+        /// </summary>
+        internal static float BlurScale(int width, int height, RectInt rect, long maximumTaps)
+        {
+            float scale = Mathf.Clamp(Mathf.Max(width, height) / 1024f, 1f, 4f);
+            long pixels = (long)Mathf.Max(1, rect.width) * Mathf.Max(1, rect.height);
+            while (scale > 1f)
+            {
+                long taps = 2 * BlurRadius(scale) + 1;
+                if (pixels * taps * taps <= maximumTaps) break;
+                scale = Mathf.Max(1f, scale - 0.5f);
+            }
+            return scale;
+        }
+
+        /// <summary>Kernel half-width in texels for a blur scale: 1 is the 3x3 kernel, wider scales reach 1.5 times the scale.</summary>
+        internal static int BlurRadius(float scale) => scale > 1.0001f ? Mathf.CeilToInt(scale * 1.5f) : 1;
+
         private void ApplyCPU(ActiveTarget active, StrokeSample sample, BrushProjection projection,
             Vector4 uvToBrush, RectInt rect,
             Texture2D geometryMask)
         {
+            cpuBlurScale = activeContext.tool == TexturePaintTool.Blur
+                ? BlurScale(active.target.Width, active.target.Height, rect, MaximumCpuBlurTaps) : 1f;
             Texture stencil = StrokeStencil(active);
             Texture2D stencilPixels = null;
             if (stencil is RenderTexture stencilTarget && !stencilReadbacks.TryGetValue(stencil, out stencilPixels))
@@ -2521,10 +2583,122 @@ namespace UMA.TexturePaint
             return xMax > xMin && yMax > yMin ? new RectInt(xMin, yMin, xMax - xMin, yMax - yMin) : default;
         }
 
+        /// <summary>
+        /// True when a stroke target is a layer texture: transparent where nothing was painted, with straight alpha.
+        /// The editable base texture and layer masks are opaque and are not layer targets.
+        /// </summary>
+        private static bool IsLayerTarget(ActiveTarget active) => active != null && !active.isLayerMask &&
+            !ReferenceEquals(active.textures?.GetChannel(active.channel)?.editable, active.target);
+
+        private void BindEraseOriginal(ComputeShader shader, int kernel, ActiveTarget active)
+        {
+            bool restore = activeContext.tool == TexturePaintTool.Erase && active.eraseOriginal != null;
+            shader.SetInt("_EraseToOriginal", restore ? 1 : 0);
+            shader.SetTexture(kernel, "_EraseOriginal", restore ? active.eraseOriginal : Texture2D.whiteTexture);
+        }
+
+        private static Color BlendRGB(Color destination, Color source, TexturePaintBlendMode mode)
+        {
+            switch (mode)
+            {
+                case TexturePaintBlendMode.Multiply: return destination * source;
+                case TexturePaintBlendMode.Add: return destination + source;
+                case TexturePaintBlendMode.Subtract: return destination - source;
+                case TexturePaintBlendMode.Screen: return Color.white - (Color.white - destination) * (Color.white - source);
+                case TexturePaintBlendMode.Overlay:
+                    return new Color(OverlayValue(destination.r, source.r), OverlayValue(destination.g, source.g),
+                        OverlayValue(destination.b, source.b), source.a);
+                default: return source;
+            }
+        }
+
+        private static float OverlayValue(float destination, float source) => destination < 0.5f
+            ? 2f * destination * source : 1f - 2f * (1f - destination) * (1f - source);
+
+        /// <summary>
+        /// Erase, Dodge, Burn, Smear and Clone on a layer texture. Mirrors ApplyLayerTool in StrokeRasterize.compute:
+        /// Erase takes coverage away, Dodge and Burn change only the colour, Smear and Clone move colour with its coverage.
+        /// </summary>
+        private Color ApplyCPULayerTool(ActiveTarget active, int index, Color current, Color desired,
+            float weight, float coverageLimit)
+        {
+            Color reference = current;
+            float amount = weight;
+            if (activeContext.limitStrokeCoverage)
+            {
+                float accumulated = active.cpuStrokeCoverage.TryGetValue(index, out float used) ? used : 0f;
+                amount = TexturePaintMath.ConsumeStrokeCoverage(weight, coverageLimit, ref accumulated);
+                active.cpuStrokeCoverage[index] = accumulated;
+                reference = GetCPUStrokeBase(active, index, current);
+            }
+            Color result;
+            if (activeContext.tool == TexturePaintTool.Erase)
+                result = new Color(current.r, current.g, current.b, Mathf.Clamp01(current.a - amount * reference.a));
+            else
+            {
+                Color candidate = BlendRGB(reference, desired, activeContext.brush.blendMode);
+                if (activeContext.tool == TexturePaintTool.Dodge || activeContext.tool == TexturePaintTool.Burn)
+                    result = new Color(current.r + amount * (candidate.r - reference.r),
+                        current.g + amount * (candidate.g - reference.g),
+                        current.b + amount * (candidate.b - reference.b), current.a);
+                else
+                {
+                    float alpha = Mathf.Clamp01(current.a + amount * (desired.a - reference.a));
+                    if (alpha <= 0.00001f) result = new Color(current.r, current.g, current.b, alpha);
+                    else result = new Color(
+                        (current.r * current.a + amount * (candidate.r * desired.a - reference.r * reference.a)) / alpha,
+                        (current.g * current.a + amount * (candidate.g * desired.a - reference.g * reference.a)) / alpha,
+                        (current.b * current.a + amount * (candidate.b * desired.a - reference.b * reference.a)) / alpha,
+                        alpha);
+                }
+            }
+            if (active.channel == TexturePaintChannel.Normal)
+            {
+                Vector3 normal = new Vector3(result.r * 2f - 1f, result.g * 2f - 1f, result.b * 2f - 1f);
+                if (normal.magnitude > 0.0001f)
+                {
+                    normal.Normalize();
+                    result = new Color(normal.x * 0.5f + 0.5f, normal.y * 0.5f + 0.5f, normal.z * 0.5f + 0.5f, result.a);
+                }
+            }
+            return result;
+        }
+
         private Color ApplyCPUOperation(ActiveTarget active, Color[] source, int index, int x, int y, int width, int height,
             Vector2 uv, StrokeSample sample, Vector4 uvToBrush, float weight, float coverageLimit)
         {
             Color current = source[index];
+            if (activeContext.tool == TexturePaintTool.Erase && active.eraseOriginal != null)
+            {
+                active.eraseOriginalPixels ??= ReadPixels(active.eraseOriginal);
+                if (active.eraseOriginalPixels.Length == source.Length)
+                    return ApplyCPUStrokeDeposit(active, index, current, active.eraseOriginalPixels[index],
+                        weight, coverageLimit);
+            }
+            if (IsLayerTarget(active))
+                switch (activeContext.tool)
+                {
+                    case TexturePaintTool.Erase:
+                        return ApplyCPULayerTool(active, index, current, current, weight, coverageLimit);
+                    case TexturePaintTool.Dodge:
+                        return ApplyCPULayerTool(active, index, current, new Color(1f, 1f, 1f, current.a), weight, coverageLimit);
+                    case TexturePaintTool.Burn:
+                        return ApplyCPULayerTool(active, index, current, new Color(0f, 0f, 0f, current.a), weight, coverageLimit);
+                    case TexturePaintTool.Smear:
+                    {
+                        Vector2 layerDelta = (sample.uv - sample.previousUV) * new Vector2(width, height);
+                        int fromX = Mathf.Clamp(Mathf.RoundToInt(x - layerDelta.x), 0, width - 1);
+                        int fromY = Mathf.Clamp(Mathf.RoundToInt(y - layerDelta.y), 0, height - 1);
+                        return ApplyCPULayerTool(active, index, current, source[fromY * width + fromX], weight, coverageLimit);
+                    }
+                    case TexturePaintTool.Clone:
+                    {
+                        Vector2 layerCloneUV = activeContext.cloneSourceUV + (uv - sample.uv);
+                        int fromX = Mathf.Clamp(Mathf.FloorToInt(layerCloneUV.x * width), 0, width - 1);
+                        int fromY = Mathf.Clamp(Mathf.FloorToInt(layerCloneUV.y * height), 0, height - 1);
+                        return ApplyCPULayerTool(active, index, current, source[fromY * width + fromX], weight, coverageLimit);
+                    }
+                }
             switch (activeContext.tool)
             {
                 case TexturePaintTool.Erase:
@@ -2536,10 +2710,17 @@ namespace UMA.TexturePaint
                 case TexturePaintTool.Burn:
                     return ApplyCPUStrokeDeposit(active, index, current, new Color(0f, 0f, 0f, current.a), weight, coverageLimit);
                 case TexturePaintTool.Blur:
-                    Color average = Color.clear; int count = 0;
-                    for (int oy = -1; oy <= 1; oy++) for (int ox = -1; ox <= 1; ox++)
-                    { int sx = Mathf.Clamp(x + ox, 0, width - 1), sy = Mathf.Clamp(y + oy, 0, height - 1); average += source[sy * width + sx]; count++; }
-                    return ApplyCPUStrokeDeposit(active, index, current, average / count, weight, coverageLimit);
+                    // Same kernel as CSBlur in Blur.compute: 1-2-1 at scale 1, a wider Gaussian above it.
+                    Color average = Color.clear; float kernelTotal = 0f;
+                    int blurRadius = BlurRadius(cpuBlurScale);
+                    float blurFalloff = 1f / (cpuBlurScale * cpuBlurScale);
+                    for (int oy = -blurRadius; oy <= blurRadius; oy++) for (int ox = -blurRadius; ox <= blurRadius; ox++)
+                    {
+                        int sx = Mathf.Clamp(x + ox, 0, width - 1), sy = Mathf.Clamp(y + oy, 0, height - 1);
+                        float k = blurRadius <= 1 ? (2 - Mathf.Abs(ox)) * (2 - Mathf.Abs(oy)) : Mathf.Exp(-(ox * ox + oy * oy) * blurFalloff);
+                        average += source[sy * width + sx] * k; kernelTotal += k;
+                    }
+                    return ApplyCPUStrokeDeposit(active, index, current, average / kernelTotal, weight, coverageLimit);
                 case TexturePaintTool.Smear:
                     Vector2 delta = (sample.uv - sample.previousUV) * new Vector2(width, height);
                     int smearX = Mathf.Clamp(Mathf.RoundToInt(x - delta.x), 0, width - 1);
@@ -2616,8 +2797,9 @@ namespace UMA.TexturePaint
         private Color SamplePaintSource(ActiveTarget active, Vector2 uv, Vector2 brushCenter, Vector4 uvToBrush,
             BrushPreset brush, StrokeSample sample)
         {
+            // The same working colour the GPU stroke uses (_PaintColor): colour channels are painted in linear space.
             if (active.sourceKind == TexturePaintBrushSource.Color)
-                return TexturePaintChannelUtility.ConstrainColor(active.channel,
+                return TexturePaintChannelUtility.WorkingColor(active.channel,
                     sample.hasColor ? sample.color : active.color);
             if (!(active.paintSource is Texture2D texture)) return active.color;
             Vector2 sampleUV = uv;
@@ -2754,6 +2936,13 @@ namespace UMA.TexturePaint
                 case TexturePaintTool.Burn: return 5;
                 default: return 0;
             }
+        }
+
+        private static Color[] ReadPixels(RenderTexture source)
+        {
+            Texture2D readback = Readback(source);
+            try { return readback.GetPixels(); }
+            finally { Destroy(readback); }
         }
 
         private static Texture2D Readback(RenderTexture source)

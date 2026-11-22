@@ -19,6 +19,7 @@ MonoBehaviour:
   compatibleRaces:
   - HumanMale
   - Elf Male
+  - Human Male 3.0
   wardrobeRecipeThumbs:
   - race: HumanMale
     filename: 
@@ -49,6 +50,7 @@ MonoBehaviour:
   forceKeep: 0
   labelLocalFiles: 0
   noAutoAdd: 0
+  editorGraphData: 
   IncompatibleRecipes: []
   UserField: 
   replaces: Nothing

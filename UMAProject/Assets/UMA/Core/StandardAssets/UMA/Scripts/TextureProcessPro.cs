@@ -334,7 +334,8 @@ namespace UMA
                                     RenderTextureFormat channelTextureFormat = UMAMaterial.GetCompatibleChannelTextureFormat(channels[textureChannelNumber].textureFormat);
                                     // GPU compression produces its own Texture2D, so it counts as a conversion
                                     // whatever the conversion settings say.
-                                    GraphicsFormat gpuFormat = UMAGpuTextureCompressor.ResolveFormat(umaGenerator, channelTextureFormat);
+                                    bool neverCompress = channels[textureChannelNumber].NeverCompress;
+                                    GraphicsFormat gpuFormat = neverCompress ? GraphicsFormat.None : UMAGpuTextureCompressor.ResolveFormat(umaGenerator, channelTextureFormat);
                                     bool gpuCompress = gpuFormat != GraphicsFormat.None;
                                     bool CopyRTtoTex = gpuCompress || SupportsRTToTexture2D && (umaGenerator.convertRenderTexture || channels[textureChannelNumber].ConvertRenderTexture);
                                     bool convertedMipMaps = umaGenerator.qualityTextures.Mips(umaGenerator.convertMipMaps);
@@ -374,7 +375,7 @@ namespace UMA
                                         ww = UMAGpuTextureCompressor.AlignToBlocks(ww);
                                         hh = UMAGpuTextureCompressor.AlignToBlocks(hh);
                                     }
-                                    var compression = gpuCompress ? GeneratorRuntimeCompression.Disabled :
+                                    var compression = gpuCompress || neverCompress ? GeneratorRuntimeCompression.Disabled :
                                         umaGenerator.qualityTextures.EffectiveCompression(CopyRTtoTex, channelTextureFormat, ww, hh);
 
                                     Color backgroundColor = default;
@@ -575,11 +576,11 @@ namespace UMA
                                                 {
                                                     rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName,
                                                         textureChannelNumber, umaGenerator, atlas.CompleteConversion,
-                                                        () => { atlas.ConversionPending = false; readbackHold.Dispose(); }, gpuFormat);
+                                                        () => { atlas.ConversionPending = false; readbackHold.Dispose(); }, gpuFormat, neverCompress);
                                                 }
                                                 catch { readbackHold.Dispose(); throw; }
                                             }
-                                            else rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName, textureChannelNumber, umaGenerator, null, null, gpuFormat);
+                                            else rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName, textureChannelNumber, umaGenerator, null, null, gpuFormat, neverCompress);
                                             pendingTemporaryTexture = null;
                                             rt2cpu.DoAsyncCopy();
                                         }

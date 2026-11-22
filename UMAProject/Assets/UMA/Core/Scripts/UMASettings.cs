@@ -72,6 +72,25 @@ namespace UMA
         public bool showToolbar = true;
 #endif
         public GameObject generatorPrefab;
+
+        /// <summary>Which avatars get expression wrinkles (<see cref="UMAExpressionWrinkles"/>).</summary>
+        public enum ExpressionWrinkleMode
+        {
+            /// <summary>Only avatars that have an UMA Expression Wrinkles component.</summary>
+            PerAvatar = 0,
+            /// <summary>Every DynamicCharacterAvatar, which gets the component (not saved) when it builds.</summary>
+            AllAvatars = 1,
+            /// <summary>None: components that are present add no wrinkle maps.</summary>
+            Off = 2,
+        }
+
+        [Tooltip("Per Avatar: only avatars with an UMA Expression Wrinkles component. All Avatars: every DynamicCharacterAvatar gets one when it builds. Off: no avatar gets wrinkle maps.")]
+        public ExpressionWrinkleMode expressionWrinkles = ExpressionWrinkleMode.PerAvatar;
+        [Tooltip("Wrinkle overlay for avatars that get expression wrinkles from All Avatars.")]
+        public OverlayDataAsset wrinkleOverlay;
+        [Tooltip("Expression profile for avatars that get expression wrinkles from All Avatars.")]
+        public UMAWrinkleProfile wrinkleProfile;
+
 		public static UMASettings instance;
 #if !UNITY_EDITOR
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

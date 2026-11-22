@@ -566,6 +566,7 @@ namespace UMA.Editors
                         }
                         
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("DownSample"), new GUIContent("Down Sample", "Decrease size to save texture memory"));
+                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("NeverCompress"), new GUIContent("Never Compress", "Keep this channel's atlas uncompressed, whatever the generator's compression settings. For data that block compression damages, such as ids or values packed per component."));
                         EditorGUI.EndDisabledGroup();
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("sourceTextureName"), new GUIContent("Source Texture Name", "For use with procedural materials, leave empty otherwise."));
 

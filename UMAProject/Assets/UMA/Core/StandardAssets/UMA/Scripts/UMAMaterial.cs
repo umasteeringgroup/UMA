@@ -44,6 +44,9 @@ namespace UMA
         [SerializeField, HideInInspector] private Material _speedBackupSecondPass;
         [SerializeField, HideInInspector] private Material _speedBackupHDRPMaterial;
         [SerializeField, HideInInspector] private Material _speedBackupHDRPSecondPass;
+        // Maximum speed swaps a Realistic Skin SSS material for a Realistic Skin copy; Maximum Fidelity restores this one.
+        [SerializeField, HideInInspector] private bool _hasSpeedSkinBackup;
+        [SerializeField, HideInInspector] private Material _speedBackupSkinMaterial;
 #endif
 
         public void Awake()
@@ -199,7 +202,18 @@ namespace UMA
             /// RGBA skin-variation texture. RGB stores the color the base skin is shifted toward;
             /// alpha controls the amount and direction of that variation in the skin shader.
             /// </summary>
-            SkinColorMask = 1 << 17
+            SkinColorMask = 1 << 17,
+            /// <summary>
+            /// Expression wrinkle normal X (red) and Y (green) in tangent space, 0.5 = flat
+            /// ("UMA/URP/Realistic Skin SSS Wrinkles" _WrinkleMap). Derived from a wrinkle height, not painted directly.
+            /// </summary>
+            WrinkleSlope = 1 << 18,
+            /// <summary>Expression wrinkle crease depth, 0 = none (_WrinkleMap blue).</summary>
+            WrinkleCrease = 1 << 19,
+            /// <summary>Expression wrinkle flush, where compressed skin reddens (_WrinkleMap alpha).</summary>
+            WrinkleFlush = 1 << 20,
+            /// <summary>Expression wrinkle zone ids and masks (_WrinkleControlMap). Exact values: never compressed or painted.</summary>
+            WrinkleZone = 1 << 21
         }
 
         public enum TextureChannelLayoutMode
@@ -438,6 +452,12 @@ namespace UMA
             public bool ConvertRenderTexture;
             public bool UseExistingTextureForChannel;
             public bool NonShaderTexture;
+            /// <summary>
+            /// Keeps this channel's atlas uncompressed, whatever the generator's compression settings. For data that
+            /// block compression damages, such as ids or values packed per component.
+            /// </summary>
+            [Tooltip("Keep this channel's atlas uncompressed, whatever the generator's compression settings. For data that block compression damages, such as ids or values packed per component.")]
+            public bool NeverCompress;
 #if UNITY_EDITOR
             [Tooltip("Describes the RGBA contents of this physical texture for editor authoring tools. Automatic follows known Unity/UMA shader conventions; Custom is fully editable in the UMA Material inspector.")]
             public TextureChannelLayout textureChannelLayout;
@@ -484,6 +504,11 @@ namespace UMA
             if (owner != null && owner.Compression == CompressionSettings.Fast)
                 compression = TextureChannelImportCompression.Compressed;
             else if (owner != null && owner.Compression == CompressionSettings.HighQuality)
+                compression = TextureChannelImportCompression.HighQuality;
+            // Wrinkle zone ids must survive exactly; the wrinkle map is imported like the procedural bake (BC7).
+            if (layout.Uses(TextureChannelUsage.WrinkleZone))
+                compression = TextureChannelImportCompression.Uncompressed;
+            else if (layout.Uses(TextureChannelUsage.WrinkleSlope))
                 compression = TextureChannelImportCompression.HighQuality;
 
             return new TextureChannelOutputSettings
@@ -554,6 +579,22 @@ namespace UMA
             string property = (channel.materialPropertyName ?? string.Empty).Trim();
             string source = (channel.sourceTextureName ?? string.Empty).Trim();
             string name = (property + " " + source).ToLowerInvariant();
+
+            if (EqualsProperty(property, "_WrinkleMap"))
+            {
+                // Expression wrinkles (UMA3SkinWrinkles.hlsl): RG normal from a height, B crease, A flush.
+                layout.red = TextureChannelUsage.WrinkleSlope;
+                layout.green = TextureChannelUsage.WrinkleSlope;
+                layout.blue = TextureChannelUsage.WrinkleCrease;
+                layout.alpha = TextureChannelUsage.WrinkleFlush;
+                return layout;
+            }
+
+            if (EqualsProperty(property, "_WrinkleControlMap"))
+            {
+                SetRgba(ref layout, TextureChannelUsage.WrinkleZone);
+                return layout;
+            }
 
             if (EqualsProperty(property, "_DetailMap"))
             {

@@ -136,7 +136,8 @@ namespace UMA
         }
 
         public RenderTexToCPU(RenderTexture texture, GeneratedMaterial generatedMaterial, string textureName, int textureIndex, UMAGeneratorBase basegen,
-            Action<Texture2D> sharedCompletion = null, Action sharedFinished = null, GraphicsFormat gpuFormat = GraphicsFormat.None)
+            Action<Texture2D> sharedCompletion = null, Action sharedFinished = null, GraphicsFormat gpuFormat = GraphicsFormat.None,
+            bool neverCompress = false)
         {
             this.texture = texture;
             this.generatedMaterial = generatedMaterial;
@@ -145,7 +146,7 @@ namespace UMA
             this.recreateMips = basegen.qualityTextures.Mips(basegen.convertMipMaps);
             this.gpuFormat = gpuFormat;
             applyMips = recreateMips && gpuFormat == GraphicsFormat.None;
-            qualityCompression = gpuFormat != GraphicsFormat.None ? GeneratorRuntimeCompression.Disabled :
+            qualityCompression = gpuFormat != GraphicsFormat.None || neverCompress ? GeneratorRuntimeCompression.Disabled :
                 basegen.qualityTextures.EffectiveCompression(true, texture.format, texture.width, texture.height);
             keepReadable = basegen.keepConvertedTexturesReadable;
             qualityFilter = texture.filterMode;

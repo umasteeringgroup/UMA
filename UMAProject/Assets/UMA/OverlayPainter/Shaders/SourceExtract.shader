@@ -9,6 +9,7 @@ Shader "Hidden/UMA/TexturePaint/SourceExtract"
         [HideInInspector] _InvertGreen ("Invert Green", Int) = 0
         [HideInInspector] _InvertChannels ("Invert Channels", Int) = 0
         [HideInInspector] _Grayscale ("Grayscale", Int) = 0
+        [HideInInspector] _SingleChannel ("Single Channel Source", Int) = 0
         [HideInInspector] _SourceComponent ("Source Component", Int) = 0
     }
     SubShader
@@ -48,10 +49,13 @@ Shader "Hidden/UMA/TexturePaint/SourceExtract"
             float4 _ScaleOffset;
             int _InvertChannels;
             int _Grayscale;
+            int _SingleChannel;
 
             float4 frag(v2f_img input) : SV_Target
             {
                 float4 source = tex2D(_MainTex, input.uv * _ScaleOffset.xy + _ScaleOffset.zw);
+                // A single-channel texture (R8, R16, a 16-bit height) samples as (r, 0, 0): its value is red.
+                if (_SingleChannel != 0) source = float4(source.rrr, 1.0);
                 if (_InvertChannels != 0) source.rgb = 1.0 - source.rgb;
                 if (_Grayscale != 0)
                 {

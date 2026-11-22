@@ -27,6 +27,10 @@ float _Flow;
 float _Strength;
 float _Rotation;
 int _Shape;
+// The blur reach follows the texture size, so one stamp softens the same distance on the surface at any
+// resolution. 1 = the 3x3 kernel (textures up to 1024); above that, a Gaussian of the same shape, wider.
+float _BlurScale;
+int _BlurRadius;
 int _LimitStrokeCoverage;
 int _RestrictToTriangle;
 int _TriangleBoundaryMask;
@@ -95,15 +99,31 @@ void CSBlur(uint3 dispatchID : SV_DispatchThreadID)
     float weight = saturate(coverageLimit * _Flow);
     if (weight <= 0.00001) return;
     float4 sum = 0;
-    float kernel[3] = { 1.0, 2.0, 1.0 };
     float total = 0;
-    [unroll] for (int y = -1; y <= 1; y++)
-    [unroll] for (int x = -1; x <= 1; x++)
+    if (_BlurRadius <= 1)
     {
-        int2 samplePixel = clamp(pixel + int2(x, y), int2(0, 0), _TextureSize - 1);
-        float k = kernel[x + 1] * kernel[y + 1];
-        sum += _Source.Load(int3(samplePixel, 0)) * k;
-        total += k;
+        float kernel[3] = { 1.0, 2.0, 1.0 };
+        [unroll] for (int y = -1; y <= 1; y++)
+        [unroll] for (int x = -1; x <= 1; x++)
+        {
+            int2 samplePixel = clamp(pixel + int2(x, y), int2(0, 0), _TextureSize - 1);
+            float k = kernel[x + 1] * kernel[y + 1];
+            sum += _Source.Load(int3(samplePixel, 0)) * k;
+            total += k;
+        }
+    }
+    else
+    {
+        // The 3x3 kernel has a variance of half a texel. Keep that shape and scale it: exp(-d^2 / scale^2).
+        float falloff = 1.0 / max(_BlurScale * _BlurScale, 1e-4);
+        [loop] for (int y = -_BlurRadius; y <= _BlurRadius; y++)
+        [loop] for (int x = -_BlurRadius; x <= _BlurRadius; x++)
+        {
+            int2 samplePixel = clamp(pixel + int2(x, y), int2(0, 0), _TextureSize - 1);
+            float k = exp(-float(x * x + y * y) * falloff);
+            sum += _Source.Load(int3(samplePixel, 0)) * k;
+            total += k;
+        }
     }
     float4 current = _Source.Load(int3(pixel, 0));
     float4 candidate = sum / total;

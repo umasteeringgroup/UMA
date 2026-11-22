@@ -4660,6 +4660,14 @@ namespace UMA
             return null;
         }
         /// <summary>
+        /// Editor only. Raised by <see cref="EvilAddAsset"/> (and so by <see cref="AddIfIndexed"/>: the Global
+        /// Library window's drop and folder drop, "Add Selected Assets to Global Library" and the builders)
+        /// just before an asset is added, so editor code can prepare it, for example bring a UMA 2 wardrobe
+        /// recipe to the UMA 3 races (<c>UMALegacyRecipeLibraryHook</c>). A library rebuild does not raise it.
+        /// </summary>
+        public static event System.Action<UnityEngine.Object> EditorAssetAdding;
+
+        /// <summary>
         /// This is the evil version of AddAsset. This version cares not for the good of the project, nor
         /// does it care about readability, expandibility, and indeed, hates goodness with every beat of it's
         /// tiny evil shrivelled heart.
@@ -4676,6 +4684,17 @@ namespace UMA
         /// <returns>Whether the Asset was added or not.</returns>
         public bool EvilAddAsset(System.Type type, UnityEngine.Object o)
         {
+            if (o != null && EditorAssetAdding != null)
+            {
+                try
+                {
+                    EditorAssetAdding(o);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
+            }
             AssetItem ai = null;
             ai = new AssetItem(TypeToLookup[type], o);
             ai._Path = AssetDatabase.GetAssetPath(o.GetEntityId());

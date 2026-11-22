@@ -13,6 +13,14 @@ half _DiffuseNormalStrength, _TransmissionStrength, _TransmissionPower, _SkinIOR
 half _OilLobeWeight, _OilSmoothness, _SpecularAA, _SkinDebug;
 half _Metallic, _ShadowScatter, _CurvatureScale, _NormalBlur;
 half _ThicknessMinMM, _OcclusionColorBleed;
+#ifdef UMA_SKIN_WRINKLES
+// Only in "UMA/URP/Realistic Skin SSS Wrinkles"; see UMA3SkinWrinkles.hlsl.
+half4 _WrinkleFlushColor;
+half _WrinkleNormalStrength, _WrinkleCavityStrength, _WrinkleFlushStrength, _WrinkleStretchFlatten, _WrinkleDebug;
+half _WrinkleZone01, _WrinkleZone02, _WrinkleZone03, _WrinkleZone04, _WrinkleZone05;
+half _WrinkleZone06, _WrinkleZone07, _WrinkleZone08, _WrinkleZone09, _WrinkleZone10;
+half _WrinkleZone11, _WrinkleZone12, _WrinkleZone13, _WrinkleZone14, _WrinkleZone15;
+#endif
 CBUFFER_END
 TEXTURE2D(_MaskMap); SAMPLER(sampler_MaskMap);
 TEXTURE2D(_Skinmask); SAMPLER(sampler_Skinmask);
@@ -82,6 +90,10 @@ struct SkinData
     half oil;
 };
 
+#ifdef UMA_SKIN_WRINKLES
+#include "UMA3SkinWrinkles.hlsl"
+#endif
+
 // Detail map coordinates: the mesh's fourth UV channel when it has one, otherwise the base UV.
 // UMASkinDetailUVUtility bakes that channel so pores keep one size on the surface across texture
 // tiles laid out at different scales. Baked coordinates are never below 1. A mesh without the channel supplies
@@ -132,6 +144,9 @@ SkinData SampleSkin(float2 uv, float2 detailUV)
     s.scatter = saturate(mask.r * controls.r * _SSSBlend);
     s.transmission = saturate(mask.r * controls.b) * _TransmissionStrength * SKIN_TRANSMISSION_SCALE;
     s.oil = saturate(_OilLobeWeight * controls.g);
+    #ifdef UMA_SKIN_WRINKLES
+    SkinApplyWrinkles(uv, s);
+    #endif
     return s;
 }
 
@@ -201,6 +216,9 @@ half3 SampleSkinDiffuseNormal(float2 uv, float2 uvDx, float2 uvDy, half2 detailX
     half3 n = UnpackNormalScale(SAMPLE_TEXTURE2D_GRAD(_BumpMap, sampler_trilinear_repeat, uv, uvDx, uvDy), _BumpScale);
     #ifdef UMA_SKIN_DEBUG_MAPS
     if (SkinDebugIs(SKIN_DEBUG_LIT_WITHOUT_NORMAL_MAP)) n = half3(0, 0, 1);
+    #endif
+    #ifdef UMA_SKIN_WRINKLES
+    n = SkinWrinkleDiffuseNormal(n, uv, uvDx, uvDy);
     #endif
     half3 detailNormal = half3(detailXY, sqrt(saturate(1 - dot(detailXY, detailXY))));
     return normalize(BlendNormalRNM(n, detailNormal));

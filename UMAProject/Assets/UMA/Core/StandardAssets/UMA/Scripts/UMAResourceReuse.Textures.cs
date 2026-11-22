@@ -262,10 +262,11 @@ namespace UMA
             {
                 d.Value(width); d.Value(height); d.Value(outputWidth); d.Value(outputHeight); d.Value(format);
                 d.Value(convert); d.Value(generator.qualityTextures.Mips(convert ? generator.convertMipMaps : material.generateMipMaps));
-                d.Value(generator.qualityTextures.EffectiveCompression(convert, format, outputWidth, outputHeight));
+                bool neverCompress = material.channels[channel].NeverCompress;
+                d.Value(neverCompress ? GeneratorRuntimeCompression.Disabled : generator.qualityTextures.EffectiveCompression(convert, format, outputWidth, outputHeight));
                 d.Value(generator.useAsyncConversion); d.Value(generator.SharperFitTextures); d.Value(background);
                 d.Value(convert && generator.keepConvertedTexturesReadable);
-                d.Value((int)UMAGpuTextureCompressor.ResolveFormat(generator, format));
+                d.Value(neverCompress ? (int)UnityEngine.Experimental.Rendering.GraphicsFormat.None : (int)UMAGpuTextureCompressor.ResolveFormat(generator, format));
                 d.Value(QualitySettings.activeColorSpace); d.Value(SystemInfo.graphicsDeviceType);
                 d.Value(generator.qualityTextures.Anisotropy(material)); d.Value(generator.qualityTextures.MipBias(material)); d.Value(generator.qualityTextures.Filter(material));
                 d.Value(material.channels[channel].channelType);

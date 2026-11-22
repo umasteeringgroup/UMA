@@ -2195,6 +2195,8 @@ namespace UMA.TexturePaint
 #if UNITY_EDITOR
         private static float NeutralComponent(UMAMaterial.TextureChannelUsage usage, int component)
         {
+            // A flat wrinkle slope is 0.5; crease, flush and zones are 0 (no wrinkle).
+            if ((usage & UMAMaterial.TextureChannelUsage.WrinkleSlope) != 0) return 0.5f;
             if ((usage & UMAMaterial.TextureChannelUsage.Normal) != 0)
                 return component == 2 ? 1f : component < 2 ? 0.5f : 1f;
             if ((usage & (UMAMaterial.TextureChannelUsage.Albedo | UMAMaterial.TextureChannelUsage.Opacity |
@@ -2279,7 +2281,10 @@ namespace UMA.TexturePaint
             if (uv.Count == vertices.Count) mesh.SetUVs(0, uv);
             if (colors.Count == vertices.Count) mesh.SetColors(colors);
             mesh.SetTriangles(triangles, 0, true);
-            if (normals.Count != vertices.Count) mesh.RecalculateNormals();
+            // A source without normals gets them from its shape. Vertices at one position (UV seam and slot
+            // connection copies) share one normal: see UMABuddyNormals.
+            if (normals.Count != vertices.Count)
+                mesh.SetNormals(ProceduralMeshMapBuilder.ShapeNormals(vertices.ToArray(), triangles));
             if (tangents.Count != vertices.Count && uv.Count == vertices.Count) mesh.RecalculateTangents();
             mesh.RecalculateBounds();
             return mesh;

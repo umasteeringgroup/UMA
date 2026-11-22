@@ -53,9 +53,9 @@ namespace UMA.TexturePaint.Editor
                 string imagePath=Folder+"/"+names[i]+".png";
                 try{File.WriteAllBytes(imagePath,thumbnail.EncodeToPNG());}finally{UnityEngine.Object.DestroyImmediate(thumbnail);}
                 AssetDatabase.ImportAsset(imagePath,ImportAssetOptions.ForceSynchronousImport);preset.thumbnail=AssetDatabase.LoadAssetAtPath<Texture2D>(imagePath);
-                AssetDatabase.CreateAsset(preset,path);count++;
+                AssetDatabase.CreateAsset(preset,path);AssetDatabase.SaveAssetIfDirty(preset);count++;
             }
-            AssetDatabase.SaveAssets();return count;
+            return count;
         }
 
         private static TexturePaintPluginParameterSet Add(TexturePaintMaterialPreset preset,PluginHost host,string id,string name)

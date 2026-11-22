@@ -395,6 +395,9 @@ namespace UMA.CharacterSystem.Editors
         {
             if (thisRecipesProp == null || tempRecipeAsset == null) return false;
 
+            // A UMA 2 recipe gets its UMA 3 race and mesh hides before its races are copied into the list.
+            UMA.Editors.UMALegacyRecipeLibraryHook.ApplyWhenWorn(tempRecipeAsset);
+
             bool needToAddNew = true;
             for (int ii = 0; ii < thisRecipesProp.arraySize; ii++)
             {

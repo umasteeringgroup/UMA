@@ -19,9 +19,11 @@ namespace UMA.TexturePaint.Editor
             for (int i = 0; i < StubbleMakerPresets.Names.Length; i++)
             {
                 string path = Folder + "/" + StubbleMakerPresets.Names[i] + ".asset";
-                if (!File.Exists(path)) AssetDatabase.CreateAsset(Build(i, host), path);
+                if (File.Exists(path)) continue;
+                TexturePaintMaterialPreset preset = Build(i, host);
+                AssetDatabase.CreateAsset(preset, path);
+                AssetDatabase.SaveAssetIfDirty(preset);
             }
-            AssetDatabase.SaveAssets();
         }
 
         public static TexturePaintMaterialPreset Build(int index, PluginHost host)

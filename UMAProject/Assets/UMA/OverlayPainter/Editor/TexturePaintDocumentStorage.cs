@@ -931,6 +931,7 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintDocumentChannel channel = saved.baseChannels[i];
                 TextureChannelTarget target = set.GetChannel(channel.channel);
                 if (target == null) continue;
+                target.CaptureOriginal(); // Erase on the base brings back what the session started from.
                 Restore(channel.pixels, target.editable);
             }
         }

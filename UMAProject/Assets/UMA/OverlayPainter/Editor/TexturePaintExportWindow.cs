@@ -22,6 +22,8 @@ namespace UMA.TexturePaint.Editor
         [SerializeField] private string exportIdentifier;
         [SerializeField] private string identifierSessionKey;
         [SerializeField] private bool showMaterialDetails;
+        [SerializeField] private bool useWrinklesOnAvatar = true;
+        [SerializeField] private bool useWrinklesForAllAvatars;
 
         public static void Open(TexturePaintStageController controller, DynamicCharacterAvatar avatar,
             TextureSet current, TexturePaintStageState state, TexturePaintDocument document)
@@ -96,11 +98,27 @@ namespace UMA.TexturePaint.Editor
             EditorGUILayout.LabelField("1. Content", EditorStyles.boldLabel);
             template.content = (TexturePaintExportContent)EditorGUILayout.EnumPopup(
                 new GUIContent("Export Mode",
-                    "Flattened Composite includes the reconstructed character texture. Runtime Overlay exports only visible painter layers and creates a dedicated alpha mask."),
+                    "Flattened Composite includes the reconstructed character texture. Runtime Overlay exports only visible painter layers and creates a dedicated alpha mask. " +
+                    "Wrinkle Maps Only exports the expression wrinkle textures of a wrinkle material as a new wrinkle overlay."),
                 template.content);
             if (template.content == TexturePaintExportContent.FlattenedComposite)
                 EditorGUILayout.HelpBox("Exports the complete appearance: reconstructed character textures plus visible painter layers. Normal Control is baked into each material's physical normal output.",
                     MessageType.Info);
+            else if (template.content == TexturePaintExportContent.WrinkleMaps)
+            {
+                EditorGUILayout.HelpBox("Exports only the expression wrinkle textures: the wrinkle map (Wrinkle Height becomes its " +
+                    "red and green slope, Wrinkle Crease its blue, Wrinkle Flush its alpha) and the unchanged zone map. They are " +
+                    "written as a new wrinkle overlay, like UMA30_ExpressionWrinkles_UDIM1001, with every other channel empty, " +
+                    "and the Wrinkle Height is saved as a 16-bit '_height' texture next to the wrinkle map so it can be edited again.",
+                    MessageType.Info);
+                if (avatar != null)
+                    useWrinklesOnAvatar = EditorGUILayout.ToggleLeft(new GUIContent("Use on " + avatar.name,
+                        "After export, set the avatar's UMA Expression Wrinkles component to the new wrinkle overlay (adds the component if needed)."),
+                        useWrinklesOnAvatar);
+                useWrinklesForAllAvatars = EditorGUILayout.ToggleLeft(new GUIContent("Use for All Avatars (UMA Settings)",
+                    "After export, make the new wrinkle overlay the UMA Settings wrinkle overlay, used by every avatar when Expression Wrinkles is All Avatars."),
+                    useWrinklesForAllAvatars);
+            }
             else
                 EditorGUILayout.HelpBox("Exports visible painter layers over transparency. Direct base painting and reconstructed character textures are excluded. A grayscale alpha mask is generated and assigned to the UMA overlay for runtime blending. Authored Normal Control becomes a flat-relative normal delta and contributes to that coverage mask; it is not exported separately.",
                     MessageType.Info);
@@ -111,7 +129,14 @@ namespace UMA.TexturePaint.Editor
             EditorGUILayout.LabelField("2. Naming and Location", EditorStyles.boldLabel);
             exportIdentifier = EditorGUILayout.TextField(new GUIContent("Export Identifier",
                 "Required identifier appended to every new texture and overlay name."), exportIdentifier);
-            template.outputFolder = EditorGUILayout.TextField("Output Folder", template.outputFolder);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                template.outputFolder = EditorGUILayout.TextField(new GUIContent("Output Folder",
+                    "Project folder that receives the exported textures and overlays."), template.outputFolder);
+                if (GUILayout.Button(new GUIContent("...", "Choose a folder inside this project's Assets folder"),
+                        GUILayout.Width(28f)))
+                    ChooseOutputFolder();
+            }
             template.overwritePolicy = (TexturePaintOverwritePolicy)EditorGUILayout.EnumPopup(
                 "Name Conflict", template.overwritePolicy);
             EditorGUILayout.EndVertical();
@@ -174,6 +199,25 @@ namespace UMA.TexturePaint.Editor
             using (new EditorGUI.DisabledScope(plan == null || !plan.IsValid || controller?.Textures == null))
                 if (GUILayout.Button("Export", GUILayout.Height(30f))) Execute();
             if (!string.IsNullOrEmpty(status)) EditorGUILayout.HelpBox(status, MessageType.None);
+        }
+
+        private void ChooseOutputFolder()
+        {
+            string start = AssetDatabase.IsValidFolder(template.outputFolder) ? template.outputFolder : "Assets";
+            string picked = EditorUtility.OpenFolderPanel("Export Output Folder", System.IO.Path.GetFullPath(start), string.Empty);
+            if (!string.IsNullOrEmpty(picked))
+            {
+                string relative = FileUtil.GetProjectRelativePath(picked.Replace('\\', '/'));
+                if (relative == "Assets" || relative.StartsWith("Assets/"))
+                {
+                    template.outputFolder = relative;
+                    EditorUtility.SetDirty(template);
+                    RebuildPlan();
+                }
+                else status = "Choose a folder inside this project's Assets folder.";
+            }
+            // A file dialog inside a layout group ends this GUI pass, also when it was cancelled: the window redraws.
+            GUIUtility.ExitGUI();
         }
 
         private void DrawBindingReports()
@@ -348,7 +392,16 @@ namespace UMA.TexturePaint.Editor
                 int alphaMasks = result.alphaMaskPaths.Count;
                 status = $"Exported {result.TextureCount} material textures" +
                     (alphaMasks > 0 ? $", {alphaMasks} alpha masks" : string.Empty) +
+                    (result.heightSourcePaths.Count > 0 ? $", {result.heightSourcePaths.Count} wrinkle heights" : string.Empty) +
                     $", and {result.overlayPaths.Count} indexed UMA overlays.";
+                if (template.content == TexturePaintExportContent.WrinkleMaps && result.overlayPaths.Count > 0)
+                {
+                    OverlayDataAsset exported = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(result.overlayPaths[0]);
+                    if (useWrinklesOnAvatar && avatar != null)
+                        status += "\n" + TexturePaintWrinkleSupport.UseOnAvatar(avatar, exported);
+                    if (useWrinklesForAllAvatars)
+                        status += "\n" + TexturePaintWrinkleSupport.UseForAllAvatars(exported);
+                }
                 RebuildPlan();
             }
             catch (OperationCanceledException) { status = "Export cancelled; transaction rolled back."; }
@@ -382,6 +435,12 @@ namespace UMA.TexturePaint.Editor
             template = CreateInstance<TexturePaintExportTemplate>();
             template.name = "Descriptor-derived session defaults";
             template.hideFlags = HideFlags.HideAndDontSave;
+            // A session opened from a wrinkle overlay exports wrinkle maps, not a whole-skin composite.
+            if (TexturePaintWrinkleSupport.IsWrinkleOverlaySession(current))
+            {
+                template.content = TexturePaintExportContent.WrinkleMaps;
+                template.scope = TexturePaintExportScope.CurrentMaterial;
+            }
         }
 
         private void RememberTemplateSelection()
@@ -399,7 +458,11 @@ namespace UMA.TexturePaint.Editor
             for (int i = 0; i < plan.entries.Count; i++)
                 if (!paths.Contains(plan.entries[i].path)) paths.Add(plan.entries[i].path);
             for (int i = 0; i < plan.overlays.Count; i++)
+            {
                 if (!paths.Contains(plan.overlays[i].path)) paths.Add(plan.overlays[i].path);
+                string height = plan.overlays[i].heightSourcePath;
+                if (!string.IsNullOrEmpty(height) && !paths.Contains(height)) paths.Add(height);
+            }
             return paths;
         }
     }

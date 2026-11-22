@@ -73,7 +73,7 @@ namespace UMA.TexturePaint.Editor
                 packaged.packagedExternalDependencies.Sort(StringComparer.Ordinal);
                 packaged.Migrate();
                 EditorUtility.SetDirty(packaged);
-                AssetDatabase.SaveAssets();
+                AssetDatabase.SaveAssetIfDirty(packaged);
                 AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
                 return AssetDatabase.LoadAssetAtPath<TexturePaintMaterialPreset>(assetPath);
             }

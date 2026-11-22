@@ -483,6 +483,9 @@ void SkinFragment(SkinVaryings v, out half4 color : SV_Target0
     else if (SkinDebugIs(SKIN_DEBUG_THICKNESS)) result = saturate(thickness * 20.0).xxx * known;
     else if (SkinDebugIs(SKIN_DEBUG_DIFFUSE_NORMAL)) result = SkinDebugData(shading.normalR * 0.5 + 0.5);
     #endif
+    #ifdef UMA_SKIN_WRINKLES
+    result = SkinWrinkleDebug(v.uv.xy, result);
+    #endif
     color = half4(result, 1);
     #ifdef _WRITE_RENDERING_LAYERS
     renderingLayers = EncodeMeshRenderingLayer();

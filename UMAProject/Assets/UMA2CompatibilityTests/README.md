@@ -18,6 +18,12 @@ detail coordinates in their fourth UV channel, with one detail size inside each 
 texture layout itself is untouched, that the head mask maps show little detail on the nose, and that
 both UMA 2 skin materials use one detail tiling.
 
+The **UMA2LegacyRecipeLibraryHookTests** fixture checks that a UMA 2 wardrobe recipe added to the Global
+Library (explicit add or import) gets the `Legacy{race}_{hidden slot}_*` Mesh Hide Assets and the UMA 3 race
+(not when it uses the UMA 2 head slot), once, saving only that recipe. The same fix runs when such a recipe is
+worn in edit mode, and a deleted recipe is removed from the library. It works on renamed copies of shipped
+recipes in a temporary folder and requires the Global Library file to be byte-identical afterwards.
+
 Build artifacts are temporary files under `Library/UMA/CompatibilityBuildTests`. The tests
 do not remove the installed legacy content or alter characters in the open scene. Documentation
 registration is restored after its test. Remove this companion before removing the parent.
