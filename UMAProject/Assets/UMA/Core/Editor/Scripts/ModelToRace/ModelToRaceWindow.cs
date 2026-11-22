@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -15,13 +16,15 @@ namespace UMA.Editors.ModelToRace
         [SerializeField] private ModelToRacePlan plan = new ModelToRacePlan();
         [SerializeField] private int page;
         [SerializeField] private string completedFolder;
+        // Filters are window view state only; they never change plan selections.
+        [SerializeField] private string shapeFilter = "";
+        [SerializeField] private string boneFilter = "";
         private ScrollView content;
-        private string search = "";
 
         [MenuItem("UMA/Model to Race & Clothing...", priority = 21)]
         public static void Open() => GetWindow<ModelToRaceWindow>("Model to UMA");
 
-        private const string ProjectMenu = "Assets/UMA/Model To Race/Clothing...";
+        private const string ProjectMenu = "Assets/UMA/Model To Race && Clothing...";
 
         [MenuItem(ProjectMenu, false, 2000)]
         private static void OpenSelectedModel()
@@ -32,7 +35,8 @@ namespace UMA.Editors.ModelToRace
             window.plan = new ModelToRacePlan { source = model };
             window.plan.Scan();
             window.page = 0;
-            window.search = "";
+            window.shapeFilter = "";
+            window.boneFilter = "";
             window.completedFolder = null;
             window.Render();
             window.Show();
@@ -158,34 +162,101 @@ namespace UMA.Editors.ModelToRace
                 Toggle(intro, "Attach DNA to existing race", plan.attachDnaToExistingRace, value => plan.attachDnaToExistingRace = value);
                 Explain(intro, "Off: DNA groups are created as separate assets for you to review/attach. On: adds those groups and selected blendshape names to the existing UMA 3 race; it does not replace existing DNA. Review duplicate controls before attaching additional clothing collections.");
             }
-            Text(intro, "Filter names", search, value => { search = value; Render(); });
-            bool Match(string name) => string.IsNullOrEmpty(search) || name.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
-            var shapes = Section($"Blendshapes — {plan.shapes.Count(s => s.include)} / {plan.shapes.Count} included");
-            Explain(shapes, "All start included. Uncheck a shape to remove its frames from generated slots as well as omit its DNA. Shared names share one control; the first included renderer supplies the default. Range/default are source weights, not normalized slider values (usually 100 = full shape).");
-            var buttons = new VisualElement(); buttons.AddToClassList("row"); shapes.Add(buttons);
-            buttons.Add(new Button(() => { plan.shapes.ForEach(s => s.include = true); Render(); }) { text = "Include all" });
-            buttons.Add(new Button(() => { plan.shapes.ForEach(s => s.include = false); Render(); }) { text = "Include none" });
-            foreach (var shape in plan.shapes.Where(s => Match(s.name)))
+            var shapes = Section("");
+            var shapesTitle = shapes.Q<Label>(className: "section-title");
+            void ShapesTitle() => shapesTitle.text = $"Blendshapes — {plan.shapes.Count(s => s.include)} / {plan.shapes.Count} included";
+            ShapesTitle();
+            Explain(shapes, "All start included. Uncheck a shape to remove its frames from generated slots as well as omit its DNA. Shared names share one control; the first included renderer supplies the default. Range/default are source weights, not normalized slider values (usually 100 = full shape). The filter only hides rows; Select/Clear visible change only the shapes it shows.");
+            var shapeItems = new List<FilterItem>();
+            var applyShapeFilter = FilterBar(shapes, shapeItems, () => shapeFilter, value => shapeFilter = value, ShapesTitle);
+            foreach (var shape in plan.shapes)
             {
                 var row = new VisualElement(); row.AddToClassList("section"); shapes.Add(row);
-                Toggle(row, shape.name, shape.include, value => shape.include = value);
+                var toggle = new Toggle(shape.name) { value = shape.include };
+                toggle.RegisterValueChangedCallback(e => { shape.include = e.newValue; ShapesTitle(); }); row.Add(toggle);
                 var fold = new Foldout { text = "Weight range & default", value = false }; row.Add(fold);
                 Number(fold, "Minimum", shape.minimum, value => shape.minimum = value);
                 Number(fold, "Maximum", shape.maximum, value => shape.maximum = value);
                 Number(fold, "Default weight", shape.defaultWeight, value => shape.defaultWeight = value);
+                shapeItems.Add(new FilterItem { name = shape.name, row = row, toggle = toggle, set = value => shape.include = value });
             }
-            var bones = Section("Bone DNA — local-axis scale");
+            applyShapeFilter();
+
+            var bones = Section("");
+            var bonesTitle = bones.Q<Label>(className: "section-title");
+            void BonesTitle() => bonesTitle.text = $"Bone DNA — local-axis scale — {plan.bones.Count(b => b.include)} / {plan.bones.Count} checked";
+            BonesTitle();
             bones.SetEnabled(plan.boneDNA);
-            Explain(bones, "Each checked bone gets a size control: 0.5 preserves the rest pose; 0 / 1 scales by 1 − range / 1 + range. Defaults are ±20% uniformly, so arbitrary bone orientations work. Children inherit scale. For anatomical length/width controls, edit the local X/Y/Z ranges or refine the generated DNA effects. This is a starting rig, not automatically authored facial expressions.");
-            var all = new VisualElement(); all.AddToClassList("row"); bones.Add(all);
-            all.Add(new Button(() => { plan.bones.ForEach(b => b.include = true); Render(); }) { text = "All bones" });
-            all.Add(new Button(() => { plan.bones.ForEach(b => b.include = false); Render(); }) { text = "No bones" });
-            foreach (var bone in plan.bones.Where(b => Match(b.bone)))
+            Explain(bones, "Each checked bone gets a size control: 0.5 preserves the rest pose; 0 / 1 scales by 1 − range / 1 + range. Defaults are ±20% uniformly, so arbitrary bone orientations work. Children inherit scale. For anatomical length/width controls, edit the local X/Y/Z ranges or refine the generated DNA effects. This is a starting rig, not automatically authored facial expressions. The filter only hides rows; Select/Clear visible change only the bones it shows.");
+            var boneItems = new List<FilterItem>();
+            var applyBoneFilter = FilterBar(bones, boneItems, () => boneFilter, value => boneFilter = value, BonesTitle);
+            foreach (var bone in plan.bones)
             {
                 var row = new VisualElement(); row.AddToClassList("section"); bones.Add(row);
-                Toggle(row, bone.bone, bone.include, value => bone.include = value);
+                var toggle = new Toggle(bone.bone) { value = bone.include };
+                toggle.RegisterValueChangedCallback(e => { bone.include = e.newValue; BonesTitle(); }); row.Add(toggle);
                 var field = new Vector3Field("Local scale range") { value = bone.scaleRange }; field.RegisterValueChangedCallback(e => bone.scaleRange = e.newValue); row.Add(field);
+                boneItems.Add(new FilterItem { name = bone.bone, row = row, toggle = toggle, set = value => bone.include = value });
             }
+            applyBoneFilter();
+        }
+
+        private sealed class FilterItem
+        {
+            public string name;
+            public VisualElement row;
+            public Toggle toggle;
+            public Action<bool> set;
+        }
+
+        /// <summary>Case-insensitive substring match; an empty or blank filter matches everything.</summary>
+        internal static bool MatchesFilter(string name, string filter)
+        {
+            filter = filter?.Trim();
+            return string.IsNullOrEmpty(filter) || (name ?? "").IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        // Adds a filter field plus "Select visible" / "Clear visible". Filtering only shows or hides rows.
+        // The buttons change only items that pass the current filter; hidden items keep their state.
+        // Returns the function that applies the filter; call it after the rows have been added to items.
+        private static Action FilterBar(VisualElement parent, List<FilterItem> items, Func<string> getFilter, Action<string> setFilter, Action changed)
+        {
+            var bar = new VisualElement(); bar.AddToClassList("row"); bar.AddToClassList("filter-bar"); parent.Add(bar);
+            var field = new TextField("Filter") { value = getFilter() ?? "" };
+            field.AddToClassList("wide"); field.AddToClassList("compact"); bar.Add(field);
+            // Setting the value to "" raises the field's change callback, which stores and applies the empty filter.
+            var clear = new Button(() => { field.value = ""; field.Focus(); }) { text = "×", tooltip = "Clear filter" };
+            clear.AddToClassList("filter-clear"); bar.Add(clear);
+            var shown = new Label(); shown.AddToClassList("filter-count");
+            void Apply()
+            {
+                var filter = getFilter();
+                clear.SetEnabled(!string.IsNullOrEmpty(filter));
+                int visible = 0;
+                foreach (var item in items)
+                {
+                    bool show = MatchesFilter(item.name, filter);
+                    item.row.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+                    if (show) visible++;
+                }
+                shown.text = $"Showing {visible} of {items.Count}";
+            }
+            void SetVisible(bool value)
+            {
+                var filter = getFilter();
+                foreach (var item in items)
+                {
+                    if (!MatchesFilter(item.name, filter)) continue;
+                    item.set(value);
+                    item.toggle.SetValueWithoutNotify(value);
+                }
+                changed();
+            }
+            field.RegisterValueChangedCallback(e => { setFilter(e.newValue); Apply(); });
+            bar.Add(new Button(() => SetVisible(true)) { text = "Select visible" });
+            bar.Add(new Button(() => SetVisible(false)) { text = "Clear visible" });
+            bar.Add(shown);
+            return Apply;
         }
 
         private static void Number(VisualElement parent, string label, float value, Action<float> changed)

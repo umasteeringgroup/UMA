@@ -11,6 +11,9 @@
 .row { flex-direction: row; flex-wrap: wrap; align-items: center; }
 .row > * { margin-right: 6px; }
 .row .wide { flex-grow: 1; min-width: 180px; }
+.filter-bar { margin-bottom: 6px; }
+.filter-count { opacity: 0.75; }
+.row > .filter-clear { margin-left: -4px; min-width: 22px; padding-left: 4px; padding-right: 4px; -unity-font-style: bold; }
 .footer { flex-direction: row; flex-wrap: wrap; margin-top: 10px; }
 .footer Button { min-height: 28px; min-width: 75px; }
 .spacer { flex-grow: 1; }
