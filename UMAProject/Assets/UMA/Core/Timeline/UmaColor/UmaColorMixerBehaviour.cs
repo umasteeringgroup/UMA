@@ -58,8 +58,12 @@ namespace UMA.Timeline
             if (elapsedTime >= timeStep)
             {
                 elapsedTime = 0f;
-                Color color = avatar.GetColor(sharedColorName).color;
-                avatar.SetColor(sharedColorName, finalColor);
+                OverlayColorData current = avatar.GetColor(sharedColorName);
+                Color color = current.color;
+                // Change only the albedo tint; the color's other channels and shader parameters stay as they are.
+                OverlayColorData blended = current.Clone();
+                blended.channelMask[0] = finalColor;
+                avatar.SetRawColor(sharedColorName, blended, false);
                 if (color != finalColor)
                 {
                     colorUpdated = true;

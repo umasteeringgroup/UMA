@@ -752,8 +752,10 @@ namespace UMA
 			var rt = data.GetFirstRenderTexture();
 			if (rt != null && !rt.IsCreated())
 			{
+				// Rebuild this character's own atlases. The umaData field is whichever
+				// character the generator worked on last, not the one that lost its textures.
 				UMAGeneratorPro ugp = new UMAGeneratorPro();
-				ugp.ProcessTexture(this, umaData, true, InitialScaleFactor);
+				ugp.ProcessTexture(this, data, true, InitialScaleFactor);
 				TextureChanged++;
 			}
 		}
@@ -762,6 +764,11 @@ namespace UMA
         {
 			if (!SaveAndRestoreIgnoredItems && !CleanupUnusedBones)
             {
+                // Called only when the skeleton is about to be destroyed. Active UMAIgnore objects (a weapon in the
+                // hand) are kept anyway, through Unity's tag list instead of a walk over the bones; they were
+                // destroyed with the skeleton. Save And Restore Ignored Items walks the bones and also finds
+                // inactive ones.
+                umaData.SaveTaggedItems();
                 return;
             }
 			umaData.SaveMountedItems(this);
@@ -994,10 +1001,14 @@ namespace UMA
 				umaData.isShapeDirty = false;
 				DnaChanged++; 
             }
-			else if (umaData.skeleton.isUpdating)
+			else
 			{
-                umaData.skeleton.EndSkeletonUpdate();
-            }
+				if (umaData.skeleton.isUpdating)
+				{
+					umaData.skeleton.EndSkeletonUpdate();
+				}
+				ApplyRendererOnlyDNA(umaData);
+			}
 #if DEBUG_TIMING
             long skeletonUpdates = gstopWatch.ElapsedTicks;
             skeletonUpdatesTicks += skeletonUpdates;
@@ -2159,9 +2170,13 @@ namespace UMA
                     data.isShapeDirty = false;
                     DnaChanged++;
                 }
-                else if (data.skeleton.isUpdating)
+                else
                 {
-                    data.skeleton.EndSkeletonUpdate();
+                    if (data.skeleton.isUpdating)
+                    {
+                        data.skeleton.EndSkeletonUpdate();
+                    }
+                    ApplyRendererOnlyDNA(data);
                 }
                 skeletonUpdatesTicks += stageStopwatch.ElapsedTicks;
                 stageStopwatch.Restart();
@@ -3077,6 +3092,26 @@ namespace UMA
 			}
 		}
 
+		/// <summary>
+		/// Sets what DNA puts straight on the renderers (blendshape weights, material properties) after a
+		/// build that left the body alone. A body update does this itself, through NewDNAPostApply.
+		/// Without it a texture-only or mesh-only build would leave those values at the old DNA.
+		/// </summary>
+		protected void ApplyRendererOnlyDNA(UMAData umaData)
+		{
+			if (umaData == null || umaData.umaRecipe == null || umaData.umaRecipe.raceData == null ||
+				!umaData.umaRecipe.raceData.useNewDNA)
+			{
+				return;
+			}
+
+			DNAInstanceCollection dna = umaData.umaRecipe.dnaInstanceCollection;
+			if (dna != null && dna.dnaCollection != null)
+			{
+				dna.PostApplyEffects(umaData, DNABuildType.RendererOnly);
+			}
+		}
+
 		public virtual void PreApply(UMAData umaData)
 		{
 			if (umaData && umaData.umaRecipe.raceData.useNewDNA == false)
@@ -3111,8 +3146,8 @@ namespace UMA
                 umaData.skeleton.EnsureBoneHierarchy();
             }
 
-            // Only restore items if enabled, as this can be expensive
-            if (SaveAndRestoreIgnoredItems || CleanupUnusedBones)
+            // Restore whatever was saved: with the option off, the tag lookup still saves active UMAIgnore items.
+            if (SaveAndRestoreIgnoredItems || CleanupUnusedBones || umaData.HasSavedItems)
             {
                 umaData.RestoreSavedItems();
             }

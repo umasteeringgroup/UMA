@@ -1267,21 +1267,63 @@ namespace UMA
                 var submeshBounds = new Bounds(
                     (BoundsResult[0].Min + BoundsResult[0].Max) * 0.5f,
                     BoundsResult[0].Max - BoundsResult[0].Min);
-                for (int i = 0; i < SubMeshCount; i++)
+                // Each submesh descriptor must name only the vertex range its indices use.
+                // DontRecalculateBounds makes Unity keep firstVertex/vertexCount as given, and
+                // the renderer statistics (and range-based draw calls) count vertexCount once
+                // per submesh draw. Spanning the whole mesh made every material count every
+                // vertex: a two-material character reported twice its real vertex count.
+                // Sources are copied into contiguous vertex blocks, so the union of the blocks
+                // feeding a submesh is a valid, cheap bound for its indices.
+                int[] subFirstVertex = ArrayPool<int>.Shared.Rent(SubMeshCount);
+                int[] subEndVertex = ArrayPool<int>.Shared.Rent(SubMeshCount);
+                try
                 {
-                    meshData.SetSubMesh(i, new SubMeshDescriptor
+                    for (int i = 0; i < SubMeshCount; i++)
                     {
-                        topology = MeshTopology.Triangles,
-                        indexStart = SubIndexStart[i],
-                        indexCount = SubWrite[i],
-                        baseVertex = 0,
-                        firstVertex = 0,
-                        vertexCount = VertexCount,
-                        // DontRecalculateBounds is intentional for performance. A conservative
-                        // whole-mesh bound is valid for every submesh and avoids leaving the
-                        // descriptor bounds at their zero-valued default.
-                        bounds = submeshBounds
-                    }, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
+                        subFirstVertex[i] = int.MaxValue;
+                        subEndVertex[i] = 0;
+                    }
+                    var sources = Batch.Sources;
+                    for (int s = 0; s < sources.Length; s++)
+                    {
+                        var source = sources[s];
+                        var targets = source.targetSubmeshIndices;
+                        if (targets == null || source.meshData == null)
+                            continue;
+                        int start = SourceVertexOffsets[s];
+                        int end = start + source.meshData.vertexCount;
+                        int count = Math.Min(targets.Length, source.meshData.subMeshCount);
+                        for (int sm = 0; sm < count; sm++)
+                        {
+                            int dst = targets[sm];
+                            if (dst < 0 || dst >= SubMeshCount)
+                                continue;
+                            if (start < subFirstVertex[dst]) subFirstVertex[dst] = start;
+                            if (end > subEndVertex[dst]) subEndVertex[dst] = end;
+                        }
+                    }
+                    for (int i = 0; i < SubMeshCount; i++)
+                    {
+                        bool hasRange = SubWrite[i] > 0 && subEndVertex[i] > subFirstVertex[i];
+                        meshData.SetSubMesh(i, new SubMeshDescriptor
+                        {
+                            topology = MeshTopology.Triangles,
+                            indexStart = SubIndexStart[i],
+                            indexCount = SubWrite[i],
+                            baseVertex = 0,
+                            firstVertex = hasRange ? subFirstVertex[i] : 0,
+                            vertexCount = hasRange ? subEndVertex[i] - subFirstVertex[i] : 0,
+                            // DontRecalculateBounds is intentional for performance. A conservative
+                            // whole-mesh bound is valid for every submesh and avoids leaving the
+                            // descriptor bounds at their zero-valued default.
+                            bounds = submeshBounds
+                        }, MeshUpdateFlags.DontRecalculateBounds | MeshUpdateFlags.DontValidateIndices);
+                    }
+                }
+                finally
+                {
+                    ArrayPool<int>.Shared.Return(subFirstVertex, false);
+                    ArrayPool<int>.Shared.Return(subEndVertex, false);
                 }
                 stopwatch.Stop(); Ticks_SetSubmeshes += stopwatch.ElapsedTicks;
                 outputMeshPrepared = true;

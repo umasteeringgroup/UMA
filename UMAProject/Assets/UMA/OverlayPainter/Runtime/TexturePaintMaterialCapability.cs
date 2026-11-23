@@ -192,7 +192,17 @@ namespace UMA.TexturePaint
             UMAMaterial.TextureChannelUsage.SkinColorMask |
             UMAMaterial.TextureChannelUsage.Thickness |
             UMAMaterial.TextureChannelUsage.DetailMask |
-            UMAMaterial.TextureChannelUsage.Custom;
+            UMAMaterial.TextureChannelUsage.Custom |
+            UMAMaterial.TextureChannelUsage.WrinkleCrease |
+            UMAMaterial.TextureChannelUsage.WrinkleFlush;
+
+        /// <summary>
+        /// Wrinkle components that are not painted directly: the slope comes from the Wrinkle Height channel and the
+        /// zone ids are kept exactly as they are. Neither is reported as an unsupported meaning.
+        /// </summary>
+        private const UMAMaterial.TextureChannelUsage DerivedWrinkleUsageMask =
+            UMAMaterial.TextureChannelUsage.WrinkleSlope |
+            UMAMaterial.TextureChannelUsage.WrinkleZone;
 
         private const UMAMaterial.TextureChannelUsage ColorUsageMask =
             UMAMaterial.TextureChannelUsage.Albedo |
@@ -310,8 +320,25 @@ namespace UMA.TexturePaint
             else if ((supported & UMAMaterial.TextureChannelUsage.SkinColorMask) != 0) channel = TexturePaintChannel.SkinColorMask;
             else if ((supported & UMAMaterial.TextureChannelUsage.Thickness) != 0) channel = TexturePaintChannel.Thickness;
             else if ((supported & UMAMaterial.TextureChannelUsage.DetailMask) != 0) channel = TexturePaintChannel.DetailMask;
+            else if ((supported & UMAMaterial.TextureChannelUsage.WrinkleCrease) != 0) channel = TexturePaintChannel.WrinkleCrease;
+            else if ((supported & UMAMaterial.TextureChannelUsage.WrinkleFlush) != 0) channel = TexturePaintChannel.WrinkleFlush;
             else channel = TexturePaintChannel.Custom;
             return true;
+        }
+
+        /// <summary>True when a material channel is an expression wrinkle texture (_WrinkleMap or _WrinkleControlMap).</summary>
+        public static bool IsWrinkleChannel(TexturePaintMaterialChannelCapability channel)
+        {
+            if (channel == null) return false;
+            const UMAMaterial.TextureChannelUsage wrinkle = DerivedWrinkleUsageMask |
+                UMAMaterial.TextureChannelUsage.WrinkleCrease | UMAMaterial.TextureChannelUsage.WrinkleFlush;
+            return channel.layout.Uses(wrinkle);
+        }
+
+        /// <summary>True when the material channel stores the wrinkle slope that Wrinkle Height paints.</summary>
+        public static bool HasWrinkleSlope(TexturePaintMaterialChannelCapability channel)
+        {
+            return channel != null && channel.layout.Uses(UMAMaterial.TextureChannelUsage.WrinkleSlope);
         }
 
         private static TexturePaintMaterialChannelCapability CompileChannel(
@@ -378,7 +405,7 @@ namespace UMA.TexturePaint
             {
                 UMAMaterial.TextureChannelUsage usage = result.layout.GetComponent(component);
                 UMAMaterial.TextureChannelUsage supported = usage & EditableUsageMask;
-                UMAMaterial.TextureChannelUsage unsupported = usage & ~EditableUsageMask;
+                UMAMaterial.TextureChannelUsage unsupported = usage & ~(EditableUsageMask | DerivedWrinkleUsageMask);
                 int supportedCount = CountFlags(supported);
                 if (supportedCount > 1 || (supported != 0 && unsupported != 0))
                     Add(result, TexturePaintCapabilitySeverity.Error, "CHN006",
@@ -406,6 +433,15 @@ namespace UMA.TexturePaint
                 });
             }
 
+            // The wrinkle slope is painted as Wrinkle Height: report it as one of this channel's logical channels
+            // so authored height marks the physical _WrinkleMap for export, like Normal Control does for Normal.
+            if (result.layout.Uses(UMAMaterial.TextureChannelUsage.WrinkleSlope))
+            {
+                result.AddLogicalChannel(TexturePaintChannel.WrinkleHeight);
+                if (!result.layout.Uses(UMAMaterial.TextureChannelUsage.WrinkleCrease) &&
+                    !result.layout.Uses(UMAMaterial.TextureChannelUsage.WrinkleFlush))
+                    logicalChannels.Add(TexturePaintChannel.WrinkleHeight); // still needs a packed preview texture
+            }
             result.requiresPacking = RequiresPacking(result, logicalChannels);
             ValidateColorSpace(result);
             ValidateCustomOutput(result);
@@ -561,6 +597,7 @@ namespace UMA.TexturePaint
 
         private static float NeutralValue(UMAMaterial.TextureChannelUsage usage, int component)
         {
+            if ((usage & UMAMaterial.TextureChannelUsage.WrinkleSlope) != 0) return 0.5f;
             if ((usage & UMAMaterial.TextureChannelUsage.Normal) != 0)
                 return component == 2 ? 1f : component < 2 ? 0.5f : 1f;
             if ((usage & (UMAMaterial.TextureChannelUsage.Albedo | UMAMaterial.TextureChannelUsage.Opacity |

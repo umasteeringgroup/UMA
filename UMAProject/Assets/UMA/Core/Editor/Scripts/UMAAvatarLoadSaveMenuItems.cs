@@ -1400,33 +1400,21 @@ namespace UMA.Editors
 			return GetSelectedTextures().Count > 0;
 		}
 
-		[MenuItem("Assets/UMA/Texture Utilities/Resize Selected", false, 2003)]
-		private static void ResizeSelectedTexturesMenu()
-		{
-			UmaResizeTexturesWindow.Open(GetSelectedTextures());
-		}
-
-		[MenuItem("Assets/UMA/Texture Utilities/Resize Selected", true)]
-		private static bool ResizeSelectedTexturesMenu_Validate()
-		{
-			return GetSelectedTextures().Count > 0;
-		}
-
-		[MenuItem("Assets/UMA/Texture Utilities/Convert selected textures to PNG", false, 2004)]
-		private static void ConvertSelectedTexturesToPngMenu()
+		[MenuItem("Assets/UMA/Texture Tools", false, 2003)]
+		private static void OpenSelectedTexturesInTextureToolsMenu()
 		{
 			var textures = GetSelectedTextures();
 			if (textures.Count == 0)
 			{
-				EditorUtility.DisplayDialog("Convert textures", "Select one or more Texture2D assets in the Project window.", "OK");
+				EditorUtility.DisplayDialog("Texture Tools", "Select one or more Texture2D assets in the Project window.", "OK");
 				return;
 			}
 
-			UmaConvertTexturesToPngWindow.Open(textures);
+			UMATextureToolsWindow.Open(textures);
 		}
 
-		[MenuItem("Assets/UMA/Texture Utilities/Convert selected textures to PNG", true)]
-		private static bool ConvertSelectedTexturesToPngMenu_Validate()
+		[MenuItem("Assets/UMA/Texture Tools", true)]
+		private static bool OpenSelectedTexturesInTextureToolsMenu_Validate()
 		{
 			return GetSelectedTextures().Count > 0;
 		}
@@ -2387,6 +2375,7 @@ namespace UMA.Editors
         {
 			bool wasAsync = false;
 			bool wasConvertRenderTexture = false;
+			bool wasGPUCompression = false;
 
 			var generator = UMAAssetIndexer.Instance.Generator;
 
@@ -2399,6 +2388,7 @@ namespace UMA.Editors
 
 			wasConvertRenderTexture = generator.convertRenderTexture;
 			wasAsync = generator.useAsyncConversion;
+			wasGPUCompression = generator.forceGPUTextureCompression;
 			useBoneBakingCombiner &= !AddStandaloneDNA;
 
 			try
@@ -2407,11 +2397,13 @@ namespace UMA.Editors
 				// This is necessary because the conversion and saving of textures needs to happen synchronously to ensure that all assets are correctly processed before we attempt to save them.
 				// If async conversion were enabled, there could be timing issues where textures are not fully converted before we try to save them, leading to incomplete or corrupted assets.
 
-				bool rebuildCharacter = wasConvertRenderTexture == false || useBoneBakingCombiner;
+				// GPU-compressed atlases cannot be saved as images, so the character is rebuilt without them.
+				bool rebuildCharacter = wasConvertRenderTexture == false || wasGPUCompression || useBoneBakingCombiner;
 				if (rebuildCharacter)
 				{
 					generator.convertRenderTexture = true;
 					generator.useAsyncConversion = false;
+					generator.forceGPUTextureCompression = false;
 
 					if (avatar is DynamicCharacterAvatar dca)
 					{
@@ -2502,18 +2494,23 @@ namespace UMA.Editors
 										}
 
 										string texName = Path.Combine(Folder, CharName + "_Mat_" + Material + propertyName + ".png");
+										bool linearData = isNormal || IsLinearDataTexture(avatar.umaData, smr, Material, propertyName);
 										if (texture is RenderTexture)
 										{
 											Debug.Log("Saving Render Texture " + texName);
-											LinearSave(texture as RenderTexture, texName, isNormal);
+											LinearSave(texture as RenderTexture, texName, linearData);
 										}
 										else
 										{
 											Debug.Log("Saving texture " + texName);
-											SaveTexture2D(texture as Texture2D, texName, isNormal);
+											SaveTexture2D(texture as Texture2D, texName, linearData);
 										}
 
 										AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+										if (!isNormal && linearData)
+										{
+											ImportAsLinearData(texName);
+										}
 										if (isNormal)
 										{
 											TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(texName);
@@ -2893,7 +2890,8 @@ namespace UMA.Editors
 			{
 				generator.convertRenderTexture = wasConvertRenderTexture;
 				generator.useAsyncConversion = wasAsync;
-				if (wasConvertRenderTexture == false)
+				generator.forceGPUTextureCompression = wasGPUCompression;
+				if (wasConvertRenderTexture == false || wasGPUCompression)
 				{
 					if (avatar is DynamicCharacterAvatar)
 					{
@@ -2954,18 +2952,23 @@ namespace UMA.Editors
 										}
 									}
 									string texName = Path.Combine(Folder, CharName + "_Mat_" + Material + propertyName + ".png");
+									bool linearData = isNormal || IsLinearDataTexture(avatar.umaData, smr, Material, propertyName);
 									if (texture is RenderTexture)
                                     {
 										Debug.Log("Saving Render Texture " + texName);
-                                        LinearSave(texture as RenderTexture, texName,isNormal);
+                                        LinearSave(texture as RenderTexture, texName, linearData);
                                     }
                                     else
                                     {
 										Debug.Log("Saving texture " + texName);
-                                        SaveTexture2D(texture as Texture2D, texName, isNormal);
+                                        SaveTexture2D(texture as Texture2D, texName, linearData);
                                     }
                                     //SaveTexture(texture, texName);
 									AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+									if (!isNormal && linearData)
+									{
+										ImportAsLinearData(texName);
+									}
 									if (isNormal)
                                     {
 										TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(texName);
@@ -3153,7 +3156,8 @@ namespace UMA.Editors
                                 }
                                 else
                                 {
-                                    SaveTexture(texture, tname);
+                                    bool linearData = TryGetChannelIsLinear(umat, tex, out bool channelLinear) ? channelLinear : IsLinearDataPropertyName(tex);
+                                    SaveTexture(texture, tname, false, linearData);
                                 }
 							}
                             catch  
@@ -3168,11 +3172,91 @@ namespace UMA.Editors
 		}
 
 
-       internal static Texture2D GetReadableTexture(RenderTexture texture, bool isNormal)
+        private static readonly string[] LinearDataPropertyWords =
+            { "normal", "bump", "metallic", "occlusion", "mask", "height", "parallax", "smooth", "rough", "gloss" };
+
+        /// <summary>
+        /// True when the generated texture in a renderer's material slot holds linear data rather than colour.
+        /// Uses the UMAMaterial channel's output contract (its Color Space), and the property name when the
+        /// material did not come from a UMAMaterial.
+        /// </summary>
+        internal static bool IsLinearDataTexture(UMAData umaData, SkinnedMeshRenderer renderer, int materialIndex, string propertyName)
+        {
+            if (umaData != null && umaData.generatedMaterials != null && umaData.generatedMaterials.materials != null)
+            {
+                foreach (var generated in umaData.generatedMaterials.materials)
+                {
+                    if (generated == null || generated.skinnedMeshRenderer != renderer || generated.materialIndex != materialIndex)
+                    {
+                        continue;
+                    }
+
+                    if (TryGetChannelIsLinear(generated.umaMaterial, propertyName, out bool linear))
+                    {
+                        return linear;
+                    }
+                }
+            }
+
+            return IsLinearDataPropertyName(propertyName);
+        }
+
+        /// <summary>Finds the UMAMaterial channel writing this property and reports whether its output is linear.</summary>
+        internal static bool TryGetChannelIsLinear(UMAMaterial umaMaterial, string propertyName, out bool linear)
+        {
+            linear = false;
+            if (umaMaterial == null || umaMaterial.channels == null || string.IsNullOrEmpty(propertyName))
+            {
+                return false;
+            }
+
+            foreach (var channel in umaMaterial.channels)
+            {
+                if (channel.channelType == UMAMaterial.ChannelType.MaterialColor ||
+                    !string.Equals((channel.materialPropertyName ?? string.Empty).Trim(), propertyName, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var output = UMAMaterial.GetTextureChannelOutputSettings(channel, umaMaterial.material, umaMaterial);
+                linear = output.colorSpace != UMAMaterial.TextureChannelColorSpace.SRGB;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Fallback by shader property name: normal, metallic, occlusion, mask and similar maps are linear data.</summary>
+        internal static bool IsLinearDataPropertyName(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName))
+            {
+                return false;
+            }
+
+            string lower = propertyName.ToLowerInvariant();
+            foreach (string word in LinearDataPropertyWords)
+            {
+                if (lower.Contains(word))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Copies a texture into a readable RGBA32 Texture2D whose bytes are ready to encode as PNG.
+        /// Colour (albedo, emission) is written sRGB-encoded; linear data (normals, metallic/smoothness,
+        /// occlusion, masks) is written as is. Pass the role, not the source's flag: UMA atlases are Linear
+        /// render textures for every channel. See <see cref="IsLinearDataTexture"/>.
+        /// </summary>
+       internal static Texture2D GetReadableTexture(RenderTexture texture, bool linearData)
         {
             RenderTexture tmp;
 
-            if (isNormal)
+            if (linearData)
             {
                 tmp = RenderTexture.GetTemporary(
                 texture.width,
@@ -3195,7 +3279,7 @@ namespace UMA.Editors
             RenderTexture previous = RenderTexture.active;
             RenderTexture.active = tmp;
 
-            Texture2D readableTexture = new Texture2D(texture.width, texture.height,TextureFormat.RGBA32, false, isNormal);
+            Texture2D readableTexture = new Texture2D(texture.width, texture.height,TextureFormat.RGBA32, false, linearData);
             readableTexture.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
             readableTexture.Apply();
 
@@ -3205,11 +3289,12 @@ namespace UMA.Editors
             return readableTexture;
         }
         // Thanks, Brooklyn!
-       internal static Texture2D GetReadableTexture(Texture2D texture, bool isNormal)
+        /// <inheritdoc cref="GetReadableTexture(RenderTexture, bool)"/>
+       internal static Texture2D GetReadableTexture(Texture2D texture, bool linearData)
         {
 			RenderTexture tmp;
 
-            if (isNormal)
+            if (linearData)
 			{
                 tmp = RenderTexture.GetTemporary(
                 texture.width,
@@ -3234,7 +3319,7 @@ namespace UMA.Editors
 
 			// Always read back into a CPU RGBA32 texture; using `texture.format` can be incompatible
 			// with `ReadPixels` (e.g., compressed/HDR formats) and can produce garbage data.
-			Texture2D readableTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false, isNormal);
+			Texture2D readableTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false, linearData);
             readableTexture.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
             readableTexture.Apply();
 
@@ -3244,12 +3329,12 @@ namespace UMA.Editors
             return readableTexture;
         }
 
-        private static void SaveTexture(Texture texture, string diffuseName, bool isNormal = false)
+        private static void SaveTexture(Texture texture, string diffuseName, bool isNormal = false, bool linearData = false)
 		{
 			if (isNormal)
 			{
 				texture = sconvertNormalMap(texture);
-                SaveTexture(texture, diffuseName, false);
+                SaveTexture(texture, diffuseName, false, true);
 				return;
 			}
 
@@ -3257,15 +3342,15 @@ namespace UMA.Editors
 			{
                 //Debug.Log("Saving render texture: " + diffuseName);
                 //SaveRenderTexture(texture as RenderTexture, diffuseName, isNormal);
-                Texture2D tex = GetReadableTexture(texture as RenderTexture, isNormal);
-                SaveTexture2D(tex, diffuseName, isNormal);
+                Texture2D tex = GetReadableTexture(texture as RenderTexture, linearData);
+                SaveTexture2D(tex, diffuseName, linearData);
                 DestroyImmediate(tex);
                 return;
 			}
 			else if (texture is Texture2D)
 			{
-                Texture2D tex = GetReadableTexture(texture as Texture2D, isNormal);
-                SaveTexture2D(tex, diffuseName, isNormal);
+                Texture2D tex = GetReadableTexture(texture as Texture2D, linearData);
+                SaveTexture2D(tex, diffuseName, linearData);
                 DestroyImmediate(tex);
                 return;
 			}
@@ -3371,7 +3456,17 @@ namespace UMA.Editors
 			return tex;
 		}
 
-        static public void LinearSave(RenderTexture rt, string textureName, bool isNormal)
+        /// <summary>Saved metallic, occlusion and mask maps are data: import them without sRGB.</summary>
+        private static void ImportAsLinearData(string texName)
+        {
+            if (TextureImporter.GetAtPath(CustomAssetUtility.UnityFriendlyPath(texName)) is TextureImporter importer && importer.sRGBTexture)
+            {
+                importer.sRGBTexture = false;
+                importer.SaveAndReimport();
+            }
+        }
+
+        static public void LinearSave(RenderTexture rt, string textureName, bool linearData)
         {
             // Remember crrently active render texture
             RenderTexture currentActiveRT = RenderTexture.active;
@@ -3385,8 +3480,8 @@ namespace UMA.Editors
 
             // Restore previously active render texture
             RenderTexture.active = currentActiveRT;
-            SaveTexture2D(tex, textureName, isNormal);
-            
+            SaveTexture2D(tex, textureName, linearData);
+            DestroyImmediate(tex);
         }
 
         public static void SaveRenderTexture(RenderTexture texture, string textureName, bool isNormal = false)
@@ -3404,9 +3499,9 @@ namespace UMA.Editors
 			SaveTexture2D(tex, textureName, isNormal);
 		}
 
-		private static void SaveTexture2D(Texture2D texture, string textureName, bool isNormal)
+		private static void SaveTexture2D(Texture2D texture, string textureName, bool linearData)
 		{
-            Texture2D convertedTexture = GetReadableTexture(texture, isNormal);
+            Texture2D convertedTexture = GetReadableTexture(texture, linearData);
 			byte[] data = convertedTexture.EncodeToPNG();
 			DestroyImmediate(convertedTexture);
             System.IO.File.WriteAllBytes(textureName, data);

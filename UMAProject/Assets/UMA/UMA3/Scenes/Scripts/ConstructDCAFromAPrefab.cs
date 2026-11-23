@@ -37,11 +37,13 @@ namespace UMA
                     DCA.preloadWardrobeRecipes.recipes.Add(new DynamicCharacterAvatar.WardrobeRecipeListItem(recipe));
                 }
 
-                // Setup any predefined colors
-                // This version of "SetColor" only sets the albedo on the first texture 
-                // channel.
-                // If you need full control over color channels, use DCA.SetRawColor("Hair",overlayColorData);
-                DCA.SetColor("Hair", hairColor);
+                // Setup any predefined colors.
+                // This sets only the albedo tint on the first texture channel. An OverlayColorData holds
+                // every channel (albedo, additive colors and shader parameters); to keep what a color
+                // already has, Clone the one from DCA.GetColor("Hair") and change that instead.
+                OverlayColorData hair = new OverlayColorData(3);
+                hair.channelMask[0] = hairColor;
+                DCA.SetRawColor("Hair", hair, false);
 
                 // Set any predefined wardrobe items.
                 go.transform.position = new Vector3(0f, 0.5f, 0f);

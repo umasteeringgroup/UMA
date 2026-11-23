@@ -7,12 +7,13 @@ struct SkinMetaAttributes
     float2 uv : TEXCOORD0;
     float2 lightmapUV : TEXCOORD1;
     float2 dynamicUV : TEXCOORD2;
+    float2 detailUV : TEXCOORD3;
     half4 color : COLOR;
 };
 struct SkinMetaVaryings
 {
     float4 positionCS : SV_POSITION;
-    float2 uv : TEXCOORD0;
+    float4 uv : TEXCOORD0; // xy: base maps, zw: detail map
     half4 color : COLOR;
     #ifdef EDITOR_VISUALIZATION
     float2 vizUV : TEXCOORD1;
@@ -23,7 +24,8 @@ SkinMetaVaryings SkinMetaVertex(SkinMetaAttributes v)
 {
     SkinMetaVaryings o = (SkinMetaVaryings)0;
     o.positionCS = UnityMetaVertexPosition(v.positionOS.xyz, v.lightmapUV, v.dynamicUV);
-    o.uv = TRANSFORM_TEX(v.uv, _BaseMap);
+    o.uv.xy = TRANSFORM_TEX(v.uv, _BaseMap);
+    o.uv.zw = SkinDetailUV(o.uv.xy, v.detailUV);
     o.color = v.color;
     #ifdef EDITOR_VISUALIZATION
     UnityEditorVizData(v.positionOS.xyz, v.uv, v.lightmapUV, v.dynamicUV, o.vizUV, o.lightCoord);
@@ -32,7 +34,7 @@ SkinMetaVaryings SkinMetaVertex(SkinMetaAttributes v)
 }
 half4 SkinMetaFragment(SkinMetaVaryings v) : SV_Target
 {
-    SkinData skin = SampleSkin(v.uv);
+    SkinData skin = SampleSkin(v.uv.xy, v.uv.zw);
     MetaInput meta = (MetaInput)0;
     skin.surface.albedo *= v.color.rgb;
     BRDFData brdf;

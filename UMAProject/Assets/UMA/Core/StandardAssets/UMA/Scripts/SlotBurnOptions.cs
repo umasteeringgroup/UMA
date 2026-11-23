@@ -1,8 +1,12 @@
 using UnityEngine;
 
-[System.Serializable]
-public class SlotBurnOptions
+namespace UMA
 {
-    public string BlendShape;
-    public float value;
+
+    [System.Serializable]
+    public class SlotBurnOptions
+    {
+        public string BlendShape;
+        public float value;
+    }
 }

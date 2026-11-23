@@ -219,9 +219,12 @@ namespace UMA.Editors.PackageSupport
             var owned = new SortedSet<string>(StringComparer.Ordinal);
             var shared = new SortedSet<string>(StringComparer.Ordinal);
             var exportedText = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (string file in EnumerateSourceFiles(Root))
+            string[] sourceFiles = EnumerateSourceFiles(Root).Where(IsSourceFile).ToArray();
+            var pipelines = ClassifySource(sourceFiles);
+            foreach (string file in sourceFiles)
             {
                 if (!IncludeFile(file, pipeline)) continue;
+                if (!IsShared(file) && !UMASrpPipelineClassifier.Supports(pipelines[file], pipeline)) continue;
                 var paths = IsShared(file) ? shared : owned;
                 if (paths == owned)
                 {
@@ -235,6 +238,8 @@ namespace UMA.Editors.PackageSupport
                 for (string parent = Path.GetDirectoryName(file).Replace('\\', '/'); parent != Root;
                      parent = Path.GetDirectoryName(parent).Replace('\\', '/')) paths.Add(parent);
             }
+            ClearPipelineOnlyReferences(owned, exportedText, pipeline);
+            ApplyPipelineVariants(owned, exportedText, pipeline, PipelineVariants);
             owned.Add(manifestPath);
             var required = new List<string>
             {
@@ -270,6 +275,80 @@ namespace UMA.Editors.PackageSupport
             return new Source { manifest = manifest, manifestPath = manifestPath, manifestGuid = manifestGuid,
                 manifestMeta = manifestMeta, json = JsonUtility.ToJson(manifest, true) + "\n", guids = guids,
                 exportedText = exportedText };
+        }
+
+        /// <summary>
+        /// Files that only configure their own pipeline. The other pipeline's package does not contain them, and a
+        /// reference to one would do nothing there even if it resolved (a URP volume profile has no effect on HDRP).
+        /// So that package's scenes and prefabs get the reference cleared instead of pointing at missing content.
+        /// The September 2026 HDRP samples behaved this way: they kept this URP profile, and HDRP ignored it.
+        /// </summary>
+        private static readonly (string path, string pipeline)[] PipelineOnlyReferences =
+        {
+            (Root + "/Settings/SampleSceneProfile.asset", "URP"),
+        };
+
+        private static void ClearPipelineOnlyReferences(IEnumerable<string> owned, Dictionary<string, string> exportedText, string pipeline)
+        {
+            string[] guids = PipelineOnlyReferences.Where(entry => entry.pipeline != pipeline && File.Exists(entry.path + ".meta"))
+                .Select(entry => ReadGuid(File.ReadAllText(entry.path + ".meta"), entry.path)).ToArray();
+            if (guids.Length == 0) return;
+            foreach (string path in owned.ToArray())
+            {
+                if (!IsUnityYamlKind(path) || !File.Exists(path)) continue;
+                string text = exportedText.TryGetValue(path, out string exported) ? exported : UMASrpPackageSource.ReadYaml(path);
+                if (text == null) continue;
+                string cleared = ClearReferences(text, guids);
+                if (cleared != text) exportedText[path] = cleared;
+            }
+        }
+
+        /// <summary>
+        /// Files whose content differs per pipeline while their path and GUID stay the same, so scenes keep pointing
+        /// at them. In the named pipeline's package the file ships with the content of another source file. Scene and
+        /// prefab overrides of the listed properties on it are dropped there, because their values belong to the
+        /// other pipeline (light intensities are in HDRP's physical units).
+        /// </summary>
+        private static readonly (string path, string pipeline, string contentFrom, string[] dropOverrides)[] PipelineVariants =
+        {
+            (Root + "/Environment/U3Environment.prefab", "HDRP", Root + "/ShaderGraphs/Graphs/Helpers/U3EnvironmentHDRP.prefab", new[] { "m_Intensity" }),
+        };
+
+        internal static void ApplyPipelineVariants(IEnumerable<string> owned, Dictionary<string, string> exportedText, string pipeline,
+            IEnumerable<(string path, string pipeline, string contentFrom, string[] dropOverrides)> variants)
+        {
+            string[] files = owned.ToArray();
+            foreach (var variant in variants)
+            {
+                if (variant.pipeline != pipeline || !files.Contains(variant.path)) continue;
+                if (!File.Exists(variant.contentFrom))
+                    throw new FileNotFoundException("The " + pipeline + " variant of " + variant.path + " is missing: " + variant.contentFrom);
+                string content = UMASrpPackageSource.ExportYaml(variant.contentFrom, pipeline) ?? UMASrpPackageSource.ReadYaml(variant.contentFrom);
+                if (string.IsNullOrEmpty(content))
+                    throw new InvalidDataException("The " + pipeline + " variant of " + variant.path + " is not a Unity YAML asset: " + variant.contentFrom);
+                exportedText[variant.path] = content;
+                if (variant.dropOverrides == null || variant.dropOverrides.Length == 0) continue;
+                string guid = ReadGuid(File.ReadAllText(variant.path + ".meta"), variant.path);
+                var dropped = new Regex(@"(?m)^[ \t]*- target: \{fileID: -?\d+, guid: " + Regex.Escape(guid) + @", type: 3\}\r?\n" +
+                    @"[ \t]*propertyPath: (?:" + string.Join("|", variant.dropOverrides.Select(Regex.Escape)) + @")\r?\n" +
+                    @"[ \t]*value: [^\r\n]*\r?\n[ \t]*objectReference: [^\r\n]*\r?\n", RegexOptions.IgnoreCase);
+                foreach (string path in files)
+                {
+                    if (path == variant.path || !IsUnityYamlKind(path) || !File.Exists(path)) continue;
+                    string text = exportedText.TryGetValue(path, out string exported) ? exported : UMASrpPackageSource.ReadYaml(path);
+                    if (text == null || text.IndexOf(guid, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                    string updated = dropped.Replace(text, string.Empty);
+                    if (updated != text) exportedText[path] = updated;
+                }
+            }
+        }
+
+        internal static string ClearReferences(string yaml, IEnumerable<string> guids)
+        {
+            foreach (string guid in guids)
+                yaml = Regex.Replace(yaml, @"\{fileID:\s*-?\d+,\s*guid:\s*" + Regex.Escape(guid) + @",\s*type:\s*\d+\}", "{fileID: 0}",
+                    RegexOptions.IgnoreCase);
+            return yaml;
         }
 
         private static string ReadGuid(string meta, string path)
@@ -338,23 +417,48 @@ namespace UMA.Editors.PackageSupport
         private static bool IsShared(string path) => path.StartsWith(Root + "/Textures/", StringComparison.OrdinalIgnoreCase) ||
             path.StartsWith(Root + "/ShaderPackages/", StringComparison.OrdinalIgnoreCase);
 
-        private static bool IncludeFile(string path, string pipeline)
+        private static bool IsSourceFile(string path)
         {
             string name = Path.GetFileName(path);
-            if (path.Split('/').Any(part => part.StartsWith(".", StringComparison.Ordinal)) ||
+            return !(path.Split('/').Any(part => part.StartsWith(".", StringComparison.Ordinal)) ||
                 name.EndsWith("~", StringComparison.Ordinal) ||
                 new[] { ".meta", ".unitypackage", ".zip", ".tmp", ".previous" }.Any(ext => name.EndsWith(ext, StringComparison.OrdinalIgnoreCase)) ||
                 name.Equals("UMAURPManifest.json", StringComparison.OrdinalIgnoreCase) ||
-                name.Equals("UMAHDRPManifest.json", StringComparison.OrdinalIgnoreCase)) return false;
+                name.Equals("UMAHDRPManifest.json", StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Path rules for the dual-pipeline source. "HDRP" in a name marks HDRP-only content, and a few folders
+        /// belong to one pipeline. A "URP" name does not exclude a file from HDRP: UMAMaterials named after URP
+        /// carry the HDRP material too. Whether a shader, include file or material works in a pipeline is
+        /// decided from its content by <see cref="UMASrpPipelineClassifier"/>.
+        /// </summary>
+        private static bool IncludeFile(string path, string pipeline)
+        {
+            if (!IsSourceFile(path)) return false;
             if (IsShared(path)) return true;
             if (pipeline == "URP")
                 return path.IndexOf("HDRP", StringComparison.OrdinalIgnoreCase) < 0 &&
                     !path.StartsWith(Root + "/DiffusionProfiles/", StringComparison.OrdinalIgnoreCase) &&
                     !path.StartsWith(Root + "/Objects/", StringComparison.OrdinalIgnoreCase) &&
                     path != Root + "/SampleSceneProfile.asset";
-            return path.IndexOf("URP", StringComparison.OrdinalIgnoreCase) < 0 &&
-                !path.StartsWith(Root + "/Settings/", StringComparison.OrdinalIgnoreCase);
+            return !path.StartsWith(Root + "/Settings/", StringComparison.OrdinalIgnoreCase);
         }
+
+        private static Dictionary<string, SrpPipelines> ClassifySource(IEnumerable<string> files) =>
+            UMASrpPipelineClassifier.Classify(files.Where(path => !IsShared(path)),
+                path => IsUnityYamlKind(path) ? UMASrpPackageSource.ReadYaml(path) : File.ReadAllText(path),
+                path =>
+                {
+                    if (!File.Exists(path + ".meta")) return null;
+                    Match match = Regex.Match(File.ReadAllText(path + ".meta"), @"(?m)^guid:\s*([a-fA-F0-9]{32})\s*$");
+                    return match.Success ? match.Groups[1].Value : null;
+                },
+                guid => AssetDatabase.GUIDToAssetPath(guid));
+
+        // Native Unity asset kinds: only read as text when they carry the Unity YAML header.
+        private static bool IsUnityYamlKind(string path) =>
+            new[] { ".mat", ".asset", ".prefab", ".unity" }.Any(ext => path.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
 
         private static IEnumerable<string> EnumerateSourceFiles(string directory)
         {

@@ -56,6 +56,8 @@ namespace UMA
         public bool showIndexedTypes = true;
         public bool showUnindexedTypes = false;
         public bool ignoreBackupFolders = false;
+        [Tooltip("Add new slots, overlays and races to the Global Library when they are created, imported, duplicated or moved into the project, and remove them when they are deleted. The library is saved once each import has finished. Assets with 'No Auto Add' set are skipped.")]
+        public bool autoAddToGlobalLibrary = true;
 
         public bool addrUseSharedGroup = true;
         public string addrDefaultLabel = "UMA_Default";
@@ -70,6 +72,25 @@ namespace UMA
         public bool showToolbar = true;
 #endif
         public GameObject generatorPrefab;
+
+        /// <summary>Which avatars get expression wrinkles (<see cref="UMAExpressionWrinkles"/>).</summary>
+        public enum ExpressionWrinkleMode
+        {
+            /// <summary>Only avatars that have an UMA Expression Wrinkles component.</summary>
+            PerAvatar = 0,
+            /// <summary>Every DynamicCharacterAvatar, which gets the component (not saved) when it builds.</summary>
+            AllAvatars = 1,
+            /// <summary>None: components that are present add no wrinkle maps.</summary>
+            Off = 2,
+        }
+
+        [Tooltip("Per Avatar: only avatars with an UMA Expression Wrinkles component. All Avatars: every DynamicCharacterAvatar gets one when it builds. Off: no avatar gets wrinkle maps.")]
+        public ExpressionWrinkleMode expressionWrinkles = ExpressionWrinkleMode.PerAvatar;
+        [Tooltip("Wrinkle overlay for avatars that get expression wrinkles from All Avatars.")]
+        public OverlayDataAsset wrinkleOverlay;
+        [Tooltip("Expression profile for avatars that get expression wrinkles from All Avatars.")]
+        public UMAWrinkleProfile wrinkleProfile;
+
 		public static UMASettings instance;
 #if !UNITY_EDITOR
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -616,6 +637,19 @@ namespace UMA
             {
                 var settings = GetOrCreateSettings();
                 return settings.ignoreBackupFolders;
+            }
+        }
+
+        /// <summary>
+        /// When true (the default), new slots, overlays and races are added to the Global Library
+        /// as they arrive in the project, and removed when deleted.
+        /// </summary>
+        public static bool AutoAddToGlobalLibrary
+        {
+            get
+            {
+                var settings = GetOrCreateSettings();
+                return settings != null && settings.autoAddToGlobalLibrary;
             }
         }
         public static string TexturePaintRecoveryFolder

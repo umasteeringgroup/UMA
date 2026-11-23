@@ -1,0 +1,23 @@
+{
+    "name": "UMA.ClothesDesigner.Editor",
+    "rootNamespace": "UMA.ClothesDesigner.Editor",
+    "references": [
+        "UMA_Core",
+        "UMA_Editor",
+        "UMA_Core_Editor",
+        "Unity.Burst",
+        "Unity.Mathematics",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

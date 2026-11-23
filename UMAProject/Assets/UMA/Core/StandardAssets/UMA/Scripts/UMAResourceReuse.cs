@@ -408,7 +408,7 @@ namespace UMA
                     Buffer(submesh, new ReadOnlySpan<byte>(submesh.nativeTriangles.GetUnsafeReadOnlyPtr(),
                         checked(submesh.nativeTriangles.Length * sizeof(int))));
                 }
-                else Value(null);
+                else Value((string)null); // typed: on Unity 6.6 null also converts to Vector2
             }
             internal void Mesh(UMAMeshData mesh, int lod)
             {

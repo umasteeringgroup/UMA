@@ -28,6 +28,10 @@ namespace UMA
 
 #if UNITY_EDITOR
         private DNACurve _TemplateCurve = null;
+        // Shown in place of a curve that has no keys. Must not be serialized: Unity would
+        // bring it back from a domain reload as another curve with no keys.
+        [NonSerialized]
+        private AnimationCurve _keylessCurveStandIn;
         public bool expanded;
         public bool selected;
         public bool showHelp;
@@ -55,6 +59,17 @@ namespace UMA
                 // This is a placeholder. You need to return the actual area affected by this effect.
                 return DNABuildType.None;
             }
+        }
+
+        /// <summary>
+        /// DNA at its default value is normally skipped, because most effects do nothing there.
+        /// Return true for an effect that writes a value outright (for example a shared color component),
+        /// so that going back to the default also writes the value the curve gives for it
+        /// instead of leaving the last one in place.
+        /// </summary>
+        public virtual bool AppliesAtDefaultValue
+        {
+            get { return false; }
         }
 
         /// <summary>
@@ -128,10 +143,66 @@ namespace UMA
             return minMapping + (value * (maxMapping - minMapping));
         }
 
+        /// <summary>
+        /// The scale this effect multiplies its target by at a DNA value, per axis, for
+        /// <see cref="DNA.ReverseInterpolate(float, float)"/>.
+        /// Effects that do not scale anything return false (the default).
+        /// </summary>
+        /// <param name="value">Raw DNA value, 0..1.</param>
+        /// <param name="factor">The multiplier at that value. Vector3.one means no change.</param>
+        public virtual bool TryGetScaleFactor(float value, out Vector3 factor)
+        {
+            factor = Vector3.one;
+            return false;
+        }
+
+        /// <summary>
+        /// The DNA value (0..1) at which this effect's mapped value (curve, then min/max) equals
+        /// <paramref name="mappedValue"/>. The curve is inverted numerically, see <see cref="DNAReverseInterpolation"/>.
+        /// </summary>
+        /// <param name="mappedValue">The mapped value wanted.</param>
+        /// <param name="preferredValue">Used when a curve that turns back reaches the target twice: the
+        /// value nearest this wins.</param>
+        public DNAReverseInterpolation.Result GetValueForMappedValue(float mappedValue, float preferredValue = 0.5f)
+        {
+            return DNAReverseInterpolation.SolveMappedValue(this, mappedValue, preferredValue);
+        }
+
         public string EffectName;
         public virtual string Description { get; }
 
 #if UNITY_EDITOR
+        /// <summary>
+        /// Draws the mapping curve field.
+        /// A curve with no keys passes the value straight through (see <see cref="GetMappedValue"/>),
+        /// but Unity draws it as an empty field and opens an empty curve editor. This shows the
+        /// straight 0-1 line such a curve stands for, and stores it only once it has been edited,
+        /// so looking at an effect never changes the asset.
+        /// </summary>
+        public void DrawCurveField(string label = "Curve")
+        {
+            if (curve != null && curve.length > 0)
+            {
+                _keylessCurveStandIn = null;
+                curve = EditorGUILayout.CurveField(label, curve);
+                return;
+            }
+
+            // Keep one stand-in between repaints: the curve editor window edits the object it was given.
+            if (_keylessCurveStandIn == null || _keylessCurveStandIn.length == 0)
+            {
+                _keylessCurveStandIn = AnimationCurve.Linear(0f, 0f, 1f, 1f);
+            }
+
+            EditorGUI.BeginChangeCheck();
+            AnimationCurve edited = EditorGUILayout.CurveField(label, _keylessCurveStandIn);
+            if (EditorGUI.EndChangeCheck() && edited != null)
+            {
+                curve = edited;
+                _keylessCurveStandIn = null;
+            }
+        }
+
         public virtual void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)
         {
             this.showHelp = showHelp;
@@ -147,7 +218,7 @@ namespace UMA
             // select: 1,0,1
             EffectName = EditorGUILayout.DelayedTextField("Effect Name", EffectName);
             GUILayout.BeginHorizontal();
-            curve = EditorGUILayout.CurveField("Curve", curve);
+            DrawCurveField();
             if (curve != null)
             {
                 if (GUILayout.Button("Reset", GUILayout.MaxWidth(50)))

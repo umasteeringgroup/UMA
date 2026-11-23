@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8c35dde900aa5e4ba94b4984a9197a2, type: 3}
+  m_Name: ChainJiggleBreasts_Animator
+  m_EditorClassIdentifier: UMA_Core::UMA.UMAChainJiggleAnimator
+  Chains:
+  - AnchorBoneName: LeftOuterBreast
+    ExcludedBoneNames: []
+  - AnchorBoneName: RightOuterBreast
+    ExcludedBoneNames: []
+  Colliders: []
+  ExcludedRaces:
+  - ElfFemale30
+  - ElfMale30
+  - SylvanFemale30
+  - SylvanMale30
+  settings:
+    damping: 0.25
+    elasticity: 0.15
+    stiffness: 0.8
+    inertia: 0.5
+    dampingDistribution:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    elasticityDistribution:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    stiffnessDistribution:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    inertiaDistribution:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    gravity: 9.81
+    restPoseIncludesGravity: 1
+    force: {x: 0, y: 0, z: 0}
+    freezeAxis: 0
+    radius: 0
+    endLength: 0
+    endOffset: {x: 0, y: 0, z: 0}
+    blendWeight: 1
+    updateRate: 60
+    maxSubsteps: 4
+    teleportDistance: 1

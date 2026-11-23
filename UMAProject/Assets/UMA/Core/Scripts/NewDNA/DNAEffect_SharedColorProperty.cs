@@ -40,9 +40,16 @@ namespace UMA
         /// </summary>
         public Color oneColorValue;
 
-        public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Texture;
+        // The property is written while the recipe is loaded, so a DNA change needs that step run again
+        // (SharedColors), not only the textures redrawn from the values already in place.
+        public override DNAInstanceCollection.DNABuildType AreaEffect =>
+            DNAInstanceCollection.DNABuildType.Texture | DNAInstanceCollection.DNABuildType.SharedColors;
         public override ExpressionEffectPhase ExpressionPhases =>
             ExpressionEffectPhase.BuildAfterRecipe;
+
+        // The property is written outright, so the default DNA value must write it too. Otherwise the
+        // value of the last DNA value that was not the default stays in the property block.
+        public override bool AppliesAtDefaultValue => true;
 
         public override string Description => "Sets a shared color property for the avatar. This can be used to modify shader properties or even the UV location of an overlay.";
 

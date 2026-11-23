@@ -800,6 +800,108 @@ namespace UMA.TexturePaint.Editor.Tests
             finally { members.Clear(); }
         }
 
+        [Test]
+        public void CopyFromBelowGivesAnEmptyPaintLayerTheResultUnderItWithoutChangingThePicture()
+        {
+            var set = Set();
+            TextureChannelTarget albedo = set.GetChannel(TexturePaintChannel.Albedo);
+            albedo.editable.Reset(null, new Color(.18f, .32f, .46f, 1f));
+            var lower = Paint(set, "Lower", new Color(.85f, .13f, .27f, .45f));
+            set.activeLayerIndex = -1;
+            var top = set.AddLayer("Top");
+            Color[] before = Composite(set);
+            Color[] lowerBefore = TexturePaintGpuTestFixture.ReadPixels(lower.channels[TexturePaintChannel.Albedo].Front);
+            var stage = Stage(set);
+
+            Assert.That(Invoke(stage, "CopyLayerChannelFromBelowWithHistory", set, top, TexturePaintChannel.Albedo), Is.True);
+            Assert.That(top.channels.ContainsKey(TexturePaintChannel.Albedo), Is.True, "The layer has pixels to blur now.");
+            TexturePaintGpuTestFixture.AssertImage("The copy is what was under the layer", before,
+                TexturePaintGpuTestFixture.ReadPixels(top.channels[TexturePaintChannel.Albedo].Front));
+            Assert.That(top.GetChannelSettings(TexturePaintChannel.Albedo, false).blendMode,
+                Is.EqualTo(TexturePaintBlendMode.Normal));
+            TexturePaintGpuTestFixture.AssertImage("The picture is unchanged", before, Composite(set));
+            TexturePaintGpuTestFixture.AssertImage("The layer below is untouched", lowerBefore,
+                TexturePaintGpuTestFixture.ReadPixels(lower.channels[TexturePaintChannel.Albedo].Front));
+
+            Assert.That(Invoke(stage, "UndoLightweight"), Is.True);
+            Assert.That(top.channels.ContainsKey(TexturePaintChannel.Albedo), Is.False, "Undo removes the copy.");
+            Assert.That(top.GetChannelSettings(TexturePaintChannel.Albedo, false), Is.Null);
+            TexturePaintGpuTestFixture.AssertImage("Undo keeps the picture", before, Composite(set));
+            Assert.That(Invoke(stage, "RedoLightweight"), Is.True);
+            Assert.That(top.channels.ContainsKey(TexturePaintChannel.Albedo), Is.True);
+            TexturePaintGpuTestFixture.AssertImage("Redo keeps the picture", before, Composite(set));
+        }
+
+        [Test]
+        public void CopyFromBelowReplacesPaintedPixelsAndUndoBringsThemBack()
+        {
+            var set = Set();
+            set.GetChannel(TexturePaintChannel.Albedo).editable.Reset(null, new Color(.18f, .32f, .46f, 1f));
+            Paint(set, "Lower", new Color(.85f, .13f, .27f, 1f));
+            var top = Paint(set, "Top", new Color(.1f, .9f, .2f, 1f));
+            TexturePaintLayerChannelSettings settings = top.GetChannelSettings(TexturePaintChannel.Albedo);
+            settings.blendMode = TexturePaintBlendMode.Multiply;
+            settings.opacity = .5f;
+            EditableTextureTarget painted = top.channels[TexturePaintChannel.Albedo];
+            Color[] before = Composite(set);
+            var stage = Stage(set);
+
+            Assert.That(Invoke(stage, "CopyLayerChannelFromBelowWithHistory", set, top, TexturePaintChannel.Albedo), Is.True);
+            Color copied = TexturePaintGpuTestFixture.ReadPixels(top.channels[TexturePaintChannel.Albedo].Front)[0];
+            Assert.That(copied.r, Is.EqualTo(.85f).Within(.01f), "The copy is the layer below, not this layer's own paint.");
+            Assert.That(copied.g, Is.EqualTo(.13f).Within(.01f));
+            settings = top.GetChannelSettings(TexturePaintChannel.Albedo, false);
+            Assert.That(settings.blendMode, Is.EqualTo(TexturePaintBlendMode.Normal), "A complete copy must replace.");
+            Assert.That(settings.opacity, Is.EqualTo(1f));
+            Assert.That(Composite(set)[0].r, Is.EqualTo(.85f).Within(.01f));
+
+            Assert.That(Invoke(stage, "UndoLightweight"), Is.True);
+            Assert.That(top.channels[TexturePaintChannel.Albedo], Is.SameAs(painted), "Undo restores the painted texture.");
+            settings = top.GetChannelSettings(TexturePaintChannel.Albedo, false);
+            Assert.That(settings.blendMode, Is.EqualTo(TexturePaintBlendMode.Multiply));
+            Assert.That(settings.opacity, Is.EqualTo(.5f));
+            TexturePaintGpuTestFixture.AssertImage("Undo restores the picture", before, Composite(set));
+        }
+
+        [Test]
+        public void PaintingIsAllowedWhenOnlySomeTargetMembersHaveTheChannel()
+        {
+            // An avatar's head tile has the wrinkle channels; its other tiles do not.
+            var head = Set(TexturePaintChannel.Albedo, TexturePaintChannel.WrinkleHeight);
+            var torso = Set(TexturePaintChannel.Albedo);
+            var binding = new TexturePaintLogicalLayerBinding { complete = true };
+            foreach (var set in new[] { head, torso })
+            {
+                set.activeLayerIndex = -1;
+                var layer = set.AddLayer("Paint");
+                binding.members.Add(new TexturePaintLogicalLayerMember
+                {
+                    textureSet = set, layer = layer,
+                    targetMember = new TexturePaintLogicalTargetMember { slotName = set == head ? "Head" : "Torso" }
+                });
+            }
+            var controller = new TexturePaintLogicalLayerController(null);
+            Assert.That(controller.ValidatePaintBinding(binding, TexturePaintChannel.WrinkleHeight, out string error),
+                Is.True, error);
+            Assert.That(controller.ValidatePaintBinding(binding, TexturePaintChannel.Albedo, out error), Is.True, error);
+            Assert.That(controller.ValidatePaintBinding(binding, TexturePaintChannel.Roughness, out error), Is.False,
+                "No member has Roughness.");
+            Assert.That(error, Does.Contain("Roughness"));
+        }
+
+        [Test]
+        public void CopyFromBelowIsOnlyForPaintLayers()
+        {
+            var set = Set();
+            var plugin = Paint(set, "Generated", Color.red, kind: TexturePaintLayerKind.Plugin);
+            var group = Group(set, "Group");
+            var stage = Stage(set);
+            Assert.That(Invoke(stage, "CopyLayerChannelFromBelowWithHistory", set, plugin, TexturePaintChannel.Albedo), Is.False);
+            Assert.That(Invoke(stage, "CopyLayerChannelFromBelowWithHistory", set, group, TexturePaintChannel.Albedo), Is.False);
+            Assert.That(typeof(TexturePaintStageWindow).GetProperty("CanUndoLightweight", Private).GetValue(stage), Is.False,
+                "A refused copy leaves no undo step.");
+        }
+
         private sealed class FilterProbe : ITexturePaintFilterV2
         {
             public int calls;

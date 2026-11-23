@@ -63,6 +63,45 @@ namespace UMA
             EditorGUI.DrawRect(rect, new Color(shade, shade, shade, 0.75f));
         }
 
+        private static GUIStyle closeButtonStyle;
+
+        /// <summary>
+        /// The stage's Close button, centred along the top of the Scene view's camera area, clear of the
+        /// orientation gizmo (top right), the side panels (left) and any toolbars docked along the window's
+        /// edges. Call between Handles.BeginGUI and Handles.EndGUI. Returns true when it was clicked.
+        /// </summary>
+        public static bool DrawCloseButton(SceneView view, string label)
+        {
+            if (view == null)
+            {
+                return false;
+            }
+
+            if (closeButtonStyle == null)
+            {
+                closeButtonStyle = new GUIStyle(GUI.skin.button)
+                {
+                    fontStyle = FontStyle.Bold,
+                    padding = new RectOffset(14, 14, 4, 4)
+                };
+            }
+
+            // Handles.BeginGUI puts the origin at the camera area's top-left; the window (view.position) is wider
+            // and taller whenever toolbars are docked along its edges.
+            Rect area = view.cameraViewport;
+            float width = area.width > 1f ? area.width : view.position.width;
+            var content = new GUIContent(label, "Close this editor and return to the scene. Asks first if there are unsaved changes.");
+            Vector2 size = closeButtonStyle.CalcSize(content);
+            size.y = Mathf.Max(size.y, 24f);
+            Rect rect = new Rect(Mathf.Round((width - size.x) * 0.5f), 6f, size.x, size.y);
+
+            Color previousBackground = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.82f, 0.25f, 0.2f, 1f);
+            bool pressed = GUI.Button(rect, content, closeButtonStyle);
+            GUI.backgroundColor = previousBackground;
+            return pressed;
+        }
+
         public static Color IconTint => EditorGUIUtility.isProSkin
             ? new Color(0.86f, 0.86f, 0.86f)
             : new Color(0.15f, 0.15f, 0.15f);

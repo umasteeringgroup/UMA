@@ -11,13 +11,14 @@ struct SkinAttributes
     float2 uv : TEXCOORD0;
     float2 lightmapUV : TEXCOORD1;
     float2 dynamicUV : TEXCOORD2;
+    float2 detailUV : TEXCOORD3;
     half4 color : COLOR;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 struct SkinVaryings
 {
     float4 positionCS : SV_POSITION;
-    float2 uv : TEXCOORD0;
+    float4 uv : TEXCOORD0; // xy: base maps, zw: detail map
     float3 positionWS : TEXCOORD1;
     half3 normalWS : TEXCOORD2;
     half4 tangentWS : TEXCOORD3;
@@ -44,7 +45,7 @@ SkinVaryings SkinVertex(SkinAttributes v)
     o.positionCS = p.positionCS; o.positionWS = p.positionWS;
     o.normalWS = n.normalWS;
     o.tangentWS = half4(n.tangentWS, v.tangentOS.w * GetOddNegativeScale());
-    o.uv = TRANSFORM_TEX(v.uv, _BaseMap); o.color = v.color;
+    o.uv.xy = TRANSFORM_TEX(v.uv, _BaseMap); o.uv.zw = SkinDetailUV(o.uv.xy, v.detailUV); o.color = v.color;
     o.fogAndLight = half4(ComputeFogFactor(p.positionCS.z), VertexLighting(p.positionWS, n.normalWS));
     OUTPUT_LIGHTMAP_UV(v.lightmapUV, unity_LightmapST, o.lightmapUV);
     #ifdef DYNAMICLIGHTMAP_ON
@@ -113,7 +114,7 @@ void SkinFragment(SkinVaryings v, out half4 color : SV_Target0
     #ifdef LOD_FADE_CROSSFADE
     LODFadeCrossFade(v.positionCS);
     #endif
-    SkinData s = SampleSkin(v.uv);
+    SkinData s = SampleSkin(v.uv.xy, v.uv.zw);
     s.surface.albedo *= v.color.rgb;
     InputData inputData = SkinInput(v, s.surface.normalTS);
     #if defined(_DBUFFER)
@@ -187,7 +188,7 @@ void SkinDepthNormals(SkinVaryings v, out half4 normal : SV_Target0
     #ifdef LOD_FADE_CROSSFADE
     LODFadeCrossFade(v.positionCS);
     #endif
-    InputData d = SkinInput(v, SampleSkin(v.uv).surface.normalTS);
+    InputData d = SkinInput(v, SampleSkin(v.uv.xy, v.uv.zw).surface.normalTS);
     #ifdef _GBUFFER_NORMALS_OCT
     normal = half4(PackFloat2To888(saturate(PackNormalOctQuadEncode(d.normalWS) * 0.5 + 0.5)), 0);
     #else

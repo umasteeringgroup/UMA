@@ -35,6 +35,10 @@ namespace UMA
         public bool useAsyncConversion = true;
         [Tooltip("Regenerate Mipmaps on conversion to avoid copying mips from GPU")]
         public bool asyncMipRegen = true;
+        [Tooltip("Keep a CPU copy of converted textures so scripts can call GetPixels or EncodeToPNG on them. Off frees that copy (the size of the texture again, in system memory) once the texture is on the GPU. UMA's own save and export tools do not need it.")]
+        public bool keepConvertedTexturesReadable = false;
+        [Tooltip("Experimental. Compress generated Atlas and No Atlas textures on the GPU (BC3 on desktop, ETC2 on mobile), a quarter of the memory of the uncompressed texture. Takes the place of Convert Render Texture and of runtime CPU compression. Ignored on devices without compute shaders, such as WebGL. With Keep Converted Textures Readable the compressed data also stays on the CPU: GetPixels works on it, EncodeToPNG does not.")]
+        public bool forceGPUTextureCompression = false;
 
         [Tooltip("Create Mipmaps for the generated texture. Checking this is a good idea.")]
         public bool convertMipMaps;
@@ -87,6 +91,9 @@ namespace UMA
         // skeleton with a retargeted animation pose.
         protected bool evaluateAnimatorPoseAfterAvatarUpdate = true;
 
+        [Tooltip("Active objects tagged UMAIgnore under a character's bones (a weapon in the hand) are always kept when the skeleton is rebuilt. " +
+            "On: also keeps inactive ones and UMAKeepChain chains, by walking the bones when the skeleton is rebuilt (a race change, a new rig). " +
+            "Off: to hide a mounted item, keep its tagged object active and disable its child objects or its renderer instead.")]
         public bool SaveAndRestoreIgnoredItems;
 
         [Tooltip("After a successful rig build, remove unused non-T-pose bones. Keeps current slot/renderer dependencies and UMAIgnore subtrees. External skeletons are never pruned. Off preserves legacy behavior.")]

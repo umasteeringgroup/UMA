@@ -144,13 +144,105 @@ namespace UMA
                 _manualMeshModifiers = value;
             }
         }
+
+        private readonly List<MeshModifier> _editorSessionMeshModifiers = new List<MeshModifier>();
+
+        /// <summary>
+        /// Mesh Modifier assets whose edits the Vertex Editor already applies through
+        /// <see cref="ManualMeshModifiers"/>: a worn recipe that carries one does not apply it again. The
+        /// Vertex Editor fills this with the modifier it opened on and with each modifier it adds to a recipe
+        /// after saving, and clears it when it closes, so the character then wears them through its recipes
+        /// as usual.
+        /// </summary>
+        public List<MeshModifier> EditorSessionMeshModifiers => _editorSessionMeshModifiers;
+
+        private bool IsEditorSessionMeshModifier(MeshModifier modifier)
+        {
+            for (int i = 0; i < _editorSessionMeshModifiers.Count; i++)
+            {
+                if (ReferenceEquals(_editorSessionMeshModifiers[i], modifier))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 #endif
 
+
+        // Mesh modifiers that DNA effects added, kept apart so a DNA change can replace them
+        // without touching the ones that came from the recipes.
+        private readonly List<MeshModifier.Modifier> dnaMeshModifiers = new List<MeshModifier.Modifier>();
+        // Where each slot's DNA modifiers sat before they were removed, so their replacements go back
+        // in the same place and the order of modifiers matches a full build.
+        private readonly Dictionary<string, int> dnaMeshModifierInsertIndex = new Dictionary<string, int>();
 
         public void ClearModifiers()
         {
             meshModifiers.Clear();
 			accumulatedModifiers.Clear();
+            dnaMeshModifiers.Clear();
+            dnaMeshModifierInsertIndex.Clear();
+        }
+
+        /// <summary>
+        /// Adds mesh modifiers produced by a DNA effect. They take part in the mesh build like any other
+        /// modifier, and <see cref="RemoveDNAMeshModifiers"/> can take them out again.
+        /// </summary>
+        public void AddDNAMeshModifiers(List<MeshModifier.Modifier> modifiers)
+        {
+            if (modifiers == null)
+            {
+                return;
+            }
+            foreach (MeshModifier.Modifier modifier in modifiers)
+            {
+                if (modifier == null || string.IsNullOrEmpty(modifier.SlotName))
+                {
+                    continue;
+                }
+                if (dnaMeshModifierInsertIndex.TryGetValue(modifier.SlotName, out int index) &&
+                    meshModifiers.TryGetValue(modifier.SlotName, out List<MeshModifier.Modifier> slotModifiers) &&
+                    index <= slotModifiers.Count)
+                {
+                    slotModifiers.Insert(index, modifier);
+                    dnaMeshModifierInsertIndex[modifier.SlotName] = index + 1;
+                }
+                else
+                {
+                    AddMeshModifier(modifier);
+                }
+                dnaMeshModifiers.Add(modifier);
+            }
+        }
+
+        /// <summary>
+        /// Removes the mesh modifiers that DNA effects added, leaving the recipes' own modifiers in place.
+        /// </summary>
+        public void RemoveDNAMeshModifiers()
+        {
+            dnaMeshModifierInsertIndex.Clear();
+            for (int i = 0; i < dnaMeshModifiers.Count; i++)
+            {
+                MeshModifier.Modifier modifier = dnaMeshModifiers[i];
+                if (!meshModifiers.TryGetValue(modifier.SlotName, out List<MeshModifier.Modifier> slotModifiers))
+                {
+                    continue;
+                }
+                int index = slotModifiers.IndexOf(modifier);
+                if (index < 0)
+                {
+                    continue;
+                }
+                slotModifiers.RemoveAt(index);
+                // Modifiers are removed in the order they were added, so the first one found per slot
+                // is where the block started.
+                if (!dnaMeshModifierInsertIndex.ContainsKey(modifier.SlotName))
+                {
+                    dnaMeshModifierInsertIndex.Add(modifier.SlotName, index);
+                }
+            }
+            dnaMeshModifiers.Clear();
         }
 
 		public void AddMeshModifier(MeshModifier.Modifier modifier)
@@ -178,6 +270,12 @@ namespace UMA
 			{
 				if (modifier != null)
 				{
+#if UNITY_EDITOR
+					if (IsEditorSessionMeshModifier(modifier))
+					{
+						continue;
+					}
+#endif
 					AddMeshModifiers(modifier.RuntimeModifiers);
 				}
             }
@@ -246,17 +344,35 @@ namespace UMA
 				var slot = umaRecipe.slotDataList[i];
 				if (slot != null && slot.meshModifiers != null)
 				{
-				slot.meshModifiers.Clear();
-				if (accumulatedModifiers.ContainsKey(slot.asset.sourceSlot))
+					slot.meshModifiers.Clear();
+					if (slot.asset != null)
+					{
+						AddModifiersForSlotKeys(slot);
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Adds the accumulated modifiers whose slot key names this slot: its logical source name, or
+		/// the legacy asset-name form older modifiers were saved with (see MeshModifier.IsLegacySlotKey).
+		/// </summary>
+		private void AddModifiersForSlotKeys(SlotData slot)
+		{
+			string sourceSlot = slot.asset.sourceSlot;
+			if (!string.IsNullOrEmpty(sourceSlot) && accumulatedModifiers.TryGetValue(sourceSlot, out var exact))
+			{
+				slot.meshModifiers.AddRange(exact);
+			}
+			foreach (var kvp in accumulatedModifiers)
+			{
+				if (!string.Equals(kvp.Key, sourceSlot, StringComparison.Ordinal) &&
+					MeshModifier.IsLegacySlotKey(kvp.Key, slot.asset))
 				{
-					var modifiers = accumulatedModifiers[slot.asset.sourceSlot];
-					//Debug.Log($"Adding {modifiers.Count} modifiers to slot {slot.asset.slotName}");
-                        slot.meshModifiers.AddRange(modifiers);
-                }
-            }
-			
-        }
-        }
+					slot.meshModifiers.AddRange(kvp.Value);
+				}
+			}
+		}
         #endregion
 
         #region SAVE RESTORE ITEMS
@@ -273,31 +389,8 @@ namespace UMA
             // definitions, not the current animated transforms.
             if (generator != null && generator.CleanupUnusedBones)
                 savedBaseBoneDefinitions = UMABoneLifecycle.CaptureBaseBones(this);
-            GameObject holder = null;
             string ignoreTag = UMASettings.GetValidatedIgnoreTag(gameObject);
-
-            // Find or create holder using for loops (no foreach alloc)
-            var rootTf = gameObject.transform;
-            for (int i = 0; i < rootTf.childCount; i++)
-            {
-                var child = rootTf.GetChild(i);
-                if (child.name == HolderObjectName)
-                {
-                    holder = child.gameObject;
-                    break;
-                }
-            }
-
-            if (holder == null)
-            {
-                holder = new GameObject(HolderObjectName);
-                if (!string.IsNullOrEmpty(ignoreTag))
-                {
-                    holder.tag = ignoreTag;
-                }
-                holder.SetActive(false);
-                holder.transform.parent = rootTf;
-            }
+            GameObject holder = GetMountedItemHolder(ignoreTag);
 
             if (umaRoot == null) return;
 
@@ -307,6 +400,95 @@ namespace UMA
                 generator != null ? generator.EffectiveKeepTag : null,
                 "keep");
             SaveBonesIterative(umaRoot.transform, holder.transform, ignoreTag, kpTag);
+        }
+
+        /// <summary>The inactive object saved items wait in while the skeleton is rebuilt (found or created).</summary>
+        private GameObject GetMountedItemHolder(string ignoreTag)
+        {
+            // Find or create holder using for loops (no foreach alloc)
+            var rootTf = gameObject.transform;
+            for (int i = 0; i < rootTf.childCount; i++)
+            {
+                var child = rootTf.GetChild(i);
+                if (child.name == HolderObjectName)
+                {
+                    return child.gameObject;
+                }
+            }
+
+            var holder = new GameObject(HolderObjectName);
+            if (!string.IsNullOrEmpty(ignoreTag))
+            {
+                holder.tag = ignoreTag;
+            }
+            holder.SetActive(false);
+            holder.transform.parent = rootTf;
+            return holder;
+        }
+
+        // Reused by SaveTaggedItems, so the lookup allocates nothing.
+        private static readonly List<GameObject> taggedObjects = new List<GameObject>();
+
+        /// <summary>True when items were saved for the skeleton rebuild and wait to be put back.</summary>
+        public bool HasSavedItems => savedItems.Count > 0;
+
+        /// <summary>
+        /// Saves the active objects tagged with the ignore tag (UMAIgnore) under this character's skeleton, so a
+        /// rebuild that destroys the skeleton (a race change, a new rig) does not destroy them with it; a weapon
+        /// in the hand was lost unless Save And Restore Ignored Items was on. Unity keeps a list of objects per
+        /// tag, so this does not walk the bones (about 0.3 us, against about 116 us for a 230-bone walk). That
+        /// list only has active objects: the generator's Save And Restore Ignored Items walks the bones instead,
+        /// and also finds inactive ones (and UMAKeepChain chains).
+        /// </summary>
+        public void SaveTaggedItems()
+        {
+            if (umaRoot == null)
+            {
+                return;
+            }
+            string ignoreTag = UMASettings.GetValidatedIgnoreTag(gameObject);
+            if (string.IsNullOrEmpty(ignoreTag))
+            {
+                return;
+            }
+            GameObject.FindGameObjectsWithTag(ignoreTag, taggedObjects);
+            if (taggedObjects.Count == 0)
+            {
+                return;
+            }
+            Transform rootTransform = umaRoot.transform;
+            GameObject holder = null;
+            for (int i = 0; i < taggedObjects.Count; i++)
+            {
+                Transform item = taggedObjects[i] != null ? taggedObjects[i].transform : null;
+                if (item == null || item == rootTransform || item.parent == null || !item.IsChildOf(rootTransform))
+                {
+                    continue;
+                }
+                // Inside another tagged object: it moves with that one (saving it apart put it back on the
+                // skeleton root, as its parent is not a bone).
+                bool nested = false;
+                for (Transform ancestor = item.parent; ancestor != null && ancestor != rootTransform; ancestor = ancestor.parent)
+                {
+                    if (ancestor.CompareTag(ignoreTag))
+                    {
+                        nested = true;
+                        break;
+                    }
+                }
+                if (nested)
+                {
+                    continue;
+                }
+                if (holder == null)
+                {
+                    holder = GetMountedItemHolder(ignoreTag);
+                }
+                var parent = item.parent;
+                savedItems.Add(new UMASavedItem(parent.name, UMAUtils.StringToHash(parent.name), item, false));
+                item.SetParent(holder.transform, false);
+            }
+            taggedObjects.Clear();
         }
 
         // Add this new helper inside class UMAData; it supersedes SaveBonesRecursively at call sites
@@ -1796,6 +1978,41 @@ namespace UMA
 
 			public Color GetMultiplier(int overlay, int textureType)
 			{
+				Color c = GetColorMultiplier(overlay, textureType);
+				if (IgnoresColorAlpha(overlay, textureType))
+				{
+					c.a = 1f;
+				}
+				return c;
+			}
+
+			/// <summary>
+			/// True when the overlay asks to be drawn at full strength on this channel whatever the alpha of its color.
+			/// Only Diffuse Texture channels use the color's alpha as the overlay's strength; on other channel types
+			/// the alpha is data (for example smoothness) and is left alone.
+			/// </summary>
+			private bool IgnoresColorAlpha(int overlay, int textureType)
+			{
+				if (overlayData == null || overlay < 0 || overlay >= overlayData.Length)
+				{
+					return false;
+				}
+				OverlayData data = overlayData[overlay];
+				if (data == null || data.asset == null || !data.asset.ignoreColorAlpha)
+				{
+					return false;
+				}
+				UMAMaterial sourceMaterial = umaMaterial != null ? umaMaterial : slotData?.material;
+				if (sourceMaterial == null || sourceMaterial.channels == null ||
+					textureType < 0 || textureType >= sourceMaterial.channels.Length)
+				{
+					return false;
+				}
+				return sourceMaterial.channels[textureType].channelType == UMAMaterial.ChannelType.DiffuseTexture;
+			}
+
+			private Color GetColorMultiplier(int overlay, int textureType)
+			{
 				var c = Color.white;
 				if (overlay >= overlayData.Length)
                 {
@@ -1949,10 +2166,27 @@ namespace UMA
 			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAPreApplyConverters = new Dictionary<int, List<DNAConvertDelegate>>();
 			protected Dictionary<int, List<DNAConvertDelegate>> umaDNAPostApplyConverters = new Dictionary<int, List<DNAConvertDelegate>>();
 			protected Dictionary<string, int> mergedSharedColors = new Dictionary<string, int>();
+			// The merged recipe's own shared colors, by reference, during Merge: two of its shared colors with
+			// one name are two colors, and a name lookup gave both overlays the first one's values.
+			private readonly Dictionary<OverlayColorData, int> mergedSharedColorsByRef = new Dictionary<OverlayColorData, int>(NPCReferenceComparer<OverlayColorData>.Instance);
 			[SerializeField]
 			public List<UMADnaBase> dnaValues = new List<UMADnaBase>();
 			public SlotData[] slotDataList;
 			public OverlayColorData[] sharedColors;
+			/// <summary>
+			/// Slots and overlays the last load of this recipe could not find, so they were left out
+			/// (for example "Slot 'Hat'"). Null when nothing was missing. Saving a recipe loaded with
+			/// missing assets would drop them for good, so editors check this before saving.
+			/// </summary>
+			[System.NonSerialized]
+			public List<string> missingAssets;
+			/// <summary>
+			/// Packed DNA entries the last load could not read (a DNA type this project does not have, such as
+			/// an older UMA DNA class). They are kept as they were and written back when the recipe is saved:
+			/// leaving them out made an unrelated edit remove them from the asset for good.
+			/// </summary>
+			[System.NonSerialized]
+			public List<UMAPackedRecipeBase.UMAPackedDna> unreadDna;
 			public Dictionary<string, List<MeshHideAsset>> MeshHideDictionary { get; set; } = new Dictionary<string, List<MeshHideAsset>>();
 			public Dictionary<string, List<UMAMeshData>> BlendshapeSlots { get; set; } = new Dictionary<string, List<UMAMeshData>>();
 
@@ -2632,6 +2866,11 @@ namespace UMA
 							{
 								OverlayData overlay = slot.GetOverlay(j);
 								OverlayData overlayCopy = overlay.Duplicate();
+								// Keep the overlay linked to its shared color; the copy's color is a clone.
+								if (TryGetMergedSharedColor(overlay.colorData, out int sharedIndex))
+								{
+									overlayCopy.colorData = sharedColors[sharedIndex];
+								}
 								overlayCopy.mergedFromSlot = slot;
 								overlayCopy.mergedFromRecipe = recipeName;
 								originalSlot.AddOverlay(overlayCopy);
@@ -2654,26 +2893,20 @@ namespace UMA
 							if (originalOverlay != null && overlay.asset.dontMergeDuplicates != true)
 							{
 								originalOverlay.CopyColors(overlay);//also copies textures
+								originalOverlay.CopyStoredSettings(overlay);
 								originalOverlay.Supressed = overlay.Supressed;
-								if (overlay.colorData.HasName())
+								if (TryGetMergedSharedColor(overlay.colorData, out int sharedIndex))
 								{
-									int sharedIndex;
-									if (mergedSharedColors.TryGetValue(overlay.colorData.name, out sharedIndex))
-									{
-										originalOverlay.colorData = sharedColors[sharedIndex];
-									}
+									originalOverlay.colorData = sharedColors[sharedIndex];
 								}
 							}
 							else
 							{
 								OverlayData overlayCopy = overlay.Duplicate();
-								if (overlayCopy.colorData.HasName())
+								// The incoming overlay's own color: the copy's is a clone, which a lookup by reference cannot find.
+								if (TryGetMergedSharedColor(overlay.colorData, out int sharedIndex))
 								{
-									int sharedIndex;
-									if (mergedSharedColors.TryGetValue(overlayCopy.colorData.name, out sharedIndex))
-									{
-										overlayCopy.colorData = sharedColors[sharedIndex];
-									}
+									overlayCopy.colorData = sharedColors[sharedIndex];
 								}
                                 overlayCopy.mergedFromSlot = slot;
 								overlayCopy.mergedFromRecipe = recipeName;
@@ -2703,18 +2936,23 @@ namespace UMA
 #endif
 				SlotData slotCopy = slot.Copy();
 				slotCopy.dontSerialize = dontSerialize;
+				// slot.Copy() copies the overlays in order, leaving out empty entries; the incoming overlay's own color
+				// finds its merged shared color by reference (the copy's color is a clone).
+				List<OverlayData> incomingOverlays = slot.GetOverlayList();
+				int incoming = 0;
 				overlayCount = slotCopy.OverlayCount;
 				for (int j = 0; j < overlayCount; j++)
 				{
 					OverlayData overlay = slotCopy.GetOverlay(j);
 					overlay.mergedFromRecipe = recipeName;
-                    if (overlay.colorData.HasName())
+					while (incomingOverlays != null && incoming < incomingOverlays.Count && incomingOverlays[incoming] == null)
 					{
-						int sharedIndex;
-						if (mergedSharedColors.TryGetValue(overlay.colorData.name, out sharedIndex))
-						{
-							overlay.colorData = sharedColors[sharedIndex];
-						}
+						incoming++;
+					}
+					OverlayColorData incomingColor = incomingOverlays != null && incoming < incomingOverlays.Count ? incomingOverlays[incoming++].colorData : overlay.colorData;
+					if (TryGetMergedSharedColor(incomingColor, out int sharedIndex))
+					{
+						overlay.colorData = sharedColors[sharedIndex];
 					}
 				}
 				slotDataList[insertIndex] = slotCopy;
@@ -2948,6 +3186,11 @@ namespace UMA
 			public void MergeMatchingOverlays()
 			{
                 using var profile = UMACharacterBuildProfiler.MergeMatchingOverlays.Auto();
+				// A new, never-filled recipe has no slot list yet.
+				if (slotDataList == null)
+				{
+					return;
+				}
 				for (int i = 0; i < slotDataList.Length; i++)
 				{
 					if (slotDataList[i] == null)
@@ -3315,9 +3558,29 @@ namespace UMA
 						var destDNA = GetOrCreateDna(dnaEntry.Value.GetType(), dnaEntry.Key);
 						destDNA.Values = dnaEntry.Value.Values;
 					}
+					// DNA the merged recipe could not read comes along, so saving the result keeps it.
+					if (recipe.unreadDna != null)
+					{
+						for (int i = 0; i < recipe.unreadDna.Count; i++)
+						{
+							var unread = recipe.unreadDna[i];
+							if (unread == null || umaDna.ContainsKey(unread.dnaTypeHash))
+							{
+								continue;
+							}
+							if (unreadDna == null)
+							{
+								unreadDna = new List<UMAPackedRecipeBase.UMAPackedDna>();
+							}
+							// The merged recipe's values win, as they do for DNA that loaded.
+							unreadDna.RemoveAll(d => d.dnaType == unread.dnaType && d.dnaTypeHash == unread.dnaTypeHash);
+							unreadDna.Add(unread);
+						}
+					}
 				}
 
 				mergedSharedColors.Clear();
+				mergedSharedColorsByRef.Clear();
 				if (sharedColors == null)
                 {
                     sharedColors = new OverlayColorData[0];
@@ -3325,31 +3588,38 @@ namespace UMA
 
                 if (recipe.sharedColors != null)
 				{
+					// A name finds the first shared color with it. Two with one name used to have the later ones
+					// renamed ("Skin."), which changed the recipe's own colors and stopped the avatar's "Skin"
+					// color from reaching them.
 					for (int i = 0; i < sharedColors.Length; i++)
 					{
-						if (sharedColors[i] != null && sharedColors[i].HasName())
+						if (sharedColors[i] != null && sharedColors[i].HasName() && !mergedSharedColors.ContainsKey(sharedColors[i].name))
 						{
-							while (mergedSharedColors.ContainsKey(sharedColors[i].name))
-							{
-								sharedColors[i].name = sharedColors[i].name + ".";
-							}
 							mergedSharedColors.Add(sharedColors[i].name, i);
 						}
 					}
 
+					int ownColors = sharedColors.Length;
 					for (int i = 0; i < recipe.sharedColors.Length; i++)
 					{
 						OverlayColorData sharedColor = recipe.sharedColors[i];
-						if (sharedColor != null && sharedColor.HasName())
+						if (sharedColor != null && sharedColor.HasName() && !mergedSharedColorsByRef.ContainsKey(sharedColor))
 						{
 							int sharedIndex;
-							if (!mergedSharedColors.TryGetValue(sharedColor.name, out sharedIndex))
+							// A color this recipe already has under that name is the one the merged recipe's
+							// overlays use (shared colors are matched across recipes by name). Two of the merged
+							// recipe's own colors with one name stay two colors.
+							if (!mergedSharedColors.TryGetValue(sharedColor.name, out sharedIndex) || sharedIndex >= ownColors)
 							{
-								int index = sharedColors.Length;
-								mergedSharedColors.Add(sharedColor.name, index);
-								Array.Resize<OverlayColorData>(ref sharedColors, index + 1);
-								sharedColors[index] = sharedColor.Clone();
+								sharedIndex = sharedColors.Length;
+								if (!mergedSharedColors.ContainsKey(sharedColor.name))
+								{
+									mergedSharedColors.Add(sharedColor.name, sharedIndex);
+								}
+								Array.Resize<OverlayColorData>(ref sharedColors, sharedIndex + 1);
+								sharedColors[sharedIndex] = sharedColor.Clone();
 							}
+							mergedSharedColorsByRef[sharedColor] = sharedIndex;
 						}
 					}
 				}
@@ -3391,6 +3661,23 @@ namespace UMA
 						}
 					}
 				}
+				// Only this merge's overlays are matched by reference; keep no hold on the merged recipe's colors.
+				mergedSharedColorsByRef.Clear();
+			}
+
+			/// <summary>
+			/// The shared color (index into sharedColors) an overlay being merged uses: during Merge, the merged
+			/// recipe's own shared color by reference; otherwise the first shared color with its name.
+			/// </summary>
+			private bool TryGetMergedSharedColor(OverlayColorData color, out int sharedIndex)
+			{
+				sharedIndex = -1;
+				if (color is null || !color.HasName())
+				{
+					return false;
+				}
+				return mergedSharedColorsByRef.TryGetValue(color, out sharedIndex) ||
+					mergedSharedColors.TryGetValue(color.name, out sharedIndex);
 			}
 		}
 
@@ -3427,8 +3714,16 @@ namespace UMA
 			}
         }
 
+        /// <summary>
+        /// Counts calls to <see cref="SetupEmbeddedPhysics"/>. Components that a bone animator
+        /// added to the skeleton compare this with the value they were set up with, to notice
+        /// that the slot which asked for them is no longer part of the character.
+        /// </summary>
+        public int EmbeddedPhysicsGeneration { get; private set; }
+
         public void SetupEmbeddedPhysics()
         {
+			EmbeddedPhysicsGeneration++;
 			boneAnimators.Clear();
             var slotDataList = umaRecipe.slotDataList;
 			
@@ -3444,6 +3739,12 @@ namespace UMA
                     for (int j = 0; j < slot.asset.animatedBones.Length; j++)
                     {
                         BaseUpdatedObject boneAnimator = slot.asset.animatedBones[j];
+                        if (boneAnimator == null)
+                        {
+                            // An empty entry in the slot's list. Skip it rather than stop the build.
+                            continue;
+                        }
+
                         boneAnimator.Initialize(this,slot);
 						boneAnimators.Add(boneAnimator);
                     }
@@ -3670,34 +3971,9 @@ namespace UMA
 						{
 							Texture tempTexture = generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex];
                             generatedMaterials.materials[atlasIndex].resultingAtlasList[textureIndex] = null;
-                            if (UMAGeneratedResourceCache.IsManagedResource(tempTexture)) continue;
-
-                            if (tempTexture is RenderTexture)
-							{
-								RenderTexture tempRenderTexture = tempTexture as RenderTexture;
-								var entityId = tempRenderTexture.GetUmaObjectId();
-								if (!RenderTexToCPU.renderTexturesToCPU.ContainsKey(entityId))
-								{
-                                    // this will be cleared up when the async call is completed.
-                                    tempTexture = null;
-									bool safe = RenderTexToCPU.SafeToFree(tempRenderTexture);
-									if (safe)
-									{
-										UMARenderTextureTracker.Untrack(tempRenderTexture);
-										if (tempRenderTexture.IsCreated())
-										{
-											tempRenderTexture.Release();
-										}
-										RenderTexToCPU.renderTexturesCleanedUMAData++;
-										UMAUtils.DestroySceneObject(tempRenderTexture);
-
-                                    }
-								}
-							}
-							else
-							{
-								UMAUtils.DestroySceneObject(tempTexture);
-							}
+                            // Skips cache-managed textures and pending readbacks (the async copy
+                            // frees those), and never destroys a temporary render texture.
+                            TextureProcessPRO.ReleaseGeneratedTexture(tempTexture);
 						}
 					}
                 }

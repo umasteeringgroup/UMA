@@ -1,6 +1,6 @@
 # UMA official plugins
 
-Launcher API version 1 lives in the editor-only `UMA_Editor` assembly. UMA2Compatibility, Overlay Painter, Hair Card Editor and Dismemberment are official optional packages. Overlay Painter's generator/filter Plugin API v2 remains a separate API.
+Launcher API version 1 lives in the editor-only `UMA_Editor` assembly. UMA2Compatibility, Overlay Painter, Hair Card Editor, Dismemberment and Clothes Designer are official optional packages. Overlay Painter's generator/filter Plugin API v2 remains a separate API.
 
 Every plugin distributes **Examples** and **Tests** as separate companion packages. The welcome
 page lists compact, single-line rows with those companions indented immediately below their
@@ -106,6 +106,35 @@ The `U3-GoreExample` scene and its lighting assets are now in the Examples packa
 SRP's general samples. Examples requires UMA3 Content and SRP Support; Tests requires Unity
 Test Framework. The cap shader is part of the main plugin, so runtime cuts work without Examples.
 
+## Clothes Designer installation and use
+
+Install **Clothes Designer** from the Plugins page. Its editor code and documentation live under
+`Assets/UMA/ClothesDesigner`, excluded from UMA Core. It has one editor-only assembly,
+`UMA.ClothesDesigner.Editor`, and no runtime assembly: nothing of it is part of a player build, and
+the clothes it publishes are ordinary UMA slots and wardrobe recipes.
+
+Choose **UMA > Clothes Designer > Create Clothes on Race...** and pick a race, or select a race, a
+scene character, a slot or a wardrobe recipe and use **Editors > Plugins > Clothes Designer**. The
+Vertex Editor opens on a default body of the race, in the pose its meshes were modelled in, with the
+**Clothes Designer** workflow active. Nothing needs to be in the scene, and a scene character it was
+started from is not changed. Draw and sew a pattern in the Pattern Canvas (or start from the example
+vest), simulate the drape, pull and pin the cloth, and bake a slot, overlay and wardrobe recipe. The
+drape runs on the GPU through a compute shader in the plugin folder (never in `Resources`, so it is not
+in a player build); a Burst CPU solver runs the same simulation where compute shaders are missing.
+**Fit Existing Slot** refits existing clothing to another body shape. Its guides (Quick Start, Pattern
+Canvas, Fitting and Publishing, Fit Existing Slot) are in the Documentation Browser.
+
+Patterns (`ClothesPattern`) and fits (`ClothesFit`) are saved under
+`Assets/UMAProjectData/ClothesDesigner` by default, outside the plugin folder, so they survive removing
+and reinstalling the plugin; opening them again needs the plugin. Baked clothes never refer to a
+pattern or a fit.
+
+**Clothes Designer Examples** owns `Assets/UMA/ClothesDesignerExamples` (the Sleeveless Vest pattern,
+twenty more sample patterns from a T-shirt to socks, and a walkthrough) and requires UMA 3 Content and SRP Support. **Clothes Designer Tests** owns `Assets/UMA/ClothesDesignerTests` and requires Unity
+Test Framework. The parent has no dependency on either. Removing the plugin removes its workflow
+from the Vertex Editor, which then shows its four built-in workflows as before. UMA core has no
+Clothes Designer type reference and compiles without the plugin.
+
 ## UMA2Compatibility installation and use
 
 Install **UMA2Compatibility** from **UMA > Welcome to UMA > Plugins** when a project needs the
@@ -180,6 +209,58 @@ Actions are synchronous, nongeneric `static void Method(Editor)`. Validators are
 `IncludeDerived` defaults to true. `SupportsMultipleTargets` defaults to false. Every selected target must match a registration. Repeat the attribute to cover several types with one action, keeping label, tooltip, order, validator, and multiple-target metadata identical. Ordering is deterministic; invalid registrations are isolated and logged.
 
 The dispatcher commits serialized edits, invokes once on a subsequent editor callback, and refreshes the inspector. Stale targets, host lifetimes, registry generations, and play-mode transitions cancel queued work. Plugin code owns Undo recording, asset saving, window lifecycle, and event cleanup.
+
+## Add a Vertex Editor workflow
+
+A plugin can add its own workflow to the Vertex Editor, beside Sculpt, Vertex Paint, Advanced and
+Blendshapes. Reference `UMA_Core_Editor` from an editor-only asmdef.
+
+```csharp
+using UMA;
+using UMA.Editors;
+using UnityEditor;
+using UnityEngine;
+
+[InitializeOnLoad]
+internal sealed class MyWorkflow : VertexEditorWorkflow
+{
+    static MyWorkflow() => VertexEditorWorkflows.Register(new MyWorkflow());
+
+    public override string Id => "com.mycompany.my-workflow";
+    public override GUIContent ToolbarContent { get; } = new GUIContent("My Tool", "What it is for.");
+
+    public override void OnActivate(VertexEditorStage stage) { /* stage.Character, stage.CharacterRace */ }
+    public override void OnToolsGUI(VertexEditorStage stage) { GUILayout.Label("Shown in the Scene view panel"); }
+    public override void OnWindowGUI(VertexEditorStage stage) { GUILayout.Label("Shown in the Vertex Editor window"); }
+    public override void OnSceneGUI(VertexEditorStage stage, SceneView view, bool pointerOverPanel) { }
+    public override void OnCharacterRebuilt(VertexEditorStage stage) { }
+    public override void OnStageClosing(VertexEditorStage stage) { }
+}
+```
+
+The button appears on a second row of the workflow bar, in the Scene view panel and in the Vertex
+Editor window. While the workflow is active it draws the panel and the window's body and receives
+the Scene view's events; the built-in brushes and vertex selection are off. Choosing a built-in
+workflow ends it. `stage.ActivateWorkflow(id)` starts it from code, for example right after
+`VertexEditorStage.ShowStageForRace`.
+
+- `Id` names the workflow in code and is never shown. Keep it stable.
+- The Vertex Editor never opens on a plugin workflow by itself. **Open Vertex Editor** always gives
+  the built-in workflow used last; start yours from your own command with `stage.ActivateWorkflow(id)`,
+  or let the user press its button.
+- One instance serves every stage. Keep per-session data keyed by the stage and release it in
+  `OnStageClosing`.
+- Override `HasUnsavedChanges`, `DescribeUnsavedChanges`, `SaveChanges` and `DiscardChanges` to take
+  part in the dialog shown when the Vertex Editor is left with unsaved work.
+- Add objects to `stage.scene` freely, but do not change the stage's baked body mesh: the built-in
+  workflows track their edits by vertex index.
+- An exception thrown from a callback is logged and the editor returns to a built-in workflow.
+- The weight editors (Slot Weight Editor, Touchup Weights) do not offer plugin workflows.
+
+To fit geometry to the character and publish it, use `UMASlotSkinTransfer` (capture the skin,
+transfer weights from the closest face, build the slot mesh in bind space) and `UMASlotPublisher`
+(validate a request, create the slot, overlay and wardrobe recipe, roll back on failure). Pass
+`regenerate: false` to `CaptureTargetData` when your tool posed the character itself.
 
 ## Custom hosts and buffered data
 

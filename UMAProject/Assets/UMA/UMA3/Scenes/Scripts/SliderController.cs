@@ -56,7 +56,8 @@ namespace UMA
             if (MyDNA.ContainsKey(DnaName))
             {
                 MyDNA[DnaName].Set(Value);
-                Avatar.ForceUpdate(true);
+                // Build what the DNA's effects call for (a color effect also needs its colors written again).
+                Avatar.ApplyDNAChange(DnaName, false);
             }
         }
 

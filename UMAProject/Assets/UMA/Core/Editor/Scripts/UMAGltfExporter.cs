@@ -557,6 +557,7 @@ namespace UMA.Editors
                 UMAGeneratorBase generator = null;
                 bool previousConvertRenderTexture = false;
                 bool previousUseAsyncConversion = false;
+                bool previousGPUCompression = false;
                 bool restoreGeneratorSettings = false;
 
                 if (UMAAssetIndexer.Instance != null)
@@ -568,8 +569,11 @@ namespace UMA.Editors
                 {
                     previousConvertRenderTexture = generator.convertRenderTexture;
                     previousUseAsyncConversion = generator.useAsyncConversion;
+                    previousGPUCompression = generator.forceGPUTextureCompression;
                     generator.convertRenderTexture = true;
                     generator.useAsyncConversion = false;
+                    // The exporter encodes the atlases as images, which needs uncompressed pixels.
+                    generator.forceGPUTextureCompression = false;
                     restoreGeneratorSettings = true;
                 }
 
@@ -583,6 +587,7 @@ namespace UMA.Editors
                     {
                         generator.convertRenderTexture = previousConvertRenderTexture;
                         generator.useAsyncConversion = previousUseAsyncConversion;
+                        generator.forceGPUTextureCompression = previousGPUCompression;
                     }
                 }
             }
@@ -1237,7 +1242,7 @@ namespace UMA.Editors
                 return "image/png";
             }
 
-            private byte[] EncodeTextureToImageBytes(Texture texture, out string mimeType)
+            private byte[] EncodeTextureToImageBytes(Texture texture, bool linearData, out string mimeType)
             {
                 mimeType = "image/png";
                 if (texture == null)
@@ -1250,11 +1255,11 @@ namespace UMA.Editors
                 {
                     if (texture is RenderTexture rt)
                     {
-                        readable = GetReadableTexture(rt, false);
+                        readable = GetReadableTexture(rt, linearData);
                     }
                     else if (texture is Texture2D tex2d)
                     {
-                        readable = GetReadableTexture(tex2d, false);
+                        readable = GetReadableTexture(tex2d, linearData);
                     }
                     else
                     {
@@ -1384,7 +1389,7 @@ namespace UMA.Editors
                 gltfMaterial.pbrMetallicRoughness.roughnessFactor = Mathf.Clamp01(1f - smoothness);
 
                 Texture normalTexture = GetNormalTexture(material);
-                int normalTextureIndex = RegisterTexture(normalTexture);
+                int normalTextureIndex = RegisterTexture(normalTexture, true);
                 if (normalTextureIndex >= 0)
                 {
                     gltfMaterial.normalTexture = new NormalTextureInfoData
@@ -1399,7 +1404,7 @@ namespace UMA.Editors
                 }
 
                 Texture occlusionTexture = GetTextureByExactName(material, "_OcclusionMap");
-                int occlusionTextureIndex = RegisterTexture(occlusionTexture);
+                int occlusionTextureIndex = RegisterTexture(occlusionTexture, true);
                 if (occlusionTextureIndex >= 0)
                 {
                     gltfMaterial.occlusionTexture = new OcclusionTextureInfoData
@@ -1456,7 +1461,8 @@ namespace UMA.Editors
                 return index;
             }
 
-            private int RegisterTexture(Texture texture)
+            /// <param name="linearData">Normal and occlusion maps are linear data; base colour and emission are sRGB colour.</param>
+            private int RegisterTexture(Texture texture, bool linearData = false)
             {
                 if (texture == null)
                 {
@@ -1471,7 +1477,7 @@ namespace UMA.Editors
                 {
                     UMAObjectId instanceId = texture.GetUmaObjectId();
                     int existingIndex;
-                    if (_runtimeTextureMap.TryGetValue(instanceId, out existingIndex))
+                    if (!linearData && _runtimeTextureMap.TryGetValue(instanceId, out existingIndex))
                     {
                         return existingIndex;
                     }
@@ -1479,6 +1485,11 @@ namespace UMA.Editors
 
                 int imageIndex;
                 string imageKey = isRuntimeTexture ? texture.GetUmaObjectId().ToString() : assetPath;
+                if (linearData && (isRuntimeTexture || _embedImages))
+                {
+                    // The same texture read as data encodes differently from the colour read.
+                    imageKey += "|linear";
+                }
 
                 if (!_imageMap.TryGetValue(imageKey, out imageIndex))
                 {
@@ -1486,7 +1497,7 @@ namespace UMA.Editors
 
                     if (_embedImages)
                     {
-                        byte[] imageBytes = EncodeTextureToImageBytes(texture, out string mimeType);
+                        byte[] imageBytes = EncodeTextureToImageBytes(texture, linearData, out string mimeType);
                         if (imageBytes == null || imageBytes.Length == 0)
                         {
                             return -1;
@@ -1498,7 +1509,7 @@ namespace UMA.Editors
                     }
                     else if (isRuntimeTexture)
                     {
-                        string exportedFileName = ExportRuntimeTexture(texture);
+                        string exportedFileName = ExportRuntimeTexture(texture, linearData);
                         if (string.IsNullOrEmpty(exportedFileName))
                         {
                             return -1;
@@ -1524,7 +1535,7 @@ namespace UMA.Editors
                 int textureIndex;
                 if (_textureMap.TryGetValue(textureKey, out textureIndex))
                 {
-                    if (isRuntimeTexture)
+                    if (isRuntimeTexture && !linearData)
                     {
                         _runtimeTextureMap[texture.GetUmaObjectId()] = textureIndex;
                     }
@@ -1540,7 +1551,7 @@ namespace UMA.Editors
                 textureIndex = textures.Count - 1;
                 _textureMap.Add(textureKey, textureIndex);
 
-                if (isRuntimeTexture)
+                if (isRuntimeTexture && !linearData)
                 {
                     _runtimeTextureMap[texture.GetUmaObjectId()] = textureIndex;
                 }
@@ -1590,7 +1601,7 @@ namespace UMA.Editors
                 return samplerIndex;
             }
 
-            private string ExportRuntimeTexture(Texture texture)
+            private string ExportRuntimeTexture(Texture texture, bool linearData)
             {
                 int width = texture.width;
                 int height = texture.height;
@@ -1602,11 +1613,11 @@ namespace UMA.Editors
                 Texture2D readableTex;
                 if (texture is RenderTexture renderTexture)
                 {
-                    readableTex = GetReadableTexture(renderTexture, false);
+                    readableTex = GetReadableTexture(renderTexture, linearData);
                 }
                 else if (texture is Texture2D texture2D)
                 {
-                    readableTex = GetReadableTexture(texture2D, false);
+                    readableTex = GetReadableTexture(texture2D, linearData);
                 }
                 else
                 {
@@ -1638,11 +1649,13 @@ namespace UMA.Editors
                 return fileName;
             }
 
-            private static Texture2D GetReadableTexture(RenderTexture texture, bool isNormal)
+            // linearData: written as is (normal, occlusion). Otherwise sRGB-encoded colour. UMA atlases are
+            // Linear render textures for every channel, so the role decides, not the source's flag.
+            private static Texture2D GetReadableTexture(RenderTexture texture, bool linearData)
             {
                 RenderTexture tmp;
 
-                if (isNormal)
+                if (linearData)
                 {
                     tmp = RenderTexture.GetTemporary(
                         texture.width,
@@ -1665,7 +1678,7 @@ namespace UMA.Editors
                 RenderTexture previous = RenderTexture.active;
                 RenderTexture.active = tmp;
 
-                Texture2D readableTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false, isNormal);
+                Texture2D readableTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false, linearData);
                 readableTexture.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
                 readableTexture.Apply();
 
@@ -1675,11 +1688,11 @@ namespace UMA.Editors
                 return readableTexture;
             }
 
-            private static Texture2D GetReadableTexture(Texture2D texture, bool isNormal)
+            private static Texture2D GetReadableTexture(Texture2D texture, bool linearData)
             {
                 RenderTexture tmp;
 
-                if (isNormal)
+                if (linearData)
                 {
                     tmp = RenderTexture.GetTemporary(
                         texture.width,
@@ -1702,7 +1715,7 @@ namespace UMA.Editors
                 RenderTexture previous = RenderTexture.active;
                 RenderTexture.active = tmp;
 
-                Texture2D readableTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false, isNormal);
+                Texture2D readableTexture = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false, linearData);
                 readableTexture.ReadPixels(new Rect(0, 0, tmp.width, tmp.height), 0, 0);
                 readableTexture.Apply();
 

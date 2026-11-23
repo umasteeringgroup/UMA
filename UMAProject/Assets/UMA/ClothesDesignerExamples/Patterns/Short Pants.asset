@@ -1,0 +1,520 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84502f13ce032214195115124a93b406, type: 3}
+  m_Name: Short Pants
+  m_EditorClassIdentifier: UMA.ClothesDesigner.Editor::UMA.ClothesDesigner.Editor.ClothesPattern
+  schemaVersion: 2
+  pieces:
+  - id: 05919f34e4a643f0aba6a1ea39407a1a
+    name: Left Front
+    points:
+    - id: b815ef4f353842e396bedb6b96589476
+      position: {x: 5.5, y: 0}
+    - id: 4ff6c2a239544b78acf10361d49eaf24
+      position: {x: 35.5, y: 0}
+    - id: 684f3f41d9ce424ca1c37df1de3c1427
+      position: {x: 35, y: 25}
+    - id: 1c40df093d6742d6af30dcf780ded250
+      position: {x: 31.5, y: 43}
+    - id: bdf80e10a67e443ba7fa4fbec4dc01fd
+      position: {x: 9.5, y: 43}
+    - id: 29b6841147a747f180bb0b31f17aeb44
+      position: {x: 6, y: 25}
+    - id: 8de76d40a00e4cc08cec0fbb9524c8c4
+      position: {x: 0, y: 18}
+    edges:
+    - id: 59f95cb9cc6245a6936af5e7d392c466
+      name: Hem
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: c0f49277203a4cd5ac2db7ea9a10d20a
+      name: Outseam
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 3ceae8eee9994d318695e2a998baa5b3
+      name: Hip curve
+      curved: 1
+      handleA: {x: 0, y: 8}
+      handleB: {x: 1.5, y: -6}
+      opening: 0
+    - id: e7831ee5c55b4ed0b2788a145bd79614
+      name: Waist
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: 97bc3ed66e9141c2ab3be5b2a894122c
+      name: Center
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 1ab6e51739364952bdb563b51a07b6cf
+      name: Crotch curve
+      curved: 1
+      handleA: {x: 0, y: -6}
+      handleB: {x: 3, y: 0.5}
+      opening: 0
+    - id: 2ed38590ef0a4427ab0a097dc78685e3
+      name: Inseam
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 0
+      topAboveShoulderCm: -11
+      distanceCm: 0
+      part: 4
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Cotton
+      stretchCompliance: 0.00000001
+      bendCompliance: 0.00002
+      density: 0.2
+      friction: 0.35
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: 0.0078125, y: 0.5203651}
+      scale: 0.010972612
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.5203651
+        width: 0.3895277
+        height: 0.4718223
+  - id: 40817b0c833d4d5a9972b1da51784a4e
+    name: Left Back
+    points:
+    - id: 66c38f9e49564bccb3826ccac422bfd3
+      position: {x: 43.75, y: 0}
+    - id: dcae882f7ba94dda926d62e1ac0e0eb1
+      position: {x: 75.75, y: 0}
+    - id: 3e3a56c81a98465dacf82e7f65b2eff5
+      position: {x: 87, y: 18}
+    - id: 360db7f1f7b24e8b8e06b15d939b2a76
+      position: {x: 76, y: 25}
+    - id: 1d84c7dccfcd49a5be16cddf989eaa55
+      position: {x: 72.75, y: 46}
+    - id: 2334611718004fc0acac3eec2da8c8ce
+      position: {x: 46.75, y: 43}
+    - id: 07f1a07a54404d519fa0bedf2f237f9e
+      position: {x: 43.5, y: 25}
+    edges:
+    - id: 20ea5f40baf6446ebee0c30a70d2e2ff
+      name: Hem
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: 27e03148bc7248cc85eafedf7705a710
+      name: Inseam
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 929175e6f2ea4da6a5a7fea461a0ba26
+      name: Crotch curve
+      curved: 1
+      handleA: {x: -6, y: 0.5}
+      handleB: {x: 0, y: -7}
+      opening: 0
+    - id: 94934f7ed97e40898fe004bde3010137
+      name: Center
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: f91a87e90d2f49dca543d45e14d6d4ed
+      name: Waist
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: 8e09ed008be34840a76cdebde2e57675
+      name: Hip curve
+      curved: 1
+      handleA: {x: -1.5, y: -6}
+      handleB: {x: 0, y: 8}
+      opening: 0
+    - id: ed4366e48eb141bba4b4cb341e013bfe
+      name: Outseam
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 180
+      topAboveShoulderCm: -8
+      distanceCm: 0
+      part: 4
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Cotton
+      stretchCompliance: 0.00000001
+      bendCompliance: 0.00002
+      density: 0.2
+      friction: 0.35
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -0.4694961, y: 0.0078125}
+      scale: 0.010972612
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.0078125
+        width: 0.4773086
+        height: 0.5047401
+  - id: d9be0b08a8344ec6b9ef3c293964c7ca
+    name: Right Front
+    points:
+    - id: 2f7bcb07530b417999813d0c45420f68
+      position: {x: 125, y: 0}
+    - id: 18f8082ea75d40a7bdbeee36576ec978
+      position: {x: 130.5, y: 18}
+    - id: 7aa855a2664d4fab804577beb2871a6f
+      position: {x: 124.5, y: 25}
+    - id: 1f39ede6c4c14a0d9b24a6da64bd9286
+      position: {x: 121, y: 43}
+    - id: 09f8f9e7e0d146b891ac9b4a3d1240c4
+      position: {x: 99, y: 43}
+    - id: 2d0525e829034a1d830481deac904d48
+      position: {x: 95.5, y: 25}
+    - id: 3db76c7374074f9196ef1caab651d703
+      position: {x: 95, y: 0}
+    edges:
+    - id: b7fd171bbd0d4f8e86b7ad8147d5a5a9
+      name: Inseam
+      curved: 0
+      handleA: {x: -0, y: 0}
+      handleB: {x: -0, y: 0}
+      opening: 0
+    - id: d4f04a68dcfa476593213ceba020b243
+      name: Crotch curve
+      curved: 1
+      handleA: {x: -3, y: 0.5}
+      handleB: {x: -0, y: -6}
+      opening: 0
+    - id: f5a48cd80b18458f8be8b0f488be9714
+      name: Center
+      curved: 0
+      handleA: {x: -0, y: 0}
+      handleB: {x: -0, y: 0}
+      opening: 0
+    - id: 851e1a29a1a54c6c9bb92adb6dc531c0
+      name: Waist
+      curved: 0
+      handleA: {x: -0, y: 0}
+      handleB: {x: -0, y: 0}
+      opening: 1
+    - id: bab59a81bf9c4977b79597622e206ebe
+      name: Hip curve
+      curved: 1
+      handleA: {x: -1.5, y: -6}
+      handleB: {x: -0, y: 8}
+      opening: 0
+    - id: 8faaf71fc2934dc2b6a5bdb0de9dd7e6
+      name: Outseam
+      curved: 0
+      handleA: {x: -0, y: 0}
+      handleB: {x: -0, y: 0}
+      opening: 0
+    - id: 7509586522bb4181baf98156589c152c
+      name: Hem
+      curved: 0
+      handleA: {x: -0, y: 0}
+      handleB: {x: -0, y: 0}
+      opening: 1
+    grainAngle: -0
+    mirrorOf: 05919f34e4a643f0aba6a1ea39407a1a
+    placement:
+      angle: 0
+      topAboveShoulderCm: -11
+      distanceCm: 0
+      part: 5
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Cotton
+      stretchCompliance: 0.00000001
+      bendCompliance: 0.00002
+      density: 0.2
+      friction: 0.35
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -0.6372454, y: 0.5203651}
+      scale: 0.010972612
+      rotation: 0
+      reserved:
+        serializedVersion: 2
+        x: 0.4051527
+        y: 0.5203651
+        width: 0.3895277
+        height: 0.4718223
+  - id: cc58050e123d426e87344c23ab8b2529
+    name: Right Back
+    points:
+    - id: 3be4d10b51a4443ebf02cba133f8aac1
+      position: {x: 181.75, y: 0}
+    - id: 4f14017adc78451e95cb3aa21e9cc612
+      position: {x: 182, y: 25}
+    - id: 19386ea421154f37b18132f37a03dc1a
+      position: {x: 178.75, y: 43}
+    - id: a550f7b69e4e4cf68dc65e362bf6aecf
+      position: {x: 152.75, y: 46}
+    - id: b0e8954a9e8a42b0941dd4e635a07076
+      position: {x: 149.5, y: 25}
+    - id: 60314d00e8c34de0a845e58d139569e7
+      position: {x: 138.5, y: 18}
+    - id: 32944e6ab28242e1b4169671a8a26caa
+      position: {x: 149.75, y: 0}
+    edges:
+    - id: 475b2d62593248adb9023f59f0f59e53
+      name: Outseam
+      curved: 0
+      handleA: {x: -0, y: 0}
+      handleB: {x: -0, y: 0}
+      opening: 0
+    - id: ee49ad35773a4b34a3a5938289e5194a
+      name: Hip curve
+      curved: 1
+      handleA: {x: -0, y: 8}
+      handleB: {x: 1.5, y: -6}
+      opening: 0
+    - id: ce8f729d0cfc4c3dabe124c871b68dcb
+      name: Waist
+      curved: 0
+      handleA: {x: -0, y: 0}
+      handleB: {x: -0, y: 0}
+      opening: 1
+    - id: 6e71937075724f9b966074782f03eec0
+      name: Center
+      curved: 0
+      handleA: {x: -0, y: 0}
+      handleB: {x: -0, y: 0}
+      opening: 0
+    - id: a7dcef4d49754f69983c67cacc44c419
+      name: Crotch curve
+      curved: 1
+      handleA: {x: -0, y: -7}
+      handleB: {x: 6, y: 0.5}
+      opening: 0
+    - id: 945bc22ac50f4cc1b0184306a9a3ebc4
+      name: Inseam
+      curved: 0
+      handleA: {x: -0, y: 0}
+      handleB: {x: -0, y: 0}
+      opening: 0
+    - id: b68cdd2e1c474b88afc42c039c280dc7
+      name: Hem
+      curved: 0
+      handleA: {x: -0, y: 0}
+      handleB: {x: -0, y: 0}
+      opening: 1
+    grainAngle: -0
+    mirrorOf: 40817b0c833d4d5a9972b1da51784a4e
+    placement:
+      angle: 180
+      topAboveShoulderCm: -8
+      distanceCm: 0
+      part: 5
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Cotton
+      stretchCompliance: 0.00000001
+      bendCompliance: 0.00002
+      density: 0.2
+      friction: 0.35
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -1.0267731, y: 0.0078125}
+      scale: 0.010972612
+      rotation: 0
+      reserved:
+        serializedVersion: 2
+        x: 0.4929336
+        y: 0.0078125
+        width: 0.4773086
+        height: 0.5047401
+  seams:
+  - id: d4a1ed40cdd94cf28333e847999ec446
+    a:
+      pieceId: 05919f34e4a643f0aba6a1ea39407a1a
+      edgeId: c0f49277203a4cd5ac2db7ea9a10d20a
+      start: 0
+      end: 1
+    b:
+      pieceId: 40817b0c833d4d5a9972b1da51784a4e
+      edgeId: ed4366e48eb141bba4b4cb341e013bfe
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 95b3eabd255d46afa9778dd7c1ca738f
+    a:
+      pieceId: 05919f34e4a643f0aba6a1ea39407a1a
+      edgeId: 3ceae8eee9994d318695e2a998baa5b3
+      start: 0
+      end: 1
+    b:
+      pieceId: 40817b0c833d4d5a9972b1da51784a4e
+      edgeId: 8e09ed008be34840a76cdebde2e57675
+      start: 0
+      end: 1
+    reversed: 1
+  - id: e76d3f70dc76497a90a2b09d62df2f7d
+    a:
+      pieceId: 05919f34e4a643f0aba6a1ea39407a1a
+      edgeId: 2ed38590ef0a4427ab0a097dc78685e3
+      start: 0
+      end: 1
+    b:
+      pieceId: 40817b0c833d4d5a9972b1da51784a4e
+      edgeId: 27e03148bc7248cc85eafedf7705a710
+      start: 0
+      end: 1
+    reversed: 1
+  - id: d1bb5c200eb24d288913d5b53fc71dcf
+    a:
+      pieceId: d9be0b08a8344ec6b9ef3c293964c7ca
+      edgeId: 8faaf71fc2934dc2b6a5bdb0de9dd7e6
+      start: 0
+      end: 1
+    b:
+      pieceId: cc58050e123d426e87344c23ab8b2529
+      edgeId: 475b2d62593248adb9023f59f0f59e53
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 4f52050111e54dabbe6371d99cc90160
+    a:
+      pieceId: d9be0b08a8344ec6b9ef3c293964c7ca
+      edgeId: bab59a81bf9c4977b79597622e206ebe
+      start: 0
+      end: 1
+    b:
+      pieceId: cc58050e123d426e87344c23ab8b2529
+      edgeId: ee49ad35773a4b34a3a5938289e5194a
+      start: 0
+      end: 1
+    reversed: 1
+  - id: c57225a999af40dba4d4fd6b504359be
+    a:
+      pieceId: d9be0b08a8344ec6b9ef3c293964c7ca
+      edgeId: b7fd171bbd0d4f8e86b7ad8147d5a5a9
+      start: 0
+      end: 1
+    b:
+      pieceId: cc58050e123d426e87344c23ab8b2529
+      edgeId: 945bc22ac50f4cc1b0184306a9a3ebc4
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 15d495cfe0184571bf00fdb44c1dbb04
+    a:
+      pieceId: 05919f34e4a643f0aba6a1ea39407a1a
+      edgeId: 97bc3ed66e9141c2ab3be5b2a894122c
+      start: 0
+      end: 1
+    b:
+      pieceId: d9be0b08a8344ec6b9ef3c293964c7ca
+      edgeId: f5a48cd80b18458f8be8b0f488be9714
+      start: 0
+      end: 1
+    reversed: 1
+  - id: c0d24a9ec3e94c609c0bb44cd6b58e46
+    a:
+      pieceId: 05919f34e4a643f0aba6a1ea39407a1a
+      edgeId: 1ab6e51739364952bdb563b51a07b6cf
+      start: 0
+      end: 1
+    b:
+      pieceId: d9be0b08a8344ec6b9ef3c293964c7ca
+      edgeId: d4f04a68dcfa476593213ceba020b243
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 55d71d17457f4670b86910af554ba4c5
+    a:
+      pieceId: 40817b0c833d4d5a9972b1da51784a4e
+      edgeId: 94934f7ed97e40898fe004bde3010137
+      start: 0
+      end: 1
+    b:
+      pieceId: cc58050e123d426e87344c23ab8b2529
+      edgeId: 6e71937075724f9b966074782f03eec0
+      start: 0
+      end: 1
+    reversed: 1
+  - id: c04457aed6c14e339a7eb6078a350dfb
+    a:
+      pieceId: 40817b0c833d4d5a9972b1da51784a4e
+      edgeId: 929175e6f2ea4da6a5a7fea461a0ba26
+      start: 0
+      end: 1
+    b:
+      pieceId: cc58050e123d426e87344c23ab8b2529
+      edgeId: a7dcef4d49754f69983c67cacc44c419
+      start: 0
+      end: 1
+    reversed: 1
+  dimensions:
+  - id: 0deb5bf3ec5043f193c75bfb22da3ff9
+    name: Hip (front)
+    kind: 0
+    measurement: 3
+    fixedCm: 116
+    allowanceCm: -1
+    shareCount: 4
+    lineY: 25
+    pieceIds:
+    - 05919f34e4a643f0aba6a1ea39407a1a
+    - d9be0b08a8344ec6b9ef3c293964c7ca
+  - id: 3ba53d4768c94b4aade80772d5ea707d
+    name: Hip (back)
+    kind: 0
+    measurement: 3
+    fixedCm: 130
+    allowanceCm: 13
+    shareCount: 4
+    lineY: 25
+    pieceIds:
+    - 40817b0c833d4d5a9972b1da51784a4e
+    - cc58050e123d426e87344c23ab8b2529
+  meshLevel: 1
+  customEdgeLengthCm: 2
+  uvLayout:
+    bakeResolution: 1024
+    gutterPixels: 8
+    aspect: 1
+  notes: Cotton shorts with an 18 cm inseam, sitting on the hips. Four pieces, each
+    laid round its leg; the hips follow the body.

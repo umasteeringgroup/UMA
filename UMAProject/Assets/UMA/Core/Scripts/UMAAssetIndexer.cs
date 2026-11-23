@@ -1305,7 +1305,7 @@ namespace UMA
                         for (int i1 = 0; i1 < dcas.Length; i1++)
                         {
                             DynamicCharacterAvatar dca = dcas[i1];
-                            if (dca.editorTimeGeneration)
+                            if (dca.editorTimeGeneration && IsSavedWithScene(dca.gameObject))
                             {
                                 dca.GenerateSingleUMA(
                                     false,
@@ -1315,6 +1315,22 @@ namespace UMA
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// False when the object or one of its parents is never written to a scene file
+        /// (<see cref="HideFlags.DontSaveInEditor"/>), as editor tools' temporary characters are.
+        /// </summary>
+        public static bool IsSavedWithScene(GameObject gameObject)
+        {
+            for (Transform t = gameObject != null ? gameObject.transform : null; t != null; t = t.parent)
+            {
+                if ((t.gameObject.hideFlags & HideFlags.DontSaveInEditor) != 0)
+                {
+                    return false;
+                }
+            }
+            return gameObject != null;
         }
 
         public static void CleanupUMAS(Scene scene)
@@ -1330,6 +1346,12 @@ namespace UMA
                     for (int i1 = 0; i1 < dcas.Length; i1++)
                     {
                         DynamicCharacterAvatar dca = dcas[i1];
+                        // A character that is never written to the scene file (an editor tool's
+                        // temporary preview) cannot junk it up, and nothing would build it again.
+                        if (!IsSavedWithScene(dca.gameObject))
+                        {
+                            continue;
+                        }
                         // Free all the generated data so we don't junk up the scene file.
                         // it will be regenerated later.
                         dca.CleanupGeneratedData();
@@ -1825,7 +1847,9 @@ namespace UMA
         */
 
         /// <summary>
-        /// Force the Index to save and reload
+        /// Saves the Global Library asset, and only that asset. It used to call AssetDatabase.SaveAssets,
+        /// which also wrote every other unsaved asset in the project; code that changes other assets saves
+        /// them itself (AssetDatabase.SaveAssetIfDirty).
         /// </summary>
         public void ForceSave()
         {
@@ -1841,9 +1865,8 @@ namespace UMA
             }
 #endif
             EditorUtility.SetDirty(this);
-            // Save all assets
-            //AssetDatabase.SaveAssetIfDirty(this);
-            AssetDatabase.SaveAssets();
+            // The library alone: never the project's other unsaved assets.
+            AssetDatabase.SaveAssetIfDirty(this);
             StopTimer(st, "ForceSave");
         }
 #endif
@@ -3995,6 +4018,8 @@ namespace UMA
             var slots = GetAllAssets<SlotDataAsset>();
             var overlays = GetAllAssets<OverlayDataAsset>();
             var umaMaterials = GetAllAssets<UMAMaterial>();
+            // The assets repaired here are saved one by one below; ForceSave saves only the library.
+            var repaired = new List<UnityEngine.Object>();
 
             // if we stripped the shaders from the materials, we need to look them up
             // and reassign them here.
@@ -4011,6 +4036,7 @@ namespace UMA
                             string assetPath = AssetDatabase.GUIDToAssetPath(guids[0]);
                             um.material = AssetDatabase.LoadAssetAtPath<Material>(assetPath);
                             EditorUtility.SetDirty(um);
+                            repaired.Add(um);
                         }
                     }
                 }
@@ -4026,6 +4052,9 @@ namespace UMA
                         {
                             // Shader was found. We need to resave the material with the correct shader
                             EditorUtility.SetDirty(um);
+                            EditorUtility.SetDirty(um.material);
+                            repaired.Add(um);
+                            repaired.Add(um.material);
                         }
                     }
                 }
@@ -4047,11 +4076,19 @@ namespace UMA
                             Debug.LogWarning("Unable to find material '" + od.materialName + "' for overlay: " + od.name);
                         }
                         EditorUtility.SetDirty(od);
+                        repaired.Add(od);
                     }
                     else
                     {
                         Debug.LogWarning("Material name is null on overlay: " + od.name);
                     }
+                }
+            }
+            for (int i = 0; i < repaired.Count; i++)
+            {
+                if (repaired[i] != null && EditorUtility.IsPersistent(repaired[i]))
+                {
+                    AssetDatabase.SaveAssetIfDirty(repaired[i]);
                 }
             }
             ForceSave();
@@ -4484,10 +4521,10 @@ namespace UMA
         }
 
         /// <summary>
-        /// releases an asset an asset reference
+        /// Releases the library's reference to an asset, so the next request loads it again. Call this
+        /// after changing an asset the library may be holding. For a slot it also drops the slot's
+        /// race-baked copies (<see cref="DropBakedCopies"/>), which were made from the slot as it was.
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="Name"></param>
         public void ReleaseReference(UnityEngine.Object obj)
         {
             if (obj == null)
@@ -4513,6 +4550,102 @@ namespace UMA
                 AssetItem ai = TypeDic[Name];
                 ai.FreeReference();
             }
+
+            if (obj is SlotDataAsset slot)
+            {
+                DropBakedCopies(slot);
+            }
+        }
+
+        /// <summary>
+        /// Removes the race-baked copies of a slot from the library. A race with prebaked blendshapes
+        /// wears "&lt;slot&gt;_baked_&lt;race&gt;", a copy made in memory by
+        /// <see cref="SlotDataAsset.BakeNewSlotData"/> and found again by that name, so it keeps the
+        /// slot's old mesh after the slot changes. Once dropped, the next character build bakes a
+        /// new copy from the slot as it is now.
+        /// </summary>
+        /// <remarks>
+        /// Only copies that exist in memory are dropped; a baked slot saved as an asset in the project
+        /// is left in the library. The copies themselves are not destroyed, because characters that
+        /// are already built still wear them. The library is not marked as changed.
+        /// </remarks>
+        /// <returns>How many copies were dropped.</returns>
+        public int DropBakedCopies(SlotDataAsset source)
+        {
+            if (source == null || !TypeToLookup.ContainsKey(typeof(SlotDataAsset)))
+            {
+                return 0;
+            }
+            string sourceName = source.slotName;
+            if (string.IsNullOrEmpty(sourceName))
+            {
+                return 0;
+            }
+            string bakedPrefix = sourceName + "_baked_";
+            Dictionary<string, AssetItem> slots = GetAssetDictionary(typeof(SlotDataAsset));
+            List<KeyValuePair<string, AssetItem>> stale = null;
+            foreach (KeyValuePair<string, AssetItem> entry in slots)
+            {
+                AssetItem ai = entry.Value;
+                if (ai == null || !string.IsNullOrEmpty(ai._Guid))
+                {
+                    continue;
+                }
+                SlotDataAsset copy = ai._SerializedItem as SlotDataAsset;
+                bool isCopy;
+                if (copy != null)
+                {
+#if UNITY_EDITOR
+                    if (EditorUtility.IsPersistent(copy))
+                    {
+                        continue;
+                    }
+#endif
+                    isCopy = !ReferenceEquals(copy, source) && copy.isBaked && copy.sourceSlot == sourceName;
+                }
+                else
+                {
+                    // Already released: all that is left to go by is the name baking gives a copy.
+                    isCopy = entry.Key.StartsWith(bakedPrefix, StringComparison.Ordinal);
+                }
+                if (isCopy)
+                {
+                    (stale ?? (stale = new List<KeyValuePair<string, AssetItem>>())).Add(entry);
+                }
+            }
+            if (stale == null)
+            {
+                return 0;
+            }
+            for (int i = 0; i < stale.Count; i++)
+            {
+                slots.Remove(stale[i].Key);
+                RemoveInMemoryItem(stale[i].Value);
+            }
+            return stale.Count;
+        }
+
+        /// <summary>
+        /// Takes an item that was only ever in memory out of the item list, keeping every other
+        /// item's index right. Unlike <see cref="RemoveAsset(AssetItem, bool)"/> it leaves no gap to
+        /// compress and does not save or dirty the library.
+        /// </summary>
+        private void RemoveInMemoryItem(AssetItem ai)
+        {
+            int index = ai.Index;
+            if (index >= 0 && index < SerializedItems.Count && ReferenceEquals(SerializedItems[index], ai))
+            {
+                SerializedItems.RemoveAt(index);
+                for (int i = index; i < SerializedItems.Count; i++)
+                {
+                    if (SerializedItems[i] != null)
+                    {
+                        SerializedItems[i].Index = i;
+                    }
+                }
+            }
+            ai.Index = -1;
+            ai.FreeReference();
         }
 
 
@@ -4526,6 +4659,14 @@ namespace UMA
             }
             return null;
         }
+        /// <summary>
+        /// Editor only. Raised by <see cref="EvilAddAsset"/> (and so by <see cref="AddIfIndexed"/>: the Global
+        /// Library window's drop and folder drop, "Add Selected Assets to Global Library" and the builders)
+        /// just before an asset is added, so editor code can prepare it, for example bring a UMA 2 wardrobe
+        /// recipe to the UMA 3 races (<c>UMALegacyRecipeLibraryHook</c>). A library rebuild does not raise it.
+        /// </summary>
+        public static event System.Action<UnityEngine.Object> EditorAssetAdding;
+
         /// <summary>
         /// This is the evil version of AddAsset. This version cares not for the good of the project, nor
         /// does it care about readability, expandibility, and indeed, hates goodness with every beat of it's
@@ -4543,6 +4684,17 @@ namespace UMA
         /// <returns>Whether the Asset was added or not.</returns>
         public bool EvilAddAsset(System.Type type, UnityEngine.Object o)
         {
+            if (o != null && EditorAssetAdding != null)
+            {
+                try
+                {
+                    EditorAssetAdding(o);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
+            }
             AssetItem ai = null;
             ai = new AssetItem(TypeToLookup[type], o);
             ai._Path = AssetDatabase.GetAssetPath(o.GetEntityId());

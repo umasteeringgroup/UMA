@@ -198,37 +198,16 @@ namespace UMA.Editors
             _overlayEditors.Add(new OverlayEditor(_recipe, _slotData, newOverlay, null, _recipeContext));
             _overlayData.Add(newOverlay);
             RememberRecentOverlay(overlay);
-            SaveRecipeContext();
+            SaveRecipeContext("Add Overlay");
         }
 
-        private void SaveRecipeContext()
+        private void SaveRecipeContext(string undoName = "Edit Slot")
         {
-            if (_recipeContext == null)
-            {
-                return;
-            }
-
-            if (_recipeContext is UMARecipeBase recipeBase)
-            {
-                recipeBase.Save(_recipe);
-                EditorUtility.SetDirty(recipeBase);
-                if (EditorUtility.IsPersistent(recipeBase))
-                {
-                    AssetDatabase.SaveAssetIfDirty(recipeBase);
-                }
-
-                if (recipeBase is UMATextRecipe textRecipe)
-                {
-                    UMAUpdateProcessor.UpdateRecipe(textRecipe);
-                }
-                return;
-            }
-
-            EditorUtility.SetDirty(_recipeContext);
-            if (EditorUtility.IsPersistent(_recipeContext))
-            {
-                AssetDatabase.SaveAssetIfDirty(_recipeContext);
-            }
+            // Checks the incomplete-load lock and whether the recipe changed elsewhere since the open
+            // inspector or graph loaded it; with Automatic Updates off the edit stays pending there. Undo is
+            // recorded there too: these controls change only the working copy, so Add Overlay and Add Slot
+            // left nothing to undo.
+            CharacterBaseEditor.WriteWorkingCopy(_recipeContext, _recipe, undoName);
         }
 
         private bool InIndex(SlotData _slotData)
@@ -286,8 +265,8 @@ namespace UMA.Editors
 
                     if (!_slotData.isPlaceholderSlot && GUILayout.Button("Add to Global Index (Recommended)"))
                     {
-                        UMAAssetIndexer.Instance.EvilAddAsset(typeof(SlotDataAsset), _slotData.asset);
-                        UMAAssetIndexer.Instance.ForceSave();
+                        // Saves the library alone, not the project's other unsaved assets.
+                        UMAGlobalLibraryAutoRegistration.AddAndSave(_slotData.asset);
                     }
                     GUILayout.EndHorizontal();
                 }
@@ -299,7 +278,14 @@ namespace UMA.Editors
 
                     EditorGUI.BeginChangeCheck();
                     string newName = EditorGUILayout.DelayedTextField("Placeholder Name", _slotData.placeholderSlotName);
-                    if (EditorGUI.EndChangeCheck() && newName != _slotData.placeholderSlotName)
+                    bool nameEdited = EditorGUI.EndChangeCheck() && newName != _slotData.placeholderSlotName;
+                    if (nameEdited && string.IsNullOrWhiteSpace(newName))
+                    {
+                        // A placeholder with no name is not saved (the recipe would lose the slot and its
+                        // overlays), so an empty name is refused and the current one kept.
+                        Debug.LogWarning("A placeholder slot needs a name. The name '" + _slotData.placeholderSlotName + "' was kept; use the slot's X to remove it.");
+                    }
+                    else if (nameEdited)
                     {
                         _slotData.placeholderSlotName = newName;
                         _name = newName;
@@ -386,7 +372,7 @@ namespace UMA.Editors
                                         _slotData.asset = AssetDatabase.LoadAssetAtPath<SlotDataAsset>(AssetDatabase.GetAssetPath(_slotData.asset));
                                         _slotData.UpdateFromAsset(_slotData.asset);
                                         changed = true;
-                                        SaveRecipeContext();
+                                        SaveRecipeContext("Refresh Slot From Asset");
                                         GUIUtility.ExitGUI();
                                     }
                                 }
@@ -398,7 +384,7 @@ namespace UMA.Editors
                             Rect matDrop = GUILayoutUtility.GetRect(0.0f, 40.0f, GUILayout.ExpandWidth(true));
                             GUI.Box(matDrop, "Drag UMA Material here to update this slot's overlays");
                             Event evt = Event.current;
-                            if ((evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform) && matDrop.Contains(evt.mousePosition))
+                            if (GUI.enabled && (evt.type == EventType.DragUpdated || evt.type == EventType.DragPerform) && matDrop.Contains(evt.mousePosition))
                             {
                                 bool hasUmaMaterial = false;
                                 foreach (var obj in DragAndDrop.objectReferences)
@@ -461,7 +447,8 @@ namespace UMA.Editors
                     _slotData.smooshTargetTag = EditorGUILayout.TextField("Override Target Tag", _slotData.smooshTargetTag);
                     _slotData.smooshableTag = EditorGUILayout.TextField("Override Smooshed Tag", _slotData.smooshableTag);
 
-                    changed = EditorGUI.EndChangeCheck();
+                    // |= so a change made earlier in this frame (Disable, placeholder name) is not dropped.
+                    changed |= EditorGUI.EndChangeCheck();
 
                 }
             }
@@ -509,7 +496,7 @@ namespace UMA.Editors
                                 _dnaDirty = true;
                                 _meshDirty = true;
                                 changed = true;
-                                SaveRecipeContext();
+                                SaveRecipeContext("Remove Blendshape Slot");
                                 GUIUtility.ExitGUI();
                             }
                         }
@@ -596,7 +583,9 @@ namespace UMA.Editors
                             SlotTagsList = GUIHelper.InitGenericTagsList(backingTags);
                         }
                         SlotTagsList.DoLayoutList();
-                        if (GUI.changed)
+                        // Compare instead of trusting GUI.changed: the list's Load button exits the GUI
+                        // before this line runs, and GUI.changed also reports unrelated controls.
+                        if (!TagsMatch(backingTags, _slotData.tags))
                         {
                             _slotData.tags = backingTags.ToArray();
                             changed = true;
@@ -609,9 +598,9 @@ namespace UMA.Editors
                 if (!_slotData.isPlaceholderSlot)
                 {
                     EditorGUILayout.HelpBox("Expand Along Normal is used to expand the slot along the normal of the mesh. This is useful for offsetting to address zfighting issues. In micrometers", MessageType.Info);
-                    GUI.changed = false;
+                    EditorGUI.BeginChangeCheck();
                     _slotData.expandAlongNormal = EditorGUILayout.DelayedIntField("Expand Along Normal", _slotData.expandAlongNormal);
-                    if (GUI.changed)
+                    if (EditorGUI.EndChangeCheck())
                     {
                         changed = true;
                     }
@@ -687,7 +676,7 @@ namespace UMA.Editors
                             _textureDirty = true;
                             _meshDirty = true;
                             changed = true;
-                            SaveRecipeContext();
+                            SaveRecipeContext("Add Slot");
                             GUIUtility.ExitGUI();
                         }
 
@@ -712,8 +701,19 @@ namespace UMA.Editors
 
                         if (overlayEditor.Delete)
                         {
+                            if (_recipeContext != null)
+                            {
+                                Undo.RecordObject(_recipeContext, "Remove Overlay");
+                            }
                             _overlayEditors.RemoveAt(i);
-                            _overlayData.RemoveAt(i);
+                            // By reference, not by row: the overlay list can have been reordered since the
+                            // rows were built (in the wardrobe graph), and the row's index then removed
+                            // another overlay.
+                            int dataIndex = _overlayData.FindIndex(o => ReferenceEquals(o, overlayEditor.Overlay));
+                            if (dataIndex >= 0)
+                            {
+                                _overlayData.RemoveAt(dataIndex);
+                            }
                             _textureDirty = true;
                             changed = true;
                             SaveRecipeContext();
@@ -761,6 +761,23 @@ namespace UMA.Editors
             GUIHelper.EndVerticalPadded(10);
 
             return changed;
+        }
+
+        private static bool TagsMatch(List<string> edited, string[] stored)
+        {
+            int storedCount = stored != null ? stored.Length : 0;
+            if (edited.Count != storedCount)
+            {
+                return false;
+            }
+            for (int i = 0; i < storedCount; i++)
+            {
+                if (!string.Equals(edited[i], stored[i], System.StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private bool HasMissingPlaceholderTags()

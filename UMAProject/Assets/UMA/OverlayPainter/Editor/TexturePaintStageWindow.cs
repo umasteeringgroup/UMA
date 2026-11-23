@@ -329,6 +329,7 @@ namespace UMA.TexturePaint.Editor
             if (!choice.HasValue) return null;
             try
             {
+                TexturePaintOpenProgress.Begin("Posing " + avatar.name);
                 using var pose = TexturePaintCharacterPose.Build(avatar, choice.Value);
                 TexturePaintStageWindow stage = CreateInstance<TexturePaintStageWindow>();
                 stage.avatar = avatar;
@@ -338,10 +339,12 @@ namespace UMA.TexturePaint.Editor
             }
             catch (Exception exception)
             {
+                TexturePaintOpenProgress.End();
                 Debug.LogException(exception);
                 EditorUtility.DisplayDialog("Overlay Painter Could Not Open", exception.Message, "OK");
                 return null;
             }
+            finally { TexturePaintOpenProgress.End(); }
         }
 
         public static TexturePaintStageWindow ShowStage(TexturePaintLaunchContext context)
@@ -370,7 +373,12 @@ namespace UMA.TexturePaint.Editor
             TexturePaintStageWindow stage = CreateInstance<TexturePaintStageWindow>();
             stage.launchContext = context;
             stage.launchDocument = document;
-            StageUtility.GoToStage(stage, true);
+            try
+            {
+                TexturePaintOpenProgress.Begin("Starting");
+                StageUtility.GoToStage(stage, true);
+            }
+            finally { TexturePaintOpenProgress.End(); }
             return stage;
         }
 
@@ -410,11 +418,15 @@ namespace UMA.TexturePaint.Editor
             bool standalone = launchContext != null && launchContext.IsStandalone;
             if (!standalone && (avatar == null || avatar.umaData == null))
             {
+                TexturePaintOpenProgress.End();
                 EditorUtility.DisplayDialog("Overlay Painter", "Generate the DynamicCharacterAvatar before opening this stage.", "OK");
                 return false;
             }
+            // Shown by ShowStage; started here when the stage is opened another way.
+            TexturePaintOpenProgress.Begin("Loading shaders");
             try
             {
+                TexturePaintOpenProgress.Report("Loading shaders", 0.02f);
                 transientBrush = CreateInstance<BrushPreset>();
                 transientBrush.name = "Session Brush";
                 transientBrush.hideFlags = HideFlags.HideAndDontSave;
@@ -427,18 +439,22 @@ namespace UMA.TexturePaint.Editor
                     ShaderRoot + "PluginGenerators.compute");
                 Shader fill = AssetDatabase.LoadAssetAtPath<Shader>(ShaderRoot + "FillLayer.shader");
                 Shader ribbon = AssetDatabase.LoadAssetAtPath<Shader>(ShaderRoot + "RibbonProjection.shader");
+                TexturePaintOpenProgress.Report(standalone ? "Building the slot meshes" : "Rebuilding the character's meshes", 0.05f);
                 controller = new TexturePaintStageController();
                 if (standalone)
                     controller.InitializeStandalone(launchContext, stroke, blur, normal, composite, channelPack,
                         launchContext.resolution, fill, ribbon);
                 else controller.Initialize(avatar, stroke, blur, normal, composite, channelPack, 2048, fill, ribbon);
                 controller.Plugins.GpuGeneratorShader = pluginGenerators;
+                TexturePaintOpenProgress.Report("Setting up the stage", 0.86f);
                 InitializeReconstructionWarnings(controller.Reconstruction);
                 SceneManager.MoveGameObjectToScene(controller.Reconstruction.root, scene);
                 CreateStageLighting();
                 TexturePaintStageState savedState = standalone ? null : controller.LoadRecipeState();
+                TexturePaintOpenProgress.Report("Restoring the document", 0.88f);
                 if (!InitializeDocumentSession())
                 {
+                    TexturePaintOpenProgress.End();
                     controller.Dispose();
                     controller = null;
                     DisposeStageLighting();
@@ -459,6 +475,7 @@ namespace UMA.TexturePaint.Editor
                     try { SyncActiveLayerSelection(controller.Textures.Sets[selectedSurface]); }
                     finally { suppressLogicalLayerRepair = false; }
                 }
+                TexturePaintOpenProgress.Report("Opening the workspace", 0.96f);
                 InitializeWorkspaceUI();
                 controller.Painting.TextureChanged += OnTextureChanged;
                 controller.Plugins.Changed += OnPluginChanged;
@@ -469,10 +486,12 @@ namespace UMA.TexturePaint.Editor
                 ActiveStage = this;
                 TexturePaintWorkspaceLayout.OpenForActiveStage();
                 TexturePaintGettingStartedWindow.ScheduleFor(this);
+                TexturePaintOpenProgress.End();
                 return true;
             }
             catch (Exception exception)
             {
+                TexturePaintOpenProgress.End();
                 DisposeWorkspaceUI();
                 EditorApplication.update -= PersistenceUpdate;
                 if (controller?.Painting != null) controller.Painting.TextureChanged -= OnTextureChanged;
@@ -1441,7 +1460,7 @@ namespace UMA.TexturePaint.Editor
                 Undo.RegisterCreatedObjectUndo(preset, "Create Overlay Painter Brush");
                 library.Add(preset);
                 EditorUtility.SetDirty(library);
-                AssetDatabase.SaveAssets();
+                AssetDatabase.SaveAssetIfDirty(library);
                 return preset;
             }
             catch (Exception exception)
@@ -1654,7 +1673,10 @@ namespace UMA.TexturePaint.Editor
             }
             string activeType = set != null && (uint)set.activeLayerIndex < (uint)set.layers.Count
                 ? set.layers[set.activeLayerIndex].kind.ToString() : "no active";
-            ShowWorkspaceStatus($"Freehand tools require a Paint layer ({activeType} layer selected)");
+            bool convertible = activeType == "Fill" || activeType == "Projection";
+            ShowWorkspaceStatus($"Freehand tools require a Paint layer ({activeType} layer selected). " +
+                (convertible ? "Right-click the layer and choose Convert to Paint Layer, or add " : "Add ") +
+                "a Paint layer above it and use Copy from Below to blur or smear what is under it.");
         }
 
         private void BeginPaint()

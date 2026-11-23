@@ -72,11 +72,45 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: 4634152745382183226
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1462
+        weight: 1
+        _name: Set Color
+        active: 0
+        slotName: UMA30_Body_UDIM1001_slot
+        color:
+          serializedVersion: 2
+          rgba: 4294967295
+    - rid: 4634152745382183227
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1462
+        weight: 1
+        _name: Set Color
+        active: 0
+        slotName: UMA30_Body_UDIM1001_slot
+        color:
+          serializedVersion: 2
+          rgba: 4294967295
+    - rid: 4634152745382183228
+      type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
+      data:
+        vertexIndex: 1462
+        weight: 1
+        _name: Set Color
+        active: 0
+        slotName: UMA30_Body_UDIM1001_slot
+        color:
+          serializedVersion: 2
+          rgba: 0
     - rid: 7442055671937761700
       type: {class: VertexColorAdjustmentCollection, ns: UMA, asm: UMA_Core}
       data:
         vertexAdjustments:
         - rid: 7442055671937761706
+        - rid: 4634152745382183226
         - rid: 7442055671937761707
         - rid: 7442055671937761708
         - rid: 7442055671937761709
@@ -121,6 +155,7 @@ MonoBehaviour:
         - rid: 7442055671937761748
         - rid: 7442055671937761749
         - rid: 7442055671937761750
+        - rid: 4634152745382183227
         - rid: 7442055671937761751
         - rid: 7442055671937761752
         - rid: 7442055671937761753
@@ -165,6 +200,7 @@ MonoBehaviour:
         - rid: 7442055671937761792
         - rid: 7442055671937761793
         - rid: 7442055671937761794
+        - rid: 4634152745382183228
         - rid: 7442055671937761795
         - rid: 7442055671937761796
         - rid: 7442055671937761797
@@ -373,7 +409,7 @@ MonoBehaviour:
     - rid: 7442055671937761706
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 239
+        vertexIndex: 1348
         weight: 1
         _name: Set Color
         active: 1
@@ -384,7 +420,7 @@ MonoBehaviour:
     - rid: 7442055671937761707
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 240
+        vertexIndex: 1463
         weight: 1
         _name: Set Color
         active: 1
@@ -395,7 +431,7 @@ MonoBehaviour:
     - rid: 7442055671937761708
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 246
+        vertexIndex: 1493
         weight: 1
         _name: Set Color
         active: 1
@@ -406,7 +442,7 @@ MonoBehaviour:
     - rid: 7442055671937761709
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 254
+        vertexIndex: 1461
         weight: 1
         _name: Set Color
         active: 1
@@ -417,7 +453,7 @@ MonoBehaviour:
     - rid: 7442055671937761710
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 255
+        vertexIndex: 1353
         weight: 1
         _name: Set Color
         active: 1
@@ -428,7 +464,7 @@ MonoBehaviour:
     - rid: 7442055671937761711
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 256
+        vertexIndex: 1352
         weight: 1
         _name: Set Color
         active: 1
@@ -439,7 +475,7 @@ MonoBehaviour:
     - rid: 7442055671937761712
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 258
+        vertexIndex: 1460
         weight: 1
         _name: Set Color
         active: 1
@@ -450,7 +486,7 @@ MonoBehaviour:
     - rid: 7442055671937761713
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 259
+        vertexIndex: 1358
         weight: 1
         _name: Set Color
         active: 1
@@ -461,7 +497,7 @@ MonoBehaviour:
     - rid: 7442055671937761714
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 260
+        vertexIndex: 1492
         weight: 1
         _name: Set Color
         active: 1
@@ -472,7 +508,7 @@ MonoBehaviour:
     - rid: 7442055671937761715
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 262
+        vertexIndex: 1487
         weight: 1
         _name: Set Color
         active: 1
@@ -483,7 +519,7 @@ MonoBehaviour:
     - rid: 7442055671937761716
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 263
+        vertexIndex: 1357
         weight: 1
         _name: Set Color
         active: 1
@@ -494,7 +530,7 @@ MonoBehaviour:
     - rid: 7442055671937761717
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 266
+        vertexIndex: 1458
         weight: 1
         _name: Set Color
         active: 1
@@ -505,7 +541,7 @@ MonoBehaviour:
     - rid: 7442055671937761718
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 272
+        vertexIndex: 1456
         weight: 1
         _name: Set Color
         active: 1
@@ -516,7 +552,7 @@ MonoBehaviour:
     - rid: 7442055671937761719
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 295
+        vertexIndex: 1485
         weight: 1
         _name: Set Color
         active: 1
@@ -527,7 +563,7 @@ MonoBehaviour:
     - rid: 7442055671937761720
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 271
+        vertexIndex: 1360
         weight: 1
         _name: Set Color
         active: 1
@@ -538,7 +574,7 @@ MonoBehaviour:
     - rid: 7442055671937761721
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 241
+        vertexIndex: 1351
         weight: 1
         _name: Set Color
         active: 1
@@ -549,7 +585,7 @@ MonoBehaviour:
     - rid: 7442055671937761722
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 286
+        vertexIndex: 1373
         weight: 1
         _name: Set Color
         active: 1
@@ -560,7 +596,7 @@ MonoBehaviour:
     - rid: 7442055671937761723
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 287
+        vertexIndex: 1453
         weight: 1
         _name: Set Color
         active: 1
@@ -571,7 +607,7 @@ MonoBehaviour:
     - rid: 7442055671937761724
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 290
+        vertexIndex: 1457
         weight: 1
         _name: Set Color
         active: 1
@@ -582,7 +618,7 @@ MonoBehaviour:
     - rid: 7442055671937761725
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 293
+        vertexIndex: 1459
         weight: 1
         _name: Set Color
         active: 1
@@ -593,7 +629,7 @@ MonoBehaviour:
     - rid: 7442055671937761726
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 636
+        vertexIndex: 315
         weight: 1
         _name: Set Color
         active: 1
@@ -604,7 +640,7 @@ MonoBehaviour:
     - rid: 7442055671937761727
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 797
+        vertexIndex: 320
         weight: 1
         _name: Set Color
         active: 1
@@ -615,7 +651,7 @@ MonoBehaviour:
     - rid: 7442055671937761728
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 799
+        vertexIndex: 317
         weight: 1
         _name: Set Color
         active: 1
@@ -626,7 +662,7 @@ MonoBehaviour:
     - rid: 7442055671937761729
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 805
+        vertexIndex: 322
         weight: 1
         _name: Set Color
         active: 1
@@ -637,7 +673,7 @@ MonoBehaviour:
     - rid: 7442055671937761730
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 802
+        vertexIndex: 140
         weight: 1
         _name: Set Color
         active: 1
@@ -648,7 +684,7 @@ MonoBehaviour:
     - rid: 7442055671937761731
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 801
+        vertexIndex: 316
         weight: 1
         _name: Set Color
         active: 1
@@ -659,7 +695,7 @@ MonoBehaviour:
     - rid: 7442055671937761732
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 792
+        vertexIndex: 313
         weight: 1
         _name: Set Color
         active: 1
@@ -670,7 +706,7 @@ MonoBehaviour:
     - rid: 7442055671937761733
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 793
+        vertexIndex: 312
         weight: 1
         _name: Set Color
         active: 1
@@ -681,7 +717,7 @@ MonoBehaviour:
     - rid: 7442055671937761734
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 788
+        vertexIndex: 311
         weight: 1
         _name: Set Color
         active: 1
@@ -692,7 +728,7 @@ MonoBehaviour:
     - rid: 7442055671937761735
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 791
+        vertexIndex: 314
         weight: 1
         _name: Set Color
         active: 1
@@ -703,7 +739,7 @@ MonoBehaviour:
     - rid: 7442055671937761736
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 637
+        vertexIndex: 321
         weight: 1
         _name: Set Color
         active: 1
@@ -714,7 +750,7 @@ MonoBehaviour:
     - rid: 7442055671937761737
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 798
+        vertexIndex: 323
         weight: 1
         _name: Set Color
         active: 1
@@ -725,7 +761,7 @@ MonoBehaviour:
     - rid: 7442055671937761738
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 803
+        vertexIndex: 324
         weight: 1
         _name: Set Color
         active: 1
@@ -736,7 +772,7 @@ MonoBehaviour:
     - rid: 7442055671937761739
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 807
+        vertexIndex: 325
         weight: 1
         _name: Set Color
         active: 1
@@ -747,7 +783,7 @@ MonoBehaviour:
     - rid: 7442055671937761740
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 811
+        vertexIndex: 330
         weight: 1
         _name: Set Color
         active: 1
@@ -758,7 +794,7 @@ MonoBehaviour:
     - rid: 7442055671937761741
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 800
+        vertexIndex: 327
         weight: 1
         _name: Set Color
         active: 1
@@ -769,7 +805,7 @@ MonoBehaviour:
     - rid: 7442055671937761742
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 639
+        vertexIndex: 326
         weight: 1
         _name: Set Color
         active: 1
@@ -780,7 +816,7 @@ MonoBehaviour:
     - rid: 7442055671937761743
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 626
+        vertexIndex: 329
         weight: 1
         _name: Set Color
         active: 1
@@ -791,7 +827,7 @@ MonoBehaviour:
     - rid: 7442055671937761744
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 804
+        vertexIndex: 146
         weight: 1
         _name: Set Color
         active: 1
@@ -802,7 +838,7 @@ MonoBehaviour:
     - rid: 7442055671937761745
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 796
+        vertexIndex: 115
         weight: 1
         _name: Set Color
         active: 1
@@ -813,7 +849,7 @@ MonoBehaviour:
     - rid: 7442055671937761746
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 795
+        vertexIndex: 149
         weight: 1
         _name: Set Color
         active: 1
@@ -824,7 +860,7 @@ MonoBehaviour:
     - rid: 7442055671937761747
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 787
+        vertexIndex: 150
         weight: 1
         _name: Set Color
         active: 1
@@ -835,7 +871,7 @@ MonoBehaviour:
     - rid: 7442055671937761748
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 786
+        vertexIndex: 310
         weight: 1
         _name: Set Color
         active: 1
@@ -846,7 +882,7 @@ MonoBehaviour:
     - rid: 7442055671937761749
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 794
+        vertexIndex: 147
         weight: 1
         _name: Set Color
         active: 1
@@ -857,7 +893,7 @@ MonoBehaviour:
     - rid: 7442055671937761750
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 239
+        vertexIndex: 1348
         weight: 1
         _name: Set Color
         active: 1
@@ -868,7 +904,7 @@ MonoBehaviour:
     - rid: 7442055671937761751
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 240
+        vertexIndex: 1463
         weight: 1
         _name: Set Color
         active: 1
@@ -879,7 +915,7 @@ MonoBehaviour:
     - rid: 7442055671937761752
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 246
+        vertexIndex: 1493
         weight: 1
         _name: Set Color
         active: 1
@@ -890,7 +926,7 @@ MonoBehaviour:
     - rid: 7442055671937761753
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 254
+        vertexIndex: 1461
         weight: 1
         _name: Set Color
         active: 1
@@ -901,7 +937,7 @@ MonoBehaviour:
     - rid: 7442055671937761754
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 255
+        vertexIndex: 1353
         weight: 1
         _name: Set Color
         active: 1
@@ -912,7 +948,7 @@ MonoBehaviour:
     - rid: 7442055671937761755
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 256
+        vertexIndex: 1352
         weight: 1
         _name: Set Color
         active: 1
@@ -923,7 +959,7 @@ MonoBehaviour:
     - rid: 7442055671937761756
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 258
+        vertexIndex: 1460
         weight: 1
         _name: Set Color
         active: 1
@@ -934,7 +970,7 @@ MonoBehaviour:
     - rid: 7442055671937761757
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 259
+        vertexIndex: 1358
         weight: 1
         _name: Set Color
         active: 1
@@ -945,7 +981,7 @@ MonoBehaviour:
     - rid: 7442055671937761758
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 260
+        vertexIndex: 1492
         weight: 1
         _name: Set Color
         active: 1
@@ -956,7 +992,7 @@ MonoBehaviour:
     - rid: 7442055671937761759
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 262
+        vertexIndex: 1487
         weight: 1
         _name: Set Color
         active: 1
@@ -967,7 +1003,7 @@ MonoBehaviour:
     - rid: 7442055671937761760
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 263
+        vertexIndex: 1357
         weight: 1
         _name: Set Color
         active: 1
@@ -978,7 +1014,7 @@ MonoBehaviour:
     - rid: 7442055671937761761
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 266
+        vertexIndex: 1458
         weight: 1
         _name: Set Color
         active: 1
@@ -989,7 +1025,7 @@ MonoBehaviour:
     - rid: 7442055671937761762
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 272
+        vertexIndex: 1456
         weight: 1
         _name: Set Color
         active: 1
@@ -1000,7 +1036,7 @@ MonoBehaviour:
     - rid: 7442055671937761763
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 295
+        vertexIndex: 1485
         weight: 1
         _name: Set Color
         active: 1
@@ -1011,7 +1047,7 @@ MonoBehaviour:
     - rid: 7442055671937761764
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 271
+        vertexIndex: 1360
         weight: 1
         _name: Set Color
         active: 1
@@ -1022,7 +1058,7 @@ MonoBehaviour:
     - rid: 7442055671937761765
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 241
+        vertexIndex: 1351
         weight: 1
         _name: Set Color
         active: 1
@@ -1033,7 +1069,7 @@ MonoBehaviour:
     - rid: 7442055671937761766
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 286
+        vertexIndex: 1373
         weight: 1
         _name: Set Color
         active: 1
@@ -1044,7 +1080,7 @@ MonoBehaviour:
     - rid: 7442055671937761767
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 287
+        vertexIndex: 1453
         weight: 1
         _name: Set Color
         active: 1
@@ -1055,7 +1091,7 @@ MonoBehaviour:
     - rid: 7442055671937761768
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 290
+        vertexIndex: 1457
         weight: 1
         _name: Set Color
         active: 1
@@ -1066,7 +1102,7 @@ MonoBehaviour:
     - rid: 7442055671937761769
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 293
+        vertexIndex: 1459
         weight: 1
         _name: Set Color
         active: 1
@@ -1077,7 +1113,7 @@ MonoBehaviour:
     - rid: 7442055671937761770
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 636
+        vertexIndex: 315
         weight: 1
         _name: Set Color
         active: 1
@@ -1088,7 +1124,7 @@ MonoBehaviour:
     - rid: 7442055671937761771
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 797
+        vertexIndex: 320
         weight: 1
         _name: Set Color
         active: 1
@@ -1099,7 +1135,7 @@ MonoBehaviour:
     - rid: 7442055671937761772
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 799
+        vertexIndex: 317
         weight: 1
         _name: Set Color
         active: 1
@@ -1110,7 +1146,7 @@ MonoBehaviour:
     - rid: 7442055671937761773
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 805
+        vertexIndex: 322
         weight: 1
         _name: Set Color
         active: 1
@@ -1121,7 +1157,7 @@ MonoBehaviour:
     - rid: 7442055671937761774
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 802
+        vertexIndex: 140
         weight: 1
         _name: Set Color
         active: 1
@@ -1132,7 +1168,7 @@ MonoBehaviour:
     - rid: 7442055671937761775
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 801
+        vertexIndex: 316
         weight: 1
         _name: Set Color
         active: 1
@@ -1143,7 +1179,7 @@ MonoBehaviour:
     - rid: 7442055671937761776
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 792
+        vertexIndex: 313
         weight: 1
         _name: Set Color
         active: 1
@@ -1154,7 +1190,7 @@ MonoBehaviour:
     - rid: 7442055671937761777
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 793
+        vertexIndex: 312
         weight: 1
         _name: Set Color
         active: 1
@@ -1165,7 +1201,7 @@ MonoBehaviour:
     - rid: 7442055671937761778
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 788
+        vertexIndex: 311
         weight: 1
         _name: Set Color
         active: 1
@@ -1176,7 +1212,7 @@ MonoBehaviour:
     - rid: 7442055671937761779
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 791
+        vertexIndex: 314
         weight: 1
         _name: Set Color
         active: 1
@@ -1187,7 +1223,7 @@ MonoBehaviour:
     - rid: 7442055671937761780
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 637
+        vertexIndex: 321
         weight: 1
         _name: Set Color
         active: 1
@@ -1198,7 +1234,7 @@ MonoBehaviour:
     - rid: 7442055671937761781
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 798
+        vertexIndex: 323
         weight: 1
         _name: Set Color
         active: 1
@@ -1209,7 +1245,7 @@ MonoBehaviour:
     - rid: 7442055671937761782
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 803
+        vertexIndex: 324
         weight: 1
         _name: Set Color
         active: 1
@@ -1220,7 +1256,7 @@ MonoBehaviour:
     - rid: 7442055671937761783
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 807
+        vertexIndex: 325
         weight: 1
         _name: Set Color
         active: 1
@@ -1231,7 +1267,7 @@ MonoBehaviour:
     - rid: 7442055671937761784
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 811
+        vertexIndex: 330
         weight: 1
         _name: Set Color
         active: 1
@@ -1242,7 +1278,7 @@ MonoBehaviour:
     - rid: 7442055671937761785
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 800
+        vertexIndex: 327
         weight: 1
         _name: Set Color
         active: 1
@@ -1253,7 +1289,7 @@ MonoBehaviour:
     - rid: 7442055671937761786
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 639
+        vertexIndex: 326
         weight: 1
         _name: Set Color
         active: 1
@@ -1264,7 +1300,7 @@ MonoBehaviour:
     - rid: 7442055671937761787
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 626
+        vertexIndex: 329
         weight: 1
         _name: Set Color
         active: 1
@@ -1275,7 +1311,7 @@ MonoBehaviour:
     - rid: 7442055671937761788
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 804
+        vertexIndex: 146
         weight: 1
         _name: Set Color
         active: 1
@@ -1286,7 +1322,7 @@ MonoBehaviour:
     - rid: 7442055671937761789
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 796
+        vertexIndex: 115
         weight: 1
         _name: Set Color
         active: 1
@@ -1297,7 +1333,7 @@ MonoBehaviour:
     - rid: 7442055671937761790
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 795
+        vertexIndex: 149
         weight: 1
         _name: Set Color
         active: 1
@@ -1308,7 +1344,7 @@ MonoBehaviour:
     - rid: 7442055671937761791
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 787
+        vertexIndex: 150
         weight: 1
         _name: Set Color
         active: 1
@@ -1319,7 +1355,7 @@ MonoBehaviour:
     - rid: 7442055671937761792
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 786
+        vertexIndex: 310
         weight: 1
         _name: Set Color
         active: 1
@@ -1330,7 +1366,7 @@ MonoBehaviour:
     - rid: 7442055671937761793
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 794
+        vertexIndex: 147
         weight: 1
         _name: Set Color
         active: 1
@@ -1341,7 +1377,7 @@ MonoBehaviour:
     - rid: 7442055671937761794
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 239
+        vertexIndex: 1348
         weight: 1
         _name: Set Color
         active: 1
@@ -1352,7 +1388,7 @@ MonoBehaviour:
     - rid: 7442055671937761795
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 240
+        vertexIndex: 1463
         weight: 1
         _name: Set Color
         active: 1
@@ -1363,7 +1399,7 @@ MonoBehaviour:
     - rid: 7442055671937761796
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 246
+        vertexIndex: 1493
         weight: 1
         _name: Set Color
         active: 1
@@ -1374,7 +1410,7 @@ MonoBehaviour:
     - rid: 7442055671937761797
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 254
+        vertexIndex: 1461
         weight: 1
         _name: Set Color
         active: 1
@@ -1385,7 +1421,7 @@ MonoBehaviour:
     - rid: 7442055671937761798
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 255
+        vertexIndex: 1353
         weight: 1
         _name: Set Color
         active: 1
@@ -1396,7 +1432,7 @@ MonoBehaviour:
     - rid: 7442055671937761799
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 256
+        vertexIndex: 1352
         weight: 1
         _name: Set Color
         active: 1
@@ -1407,7 +1443,7 @@ MonoBehaviour:
     - rid: 7442055671937761800
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 258
+        vertexIndex: 1460
         weight: 1
         _name: Set Color
         active: 1
@@ -1418,7 +1454,7 @@ MonoBehaviour:
     - rid: 7442055671937761801
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 259
+        vertexIndex: 1358
         weight: 1
         _name: Set Color
         active: 1
@@ -1429,7 +1465,7 @@ MonoBehaviour:
     - rid: 7442055671937761802
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 260
+        vertexIndex: 1492
         weight: 1
         _name: Set Color
         active: 1
@@ -1440,7 +1476,7 @@ MonoBehaviour:
     - rid: 7442055671937761803
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 262
+        vertexIndex: 1487
         weight: 1
         _name: Set Color
         active: 1
@@ -1451,7 +1487,7 @@ MonoBehaviour:
     - rid: 7442055671937761804
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 263
+        vertexIndex: 1357
         weight: 1
         _name: Set Color
         active: 1
@@ -1462,7 +1498,7 @@ MonoBehaviour:
     - rid: 7442055671937761805
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 266
+        vertexIndex: 1458
         weight: 1
         _name: Set Color
         active: 1
@@ -1473,7 +1509,7 @@ MonoBehaviour:
     - rid: 7442055671937761806
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 272
+        vertexIndex: 1456
         weight: 1
         _name: Set Color
         active: 1
@@ -1484,7 +1520,7 @@ MonoBehaviour:
     - rid: 7442055671937761807
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 295
+        vertexIndex: 1485
         weight: 1
         _name: Set Color
         active: 1
@@ -1495,7 +1531,7 @@ MonoBehaviour:
     - rid: 7442055671937761808
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 271
+        vertexIndex: 1360
         weight: 1
         _name: Set Color
         active: 1
@@ -1506,7 +1542,7 @@ MonoBehaviour:
     - rid: 7442055671937761809
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 241
+        vertexIndex: 1351
         weight: 1
         _name: Set Color
         active: 1
@@ -1517,7 +1553,7 @@ MonoBehaviour:
     - rid: 7442055671937761810
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 286
+        vertexIndex: 1373
         weight: 1
         _name: Set Color
         active: 1
@@ -1528,7 +1564,7 @@ MonoBehaviour:
     - rid: 7442055671937761811
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 287
+        vertexIndex: 1453
         weight: 1
         _name: Set Color
         active: 1
@@ -1539,7 +1575,7 @@ MonoBehaviour:
     - rid: 7442055671937761812
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 290
+        vertexIndex: 1457
         weight: 1
         _name: Set Color
         active: 1
@@ -1550,7 +1586,7 @@ MonoBehaviour:
     - rid: 7442055671937761813
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 293
+        vertexIndex: 1459
         weight: 1
         _name: Set Color
         active: 1
@@ -1561,7 +1597,7 @@ MonoBehaviour:
     - rid: 7442055671937761814
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 636
+        vertexIndex: 315
         weight: 1
         _name: Set Color
         active: 1
@@ -1572,7 +1608,7 @@ MonoBehaviour:
     - rid: 7442055671937761815
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 797
+        vertexIndex: 320
         weight: 1
         _name: Set Color
         active: 1
@@ -1583,7 +1619,7 @@ MonoBehaviour:
     - rid: 7442055671937761816
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 799
+        vertexIndex: 317
         weight: 1
         _name: Set Color
         active: 1
@@ -1594,7 +1630,7 @@ MonoBehaviour:
     - rid: 7442055671937761817
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 805
+        vertexIndex: 322
         weight: 1
         _name: Set Color
         active: 1
@@ -1605,7 +1641,7 @@ MonoBehaviour:
     - rid: 7442055671937761818
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 802
+        vertexIndex: 140
         weight: 1
         _name: Set Color
         active: 1
@@ -1616,7 +1652,7 @@ MonoBehaviour:
     - rid: 7442055671937761819
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 801
+        vertexIndex: 316
         weight: 1
         _name: Set Color
         active: 1
@@ -1627,7 +1663,7 @@ MonoBehaviour:
     - rid: 7442055671937761820
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 792
+        vertexIndex: 313
         weight: 1
         _name: Set Color
         active: 1
@@ -1638,7 +1674,7 @@ MonoBehaviour:
     - rid: 7442055671937761821
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 793
+        vertexIndex: 312
         weight: 1
         _name: Set Color
         active: 1
@@ -1649,7 +1685,7 @@ MonoBehaviour:
     - rid: 7442055671937761822
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 788
+        vertexIndex: 311
         weight: 1
         _name: Set Color
         active: 1
@@ -1660,7 +1696,7 @@ MonoBehaviour:
     - rid: 7442055671937761823
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 791
+        vertexIndex: 314
         weight: 1
         _name: Set Color
         active: 1
@@ -1671,7 +1707,7 @@ MonoBehaviour:
     - rid: 7442055671937761824
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 637
+        vertexIndex: 321
         weight: 1
         _name: Set Color
         active: 1
@@ -1682,7 +1718,7 @@ MonoBehaviour:
     - rid: 7442055671937761825
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 798
+        vertexIndex: 323
         weight: 1
         _name: Set Color
         active: 1
@@ -1693,7 +1729,7 @@ MonoBehaviour:
     - rid: 7442055671937761826
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 803
+        vertexIndex: 324
         weight: 1
         _name: Set Color
         active: 1
@@ -1704,7 +1740,7 @@ MonoBehaviour:
     - rid: 7442055671937761827
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 807
+        vertexIndex: 325
         weight: 1
         _name: Set Color
         active: 1
@@ -1715,7 +1751,7 @@ MonoBehaviour:
     - rid: 7442055671937761828
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 811
+        vertexIndex: 330
         weight: 1
         _name: Set Color
         active: 1
@@ -1726,7 +1762,7 @@ MonoBehaviour:
     - rid: 7442055671937761829
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 800
+        vertexIndex: 327
         weight: 1
         _name: Set Color
         active: 1
@@ -1737,7 +1773,7 @@ MonoBehaviour:
     - rid: 7442055671937761830
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 639
+        vertexIndex: 326
         weight: 1
         _name: Set Color
         active: 1
@@ -1748,7 +1784,7 @@ MonoBehaviour:
     - rid: 7442055671937761831
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 626
+        vertexIndex: 329
         weight: 1
         _name: Set Color
         active: 1
@@ -1759,7 +1795,7 @@ MonoBehaviour:
     - rid: 7442055671937761832
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 804
+        vertexIndex: 146
         weight: 1
         _name: Set Color
         active: 1
@@ -1770,7 +1806,7 @@ MonoBehaviour:
     - rid: 7442055671937761833
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 796
+        vertexIndex: 115
         weight: 1
         _name: Set Color
         active: 1
@@ -1781,7 +1817,7 @@ MonoBehaviour:
     - rid: 7442055671937761834
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 795
+        vertexIndex: 149
         weight: 1
         _name: Set Color
         active: 1
@@ -1792,7 +1828,7 @@ MonoBehaviour:
     - rid: 7442055671937761835
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 787
+        vertexIndex: 150
         weight: 1
         _name: Set Color
         active: 1
@@ -1803,7 +1839,7 @@ MonoBehaviour:
     - rid: 7442055671937761836
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 786
+        vertexIndex: 310
         weight: 1
         _name: Set Color
         active: 1
@@ -1814,7 +1850,7 @@ MonoBehaviour:
     - rid: 7442055671937761837
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 794
+        vertexIndex: 147
         weight: 1
         _name: Set Color
         active: 1
@@ -1825,7 +1861,7 @@ MonoBehaviour:
     - rid: 7442055671937761838
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 967
+        vertexIndex: 137
         weight: 1
         _name: Set Color
         active: 1
@@ -1836,7 +1872,7 @@ MonoBehaviour:
     - rid: 7442055671937761839
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 806
+        vertexIndex: 138
         weight: 1
         _name: Set Color
         active: 1
@@ -1847,7 +1883,7 @@ MonoBehaviour:
     - rid: 7442055671937761840
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 809
+        vertexIndex: 117
         weight: 1
         _name: Set Color
         active: 1
@@ -1858,7 +1894,7 @@ MonoBehaviour:
     - rid: 7442055671937761841
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 808
+        vertexIndex: 139
         weight: 1
         _name: Set Color
         active: 1
@@ -1869,7 +1905,7 @@ MonoBehaviour:
     - rid: 7442055671937761842
       type: {class: VertexColorAdjustment, ns: UMA, asm: UMA_Core}
       data:
-        vertexIndex: 262
+        vertexIndex: 1487
         weight: 1
         _name: Set Color
         active: 1

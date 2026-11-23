@@ -25,6 +25,7 @@ namespace UMA.Editors.Tests
                 gen.meshCombiner = root.AddComponent<UMADefaultMeshCombiner>();
                 gen.processAllPending = true; gen.MaxMultiStepWorkMilliseconds = 40;
                 gen.convertRenderTexture = true; gen.alwaysRegenerateRenderers = true;
+                gen.forceGPUTextureCompression = true;
                 gen.atlasResolution = 2048; gen.editorAtlasResolution = 512;
                 gen.InitialScaleFactor = 2; gen.editorInitialScaleFactor = 4;
                 gen.keepTag = "CustomKeep"; gen.autoSetRaceBlendshapes = true;
@@ -62,6 +63,7 @@ namespace UMA.Editors.Tests
                     Assert.That(gen.MaxMultiStepWorkMilliseconds, Is.EqualTo(2));
                     Assert.That(gen.garbageCollectionRate, Is.EqualTo(128));
                     Assert.That(gen.convertRenderTexture, Is.False); Assert.That(gen.useAsyncConversion, Is.True);
+                    Assert.That(gen.forceGPUTextureCompression, Is.EqualTo(speed), "GPU compression is on for Maximum speed only.");
                     Assert.That(gen.alwaysRegenerateRenderers, Is.False);
                     Assert.That(gen.CleanupUnusedBones, Is.EqualTo(speed));
                     Assert.That(gen.enableSourceUVCropping, Is.EqualTo(speed));
@@ -73,6 +75,7 @@ namespace UMA.Editors.Tests
                 finally { PrefabUtility.UnloadPrefabContents(loaded); }
                 Assert.That(skin.materialType, Is.EqualTo(speed ? UMAMaterial.MaterialType.Atlas : UMAMaterial.MaterialType.NoAtlas));
                 Assert.That(skin.generateMipMaps, Is.False);
+                Assert.That(skin.AnisoLevel, Is.EqualTo(speed ? UMAProjectDefaults.SpeedAnisoLevel : UMAProjectDefaults.FidelityAnisoLevel));
                 Assert.That(existing.materialType, Is.EqualTo(UMAMaterial.MaterialType.UseExistingMaterial));
             }
         }
@@ -106,6 +109,78 @@ namespace UMA.Editors.Tests
             Assert.That(UMAProjectDefaults.IsSkinMaterial(skin), Is.False);
             Assert.That(UMAProjectDefaults.CanSwitchMaterial(existing), Is.False);
             Assert.That(UMAProjectDefaults.IsSkinMaterial(null), Is.False);
+        }
+
+        private Material SkinMaterialOf(UMAMaterial material)
+        {
+            using var serialized = new SerializedObject(material);
+            return serialized.FindProperty("_material").objectReferenceValue as Material;
+        }
+
+        private static string PathOf(Material material) => AssetDatabase.GetAssetPath(material);
+
+        private static void SetSkinValue(string path, string property, float value)
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            material.SetFloat(property, value);
+            EditorUtility.SetDirty(material);
+            AssetDatabase.SaveAssetIfDirty(material);
+        }
+
+        private Material AssignSkinShader(string shaderName, string assetName)
+        {
+            var shader = Shader.Find(shaderName);
+            if (shader == null) Assert.Ignore(shaderName + " is not installed.");
+            var material = new Material(shader) { name = assetName };
+            AssetDatabase.CreateAsset(material, folder + "/" + assetName + ".mat");
+            using var serialized = new SerializedObject(skin);
+            serialized.FindProperty("_material").objectReferenceValue = material;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.SaveAssetIfDirty(skin);
+            return material;
+        }
+
+        [Test] public void SpeedSwapsRealisticSkinSSSForARealisticCopyAndFidelityRestoresIt()
+        {
+            var sss = AssignSkinShader(UMARealisticSkinUtility.SSSShaderName, "SkinSSS");
+            SetSkinValue(PathOf(sss), "_BumpScale", 1.25f);
+            string copyPath = folder + "/SkinSSS" + UMAProjectDefaults.SpeedSkinSuffix + ".mat";
+
+            UMAProjectDefaults.Apply(prefab, new[] { skin }, true);
+            var copy = SkinMaterialOf(skin);
+            Assert.That(AssetDatabase.GetAssetPath(copy), Is.EqualTo(copyPath));
+            Assert.That(copy.shader.name, Is.EqualTo(UMARealisticSkinUtility.ShaderName));
+            Assert.That(copy.GetFloat("_BumpScale"), Is.EqualTo(1.25f));
+            Assert.That(UMAProjectDefaults.HasSkinShaderBackup(skin), Is.True);
+            string copyGuid = AssetDatabase.AssetPathToGUID(copyPath);
+
+            UMAProjectDefaults.Apply(prefab, new[] { skin }, true); // Repeating Speed keeps the SSS backup.
+            Assert.That(PathOf(SkinMaterialOf(skin)), Is.EqualTo(copyPath));
+
+            UMAProjectDefaults.Apply(prefab, new[] { skin }, false);
+            Assert.That(PathOf(SkinMaterialOf(skin)), Is.EqualTo(PathOf(sss)));
+            Assert.That(UMAProjectDefaults.HasSkinShaderBackup(skin), Is.False);
+
+            // SSS edits made while restored reach the same copy on the next Speed run.
+            SetSkinValue(PathOf(sss), "_BumpScale", 1.75f);
+            UMAProjectDefaults.Apply(prefab, new[] { skin }, true);
+            Assert.That(AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(SkinMaterialOf(skin))), Is.EqualTo(copyGuid));
+            Assert.That(SkinMaterialOf(skin).GetFloat("_BumpScale"), Is.EqualTo(1.75f));
+            Assert.That(SkinMaterialOf(skin).name, Is.EqualTo("SkinSSS" + UMAProjectDefaults.SpeedSkinSuffix));
+        }
+
+        [Test] public void SpeedKeepsTheWrinkleShaderAndOtherSkinShaders()
+        {
+            foreach (string shaderName in new[] { UMARealisticSkinUtility.WrinkleShaderName, UMARealisticSkinUtility.ShaderName })
+            {
+                var material = AssignSkinShader(shaderName, "Skin" + shaderName.GetHashCode().ToString("X"));
+                UMAProjectDefaults.Apply(prefab, new[] { skin }, true);
+                Assert.That(PathOf(SkinMaterialOf(skin)), Is.EqualTo(PathOf(material)), shaderName);
+                Assert.That(UMAProjectDefaults.HasSkinShaderBackup(skin), Is.False, shaderName);
+                UMAProjectDefaults.Apply(prefab, new[] { skin }, false);
+                Assert.That(PathOf(SkinMaterialOf(skin)), Is.EqualTo(PathOf(material)), shaderName);
+            }
+            Assert.That(AssetDatabase.FindAssets(UMAProjectDefaults.SpeedSkinSuffix, new[] { folder }), Is.Empty);
         }
 
         private Material MakePass(string name, bool alphaClip)

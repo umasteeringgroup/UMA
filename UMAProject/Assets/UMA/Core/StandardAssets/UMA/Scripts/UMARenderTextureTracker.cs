@@ -31,10 +31,36 @@ namespace UMA
         private static readonly Dictionary<UMAObjectId, Ownership> ownershipByTextureId =
             new Dictionary<UMAObjectId, Ownership>();
 
+        // Temporary textures UMA has handed back to Unity's pool and not taken out again.
+        // Unity owns them from then on; UMA must never Release or Destroy them.
+        private static readonly Dictionary<UMAObjectId, RenderTexture> pooledTextures =
+            new Dictionary<UMAObjectId, RenderTexture>();
+        private const int PooledTexturePruneThreshold = 256;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset()
         {
             ownershipByTextureId.Clear();
+            pooledTextures.Clear();
+        }
+
+        /// <summary>
+        /// True when the texture is a temporary render texture that UMA has already handed
+        /// back to Unity with <see cref="ReleaseTemporary"/>. Unity owns it from then on.
+        /// </summary>
+        public static bool IsReturnedToPool(RenderTexture texture)
+        {
+            return texture != null && pooledTextures.ContainsKey(texture.GetUmaObjectId());
+        }
+
+        /// <summary>
+        /// True when the texture is tracked as a temporary render texture that UMA still holds.
+        /// </summary>
+        public static bool IsHeldTemporary(RenderTexture texture)
+        {
+            return texture != null &&
+                ownershipByTextureId.TryGetValue(texture.GetUmaObjectId(), out Ownership ownership) &&
+                ownership.temporary;
         }
 
         /// <summary>
@@ -65,7 +91,10 @@ namespace UMA
                 temporary = temporary
             };
 
-            ownershipByTextureId[texture.GetUmaObjectId()] = ownership;
+            UMAObjectId textureId = texture.GetUmaObjectId();
+            ownershipByTextureId[textureId] = ownership;
+            // GetTemporary can hand back a texture UMA returned earlier; it is UMA's again.
+            pooledTextures.Remove(textureId);
             texture.name = string.Format(
                 "{0}{1} [{2}] | Atlas {3} | {4} | {5}{6}",
                 RenderTextureNamePrefix,
@@ -113,7 +142,33 @@ namespace UMA
             }
 
             Untrack(texture);
+            if (pooledTextures.Count >= PooledTexturePruneThreshold)
+            {
+                PrunePooledTextures();
+            }
+            pooledTextures[texture.GetUmaObjectId()] = texture;
             RenderTexture.ReleaseTemporary(texture);
+        }
+
+        // Unity destroys pooled textures that stay unused; forget those.
+        private static void PrunePooledTextures()
+        {
+            List<UMAObjectId> destroyed = null;
+            foreach (KeyValuePair<UMAObjectId, RenderTexture> entry in pooledTextures)
+            {
+                if (entry.Value == null)
+                {
+                    (destroyed ??= new List<UMAObjectId>()).Add(entry.Key);
+                }
+            }
+            if (destroyed == null)
+            {
+                return;
+            }
+            for (int i = 0; i < destroyed.Count; i++)
+            {
+                pooledTextures.Remove(destroyed[i]);
+            }
         }
 
         /// <summary>

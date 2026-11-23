@@ -31,6 +31,9 @@ namespace UMA.Editors
         private const string MenuPath = "UMA/Tools/Slot Tools/Rig Profile Editor";
         private const string PreviewPrefsPrefix = "UMA.RigProfileEditor.Preview.";
         private const string MirrorPrefsKey = "UMA.RigProfileEditor.Mirror";
+        private const string FrameBonePrefsKey = "UMA.RigProfileEditor.FrameBoneOnSelect";
+        // The smallest box a bone is framed with, so one vertex or a short joint does not fill the view.
+        private const float MinimumBoneFrameSize = 0.12f;
         private const double MinimumRefreshInterval = 0.03;
         private const int MaximumSceneDots = 80;
         private static readonly string[] FilterLabels = { "All", "Favorites", "Edited", "Used by preview" };
@@ -87,6 +90,7 @@ namespace UMA.Editors
         [SerializeField] private Vector2 scroll;
 
         [NonSerialized] private UMARigProfilePreview preview;
+        [NonSerialized] private bool frameBoneOnSelect = true;
         [NonSerialized] private UMARigRestPose targetRig;
         [NonSerialized] private UMARigRestPose legacyRig;
         [NonSerialized] private RaceData rigRace;
@@ -197,6 +201,7 @@ namespace UMA.Editors
             tree = null;
             treeDirty = true;
             mirror = EditorPrefs.GetBool(MirrorPrefsKey, true);
+            frameBoneOnSelect = EditorPrefs.GetBool(FrameBonePrefsKey, true);
             SceneView.duringSceneGui -= OnSceneGUI;
             SceneView.duringSceneGui += OnSceneGUI;
             EditorApplication.update -= OnEditorUpdate;
@@ -247,6 +252,8 @@ namespace UMA.Editors
             EditorGUILayout.EndScrollView();
         }
 
+        private static GUIStyle saveButtonBold;
+
         private void DrawHeader()
         {
             EditorGUI.BeginChangeCheck();
@@ -270,6 +277,23 @@ namespace UMA.Editors
             if (GUILayout.Button(new GUIContent("New", "Create a profile next to the race and edit it."), GUILayout.Width(48f)))
             {
                 CreateProfile();
+            }
+            bool unsaved = profile != null && EditorUtility.IsDirty(profile);
+            if (saveButtonBold == null)
+            {
+                saveButtonBold = new GUIStyle(GUI.skin.button) { fontStyle = FontStyle.Bold };
+            }
+            using (new EditorGUI.DisabledScope(profile == null))
+            {
+                // Always clickable, so it is easy to find; bold with a * while the profile has unsaved changes.
+                if (GUILayout.Button(new GUIContent(unsaved ? "Save*" : "Save", unsaved
+                        ? "The profile has changes that are not on disk yet. Save writes this profile alone; File > Save and Save Project also write it."
+                        : "Writes this profile to disk. It has no unsaved changes right now."),
+                        unsaved ? saveButtonBold : GUI.skin.button, GUILayout.Width(52f)))
+                {
+                    EditorUtility.SetDirty(profile);
+                    AssetDatabase.SaveAssetIfDirty(profile);
+                }
             }
             EditorGUILayout.EndHorizontal();
 
@@ -538,6 +562,21 @@ namespace UMA.Editors
                 {
                     FramePreview();
                 }
+                using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(selectedBone)))
+                {
+                    if (GUILayout.Button(new GUIContent("Bone", "Frame the vertices the selected bone moves in the Scene view."), GUILayout.Height(24f), GUILayout.Width(48f)))
+                    {
+                        FrameSelectedBone();
+                    }
+                }
+            }
+            EditorGUI.BeginChangeCheck();
+            frameBoneOnSelect = GUILayout.Toggle(frameBoneOnSelect, new GUIContent("Frame bone",
+                "When a bone is picked in the list, frame the vertices of the converted slots that bone moves (in the slot being edited, when editing one slot). A bone that no converted vertex follows frames its joint instead."),
+                GUILayout.Width(86f), GUILayout.Height(24f));
+            if (EditorGUI.EndChangeCheck())
+            {
+                EditorPrefs.SetBool(FrameBonePrefsKey, frameBoneOnSelect);
             }
             EditorGUILayout.EndHorizontal();
 
@@ -1753,7 +1792,7 @@ namespace UMA.Editors
             Repaint();
         }
 
-        private void SelectBone(string boneName)
+        private void SelectBone(string boneName, bool frame = false)
         {
             if (selectedBone == boneName)
             {
@@ -1761,8 +1800,42 @@ namespace UMA.Editors
             }
             selectedBone = boneName ?? string.Empty;
             selectedEffector = -1;   // the Scene view handle goes back to the bone
+            if (frame && frameBoneOnSelect)
+            {
+                FrameSelectedBone();
+            }
             Repaint();
             SceneView.RepaintAll();
+        }
+
+        /// <summary>
+        /// The Scene view box for the selected bone: the converted vertices it moves (only the edited
+        /// slot's, in one-slot scope), or its joint and child joints when no converted vertex follows it.
+        /// </summary>
+        public bool TryGetSelectedBoneFrame(out Bounds bounds, out int vertexCount)
+        {
+            vertexCount = 0;
+            bounds = default;
+            if (preview == null || !preview.IsBuilt || string.IsNullOrEmpty(selectedBone))
+            {
+                return false;
+            }
+            if (!preview.TryGetBoneVertexBounds(selectedBone, Scope, out bounds, out vertexCount)
+                && !preview.TryGetBoneJointBounds(selectedBone, out bounds))
+            {
+                return false;
+            }
+            bounds.size = Vector3.Max(bounds.size, Vector3.one * MinimumBoneFrameSize);
+            return true;
+        }
+
+        private void FrameSelectedBone()
+        {
+            SceneView view = SceneView.lastActiveSceneView;
+            if (view != null && TryGetSelectedBoneFrame(out Bounds bounds, out _))
+            {
+                view.Frame(bounds, false);
+            }
         }
 
         private string NameForId(int id)
@@ -1821,7 +1894,7 @@ namespace UMA.Editors
             {
                 if (selectedIds != null && selectedIds.Count > 0 && selectedIds[0] != EmptyId)
                 {
-                    owner.SelectBone(owner.NameForId(selectedIds[0]));
+                    owner.SelectBone(owner.NameForId(selectedIds[0]), frame: true);
                 }
             }
 

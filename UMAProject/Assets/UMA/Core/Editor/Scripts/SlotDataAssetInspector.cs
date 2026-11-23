@@ -1894,9 +1894,28 @@ namespace UMA.Editors
             }
 
             int vertexCount = vertices.Length;
+            var allTriangles = new List<int>();
+            if (meshData.submeshes != null)
+            {
+                for (int submeshIndex = 0; submeshIndex < meshData.submeshes.Length; submeshIndex++)
+                {
+                    int[] submeshTriangles = GetBaseManagedTriangles(meshData.submeshes[submeshIndex]);
+                    if (submeshTriangles == null)
+                    {
+                        continue;
+                    }
+                    int usable = submeshTriangles.Length - submeshTriangles.Length % 3;
+                    for (int i = 0; i < usable; i++)
+                    {
+                        allTriangles.Add(submeshTriangles[i]);
+                    }
+                }
+            }
+            // Vertices at one position (the copies along a UV seam) get one normal: see UMABuddyNormals.
             Vector3[] normalSums = new Vector3[vertexCount];
-            int processedTriangleCount = AccumulateSlotTriangleNormals(meshData, normalSums, weightNormalsByTriangleSize);
-            if (processedTriangleCount == 0)
+            int processedTriangleCount = allTriangles.Count / 3;
+            if (processedTriangleCount == 0 ||
+                new UMABuddyNormals(vertices, allTriangles.ToArray()).Recalculate(vertices, normalSums, weightNormalsByTriangleSize) == 0)
             {
                 return "No valid triangles found.";
             }
@@ -1931,53 +1950,6 @@ namespace UMA.Editors
 
             return "Recalculated normals and tangents from " + processedTriangleCount + " triangle(s)." +
                 (fallbackNormalCount > 0 ? " " + fallbackNormalCount + " vertex normal(s) had no triangle contribution and used fallback normals." : string.Empty);
-        }
-
-        private static int AccumulateSlotTriangleNormals(UMAMeshData meshData, Vector3[] normalSums, bool weightNormalsByTriangleSize)
-        {
-            if (meshData == null || meshData.submeshes == null || normalSums == null || normalSums.Length == 0)
-            {
-                return 0;
-            }
-
-            int processedTriangleCount = 0;
-            Vector3[] vertices = meshData.vertices;
-            for (int submeshIndex = 0; submeshIndex < meshData.submeshes.Length; submeshIndex++)
-            {
-                SubMeshTriangles submesh = meshData.submeshes[submeshIndex];
-                int[] triangles = GetBaseManagedTriangles(submesh);
-                if (triangles == null || triangles.Length < 3)
-                {
-                    continue;
-                }
-
-                for (int triangleIndex = 0; triangleIndex + 2 < triangles.Length; triangleIndex += 3)
-                {
-                    int vertexIndex0 = triangles[triangleIndex];
-                    int vertexIndex1 = triangles[triangleIndex + 1];
-                    int vertexIndex2 = triangles[triangleIndex + 2];
-                    if (!IsValidVertexIndex(vertexIndex0, normalSums.Length) || !IsValidVertexIndex(vertexIndex1, normalSums.Length) || !IsValidVertexIndex(vertexIndex2, normalSums.Length))
-                    {
-                        continue;
-                    }
-
-                    Vector3 edge0 = vertices[vertexIndex1] - vertices[vertexIndex0];
-                    Vector3 edge1 = vertices[vertexIndex2] - vertices[vertexIndex0];
-                    Vector3 faceNormal = Vector3.Cross(edge0, edge1);
-                    if (faceNormal.sqrMagnitude <= 0.0000001f)
-                    {
-                        continue;
-                    }
-
-                    Vector3 contribution = weightNormalsByTriangleSize ? faceNormal : faceNormal.normalized;
-                    normalSums[vertexIndex0] += contribution;
-                    normalSums[vertexIndex1] += contribution;
-                    normalSums[vertexIndex2] += contribution;
-                    processedTriangleCount++;
-                }
-            }
-
-            return processedTriangleCount;
         }
 
         private static Vector4[] RecalculateSlotTangents(UMAMeshData meshData, Vector3[] normals)
@@ -2579,13 +2551,38 @@ namespace UMA.Editors
             GameObject obj = DropAreaGUI(dropArea);
             if (obj != null)
             {
+                // A model imported with Optimize Game Objects has no bones to update the slot from.
+                string modelPath = AssetDatabase.GetAssetPath(obj);
+                string objectName = obj.name;
+                if (UMASlotProcessingUtil.OfferToKeepModelBones(new UnityEngine.Object[] { obj }) && obj == null)
+                {
+                    foreach (UnityEngine.Object asset in AssetDatabase.LoadAllAssetsAtPath(modelPath))
+                    {
+                        if (asset is GameObject reloaded && reloaded.name == objectName)
+                        {
+                            obj = reloaded;
+                            break;
+                        }
+                    }
+                    if (obj == null)
+                    {
+                        return;
+                    }
+                }
                 SkinnedMeshRenderer skinnedMesh = obj.GetComponent<SkinnedMeshRenderer>();
                 if (skinnedMesh != null)
                 {
                     // normalReferenceMesh may be null. It's OK to pass null seams mesh.
-                    UpdateSlotData(slot != null ? slot.normalReferenceMesh : null, skinnedMesh);
-                    GUI.changed = true;
-                    EditorUtility.DisplayDialog("Complete", "Update completed", "OK");
+                    // It said "Update completed" also when the update was refused (the reason is in the Console).
+                    if (UpdateSlotData(slot != null ? slot.normalReferenceMesh : null, skinnedMesh))
+                    {
+                        GUI.changed = true;
+                        EditorUtility.DisplayDialog("Complete", "Update completed", "OK");
+                    }
+                    else
+                    {
+                        EditorUtility.DisplayDialog("Error", "The slot was not updated. The Console says why.", "OK");
+                    }
                 }
                 else
                 {
@@ -2631,21 +2628,25 @@ namespace UMA.Editors
             return null;
         }
 
-        private void UpdateSlotData(SkinnedMeshRenderer seamsMesh, SkinnedMeshRenderer skinnedMesh)
+        private bool UpdateSlotData(SkinnedMeshRenderer seamsMesh, SkinnedMeshRenderer skinnedMesh)
         {
             SlotDataAsset s = target as SlotDataAsset;
             if (s == null)
             {
                 EditorUtility.DisplayDialog("Error", "Target slot is not available.", "OK");
-                return;
+                return false;
             }
 
             string existingRootBone = !UMAMeshData.IsNullOrEmptyMeshData(s.meshData) ? s.meshData.RootBoneName : string.Empty;
 
-            UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, null, seamsMesh, existingRootBone, true, clearNormals, clearTangents, stripBlendShapePrefix);
+            if (!UMASlotProcessingUtil.UpdateSlotData(s, skinnedMesh, null, seamsMesh, existingRootBone, true, clearNormals, clearTangents, stripBlendShapePrefix))
+            {
+                return false;
+            }
             string path = AssetDatabase.GetAssetPath(target.GetEntityId());
             AssetDatabase.ImportAsset(path);
             UMAUpdateProcessor.UpdateSlot(s);
+            return true;
         }
 
         /// <summary>

@@ -306,9 +306,10 @@ namespace UMA
                 int undoGroup = Undo.GetCurrentGroup();
                 Undo.SetCurrentGroupName(label);
                 Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { this, BakedMesh }, label);
+                Vector3[] verticesBefore = BakedMesh.vertices;
+                Vector3[] normalsBefore = BakedMesh.normals;
                 BakedMesh.vertices = vertices;
-                BakedMesh.RecalculateNormals();
-                SynchronizeCrossSlotSculptNormals();
+                FollowShape(verticesBefore, normalsBefore, vertices);
                 BakedMesh.RecalculateBounds();
                 RefreshBakedMeshCaches();
                 RefreshSculptCollider();

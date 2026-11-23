@@ -20,8 +20,18 @@ namespace UMA
         List<UMAPackedRecipeBase> Recipes;
         Dictionary<AssetItem, List<string>> AddressableItems = new Dictionary<AssetItem, List<string>>();
         Dictionary<string, List<string>> RecipeExtraLabels = new Dictionary<string, List<string>>();
+        // Assets this generator changes (stripped materials, overlays, UMA materials). Complete() saves
+        // exactly these; UMAAssetIndexer.ForceSave saves only the Global Library.
+        readonly HashSet<UnityEngine.Object> changedAssets = new HashSet<UnityEngine.Object>();
 
         const string SharedGroupName = "UMA_SharedItems";
+
+        void MarkChanged(UnityEngine.Object asset)
+        {
+            if (asset == null) return;
+            EditorUtility.SetDirty(asset);
+            changedAssets.Add(asset);
+        }
 
         public void DebugLog(string message)
         {
@@ -292,7 +302,7 @@ namespace UMA
                                             MakeAssetWritable(mat); //VES added: mat (e.g. GlovedHandMaterial.mat) is Perforce read-only on the build server; without this the swap below never persists and the bundle keeps the URP Lit copy
                                             mat.SetOverrideTag("OriginalShader", mat.shader.name);
                                             mat.shader = Shader.Find("Hidden/InternalErrorShader");
-                                            EditorUtility.SetDirty(mat);
+                                            MarkChanged(mat);
                                         }
                                     }
                                 }
@@ -353,7 +363,7 @@ namespace UMA
                                     // 4) Store texture name then strip reference
                                     od.textureNames[i] = tex.name;
                                     od.textureList[i] = null;
-                                    EditorUtility.SetDirty(od);
+                                    MarkChanged(od);
                                 }
                                 else
                                 {
@@ -398,14 +408,14 @@ namespace UMA
                                 MakeAssetWritable(od); //VES added: overlay asset is Perforce read-only on the build server (idempotent with the strip-textures call above), so the strip can't persist without this
                                 od.materialName = od.material.name;
                                 od.material = null;
-                                EditorUtility.SetDirty(od);
+                                MarkChanged(od);
                             }
                             else
                             {
                                 if (od.material == null)
                                 {
                                     od.material = Index.GetAsset<UMAMaterial>(od.materialName);
-                                    EditorUtility.SetDirty(od);
+                                    MarkChanged(od);
                                 }
                             }
                         }
@@ -419,8 +429,8 @@ namespace UMA
                                 um.ShaderName = um.material.shader.name;
                                 um.MaterialName = um.material.name;
                                 um.material.shader = null;
-                                EditorUtility.SetDirty(um); //VES added: was missing, so this shader strip never persisted even when writable
-                                EditorUtility.SetDirty(um.material); //VES added
+                                MarkChanged(um); //VES added: was missing, so this shader strip never persisted even when writable
+                                MarkChanged(um.material); //VES added
                             }
                         }
 #if INCL_TEXTURE2D
@@ -461,6 +471,17 @@ namespace UMA
             finally
             {
                 EditorUtility.ClearProgressBar();
+                // Write the stripped assets and the Addressables groups (the Addressables build reads them
+                // from disk), then the library. Nothing else in the project is saved.
+                foreach (UnityEngine.Object asset in changedAssets)
+                {
+                    if (asset != null && EditorUtility.IsPersistent(asset))
+                    {
+                        AssetDatabase.SaveAssetIfDirty(asset);
+                    }
+                }
+                changedAssets.Clear();
+                UMAAddressablesSupport.SaveAddressablesSettings();
 				Index.ForceSave();
             }
         }

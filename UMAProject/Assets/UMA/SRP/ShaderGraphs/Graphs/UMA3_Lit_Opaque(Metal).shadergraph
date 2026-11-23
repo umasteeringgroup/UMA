@@ -84,9 +84,7 @@
                            "m_Id":  "db8e937a2f18475a9d773b58a77ca7d9"
                        }
                    ],
-    "m_Dropdowns":  [
-
-                    ],
+    "m_Dropdowns":  [],
     "m_CategoryData":  [
                            {
                                "m_Id":  "a701cc4740694f32bb93e26a40615380"
@@ -342,9 +340,7 @@
                              "m_Id":  "d4e1442d04854ba19c672a0dc0154e44"
                          }
                      ],
-    "m_StickyNoteDatas":  [
-
-                          ],
+    "m_StickyNoteDatas":  [],
     "m_Edges":  [
                     {
                         "m_OutputSlot":  {
@@ -1350,14 +1346,15 @@
     "m_OutputNode":  {
                          "m_Id":  ""
                      },
-    "m_SubDatas":  [
-
-                   ],
+    "m_SubDatas":  [],
     "m_ActiveTargets":  [
                             {
                                 "m_Id":  "6684dc11495946c491a8405514504ea9"
-                            }
-                        ]
+                            },
+        {
+            "m_Id": "0e03a784cb6f48e79ae23344d7a4fca4"
+        }
+    ]
 }
 
 {
@@ -9909,3 +9906,117 @@
         "e33": 1.0
     }
 }
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.Rendering.HighDefinition.ShaderGraph.HDTarget",
+    "m_ObjectId": "0e03a784cb6f48e79ae23344d7a4fca4",
+    "m_ActiveSubTarget": {
+        "m_Id": "abb239450c1346ecbaee5a2800085e05"
+    },
+    "m_Datas": [
+        {
+            "m_Id": "3308ca1ec64a48fc8440ffb11879c2e9"
+        },
+        {
+            "m_Id": "4a071d28394448398f22f062d70ebdf2"
+        },
+        {
+            "m_Id": "c514ae4f4e494041ac9168083f2a4042"
+        },
+        {
+            "m_Id": "bac218f6faee48faa3127d832e0288d0"
+        }
+    ],
+    "m_CustomEditorGUI": "",
+    "m_SupportVFX": false,
+    "m_SupportLineRendering": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.Rendering.HighDefinition.ShaderGraph.HDLitData",
+    "m_ObjectId": "3308ca1ec64a48fc8440ffb11879c2e9",
+    "m_RayTracing": false,
+    "m_MaterialType": 0,
+    "m_MaterialTypeMask": 2,
+    "m_RefractionModel": 0,
+    "m_SSSTransmission": true,
+    "m_EnergyConservingSpecular": true,
+    "m_ClearCoat": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.Rendering.HighDefinition.ShaderGraph.LightingData",
+    "m_ObjectId": "4a071d28394448398f22f062d70ebdf2",
+    "m_NormalDropOffSpace": 0,
+    "m_BlendPreserveSpecular": true,
+    "m_ReceiveDecals": true,
+    "m_ReceiveSSR": true,
+    "m_ReceiveSSRTransparent": false,
+    "m_SpecularAA": false,
+    "m_SpecularOcclusionMode": 1,
+    "m_OverrideBakedGI": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.Rendering.HighDefinition.ShaderGraph.HDLitSubTarget",
+    "m_ObjectId": "abb239450c1346ecbaee5a2800085e05"
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.Rendering.HighDefinition.ShaderGraph.BuiltinData",
+    "m_ObjectId": "bac218f6faee48faa3127d832e0288d0",
+    "m_Distortion": false,
+    "m_DistortionMode": 0,
+    "m_DistortionDepthTest": true,
+    "m_AddPrecomputedVelocity": false,
+    "m_TransparentWritesMotionVec": false,
+    "m_DepthOffset": false,
+    "m_ConservativeDepthOffset": false,
+    "m_TransparencyFog": true,
+    "m_AlphaTestShadow": false,
+    "m_BackThenFrontRendering": false,
+    "m_TransparentDepthPrepass": false,
+    "m_TransparentDepthPostpass": false,
+    "m_TransparentPerPixelSorting": false,
+    "m_SupportLodCrossFade": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.Rendering.HighDefinition.ShaderGraph.SystemData",
+    "m_ObjectId": "c514ae4f4e494041ac9168083f2a4042",
+    "m_MaterialNeedsUpdateHash": 0,
+    "m_SurfaceType": 0,
+    "m_RenderingPass": 1,
+    "m_BlendMode": 0,
+    "m_ZTest": 4,
+    "m_ZWrite": false,
+    "m_TransparentCullMode": 2,
+    "m_OpaqueCullMode": 2,
+    "m_SortPriority": 0,
+    "m_AlphaTest": false,
+    "m_ExcludeFromTUAndAA": false,
+    "m_TransparentDepthPrepass": false,
+    "m_TransparentDepthPostpass": false,
+    "m_SupportLodCrossFade": false,
+    "m_DoubleSidedMode": 0,
+    "m_DOTSInstancing": false,
+    "m_CustomVelocity": false,
+    "m_Tessellation": false,
+    "m_TessellationMode": 0,
+    "m_TessellationFactorMinDistance": 20.0,
+    "m_TessellationFactorMaxDistance": 50.0,
+    "m_TessellationFactorTriangleSize": 100.0,
+    "m_TessellationShapeFactor": 0.75,
+    "m_TessellationBackFaceCullEpsilon": -0.25,
+    "m_TessellationMaxDisplacement": 0.009999999776482582,
+    "m_DebugSymbols": false,
+    "m_Version": 2,
+    "inspectorFoldoutMask": 0
+}
+

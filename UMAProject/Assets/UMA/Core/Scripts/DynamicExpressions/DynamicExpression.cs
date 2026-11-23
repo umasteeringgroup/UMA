@@ -2,10 +2,14 @@ using System;
 using UMA;
 using UnityEngine;
 
-[Serializable]
-public class DynamicExpression
+namespace UMA
 {
-    public string Name;
-    public DNA ExpressionDNA;
-    public DNAInstance ExpressionValue;
+
+    [Serializable]
+    public class DynamicExpression
+    {
+        public string Name;
+        public DNA ExpressionDNA;
+        public DNAInstance ExpressionValue;
+    }
 }

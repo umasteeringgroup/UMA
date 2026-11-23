@@ -151,6 +151,8 @@ namespace UMA.Editors
             public bool convertRenderTexture;
             public bool useAsyncConversion;
             public bool asyncMipRegen;
+            public bool keepConvertedTexturesReadable;
+            public bool forceGPUTextureCompression;
             public bool convertMipMaps;
             public bool multiThreadTextureConversion;
             public int maxQueuedConversionsPerFrame;
@@ -173,6 +175,8 @@ namespace UMA.Editors
                 result.convertRenderTexture = generator.convertRenderTexture;
                 result.useAsyncConversion = generator.useAsyncConversion;
                 result.asyncMipRegen = generator.asyncMipRegen;
+                result.keepConvertedTexturesReadable = generator.keepConvertedTexturesReadable;
+                result.forceGPUTextureCompression = generator.forceGPUTextureCompression;
                 result.convertMipMaps = generator.convertMipMaps;
                 result.multiThreadTextureConversion = generator.MultiThreadTextureConversion;
                 result.maxQueuedConversionsPerFrame = generator.MaxQueuedConversionsPerFrame;

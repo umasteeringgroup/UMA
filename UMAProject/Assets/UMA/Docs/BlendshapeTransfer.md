@@ -15,7 +15,7 @@ Everything is measured in *avatar space*: each slot is placed the way a characte
 3. **Fade.** The movement fades with distance from the body: full strength close to the skin, none beyond the fade distance. A cape hem or a hat brim stays put.
 4. **Smooth.** The movement is smoothed over the slot's own surface, which removes the steps where neighbouring vertices are bound to different parts of the body.
 5. **Keep clear.** A vertex that would end up under the moved body is pushed back out.
-6. **Write.** The movement is written as a blendshape of the same name, in the slot's own mesh space, with normal and tangent deltas worked out from how the shape bends the slot. Every frame of a multi-frame shape is transferred.
+6. **Write.** The movement is written in the slot's own mesh space, with the optional **Shape name suffix** and normal and tangent deltas worked out from how the shape bends the slot. Every frame of a multi-frame shape is transferred.
 
 Vertices that share a position (UV seams, hard edges) always move together, so seams stay closed. A shape that does not move a slot is not added to it: boots do not get a nose shape.
 
@@ -45,6 +45,48 @@ Add slots with **Add selected** (slots, the slots of selected recipes, the slots
 
 ### Fit
 
+The **Clothing** preset enables **Follow smooth frame**, four passes of adaptive
+**Delta Mush**, rigid attachments up to 25 mm, and a fresh deformed-body check.
+It disables distance falloff and sets the output suffix to `Auto`. The original
+defaults remain available with **Defaults**. These are starting settings, not a
+guarantee for every fabric or body shape.
+
+**Follow smooth frame** fits full rotations to welded source-edge neighbourhoods
+and smooths their covariance before extracting rotations. Unlike normal-only
+following it carries twist about the surface normal. **Rotation smoothing**
+controls the neighbourhood size in graph passes.
+
+**Delta Mush** smooths the rest and transferred positions with the same operator,
+then restores the rest detail in a local best-fit rotating frame. With **Only
+distorted regions**, logarithmic edge stretch/compression controls a feathered
+repair mask. The thresholds measure change from the original garment, so an
+authored fold is not classified as damage merely because it is sharp. This is
+a geometric heuristic; valid stretching can also trigger it. Use **Repair regions**
+in the preview to inspect the mask. High global smoothing can erase intended body
+changes even when rest detail is restored.
+
+**Attach and rotate** fits small disconnected components to the nearest six cloth
+vertices within a size-limited neighbourhood. Unsupported components use their
+own best-fit rigid motion. A button can translate and rotate without bending at
+the generated frame. Ordinary linear blendshape interpolation can still change
+its shape between frames; exact rigidity throughout a large rotation needs more
+frames or a separate transform/bone.
+The size test is a bounding-box diagonal in avatar-space metres, not a semantic
+classifier: small fabric patches can be mistaken for hardware; connected buttons
+cannot be separated this way. Disable the option when that assumption is wrong.
+With it off, the earlier average-translation behaviour is retained.
+
+**Recheck moved surface** searches the deformed body's surface after smoothing,
+including triangles outside the original binding. Up to four projection passes
+restore vertex clearance; **Check triangle interiors** also tests edge midpoints
+and face centres, using up to eight passes. Rigid components are pushed as whole
+pieces. Zero strength,
+zero source motion, excluded vertices and pre-existing penetration are preserved.
+The check uses oriented nearest-surface normals. Finite samples cannot guarantee
+all triangle-edge contacts are clear. It does not solve garment self-collisions,
+cloth layers, continuous motion, or combinations
+of blendshapes. Inspect intermediate weights and poses as well as the endpoint.
+
 | Setting | What it does |
 | --- | --- |
 | **Method** | *Follow the surface* keeps each vertex's place relative to the skin (recommended). *Copy the movement* takes the nearest body point's movement as it is. |
@@ -61,6 +103,9 @@ Under **Advanced**: **Prefer facing surfaces** and its margin, **Ignore movement
 
 ### Output
 
+- **Shape name suffix.** `Auto` writes `S_BodyMuscularAuto` from `S_BodyMuscular`.
+  Replacement, removal and sculpting refer to this output name, preserving an
+  original shape with a different name. Leave empty for same-name transfer.
 - **A shape the slot already has.** *Replace it*, or *Keep the slot's own*.
 - **Write to.** *The slots themselves* adds the shapes to the slot assets, so every recipe that uses them gets the shapes. *Copies of the slots* saves each slot as a new asset (with a name suffix, next to the original or in a folder, optionally added to the UMA library); recipes keep using the originals until you point them at the copies.
 
@@ -88,13 +133,18 @@ What opens is the Mesh Modifier editor in Sculpt mode:
 - The target slots are the only editable ones; the body is shown but locked, so brushes work against it. Change that in the **Slots** panel.
 - The shape is loaded and shown fully dialled in, on the body and on the slots. A slot that already has the shape shows its own, with any earlier hand-made changes. A slot that does not shows the transfer as the dialog worked it out with the current settings; nothing has been written to it yet.
 
-Sculpt, then press **Save to '\<shape\>'** in the Sculpt panel's **Edit Blendshape** section. That writes the shape to the slots: the previewed transfer plus your strokes. **Stop Editing**, or leaving the editor, drops whatever was not saved. See [Edit an Existing Blendshape](MeshModifierSculpting.md#edit-an-existing-blendshape). The same mode is available from the Mesh Modifier editor itself, for any blendshape on any slot a character wears.
+Sculpt, then press **Save to '\<shape\>'** in the **Save** panel of the Vertex Editor window. That writes the shape to the slots: the previewed transfer plus your strokes. **Stop Editing**, or leaving the editor, drops whatever was not saved. See [Edit an Existing Blendshape](MeshModifierSculpting.md#edit-an-existing-blendshape). The same mode is available from the Mesh Modifier editor itself, for any blendshape on any slot a character wears.
 
 The temporary character stands in the pose the slots were modelled in, the same pose the preview draws. A generated character normally does not: the generator puts it into the race's T-pose and then, when the T-pose asset holds a stored human pose, applies that through Unity's humanoid system. The limbs end up where they were modelled, but Unity spreads their twist over the bones its own way, and a thigh can be rolled 20 degrees or more about its length. Skin weighted to one limb barely shows it; clothing weighted to both legs is pulled apart and folds between them. That fold comes from the pose and the slot's bone weights, not from the blendshape, and a blendshape should not be sculpted to hide it: it would be wrong in every other pose. A character you select in the scene is used as it stands.
 
 Where the fit left a pinch, fold or stretched patch, paint the mask over it, choose the **Heal** brush and press **Heal Masked**. That evens out how far the shape moves that area, so it returns to its modelled form (see [Heal](MeshModifierSculpting.md#heal)).
 
 The preview in the Scene view is only a drawing of the result; it cannot be sculpted, and it is hidden while the editor is open.
+
+When using a suffix, the transfer preview still drives the source body's original
+shape together with the generated clothing. A character or sculpt session using
+the new name needs the body's original shape driven separately. Do not enable
+both clothing shapes together: they would add their deltas.
 
 Sculpting always saves to the slots themselves, also when **Write to** is set to copies. Transferring a shape again replaces it, hand-made changes included (unless **A shape the slot already has** is set to keep the slot's own). Sculpt last.
 

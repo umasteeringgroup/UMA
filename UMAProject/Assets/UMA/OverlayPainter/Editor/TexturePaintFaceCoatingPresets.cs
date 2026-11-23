@@ -28,9 +28,9 @@ namespace UMA.TexturePaint.Editor
                     string image=Folder+"/"+Names[index]+".png";try{File.WriteAllBytes(image,thumbnail.EncodeToPNG());}finally{UnityEngine.Object.DestroyImmediate(thumbnail);}
                     AssetDatabase.ImportAsset(image);preset.thumbnail=AssetDatabase.LoadAssetAtPath<Texture2D>(image);
                 }
-                AssetDatabase.CreateAsset(preset,path);count++;
+                AssetDatabase.CreateAsset(preset,path);AssetDatabase.SaveAssetIfDirty(preset);count++;
             }
-            AssetDatabase.SaveAssets();return count;
+            return count;
         }
         public static TexturePaintMaterialPreset Build(int index,PluginHost host)
         {

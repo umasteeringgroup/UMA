@@ -54,6 +54,16 @@ namespace UMA.Editors
 
         public bool OnGUI(ref bool _dnaDirty, ref bool _textureDirty, ref bool _meshDirty)
         {
+            // A recipe without DNA (most wardrobe recipes) has no entries: reading the first one threw and left the
+            // caller's GUI layout unbalanced. Callers normally check IsValid first.
+            if (_dnaTypeHashes == null || _dnaTypeHashes.Length == 0)
+            {
+                return false;
+            }
+            if (viewDna >= _dnaTypeHashes.Length)
+            {
+                viewDna = _dnaTypeHashes.Length - 1;
+            }
             GUILayout.BeginHorizontal();
             var newToolBarIndex = EditorGUILayout.Popup("DNA", viewDna, _dnaTypeNames);
             if (newToolBarIndex != viewDna)

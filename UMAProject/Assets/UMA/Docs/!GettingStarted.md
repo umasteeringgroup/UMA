@@ -128,6 +128,7 @@ The **UMA Toolbar** sits in the Scene view. Its buttons:
 - focus on or select parts of the character
 - show the selected character's skeleton
 - pause editor-time generation
+- show one texture, mesh attribute or lighting term of Realistic Skin SSS materials (**Skin View**; see [Debugging skin in the Scene view](../SRP/Shaders/Skin/README.md#debugging-skin-in-the-scene-view))
 - open diagnostics and the UMA tools menu
 
 Hover a button for its name. The toolbar hides itself inside UMA editing stages, such as the Mesh Hide or Mesh Modifier editors, and returns when you leave them. Turn it off entirely with **Show UMA Toolbar** in the project settings.

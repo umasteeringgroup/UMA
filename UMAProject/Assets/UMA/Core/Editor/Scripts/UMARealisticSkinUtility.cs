@@ -13,11 +13,20 @@ namespace UMA.Editors
         /// <summary>The subsurface scattering version. It reads every input of <see cref="ShaderName"/>.</summary>
         public const string SSSShaderName = "UMA/URP/Realistic Skin SSS";
         public const string OriginalShaderName = "Shader Graphs/UMA3_SkinShader_URP";
+        /// <summary>Realistic Skin SSS with expression wrinkles. It reads every input of <see cref="SSSShaderName"/>.</summary>
+        public const string WrinkleShaderName = UMAWrinkleZones.ShaderName;
 
-        /// <summary>True for the three UMA3 URP skin shaders, which share one texture contract.</summary>
+        /// <summary>True for the UMA3 URP skin shaders, which share one texture contract.</summary>
         public static bool IsSkinShader(Shader shader)
         {
-            return shader != null && (shader.name == OriginalShaderName || shader.name == ShaderName || shader.name == SSSShaderName);
+            return shader != null && (shader.name == OriginalShaderName || shader.name == ShaderName || shader.name == SSSShaderName ||
+                shader.name == WrinkleShaderName);
+        }
+
+        /// <summary>Creates a copy of a UMA3 URP skin material that uses the expression wrinkle shader.</summary>
+        public static Material CreateWrinkleMaterialCopy(Material source)
+        {
+            return CreateMaterialCopy(source, WrinkleShaderName, "_Wrinkles");
         }
 
         public static Material CreateMaterialCopy(Material source)

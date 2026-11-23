@@ -50,13 +50,32 @@ namespace UMA
         // Unity does not dispatch OnDestroy to a never-active template renderer.
         internal void ReleaseNPCReferences() => OnDestroy();
 
-        private static Texture CopyTexture(Texture source)
+        /// <summary>
+        /// Copies a generated texture, whatever its kind: a render texture, a readable texture, or
+        /// one that only exists on the GPU (a converted or GPU-compressed atlas). The caller owns the copy.
+        /// </summary>
+        public static Texture CopyTexture(Texture source)
         {
             if (source is RenderTexture rt)
             {
                 var output = new RenderTexture(rt.descriptor) { filterMode = rt.filterMode, wrapMode = rt.wrapMode,
                     anisoLevel = rt.anisoLevel, mipMapBias = rt.mipMapBias };
                 output.Create(); Graphics.Blit(rt, output); return output;
+            }
+            if (source is Texture2D texture && !texture.isReadable)
+            {
+                // Unity refuses to Instantiate a texture that has no CPU copy (a converted or
+                // GPU-compressed atlas), so copy it on the GPU, mip levels included.
+                // Created from the TextureFormat: ARGB32, the usual converted format, has no
+                // GraphicsFormat a texture can be created with.
+                var copy = new Texture2D(texture.width, texture.height, texture.format, texture.mipmapCount, !texture.isDataSRGB)
+                {
+                    name = texture.name, filterMode = texture.filterMode, wrapMode = texture.wrapMode,
+                    anisoLevel = texture.anisoLevel, mipMapBias = texture.mipMapBias
+                };
+                copy.Apply(false, true);
+                Graphics.CopyTexture(texture, copy);
+                return copy;
             }
             return Instantiate(source);
         }

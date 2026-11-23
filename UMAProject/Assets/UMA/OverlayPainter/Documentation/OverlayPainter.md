@@ -99,6 +99,11 @@ A channel's source does not determine the destination, and selecting the Paint /
 
 ## Open Overlay Painter
 
+Opening rebuilds the meshes and reads every texture of every surface, so it can take a while on a full character.
+An **Opening Overlay Painter** dialog shows the step in progress (for example *Reading textures: UMA30_Body (3 of 5)*)
+and closes when the workspace is ready. If a question comes up while opening, such as recovering an earlier session,
+the dialog steps aside until you answer it.
+
 ### From a SlotDataAsset
 
 This is the recommended path when creating a new reusable overlay.
@@ -347,7 +352,7 @@ The layer toolbar has **+ Paint**, which adds an empty Paint layer, and **Add La
 - **Group**.
 - **Apply Material Preset...**
 
-The **Edit > Layer** menu also has New Paint Layer, New Fill Layer and New Projection Layer.
+The **Edit > Layer** menu also has New Paint Layer, New Fill Layer, New Projection Layer, New Path Layer and New Plugin Layer.
 
 ### Properties window
 
@@ -542,6 +547,24 @@ The UMA3 `SSS.AO.Detail.Gloss Map` contract is R=Thickness/SSS, G=Ambient Occlus
 B=Detail Mask, and A=Smoothness. Overlay Painter presents A as Roughness and performs the
 Smoothness inversion during unpacking and repacking.
 
+### Wrinkle Height, Wrinkle Crease and Wrinkle Flush
+
+Present when the material is the expression wrinkle skin (**UMA/URP/Realistic Skin SSS Wrinkles**, for example
+`UMA3_SkinRealisticSSS_Wrinkles`). They edit the wrinkle map, whose lines appear only when the face makes an expression:
+
+- **Wrinkle Height** is painter-owned grayscale relief: mid gray is flat, darker digs a crease, lighter raises skin.
+  Black and white are -2.5 mm and +2.5 mm. Like Normal Control, it never appears as its own texture. Its changes become
+  the red and green slope of `_WrinkleMap`, along the head's real tangent frames, and everything you do not change stays
+  exactly as it was. It starts from the `_height` texture kept next to the wrinkle map, and new layer channels use the
+  **Overlay** blend.
+- **Wrinkle Crease** (`_WrinkleMap` blue) darkens light inside creases. **Wrinkle Flush** (`_WrinkleMap` alpha) reddens
+  squeezed skin.
+- The zone map (`_WrinkleControlMap`) is exact data and is never painted. A line shows only inside a wrinkle zone, at
+  that zone's weight; Overlay Painter sets every zone weight to 1 in its preview so the wrinkles are visible.
+
+Export them with **Export Mode: Wrinkle Maps Only**. The full workflow is in
+[Painting Expression Wrinkle Maps](ExpressionWrinkleMaps.md).
+
 ### Channel availability
 
 The active material decides which logical channels exist. If **The active target has no matching logical channel** appears, changing the channel selector cannot create unsupported material data. Correct the `UMAMaterial` channel layout or select a compatible target.
@@ -570,6 +593,7 @@ Some operations can target the editable base copy.
 - This changes the document's base pixels directly.
 - It still does not modify the source texture asset.
 - It is less flexible than a layer because there is no independent layer to hide, reorder, or restyle.
+- **Erase** paints the original base back, so a base correction can be taken back locally without Undo.
 
 Use base edits for intentional corrections that truly belong to the new baseline. Use layers for art-direction decisions and details that may change.
 
@@ -774,6 +798,32 @@ Use Paint layers for freehand strokes and tool operations.
 - Each channel can have its own source and controls.
 - Erasing removes content from the active layer rather than changing lower layers.
 - A layer can carry several coordinated channels.
+- **Blur**, **Smear**, **Clone**, **Dodge** and **Burn** change the pixels the layer already has. On a new, empty
+  Paint layer they have nothing to work on: see **Copy from Below**.
+
+#### Copy from Below
+
+**Copy from Below** fills one channel of a Paint layer with the result of everything under it: the source texture
+and all the layers below. Use it to blur, smear or retouch what is already there without changing those layers.
+
+1. Add a Paint layer above the layers you want to work on (**+ Paint**).
+2. Right-click the layer (or click its **⋮** button) and choose **Copy from Below**, then the channel. The same
+   command is the **Copy from Below** button in the channel's entry under **Layer Channels & Settings**, and the
+   Brush panel offers it when you pick Blur, Smear, Clone, Dodge or Burn on a layer that has no pixels on the
+   selected channel.
+3. Paint with **Blur**, **Smear**, **Clone**, **Dodge** or **Burn**.
+
+What to expect:
+
+- The picture does not change when you copy. The layer now holds a complete copy of that channel and shows it
+  with the **Normal** blend at full channel opacity, whatever the channel used before.
+- Only that one channel is copied. Repeat the command for other channels.
+- The layers below are not changed. Hide the Paint layer to compare, or lower its opacity to blend.
+- Because the copy is complete, later changes to the layers below are hidden by it on that channel. To let part of
+  them show again, **Erase** the copy there, or give the Paint layer a mask and paint the mask black.
+- If the layer already has pixels on the channel, you are asked before they are replaced.
+- On a UDIM target, every tile whose material has the channel gets its own copy.
+- It is one Undo step.
 
 Good practice: separate artwork by purpose, not by every individual stroke. `Logo`, `Wear`, `Edge Dirt`, and `Normal Stitching` are more maintainable than `Layer 1` through `Layer 25`.
 
@@ -791,7 +841,31 @@ Fill sources can be:
 
 Every Fill channel can have independent X/Y tiling, X/Y offset, rotation, and Flat/Triplanar mapping. Enable **Use Transform For All Channels** on the first authored channel to share its complete mapping, including Fill Type and triplanar blend settings. Sprite Set fills enable this by default so Albedo, Normal, Roughness, and other maps stay aligned. **Fill Type (All Channels)** edits the shared mapping even when a secondary channel is selected. Other channels' transform controls remain locked until sharing is disabled; their textures, colors, blur, opacity, and normal conventions remain independent.
 
+#### Convert a Fill layer to a Paint layer
+
+The brush tools do not paint on a Fill layer. To edit a Fill's pixels by hand, select it and click
+**Convert to Paint Layer** in its properties, or choose the same command in the row menu. The layer keeps its
+place, name, channels, blending and mask, and its generated pixels become paint pixels on every channel and
+every UDIM tile. Its source, tiling and **UDIM Sources** settings are removed. Undo brings the Fill layer back;
+**Duplicate** it first if you want to keep an editable Fill. Projection layers have the same command.
+
+To leave the Fill layer as it is and work on a copy of one channel instead, use
+[Copy from Below](#copy-from-below) on a Paint layer above it.
+
 #### Replacing individual UDIM tiles
+
+**Add Layer > Fill > From Overlay...** fills every tile for you when the picked overlay belongs to one tile. That means the
+character puts it on that tile, or its name carries the tile number, like `UMA30_Body_UDIM1001`:
+
+- The picked overlay is the shared source, used on its own tile.
+- Every other tile gets **Override** with its own overlay: the same name with that tile's number (`UMA30_Body_UDIM1002`,
+  `..._UDIM1003`, ...). Overlays the character puts on that tile are tried first, then the Global Library, then the project.
+- A tile with no matching, compatible overlay gets **No contribution**. For example, the head-only
+  `UMA30_ExpressionWrinkles_UDIM1001` fills tile 1001 and leaves the other tiles alone.
+- The status line lists what each tile received. The assignment is one undo step, and every choice can be changed
+  under **UDIM Sources**.
+
+An overlay without a tile number (a decal, for example) stays a shared source on every tile.
 
 A UDIM group keeps one shared layer stack. Select a Fill layer and use **UDIM Sources** in its properties to assign sources per tile:
 
@@ -894,6 +968,8 @@ Common operations include:
 - **Merge Group to Paint Layer** on a group.
 - **Merge Selected** for marked layers or groups.
 - **Remove from Group**.
+- **Copy from Below** on a Paint layer: see [Copy from Below](#copy-from-below).
+- **Convert to Paint Layer** on a Fill or Projection layer.
 - **Delete** or `Delete`.
 
 **Merge Down** bakes two adjacent sibling layers into one Paint layer, including cached Plugin output, masks, and supported effects across every authored channel. Both layers and their channel overrides must use **Normal** blend. Plugin generators and filters are not rerun during the merge.
@@ -1342,7 +1418,7 @@ For additional local correction, add a layer mask and use the regular mask paint
 
 Projection layers support layer/channel opacity and blend, effects, painted masks, duplication, references, Undo/Redo, documents, and recovery. Material presets retain the world-space definition and cached output. If the original surface region is unavailable on another target, the cached output remains until you place the projection again.
 
-**Rasterize to Paint Layer** in the layer row menu bakes the generated channels and effective mask into editable pixels and removes the editable projector. Export also uses the generated texture result, but does not require rasterizing the authoring layer. Exported textures follow the model normally through its UVs.
+**Convert to Paint Layer** in the layer row menu bakes the generated channels and effective mask into editable pixels and removes the editable projector. Export also uses the generated texture result, but does not require rasterizing the authoring layer. Exported textures follow the model normally through its UVs.
 
 Enable [Layer Symmetry](#layer-symmetry) for live mirrored or radial copies within the same projection layer. Moving, resizing, or changing the source updates every copy.
 
@@ -1471,17 +1547,40 @@ Deposits the selected Texture, Overlay, or Color source. It respects source alph
 
 Removes content from the active layer. It does not erase lower layers or the original source asset.
 
+On a Paint layer, Erase takes the paint's coverage away and lets the layers below show again; **Strength** and
+**Flow** decide how much. Where the layer has no paint, Erase does nothing. On a layer filled with
+[Copy from Below](#copy-from-below), erasing an area brings back the live result of the layers under it there.
+
+On the [Editable Base](#editable-base), Erase brings back the base as it was when the session started, before you
+painted it: the source texture, or the base saved in the document you opened. **Strength** and **Flow** decide how
+far back each stroke goes, and the brush blend mode does not apply. Where the base was never painted, Erase does
+nothing.
+
 ### Blur
 
 Softens neighboring values on the active destination. Use it sparingly on normals and packed material data; excessive blur can reduce vector quality or create physically vague scalar values.
+
+Blur works on the pixels of the layer it paints on. To soften what is under an empty Paint layer, first use
+[Copy from Below](#copy-from-below); to soften a Fill layer itself, convert it to a Paint layer.
+
+One stamp softens the same distance on the surface at any texture resolution: the blur reach grows with the texture
+above 1024 pixels (twice as many texels at 2048, four times at 4096). Go over an area again to soften it more, and
+turn **Cap Per Stroke** off so that one stroke can build up.
 
 ### Smear
 
 Drags existing values along the stroke direction. A smooth, continuous gesture gives a more predictable motion vector than disconnected clicks.
 
+On a Paint layer, Smear moves the layer's paint together with its coverage: dragging from a painted area into an
+empty one carries paint there, and dragging from an empty area thins the paint. It never reads the layers below.
+
 ### Clone
 
 Samples from one surface location and paints relative content elsewhere. Set the clone source first, then paint the destination. Verify the source on the UV canvas when repeated or mirrored UVs make the 3D relationship ambiguous.
+
+On a Paint layer, Clone copies the layer's own paint with its coverage, so cloning from an empty part of the layer
+clears the destination. To clone what is visible from the layers below, first use
+[Copy from Below](#copy-from-below).
 
 ### Dodge and Burn
 
@@ -1490,6 +1589,9 @@ Dodge brightens and Burn darkens. They operate on numeric channel values, so the
 - On Albedo, they resemble lightening and darkening.
 - On Roughness, a value change affects smoothness rather than brightness.
 - On Metallic or AO, they alter material data.
+
+On a Paint layer, Dodge and Burn change the colour of the paint that is there and leave its coverage alone. They do
+nothing where the layer is empty.
 
 ### Normal Touchup
 
@@ -2081,7 +2183,7 @@ These presets retain construction settings and logo asset references;
 document-specific fold/seam links are deliberately omitted. Use a Material Preset containing the
 source layers as well when the live dependency graph should travel together. Documents and recovery
 retain the complete generated definition and cached channels. Edits support Undo/Redo, duplication,
-layer masks and effects, ordinary exports, and **Rasterize to Paint Layer**.
+layer masks and effects, ordinary exports, and **Convert to Paint Layer**.
 
 These generators create texture shading, relief, and silhouettes within their placement. They do not
 change garment geometry, make a physical pocket, cut a mesh hole, simulate draping, or add loose-thread
@@ -2517,6 +2619,12 @@ for preview and flattened export; painting does not modify the material's source
 When the UMA material uses a second render pass, Overlay Painter imports only the first-pass slot
 geometry and attaches an informational import record to the affected target indicating that the
 duplicate second-pass submesh was skipped.
+
+- **Wrinkle Maps Only** exports just the expression wrinkle textures of a wrinkle material: the wrinkle map (Wrinkle
+  Height as its slope, Wrinkle Crease, Wrinkle Flush) and the zone map, copied exactly. They go into a new wrinkle overlay
+  whose other channels are empty, plus a 16-bit `_height` texture beside the wrinkle map for later editing. Tiles without
+  a wrinkle map are skipped. Options can make an avatar, or every avatar through UMA Settings, use the new overlay at
+  once. See [Painting Expression Wrinkle Maps](ExpressionWrinkleMaps.md#5-export).
 
 Normal Control never appears as a standalone physical texture in either mode. Its only export result
 is the change it produces in a material-declared Normal output.

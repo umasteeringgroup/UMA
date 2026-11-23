@@ -193,6 +193,7 @@ namespace UMA.TexturePaint.Editor
         {
             TexturePaintChannel.Normal => new Color(.5f, .5f, 1, 1),
             TexturePaintChannel.NormalControl => new Color(.5f, .5f, .5f, 1),
+            TexturePaintChannel.WrinkleHeight => new Color(.5f, .5f, .5f, 1),
             TexturePaintChannel.Roughness => new Color(.7f, .7f, .7f, 1),
             TexturePaintChannel.AmbientOcclusion => Color.white,
             TexturePaintChannel.Albedo => new Color(.24f, .28f, .34f, 1),

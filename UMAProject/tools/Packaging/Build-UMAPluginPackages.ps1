@@ -23,6 +23,9 @@ $manifestGuids['hair-cards-tests'] = '64c3ec7799ed40c4bd7a116079de4025'
 $manifestGuids['dismemberment'] = '1a936e502e1b4d81b2f97b4e8ce0b563'
 $manifestGuids['dismemberment-examples'] = 'd14a3c192acf4fce9caa7ef74dc87eb0'
 $manifestGuids['dismemberment-tests'] = '9ea72f06bca04ee7a4d2100630cffe54'
+$manifestGuids['clothes-designer'] = '6d9ff568f87a4a3ba33b272b6b77ac2c'
+$manifestGuids['clothes-designer-examples'] = '8767f0b1347a4787b6979b504f2c89fa'
+$manifestGuids['clothes-designer-tests'] = '4009aff20b1d4f0aa751042b69c2916e'
 $definitions = @(
     @{ Id='uma2'; Name='UMA2Compatibility'; Root='Assets/UMA2'; Dependencies=@('core','srp','uma3'); Required=@('UMA2.Content.asmdef','UMAPluginDocumentation.json','UMA2Docs/UMA2Compatibility.md') },
     @{ Id='uma2-compatibility-examples'; Name='UMA2CompatibilityExamples'; Root='Assets/UMA2CompatibilityExamples'; Dependencies=@('core','uma2','uma3','srp'); Required=@('Recipes/UMA2 Male Example.asset','Recipes/UMA2 Female Example.asset','UMA2.Content.asmref','Wearables/Example/AdditionalSlots/Locomotion/LocomotionSlotScript.cs','README.md') },
@@ -35,7 +38,10 @@ $definitions = @(
     @{ Id='dismemberment-tests'; Name='DismembermentTests'; Root='Assets/UMA/UMADismemberment/Tests'; Dependencies=@('core','dismemberment','test-framework'); Required=@('Editor/UMA.Dismemberment.Editor.Tests.asmdef') },
     @{ Id='overlay-painter'; Name='OverlayPainter'; Root='Assets/UMA/OverlayPainter'; Dependencies=@('core'); Required=@('Runtime/UMA.TexturePaint.Runtime.asmdef','Editor/UMA.TexturePaint.Editor.asmdef','Editor/TexturePaintPluginActions.cs','Shaders/StrokeRasterize.compute') },
     @{ Id='overlay-painter-examples'; Name='OverlayPainterExamples'; Root='Assets/UMA/OverlayPainterExamples'; Dependencies=@('core','overlay-painter','uma3','srp'); Required=@('Samples/Overlay Painter Document.asset') },
-    @{ Id='overlay-painter-tests'; Name='OverlayPainterTests'; Root='Assets/UMA/OverlayPainterTests'; Dependencies=@('core','overlay-painter','test-framework'); Required=@('UMA.TexturePaint.Editor.Tests.asmdef') }
+    @{ Id='overlay-painter-tests'; Name='OverlayPainterTests'; Root='Assets/UMA/OverlayPainterTests'; Dependencies=@('core','overlay-painter','test-framework'); Required=@('UMA.TexturePaint.Editor.Tests.asmdef') },
+    @{ Id='clothes-designer'; Name='ClothesDesigner'; Root='Assets/UMA/ClothesDesigner'; Dependencies=@('core'); Required=@('Editor/UMA.ClothesDesigner.Editor.asmdef','Editor/ClothesDesignerPluginActions.cs','Editor/ClothesDesignerWorkflow.cs','Shaders/ClothesDesignerClothSolver.compute','UMAPluginDocumentation.json') },
+    @{ Id='clothes-designer-examples'; Name='ClothesDesignerExamples'; Root='Assets/UMA/ClothesDesignerExamples'; Dependencies=@('core','clothes-designer','uma3','srp'); Required=@('README.md','Patterns/Sleeveless Vest.asset') },
+    @{ Id='clothes-designer-tests'; Name='ClothesDesignerTests'; Root='Assets/UMA/ClothesDesignerTests'; Dependencies=@('core','clothes-designer','test-framework'); Required=@('UMA.ClothesDesigner.Editor.Tests.asmdef') }
 )
 if ($PluginIds.Count -gt 0) {
     $unknown = @($PluginIds | Where-Object { $_ -notin $definitions.Id })

@@ -4,6 +4,7 @@
     "references": [
         "UMA_Core",
         "UMA_Editor",
+        "UMA_Core_Editor",
         "UMA.TexturePaint.Runtime",
         "UMA.TexturePaint.Examples",
         "UMA.TexturePaint.Editor",

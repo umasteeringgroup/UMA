@@ -38,9 +38,15 @@ namespace UMA
         public ColorType colorType = ColorType.BaseMultiplier; // The type of color application, either BaseMultiplier or Additive.
 
 
-        public override DNAInstanceCollection.DNABuildType AreaEffect => DNAInstanceCollection.DNABuildType.Texture;
+        // The color is written while the recipe is loaded, so a DNA change needs that step run again
+        // (SharedColors), not only the textures redrawn from the colors already in place.
+        public override DNAInstanceCollection.DNABuildType AreaEffect =>
+            DNAInstanceCollection.DNABuildType.Texture | DNAInstanceCollection.DNABuildType.SharedColors;
         public override ExpressionEffectPhase ExpressionPhases =>
             ExpressionEffectPhase.BuildAfterRecipe;
+
+        // This effect sets the component outright, so the default DNA value must write its curve value too.
+        public override bool AppliesAtDefaultValue => true;
 
         /// <inheritdoc />
         public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
@@ -66,7 +72,24 @@ namespace UMA
                     sharedColor.EnsureChannels(TextureNumber + 1);
                 }
 
-                Color col = sharedColor.GetColor(TextureNumber, colorType == ColorType.Additive);
+                if (TextureNumber < 0)
+                {
+                    // Set the color channel for all channels on -1
+                    for (int i = 0; i < sharedColor.channelCount; i++)
+                    {
+                        SetColorChannel(i, colorComponent, colorType, sharedColor, value);   
+                    } 
+                }
+                else
+                {
+                    SetColorChannel(TextureNumber, colorComponent, colorType, sharedColor, value);
+                }
+            }
+        }
+
+        public void SetColorChannel (int textureNumber, ColorComponent colorComponent, ColorType colorType, OverlayColorData sharedColor, float value)
+        {
+                Color col = sharedColor.GetColor(textureNumber, colorType == ColorType.Additive);
 
                 // replace the color channel based on the selected component
 
@@ -85,9 +108,10 @@ namespace UMA
                         col.a = value * ChannelValue;
                         break;
                 }
-                sharedColor.SetColor(TextureNumber, colorType == ColorType.Additive, col);
-            }
+                sharedColor.SetColor(textureNumber, colorType == ColorType.Additive, col);
         }
+
+
 #if UNITY_EDITOR
         /// <inheritdoc />
         public override void DoGui(bool showDescription, bool showHelp, out AnimationCurve curveToCopy)

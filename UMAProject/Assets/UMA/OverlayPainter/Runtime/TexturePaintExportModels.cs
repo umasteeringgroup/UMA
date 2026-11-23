@@ -18,15 +18,24 @@ namespace UMA.TexturePaint
         Thickness = 1 << 8,
         DetailMask = 1 << 9,
         NormalControl = 1 << 10,
+        WrinkleHeight = 1 << 11,
+        WrinkleCrease = 1 << 12,
+        WrinkleFlush = 1 << 13,
         All = Albedo | Normal | Metallic | Roughness | AmbientOcclusion | Emission | Custom |
-              SkinColorMask | Thickness | DetailMask | NormalControl
+              SkinColorMask | Thickness | DetailMask | NormalControl |
+              WrinkleHeight | WrinkleCrease | WrinkleFlush
     }
 
     public enum TexturePaintExportScope { CurrentMaterial, AllMaterials }
     public enum TexturePaintExportContent
     {
         FlattenedComposite,
-        [InspectorName("Runtime Overlay (Transparent)")] AuthoredOverlay
+        [InspectorName("Runtime Overlay (Transparent)")] AuthoredOverlay,
+        /// <summary>
+        /// Only the expression wrinkle textures (_WrinkleMap, _WrinkleControlMap) of a wrinkle material, as a wrinkle
+        /// overlay like UMA30_ExpressionWrinkles_UDIM1001, plus the editable wrinkle height next to the wrinkle map.
+        /// </summary>
+        [InspectorName("Wrinkle Maps Only")] WrinkleMaps
     }
     public enum TexturePaintOverwritePolicy { Fail, Overwrite, Versioned }
     public enum TexturePaintExportBitDepth { Eight, Sixteen, HalfFloat }

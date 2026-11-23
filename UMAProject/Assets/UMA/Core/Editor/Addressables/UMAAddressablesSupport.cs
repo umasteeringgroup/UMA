@@ -48,6 +48,36 @@ namespace UMA
 
 #if UNITY_EDITOR
         /// <summary>
+        /// Saves the Addressables settings, groups and group schemas that have unsaved changes, and nothing
+        /// else. Generating groups changes these assets; UMAAssetIndexer.ForceSave saves only the Global
+        /// Library, so the generators call this to write the groups.
+        /// </summary>
+        public static void SaveAddressablesSettings()
+        {
+            AddressableAssetSettings settings = AddressableUtility.AddressableSettings;
+            if (settings == null)
+            {
+                return;
+            }
+            foreach (AddressableAssetGroup group in settings.groups)
+            {
+                if (group == null)
+                {
+                    continue;
+                }
+                foreach (AddressableAssetGroupSchema schema in group.Schemas)
+                {
+                    if (schema != null)
+                    {
+                        AssetDatabase.SaveAssetIfDirty(schema);
+                    }
+                }
+                AssetDatabase.SaveAssetIfDirty(group);
+            }
+            AssetDatabase.SaveAssetIfDirty(settings);
+        }
+
+        /// <summary>
         /// Removes the assent entry, if it exists
         /// </summary>
         /// <param name="ai"></param>
@@ -800,6 +830,7 @@ namespace UMA
             finally
             {
                 EditorUtility.ClearProgressBar();
+                SaveAddressablesSettings();
                 UMAAssetIndexer.Instance.ForceSave();
             }
         }

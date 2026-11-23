@@ -133,7 +133,9 @@ namespace UMA.Editors
                 "Convert Render Textures creates Texture2D output for CPU access, saving, or " +
                 "compression. Asynchronous Conversion avoids a synchronous GPU readback stall; " +
                 "Regenerate Async Mips rebuilds mip levels after that copy. Leave conversion off " +
-                "when RenderTexture output is sufficient."))
+                "when RenderTexture output is sufficient. Force GPU Texture Compression (experimental) compresses " +
+                "generated textures on the GPU to a quarter of their memory and takes the place of " +
+                "conversion; it is ignored on devices without compute shaders."))
             {
                 DrawTextureConversion(false);
             }
@@ -294,6 +296,8 @@ namespace UMA.Editors
 
         private void DrawTextureConversion(bool showInactiveValues)
         {
+            // Compression produces its own Texture2D, so it is shown ahead of the conversion it replaces.
+            Field("forceGPUTextureCompression", UMAGeneratorBaseEditor.ForceGPUTextureCompressionLabel);
             Field("convertRenderTexture", "Convert Render Textures");
             bool conversionEnabled = IsTrue("convertRenderTexture");
             if (!showInactiveValues && !conversionEnabled) return;
@@ -308,6 +312,7 @@ namespace UMA.Editors
                     using (new EditorGUI.DisabledScope(!asyncEnabled))
                         Field("asyncMipRegen", "Regenerate Async Mips");
                 }
+                Field("keepConvertedTexturesReadable", "Keep Converted Textures Readable");
             }
         }
 

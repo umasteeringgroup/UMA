@@ -36,6 +36,9 @@ namespace UMA.TexturePaint.Editor
         public string path;
         public string alphaMaskPath;
         public int alphaMaskResolution;
+        /// <summary>Wrinkle Maps Only: the editable wrinkle height written next to the wrinkle map, or null.</summary>
+        public string heightSourcePath;
+        public int heightSourceResolution;
         public readonly List<TexturePaintExportPlanEntry> textures = new List<TexturePaintExportPlanEntry>();
         public string DisplayName => targetName + (tileNumber > 0 ? " / " + tileNumber : string.Empty) + " / Overlay";
     }
@@ -57,6 +60,7 @@ namespace UMA.TexturePaint.Editor
         public int tileNumber;
         public string overlayPath;
         public string alphaMaskPath;
+        public string heightSourcePath;
         public readonly List<string> texturePaths = new List<string>();
     }
 
@@ -65,6 +69,8 @@ namespace UMA.TexturePaint.Editor
         public string identifier;
         public readonly List<string> texturePaths = new List<string>();
         public readonly List<string> alphaMaskPaths = new List<string>();
+        /// <summary>Wrinkle heights written next to exported wrinkle maps (Wrinkle Maps Only).</summary>
+        public readonly List<string> heightSourcePaths = new List<string>();
         public readonly List<string> overlayPaths = new List<string>();
         // Retained for source compatibility. Phase 4 never creates material overrides.
         public readonly List<string> materialPaths = new List<string>();
@@ -90,7 +96,8 @@ namespace UMA.TexturePaint.Editor
             public string path;
             public string displayName;
             public string stagingPath;
-            public bool IsAlphaMask => overlay != null;
+            public bool isHeightSource;
+            public bool IsAlphaMask => overlay != null && !isHeightSource;
         }
 
         private sealed class ObjectSnapshot
@@ -307,6 +314,8 @@ namespace UMA.TexturePaint.Editor
             string folder = NormalizeAssetFolder(template.outputFolder);
             List<TextureSet> sets = SelectSets(store, current, template, targets, plan);
             HashSet<string> reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            bool wrinkleMaps = template.content == TexturePaintExportContent.WrinkleMaps;
+            bool warnedWrinkleChannels = false;
             for (int setIndex = 0; setIndex < sets.Count; setIndex++)
             {
                 TextureSet set = sets[setIndex];
@@ -316,13 +325,34 @@ namespace UMA.TexturePaint.Editor
                     plan.errors.Add(set.Name + " has no compiled UMAMaterial channel descriptor.");
                     continue;
                 }
+                bool hasWrinkleChannels = HasWrinkleChannels(descriptor);
+                if (wrinkleMaps && !hasWrinkleChannels) continue;
                 AppendDiagnostics(plan, set, descriptor);
                 if (!descriptor.IsSupported || set.umaMaterial?.channels == null) continue;
+                if (hasWrinkleChannels && !wrinkleMaps && !warnedWrinkleChannels)
+                {
+                    warnedWrinkleChannels = true;
+                    plan.warnings.Add(template.content == TexturePaintExportContent.AuthoredOverlay
+                        ? "Runtime Overlay export leaves out the expression wrinkle textures. Use Export Mode 'Wrinkle Maps Only' to export them."
+                        : "This material carries expression wrinkle maps. A Flattened Composite writes every channel, skin included. " +
+                          "To make a wrinkle overlay (wrinkle textures only, plus their editable height), use Export Mode 'Wrinkle Maps Only'.");
+                }
 
                 List<MemberBinding> bindings = ResolveMemberBindings(set, targets);
                 for (int bindingIndex = 0; bindingIndex < bindings.Count; bindingIndex++)
                 {
                     MemberBinding binding = bindings[bindingIndex];
+                    if (wrinkleMaps)
+                    {
+                        if (!CarriesWrinkleMap(set, binding))
+                        {
+                            plan.warnings.Add(binding.targetName + (binding.tileNumber > 0 ? " / " + binding.tileNumber : string.Empty) +
+                                " has no wrinkle map and no wrinkle painting, so it is not exported.");
+                            continue;
+                        }
+                        // The overlay that supplies the wrinkle maps, not the skin overlay underneath it.
+                        binding.sourceOverlay = WrinkleSourceOverlay(set, binding) ?? binding.sourceOverlay;
+                    }
                     TexturePaintOverlayPlanEntry overlay = new TexturePaintOverlayPlanEntry
                     {
                         set = set,
@@ -336,6 +366,10 @@ namespace UMA.TexturePaint.Editor
                     {
                         TexturePaintMaterialChannelCapability channel = descriptor.Channels[channelIndex];
                         if (!channel.isTexture) continue;
+                        bool wrinkleChannel = TexturePaintMaterialCapabilityService.IsWrinkleChannel(channel);
+                        // Wrinkle Maps Only writes only the wrinkle textures; Runtime Overlay leaves them out.
+                        if (wrinkleMaps ? !wrinkleChannel :
+                            wrinkleChannel && template.content == TexturePaintExportContent.AuthoredOverlay) continue;
                         if (template.content == TexturePaintExportContent.AuthoredOverlay &&
                             !HasVisibleAuthoredContribution(set, channel)) continue;
                         TexturePaintExportPlanEntry entry = BuildTextureEntry(plan, reserved, folder, template,
@@ -353,6 +387,18 @@ namespace UMA.TexturePaint.Editor
                         continue;
                     }
                     overlay.path = ResolveOverlayPath(plan, reserved, folder, template, binding);
+                    if (wrinkleMaps && set.HasWrinkleHeight)
+                    {
+                        TexturePaintExportPlanEntry wrinkleMap = overlay.textures.Find(entry =>
+                            TexturePaintMaterialCapabilityService.HasWrinkleSlope(entry.materialChannel));
+                        if (wrinkleMap != null)
+                        {
+                            overlay.heightSourcePath = UMA.Editors.UMAWrinkleMapBaker.HeightSourcePath(wrinkleMap.path);
+                            overlay.heightSourceResolution = wrinkleMap.resolution;
+                            if (!reserved.Add(overlay.heightSourcePath))
+                                plan.errors.Add("Two outputs would write the same wrinkle height: " + overlay.heightSourcePath);
+                        }
+                    }
                     if (!string.IsNullOrEmpty(overlay.path))
                     {
                         if (template.content == TexturePaintExportContent.AuthoredOverlay)
@@ -368,6 +414,10 @@ namespace UMA.TexturePaint.Editor
                 }
             }
 
+            if (wrinkleMaps && plan.overlays.Count == 0 && plan.errors.Count == 0)
+                plan.errors.Add("Nothing here has a wrinkle map to export. 'Wrinkle Maps Only' needs a material with " +
+                    "_WrinkleMap and _WrinkleControlMap (for example UMA3_SkinRealisticSSS_Wrinkles) on a tile that " +
+                    "carries a wrinkle overlay or wrinkle painting.");
             if (template.exportLogicalChannels || template.customPacking?.Exists(rule => rule != null && rule.enabled) == true)
                 plan.warnings.Add("Logical/custom diagnostic outputs are ignored by the Phase 4 release export. " +
                     "Only descriptor-ordered physical UMAMaterial channels are written.");
@@ -535,8 +585,9 @@ namespace UMA.TexturePaint.Editor
             {
                 TexturePaintCapabilityDiagnostic diagnostic = descriptor.Diagnostics[i];
                 string message = $"{set.Name} [{diagnostic.code}]: {diagnostic.message}";
-                if (diagnostic.severity == TexturePaintCapabilitySeverity.Error) plan.errors.Add(message);
-                else if (diagnostic.severity == TexturePaintCapabilitySeverity.Warning) plan.warnings.Add(message);
+                // UDIM tiles share one material: report each of its diagnostics once.
+                if (diagnostic.severity == TexturePaintCapabilitySeverity.Error) { if (!plan.errors.Contains(message)) plan.errors.Add(message); }
+                else if (diagnostic.severity == TexturePaintCapabilitySeverity.Warning && !plan.warnings.Contains(message)) plan.warnings.Add(message);
             }
         }
 
@@ -725,6 +776,53 @@ namespace UMA.TexturePaint.Editor
             return Mathf.Clamp(resolution > 0 ? resolution : FirstResolution(overlay.set), 1, 8192);
         }
 
+        private static bool HasWrinkleChannels(TexturePaintMaterialCapabilityDescriptor descriptor)
+        {
+            for (int i = 0; descriptor != null && i < descriptor.Channels.Count; i++)
+                if (TexturePaintMaterialCapabilityService.IsWrinkleChannel(descriptor.Channels[i])) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// A tile carries a wrinkle map when it edits one (Wrinkle Height), its source overlay has one, or wrinkle
+        /// channels were painted on it.
+        /// </summary>
+        private static bool CarriesWrinkleMap(TextureSet set, MemberBinding binding)
+        {
+            if (set.HasWrinkleHeight || WrinkleSourceOverlay(set, binding) != null) return true;
+            TexturePaintMaterialCapabilityDescriptor descriptor = set.materialCapability;
+            for (int i = 0; descriptor != null && i < descriptor.Channels.Count; i++)
+                if (TexturePaintMaterialCapabilityService.IsWrinkleChannel(descriptor.Channels[i]) &&
+                    HasVisibleAuthoredContribution(set, descriptor.Channels[i])) return true;
+            return false;
+        }
+
+        /// <summary>The overlay that supplies a tile's wrinkle textures (for a generated character, not the skin overlay).</summary>
+        private static OverlayDataAsset WrinkleSourceOverlay(TextureSet set, MemberBinding binding)
+        {
+            TexturePaintMaterialCapabilityDescriptor descriptor = set.materialCapability;
+            bool HasWrinkleTexture(OverlayDataAsset overlay)
+            {
+                Texture[] textures = overlay != null ? overlay.textureList : null;
+                for (int i = 0; textures != null && descriptor != null && i < descriptor.Channels.Count; i++)
+                {
+                    TexturePaintMaterialChannelCapability channel = descriptor.Channels[i];
+                    if (TexturePaintMaterialCapabilityService.IsWrinkleChannel(channel) &&
+                        channel.index < textures.Length && textures[channel.index] != null) return true;
+                }
+                return false;
+            }
+            if (HasWrinkleTexture(set.surface?.standaloneSourceOverlay)) return set.surface.standaloneSourceOverlay;
+            TexturePaintLogicalTargetMember member = binding.member;
+            for (int i = 0; member?.sourceOverlays != null && i < member.sourceOverlays.Count; i++)
+                if (HasWrinkleTexture(member.sourceOverlays[i]?.asset)) return member.sourceOverlays[i].asset;
+            for (int i = 0; member?.destinationOverlays != null && i < member.destinationOverlays.Count; i++)
+                if (HasWrinkleTexture(member.destinationOverlays[i]?.asset)) return member.destinationOverlays[i].asset;
+            for (int i = 0; set.sources != null && i < set.sources.Count; i++)
+                if (HasWrinkleTexture(set.sources[i]?.overlay?.asset)) return set.sources[i].overlay.asset;
+            return HasWrinkleTexture(binding.sourceOverlay) ? binding.sourceOverlay : null;
+        }
+
         private static bool HasVisibleAuthoredContribution(TextureSet set,
             TexturePaintMaterialChannelCapability capability)
         {
@@ -898,6 +996,26 @@ namespace UMA.TexturePaint.Editor
                     Report(operation, detailedProgress, $"Prepared {entry.DisplayName}", entryStart + entrySpan);
                 }
 
+                for (int i = 0; i < plan.overlays.Count; i++)
+                {
+                    TexturePaintOverlayPlanEntry overlay = plan.overlays[i];
+                    if (string.IsNullOrEmpty(overlay.heightSourcePath)) continue;
+                    operation.ThrowIfCancellationRequested();
+                    string displayName = overlay.targetName +
+                        (overlay.tileNumber > 0 ? " / " + overlay.tileNumber : string.Empty) + " / Wrinkle Height";
+                    Report(operation, detailedProgress, "Baking " + displayName, 0.45f);
+                    string stagingPath = Path.Combine(stagingFolder, "height" + i.ToString("D4") + ".png");
+                    File.WriteAllBytes(stagingPath, EncodeWrinkleHeight(overlay.set, overlay.heightSourceResolution));
+                    outputs.Add(new EncodedOutput
+                    {
+                        overlay = overlay,
+                        isHeightSource = true,
+                        path = overlay.heightSourcePath,
+                        displayName = displayName,
+                        stagingPath = stagingPath
+                    });
+                }
+
                 if (template.content != TexturePaintExportContent.AuthoredOverlay) return;
                 for (int i = 0; i < plan.overlays.Count; i++)
                 {
@@ -928,6 +1046,39 @@ namespace UMA.TexturePaint.Editor
             finally
             {
                 foreach (AuthoredOverlayBakeContext context in overlayContexts.Values) context.Dispose();
+            }
+        }
+
+        /// <summary>The Wrinkle Height composite as a 16-bit grayscale PNG (UMAWrinkleMapBaker.EncodeGray16 layout).</summary>
+        private static byte[] EncodeWrinkleHeight(TextureSet set, int resolution)
+        {
+            RenderTexture source = set.GetVisibleTexture(TexturePaintChannel.WrinkleHeight);
+            if (source == null) throw new InvalidOperationException(set.Name + " has no Wrinkle Height to export.");
+            int size = resolution > 0 ? resolution : source.width;
+            RenderTexture scaled = RenderTexture.GetTemporary(size, size, 0, RenderTextureFormat.ARGBFloat,
+                RenderTextureReadWrite.Linear);
+            RenderTexture previous = RenderTexture.active;
+            Texture2D readback = null;
+            try
+            {
+                Graphics.Blit(source, scaled);
+                RenderTexture.active = scaled;
+                readback = new Texture2D(size, size, TextureFormat.RGBAFloat, false, true);
+                readback.ReadPixels(new Rect(0, 0, size, size), 0, 0, false);
+                readback.Apply(false, false);
+                Color[] pixels = readback.GetPixels();
+                float[] gray = new float[size * size];
+                // Texture rows start at the bottom; the encoder wants the top row first.
+                for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                    gray[(size - 1 - y) * size + x] = pixels[y * size + x].r;
+                return UMA.Editors.UMAWrinkleMapBaker.EncodeGray16(gray, size);
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                RenderTexture.ReleaseTemporary(scaled);
+                if (readback != null) UnityEngine.Object.DestroyImmediate(readback);
             }
         }
 
@@ -966,7 +1117,8 @@ namespace UMA.TexturePaint.Editor
                     }
                     else newFiles.Add(path);
                     File.Copy(encoded[i].stagingPath, fullPath, true);
-                    if (encoded[i].IsAlphaMask) result.alphaMaskPaths.Add(path);
+                    if (encoded[i].isHeightSource) result.heightSourcePaths.Add(path);
+                    else if (encoded[i].IsAlphaMask) result.alphaMaskPaths.Add(path);
                     else result.texturePaths.Add(path);
                     Report(operation, detailedProgress, $"Writing {encoded[i].displayName}",
                         0.5f + 0.12f * ((i + 1f) / encoded.Count));
@@ -987,6 +1139,9 @@ namespace UMA.TexturePaint.Editor
                 for (int i = 0; i < plan.overlays.Count; i++)
                 {
                     TexturePaintOverlayPlanEntry overlay = plan.overlays[i];
+                    if (!string.IsNullOrEmpty(overlay.heightSourcePath))
+                        UMA.Editors.UMAWrinkleMapBaker.ConfigureHeightImporter(overlay.heightSourcePath,
+                            overlay.heightSourceResolution);
                     if (string.IsNullOrEmpty(overlay.alphaMaskPath)) continue;
                     ConfigureAlphaMaskImporter(overlay.alphaMaskPath);
                     AssetDatabase.WriteImportSettingsIfDirty(overlay.alphaMaskPath);
@@ -1025,7 +1180,8 @@ namespace UMA.TexturePaint.Editor
                         targetName = overlayPlan.targetName,
                         tileNumber = overlayPlan.tileNumber,
                         overlayPath = overlayPlan.path,
-                        alphaMaskPath = overlayPlan.alphaMaskPath
+                        alphaMaskPath = overlayPlan.alphaMaskPath,
+                        heightSourcePath = overlayPlan.heightSourcePath
                     };
                     for (int entryIndex = 0; entryIndex < overlayPlan.textures.Count; entryIndex++)
                         resultSet.texturePaths.Add(overlayPlan.textures[entryIndex].path);
@@ -1148,6 +1304,9 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintOverlayPlanEntry expected = plan.overlays[i];
                 OverlayDataAsset overlay = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(expected.path);
                 if (overlay == null) throw new InvalidDataException("Overlay did not persist: " + expected.path);
+                if (!string.IsNullOrEmpty(expected.heightSourcePath) &&
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(expected.heightSourcePath) == null)
+                    throw new InvalidDataException("The wrinkle height did not import: " + expected.heightSourcePath);
                 AssetItem item = indexer.GetAssetItem<OverlayDataAsset>(overlay.overlayName);
                 if (item == null || !ReferenceEquals(item.Item, overlay))
                     throw new InvalidDataException("UMA library lookup failed for overlay '" + overlay.overlayName + "'.");
@@ -1305,7 +1464,7 @@ namespace UMA.TexturePaint.Editor
         private static string PersistentTextureStem(Texture texture)
         {
             if (texture == null) return null;
-            string path = AssetDatabase.GetAssetPath(texture);
+            string path = AssetDatabase.GetAssetPath(TexturePaintWrinkles.Original(texture));
             return string.IsNullOrEmpty(path) ? null : Sanitize(Path.GetFileNameWithoutExtension(path));
         }
 

@@ -22,8 +22,15 @@ namespace UMA
             BlendShape = 1 << 3,
             SharedColors = 1 << 4,
             MeshModifiers = 1 << 5,
+            /// <summary>A shader property written through a renderer's property block. Like BlendShape, it needs no build.</summary>
+            MaterialProperty = 1 << 6,
             Base = Mesh | Rig | Texture,
-            All = Texture | Mesh | Rig | BlendShape | SharedColors | MeshModifiers
+            All = Texture | Mesh | Rig | BlendShape | SharedColors | MeshModifiers | MaterialProperty,
+            /// <summary>
+            /// The types that are set on the renderers and need no build. They are set again at the
+            /// end of every build, because a build can replace the renderers' meshes and materials.
+            /// </summary>
+            RendererOnly = BlendShape | MaterialProperty
         }
 
         private DNACollection _DNACollection;
@@ -405,6 +412,15 @@ namespace UMA
         /// </summary>
         public DNABuildType AfterRecipeGenerated(DynamicCharacterAvatar avatar)
         {
+            return AfterRecipeGenerated(avatar, DNABuildType.All);
+        }
+
+        /// <summary>
+        /// Runs the after-recipe step again for the effects that report one of the given build types,
+        /// leaving the others alone. Used when a DNA value changes on a character that is already loaded.
+        /// </summary>
+        public DNABuildType AfterRecipeGenerated(DynamicCharacterAvatar avatar, DNABuildType only)
+        {
             DNABuildType flags = DNABuildType.None;
 
             if (!ValidateCollection())
@@ -427,11 +443,39 @@ namespace UMA
                     continue;
                 }
 
-                // If value differs from default, run effect
-                if (ValueDiffers(inst.Value, dna.defaultValue))
-                {
-                    flags |= dna.AfterRecipeGeneration(avatar, inst.Value);
-                }
+                // At the default value only effects that write a value outright still run.
+                flags |= dna.AfterRecipeGeneration(avatar, inst.Value, !ValueDiffers(inst.Value, dna.defaultValue), only);
+            }
+            return flags;
+        }
+
+        /// <summary>
+        /// Runs the post-apply step for the effects that report one of the given build types.
+        /// Like the generator's own post-apply pass it runs at every value, the default included,
+        /// so an effect such as a blendshape weight is also written when DNA returns to its default.
+        /// </summary>
+        public DNABuildType PostApplyEffects(UMAData umaData, DNABuildType only)
+        {
+            DNABuildType flags = DNABuildType.None;
+
+            if (dnaInstances == null || dnaInstances.Count == 0)
+            {
+                return flags;
+            }
+
+            if (!ValidateCollection())
+            {
+                return flags;
+            }
+
+            var dict = _DNACollection.dnaDictionary;
+            for (int i = 0; i < dnaInstances.Count; i++)
+            {
+                var inst = dnaInstances[i];
+                if (inst == null || string.IsNullOrEmpty(inst.Name) || inst.enabled == false) continue;
+                if (!dict.TryGetValue(inst.Name, out var dna) || dna == null) continue;
+
+                flags |= dna.PostApply(umaData, inst.Value, only);
             }
             return flags;
         }

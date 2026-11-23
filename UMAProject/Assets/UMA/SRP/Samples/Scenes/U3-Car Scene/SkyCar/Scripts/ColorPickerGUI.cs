@@ -20,7 +20,11 @@ namespace UMA.Examples
 
         void SetColor()
         {
-            avatar.SetColor(sharedColorName, button.image.color);
+            // Change only the albedo tint; the color's other channels and shader parameters stay as they are.
+            OverlayColorData current = avatar.GetColor(sharedColorName);
+            OverlayColorData color = current != null ? current.Clone() : new OverlayColorData(3);
+            color.channelMask[0] = button.image.color;
+            avatar.SetRawColor(sharedColorName, color, false);
             avatar.UpdateColors(true);
         }
     }

@@ -77,7 +77,7 @@ Material:
     - _TransmissionStrength: 0.25
     m_Colors:
     - _Ambient_Occlusion_Remap: {r: 0, g: 1, b: 0, a: 0}
-    - _Base_Color: {r: 0.3773585, g: 0.3773585, b: 0.3773585, a: 1}
+    - _Base_Color: {r: 0.9137255, g: 0.9137255, b: 0.9137255, a: 1}
     - _Detail_Tiling: {r: 24, g: 24, b: 0, a: 0}
     - _Smoothness_Remap: {r: 0.12, g: 0.55, b: 0, a: 0}
     - _SubsurfaceColor: {r: 1, g: 0.38, b: 0.22, a: 1}

@@ -231,7 +231,7 @@ namespace UMA
                         foreach (var property in block.shaderProperties)
                         {
                             var type = property?.GetType();
-                            if (property == null) { Value(null); continue; }
+                            if (property == null) { Value((string)null); continue; } // typed: on Unity 6.6 null also converts to Vector2
                             if (type == typeof(UMAFloatProperty) || type == typeof(UMAColorProperty) ||
                                 type == typeof(UMAVectorProperty) || type == typeof(UMAVectorArrayProperty) ||
                                 type == typeof(UMAFloatArrayProperty) || type == typeof(UMAIntProperty) ||
@@ -262,8 +262,11 @@ namespace UMA
             {
                 d.Value(width); d.Value(height); d.Value(outputWidth); d.Value(outputHeight); d.Value(format);
                 d.Value(convert); d.Value(generator.qualityTextures.Mips(convert ? generator.convertMipMaps : material.generateMipMaps));
-                d.Value(generator.qualityTextures.EffectiveCompression(convert, format, outputWidth, outputHeight));
+                bool neverCompress = material.channels[channel].NeverCompress;
+                d.Value(neverCompress ? GeneratorRuntimeCompression.Disabled : generator.qualityTextures.EffectiveCompression(convert, format, outputWidth, outputHeight));
                 d.Value(generator.useAsyncConversion); d.Value(generator.SharperFitTextures); d.Value(background);
+                d.Value(convert && generator.keepConvertedTexturesReadable);
+                d.Value(neverCompress ? (int)UnityEngine.Experimental.Rendering.GraphicsFormat.None : (int)UMAGpuTextureCompressor.ResolveFormat(generator, format));
                 d.Value(QualitySettings.activeColorSpace); d.Value(SystemInfo.graphicsDeviceType);
                 d.Value(generator.qualityTextures.Anisotropy(material)); d.Value(generator.qualityTextures.MipBias(material)); d.Value(generator.qualityTextures.Filter(material));
                 d.Value(material.channels[channel].channelType);

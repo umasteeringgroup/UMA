@@ -22,6 +22,7 @@ Artists creating new content should continue with:
 - [Creating a New Race](CreatingANewRace.md) — the complete race-authoring process from source model through runtime validation.
 - [Overlay Painter](../OverlayPainter/Documentation/OverlayPainter.md) — non-destructive 3D/2D painting, per-channel projections and surface warping, UDIM fills, path fade curves, composable masks, stencils, linked layers, selections, symmetry, and recipe-ready export.
 - [Overlay Painter Generators and Filters](../OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md) — artist workflows, material recipes, detailed controls, and troubleshooting for every included procedural plugin.
+- [Expression Wrinkle Maps](ExpressionWrinkleMaps.md) — how the expression wrinkle maps work, every wrinkle menu, and editing them in an image editor or in [Overlay Painter](../OverlayPainter/Documentation/ExpressionWrinkleMaps.md).
 
 You can open these guides inside Unity from `UMA > View Documentation`.
 
@@ -67,6 +68,9 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Examine Slots](ExamineSlots.md)
 - [Overlay Painter](../OverlayPainter/Documentation/OverlayPainter.md)
 - [Overlay Painter Generators and Filters](../OverlayPainter/Documentation/OverlayPainterGeneratorsAndFilters.md)
+- [Expression Wrinkle Maps: An Artist's Guide](ExpressionWrinkleMaps.md)
+- [Painting Expression Wrinkle Maps in Overlay Painter](../OverlayPainter/Documentation/ExpressionWrinkleMaps.md)
+- [Texture Tools](TextureTools.md)
 - [Texture Utilities](TextureUtilities.md)
 - [Weight Touchup](WeightTouchup.md)
 - [Hair Animation: An Artist's Guide](HairAnimation.md) - make UMA hair sway, give it root-to-tip vertex colors, and choose settings for short, medium and long hair.

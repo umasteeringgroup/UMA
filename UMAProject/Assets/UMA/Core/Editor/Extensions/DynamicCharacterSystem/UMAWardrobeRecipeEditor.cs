@@ -122,6 +122,17 @@ namespace UMA.Editors
 				return;
 			}
 
+			// A new asset only. Choosing the recipe itself replaced it with a new asset (a new GUID, so every
+			// reference to it broke), and any other existing asset would be replaced the same way.
+			if (AssetDatabase.LoadMainAssetAtPath(assetPath) != null || File.Exists(assetPath))
+			{
+				bool self = assetPath == currentPath;
+				EditorUtility.DisplayDialog("Save As",
+					self ? "Save As makes a new recipe, so it cannot be saved over '" + target.name + "' itself. Use Save Recipe, or choose a new name."
+						 : "'" + assetPath + "' already exists. Save As makes a new recipe: choose a new name.", "OK");
+				return;
+			}
+
 			var newRecipe = ScriptableObject.CreateInstance(targetType) as UMARecipeBase;
 			if (newRecipe == null)
 			{
@@ -132,8 +143,17 @@ namespace UMA.Editors
 			EditorUtility.CopySerialized(target, newRecipe);
 			newRecipe.name = Path.GetFileNameWithoutExtension(assetPath);
 
+			// Fill in the recipe before the file exists, so a failure here leaves no half-made asset.
+			try
+			{
+				newRecipe.Save(_recipe);
+			}
+			catch
+			{
+				DestroyImmediate(newRecipe);
+				throw;
+			}
 			AssetDatabase.CreateAsset(newRecipe, assetPath);
-			newRecipe.Save(_recipe);
 			EditorUtility.SetDirty(newRecipe);
 			AssetDatabase.SaveAssetIfDirty(newRecipe);
 

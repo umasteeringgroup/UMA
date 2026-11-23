@@ -3574,14 +3574,7 @@ namespace UMA.PoseTools
                     List<int> toRemove = new List<int>();
                     for (int i =0; i < poses.arraySize; i++)
                     {
-                        SerializedProperty pose = poses.GetArrayElementAtIndex(i);
-                        SerializedProperty position = pose.FindPropertyRelative("position");
-                        SerializedProperty rotation = pose.FindPropertyRelative("rotation");
-                        SerializedProperty scale = pose.FindPropertyRelative("scale");
-                        bool isDefaultPosition = position.vector3Value == Vector3.zero;
-                        bool isDefaultRotation = rotation.quaternionValue == Quaternion.identity;
-                        bool isDefaultScale = scale.vector3Value == Vector3.one;
-                        if (isDefaultPosition && isDefaultRotation && isDefaultScale)
+                        if (IsUnmodifiedPoseBone(poses.GetArrayElementAtIndex(i)))
                         {
                             toRemove.Add(i);
                         }
@@ -4694,6 +4687,21 @@ namespace UMA.PoseTools
             }
         }
 
+        /// <summary>
+        /// True when a pose bone has no effect: no offset, no rotation and a scale of one. The pose
+        /// list marks these "(unchanged)", and Remove Unmodified removes them.
+        /// </summary>
+        private static bool IsUnmodifiedPoseBone(SerializedProperty pose)
+        {
+            SerializedProperty position = pose.FindPropertyRelative("position");
+            SerializedProperty rotation = pose.FindPropertyRelative("rotation");
+            SerializedProperty scale = pose.FindPropertyRelative("scale");
+            return position != null && rotation != null && scale != null &&
+                   position.vector3Value == Vector3.zero &&
+                   rotation.quaternionValue == Quaternion.identity &&
+                   scale.vector3Value == Vector3.one;
+        }
+
         private void ReloadFilteredTree()
         {
             filtered = true;
@@ -4817,9 +4825,12 @@ namespace UMA.PoseTools
 
             SerializedProperty bone = property.FindPropertyRelative("bone");
             SerializedProperty enabledProp = property.FindPropertyRelative("enabled"); // new flag
+            bool unchanged = IsUnmodifiedPoseBone(property);
             GUIContent boneGUIContent = new GUIContent(
-                bone.stringValue,
-                "The name of the bone being modified by pose.");
+                unchanged ? bone.stringValue + " (unchanged)" : bone.stringValue,
+                unchanged
+                    ? "This bone is in the pose but does not move, rotate or scale it, so it has no effect. Remove Unmodified removes it."
+                    : "The name of the bone being modified by pose.");
             EditorGUILayout.BeginHorizontal();
             bool useLinkedTranslation = linkedTranslationBoneNames.Contains(bone.stringValue);
             bool newUseLinkedTranslation = GUILayout.Toggle(useLinkedTranslation, linkedTranslationBoneGUIContent, GUILayout.Width(18f));

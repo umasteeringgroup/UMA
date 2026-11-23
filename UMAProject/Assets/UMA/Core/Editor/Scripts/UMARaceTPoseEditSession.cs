@@ -160,7 +160,8 @@ namespace UMA.PoseTools
             }
             else
             {
-                copy = Object.Instantiate(source);
+                // Not Instantiate: Unity refuses that for an atlas that only exists on the GPU.
+                copy = UMAResourceLeaseOwner.CopyTexture(source);
                 ownedResources.Add(copy);
             }
             copy.name = source.name + " - T-Pose Preview";

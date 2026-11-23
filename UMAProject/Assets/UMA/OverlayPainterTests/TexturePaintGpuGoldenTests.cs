@@ -685,10 +685,9 @@ namespace UMA.TexturePaint.Editor.Tests
             finally { Object.DestroyImmediate(brush); }
         }
 
-        [TestCase(TexturePaintTool.Erase)]
         [TestCase(TexturePaintTool.Dodge)]
         [TestCase(TexturePaintTool.Burn)]
-        public void TonalAndEraseToolsMatchReferenceImage(TexturePaintTool tool)
+        public void TonalToolsMatchReferenceImage(TexturePaintTool tool)
         {
             using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Base);
             using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
@@ -726,6 +725,266 @@ namespace UMA.TexturePaint.Editor.Tests
 
                 TexturePaintGpuTestFixture.AssertImage("tool-blur", ReferenceBlur(source), fixture.ReadPixels(),
                     maximumTolerance: 0.006f, meanTolerance: 0.001f);
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
+        // ---- Brush tools on a Paint layer. A layer is transparent where nothing was painted, so the tools must
+        // respect its coverage. Each case runs on the GPU and on the CPU fallback, with and without Cap Per Stroke.
+
+        private static readonly Color LayerRed = new Color(0.8f, 0.1f, 0.1f, 1f);
+
+        /// <summary>One stamp of a tool at the centre of a Paint layer; returns the layer pixels.</summary>
+        private static Color[] StampOnLayer(TexturePaintTool tool, System.Func<float, float, Color> layerPaint,
+            bool gpu, bool capPerStroke, float strength = 1f)
+        {
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(new Color(0.2f, 0.3f, 0.4f, 1f));
+            int size = TexturePaintGpuTestFixture.Size;
+            fixture.set.AddLayer("Paint");
+            EditableTextureTarget layer = fixture.set.GetPaintTarget(TexturePaintChannel.Albedo,
+                TexturePaintSourceMode.SourceOverlay);
+            Color[] pixels = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+                pixels[y * size + x] = layerPaint((x + 0.5f) / size, (y + 0.5f) / size);
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBAHalf, false, true);
+            texture.SetPixels(pixels);
+            texture.Apply(false, false);
+            Graphics.CopyTexture(texture, layer.Front);
+            Graphics.CopyTexture(texture, layer.Back);
+            Object.DestroyImmediate(texture);
+
+            using PaintingEngine engine = gpu ? TexturePaintGpuTestFixture.CreateEngine() : new PaintingEngine(null, null, null);
+            BrushPreset brush = fixture.CreateBrush(1f, 1f);
+            try
+            {
+                StrokeContext context = fixture.CreateContext(brush, tool, Color.white, strength: strength);
+                context.limitStrokeCoverage = capPerStroke;
+                context.cloneSourceUV = new Vector2(0.25f, 0.5f);
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceOverlay), Is.True, engine.LastStrokeError);
+                Assert.That(engine.ApplySample(TexturePaintGpuTestFixture.CenterSample(new Vector2(0.4f, 0.5f)), Radius), Is.True);
+                engine.EndStroke();
+                if (gpu) Assert.That(engine.Performance.computeDispatches, Is.GreaterThan(0));
+                else Assert.That(engine.Performance.cpuFallbacks, Is.GreaterThan(0));
+                return TexturePaintGpuTestFixture.ReadPixels(layer.Front);
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
+        private static Color LayerPixel(Color[] pixels, float u, float v = 0.5f)
+        {
+            int size = TexturePaintGpuTestFixture.Size;
+            return pixels[Mathf.FloorToInt(v * size) * size + Mathf.FloorToInt(u * size)];
+        }
+
+        [Test]
+        public void EraseOnTheEditableBaseBringsBackTheOriginal([Values] bool gpu, [Values] bool capPerStroke)
+        {
+            if (gpu) TexturePaintGpuTestFixture.RequireComputeShaders();
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.black);
+            int size = TexturePaintGpuTestFixture.Size;
+            // An original with detail, so a restore is not the same as painting one colour.
+            Color[] original = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+                original[y * size + x] = new Color(x / (float)size, y / (float)size, 0.35f, 1f);
+            fixture.SetPixels(original);
+
+            using PaintingEngine engine = gpu ? TexturePaintGpuTestFixture.CreateEngine() : new PaintingEngine(null, null, null);
+            BrushPreset brush = fixture.CreateBrush(1f, 1f);
+            try
+            {
+                // Erasing a base that was never painted changes nothing.
+                Stroke(TexturePaintTool.Erase, Color.white, 1f);
+                TexturePaintGpuTestFixture.AssertImage("untouched base", original, fixture.ReadPixels(), 0.002f, 0.0005f);
+
+                // Paint the base, then erase it at half strength: halfway back.
+                Color paint = new Color(0.9f, 0.1f, 0.6f, 1f);
+                Stroke(TexturePaintTool.Paint, paint, 1f);
+                Color painted = fixture.ReadPixels()[size / 2 * size + size / 2];
+                // Albedo is painted in linear space, on the GPU and on the CPU fallback alike.
+                Color working = TexturePaintChannelUtility.WorkingColor(TexturePaintChannel.Albedo, paint);
+                Assert.That(painted.r, Is.EqualTo(working.r).Within(0.01f), "the base was painted");
+                Assert.That(painted.b, Is.EqualTo(working.b).Within(0.01f));
+                Stroke(TexturePaintTool.Erase, Color.white, 0.5f);
+                Color half = fixture.ReadPixels()[size / 2 * size + size / 2];
+                Color expected = Color.Lerp(painted, original[size / 2 * size + size / 2], 0.5f);
+                Assert.That(half.r, Is.EqualTo(expected.r).Within(0.01f), "half strength goes halfway back");
+                Assert.That(half.b, Is.EqualTo(expected.b).Within(0.01f));
+
+                // A full-strength Erase brings the original back where the brush is solid.
+                Stroke(TexturePaintTool.Erase, Color.white, 1f);
+                Color[] restored = fixture.ReadPixels();
+                for (int y = size / 2 - 4; y <= size / 2 + 4; y++)
+                for (int x = size / 2 - 4; x <= size / 2 + 4; x++)
+                {
+                    Color a = restored[y * size + x], b = original[y * size + x];
+                    Assert.That(Mathf.Max(Mathf.Abs(a.r - b.r), Mathf.Abs(a.g - b.g), Mathf.Abs(a.b - b.b), Mathf.Abs(a.a - b.a)),
+                        Is.LessThan(0.01f), $"original restored at {x},{y}");
+                }
+
+                // Clearing the session also returns to the original copy.
+                Stroke(TexturePaintTool.Paint, new Color(0.9f, 0.1f, 0.6f, 1f), 1f);
+                fixture.set.ClearModifications();
+                TexturePaintGpuTestFixture.AssertImage("cleared base", original, fixture.ReadPixels(), 0.002f, 0.0005f);
+                Assert.That(fixture.set.GetChannel(TexturePaintChannel.Albedo).original, Is.Null, "the copy is freed after clearing");
+            }
+            finally { Object.DestroyImmediate(brush); }
+
+            void Stroke(TexturePaintTool tool, Color color, float strength)
+            {
+                StrokeContext context = fixture.CreateContext(brush, tool, color, strength: strength);
+                context.limitStrokeCoverage = capPerStroke;
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceTexture), Is.True, engine.LastStrokeError);
+                Assert.That(engine.ApplySample(TexturePaintGpuTestFixture.CenterSample(), Radius), Is.True);
+                engine.EndStroke();
+            }
+        }
+
+        [Test]
+        public void EraseOnAPaintLayerTakesThePaintAway([Values] bool gpu, [Values] bool capPerStroke)
+        {
+            if (gpu) TexturePaintGpuTestFixture.RequireComputeShaders();
+            Color erased = LayerPixel(StampOnLayer(TexturePaintTool.Erase, (u, v) => LayerRed, gpu, capPerStroke), 0.5f);
+            Assert.That(erased.a, Is.EqualTo(0f).Within(0.005f), "A full-strength Erase removes the paint.");
+
+            Color half = LayerPixel(StampOnLayer(TexturePaintTool.Erase, (u, v) => LayerRed, gpu, capPerStroke, 0.5f), 0.5f);
+            Assert.That(half.a, Is.EqualTo(0.5f).Within(0.01f), "Half strength removes half the coverage.");
+            Assert.That(half.r, Is.EqualTo(LayerRed.r).Within(0.01f), "Erase leaves the colour of what remains.");
+            Assert.That(half.g, Is.EqualTo(LayerRed.g).Within(0.01f));
+
+            Color[] untouched = StampOnLayer(TexturePaintTool.Erase, (u, v) => LayerRed, gpu, capPerStroke);
+            Assert.That(LayerPixel(untouched, 0.05f).a, Is.EqualTo(1f).Within(0.005f), "Paint outside the brush stays.");
+
+            Color empty = LayerPixel(StampOnLayer(TexturePaintTool.Erase, (u, v) => Color.clear, gpu, capPerStroke), 0.5f);
+            Assert.That(empty.a, Is.EqualTo(0f).Within(0.005f), "Erasing an empty layer must not paint on it.");
+        }
+
+        [Test]
+        public void DodgeAndBurnOnAPaintLayerKeepItsCoverage([Values] bool gpu, [Values] bool capPerStroke)
+        {
+            if (gpu) TexturePaintGpuTestFixture.RequireComputeShaders();
+            Color half = new Color(LayerRed.r, LayerRed.g, LayerRed.b, 0.5f);
+            Color dodged = LayerPixel(StampOnLayer(TexturePaintTool.Dodge, (u, v) => half, gpu, capPerStroke), 0.5f);
+            Assert.That(dodged.a, Is.EqualTo(0.5f).Within(0.005f), "Dodge does not change coverage.");
+            Assert.That(dodged.g, Is.GreaterThan(0.95f), "Dodge lightens the paint.");
+
+            Color burned = LayerPixel(StampOnLayer(TexturePaintTool.Burn, (u, v) => half, gpu, capPerStroke), 0.5f);
+            Assert.That(burned.a, Is.EqualTo(0.5f).Within(0.005f), "Burn does not change coverage.");
+            Assert.That(burned.r, Is.LessThan(0.05f), "Burn darkens the paint.");
+
+            foreach (TexturePaintTool tool in new[] { TexturePaintTool.Dodge, TexturePaintTool.Burn })
+                Assert.That(LayerPixel(StampOnLayer(tool, (u, v) => Color.clear, gpu, capPerStroke), 0.5f).a,
+                    Is.EqualTo(0f).Within(0.005f), tool + " on an empty layer must not paint on it.");
+        }
+
+        [Test]
+        public void SmearAndCloneOnAPaintLayerCarryCoverageWithTheColour([Values] bool gpu, [Values] bool capPerStroke)
+        {
+            if (gpu) TexturePaintGpuTestFixture.RequireComputeShaders();
+            // The left half of the layer is painted red; the right half is empty.
+            System.Func<float, float, Color> halfPainted = (u, v) => u < 0.5f ? LayerRed : Color.clear;
+
+            // Clone copies from a quarter of the texture to the left of each pixel.
+            Color[] cloned = StampOnLayer(TexturePaintTool.Clone, halfPainted, gpu, capPerStroke);
+            Color clonedPaint = LayerPixel(cloned, 0.62f);
+            Assert.That(clonedPaint.a, Is.EqualTo(1f).Within(0.01f), "Cloned paint arrives with its coverage.");
+            Assert.That(clonedPaint.r, Is.EqualTo(LayerRed.r).Within(0.02f));
+            Assert.That(clonedPaint.g, Is.EqualTo(LayerRed.g).Within(0.02f), "The cloned colour is not darkened.");
+            Assert.That(LayerPixel(cloned, 0.78f).a, Is.EqualTo(0f).Within(0.01f),
+                "Cloning an empty area leaves the layer empty there.");
+            Assert.That(LayerPixel(cloned, 0.32f).a, Is.EqualTo(1f).Within(0.01f), "Paint cloned onto paint stays opaque.");
+
+            // Smear drags from a tenth of the texture to the left.
+            Color[] smeared = StampOnLayer(TexturePaintTool.Smear, halfPainted, gpu, capPerStroke);
+            Color smearedPaint = LayerPixel(smeared, 0.56f);
+            Assert.That(smearedPaint.a, Is.GreaterThan(0.95f), "Smeared paint arrives with its coverage.");
+            Assert.That(smearedPaint.g, Is.EqualTo(LayerRed.g).Within(0.03f), "The smeared colour is not darkened.");
+            Assert.That(LayerPixel(smeared, 0.72f).a, Is.EqualTo(0f).Within(0.01f),
+                "Smearing an empty area leaves the layer empty there.");
+        }
+
+        [Test]
+        public void AStrokeSkipsTargetMembersWhoseMaterialLacksTheChannel()
+        {
+            // The tiles of an avatar can use different materials: only the head tile has the wrinkle channels.
+            using TexturePaintGpuTestFixture head = new TexturePaintGpuTestFixture(Color.black, TexturePaintChannel.WrinkleHeight);
+            using TexturePaintGpuTestFixture torso = new TexturePaintGpuTestFixture(Color.black, TexturePaintChannel.Albedo);
+            torso.set.persistentId = "golden-torso";
+            torso.set.surface.index = 1;
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = head.CreateBrush(1f, 1f);
+            try
+            {
+                StrokeContext context = head.CreateContext(brush, TexturePaintTool.Paint, Color.white,
+                    TexturePaintChannel.WrinkleHeight, 1f);
+                var sets = new List<TextureSet> { head.set, torso.set };
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceTexture, sets), Is.True,
+                    engine.LastStrokeError);
+                Assert.That(engine.ApplySample(TexturePaintGpuTestFixture.CenterSample(), Radius), Is.True);
+                engine.EndStroke();
+                int centre = TexturePaintGpuTestFixture.Size / 2 * TexturePaintGpuTestFixture.Size + TexturePaintGpuTestFixture.Size / 2;
+                Assert.That(head.ReadPixels()[centre].r, Is.GreaterThan(0.9f), "The member with the channel is painted.");
+                Assert.That(torso.ReadPixels()[centre].r, Is.EqualTo(0f).Within(0.001f), "The member without it is left alone.");
+
+                // A target where no member has the channel still refuses, with the reason.
+                StrokeContext missing = torso.CreateContext(brush, TexturePaintTool.Paint, Color.white,
+                    TexturePaintChannel.Roughness, 1f);
+                Assert.That(engine.BeginStroke(missing, TexturePaintSourceMode.SourceTexture, sets), Is.False);
+                Assert.That(engine.LastStrokeError, Is.Not.Null.And.Not.Empty);
+            }
+            finally { Object.DestroyImmediate(brush); }
+        }
+
+        [TestCase(512, 1f, 1)]
+        [TestCase(1024, 1f, 1)]
+        [TestCase(2048, 2f, 3)]
+        [TestCase(4096, 4f, 6)]
+        public void BlurReachFollowsTheTextureSize(int size, float scale, int radius)
+        {
+            var stamp = new RectInt(0, 0, 128, 128);
+            Assert.That(PaintingEngine.BlurScale(size, size, stamp, long.MaxValue), Is.EqualTo(scale));
+            Assert.That(PaintingEngine.BlurRadius(scale), Is.EqualTo(radius));
+            // A stamp too large for the budget falls back to the 3x3 kernel instead of stalling the stroke.
+            Assert.That(PaintingEngine.BlurScale(size, size, new RectInt(0, 0, size, size), 1L), Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void OneBlurStampSoftensAnEdgeTheSameDistanceAt1024And2048()
+        {
+            float small = BlurredEdgeSpread(1024);
+            float large = BlurredEdgeSpread(2048);
+            Assert.That(small, Is.GreaterThan(0.0003f), "The stamp softened the edge.");
+            Assert.That(large / small, Is.InRange(0.8f, 1.25f),
+                "The same stamp must soften an edge the same distance on the surface at 1024 and 2048 (" +
+                small + " and " + large + " of the texture width).");
+        }
+
+        /// <summary>The area between a step edge after one Blur stamp and the sharp edge, along the middle row, in UV units.</summary>
+        private static float BlurredEdgeSpread(int size)
+        {
+            using TexturePaintGpuTestFixture fixture = new TexturePaintGpuTestFixture(Color.black, size: size);
+            Color[] pixels = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+                pixels[y * size + x] = x >= size / 2 ? Color.white : Color.black;
+            fixture.SetPixels(pixels);
+            using PaintingEngine engine = TexturePaintGpuTestFixture.CreateEngine();
+            BrushPreset brush = fixture.CreateBrush(1f, 1f);
+            try
+            {
+                StrokeContext context = fixture.CreateContext(brush, TexturePaintTool.Blur, Color.white, strength: 1f);
+                Assert.That(engine.BeginStroke(context, TexturePaintSourceMode.SourceTexture), Is.True);
+                Assert.That(engine.ApplySample(TexturePaintGpuTestFixture.CenterSample(), 0.1f), Is.True);
+                engine.EndStroke();
+                Assert.That(engine.Performance.computeDispatches, Is.GreaterThan(0));
+                Color[] result = fixture.ReadPixels();
+                int row = size / 2;
+                int reach = size / 20;
+                float spread = 0f;
+                for (int x = size / 2 - reach; x < size / 2 + reach; x++)
+                    spread += Mathf.Abs(result[row * size + x].r - (x >= size / 2 ? 1f : 0f));
+                return spread / size;
             }
             finally { Object.DestroyImmediate(brush); }
         }

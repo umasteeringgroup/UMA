@@ -13,13 +13,14 @@ struct SkinAttributes
     float2 uv : TEXCOORD0;
     float2 lightmapUV : TEXCOORD1;
     float2 dynamicUV : TEXCOORD2;
+    float2 detailUV : TEXCOORD3;
     half4 color : COLOR;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 struct SkinVaryings
 {
     float4 positionCS : SV_POSITION;
-    float2 uv : TEXCOORD0;
+    float4 uv : TEXCOORD0; // xy: base maps, zw: detail map
     float3 positionWS : TEXCOORD1;
     half3 normalWS : TEXCOORD2;
     half4 tangentWS : TEXCOORD3;
@@ -46,7 +47,7 @@ SkinVaryings SkinVertex(SkinAttributes v)
     o.positionCS = p.positionCS; o.positionWS = p.positionWS;
     o.normalWS = n.normalWS;
     o.tangentWS = half4(n.tangentWS, v.tangentOS.w * GetOddNegativeScale());
-    o.uv = TRANSFORM_TEX(v.uv, _BaseMap); o.color = v.color;
+    o.uv.xy = TRANSFORM_TEX(v.uv, _BaseMap); o.uv.zw = SkinDetailUV(o.uv.xy, v.detailUV); o.color = v.color;
     o.fogAndLight = half4(ComputeFogFactor(p.positionCS.z), VertexLighting(p.positionWS, n.normalWS));
     OUTPUT_LIGHTMAP_UV(v.lightmapUV, unity_LightmapST, o.lightmapUV);
     #ifdef DYNAMICLIGHTMAP_ON
@@ -335,7 +336,7 @@ void SkinFragment(SkinVaryings v, out half4 color : SV_Target0
     #ifdef LOD_FADE_CROSSFADE
     LODFadeCrossFade(v.positionCS);
     #endif
-    SkinData s = SampleSkin(v.uv);
+    SkinData s = SampleSkin(v.uv.xy, v.uv.zw);
     s.surface.albedo *= v.color.rgb;
 
     // ---- Scattering distances per color channel, in meters (one Unity unit is one meter).
@@ -346,14 +347,14 @@ void SkinFragment(SkinVaryings v, out half4 color : SV_Target0
     // ---- Diffuse normals. Each channel reads the normal map with a footprint as wide as its
     // scattering, measured on the surface, so the softening holds its size as the camera moves.
     float3 dPdx = ddx(v.positionWS), dPdy = ddy(v.positionWS);
-    float2 dUVdx = ddx(v.uv), dUVdy = ddy(v.uv);
+    float2 dUVdx = ddx(v.uv.xy), dUVdy = ddy(v.uv.xy);
     float pixelX = max(length(dPdx), 1e-7), pixelY = max(length(dPdy), 1e-7);
     float3 footprint = 4.0 * scatterDistance * (_NormalBlur * s.scatter);
     float3 widenX = clamp(footprint / pixelX, 1.0, 64.0), widenY = clamp(footprint / pixelY, 1.0, 64.0);
     half3 detailKept = _DiffuseNormalStrength * saturate(SKIN_DETAIL_FEATURE_METERS / max(footprint, 1e-6));
-    half3 normalRTS = SampleSkinDiffuseNormal(v.uv, dUVdx * widenX.r, dUVdy * widenY.r, s.detailNormalXY * detailKept.r);
-    half3 normalGTS = SampleSkinDiffuseNormal(v.uv, dUVdx * widenX.g, dUVdy * widenY.g, s.detailNormalXY * detailKept.g);
-    half3 normalBTS = SampleSkinDiffuseNormal(v.uv, dUVdx * widenX.b, dUVdy * widenY.b, s.detailNormalXY * detailKept.b);
+    half3 normalRTS = SampleSkinDiffuseNormal(v.uv.xy, dUVdx * widenX.r, dUVdy * widenY.r, s.detailNormalXY * detailKept.r);
+    half3 normalGTS = SampleSkinDiffuseNormal(v.uv.xy, dUVdx * widenX.g, dUVdy * widenY.g, s.detailNormalXY * detailKept.g);
+    half3 normalBTS = SampleSkinDiffuseNormal(v.uv.xy, dUVdx * widenX.b, dUVdy * widenY.b, s.detailNormalXY * detailKept.b);
 
     InputData inputData = SkinInput(v, s.surface.normalTS, normalGTS);
     #if defined(_DBUFFER)
@@ -472,6 +473,19 @@ void SkinFragment(SkinVaryings v, out half4 color : SV_Target0
     if (_SkinDebug > 8.5 && _SkinDebug < 9.5) result = ambientSpecular + sum.specular;
     if (_SkinDebug > 9.5 && _SkinDebug < 10.5) result = shading.normalR * 0.5 + 0.5;
     if (_SkinDebug > 10.5) result = saturate(thickness * 20.0).xxx * known;
+    #ifdef UMA_SKIN_DEBUG_MAPS
+    half3 debugColor;
+    if (SkinDebugMapColor(v.uv.xy, v.uv.zw, normalize(v.normalWS), normalize(v.tangentWS.xyz), v.color.rgb, s, inputData.normalWS, debugColor)) result = debugColor;
+    else if (SkinDebugIs(SKIN_DEBUG_DIFFUSE_LIGHT)) result = ambientDiffuse + sum.diffuse + sum.transmission;
+    else if (SkinDebugIs(SKIN_DEBUG_REFLECTION)) result = ambientSpecular + sum.specular;
+    else if (SkinDebugIs(SKIN_DEBUG_TRANSMISSION)) result = mainTransmission;
+    else if (SkinDebugIs(SKIN_DEBUG_CURVATURE)) result = Sq(shading.curvatureRow);
+    else if (SkinDebugIs(SKIN_DEBUG_THICKNESS)) result = saturate(thickness * 20.0).xxx * known;
+    else if (SkinDebugIs(SKIN_DEBUG_DIFFUSE_NORMAL)) result = SkinDebugData(shading.normalR * 0.5 + 0.5);
+    #endif
+    #ifdef UMA_SKIN_WRINKLES
+    result = SkinWrinkleDebug(v.uv.xy, result);
+    #endif
     color = half4(result, 1);
     #ifdef _WRITE_RENDERING_LAYERS
     renderingLayers = EncodeMeshRenderingLayer();
@@ -489,7 +503,7 @@ void SkinDepthNormals(SkinVaryings v, out half4 normal : SV_Target0
     #ifdef LOD_FADE_CROSSFADE
     LODFadeCrossFade(v.positionCS);
     #endif
-    half3 normalTS = SampleSkin(v.uv).surface.normalTS;
+    half3 normalTS = SampleSkin(v.uv.xy, v.uv.zw).surface.normalTS;
     InputData d = SkinInput(v, normalTS, normalTS);
     #ifdef _GBUFFER_NORMALS_OCT
     normal = half4(PackFloat2To888(saturate(PackNormalOctQuadEncode(d.normalWS) * 0.5 + 0.5)), 0);

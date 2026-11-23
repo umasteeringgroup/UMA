@@ -1,0 +1,311 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84502f13ce032214195115124a93b406, type: 3}
+  m_Name: Beanie
+  m_EditorClassIdentifier: UMA.ClothesDesigner.Editor::UMA.ClothesDesigner.Editor.ClothesPattern
+  schemaVersion: 2
+  pieces:
+  - id: 1b2dbbba97574861b75d3e5f16e16eb6
+    name: Front Panel
+    points:
+    - id: e578ffff1df84837a3630a994a7d6e27
+      position: {x: 0, y: 0}
+    - id: 27408815a4a04716bbd6ed21723050ee
+      position: {x: 15, y: 0}
+    - id: bc8d93dbd8684a91be3caa86e6e95518
+      position: {x: 7.5, y: 14}
+    edges:
+    - id: 3e93b409644c4dcc89b5f359012b7c53
+      name: Brim
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: f376019fab7441948030ada19be24152
+      name: Right seam
+      curved: 1
+      handleA: {x: 0, y: 7}
+      handleB: {x: 6, y: 0}
+      opening: 0
+    - id: 6a4bb030a6904cff80b6c73d3ac0d4c5
+      name: Left seam
+      curved: 1
+      handleA: {x: -6, y: 0}
+      handleB: {x: 0, y: 7}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 0
+      topAboveShoulderCm: 2
+      distanceCm: 0
+      part: 1
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Elastic
+      stretchCompliance: 0.08
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.6
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: 0.0078125, y: 0.0078125}
+      scale: 0.032552082
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.0078125
+        width: 0.48828122
+        height: 0.45572916
+  - id: 35102784586d4eb0aebcee4ae0c7c6a2
+    name: Left Panel
+    points:
+    - id: bc0b2d9817dc4280b3b788dad45d5f86
+      position: {x: 23, y: 0}
+    - id: e318fb021f7b4142a7b53cb902573c28
+      position: {x: 38, y: 0}
+    - id: ae56f1966af445848ab903a612996e9b
+      position: {x: 30.5, y: 14}
+    edges:
+    - id: 9c8c4e674b47402792229a2294d3853e
+      name: Brim
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: 7061d1b3c1314dbeb46f2a41e143e235
+      name: Right seam
+      curved: 1
+      handleA: {x: 0, y: 7}
+      handleB: {x: 6, y: 0}
+      opening: 0
+    - id: 8f3839a76a7441e98b8602a3313e6d9d
+      name: Left seam
+      curved: 1
+      handleA: {x: -6, y: 0}
+      handleB: {x: 0, y: 7}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 90
+      topAboveShoulderCm: 2
+      distanceCm: 0
+      part: 1
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Elastic
+      stretchCompliance: 0.08
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.6
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -0.24479164, y: 0.0078125}
+      scale: 0.032552082
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.50390625
+        y: 0.0078125
+        width: 0.48828122
+        height: 0.45572916
+  - id: 0ecef2de5c7a4f99a88e5decce8774ee
+    name: Back Panel
+    points:
+    - id: 49e159a671d0443e9024a73a58dc07e9
+      position: {x: 46, y: 0}
+    - id: 3075eaa928c54aa091252d0a751a9aed
+      position: {x: 61, y: 0}
+    - id: f7c4ee7d3c204d31a5c6c746aceb5216
+      position: {x: 53.5, y: 14}
+    edges:
+    - id: de08b806a66d49fd8e0d87349e6d5f59
+      name: Brim
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: 109b0ef51fc94557aeae44993746e1bf
+      name: Right seam
+      curved: 1
+      handleA: {x: 0, y: 7}
+      handleB: {x: 6, y: 0}
+      opening: 0
+    - id: 140cb23b709d4dbea6762a1faa99e027
+      name: Left seam
+      curved: 1
+      handleA: {x: -6, y: 0}
+      handleB: {x: 0, y: 7}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 180
+      topAboveShoulderCm: 2
+      distanceCm: 0
+      part: 1
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Elastic
+      stretchCompliance: 0.08
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.6
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -1.4895833, y: 0.47135416}
+      scale: 0.032552082
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.47135416
+        width: 0.48828122
+        height: 0.45572916
+  - id: 8ef4fcb4c6b6424dbcb0aecc283355af
+    name: Right Panel
+    points:
+    - id: ecc3ffe895c14aeba4241a3ead5ced25
+      position: {x: 69, y: 0}
+    - id: a5a2a0cca1824db6bd83dd9058ecc4db
+      position: {x: 84, y: 0}
+    - id: 04873b76bc8c4c6e8a4ed01e5239b533
+      position: {x: 76.5, y: 14}
+    edges:
+    - id: dabc74c65f7e4283be35f051784599a1
+      name: Brim
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: a690ec84a6774f83b8573bac1f8cafd6
+      name: Right seam
+      curved: 1
+      handleA: {x: 0, y: 7}
+      handleB: {x: 6, y: 0}
+      opening: 0
+    - id: 35dd179736334544993d48acac5c0ca4
+      name: Left seam
+      curved: 1
+      handleA: {x: -6, y: 0}
+      handleB: {x: 0, y: 7}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 270
+      topAboveShoulderCm: 2
+      distanceCm: 0
+      part: 1
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Elastic
+      stretchCompliance: 0.08
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.6
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -1.7421874, y: 0.47135416}
+      scale: 0.032552082
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.50390625
+        y: 0.47135416
+        width: 0.48828122
+        height: 0.45572916
+  seams:
+  - id: c684fe9cc4cc4f8a8151a92863020c6b
+    a:
+      pieceId: 1b2dbbba97574861b75d3e5f16e16eb6
+      edgeId: f376019fab7441948030ada19be24152
+      start: 0
+      end: 1
+    b:
+      pieceId: 35102784586d4eb0aebcee4ae0c7c6a2
+      edgeId: 8f3839a76a7441e98b8602a3313e6d9d
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 63bb15eed4fd449dbd11e03902249010
+    a:
+      pieceId: 35102784586d4eb0aebcee4ae0c7c6a2
+      edgeId: 7061d1b3c1314dbeb46f2a41e143e235
+      start: 0
+      end: 1
+    b:
+      pieceId: 0ecef2de5c7a4f99a88e5decce8774ee
+      edgeId: 140cb23b709d4dbea6762a1faa99e027
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 32e20017824246a2865cd6d46a48405f
+    a:
+      pieceId: 0ecef2de5c7a4f99a88e5decce8774ee
+      edgeId: 109b0ef51fc94557aeae44993746e1bf
+      start: 0
+      end: 1
+    b:
+      pieceId: 8ef4fcb4c6b6424dbcb0aecc283355af
+      edgeId: 35dd179736334544993d48acac5c0ca4
+      start: 0
+      end: 1
+    reversed: 1
+  - id: af0c962ebc6146978261cd355c468d30
+    a:
+      pieceId: 8ef4fcb4c6b6424dbcb0aecc283355af
+      edgeId: a690ec84a6774f83b8573bac1f8cafd6
+      start: 0
+      end: 1
+    b:
+      pieceId: 1b2dbbba97574861b75d3e5f16e16eb6
+      edgeId: 6a4bb030a6904cff80b6c73d3ac0d4c5
+      start: 0
+      end: 1
+    reversed: 1
+  dimensions:
+  - id: 0a56f0ee17b74b18ba3e8b7d551ccff6
+    name: Head
+    kind: 0
+    measurement: 9
+    fixedCm: 60
+    allowanceCm: -4
+    shareCount: 4
+    lineY: 2
+    pieceIds:
+    - 1b2dbbba97574861b75d3e5f16e16eb6
+    - 35102784586d4eb0aebcee4ae0c7c6a2
+    - 0ecef2de5c7a4f99a88e5decce8774ee
+    - 8ef4fcb4c6b6424dbcb0aecc283355af
+  meshLevel: 2
+  customEdgeLengthCm: 2
+  uvLayout:
+    bakeResolution: 1024
+    gutterPixels: 8
+    aspect: 1
+  notes: Knitted beanie of four panels meeting at the crown, 4 cm smaller round than
+    the head so it hugs it.

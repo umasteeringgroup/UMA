@@ -99,6 +99,28 @@ namespace UMA
             }
         }
 
+        /// <summary>
+        /// True when <paramref name="key"/> names <paramref name="asset"/> the way modifiers saved before
+        /// slots had a separate logical name (October 2026) did: by the slot's asset name, which UMA's
+        /// slot builders end with "_slot" (e.g. "UMA30_Body_UDIM1001_slot" for "UMA30_Body_UDIM1001").
+        /// Race-baked copies keep the logical source name but not the asset name, so the source name
+        /// plus "_slot" is accepted as well.
+        /// </summary>
+        public static bool IsLegacySlotKey(string key, SlotDataAsset asset)
+        {
+            if (string.IsNullOrEmpty(key) || asset == null)
+            {
+                return false;
+            }
+            string sourceSlot = asset.sourceSlot;
+            if (!string.IsNullOrEmpty(sourceSlot) &&
+                string.Equals(key, sourceSlot + "_slot", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            return string.Equals(key, asset.name, StringComparison.OrdinalIgnoreCase);
+        }
+
         // Runtime modifiers are split by slot and used during mesh generation.
         public List<Modifier> runtimeModifiers = new List<Modifier>();
 

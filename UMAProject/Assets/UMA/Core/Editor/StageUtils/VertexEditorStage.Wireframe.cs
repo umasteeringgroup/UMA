@@ -28,7 +28,7 @@ namespace UMA
         private Mesh wireSourceMesh;
         private int wireSlotSignature;
         private bool wireHasLines;
-        private bool wirePrefsLoaded;
+        [NonSerialized] private bool wirePrefsLoaded;
 
         /// <summary>Whether the wireframe is shown on the editable slots.</summary>
         public bool ShowEditableWireframe

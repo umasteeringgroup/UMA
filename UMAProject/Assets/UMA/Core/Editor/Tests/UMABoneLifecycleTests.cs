@@ -210,6 +210,59 @@ namespace UMA.Editors.Tests
         }
 
         [Test]
+        public void AnActiveIgnoredAttachmentIsKeptWithoutSaveAndRestore()
+        {
+            // A weapon tagged UMAIgnore in the hand was destroyed with the skeleton unless Save And Restore Ignored
+            // Items was on. Active ones are now found through Unity's tag list (no walk over the bones).
+            var hand = Child(root, "RightHand");
+            var weapon = Child(hand, "Weapon"); weapon.tag = "UMAIgnore";
+            var gem = Child(weapon, "Gem"); gem.tag = "UMAIgnore"; // moves with the weapon
+            var holstered = Child(hand, "Holstered"); holstered.tag = "UMAIgnore";
+            holstered.gameObject.SetActive(false); // the tag list has active objects only
+            generator.CleanupUnusedBones = false;
+            generator.SaveAndRestoreIgnoredItems = false;
+
+            generator.SaveMountedItems(data);
+            Assert.That(data.HasSavedItems, Is.True);
+            Assert.That(weapon.parent, Is.Not.SameAs(hand), "the weapon waits outside the skeleton");
+            Assert.That(gem.parent, Is.SameAs(weapon));
+            Assert.That(holstered.parent, Is.SameAs(hand), "inactive: only the bone walk (option on) finds it");
+
+            Object.DestroyImmediate(data.umaRoot);
+            data.umaRoot = Child(avatar.transform, "Root").gameObject;
+            root = Child(data.umaRoot.transform, "Global");
+            var newHand = Child(root, "RightHand"); Skeleton();
+            data.RestoreSavedItems();
+            Assert.That(weapon != null && gem != null, Is.True);
+            Assert.That(weapon.parent, Is.SameAs(newHand));
+            Assert.That(gem.parent, Is.SameAs(weapon));
+            Assert.That(holstered == null, Is.True);
+
+            // With the option on, the bone walk keeps an inactive one too.
+            var stored = Child(newHand, "Stored"); stored.tag = "UMAIgnore";
+            stored.gameObject.SetActive(false);
+            generator.SaveAndRestoreIgnoredItems = true;
+            generator.SaveMountedItems(data);
+            Assert.That(stored.parent, Is.Not.SameAs(newHand));
+            data.RestoreSavedItems();
+            Assert.That(stored.parent, Is.SameAs(newHand));
+        }
+
+        [Test]
+        public void TheShippedQualityProfilesLeaveSaveAndRestoreIgnoredItemsAlone()
+        {
+            // They turned it off whenever a quality controller applied them, which dropped UMAIgnore attachments.
+            foreach (string path in new[] { "Assets/UMA/QualityProfiles/HighPC.asset", "Assets/UMA/QualityProfiles/LowPC.asset" })
+            {
+                var profile = UnityEditor.AssetDatabase.LoadAssetAtPath<GeneratorQualityProfile>(path);
+                if (profile == null) continue;
+                var configuration = new GeneratorQualityConfiguration { SaveAndRestoreIgnoredItems = true };
+                profile.Overlay(configuration);
+                Assert.That(configuration.SaveAndRestoreIgnoredItems, Is.True, profile.name);
+            }
+        }
+
+        [Test]
         public void CompletedRigTransactionCleansOnceButTextureOnlyCompletionDoesNot()
         {
             var unused = Child(root, "Unused"); Skeleton();

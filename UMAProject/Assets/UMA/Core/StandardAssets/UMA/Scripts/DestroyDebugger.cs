@@ -1,13 +1,17 @@
 using UnityEngine;
 
-public class DestroyDebugger : MonoBehaviour
+namespace UMA
 {
-    private void OnDestroy()
+
+    public class DestroyDebugger : MonoBehaviour
     {
-        Debug.Log("Destroying " + gameObject.name);
-    }
-    private void OnDisable()
-    {
-        Debug.Log("Disabling " + gameObject.name);
+        private void OnDestroy()
+        {
+            Debug.Log("Destroying " + gameObject.name);
+        }
+        private void OnDisable()
+        {
+            Debug.Log("Disabling " + gameObject.name);
+        }
     }
 }

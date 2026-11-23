@@ -37,18 +37,15 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UMA_Mat_Diffuse_Normal_Metallic_ShaderGraph
-  m_Shader: {fileID: -6465566751694194690, guid: a3ed21b11d1097e4c9cd06fd7766b2f3, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 6a498f78130e5ed4dad6765214312013, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - _METALLICSPECGLOSSMAP
-  m_InvalidKeywords:
-  - _DISABLE_SSR_TRANSPARENT
-  - _MATERIAL_FEATURE_SPECULAR_COLOR
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2450
+  m_CustomRenderQueue: -1
   stringTagMap:
     Keep: Keep
     MotionVector: User
@@ -63,11 +60,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 614d6a0580b42ed4b96339e535ac0957, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: e6e7016f874e7154888112b9f7d072b3, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -87,7 +84,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 614d6a0580b42ed4b96339e535ac0957, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -132,10 +129,13 @@ Material:
     - _EnableFogOnTransparent: 1
     - _EnvironmentReflections: 1
     - _ExcludeFromTUAndAA: 0
+    - _InvertMetallic: 0
+    - _InvertSmooth: 0
     - _METALLICSPECGLOSSMAP: 1
     - _MaterialID: 4
     - _MaterialTypeMask: 16
     - _Metallic: 0
+    - _MetallicModulus: 1
     - _NORMALMAP: 0
     - _OCCLUSIONMAP: 0
     - _OcclusionStrength: 1
@@ -149,7 +149,7 @@ Material:
     - _RefractionModel: 0
     - _RenderQueueType: 1
     - _RequireSplitLighting: 0
-    - _Smoothness: 0.5
+    - _Smoothness: 1
     - _SmoothnessSRC: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -179,6 +179,7 @@ Material:
     - _ZTestTransparent: 4
     - _ZWrite: 1
     m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DoubleSidedConstants: {r: 1, g: 1, b: -1, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}

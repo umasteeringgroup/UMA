@@ -11,6 +11,10 @@ Open **UMA > Welcome to UMA > Configure UMA**. The active page's navigation butt
 | Setting | Maximum speed | Maximum Fidelity |
 |---|---|---|
 | Skin UMAMaterial type | Atlas | No Atlas |
+| Skin shader | Realistic Skin SSS materials switched to a Realistic Skin copy (`<name>_Speed.mat`); SSS original backed up | SSS original restored |
+| Skin Aniso Level | 1 | 8 |
+| Force GPU Texture Compression | On (BC3 / ETC2) | Off |
+| Expression wrinkles (optional checkbox) | **Remove wrinkle maps**: Off for every avatar | **Enable wrinkle maps**: on for every avatar |
 | Hair material assignments | Existing opaque Alpha Clip pass only; original assignments backed up | Original assignments and additional passes restored |
 | Supported source-UV cropping | Enabled | Disabled |
 | Unused, non-T-pose bone cleanup | Enabled | Disabled |
@@ -20,9 +24,9 @@ Atlas mode can reduce compatible material groups and draw calls; it can add text
 
 For hair, Maximum Speed keeps a compatible opaque Alpha Clip material already assigned to the first or second pass and clears the additional pass. It backs up the default and HDRP material assignments, including both second-pass fields, on the UMAMaterial. Applying Speed again preserves that original backup. Maximum Fidelity restores those references, including empty fields, and clears the backup. Hair without a compatible Alpha Clip configuration is preserved and reported in the results. Source Unity materials, shaders, and textures are not rewritten.
 
-Both modes disable Process All Pending, use Iteration Count 1, Inter Frame Delay 0, and a 2 ms **soft** incremental-work budget (an atomic step can exceed it). They keep generated RenderTextures, enable async/multithreaded conversion and mip regeneration for later conversion use, set conversion apply budget to 4, disable inline application and forced renderer recreation, enable atlas fitting, use automatic 16/32-bit index sizing, preserve ignored attachments, and disable bone-cleanup timing measurements. Garbage Collection Rate is set to 128 to avoid a forced collection after each mesh/rig build in players; zero is not an off switch in the current generator. Existing unused combiner components are retained; the generator's active combiner reference is changed to Jobified.
+Both modes disable Process All Pending, use Iteration Count 1, Inter Frame Delay 0, and a 2 ms **soft** incremental-work budget (an atomic step can exceed it). They leave **Convert Render Texture** off (Maximum speed compresses on the GPU instead, which produces its own textures), enable async/multithreaded conversion and mip regeneration for later conversion use, set conversion apply budget to 4, disable inline application and forced renderer recreation, enable atlas fitting, use automatic 16/32-bit index sizing, preserve ignored attachments, and disable bone-cleanup timing measurements. Garbage Collection Rate is set to 128 to avoid a forced collection after each mesh/rig build in players; zero is not an off switch in the current generator. Existing unused combiner components are retained; the generator's active combiner reference is changed to Jobified.
 
-The presets preserve atlas resolutions, runtime/editor scale factors, automatic memory scaling and thresholds, atlas overflow algorithm, material mip/filter/compression settings, shader/channel data, default renderer/overlay/texture merger references, keep tags, race blendshape behavior, and diagnostic visibility. These depend on content, platform, or application behavior rather than the Atlas/No Atlas choice. Blendshapes and MeshModifiers still need selective authoring; neither preset adds or removes them. Legacy fields such as Collect Garbage and Allow Read From Mesh are retained; the current work loop does not use them to control collection or mesh readability.
+The presets preserve atlas resolutions, runtime/editor scale factors, automatic memory scaling and thresholds, atlas overflow algorithm, material mip, filter mode and compression settings (the presets change only the skin materials' Aniso Level), shader/channel data, default renderer/overlay/texture merger references, keep tags, race blendshape behavior, and diagnostic visibility. These depend on content, platform, or application behavior rather than the Atlas/No Atlas choice. Blendshapes and MeshModifiers still need selective authoring; neither preset adds or removes them. Legacy fields such as Collect Garbage and Allow Read From Mesh are retained; the current work loop does not use them to control collection or mesh readability.
 
 After either preset succeeds, Configure UMA runs the generator's **Rebuild all editor UMA** action. It requests rebuilds for active characters in the active scene that have editor-time generation enabled, including when automatic editor generation is paused. The final dialog lists the configured prefab and materials and confirms the rebuild requests.
 
@@ -261,6 +265,33 @@ This serialized option is exposed by the current Inspector for compatibility wit
 
 - **Memory, speed, and responsiveness:** no independent effect in the current implementation.
 - **Starting point:** keep it aligned with **Convert Mip Maps** for configuration clarity, but do not count it as a separate optimization control.
+
+#### Keep Converted Textures Readable
+
+Off by default. A Texture2D can hold its pixels twice: on the GPU, where the material samples them, and in a CPU copy in system memory, which `GetPixels`, `SetPixels`, `EncodeToPNG` and runtime compression work on. When this option is off, UMA frees the CPU copy of each converted texture as soon as it is on the GPU (after compressing it, when **Compression** is on). When it is on, the CPU copy stays for as long as the texture does.
+
+- **Memory:** the CPU copy is as large as the texture. Measured in a Windows development player (Direct3D 12): one 2048 RGBA32 atlas channel with mips costs 42.7 MiB readable and 21.4 MiB without the copy; compressed to DXT5, 10.7 MiB and 5.4 MiB. A character with a four-channel 2048 atlas saves about 85 MiB of system memory uncompressed, or about 21 MiB compressed.
+- **Generation speed:** no extra work. Without the copy, the synchronous path fills the Texture2D with a GPU copy and skips the readback.
+- **Who needs it on:** only scripts that read a converted atlas's pixels on the CPU. UMA's save, export and prefab tools read atlases back from the GPU and work either way. A script that calls `GetPixels` on a generated atlas while this is off gets Unity's "texture is not readable" error; turn the option on, or read the texture back with `Graphics.Blit` and `ReadPixels`.
+- **Sharing:** readable and GPU-only atlases are never shared with each other by atlas reuse.
+
+Generator Quality Profiles and **UMA Generator Override** components can override it like the other conversion settings.
+
+#### Force GPU Texture Compression (Experimental)
+
+Experimental, and off by default. **Welcome > Configure UMA** turns it on for Maximum speed and off for Maximum Fidelity. When on, every generated Atlas and No Atlas texture is compressed on the GPU as soon as it has been composited, and the uncompressed RenderTexture is released. A compute shader encodes the texture in 4x4 blocks: **BC3 (DXT5)** where the device supports it (desktop and console), otherwise **ETC2 RGBA8** (mobile). Both keep the alpha channel and use 8 bits per pixel, a quarter of an RGBA32 texture.
+
+- **Memory:** measured in a Windows development player (Direct3D 12 and Direct3D 11), eight 2048 atlas channels with mips cost 170.7 MiB as RenderTextures and 43.0 MiB compressed. While a texture is being compressed, the RenderTexture and the compressed texture exist together.
+- **What it replaces:** the switch produces a Texture2D by itself, so **Convert Render Texture** and the runtime **Compression** quality policy are not used for the textures it compresses. **Convert Mip Maps** decides whether mip levels are made; each level is compressed from the RenderTexture's own mip level.
+- **Generation speed:** on devices that can copy the encoded blocks into a compressed texture on the GPU (Direct3D 11 and 12 here; UMA tests the copy once, the first time it is needed), nothing is read back and the build does not wait for the GPU: about 1.5 ms of main-thread time for a 2048 texture with mips, 7 to 13 ms for the first one. On other devices, and always on OpenGL ES, the encoded blocks are read back and uploaded, a quarter of the data that **Convert Render Texture** reads back; **Use Async Conversion** decides whether that waits.
+- **Devices without compute shaders:** WebGL and other devices that cannot run compute shaders, or that support neither format, ignore the switch and build exactly as they do with it off.
+- **Which textures:** 8-bit RGBA channels (the ARGB32 channel format). Channels in other formats, **Use Existing Textures** materials and tinted texture channels are not changed. Texture sizes are rounded up to a multiple of 4.
+- **Quality:** block compression is lossy. On the UMA 3 skin, error was 1.5 to 2.0 of 255 (RMS) on colour maps and 0.6 on normal maps. Smooth gradients can band, and a normal map loses some precision; check close-up characters before shipping.
+- **Reading pixels:** a compressed texture has no CPU copy unless **Keep Converted Textures Readable** is on. With it on, the compressed data stays in system memory and `GetPixels` works; `EncodeToPNG` does not accept a compressed texture, so read it back with `Graphics.Blit` and `ReadPixels`. UMA's save, export and prefab tools build the character without compression while they run.
+- **Sharing:** compressed and uncompressed atlases are never shared with each other by atlas reuse.
+- **Not yet verified on device:** the ETC2 encoder is checked against Unity's own ETC2 decoder on desktop, but UMA has not been run with this switch on Android or iOS hardware.
+
+`UMAGpuTextureCompressor.ModeOverride` forces the readback route, or turns compression off, for a device whose GPU copy misbehaves. Generator Quality Profiles and **UMA Generator Override** components can override the switch like the other conversion settings.
 
 ### Generation Settings
 
@@ -620,6 +651,8 @@ Texture objects are Unity engine objects, but the surrounding arrays, requests, 
 ### Minimize texture duplication
 
 - Leave **Convert Render Texture** disabled unless a later workflow needs Texture2D data.
+- When conversion is on, leave **Keep Converted Textures Readable** off unless a script reads atlas pixels on the CPU. A readable texture keeps a second copy of itself in system memory.
+- Turn on **Force GPU Texture Compression** when generated textures do not need to stay RenderTextures: they take a quarter of the memory.
 - Review per-channel conversion flags in every production `UMAMaterial`.
 - Use `UseExistingTextures` for fixed texture sets that do not require compositing.
 - Use `UseExistingMaterial` only for truly shared material state.

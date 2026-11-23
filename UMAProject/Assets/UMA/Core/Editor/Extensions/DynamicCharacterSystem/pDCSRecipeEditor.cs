@@ -230,21 +230,32 @@ namespace UMA.Editors
 									}
 									EditorGUI.BeginChangeCheck();
 									var newSelected = EditorGUILayout.Popup(kp.Key, selected, thisPopupVals.ToArray());
-									if (EditorGUI.EndChangeCheck())
+									if (EditorGUI.EndChangeCheck() && newSelected != selected)
 									{
-										for (int wsi = 0; wsi < _wardrobeSet.Count; wsi++)
+										if (string.IsNullOrEmpty(prevRecipe))
 										{
-											if (_wardrobeSet[wsi].recipe == prevRecipe)
+											// Nothing from this group was set: add the collection the way an avatar saves one.
+											// (Matching on the empty previous name would rename unrelated empty entries.)
+											if (newSelected != 0)
 											{
-												//we need to remove the wardrobeSettings that has prevRecipe as its value from _wardrobeSettings
-												if (newSelected == 0)
+												_wardrobeSet.Add(new WardrobeSettings("WardrobeCollection", thisPopupVals[newSelected]));
+											}
+										}
+										else
+										{
+											// Backwards, so removing an entry does not skip the next one.
+											for (int wsi = _wardrobeSet.Count - 1; wsi >= 0; wsi--)
+											{
+												if (_wardrobeSet[wsi].recipe == prevRecipe)
 												{
-													_wardrobeSet.RemoveAt(wsi);
-												}
-												else
-												{
-													//we need to make wardrobeSettings that has prevRecipe have the new value
-													_wardrobeSet[wsi].recipe = thisPopupVals[newSelected];
+													if (newSelected == 0)
+													{
+														_wardrobeSet.RemoveAt(wsi);
+													}
+													else
+													{
+														_wardrobeSet[wsi].recipe = thisPopupVals[newSelected];
+													}
 												}
 											}
 										}

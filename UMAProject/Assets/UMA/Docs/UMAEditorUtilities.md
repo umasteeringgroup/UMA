@@ -27,6 +27,7 @@ A race lists the tables it offers in its **Color choices** section; see [RaceDat
 
 ## Texture and Asset Maintenance
 
+- [Texture Tools](TextureTools.md): batch import settings, UMA Material checks, resizing and PNG conversion for many textures, filtered by how overlays use them.
 - [Texture Utilities](TextureUtilities.md): adjustments, alpha repair, touchup, procedural details, splitting, resizing, and normal editing.
 - [Asset Consolidation and Repair](AssetConsolidationAndRepair.md): wardrobe textures, scene dependencies, packed recipe repair, overlay channel repair, and PNG conversion.
 - [Project Asset Batch Utilities](AssetMenuBatchUtilities.md): context-sensitive generators and migrations under `Assets > UMA`.

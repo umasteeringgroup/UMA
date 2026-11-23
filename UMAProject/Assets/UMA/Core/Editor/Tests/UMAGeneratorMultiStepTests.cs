@@ -1790,6 +1790,101 @@ namespace UMA.Editors.Tests
         }
 #endif
 
+        private sealed class RendererOnlyCountingEffect : DNAEffect
+        {
+            public DNAInstanceCollection.DNABuildType area;
+            public int postApplyCalls;
+            public float lastValue;
+
+            public override DNAInstanceCollection.DNABuildType AreaEffect => area;
+
+            public override void PostApply(UMAData avatar, DNA dna, float value)
+            {
+                postApplyCalls++;
+                lastValue = value;
+            }
+        }
+
+        [TestCase(false)] [TestCase(true)]
+        [Category("UMA")]
+        [Category("GeneratorScheduler")]
+        public void BuildWithoutABodyUpdateStillAppliesRendererOnlyDNA(bool multiStep)
+        {
+            var generatorObject = new GameObject("Renderer-only DNA generator");
+            var avatarObject = new GameObject("Renderer-only DNA avatar");
+            RaceData race = null;
+            DNA dnaAsset = null;
+            DNAGroup group = null;
+            try
+            {
+                var generator = generatorObject.AddComponent<SchedulerTestGenerator>();
+                var combiner = generatorObject.AddComponent<FakeMultiStepMeshCombiner>();
+                ConfigureGenerator(generator, combiner);
+                // Mesh dirty only: the body is not updated in this build.
+                UMAData data = CreateUmaData(avatarObject, out race);
+                int bodyCalls = 0;
+                generator.updateBody = current => bodyCalls++;
+
+                var blendShape = new RendererOnlyCountingEffect { area = DNAInstanceCollection.DNABuildType.BlendShape };
+                var material = new RendererOnlyCountingEffect { area = DNAInstanceCollection.DNABuildType.MaterialProperty };
+                var rig = new RendererOnlyCountingEffect { area = DNAInstanceCollection.DNABuildType.Rig };
+                dnaAsset = ScriptableObject.CreateInstance<DNA>();
+                dnaAsset.name = "RendererOnlyTestDNA";
+                dnaAsset.defaultValue = 0.8f;
+                dnaAsset.effects.Add(blendShape);
+                dnaAsset.effects.Add(material);
+                dnaAsset.effects.Add(rig);
+                group = ScriptableObject.CreateInstance<DNAGroup>();
+                group.dnaList.Add(dnaAsset);
+                race.useNewDNA = true;
+                race.DNACollection = new DNACollection();
+                race.DNACollection.DNAGroups.Add(group);
+                var instances = new DNAInstanceCollection();
+                // At its default value: the weights must be written there too.
+                instances.AddDNAInstance(new DNAInstance(dnaAsset.name, 0.8f, group));
+                instances.Initialize(race.DNACollection);
+                data.umaRecipe.dnaInstanceCollection = instances;
+
+                void Build()
+                {
+                    if (multiStep)
+                    {
+                        generator.addDirtyUMA(data);
+                        for (int i = 0; i < 20 && !generator.IsIdle(); i++) generator.Work();
+                        Assert.IsTrue(generator.IsIdle());
+                    }
+                    else Assert.IsTrue(generator.GenerateSingleUMA(data, false));
+                }
+
+                Build();
+
+                Assert.AreEqual(0, bodyCalls, "This build must not have updated the body.");
+                Assert.AreEqual(1, blendShape.postApplyCalls,
+                    "Blendshape DNA must be set at the end of a build that leaves the body alone.");
+                Assert.AreEqual(1, material.postApplyCalls);
+                Assert.AreEqual(0.8f, blendShape.lastValue, 0.00001f);
+                Assert.AreEqual(0, rig.postApplyCalls, "Only effects that are set on the renderers belong in this pass.");
+
+                // A body update sets them itself (NewDNAPostApply), so the extra pass must not run as well.
+                data.isShapeDirty = true;
+                data.isMeshDirty = false;
+                data.dirty = true;
+                Build();
+
+                Assert.AreEqual(1, bodyCalls);
+                Assert.AreEqual(1, blendShape.postApplyCalls);
+                Assert.AreEqual(1, material.postApplyCalls);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(avatarObject);
+                UnityEngine.Object.DestroyImmediate(generatorObject);
+                if (race != null) UnityEngine.Object.DestroyImmediate(race);
+                if (group != null) UnityEngine.Object.DestroyImmediate(group);
+                if (dnaAsset != null) UnityEngine.Object.DestroyImmediate(dnaAsset);
+            }
+        }
+
         private static void ConfigureGenerator(
             SchedulerTestGenerator generator,
             UMAMeshCombiner combiner)

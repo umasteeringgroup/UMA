@@ -81,6 +81,8 @@ namespace UMA.Editors
                     sharedColors.AddRange(_recipe.sharedColors);
                     sharedColors.Add(new OverlayColorData(0));
                     sharedColors[sharedColors.Count - 1].name = "Shared Color " + sharedColors.Count;
+                    // A shader-parameter color holds only shader parameters: give it somewhere to add them.
+                    sharedColors[sharedColors.Count - 1].PropertyBlock = new UMAMaterialPropertyBlock();
                     _recipe.sharedColors = sharedColors.ToArray();
                     changed = true;
                 }
@@ -172,12 +174,15 @@ namespace UMA.Editors
                                     changed = true;
                                 }
                             }
-                            if (ocd.PropertyBlock == null)
+                        }
+                        // Available for every color, including a shader-parameter-only color with no channels
+                        // (it was only offered to colors with channels).
+                        if (ocd.PropertyBlock == null)
+                        {
+                            if (GUILayout.Button("Add Shader Property Block"))
                             {
-                                if (GUILayout.Button("Add Shader Property Block"))
-                                {
-                                    ocd.PropertyBlock = new UMAMaterialPropertyBlock();
-                                }
+                                ocd.PropertyBlock = new UMAMaterialPropertyBlock();
+                                changed = true;
                             }
                         }
                         if (ocd.PropertyBlock != null)
@@ -185,6 +190,7 @@ namespace UMA.Editors
                             if (GUILayout.Button("Remove Shader Property Block"))
                             {
                                 ocd.PropertyBlock = null;
+                                changed = true;
                             }
                             else
                             {

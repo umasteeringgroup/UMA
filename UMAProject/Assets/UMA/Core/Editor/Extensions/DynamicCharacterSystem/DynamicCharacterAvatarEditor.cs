@@ -1345,22 +1345,20 @@ namespace UMA.CharacterSystem.Editors
             var generator = UMAAssetIndexer.Instance.Generator;
             var meshCombiner = generator.meshCombiner;
     
-            bool buildTexture = (buildType & UMA.DNAInstanceCollection.DNABuildType.Texture) != 0;
-            bool buildMesh = (buildType & UMA.DNAInstanceCollection.DNABuildType.Mesh) != 0;
-            bool buildRig = (buildType & UMA.DNAInstanceCollection.DNABuildType.Rig) != 0;
-            bool buildBlendShape = (buildType & UMA.DNAInstanceCollection.DNABuildType.BlendShape) != 0;
-            bool buildSharedColors = (buildType & UMA.DNAInstanceCollection.DNABuildType.SharedColors) != 0;
-            bool buildMeshModifiers = (buildType & UMA.DNAInstanceCollection.DNABuildType.MeshModifiers) != 0;
-
-            var sw = System.Diagnostics.Stopwatch.StartNew();      
-            if (fullRebuild | buildSharedColors | buildMeshModifiers | buildBlendShape /*|| meshCombiner.GetType() == typeof(UMABoneBakingMeshCombiner)*/)
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            if (fullRebuild /*|| meshCombiner.GetType() == typeof(UMABoneBakingMeshCombiner)*/)
             {
                 GenerateSingleUMA();
             }
-            else
-            {      
-                thisDCA.Dirty(buildRig, buildTexture, buildMesh);
+            else if (thisDCA.ApplyDNABuildType(buildType))
+            {
+                // The build types decide what was marked: rig, textures, mesh, or any mix of them.
                 generator.GenerateSingleUMA(thisDCA, false, Application.isPlaying);
+            }
+            else
+            {
+                // Nothing to build (for example a blendshape weight set on the renderers); just show it.
+                SceneView.RepaintAll();
             }
             sw.Stop();
             //string combinerType = meshCombiner != null ? meshCombiner.GetType().Name : "null";

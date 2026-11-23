@@ -21,7 +21,15 @@ namespace UMA.TexturePaint
         SkinColorMask,
         Thickness,
         DetailMask,
-        NormalControl
+        NormalControl,
+        // Expression wrinkles ("UMA/URP/Realistic Skin SSS Wrinkles" _WrinkleMap). Keep new values at the end:
+        // documents store channels by number.
+        /// <summary>Wrinkle height, mid gray flat, black/white -/+2.5 mm. Painter-owned; becomes the map's RG slope.</summary>
+        WrinkleHeight,
+        /// <summary>Wrinkle crease depth (_WrinkleMap blue).</summary>
+        WrinkleCrease,
+        /// <summary>Wrinkle flush, where squeezed skin reddens (_WrinkleMap alpha).</summary>
+        WrinkleFlush
     }
 
     public static class TexturePaintChannelUtility
@@ -34,8 +42,19 @@ namespace UMA.TexturePaint
                 case TexturePaintChannel.SkinColorMask: return "Skin Color Mask";
                 case TexturePaintChannel.DetailMask: return "Detail Mask";
                 case TexturePaintChannel.NormalControl: return "Normal Control";
+                case TexturePaintChannel.WrinkleHeight: return "Wrinkle Height";
+                case TexturePaintChannel.WrinkleCrease: return "Wrinkle Crease";
+                case TexturePaintChannel.WrinkleFlush: return "Wrinkle Flush";
                 default: return channel.ToString();
             }
+        }
+
+        /// <summary>The expression wrinkle channels of "UMA/URP/Realistic Skin SSS Wrinkles".</summary>
+        public static bool IsWrinkle(TexturePaintChannel channel)
+        {
+            return channel == TexturePaintChannel.WrinkleHeight ||
+                   channel == TexturePaintChannel.WrinkleCrease ||
+                   channel == TexturePaintChannel.WrinkleFlush;
         }
 
         public static bool IsColor(TexturePaintChannel channel)
@@ -58,12 +77,14 @@ namespace UMA.TexturePaint
                    channel == TexturePaintChannel.AmbientOcclusion ||
                    channel == TexturePaintChannel.Thickness ||
                    channel == TexturePaintChannel.DetailMask ||
-                   channel == TexturePaintChannel.NormalControl;
+                   channel == TexturePaintChannel.NormalControl ||
+                   IsWrinkle(channel);
         }
 
+        /// <summary>Painter-owned height channels: no OverlayData texture holds them directly.</summary>
         public static bool IsAuxiliary(TexturePaintChannel channel)
         {
-            return channel == TexturePaintChannel.NormalControl;
+            return channel == TexturePaintChannel.NormalControl || channel == TexturePaintChannel.WrinkleHeight;
         }
 
         /// <summary>Convert an authored picker color into the channel's working representation.
@@ -280,6 +301,23 @@ namespace UMA.TexturePaint
             return Resolve(null, sprite, channel, convention);
         }
 
+        /// <summary>True for red-only formats, which sample as (r, 0, 0, 1) rather than gray.</summary>
+        private static bool IsSingleChannel(Texture source)
+        {
+            if (!(source is Texture2D texture)) return false;
+            switch (texture.format)
+            {
+                case TextureFormat.R8:
+                case TextureFormat.R16:
+                case TextureFormat.RHalf:
+                case TextureFormat.RFloat:
+                case TextureFormat.BC4:
+                case TextureFormat.EAC_R:
+                    return true;
+                default: return false;
+            }
+        }
+
         private static Texture2D Extract(Texture source, Sprite sprite,
             TexturePaintChannel channel, TexturePaintNormalConvention convention, bool invert,
             bool forceUnityPackedNormal = false, int component = -1, int blur = 0)
@@ -336,8 +374,10 @@ namespace UMA.TexturePaint
             }
 
             bool linear = normal || grayscale || component >= 0 || !source.isDataSRGB;
+            // Wrinkle height steps are far below one 8-bit level (a 16-bit height texture is the usual source).
+            bool precise = blur > 0 || channel == TexturePaintChannel.WrinkleHeight;
             RenderTexture temporary = RenderTexture.GetTemporary(width, height, 0,
-                blur > 0 ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGB32, linear
+                precise ? RenderTextureFormat.ARGBHalf : RenderTextureFormat.ARGB32, linear
                     ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.Default);
             RenderTexture previous = RenderTexture.active;
             Texture2D result = null;
@@ -356,6 +396,7 @@ namespace UMA.TexturePaint
                     normal && convention == TexturePaintNormalConvention.DirectX ? 1 : 0);
                 material.SetInt("_InvertChannels", invert ? 1 : 0);
                 material.SetInt("_Grayscale", grayscale ? 1 : 0);
+                material.SetInt("_SingleChannel", IsSingleChannel(source) ? 1 : 0);
                 material.SetInt("_SourceComponent", component);
                 Graphics.Blit(source, temporary, material, component >= 0 ? 1 : normal ? 2 : 0);
                 if (blur > 0)
@@ -376,7 +417,7 @@ namespace UMA.TexturePaint
                     finally { RenderTexture.ReleaseTemporary(horizontal); }
                 }
                 RenderTexture.active = temporary;
-                result = new Texture2D(width, height, blur > 0 ? TextureFormat.RGBAHalf : TextureFormat.RGBA32, false, linear)
+                result = new Texture2D(width, height, precise ? TextureFormat.RGBAHalf : TextureFormat.RGBA32, false, linear)
                 {
                     name = (sprite != null ? sprite.name : source.name) +
                            (component >= 0 ? $" (Overlay Painter {channel} Component {component})" :

@@ -40,6 +40,10 @@ namespace UMA
         public bool useAsyncConversion = true;
         [Tooltip("Regenerate mipmaps after asynchronous conversion.")]
         public bool asyncMipRegen = true;
+        [Tooltip("Keep a CPU copy of converted textures for scripts that read their pixels. Off saves that memory.")]
+        public bool keepConvertedTexturesReadable = false;
+        [Tooltip("Experimental. Compress generated textures on the GPU (BC3 on desktop, ETC2 on mobile). Takes the place of Convert Render Textures. Ignored on devices without compute shaders.")]
+        public bool forceGPUTextureCompression = false;
 
         // Generation Settings
         public int MaxQueuedConversionsPerFrame = 8;
@@ -186,6 +190,8 @@ namespace UMA
             state.convertRenderTexture = convertRenderTexture;
             state.useAsyncConversion = useAsyncConversion;
             state.asyncMipRegen = asyncMipRegen;
+            state.keepConvertedTexturesReadable = keepConvertedTexturesReadable;
+            state.forceGPUTextureCompression = forceGPUTextureCompression;
             state.MaxQueuedConversionsPerFrame = MaxQueuedConversionsPerFrame;
             state.IterationCount = IterationCount;
             state.InterFrameDelay = InterFrameDelay;

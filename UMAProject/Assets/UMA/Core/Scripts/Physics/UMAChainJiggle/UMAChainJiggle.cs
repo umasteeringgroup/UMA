@@ -1,309 +1,484 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace UMA
 {
     /// <summary>
-    /// jiggler for long bone chains such as ponytails, tails, ropes,
-    /// skirts, and hanging clothing bones.
+    /// Tuning values for a <see cref="UMAChainJiggle"/> chain. Shared by the component
+    /// and by <see cref="UMAChainJiggleAnimator"/> assets.
     ///
-    /// This simulates world-space particles at each bone joint, keeps the root anchored
-    /// to animation, constrains each segment to its original bone length, then rotates
-    /// the actual bones toward the simulated child particles. Normal bone chains should
-    /// use rotationWeight = 1 and positionWeight = 0 so the rig sways without changing
-    /// bind-pose offsets.
-    ///
-    /// Can be used standalone (place on a GameObject, auto-builds in Start/LateUpdate)
-    /// or driven by a UMAChainJiggleAnimator asset via Setup()/DoSimulateStep().
+    /// The four motion values are defined at a 60 Hz reference rate, so a chain behaves
+    /// the same at any frame rate.
     /// </summary>
-    [ExecuteAlways]
-    public class UMAChainJiggle : MonoBehaviour
+    [Serializable]
+    public class UMAChainJiggleSettings
     {
-        [Header("Chain Setup")]
-        [Tooltip("First bone in the chain. Children are collected recursively. If null, this transform is used.")]
-        public Transform rootBone;
+        public enum FreezeAxis
+        {
+            None,
+            X,
+            Y,
+            Z
+        }
 
-        [Tooltip("Bones to exclude. Excluded bones and their children are skipped.")]
-        public List<Transform> exclusions = new List<Transform>();
+        [Header("Motion")]
+        [Range(0f, 1f)]
+        [Tooltip("How quickly motion dies out. 0 keeps swinging, 1 never overshoots.")]
+        public float damping = 0.2f;
 
-        [Tooltip("Rebuild the chain when this component starts or is enabled.")]
-        public bool autoBuild = true;
+        [Range(0f, 1f)]
+        [Tooltip("How strongly each bone is pulled back to its authored pose. Low values are loose and slow, high values are springy and quick.")]
+        public float elasticity = 0.1f;
 
-        [Tooltip("Allow simulation while not in play mode. Useful for tuning, but it will move scene bones.")]
-        public bool simulateInEditMode;
+        [Range(0f, 1f)]
+        [Tooltip("How much of the authored shape is always kept. 0 lets a bone swing freely, 1 keeps it rigid. Use this to stop hair folding back on itself.")]
+        public float stiffness = 0.2f;
+
+        [Range(0f, 1f)]
+        [Tooltip("How much of the character's own travel is ignored. 0 trails behind every step the character takes, 1 only reacts to rotation and acceleration of the parent bone.")]
+        public float inertia = 0.5f;
+
+        [Header("Distribution along the chain (0 = root, 1 = tip)")]
+        [Tooltip("Multiplier for Damping along the chain. Leave empty for the same value everywhere.")]
+        public AnimationCurve dampingDistribution = new AnimationCurve();
+
+        [Tooltip("Multiplier for Elasticity along the chain. Leave empty for the same value everywhere.")]
+        public AnimationCurve elasticityDistribution = new AnimationCurve();
+
+        [Tooltip("Multiplier for Stiffness along the chain. Leave empty for the same value everywhere.")]
+        public AnimationCurve stiffnessDistribution = new AnimationCurve();
+
+        [Tooltip("Multiplier for Inertia along the chain. Leave empty for the same value everywhere.")]
+        public AnimationCurve inertiaDistribution = new AnimationCurve();
+
+        [Header("Forces")]
+        [Range(0f, 20f)]
+        [Tooltip("Downward world-space acceleration in metres per second squared. 9.81 is real gravity.")]
+        public float gravity = 9.81f;
+
+        [Tooltip("The chain was modelled already hanging under gravity (true for almost all hair and anatomy). The authored pose then stays put while the character is upright, and gravity only shows when the parent bone tilts.")]
+        public bool restPoseIncludesGravity = true;
+
+        [Tooltip("Constant world-space acceleration in metres per second squared, for wind or similar.")]
+        public Vector3 force = Vector3.zero;
+
+        [Header("Limits")]
+        [Tooltip("Stops bones moving along this axis of their parent bone.")]
+        public FreezeAxis freezeAxis = FreezeAxis.None;
+
+        [Min(0f)]
+        [Tooltip("Collision radius of each joint in metres. Only used when colliders are assigned.")]
+        public float radius = 0.02f;
 
         [Header("Terminal Bones")]
-        [Tooltip("Adds a virtual child to leaf bones so the last real bone can rotate. Set to 0 if your chain already has end bones.")]
+        [Min(0f)]
+        [Tooltip("Length in metres of a virtual tip added to each leaf bone so the last real bone can rotate. Leaf bones with nothing weighted to them (end bones) are harmless either way.")]
         public float endLength = 0.15f;
 
-        [Tooltip("Explicit local offset for virtual leaf children. When zero, endLength follows the leaf's parent-to-leaf direction.")]
+        [Tooltip("Explicit local offset for the virtual tip. When zero, the tip continues in the direction of the leaf bone.")]
         public Vector3 endOffset = Vector3.zero;
 
-        [Header("Physics")]
+        [Header("Output")]
         [Range(0f, 1f)]
-        [Tooltip("Spring strength pulling particles back to their animated/rest pose.")]
-        public float stiffness = 0.15f;
+        [Tooltip("Blend between the authored pose (0) and the simulated pose (1).")]
+        public float blendWeight = 1f;
 
-        [Range(0.001f, 5f)]
-        [Tooltip("Resistance to acceleration.")]
-        public float mass = 0.9f;
-
-        [Range(0f, 1f)]
-        [Tooltip("Velocity damping. Higher values settle faster.")]
-        public float damping = 0.15f;
-
-        [Range(0f, 2f)]
-        [Tooltip("Downward world-space acceleration.")]
-        public float gravity = 0.1f;
-
-        [Range(0f, 5f)]
-        [Tooltip("How much free links resist being carried by parent movement. Values >1 allow exaggerated lag.")]
-        public float inertia = 0.65f;
-
-        [Range(0f, 25f)]
-        [Tooltip("Global motion multiplier. Scales inertia response and gravity. Increase for more swing (runtime tunable).")]
-        public float forceMultiplier = 15f;
-
-        [Tooltip("Base world-space distance each particle can move from its rest target. The allowed range grows slightly down the chain.")]
-        public float maxDistance = 0.35f;
+        [Header("Simulation")]
+        [Range(60, 240)]
+        [Tooltip("Lowest simulation rate. Frames slower than this are split into sub-steps.")]
+        public int updateRate = 60;
 
         [Range(1, 8)]
-        [Tooltip("Number of length-constraint passes. Use 1-2 for most chains; higher stabilizes long chains but costs more.")]
-        public int constraintIterations = 3;
+        [Tooltip("Most sub-steps run in one frame. Below updateRate / maxSubsteps frames per second the chain moves in slow motion instead of costing more.")]
+        public int maxSubsteps = 4;
 
-        [Header("Smoothing")]
-        [Range(0f, 1f)]
-        [Tooltip("Low-pass for parent motion delta. Higher = smoother, less twitchy response to animation. 0 = no smoothing.")]
-        public float targetSmoothing = 0.35f;
+        [Min(0f)]
+        [Tooltip("If the chain root moves further than this in one frame (metres) the chain is carried along instead of whipping. 0 disables the check.")]
+        public float teleportDistance = 1f;
 
-        [Range(0f, 1f)]
-        [Tooltip("Low-pass for final bone rotation. Higher = smoother visual output.")]
-        public float rotationSmoothing = 0.5f;
+        public void CopyFrom(UMAChainJiggleSettings other)
+        {
+            if (other == null || ReferenceEquals(other, this))
+            {
+                return;
+            }
 
-        [Range(0f, 20f)]
-        [Tooltip("Caps velocity to prevent snapping when clamping or high inertia. 0 = disabled.")]
-        public float maxVelocity = 5f;
+            damping = other.damping;
+            elasticity = other.elasticity;
+            stiffness = other.stiffness;
+            inertia = other.inertia;
+            dampingDistribution = CopyCurve(other.dampingDistribution);
+            elasticityDistribution = CopyCurve(other.elasticityDistribution);
+            stiffnessDistribution = CopyCurve(other.stiffnessDistribution);
+            inertiaDistribution = CopyCurve(other.inertiaDistribution);
+            gravity = other.gravity;
+            restPoseIncludesGravity = other.restPoseIncludesGravity;
+            force = other.force;
+            freezeAxis = other.freezeAxis;
+            radius = other.radius;
+            endLength = other.endLength;
+            endOffset = other.endOffset;
+            blendWeight = other.blendWeight;
+            updateRate = other.updateRate;
+            maxSubsteps = other.maxSubsteps;
+            teleportDistance = other.teleportDistance;
+        }
 
-        [Header("Bone Output")]
-        [Range(0f, 1f)]
-        [Tooltip("How much bones rotate toward simulated child particles. Use 1 for normal ponytail/clothing chains.")]
-        public float rotationWeight = 1f;
+        private static AnimationCurve CopyCurve(AnimationCurve curve)
+        {
+            return curve != null ? new AnimationCurve(curve.keys) : new AnimationCurve();
+        }
+    }
 
-        [Range(0f, 1f)]
-        [Tooltip("Optional direct joint translation. Use 0 for normal skinned bone chains to preserve bind offsets.")]
-        public float positionWeight = 0f;
+    /// <summary>
+    /// A sphere or capsule that chain joints are pushed out of.
+    /// </summary>
+    [Serializable]
+    public class UMAChainJiggleCollider
+    {
+        public enum Direction
+        {
+            X,
+            Y,
+            Z
+        }
 
-        [Header("Freeze Axes")]
-        [Tooltip("Freeze movement on X axis in world space.")]
-        public bool freezeX;
+        [Tooltip("Bone the collider follows.")]
+        public Transform bone;
 
-        [Tooltip("Freeze movement on Y axis in world space.")]
-        public bool freezeY;
+        [Tooltip("Centre of the collider in the bone's local space.")]
+        public Vector3 center = Vector3.zero;
 
-        [Tooltip("Freeze movement on Z axis in world space.")]
-        public bool freezeZ;
+        [Min(0f)]
+        [Tooltip("Radius in metres.")]
+        public float radius = 0.08f;
 
-        private readonly List<ChainParticle> _particles = new List<ChainParticle>();
-        private readonly List<int> _realParticleIndices = new List<int>();
-        private int _maxDepth;
-        private bool _built;
-        private bool _drivenExternally;
+        [Min(0f)]
+        [Tooltip("Total height of a capsule in metres. 0 (or less than twice the radius) is a sphere.")]
+        public float height = 0f;
 
-        private const float Epsilon = 0.000001f;
+        [Tooltip("Local axis a capsule runs along.")]
+        public Direction direction = Direction.Y;
+    }
 
-        private class ChainParticle
+    /// <summary>
+    /// Bone-chain jiggle for ponytails, pigtails, tails, straps and soft anatomy.
+    ///
+    /// Each bone joint is a world-space particle. The chain root follows the animation;
+    /// every other joint lags behind it, is pulled back to the authored shape, keeps its
+    /// bone length exactly, and the bones are then rotated to point at the simulated joints.
+    /// Bones are never stretched or moved off their bind offsets.
+    ///
+    /// Works standalone (add it to the first bone of a chain) or set up on a generated UMA
+    /// skeleton by a <see cref="UMAChainJiggleAnimator"/> asset. Either way the component
+    /// simulates itself in LateUpdate, after animation.
+    /// </summary>
+    [DefaultExecutionOrder(11000)]
+    [DisallowMultipleComponent]
+    public class UMAChainJiggle : MonoBehaviour
+    {
+        [Tooltip("First bone in the chain. Children are collected recursively. If empty, this transform is used.")]
+        public Transform rootBone;
+
+        [Tooltip("Bones to leave alone. Excluded bones and their children are skipped.")]
+        public List<Transform> exclusions = new List<Transform>();
+
+        [Tooltip("Spheres and capsules the chain cannot pass through (head, neck, shoulders).")]
+        public List<UMAChainJiggleCollider> colliders = new List<UMAChainJiggleCollider>();
+
+        public UMAChainJiggleSettings settings = new UMAChainJiggleSettings();
+
+        private const float Epsilon = 1e-8f;
+        private const float ReferenceRate = 60f;
+        // Elasticity 1 pulls a joint the whole way back in one 60 Hz step.
+        private const float ElasticityToSpring = ReferenceRate * ReferenceRate;
+
+        private struct Particle
         {
             public Transform transform;
-            public int parentIndex;
-            public int depth;
-            public readonly List<int> childIndices = new List<int>();
+            public int parent;
+            public int childCount;
             public bool isVirtualEnd;
-            public Vector3 restLocalPosition;
+            public Vector3 endLocalOffset;
+            public float chainPosition;
+
+            // Evaluated tuning values.
+            public float damping;
+            public float spring;
+            public float stiffness;
+            public float inertia;
+            public float dampingFactor;
+
+            // Authored pose, and what was last written so outside changes can be told apart.
             public Quaternion restLocalRotation;
-            public Vector3 restLocalScale;
+            public Vector3 restLocalPosition;
+            public Quaternion appliedLocalRotation;
+            public Vector3 appliedLocalPosition;
+            public bool rotationApplied;
+            public bool positionApplied;
+
+            // Animated pose this frame.
+            public Vector3 animPosition;
+            public Quaternion animRotation;
+            public Vector3 animOffset;
+            public Vector3 previousAnimOffset;
             public float restLength;
-            public Vector3 targetPosition;
-            public Quaternion targetRotation;
-            public Vector3 dynamicPosition;
-            public Vector3 previousTargetPosition;
+
+            // Simulation state.
+            public Vector3 position;
             public Vector3 velocity;
-            public Vector3 smoothedDelta;
-            public Quaternion previousAppliedRotation;
-            public bool initialized;
-            public bool hasPreviousAppliedRotation;
+
+            // Shown state: the simulation carried forward to the current frame.
+            public Vector3 renderPosition;
         }
 
-        void Start()
+        private struct ColliderShape
         {
-            if (autoBuild)
-            {
-                BuildChain();
-            }
+            public Vector3 a;
+            public Vector3 b;
+            public float radius;
+            public bool isCapsule;
         }
 
-        void OnEnable()
+        private Particle[] _particles = new Particle[0];
+        private int _particleCount;
+        private int _boneCount;
+        private ColliderShape[] _colliderShapes = new ColliderShape[0];
+        private int _colliderCount;
+
+        private bool _built;
+        private bool _needsReset = true;
+        private bool _tuningDirty = true;
+        private Vector3 _previousRootPosition;
+        private Vector3 _simulatedRootPosition;
+        private float _accumulator;
+
+        private Transform _gravityReferenceRoot;
+        private Vector3 _localRestDown = Vector3.down;
+
+        private UMAData _umaData;
+        private int _umaGeneration;
+        private bool _ownedByUma;
+
+        private readonly List<Particle> _buildList = new List<Particle>();
+
+        /// <summary>Number of simulated joints, including virtual tips.</summary>
+        public int ParticleCount => _particleCount;
+
+        /// <summary>Number of real bones in the chain.</summary>
+        public int BoneCount => _boneCount;
+
+        /// <summary>
+        /// When false the component does not step itself in LateUpdate; call
+        /// <see cref="Simulate"/> yourself.
+        /// </summary>
+        public bool autoSimulate = true;
+
+        public Transform GetBone(int index)
         {
-            if (autoBuild)
+            int found = 0;
+            for (int i = 0; i < _particleCount; i++)
             {
-                BuildChain();
+                if (_particles[i].isVirtualEnd)
+                {
+                    continue;
+                }
+
+                if (found == index)
+                {
+                    return _particles[i].transform;
+                }
+
+                found++;
             }
+
+            return null;
         }
 
-        void LateUpdate()
+        /// <summary>World position of a simulated joint (index below <see cref="ParticleCount"/>).</summary>
+        public Vector3 GetParticlePosition(int index)
         {
-            if (_drivenExternally)
-            {
-                return;
-            }
+            return index >= 0 && index < _particleCount ? _particles[index].renderPosition : Vector3.zero;
+        }
 
-            if (!Application.isPlaying && !simulateInEditMode)
-            {
-                return;
-            }
-
+        private void Start()
+        {
+            // Standalone use: collect the chain while the rig is still in its scene pose,
+            // before the first animation update.
             if (!_built)
             {
                 BuildChain();
             }
+        }
 
-            if (_particles.Count == 0)
+        private void OnEnable()
+        {
+            _needsReset = true;
+        }
+
+        private void OnDisable()
+        {
+            RestoreRestPose();
+            _needsReset = true;
+        }
+
+        private void OnValidate()
+        {
+            _tuningDirty = true;
+        }
+
+        private void LateUpdate()
+        {
+            if (!autoSimulate)
             {
                 return;
             }
 
-            DoSimulateStep(Time.deltaTime);
+            if (_ownedByUma)
+            {
+                if (_umaData == null || _umaData.EmbeddedPhysicsGeneration != _umaGeneration)
+                {
+                    // The slot that asked for this chain is no longer part of the character.
+                    RestoreRestPose();
+                    if (Application.isPlaying)
+                    {
+                        Destroy(this);
+                    }
+                    else
+                    {
+                        DestroyImmediate(this);
+                    }
+
+                    return;
+                }
+
+                if (!_umaData.BoneAnimatorsEnabled)
+                {
+                    RestoreRestPose();
+                    _needsReset = true;
+                    return;
+                }
+            }
+
+            Simulate(Time.deltaTime);
         }
 
         /// <summary>
-        /// Configure the chain for animator-driven use. Call once from a UMA bone animator.
+        /// Configure the chain on a generated UMA skeleton. Called by
+        /// <see cref="UMAChainJiggleAnimator"/> every time the character is built.
         /// </summary>
         public void Setup(
             Transform chainRoot,
-            float stiffnessValue,
-            float massValue,
-            float dampingValue,
-            float gravityValue,
-            float inertiaValue,
-            float maxDistanceValue,
-            int constraintIterationsValue,
-            float rotationWeightValue,
-            float positionWeightValue,
-            float endLengthValue,
-            Vector3 endOffsetValue,
-            bool freezeXValue,
-            bool freezeYValue,
-            bool freezeZValue,
+            UMAChainJiggleSettings chainSettings,
             IList<Transform> exclusionTransforms = null,
-            float forceMultiplierValue = 1f,
-            float targetSmoothingValue = 0.35f,
-            float rotationSmoothingValue = 0.5f,
-            float maxVelocityValue = 5f)
+            IList<UMAChainJiggleCollider> chainColliders = null,
+            UMAData umaData = null)
         {
-            _drivenExternally = true;
+            // Put the bones back first: a rebuild must never read a simulated pose as the authored one.
+            RestoreRestPose();
+
             rootBone = chainRoot;
+            // The asset's own settings object is used directly so edits made while playing show at once.
+            settings = chainSettings ?? new UMAChainJiggleSettings();
+
             exclusions.Clear();
             if (exclusionTransforms != null)
             {
                 for (int i = 0; i < exclusionTransforms.Count; i++)
                 {
-                    Transform exclusion = exclusionTransforms[i];
-                    if (exclusion != null)
+                    if (exclusionTransforms[i] != null)
                     {
-                        exclusions.Add(exclusion);
+                        exclusions.Add(exclusionTransforms[i]);
                     }
                 }
             }
-            stiffness = stiffnessValue;
-            mass = massValue;
-            damping = dampingValue;
-            gravity = gravityValue;
-            inertia = inertiaValue;
-            forceMultiplier = forceMultiplierValue;
-            targetSmoothing = targetSmoothingValue;
-            rotationSmoothing = rotationSmoothingValue;
-            maxVelocity = maxVelocityValue;
-            maxDistance = maxDistanceValue;
-            constraintIterations = constraintIterationsValue;
-            rotationWeight = rotationWeightValue;
-            positionWeight = positionWeightValue;
-            endLength = endLengthValue;
-            endOffset = endOffsetValue;
-            freezeX = freezeXValue;
-            freezeY = freezeYValue;
-            freezeZ = freezeZValue;
-            autoBuild = false;
-            simulateInEditMode = false;
+
+            colliders.Clear();
+            if (chainColliders != null)
+            {
+                for (int i = 0; i < chainColliders.Count; i++)
+                {
+                    if (chainColliders[i] != null && chainColliders[i].bone != null)
+                    {
+                        colliders.Add(chainColliders[i]);
+                    }
+                }
+            }
+
+            _umaData = umaData;
+            _ownedByUma = umaData != null;
+            _umaGeneration = umaData != null ? umaData.EmbeddedPhysicsGeneration : 0;
+
             BuildChain();
 
-            if (BoneCount <= 1)
+            if (_boneCount > 0 && _particleCount <= 1)
             {
                 string rootName = chainRoot != null ? chainRoot.name : "<null>";
-                Debug.LogWarning($"[UMAChainJiggle] Chain root '{rootName}' built only {BoneCount} real bone(s). Choose the first bone in the chain, not the leaf/tip bone, and verify the generated skeleton hierarchy contains child bones under this anchor.", this);
+                Debug.LogWarning($"[UMAChainJiggle] Chain root '{rootName}' has no child bones and End Length is 0, so there is nothing to simulate. Choose the first bone of the chain, or set End Length.", this);
             }
         }
 
         /// <summary>
-        /// Run one simulation step with the given delta time.
-        /// Call from a UMA bone animator's DoUpdate.
+        /// Collects the bones under <see cref="rootBone"/>. Safe to call again at any time;
+        /// the bones are returned to their authored pose first.
         /// </summary>
-        public void DoSimulateStep(float deltaTime)
-        {
-            if (!_built)
-            {
-                BuildChain();
-            }
-
-            if (_particles.Count == 0)
-            {
-                return;
-            }
-
-            SimulateChainWithDelta(deltaTime);
-        }
-
-        public int ParticleCount => _particles.Count;
-
-        public int BoneCount => _realParticleIndices.Count;
-
-        public Transform GetBone(int index)
-        {
-            if (index < 0 || index >= _realParticleIndices.Count)
-            {
-                return null;
-            }
-
-            return _particles[_realParticleIndices[index]].transform;
-        }
-
         public void BuildChain()
         {
-            _particles.Clear();
-            _realParticleIndices.Clear();
-            _maxDepth = 0;
+            RestoreRestPose();
+
+            _buildList.Clear();
+            _boneCount = 0;
 
             Transform chainRoot = rootBone != null ? rootBone : transform;
-            if (chainRoot == null)
+            CollectParticles(chainRoot, -1);
+            _boneCount = _buildList.Count;
+            AddVirtualEnds();
+
+            _particleCount = _buildList.Count;
+            if (_particles.Length < _particleCount)
             {
-                _built = false;
-                return;
+                _particles = new Particle[_particleCount];
             }
 
-            CollectParticles(chainRoot, -1);
-            AddVirtualEndParticles();
-            _built = _particles.Count > 0;
-            ResetSimulation();
+            for (int i = 0; i < _particleCount; i++)
+            {
+                _particles[i] = _buildList[i];
+            }
+
+            _buildList.Clear();
+
+            ComputeChainPositions();
+
+            if (_particleCount > 0 && _gravityReferenceRoot != chainRoot)
+            {
+                // Remember which way is down for the authored pose. The first build of a chain
+                // happens with the skeleton in its bind pose.
+                Vector3 referenceDown = _umaData != null ? -_umaData.transform.up : Vector3.down;
+                _localRestDown = Quaternion.Inverse(chainRoot.rotation) * referenceDown;
+                _gravityReferenceRoot = chainRoot;
+            }
+
+            _built = true;
+            _needsReset = true;
+            _tuningDirty = true;
         }
 
+        /// <summary>
+        /// Drops all motion and snaps the chain to the authored pose on the next step.
+        /// Call after teleporting or re-posing a character.
+        /// </summary>
         public void ResetSimulation()
         {
-            for (int i = 0; i < _particles.Count; i++)
-            {
-                ChainParticle particle = _particles[i];
-                particle.initialized = false;
-                particle.hasPreviousAppliedRotation = false;
-                particle.velocity = Vector3.zero;
-                particle.smoothedDelta = Vector3.zero;
-            }
+            _needsReset = true;
+        }
+
+        /// <summary>
+        /// Call after changing <see cref="settings"/> from code so distribution curves are re-read.
+        /// </summary>
+        public void SettingsChanged()
+        {
+            _tuningDirty = true;
         }
 
         private void CollectParticles(Transform bone, int parentIndex)
@@ -313,500 +488,653 @@ namespace UMA
                 return;
             }
 
-            ChainParticle particle = new ChainParticle
+            Particle particle = new Particle
             {
                 transform = bone,
-                parentIndex = parentIndex,
-                depth = parentIndex >= 0 ? _particles[parentIndex].depth + 1 : 0,
-                restLocalPosition = bone.localPosition,
+                parent = parentIndex,
                 restLocalRotation = bone.localRotation,
-                restLocalScale = bone.localScale,
-                restLength = parentIndex >= 0 ? Vector3.Distance(_particles[parentIndex].transform.position, bone.position) : 0f,
-                isVirtualEnd = false
+                restLocalPosition = bone.localPosition
             };
 
-            int particleIndex = _particles.Count;
-            _particles.Add(particle);
-            _realParticleIndices.Add(particleIndex);
-            _maxDepth = Mathf.Max(_maxDepth, particle.depth);
+            int index = _buildList.Count;
+            _buildList.Add(particle);
 
             if (parentIndex >= 0)
             {
-                _particles[parentIndex].childIndices.Add(particleIndex);
+                Particle parent = _buildList[parentIndex];
+                parent.childCount++;
+                _buildList[parentIndex] = parent;
             }
 
-            foreach (Transform child in bone)
+            for (int i = 0; i < bone.childCount; i++)
             {
-                CollectParticles(child, particleIndex);
+                CollectParticles(bone.GetChild(i), index);
             }
         }
 
-        private void AddVirtualEndParticles()
+        private void AddVirtualEnds()
         {
-            if (endLength <= 0f && endOffset.sqrMagnitude <= Epsilon)
+            UMAChainJiggleSettings s = settings;
+            if (s.endLength <= 0f && s.endOffset.sqrMagnitude <= Epsilon)
             {
                 return;
             }
 
-            int realCount = _particles.Count;
+            int realCount = _buildList.Count;
             for (int i = 0; i < realCount; i++)
             {
-                ChainParticle parent = _particles[i];
-                if (parent.isVirtualEnd || parent.childIndices.Count > 0 || parent.transform == null)
+                Particle leaf = _buildList[i];
+                if (leaf.childCount > 0)
                 {
                     continue;
                 }
 
-                Vector3 localEndOffset = endOffset.sqrMagnitude > Epsilon ? endOffset : GuessEndOffset(parent);
-                if (localEndOffset.sqrMagnitude <= Epsilon)
+                Vector3 localOffset = s.endOffset.sqrMagnitude > Epsilon ? s.endOffset : GuessEndOffset(leaf.transform, s.endLength);
+                if (localOffset.sqrMagnitude <= Epsilon)
                 {
                     continue;
                 }
 
-                Vector3 worldOffset = GetVirtualEndWorldOffsetByRotation(parent, localEndOffset);
-                float worldLen = worldOffset.magnitude;
-                if (worldLen <= Epsilon)
-                {
-                    worldLen = Mathf.Max(endLength, 0.001f);
-                }
+                leaf.childCount = 1;
+                _buildList[i] = leaf;
 
-                ChainParticle endParticle = new ChainParticle
+                _buildList.Add(new Particle
                 {
                     transform = null,
-                    parentIndex = i,
-                    depth = parent.depth + 1,
-                    restLocalPosition = localEndOffset,
-                    restLocalRotation = Quaternion.identity,
-                    restLocalScale = Vector3.one,
-                    restLength = worldLen,
-                    isVirtualEnd = true
-                };
-
-                int endIndex = _particles.Count;
-                _particles.Add(endParticle);
-                parent.childIndices.Add(endIndex);
-                _maxDepth = Mathf.Max(_maxDepth, endParticle.depth);
+                    parent = i,
+                    isVirtualEnd = true,
+                    endLocalOffset = localOffset
+                });
             }
         }
 
-        private Vector3 GuessEndOffset(ChainParticle parent)
+        private static Vector3 GuessEndOffset(Transform leaf, float length)
         {
-            if (parent.transform == null)
+            // Continue in the direction the leaf bone already points: away from its parent.
+            Transform parent = leaf.parent;
+            if (parent != null)
             {
-                return Vector3.zero;
-            }
-
-            if (parent.parentIndex >= 0)
-            {
-                ChainParticle grandParent = _particles[parent.parentIndex];
-                Transform grandParentTransform = grandParent.transform;
-                if (grandParentTransform != null)
+                Vector3 direction = leaf.position - parent.position;
+                if (direction.sqrMagnitude > Epsilon)
                 {
-                    Vector3 direction = parent.transform.position - grandParentTransform.position;
-                    if (direction.sqrMagnitude > Epsilon)
-                    {
-                        return parent.transform.InverseTransformVector(direction.normalized * Mathf.Max(endLength, 0.001f));
-                    }
+                    Vector3 local = leaf.InverseTransformDirection(direction.normalized);
+                    Vector3 scale = leaf.lossyScale;
+                    float worldPerLocal = Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
+                    return local * (worldPerLocal > Epsilon ? length / worldPerLocal : length);
                 }
             }
 
-            return Vector3.forward * Mathf.Max(endLength, 0.001f);
+            // UMA bones point along local Y.
+            return Vector3.up * length;
         }
 
-        private Vector3 GetVirtualEndWorldOffset(ChainParticle parent, Vector3 localEndOffset)
+        private void ComputeChainPositions()
         {
-            return GetVirtualEndWorldOffsetByRotation(parent, localEndOffset);
-        }
-
-        private static Vector3 GetVirtualEndWorldOffsetByRotation(ChainParticle parent, Vector3 localEndOffset)
-        {
-            if (parent == null)
+            // Distance from the root along the bones, 0..1, used by the distribution curves.
+            float longest = 0f;
+            for (int i = 0; i < _particleCount; i++)
             {
-                return localEndOffset;
-            }
-
-            if (parent.initialized)
-            {
-                return parent.targetRotation * localEndOffset;
-            }
-
-            if (parent.transform != null)
-            {
-                return parent.transform.rotation * localEndOffset;
-            }
-
-            if (parent.targetRotation != default(Quaternion))
-            {
-                return parent.targetRotation * localEndOffset;
-            }
-
-            return localEndOffset;
-        }
-
-        private void SimulateChain()
-        {
-            SimulateChainWithDelta(Time.deltaTime);
-        }
-
-        private void SimulateChainWithDelta(float deltaTime)
-        {
-            RestoreRestTransforms();
-            UpdateTargets();
-            InitializeParticlesIfNeeded();
-            SimulateParticles(deltaTime);
-            SatisfyLengthConstraints();
-            EnforcePostConstraintLimits();
-            ApplyParticlesToBones(deltaTime);
-        }
-
-        private void RestoreRestTransforms()
-        {
-            for (int i = 0; i < _realParticleIndices.Count; i++)
-            {
-                ChainParticle particle = _particles[_realParticleIndices[i]];
-                if (particle.transform == null)
+                ref Particle p = ref _particles[i];
+                if (p.parent < 0)
                 {
+                    p.chainPosition = 0f;
                     continue;
                 }
 
-                particle.transform.localPosition = particle.restLocalPosition;
-                particle.transform.localRotation = particle.restLocalRotation;
-                particle.transform.localScale = particle.restLocalScale;
+                ref Particle parent = ref _particles[p.parent];
+                Vector3 parentPosition = parent.transform.position;
+                Vector3 position = p.isVirtualEnd ? parent.transform.TransformPoint(p.endLocalOffset) : p.transform.position;
+                p.chainPosition = parent.chainPosition + Vector3.Distance(parentPosition, position);
+                longest = Mathf.Max(longest, p.chainPosition);
+            }
+
+            for (int i = 0; i < _particleCount; i++)
+            {
+                _particles[i].chainPosition = longest > Epsilon ? _particles[i].chainPosition / longest : 0f;
             }
         }
 
-        private void UpdateTargets()
+        private void RefreshTuning()
         {
-            for (int i = 0; i < _particles.Count; i++)
+            UMAChainJiggleSettings s = settings;
+            for (int i = 0; i < _particleCount; i++)
             {
-                ChainParticle particle = _particles[i];
-                if (!particle.isVirtualEnd)
-                {
-                    particle.targetPosition = particle.transform.position;
-                    particle.targetRotation = particle.transform.rotation;
-                    continue;
-                }
-
-                ChainParticle parent = _particles[particle.parentIndex];
-                particle.targetPosition = parent.targetPosition + GetVirtualEndWorldOffset(parent, particle.restLocalPosition);
-                particle.targetRotation = parent.targetRotation;
+                ref Particle p = ref _particles[i];
+                float t = p.chainPosition;
+                p.damping = Mathf.Clamp01(s.damping * Evaluate(s.dampingDistribution, t));
+                p.spring = Mathf.Clamp01(s.elasticity * Evaluate(s.elasticityDistribution, t)) * ElasticityToSpring;
+                p.stiffness = Mathf.Clamp01(s.stiffness * Evaluate(s.stiffnessDistribution, t));
+                p.inertia = Mathf.Clamp01(s.inertia * Evaluate(s.inertiaDistribution, t));
             }
+
+            _tuningDirty = false;
         }
 
-        private void InitializeParticlesIfNeeded()
+        private static float Evaluate(AnimationCurve curve, float t)
         {
-            for (int i = 0; i < _particles.Count; i++)
-            {
-                ChainParticle particle = _particles[i];
-                if (particle.initialized)
-                {
-                    continue;
-                }
+            return curve != null && curve.length > 0 ? curve.Evaluate(t) : 1f;
+        }
 
-                particle.dynamicPosition = particle.targetPosition;
-                particle.previousTargetPosition = particle.targetPosition;
-                particle.velocity = Vector3.zero;
-                particle.smoothedDelta = Vector3.zero;
-                particle.initialized = true;
-                particle.hasPreviousAppliedRotation = false;
+        /// <summary>
+        /// Runs one frame of simulation and poses the bones. Called from LateUpdate when
+        /// <see cref="autoSimulate"/> is on; call it yourself (after animation) otherwise.
+        /// </summary>
+        public void Simulate(float deltaTime)
+        {
+            if (settings == null)
+            {
+                settings = new UMAChainJiggleSettings();
             }
-        }
 
-        private void SimulateParticles(float deltaTime)
-        {
-            // Clamp delta to avoid explosions; use squared delta scale like SwayBone which is framerate independent for inertia kicks
-            float rawDelta = Mathf.Clamp(deltaTime, 0f, 0.033f);
-            float simulationStep = Mathf.Clamp(rawDelta * 60f, 0f, 2f);
-            float safeMass = Mathf.Max(mass, 0.0001f);
-            float clampedInertia = Mathf.Clamp(inertia, 0f, 5f);
-            float forceMult = Mathf.Max(0f, forceMultiplier);
-            float clampedMaxDistance = Mathf.Max(maxDistance, 0.001f);
-            Vector3 freezeMask = new Vector3(freezeX ? 0f : 1f, freezeY ? 0f : 1f, freezeZ ? 0f : 1f);
-
-            // Your posted preset: damping 0.99 causes near-zero velocity survival and then ProjectOnPlane snaps look like jerks.
-            // Cap effective damping and remap >=0.9 to still leave motion like SwayBone does.
-            float effectiveDamping = Mathf.Clamp(damping, 0f, 0.95f);
-            // If stiffness is tiny (0.022 in preset) compensate to avoid drift dominating inertia
-            float effectiveStiffness = Mathf.Max(stiffness, 0.01f);
-
-            float dampingFactor = Mathf.Pow(Mathf.Clamp01(1f - effectiveDamping), simulationStep);
-            float targetSmooth = Mathf.Clamp01(targetSmoothing);
-            bool useDeltaSmoothing = targetSmooth > 0.001f;
-            float deltaLerp = useDeltaSmoothing ? 1f - Mathf.Pow(targetSmooth, simulationStep) : 1f;
-            // Inverse: 0 smoothing = immediate, 1 = very smoothed – so we invert lerp sense to keep stable
-            // Actually we want smoothedDelta to approach raw delta; lerp factor for smoothing: higher targetSmoothing means slower follow
-            // Use: smoothed = Lerp(smoothed, rawDelta, 1 - smoothingBlend)
-            float smoothingBlend = Mathf.Clamp01(targetSmoothing);
-            float rawFollow = 1f - smoothingBlend; // 0.65 default means 35% smoothing for your preset converted below
-
-            float maxVel = maxVelocity > 0f ? maxVelocity : float.MaxValue;
-
-            for (int i = 0; i < _particles.Count; i++)
+            if (!_built || ChainIsBroken())
             {
-                ChainParticle particle = _particles[i];
-                if (particle.parentIndex < 0)
-                {
-                    particle.dynamicPosition = particle.targetPosition;
-                    particle.previousTargetPosition = particle.targetPosition;
-                    particle.velocity = Vector3.zero;
-                    particle.smoothedDelta = Vector3.zero;
-                    continue;
-                }
-
-                float depthWeight = _maxDepth > 0 ? Mathf.Clamp01((float)particle.depth / _maxDepth) : 1f;
-                float inertiaWeight = Mathf.Lerp(0.35f, 1f, depthWeight);
-                float stiffnessWeight = Mathf.Lerp(0.65f, 0.15f, depthWeight);
-                float particleMaxDistance = ComputeMaxDistance(clampedMaxDistance, depthWeight);
-
-                Vector3 rawTargetDelta = particle.targetPosition - particle.previousTargetPosition;
-
-                // Low-pass target delta to avoid twitch from animation jitter / head bob
-                if (useDeltaSmoothing)
-                {
-                    // Exponential moving average
-                    particle.smoothedDelta = Vector3.Lerp(particle.smoothedDelta, rawTargetDelta, rawFollow);
-                }
-                else
-                {
-                    particle.smoothedDelta = rawTargetDelta;
-                }
-
-                Vector3 deltaForInertia = particle.smoothedDelta;
-
-                // Cap huge deltas (teleport) to avoid explosion
-                if (deltaForInertia.sqrMagnitude > 1f)
-                {
-                    deltaForInertia = deltaForInertia.normalized * 1f;
-                }
-
-                if (deltaForInertia.sqrMagnitude > Epsilon && forceMult > 0f)
-                {
-                    float depthInertiaScale = Mathf.Lerp(0.35f, 1f, depthWeight);
-                    // Don't multiply by simulationStep again – targetDelta already per-frame, and we already have velocity decay.
-                    // This matches SwayBone's approach which keeps sway smooth regardless of framerate.
-                    // old: * simulationStep caused double time scaling -> jerky when deltaTime varies
-                    particle.velocity -= deltaForInertia * clampedInertia * depthInertiaScale * forceMult;
-                }
-
-                Vector3 force = (particle.targetPosition - particle.dynamicPosition) * effectiveStiffness * stiffnessWeight;
-                force += Vector3.down * (gravity / 10f) * inertiaWeight * forceMult;
-                Vector3 acceleration = force / safeMass;
-
-                particle.velocity += acceleration * rawDelta;
-                particle.velocity *= dampingFactor;
-                particle.velocity = Vector3.Scale(particle.velocity, freezeMask);
-
-                // Velocity clamp – main fix for jerking when clamping to maxDistance then projecting velocity
-                if (maxVel < float.MaxValue && particle.velocity.sqrMagnitude > maxVel * maxVel)
-                {
-                    particle.velocity = particle.velocity.normalized * maxVel;
-                }
-
-                particle.dynamicPosition += particle.velocity * rawDelta * 60f * 0.016f; // normalize to ~60fps baseline
-
-                ApplyMotionLimits(particle, freezeMask, particleMaxDistance);
-
-                particle.previousTargetPosition = particle.targetPosition;
+                BuildChain();
             }
-        }
 
-        private float ComputeMaxDistance(float baseDistance, float depthWeight)
-        {
-            return baseDistance * (1f + depthWeight * 0.75f);
-        }
-
-        private void ApplyMotionLimits(ChainParticle particle, Vector3 freezeMask, float particleMaxDistance)
-        {
-            Vector3 offset = particle.dynamicPosition - particle.targetPosition;
-            offset = Vector3.Scale(offset, freezeMask);
-            float sqrMax = particleMaxDistance * particleMaxDistance;
-            if (offset.sqrMagnitude > sqrMax)
+            if (_particleCount <= 1)
             {
-                Vector3 clampedOffset = offset.sqrMagnitude > Epsilon ? offset.normalized * particleMaxDistance : Vector3.zero;
-                particle.dynamicPosition = particle.targetPosition + clampedOffset;
-                // Soften velocity projection: lerp toward plane instead of instant cut to avoid snap
-                if (clampedOffset.sqrMagnitude > Epsilon)
-                {
-                    Vector3 projected = Vector3.ProjectOnPlane(particle.velocity, clampedOffset.normalized);
-                    particle.velocity = Vector3.Lerp(particle.velocity, projected, 0.5f);
-                }
+                return;
+            }
+
+#if UNITY_EDITOR
+            // Sliders can be dragged while playing.
+            _tuningDirty = true;
+#endif
+            if (_tuningDirty)
+            {
+                RefreshTuning();
+            }
+
+            PrepareRestPose();
+            ReadAnimatedPose();
+
+            if (_needsReset || !IsFinite(_particles[_particleCount - 1].position))
+            {
+                SnapToAnimatedPose();
             }
             else
             {
-                particle.dynamicPosition = particle.targetPosition + offset;
+                Step(deltaTime);
             }
+
+            ApplyToBones();
         }
 
-        private void EnforcePostConstraintLimits()
+        private bool ChainIsBroken()
         {
-            float clampedMaxDistance = Mathf.Max(maxDistance, 0.001f);
-            Vector3 freezeMask = new Vector3(freezeX ? 0f : 1f, freezeY ? 0f : 1f, freezeZ ? 0f : 1f);
-
-            for (int i = 1; i < _particles.Count; i++)
+            for (int i = 0; i < _particleCount; i++)
             {
-                ChainParticle particle = _particles[i];
-                float depthWeight = _maxDepth > 0 ? Mathf.Clamp01((float)particle.depth / _maxDepth) : 1f;
-                float particleMaxDistance = ComputeMaxDistance(clampedMaxDistance, depthWeight);
-                ApplyMotionLimits(particle, freezeMask, particleMaxDistance);
-            }
-        }
-
-        private void SatisfyLengthConstraints()
-        {
-            int iterations = Mathf.Clamp(constraintIterations, 1, 8);
-            for (int iteration = 0; iteration < iterations; iteration++)
-            {
-                for (int i = 1; i < _particles.Count; i++)
+                if (!_particles[i].isVirtualEnd && _particles[i].transform == null)
                 {
-                    ChainParticle particle = _particles[i];
-                    if (particle.restLength <= Epsilon)
-                    {
-                        continue;
-                    }
-
-                    ChainParticle parent = _particles[particle.parentIndex];
-                    Vector3 direction = particle.dynamicPosition - parent.dynamicPosition;
-                    float distance = direction.magnitude;
-                    if (distance <= Epsilon)
-                    {
-                        continue;
-                    }
-
-                    Vector3 desired = parent.dynamicPosition + direction * (particle.restLength / distance);
-                    particle.dynamicPosition = desired;
+                    return true;
                 }
             }
+
+            return false;
         }
 
-        private void ApplyParticlesToBones(float deltaTime)
+        private static bool IsFinite(Vector3 v)
         {
-            float clampedRotationWeight = Mathf.Clamp01(rotationWeight);
-            float clampedPositionWeight = Mathf.Clamp01(positionWeight);
-            float rotSmooth = Mathf.Clamp01(rotationSmoothing);
-            bool useRotSmooth = rotSmooth > 0.001f && Application.isPlaying;
-            float rotSmoothingFactor = useRotSmooth ? 1f - Mathf.Pow(rotSmooth, Mathf.Clamp(deltaTime * 10f, 0f, 1f)) : 1f;
+            return !(float.IsNaN(v.x) || float.IsNaN(v.y) || float.IsNaN(v.z) || float.IsInfinity(v.x) || float.IsInfinity(v.y) || float.IsInfinity(v.z));
+        }
 
-            for (int i = 0; i < _realParticleIndices.Count; i++)
+        private static bool Same(Quaternion a, Quaternion b)
+        {
+            const float tolerance = 1e-6f;
+            return Mathf.Abs(a.x - b.x) <= tolerance && Mathf.Abs(a.y - b.y) <= tolerance && Mathf.Abs(a.z - b.z) <= tolerance && Mathf.Abs(a.w - b.w) <= tolerance;
+        }
+
+        private static bool Same(Vector3 a, Vector3 b)
+        {
+            const float tolerance = 1e-7f;
+            return Mathf.Abs(a.x - b.x) <= tolerance && Mathf.Abs(a.y - b.y) <= tolerance && Mathf.Abs(a.z - b.z) <= tolerance;
+        }
+
+        /// <summary>
+        /// Undo last frame's output, unless something else has written the bone since (the
+        /// Animator, a UMA rebuild, DNA). Whatever pose is left is this frame's authored pose.
+        /// </summary>
+        private void PrepareRestPose()
+        {
+            for (int i = 0; i < _particleCount; i++)
             {
-                int particleIndex = _realParticleIndices[i];
-                ChainParticle particle = _particles[particleIndex];
-                Transform bone = particle.transform;
+                ref Particle p = ref _particles[i];
+                Transform bone = p.transform;
                 if (bone == null)
                 {
                     continue;
                 }
 
-                if (clampedPositionWeight > 0f && particle.parentIndex >= 0)
+                if (p.rotationApplied)
                 {
-                    ChainParticle parent = _particles[particle.parentIndex];
-                    Transform parentTransform = parent.transform != null ? parent.transform : bone.parent;
-                    Vector3 targetOffset = particle.dynamicPosition - particle.targetPosition;
-                    if (parentTransform != null)
+                    if (Same(bone.localRotation, p.appliedLocalRotation))
                     {
-                        bone.localPosition = particle.restLocalPosition + parentTransform.InverseTransformVector(targetOffset * clampedPositionWeight);
+                        bone.localRotation = p.restLocalRotation;
                     }
+
+                    p.rotationApplied = false;
                 }
 
-                int childIndex = GetPrimaryChildIndex(particle);
-                if (childIndex < 0 || clampedRotationWeight <= 0f)
+                if (p.positionApplied)
                 {
-                    bone.rotation = particle.targetRotation;
-                    // store for smoothing even when no child
-                    if (useRotSmooth)
+                    if (Same(bone.localPosition, p.appliedLocalPosition))
                     {
-                        particle.previousAppliedRotation = bone.rotation;
-                        particle.hasPreviousAppliedRotation = true;
+                        bone.localPosition = p.restLocalPosition;
                     }
-                    continue;
+
+                    p.positionApplied = false;
                 }
 
-                ChainParticle child = _particles[childIndex];
-                Vector3 restDirection = child.targetPosition - particle.targetPosition;
-                Vector3 dynamicDirection = child.dynamicPosition - particle.dynamicPosition;
-                if (restDirection.sqrMagnitude <= Epsilon || dynamicDirection.sqrMagnitude <= Epsilon)
-                {
-                    bone.rotation = particle.targetRotation;
-                    if (useRotSmooth)
-                    {
-                        particle.previousAppliedRotation = bone.rotation;
-                        particle.hasPreviousAppliedRotation = true;
-                    }
-                    continue;
-                }
-
-                Quaternion rotationDelta = Quaternion.FromToRotation(restDirection.normalized, dynamicDirection.normalized);
-                Quaternion desiredRotation = Quaternion.Slerp(Quaternion.identity, rotationDelta, clampedRotationWeight) * particle.targetRotation;
-
-                if (useRotSmooth && particle.hasPreviousAppliedRotation)
-                {
-                    // Angular smoothing like SwayBone visually – prevents micro pops
-                    bone.rotation = Quaternion.Slerp(particle.previousAppliedRotation, desiredRotation, rotSmoothingFactor);
-                }
-                else
-                {
-                    bone.rotation = desiredRotation;
-                }
-
-                if (useRotSmooth)
-                {
-                    particle.previousAppliedRotation = bone.rotation;
-                    particle.hasPreviousAppliedRotation = true;
-                }
+                p.restLocalRotation = bone.localRotation;
+                p.restLocalPosition = bone.localPosition;
             }
         }
 
-        private int GetPrimaryChildIndex(ChainParticle particle)
+        private void RestoreRestPose()
         {
-            if (particle.childIndices.Count == 0)
+            for (int i = 0; i < _particleCount; i++)
             {
-                return -1;
-            }
-
-            for (int i = 0; i < particle.childIndices.Count; i++)
-            {
-                int childIndex = particle.childIndices[i];
-                if (!_particles[childIndex].isVirtualEnd)
+                ref Particle p = ref _particles[i];
+                Transform bone = p.transform;
+                if (bone == null)
                 {
-                    return childIndex;
+                    continue;
+                }
+
+                if (p.rotationApplied && Same(bone.localRotation, p.appliedLocalRotation))
+                {
+                    bone.localRotation = p.restLocalRotation;
+                }
+
+                if (p.positionApplied && Same(bone.localPosition, p.appliedLocalPosition))
+                {
+                    bone.localPosition = p.restLocalPosition;
+                }
+
+                p.rotationApplied = false;
+                p.positionApplied = false;
+            }
+        }
+
+        private void ReadAnimatedPose()
+        {
+            for (int i = 0; i < _particleCount; i++)
+            {
+                ref Particle p = ref _particles[i];
+                if (p.isVirtualEnd)
+                {
+                    ref Particle leaf = ref _particles[p.parent];
+                    p.animPosition = leaf.transform.TransformPoint(p.endLocalOffset);
+                    p.animRotation = leaf.animRotation;
+                }
+                else
+                {
+                    p.transform.GetPositionAndRotation(out p.animPosition, out p.animRotation);
+                }
+
+                if (p.parent >= 0)
+                {
+                    p.animOffset = p.animPosition - _particles[p.parent].animPosition;
+                    p.restLength = p.animOffset.magnitude;
                 }
             }
 
-            return particle.childIndices[0];
+            int shapeCount = colliders != null ? colliders.Count : 0;
+            if (_colliderShapes.Length < shapeCount)
+            {
+                _colliderShapes = new ColliderShape[shapeCount];
+            }
+
+            _colliderCount = 0;
+            for (int i = 0; i < shapeCount; i++)
+            {
+                UMAChainJiggleCollider collider = colliders[i];
+                if (collider == null || collider.bone == null || collider.radius <= 0f)
+                {
+                    continue;
+                }
+
+                Transform bone = collider.bone;
+                Vector3 lossy = bone.lossyScale;
+                float scale = Mathf.Max(Mathf.Abs(lossy.x), Mathf.Abs(lossy.y), Mathf.Abs(lossy.z));
+                float half = collider.height * 0.5f - collider.radius;
+
+                ColliderShape shape = new ColliderShape { radius = collider.radius * scale };
+                if (half > 0f)
+                {
+                    Vector3 axis = collider.direction == UMAChainJiggleCollider.Direction.X ? Vector3.right
+                        : collider.direction == UMAChainJiggleCollider.Direction.Y ? Vector3.up : Vector3.forward;
+                    shape.a = bone.TransformPoint(collider.center - axis * half);
+                    shape.b = bone.TransformPoint(collider.center + axis * half);
+                    shape.isCapsule = true;
+                }
+                else
+                {
+                    shape.a = bone.TransformPoint(collider.center);
+                    shape.b = shape.a;
+                }
+
+                _colliderShapes[_colliderCount++] = shape;
+            }
+        }
+
+        private void SnapToAnimatedPose()
+        {
+            for (int i = 0; i < _particleCount; i++)
+            {
+                ref Particle p = ref _particles[i];
+                p.position = p.animPosition;
+                p.renderPosition = p.animPosition;
+                p.velocity = Vector3.zero;
+                p.previousAnimOffset = p.animOffset;
+            }
+
+            _previousRootPosition = _particles[0].animPosition;
+            _simulatedRootPosition = _previousRootPosition;
+            _accumulator = 0f;
+            _needsReset = false;
+        }
+
+        private float RootScale()
+        {
+            Vector3 lossy = _particles[0].transform.lossyScale;
+            return Mathf.Max(Mathf.Abs(lossy.x), Mathf.Abs(lossy.y), Mathf.Abs(lossy.z));
+        }
+
+        /// <summary>
+        /// Advances the chain by <paramref name="deltaTime"/>. The simulation always runs in
+        /// steps of 1 / updateRate so it behaves the same at any frame rate: slow frames run
+        /// several steps, fast frames run none and show the last state carried forward.
+        /// </summary>
+        private void Step(float deltaTime)
+        {
+            UMAChainJiggleSettings s = settings;
+            Vector3 rootNow = _particles[0].animPosition;
+            Vector3 rootBefore = _previousRootPosition;
+            float scale = RootScale();
+
+            int steps = 0;
+            bool spreadEvenly = false;
+            float accumulatedBefore = _accumulator;
+            float h = 1f / Mathf.Clamp(s.updateRate, 60, 240);
+
+            Vector3 frameMove = rootNow - rootBefore;
+            bool teleported = s.teleportDistance > 0f && frameMove.sqrMagnitude > s.teleportDistance * s.teleportDistance * scale * scale;
+            if (teleported)
+            {
+                // Carry the whole chain along; it keeps its shape and its motion.
+                for (int i = 1; i < _particleCount; i++)
+                {
+                    _particles[i].position += frameMove;
+                }
+
+                _simulatedRootPosition += frameMove;
+                rootBefore = rootNow;
+            }
+            else if (deltaTime > 1e-6f)
+            {
+                int maxSubsteps = Mathf.Clamp(s.maxSubsteps, 1, 8);
+                _accumulator += deltaTime;
+                steps = Mathf.FloorToInt(_accumulator / h + 1e-3f);
+                if (steps > maxSubsteps)
+                {
+                    // Too slow to keep up: run what is allowed across the whole frame and drop the rest.
+                    steps = maxSubsteps;
+                    spreadEvenly = true;
+                    _accumulator = 0f;
+                }
+                else
+                {
+                    _accumulator = Mathf.Max(0f, _accumulator - steps * h);
+                }
+            }
+
+            if (steps > 0)
+            {
+                Vector3 acceleration = Vector3.down * s.gravity;
+                if (s.restPoseIncludesGravity)
+                {
+                    // The authored pose already balances gravity along the direction that was down
+                    // when it was modelled, so only the difference acts on the chain.
+                    Vector3 restDown = _particles[0].animRotation * _localRestDown;
+                    acceleration = (Vector3.down - restDown) * s.gravity;
+                }
+
+                acceleration = (acceleration + s.force) * scale;
+
+                float particleRadius = Mathf.Max(0f, s.radius) * scale;
+                int freezeAxis = (int)s.freezeAxis - 1;
+                float stepsAtReference = h * ReferenceRate;
+
+                for (int i = 1; i < _particleCount; i++)
+                {
+                    _particles[i].dampingFactor = Mathf.Pow(1f - _particles[i].damping, stepsAtReference);
+                }
+
+                for (int step = 1; step <= steps; step++)
+                {
+                    // Where this step falls inside the frame, so the root and the authored
+                    // directions are fed in smoothly instead of in one jump per frame.
+                    float t = spreadEvenly ? step / (float)steps : Mathf.Clamp01((step * h - accumulatedBefore) / deltaTime);
+                    Vector3 rootPosition = Vector3.LerpUnclamped(rootBefore, rootNow, t);
+                    Vector3 rootMove = rootPosition - _simulatedRootPosition;
+                    _simulatedRootPosition = rootPosition;
+                    _particles[0].position = rootPosition;
+
+                    for (int i = 1; i < _particleCount; i++)
+                    {
+                        ref Particle p = ref _particles[i];
+                        ref Particle parent = ref _particles[p.parent];
+
+                        if (p.restLength <= 1e-6f)
+                        {
+                            // A bone with no length sits on its parent.
+                            p.position = parent.position;
+                            p.velocity = Vector3.zero;
+                            continue;
+                        }
+
+                        Vector3 offset = p.animOffset;
+                        if (t < 1f)
+                        {
+                            offset = Vector3.Lerp(p.previousAnimOffset, p.animOffset, t);
+                            float offsetLength = offset.magnitude;
+                            offset = offsetLength > 1e-6f ? offset * (p.restLength / offsetLength) : p.animOffset;
+                        }
+
+                        Vector3 restPosition = parent.position + offset;
+                        Vector3 start = p.position + rootMove * p.inertia;
+                        Vector3 position = start;
+
+                        Vector3 velocity = p.velocity * p.dampingFactor;
+                        velocity += (acceleration + (restPosition - position) * p.spring) * h;
+                        position += velocity * h;
+
+                        if (p.stiffness > 0f)
+                        {
+                            Vector3 toRest = restPosition - position;
+                            float distance = toRest.magnitude;
+                            float allowed = p.restLength * (1f - p.stiffness) * 2f;
+                            if (distance > allowed)
+                            {
+                                position += toRest * ((distance - allowed) / distance);
+                            }
+                        }
+
+                        if (freezeAxis >= 0)
+                        {
+                            Vector3 normal = parent.animRotation * (freezeAxis == 0 ? Vector3.right : freezeAxis == 1 ? Vector3.up : Vector3.forward);
+                            position -= normal * Vector3.Dot(position - restPosition, normal);
+                        }
+
+                        // Push out of colliders, then put the bone back to its length. Fixing the
+                        // length can push a joint back into a collider, so a joint that touched
+                        // one gets a few more passes. Length is fixed last: bones never stretch.
+                        for (int pass = 0; pass < 4; pass++)
+                        {
+                            bool touched = false;
+                            for (int c = 0; c < _colliderCount; c++)
+                            {
+                                touched |= Collide(ref position, particleRadius, ref _colliderShapes[c]);
+                            }
+
+                            Vector3 fromParent = position - parent.position;
+                            float length = fromParent.magnitude;
+                            position = length > 1e-6f ? parent.position + fromParent * (p.restLength / length) : restPosition;
+                            if (!touched)
+                            {
+                                break;
+                            }
+                        }
+
+                        p.velocity = (position - start) / h;
+                        p.position = position;
+                    }
+                }
+            }
+
+            // What is shown: the last simulated state carried forward to now, hung from where the
+            // root really is this frame, with exact bone lengths.
+            float ahead = _accumulator;
+            Vector3 carried = rootNow - _simulatedRootPosition;
+            _particles[0].renderPosition = rootNow;
+            for (int i = 1; i < _particleCount; i++)
+            {
+                ref Particle p = ref _particles[i];
+                Vector3 parentPosition = _particles[p.parent].renderPosition;
+                if (p.restLength <= 1e-6f)
+                {
+                    p.renderPosition = parentPosition;
+                    continue;
+                }
+
+                Vector3 fromParent = p.position + p.velocity * ahead + carried * p.inertia - parentPosition;
+                float length = fromParent.magnitude;
+                p.renderPosition = length > 1e-6f ? parentPosition + fromParent * (p.restLength / length) : parentPosition + p.animOffset;
+            }
+
+            for (int i = 1; i < _particleCount; i++)
+            {
+                _particles[i].previousAnimOffset = _particles[i].animOffset;
+            }
+
+            _previousRootPosition = rootNow;
+        }
+
+        private static bool Collide(ref Vector3 position, float particleRadius, ref ColliderShape shape)
+        {
+            Vector3 closest = shape.a;
+            if (shape.isCapsule)
+            {
+                Vector3 axis = shape.b - shape.a;
+                float axisSqr = axis.sqrMagnitude;
+                float along = axisSqr > Epsilon ? Mathf.Clamp01(Vector3.Dot(position - shape.a, axis) / axisSqr) : 0f;
+                closest = shape.a + axis * along;
+            }
+
+            Vector3 away = position - closest;
+            float reach = shape.radius + particleRadius;
+            float sqrDistance = away.sqrMagnitude;
+            if (sqrDistance < reach * reach && sqrDistance > Epsilon)
+            {
+                position = closest + away * (reach / Mathf.Sqrt(sqrDistance));
+                return true;
+            }
+
+            return false;
+        }
+
+        private void ApplyToBones()
+        {
+            float weight = Mathf.Clamp01(settings.blendWeight);
+            if (weight <= 0f)
+            {
+                return;
+            }
+
+            for (int i = 1; i < _particleCount; i++)
+            {
+                ref Particle p = ref _particles[i];
+                ref Particle parent = ref _particles[p.parent];
+                Transform parentBone = parent.transform;
+
+                if (parent.childCount == 1)
+                {
+                    // Aim the parent bone at this joint. Bones with several children keep
+                    // their orientation, as there is no single direction to aim at.
+                    //
+                    // A bone with no length sits exactly on its own parent, and skin is usually
+                    // weighted to both (UMA's LeftOuterBreast and LeftInnerBreast). Turning only
+                    // the inner one would move half the skin, so the turn goes to the bone above.
+                    int aimIndex = p.parent;
+                    while (_particles[aimIndex].parent >= 0
+                        && _particles[aimIndex].restLength <= 1e-6f
+                        && _particles[_particles[aimIndex].parent].childCount == 1)
+                    {
+                        aimIndex = _particles[aimIndex].parent;
+                    }
+
+                    ref Particle aim = ref _particles[aimIndex];
+                    Transform aimBone = aim.transform;
+                    Vector3 joint = p.isVirtualEnd ? parentBone.TransformPoint(p.endLocalOffset) : p.transform.position;
+                    Vector3 current = joint - aimBone.position;
+                    Vector3 wanted = p.renderPosition - aim.renderPosition;
+                    if (current.sqrMagnitude > Epsilon && wanted.sqrMagnitude > Epsilon)
+                    {
+                        Quaternion turn = Quaternion.FromToRotation(current, wanted);
+                        if (weight < 1f)
+                        {
+                            turn = Quaternion.Slerp(Quaternion.identity, turn, weight);
+                        }
+
+                        aimBone.rotation = turn * aimBone.rotation;
+                        aim.appliedLocalRotation = aimBone.localRotation;
+                        aim.rotationApplied = true;
+                    }
+                }
+                else if (!p.isVirtualEnd)
+                {
+                    Transform bone = p.transform;
+                    bone.position = weight < 1f ? Vector3.Lerp(bone.position, p.renderPosition, weight) : p.renderPosition;
+                    p.appliedLocalPosition = bone.localPosition;
+                    p.positionApplied = true;
+                }
+            }
         }
 
 #if UNITY_EDITOR
         private void OnDrawGizmosSelected()
         {
-            if (_particles == null || _particles.Count == 0)
+            if (!_built || _particleCount == 0 || _needsReset)
             {
                 return;
             }
 
-            Gizmos.color = Color.cyan;
-            for (int i = 1; i < _particles.Count; i++)
+            float radius = Mathf.Max(settings.radius * RootScale(), 0.004f);
+            for (int i = 0; i < _particleCount; i++)
             {
-                ChainParticle p = _particles[i];
-                ChainParticle parent = _particles[p.parentIndex];
-                Gizmos.DrawLine(parent.dynamicPosition, p.dynamicPosition);
+                ref Particle p = ref _particles[i];
+                if (p.parent >= 0)
+                {
+                    Gizmos.color = Color.cyan;
+                    Gizmos.DrawLine(_particles[p.parent].renderPosition, p.renderPosition);
+                    Gizmos.color = new Color(1f, 1f, 1f, 0.25f);
+                    Gizmos.DrawLine(_particles[p.parent].animPosition, p.animPosition);
+                }
+
+                Gizmos.color = p.parent < 0 ? Color.green : p.isVirtualEnd ? new Color(1f, 0.5f, 0f) : Color.yellow;
+                Gizmos.DrawWireSphere(p.renderPosition, radius);
             }
 
-            for (int i = 0; i < _particles.Count; i++)
+            Gizmos.color = new Color(1f, 0.2f, 0.6f);
+            for (int i = 0; i < _colliderCount; i++)
             {
-                ChainParticle p = _particles[i];
-                if (p.isVirtualEnd)
+                Gizmos.DrawWireSphere(_colliderShapes[i].a, _colliderShapes[i].radius);
+                if (_colliderShapes[i].isCapsule)
                 {
-                    Gizmos.color = new Color(1f, 0.5f, 0f, 0.6f);
+                    Gizmos.DrawWireSphere(_colliderShapes[i].b, _colliderShapes[i].radius);
+                    Gizmos.DrawLine(_colliderShapes[i].a, _colliderShapes[i].b);
                 }
-                else if (p.parentIndex < 0)
-                {
-                    Gizmos.color = Color.green;
-                }
-                else
-                {
-                    Gizmos.color = Color.yellow;
-                }
-                Gizmos.DrawWireSphere(p.dynamicPosition, 0.012f);
-                Gizmos.DrawWireSphere(p.targetPosition, 0.008f);
             }
         }
 #endif

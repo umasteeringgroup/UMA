@@ -8,6 +8,25 @@ The `Assets > UMA` context menu exposes commands based on the selected asset typ
 
 Adds checked indexed race names to every selected `UMAWardrobeRecipe`. Existing compatible races are preserved. See [Race Utilities](RaceUtilities.md).
 
+### Add a slot to selected recipes
+
+Select one or more wardrobe recipes or text recipes and choose `Assets > UMA > Add a slot to selected recipes`. The dialog adds one slot to every selected recipe, with the same settings the recipe editor has for a slot. Wardrobe collections and saved characters are left out of the selection, because they hold no slots of their own.
+
+1. **Slot**: the `SlotDataAsset` to add. Its tags and races are filled in below as a start, the way the recipe editor does when a slot is added.
+2. **Matching criteria**:
+   - **Tags for this slot** (shown as **Match tags** for a wildcard slot, whose overlays go to every slot or overlay with one of these tags). Type a new tag, or pick one of the project's tags.
+   - **Only add for these races**: the slot is used only when the character is one of these races. Leave the list empty for every race.
+   - **This is a swap slot**: the slot is added only when the character already has a slot with the given tag, which it replaces.
+3. **Overlays (optional)**: the overlays the slot wears, in order. Each takes **Its own color** (set with the swatch) or follows one of the shared colors listed below.
+4. **Shared colors (optional)**: a name and a starting color for each. A recipe that already has a shared color of that name keeps its own, and the overlays follow that one. **Quick add** offers Hair, Skin and Eyes.
+5. Press **Add to N recipes**.
+
+A recipe that already has the slot is left alone and listed in the result, so the command can be run again safely. Recipes in the older stored formats (before version 3) are refused with a note; open such a recipe in the recipe editor and save it once first. The dialog warns when the slot or an overlay is not in the Global Library (a recipe finds its slots and overlays there by name) and when the overlays are made for different UMAMaterials.
+
+The addition is one undo step, and only the recipes that changed are saved. Everything a recipe already holds is kept as it is, including slots and overlays the Global Library cannot find at the moment: the slot is added to the recipe's stored data directly, not by loading and saving the recipe, which would drop them.
+
+From code: `UMARecipeSlotAdder.AddToRecipes(recipes, addition)` with a `UMARecipeSlotAddition`.
+
 ### Enable Thumbnail From Texture
 
 Sets `thumbnailFromTexture` on every selected wardrobe recipe. It does not generate the thumbnail immediately; runtime or editor consumers use the flag when resolving recipe imagery.
@@ -111,8 +130,7 @@ Converts selected legacy expression-set assets into the newer expression-group f
 ## Texture Commands
 
 - `Open in Texture Utilities`: loads selected textures into [Texture Utilities](TextureUtilities.md).
-- `Texture Utilities > Resize Selected`: lowers importer Maximum Size, including enabled platform overrides, then reimports. Original image files and smaller limits are preserved. See [Texture Utilities](TextureUtilities.md).
-- `Texture Utilities > Convert selected textures to PNG`: see [Asset Consolidation and Repair](AssetConsolidationAndRepair.md).
+- `Texture Tools`: opens the selected textures in [Texture Tools](TextureTools.md), which lists how overlays use each texture (by UMA Material keyword) and batch-changes import settings, checks them against the UMA Material, lowers Max Size and converts to PNG.
 
 ## Slot and Pose Commands
 

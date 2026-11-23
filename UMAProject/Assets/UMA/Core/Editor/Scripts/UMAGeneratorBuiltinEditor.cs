@@ -522,8 +522,10 @@ namespace UMA.Editors
 					"Asynchronous Texture Conversion");
 			}
 			using (inspectorView.Section("Memory management",
-				"Automatic Scaling increases the atlas scale factor when reported GPU or system memory is below the configured cutoffs. Garbage Collection Rate schedules cleanup after a number of generated avatars; zero disables periodic cleanup. 32-bit buffers support meshes above the 16-bit index limit at a higher memory cost."))
+				"Automatic Scaling increases the atlas scale factor when reported GPU or system memory is below the configured cutoffs. Garbage Collection Rate schedules cleanup after a number of generated avatars; zero disables periodic cleanup. 32-bit buffers support meshes above the 16-bit index limit at a higher memory cost. Force GPU Texture Compression (experimental, off by default) compresses generated Atlas and No Atlas textures on the GPU to a quarter of their memory; devices without compute shaders, such as WebGL, ignore it."))
 			{
+				inspectorView.Field(serializedObject, "forceGPUTextureCompression",
+					UMAGeneratorBaseEditor.ForceGPUTextureCompressionLabel);
 				DrawIfPresent(AutomaticScaling, "Automatic Scaling");
 				if (AutomaticScaling != null && AutomaticScaling.boolValue)
 				{

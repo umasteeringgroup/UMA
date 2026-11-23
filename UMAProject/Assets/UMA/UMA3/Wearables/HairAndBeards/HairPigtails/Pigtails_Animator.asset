@@ -13,25 +13,68 @@ MonoBehaviour:
   m_Name: Pigtails_Animator
   m_EditorClassIdentifier: UMA_Core::UMA.UMAChainJiggleAnimator
   Chains:
-  - AnchorBoneName: Pigtail_r.003
+  - AnchorBoneName: PigtailL01
     ExcludedBoneNames: []
-  - AnchorBoneName: Pigtail_l.003
+  - AnchorBoneName: PigtailR01
     ExcludedBoneNames: []
-  endLength: 0.15
-  endOffset: {x: 0, y: 0, z: 0}
-  stiffness: 0.088
-  mass: 0.8
-  damping: 0.246
-  gravity: 9.66
-  inertia: 0.73
-  forceMultiplier: 15
-  maxDistance: 0.35
-  constraintIterations: 3
-  targetSmoothing: 0.35
-  rotationSmoothing: 0.5
-  maxVelocity: 4.01
-  rotationWeight: 1
-  positionWeight: 0
-  freezeX: 0
-  freezeY: 0
-  freezeZ: 0
+  Colliders:
+  - BoneName: Head
+    Center: {x: 0, y: 0.09, z: 0.01}
+    Radius: 0.1
+    Height: 0
+    Direction: 1
+  - BoneName: Neck
+    Center: {x: 0, y: 0.03, z: 0}
+    Radius: 0.06
+    Height: 0.2
+    Direction: 1
+  - BoneName: LeftShoulder
+    Center: {x: 0, y: 0.07, z: 0}
+    Radius: 0.055
+    Height: 0.25
+    Direction: 1
+  - BoneName: RightShoulder
+    Center: {x: 0, y: 0.07, z: 0}
+    Radius: 0.055
+    Height: 0.25
+    Direction: 1
+  settings:
+    damping: 0.2
+    elasticity: 0.07
+    stiffness: 0.1
+    inertia: 0.5
+    dampingDistribution:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    elasticityDistribution:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    stiffnessDistribution:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    inertiaDistribution:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    gravity: 9.81
+    restPoseIncludesGravity: 1
+    force: {x: 0, y: 0, z: 0}
+    freezeAxis: 0
+    radius: 0.025
+    endLength: 0
+    endOffset: {x: 0, y: 0, z: 0}
+    blendWeight: 1
+    updateRate: 60
+    maxSubsteps: 4
+    teleportDistance: 1

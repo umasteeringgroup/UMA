@@ -43,6 +43,7 @@ namespace UMA.TexturePaint
             Reconstruction = reconstruction ?? throw new ArgumentNullException(nameof(reconstruction));
             Textures = new TextureStore();
             Textures.Initialize(Reconstruction, resolution, layerComposite, channelPack, fillShader);
+            TexturePaintOpenProgress.Report("Checking materials", 0.82f);
 #if UNITY_EDITOR
             System.Collections.Generic.List<string> materialFailures =
                 new System.Collections.Generic.List<string>();
@@ -65,6 +66,7 @@ namespace UMA.TexturePaint
             LogicalLayers = new TexturePaintLogicalLayerController(Reconstruction.logicalTargets);
             if (addDefaultWhite) AddDefaultWhiteLayer();
             Painting = new PaintingEngine(stroke, blur, normal, ribbonShader);
+            TexturePaintOpenProgress.Report("Loading plugins", 0.84f);
             Plugins = new PluginHost();
             Plugins.LogicalLayers = LogicalLayers;
             Plugins.Discover();

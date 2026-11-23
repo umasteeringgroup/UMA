@@ -14,7 +14,7 @@ namespace UMA.Editors.Tests
     public sealed class UMARigEffectorBardTests
     {
         private const string RacePath = "Assets/UMA/UMA3/Races/HumanMale30.asset";
-        private const string PantsRecipePath = "Assets/Content/UMA RPG Starter 1/Wardrobe/Bard/BardPants.asset";
+        private const string PantsRecipePath = UMA2ContentTestAssets.RpgStarter + "/Wardrobe/Bard/BardPants.asset";
 
         private readonly List<Object> temp = new List<Object>();
 
@@ -49,6 +49,7 @@ namespace UMA.Editors.Tests
 
         private static SlotDataAsset FindPants(UMARigRestPose legacy, UMARigRestPose target)
         {
+            UMA2ContentTestAssets.RequireAsset(PantsRecipePath);
             var recipe = AssetDatabase.LoadAssetAtPath<UMATextRecipe>(PantsRecipePath);
             Assert.IsNotNull(recipe, PantsRecipePath);
             foreach (SlotData slot in recipe.GetCachedRecipe(true).slotDataList)

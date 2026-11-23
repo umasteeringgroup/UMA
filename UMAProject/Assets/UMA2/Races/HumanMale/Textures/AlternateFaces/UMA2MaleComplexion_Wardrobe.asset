@@ -18,6 +18,7 @@ MonoBehaviour:
   DisplayValue: UMA2MaleComplexion
   compatibleRaces:
   - HumanMale
+  - Human Male 3.0
   wardrobeRecipeThumbs: []
   thumbnailFromTexture: 0
   thumbnailRect:
@@ -42,6 +43,7 @@ MonoBehaviour:
   forceKeep: 0
   labelLocalFiles: 0
   noAutoAdd: 0
+  editorGraphData: 
   IncompatibleRecipes: []
   UserField: 
   replaces: 

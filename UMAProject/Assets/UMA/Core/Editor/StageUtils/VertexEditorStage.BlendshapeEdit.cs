@@ -416,8 +416,15 @@ namespace UMA
                 if (adjusted.sqrMagnitude > 1e-12f)
                 {
                     meshData.normals[i] = adjusted.normalized;
+                    // Keep the tangent perpendicular to the changed normal, so normal maps still shade right.
+                    if (meshData.tangents != null && i < meshData.tangents.Length)
+                    {
+                        meshData.tangents[i] = OrthogonalTangent(meshData.tangents[i], meshData.normals[i]);
+                    }
                 }
             }
+            // UVs changed with UV Sculpt or Beautify, and the tangents turned with them.
+            ApplySculptedUVs(activeSculptState, meshData);
             error = null;
             return true;
         }
@@ -440,6 +447,7 @@ namespace UMA
             target.meshData = meshData;
             EditorUtility.SetDirty(target);
             AssetDatabase.SaveAssetIfDirty(target);
+            ReleaseSlotFromLibrary(target);
             // Converted copies of a legacy slot were made from the mesh as it was.
             UMALegacySlotConverter.ClearCache();
         }
@@ -456,6 +464,8 @@ namespace UMA
                 return null;
             }
             WriteSculptedMeshData(target, meshData);
+            // What was written is the new starting point, so a later save does not apply it again.
+            RebaseSculptState(activeSculptState);
             message = "Saved the sculpt into '" + target.name + "'.";
             return target;
         }
@@ -582,6 +592,7 @@ namespace UMA
             editBlendshapeChoice = blendshapeName;
             if (BakedMesh != null && VertexObject != null)
             {
+                ShowSculptForBlendshapeEdit();
                 BeginBlendshapeEdit(blendshapeName, out _, unsaved);
             }
             else
@@ -601,6 +612,7 @@ namespace UMA
             IDictionary<SlotDataAsset, UMABlendShape> unsaved = pendingUnsavedShapes;
             pendingBlendshapeEdit = null;
             pendingUnsavedShapes = null;
+            ShowSculptForBlendshapeEdit();
             BeginBlendshapeEdit(name, out _, unsaved);
         }
 
@@ -611,14 +623,29 @@ namespace UMA
         /// </summary>
         public static VertexEditorStage ShowStageForSlots(RaceData race, IList<SlotDataAsset> slots, out string message)
         {
+            return ShowStageOnTemporaryCharacter(race, slots, true, out message);
+        }
+
+        /// <summary>
+        /// Builds the temporary character of a race, puts it in the modelled pose and opens the editor
+        /// on it. With <paramref name="requireSlots"/> the given slots are added to the character and
+        /// become the only editable ones; without it the character is the race's base recipe alone.
+        /// </summary>
+        private static VertexEditorStage ShowStageOnTemporaryCharacter(RaceData race, IList<SlotDataAsset> slots, bool requireSlots, out string message)
+        {
             message = null;
+            if (!CloseOpenVertexEditor())
+            {
+                message = "The Vertex Editor that is open was kept.";
+                return null;
+            }
             var generator = UMAAssetIndexer.Instance != null ? UMAAssetIndexer.Instance.Generator : null;
             if (race == null || generator == null)
             {
                 message = race == null ? "Choose a race." : "No UMA generator is available to build the character.";
                 return null;
             }
-            var avatarObject = new GameObject("Blendshape Sculpt Character (temporary)") { hideFlags = HideFlags.DontSave };
+            var avatarObject = new GameObject(requireSlots ? "Blendshape Sculpt Character (temporary)" : "Vertex Editor Character (temporary)") { hideFlags = HideFlags.DontSave };
             var notes = new List<string>();
             VertexEditorStage stage = null;
             UmaTPose plainTPose = null;
@@ -647,7 +674,7 @@ namespace UMA
                 var names = new HashSet<string>(StringComparer.Ordinal);
                 var added = new List<KeyValuePair<SlotDataAsset, OverlayDataAsset>>();
                 UMAData.UMARecipe recipe = avatar.umaData.umaRecipe;
-                foreach (SlotDataAsset slot in slots)
+                foreach (SlotDataAsset slot in slots ?? (IList<SlotDataAsset>)Array.Empty<SlotDataAsset>())
                 {
                     if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || !names.Add(slot.slotName))
                     {
@@ -665,8 +692,7 @@ namespace UMA
                     recipe.SetSlot(recipe.slotDataList.Length, slotData);
                     added.Add(new KeyValuePair<SlotDataAsset, OverlayDataAsset>(slot, overlay));
                 }
-                if (names.Count == 0)
-
+                if (requireSlots && names.Count == 0)
                 {
                     message = "None of the slots could be put on a character. " + string.Join(" ", notes);
                     return null;
@@ -904,9 +930,10 @@ namespace UMA
         private void ApplyBakedVertices(Vector3[] vertices)
         {
             Undo.ClearUndo(BakedMesh);
+            Vector3[] verticesBefore = BakedMesh.vertices;
+            Vector3[] normalsBefore = BakedMesh.normals;
             BakedMesh.vertices = vertices;
-            BakedMesh.RecalculateNormals();
-            SynchronizeCrossSlotSculptNormals();
+            FollowShape(verticesBefore, normalsBefore, vertices);
             BakedMesh.RecalculateBounds();
             Vector3[] normals = BakedMesh.normals;
             foreach (SculptSlotEditState state in sculptSlotStates.Values)
@@ -1015,6 +1042,7 @@ namespace UMA
                 targets[i].meshData.InvalidateBuildData();
                 EditorUtility.SetDirty(targets[i]);
                 AssetDatabase.SaveAssetIfDirty(targets[i]);
+                ReleaseSlotFromLibrary(targets[i]);
             }
             Undo.CollapseUndoOperations(undoGroup);
             // Converted copies of legacy slots were made from the shapes as they were.
@@ -1108,18 +1136,12 @@ namespace UMA
                     MessageType.None);
                 if (unsavedShapes.Count > 0)
                 {
-                    EditorGUILayout.HelpBox($"On {unsavedShapes.Count} slot(s) this shape comes from a transfer preview and is not on the slot yet. Save writes it, with your strokes.", MessageType.Info);
+                    EditorGUILayout.HelpBox($"On {unsavedShapes.Count} slot(s) this shape comes from a transfer preview and is not on the slot yet. Save to '{editBlendshapeName}' writes it, with your strokes.", MessageType.Info);
                 }
                 bool changes = HasSculptChangesForUI() || unsavedShapes.Count > 0;
+                EditorGUILayout.LabelField("Save the strokes with Save to '" + editBlendshapeName + "' in the Save panel of the Vertex Editor window.", EditorStyles.wordWrappedMiniLabel);
                 GUILayout.BeginHorizontal();
-                using (new EditorGUI.DisabledScope(!changes))
-                {
-                    if (GUILayout.Button(new GUIContent("Save to '" + editBlendshapeName + "'", "Add the strokes made since loading to this blendshape, on every slot they touched. A slot that did not have the shape gets it.")))
-                    {
-                        SaveBlendshapeEdit();
-                        GUIUtility.ExitGUI();
-                    }
-                }
+                GUILayout.FlexibleSpace();
                 if (GUILayout.Button(new GUIContent("Stop Editing", "Show the character at rest again. Strokes that were not saved are dropped."), GUILayout.Width(96f)))
                 {
                     if (!changes || EditorUtility.DisplayDialog("Stop Editing the Blendshape",

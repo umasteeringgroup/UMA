@@ -17,7 +17,11 @@ namespace UMA.Editors
         FollowSurface = 0,
         /// <summary>The vertex takes the movement of the nearest point of the surface, unchanged.</summary>
         CopyMovement = 1,
+        /// <summary>A full best-fit rotation from nearby source edges, including twist about the surface normal.</summary>
+        FollowSmoothFrame = 2,
     }
+
+    public enum UMABlendShapeSmoothingMode { Movement = 0, DeltaMush = 1 }
 
     /// <summary>Which shape of a race's body the slots are matched against.</summary>
     public enum UMABlendShapeBodyShape
@@ -73,17 +77,39 @@ namespace UMA.Editors
         [Tooltip("How far each smoothing pass moves a vertex toward the average of its neighbours.")]
         [Range(0f, 1f)] public float smoothingStrength = 0.5f;
 
+        public UMABlendShapeSmoothingMode smoothingMode;
+        [Tooltip("In Delta Mush mode, repair only regions whose edge lengths change substantially. Original folds are restored in a rotating local frame.")]
+        public bool adaptiveSmoothing = true;
+        [Tooltip("Logarithmic edge strain at which repair begins. 0.15 is about 16% stretch or 14% compression.")]
+        [Min(0f)] public float repairStart = 0.15f;
+        [Tooltip("Logarithmic edge strain at which repair reaches full strength. 0.5 is about 65% stretch or 39% compression.")]
+        [Min(0f)] public float repairFull = 0.5f;
+        [Tooltip("Neighbourhood smoothing of the source rotation fit, for Follow smooth frame.")]
+        [Range(0, 16)] public int rotationSmoothing = 4;
+
         [Tooltip("Move each small separate piece of the mesh (a button, a buckle, a stud) as one piece, so it is not stretched or bent.")]
         public bool rigidSmallParts = false;
 
         [Tooltip("Separate pieces no larger than this are moved as one piece.")]
         [Min(0f)] public float rigidPartMaxSize = 0.05f;
 
+        [Tooltip("Fit a rigid rotation and translation to nearby cloth for small separate pieces. Without nearby cloth, fit the piece's own transferred vertices.")]
+        public bool attachRigidParts;
+
         [Tooltip("After smoothing, push a vertex back out where the shape would put it under the moved source surface.")]
         public bool keepClearance = true;
 
         [Tooltip("The distance from the moved source surface that is restored for such a vertex (never more than it had to begin with).")]
         [Min(0f)] public float clearance = 0.001f;
+
+        [Tooltip("Recheck the nearest surface on the deformed body after smoothing. Also detects contact with triangles other than the original binding. This is a vertex check, not continuous cloth collision detection.")]
+        public bool checkDeformedSurface;
+
+        [Tooltip("Also sample triangle edge midpoints and centres. Helps coarse clothing triangles clear a denser body; not an exact intersection test.")]
+        public bool checkFaceInteriors;
+
+        [Tooltip("Appended to generated blend shape names. Use Auto to retain the original sculpted shapes.")]
+        public string outputSuffix = string.Empty;
 
         [Tooltip("Movement smaller than this is stored as no movement, which keeps the blend shape sparse.")]
         [Min(0f)] public float minimumMovement = 0.00005f;
@@ -94,6 +120,18 @@ namespace UMA.Editors
         public UMABlendShapeNormalMode normals = UMABlendShapeNormalMode.Recalculate;
 
         public UMABlendShapeExistingMode existing = UMABlendShapeExistingMode.Replace;
+
+        /// <summary>A conservative authoring starting point; no garment-specific corrections or reference targets.</summary>
+        public static UMABlendShapeTransferSettings Clothing()
+        {
+            return new UMABlendShapeTransferSettings
+            {
+                method = UMABlendShapeTransferMethod.FollowSmoothFrame,
+                useFalloff = false, smoothingMode = UMABlendShapeSmoothingMode.DeltaMush,
+                rigidSmallParts = true, attachRigidParts = true, rigidPartMaxSize = 0.025f,
+                checkDeformedSurface = true, checkFaceInteriors = true, outputSuffix = "Auto",
+            };
+        }
 
         public UMABlendShapeTransferSettings Clone()
         {
@@ -1009,6 +1047,10 @@ namespace UMA.Editors
             public bool[] Under;
             /// <summary>Vertices the clearance pass pushed back out.</summary>
             public int ClearanceFixed;
+            /// <summary>Per vertex: adaptive repair weight (last frame); zero outside Delta Mush regions.</summary>
+            public float[] RepairMask;
+            public int RigidParts;
+            public int SurfaceSamplesUnder;
             public string Skipped;
         }
 
@@ -1046,6 +1088,7 @@ namespace UMA.Editors
             int added = 0;
             float max = 0f;
             int poke = 0;
+            int samplesUnder = 0;
             foreach (ShapeResult shape in Shapes)
             {
                 if (shape.Shape != null)
@@ -1053,11 +1096,13 @@ namespace UMA.Editors
                     added++;
                     max = Mathf.Max(max, shape.MaxMovement);
                     poke += shape.PokeThrough;
+                    samplesUnder += shape.SurfaceSamplesUnder;
                 }
             }
             string name = Space != null ? Space.Name : "(slot)";
             return $"{name}: {added} of {Shapes.Count} blend shape(s), {VerticesInReach} of {(Space != null ? Space.VertexCount : 0)} vertices in reach, " +
                    $"largest movement {max * 1000f:0.0} mm" + (poke > 0 ? $", {poke} vertex/shape pair(s) end under the source surface" : string.Empty) +
+                   (samplesUnder > 0 ? $", {samplesUnder} surface samples end under the source" : string.Empty) +
                    (UnderAtRestCount > 0 ? $", {UnderAtRestCount} vertices already lie under the source surface at rest" : string.Empty);
         }
     }
@@ -1075,7 +1120,7 @@ namespace UMA.Editors
     /// space with matching normal and tangent deltas. Vertices that share a position (UV seams and
     /// hard edges) always move together.
     /// </remarks>
-    public static class UMABlendShapeTransfer
+    public static partial class UMABlendShapeTransfer
     {
         /// <summary>Vertices nearer than this to each other are the same point of the surface.</summary>
         public const float WeldTolerance = 0.00005f;
@@ -1096,6 +1141,9 @@ namespace UMA.Editors
             public bool[] IslandRigid;      // per island
             public int IslandCount;
             public Vector3[] RestNormals;   // per group, geometric
+            public Vector3[] Positions;
+            public int[] TriangleGroups;
+            public float[] SampleClearance;
         }
 
         /// <summary>
@@ -1214,6 +1262,8 @@ namespace UMA.Editors
                 binding.Influence[g] = settings.Influence(distance);
                 Vector3 surfaceNormal = (source.RestNormals[a] * bary.x + source.RestNormals[b] * bary.y + source.RestNormals[c] * bary.z).normalized;
                 binding.Clearance[g] = Vector3.Dot(binding.Offset[g], surfaceNormal);
+                if (settings.checkDeformedSurface)
+                    binding.Clearance[g] = SurfaceGap(source.Lookup, source.Positions, source.RestNormals, source.Triangles, p, out _);
             }
 
             // Topology over groups: neighbours for smoothing, islands for rigid parts.
@@ -1277,8 +1327,16 @@ namespace UMA.Editors
                     binding.IslandRigid[i] = (islandMax[i] - islandMin[i]).magnitude <= settings.rigidPartMaxSize;
                 }
             }
+            // A partially excluded component cannot be both rigid and fixed outside the falloff.
+            // Honour the exclusion; it is ordinary cloth for this binding instead.
+            for (int g = 0; g < groups; g++)
+                if (binding.Influence[g] <= 0f) binding.IslandRigid[binding.Island[g]] = false;
 
             binding.RestNormals = new Vector3[groups];
+            binding.Positions = new Vector3[groups];
+            for (int g = 0; g < groups; g++) binding.Positions[g] = target.Positions[binding.First[g]];
+            if (settings.checkDeformedSurface && settings.checkFaceInteriors)
+                BindSurfaceSamples(source, target, binding);
             GroupNormals(target.Positions, null, target.Triangles, binding.Groups, binding.RestNormals);
             return binding;
         }
@@ -1316,10 +1374,12 @@ namespace UMA.Editors
                 Vector3[] sourceDeltas = shape.Frames[f].Deltas;
                 bool last = f == shape.Frames.Length - 1;
                 // How the frame turns the source surface at each of its vertices.
-                Vector3[] movedNormals = settings.method == UMABlendShapeTransferMethod.FollowSurface || settings.keepClearance || last
+                Vector3[] movedNormals = settings.method != UMABlendShapeTransferMethod.CopyMovement || settings.keepClearance || settings.checkDeformedSurface || last
                     ? source.MovedNormals(sourceDeltas) : null;
 
-                Quaternion[] turns = settings.method == UMABlendShapeTransferMethod.FollowSurface ? source.Turns(sourceDeltas) : null;
+                Quaternion[] turns = settings.method == UMABlendShapeTransferMethod.FollowSmoothFrame
+                    ? SmoothSourceRotations(source, sourceDeltas, settings.rotationSmoothing)
+                    : settings.method == UMABlendShapeTransferMethod.FollowSurface ? source.Turns(sourceDeltas) : null;
 
                 var deltas = new Vector3[groups];
                 var surfaceMove = new Vector3[groups];
@@ -1339,7 +1399,7 @@ namespace UMA.Editors
                     {
                         continue;
                     }
-                    if (settings.method == UMABlendShapeTransferMethod.FollowSurface)
+                    if (turns != null)
                     {
                         Quaternion turn = BlendRotations(turns[a], bary.x, turns[b], bary.y, turns[c], bary.z);
                         Vector3 offset = binding.Offset[g];
@@ -1348,17 +1408,26 @@ namespace UMA.Editors
                     deltas[g] = move * (influence * settings.strength);
                 }
 
-                if (settings.rigidSmallParts)
+                // The legacy path remains available for existing authoring settings.
+                if (settings.rigidSmallParts && !settings.attachRigidParts)
                 {
                     MoveRigidParts(binding, deltas);
                 }
-                Smooth(binding, deltas, settings.smoothingIterations, settings.smoothingStrength);
+                float[] repair = settings.smoothingMode == UMABlendShapeSmoothingMode.DeltaMush
+                    ? DeltaMush(binding, deltas, settings) : null;
+                if (settings.smoothingMode == UMABlendShapeSmoothingMode.Movement)
+                    Smooth(binding, deltas, settings.smoothingIterations, settings.smoothingStrength);
+                // Smoothing cannot activate vertices excluded by falloff.
+                for (int g = 0; g < groups; g++)
+                    if (binding.Influence[g] <= 0f || settings.strength == 0f) deltas[g] = Vector3.zero;
+                if (settings.attachRigidParts && settings.rigidSmallParts && settings.strength != 0f)
+                    FitRigidParts(binding, deltas);
 
                 // Where the vertex ends up relative to the moved source surface.
                 int fixedCount = 0;
                 bool[] under = last ? new bool[groups] : null;
                 int poke = 0;
-                if (movedNormals != null)
+                if (movedNormals != null && !settings.checkDeformedSurface)
                 {
                     for (int g = 0; g < groups; g++)
                     {
@@ -1372,7 +1441,7 @@ namespace UMA.Editors
                         Vector3 normal = (movedNormals[a] * bary.x + movedNormals[b] * bary.y + movedNormals[c] * bary.z).normalized;
                         // The vertex relative to the moved surface point: its old offset plus how much more (or less) it moved.
                         float clearance = Vector3.Dot(binding.Offset[g] + deltas[g] - surfaceMove[g], normal);
-                        if (settings.keepClearance && !binding.IslandRigid[binding.Island[g]])
+                        if (settings.keepClearance && settings.strength != 0f && !binding.IslandRigid[binding.Island[g]])
                         {
                             float wanted = Mathf.Min(binding.Clearance[g], settings.clearance);
                             if (clearance < wanted)
@@ -1390,12 +1459,18 @@ namespace UMA.Editors
                     }
                 }
 
+                var movingIsland = new bool[binding.IslandCount];
                 for (int g = 0; g < groups; g++)
-                {
-                    if (deltas[g].sqrMagnitude < minimum)
-                    {
+                    if (deltas[g].sqrMagnitude >= minimum) movingIsland[binding.Island[g]] = true;
+                for (int g = 0; g < groups; g++)
+                    if (binding.IslandRigid[binding.Island[g]] ? !movingIsland[binding.Island[g]] : deltas[g].sqrMagnitude < minimum)
                         deltas[g] = Vector3.zero;
-                    }
+
+                // Evaluate after sparsification so the reported clearance describes the stored result.
+                if (settings.checkDeformedSurface)
+                {
+                    fixedCount = CheckDeformedSurface(source, sourceDeltas, movedNormals, binding, deltas, settings, under, out int surfaceSamplesUnder);
+                    if (last) result.SurfaceSamplesUnder = surfaceSamplesUnder;
                 }
 
                 // Per vertex, in the slot's own mesh space.
@@ -1427,6 +1502,9 @@ namespace UMA.Editors
                     lastDeltas = avatarDeltas;
                     result.AvatarDeltas = avatarDeltas;
                     result.ClearanceFixed = fixedCount;
+                    result.RepairMask = new float[count];
+                    for (int v = 0; v < count; v++) result.RepairMask[v] = repair != null ? repair[binding.Groups[v]] : 0f;
+                    foreach (bool rigid in binding.IslandRigid) if (rigid) result.RigidParts++;
                     result.Under = new bool[count];
                     float max = 0f;
                     for (int v = 0; v < count; v++)
@@ -1477,7 +1555,7 @@ namespace UMA.Editors
                     frame.deltaTangents = new Vector3[0];
                 }
             }
-            result.Shape = new UMABlendShape { shapeName = shape.Name, frames = frames };
+            result.Shape = new UMABlendShape { shapeName = shape.Name + (settings.outputSuffix ?? string.Empty).Trim(), frames = frames };
         }
 
         /// <summary>Gives every vertex of a small separate piece the piece's average movement.</summary>

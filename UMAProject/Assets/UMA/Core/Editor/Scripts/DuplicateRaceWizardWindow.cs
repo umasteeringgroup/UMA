@@ -1102,17 +1102,19 @@ namespace UMA.Editors
 				ApplySelectedBlendshapeSettings(duplicatedRace);
 				duplicatedRace.SetCrossCompatibleRaces(GetSelectedCompatibilityRaceNames());
 
+				// Save the race, recipe and TPose this wizard wrote, and nothing else in the project.
 				EditorUtility.SetDirty(duplicatedRace);
+				AssetDatabase.SaveAssetIfDirty(duplicatedRace);
 				if (duplicatedRecipe != null)
 				{
 					EditorUtility.SetDirty(duplicatedRecipe);
+					AssetDatabase.SaveAssetIfDirty(duplicatedRecipe);
 				}
 				if (generatedTPose != null)
 				{
 					EditorUtility.SetDirty(generatedTPose);
+					AssetDatabase.SaveAssetIfDirty(generatedTPose);
 				}
-
-				AssetDatabase.SaveAssets();
 				if (duplicatedRecipe is UMATextRecipe duplicatedTextRecipe)
 				{
 					UMAUpdateProcessor.UpdateRecipe(duplicatedTextRecipe);
@@ -1138,7 +1140,7 @@ namespace UMA.Editors
 				{
 					AssetDatabase.DeleteAsset(raceAssetPath);
 				}
-				AssetDatabase.SaveAssets();
+				// No save here: a failed duplication must not write half-finished edits (or anything else).
 				AssetDatabase.Refresh();
 				Debug.LogException(ex);
 				EditorUtility.DisplayDialog("Duplicate Race", "Failed to duplicate the selected race.\n\n" + ex.Message, "OK");

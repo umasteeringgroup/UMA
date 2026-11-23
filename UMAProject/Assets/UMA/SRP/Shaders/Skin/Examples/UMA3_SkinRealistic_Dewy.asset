@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   supportsSourceUVCropping: 0
   _material: {fileID: 2100000, guid: 6a797030c9a828c4ab7d1d8fb32f61d9, type: 2}
-  _HDRPMaterial: {fileID: 0}
+  _HDRPMaterial: {fileID: 2100000, guid: 96c2261d5021a32458020318a72e7ee7, type: 2}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
   _hasSpeedMaterialBackup: 0
@@ -22,9 +22,11 @@ MonoBehaviour:
   _speedBackupSecondPass: {fileID: 0}
   _speedBackupHDRPMaterial: {fileID: 0}
   _speedBackupHDRPSecondPass: {fileID: 0}
+  _hasSpeedSkinBackup: 0
+  _speedBackupSkinMaterial: {fileID: 0}
   materialType: 2
   channels:
-  - channelType: 0
+  - channelType: 4
     textureFormat: 0
     materialPropertyName: _BaseMap
     sourceTextureName: _BaseMap
@@ -33,6 +35,7 @@ MonoBehaviour:
     ConvertRenderTexture: 0
     UseExistingTextureForChannel: 0
     NonShaderTexture: 0
+    NeverCompress: 0
     textureChannelLayout:
       mode: 0
       red: 0
@@ -61,6 +64,7 @@ MonoBehaviour:
     ConvertRenderTexture: 0
     UseExistingTextureForChannel: 0
     NonShaderTexture: 0
+    NeverCompress: 0
     textureChannelLayout:
       mode: 0
       red: 0
@@ -89,6 +93,7 @@ MonoBehaviour:
     ConvertRenderTexture: 0
     UseExistingTextureForChannel: 0
     NonShaderTexture: 0
+    NeverCompress: 0
     textureChannelLayout:
       mode: 1
       red: 2048
@@ -117,6 +122,7 @@ MonoBehaviour:
     ConvertRenderTexture: 0
     UseExistingTextureForChannel: 0
     NonShaderTexture: 0
+    NeverCompress: 0
     textureChannelLayout:
       mode: 1
       red: 131072

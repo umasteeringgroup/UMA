@@ -1,0 +1,166 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01b68d44e3ab744b98027a983d66b345, type: 3}
+  m_Name: ThinMale
+  m_EditorClassIdentifier: UMA_Core::UMA.PoseTools.UMABonePose
+  poses:
+  - bone: LeftArmAdjust
+    hash: -270431657
+    position: {x: 0.00036629452, y: -0.021193143, z: 0.0002599894}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8315682, y: 0.9999541, z: 1.0000341}
+    category: 
+    enabled: 1
+  - bone: LeftForeArmAdjust
+    hash: 923803339
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.7751568, y: 1.0004907, z: 0.99995494}
+    category: 
+    enabled: 1
+  - bone: LeftForeArmTwistAdjust
+    hash: 547566030
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftLegAdjust
+    hash: -861926788
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0148607, y: 1.0001266, z: 0.8715866}
+    category: 
+    enabled: 1
+  - bone: LeftShoulder
+    hash: 759586984
+    position: {x: 0.038505126, y: 0.00016704202, z: 0.0011904268}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftTrapezius
+    hash: -1320475381
+    position: {x: -0.051625434, y: 0.00014445, z: 0.0014352426}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: LeftUpLegAdjust
+    hash: 898137571
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.93371767, y: 1.0001544, z: 0.9312956}
+    category: 
+    enabled: 1
+  - bone: LowerBackAdjust
+    hash: -1471957022
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.88326126, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: NeckAdjust
+    hash: 1605701185
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8499076, y: 1, z: 0.6643706}
+    category: 
+    enabled: 1
+  - bone: RightArmAdjust
+    hash: -413665443
+    position: {x: -0.00036629452, y: -0.021193143, z: 0.0002599894}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8315682, y: 0.9999541, z: 1.0000341}
+    category: 
+    enabled: 1
+  - bone: RightForeArmAdjust
+    hash: -1195342688
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.7751568, y: 1.0004907, z: 0.99995494}
+    category: 
+    enabled: 1
+  - bone: RightForeArmTwistAdjust
+    hash: 758040550
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightLegAdjust
+    hash: -1005160586
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1.0148607, y: 1.0001266, z: 0.8715866}
+    category: 
+    enabled: 1
+  - bone: RightShoulder
+    hash: -167360539
+    position: {x: -0.038505126, y: 0.00016704202, z: 0.0011904268}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightTrapezius
+    hash: -1174579199
+    position: {x: 0.051625434, y: 0.00014445, z: 0.0014352426}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightUpLegAdjust
+    hash: -506228642
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.93371767, y: 1.0001544, z: 0.9312956}
+    category: 
+    enabled: 1
+  - bone: Spine1Adjust
+    hash: 473121629
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.8707581, y: 1.0000137, z: 0.9065631}
+    category: 
+    enabled: 1
+  - bone: SpineAdjust
+    hash: 1842365421
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.9583091, y: 1, z: 0.88926846}
+    category: 
+    enabled: 1
+  - bone: LeftUpLeg
+    hash: 392266736
+    position: {x: 0.0062123686, y: -0.00028779544, z: 0.0011093491}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: RightUpLeg
+    hash: 1971262097
+    position: {x: -0.0062123686, y: -0.00028779544, z: 0.0011093491}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 1, y: 1, z: 1}
+    category: 
+    enabled: 1
+  - bone: HeadAdjust
+    hash: -423229038
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 1}
+    scale: {x: 0.9663327, y: 1, z: 0.9999991}
+    category: 
+    enabled: 1
+  boneGroups: []
+  tweenPoses: []
+  tweenWeights: []
+  mixerPose: 0

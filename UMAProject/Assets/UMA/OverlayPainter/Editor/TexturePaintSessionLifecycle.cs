@@ -69,6 +69,7 @@ namespace UMA.TexturePaint.Editor
                 int choice;
                 if (requested != null)
                 {
+                    TexturePaintOpenProgress.Hide();
                     choice = EditorUtility.DisplayDialogComplex("Open Overlay Painter Document?",
                         $"A recoverable Overlay Painter session also exists for this character. You explicitly " +
                         $"opened '{requested.name}'. Open that document and discard the older recovery, cancel, " +
@@ -77,6 +78,7 @@ namespace UMA.TexturePaint.Editor
                 }
                 else
                 {
+                    TexturePaintOpenProgress.Hide();
                     choice = EditorUtility.DisplayDialogComplex("Recover Overlay Painter Session?",
                         "A recoverable Overlay Painter session exists for this character. Recovering restores " +
                         "the last complete recovery asset without changing the character, recipe, or source overlay.",
@@ -91,6 +93,7 @@ namespace UMA.TexturePaint.Editor
                     deleteRecoveryAfterRequestedOpen = true;
                 else if (!TexturePaintRecoveryStore.TryLoad(recoveryContextKey, out recovered, out string error))
                 {
+                    TexturePaintOpenProgress.Hide();
                     int corruptChoice = EditorUtility.DisplayDialogComplex("Recovery Could Not Be Loaded",
                         error + "\n\nThe recovery asset can be discarded, or stage opening can be canceled so it " +
                         "can be inspected manually.",
@@ -150,6 +153,7 @@ namespace UMA.TexturePaint.Editor
             bool savedStandalone = candidate?.launchContext != null && candidate.launchContext.IsStandalone;
             if (currentStandalone != savedStandalone)
             {
+                TexturePaintOpenProgress.Hide();
                 EditorUtility.DisplayDialog("Overlay Painter Context Mismatch",
                     "This document was created for a different launch workflow and cannot be rebound silently.", "OK");
                 return false;
@@ -164,6 +168,7 @@ namespace UMA.TexturePaint.Editor
                     StringComparison.Ordinal) || saved.members == null || launchContext.members == null ||
                 saved.members.Count != launchContext.members.Count)
             {
+                TexturePaintOpenProgress.Hide();
                 EditorUtility.DisplayDialog("Overlay Painter Context Mismatch",
                     "This document belongs to a different slot group or UMAMaterial. Open it from its original slot context.", "OK");
                 return false;
@@ -179,6 +184,7 @@ namespace UMA.TexturePaint.Editor
                 TexturePaintStandaloneMemberContext currentMember = launchContext.members[i];
                 if (!string.Equals(oldMember?.slotGuid, currentMember?.slotGuid, StringComparison.Ordinal))
                 {
+                    TexturePaintOpenProgress.Hide();
                     EditorUtility.DisplayDialog("Overlay Painter Context Mismatch",
                         "This document belongs to a different slot or UDIM member set. Open it from its original slot context.",
                         "OK");
@@ -188,6 +194,7 @@ namespace UMA.TexturePaint.Editor
                     changed = true;
             }
             if (!changed) return true;
+            TexturePaintOpenProgress.Hide();
             bool rebind = EditorUtility.DisplayDialog("Standalone Sources Changed",
                 "One or more slot, overlay, resolution, or orientation settings changed since this document was saved. Rebind the document " +
                 "to the currently selected sources, or cancel and inspect the assets first?",

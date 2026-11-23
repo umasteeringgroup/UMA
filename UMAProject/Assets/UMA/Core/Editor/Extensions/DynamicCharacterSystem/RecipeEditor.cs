@@ -146,6 +146,9 @@ namespace UMA.Editors
 			pluginPlacement = UMAPluginGUI.RegisterExplicitHost(this);
 			isDisposed = false;
 			Initialized = false;
+			Undo.undoRedoPerformed -= OnUndoRedoRecipe;
+			Undo.undoRedoPerformed += OnUndoRedoRecipe;
+			CharacterBaseEditor.RegisterWorkingCopyOwner(this);
 			QueueInitializeEditor();
         }
 
@@ -157,6 +160,8 @@ namespace UMA.Editors
 				_needsUpdate = _forceUpdate = false;
 				Debug.LogException(exception);
 			}
+			Undo.undoRedoPerformed -= OnUndoRedoRecipe;
+			CharacterBaseEditor.UnregisterWorkingCopyOwner(this);
 			pluginPlacement?.Dispose();
 			pluginPlacement = null;
 			isDisposed = true;
@@ -213,7 +218,7 @@ namespace UMA.Editors
                 return;
 			}
 
-            _errorMessage = null;
+            ResetLoadState();
             _recipe = new UMAData.UMARecipe();
             showBaseEditor = false;
 
@@ -224,6 +229,8 @@ namespace UMA.Editors
                 {
                     umaRecipeBase.Load(_recipe);
                     _description = umaRecipeBase.GetInfo();
+                    // The loader leaves out slots and overlays it cannot find instead of failing.
+                    _errorMessage = MissingAssetsMessage(_recipe);
                 }
             }
             catch (UMAResourceNotFoundException e)
@@ -285,11 +292,18 @@ namespace UMA.Editors
         protected override void DoUpdate()
         {
             _needsUpdate = false;
+            if (RecipeSaveBlocked)
+            {
+                // The recipe did not load completely (see the inspector's error). Writing the
+                // partial copy would remove the missing slots and overlays from the asset.
+                return;
+            }
             var recipeBase = (UMARecipeBase)target;
             recipeBase.Save(_recipe);
             RecordPluginRecipeRevision();
             EditorUtility.SetDirty(recipeBase);
-            AssetDatabase.SaveAssetIfDirty(recipeBase);
+            if (HostAutoSave == null || SaveEditsToDisk)
+                AssetDatabase.SaveAssetIfDirty(recipeBase);
 			_rebuildOnLayout = true;
 
             if (target is UMATextRecipe)

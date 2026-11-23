@@ -252,7 +252,10 @@ namespace UMA
 				"Use the MeshData API based combiner. When disabled, UMA uses the managed combiner."
 			);
 
-			
+			GUILayout.Space(6);
+			EditorGUILayout.LabelField("Expression Wrinkles", EditorStyles.boldLabel);
+			DrawPropertiesIncluding(m_CustomSettings, new string[] { "expressionWrinkles", "wrinkleOverlay", "wrinkleProfile" });
+
 
 
 			EndVerticalPadded(10);
@@ -280,7 +283,8 @@ namespace UMA
                 "If true, UMA will show all unindexed types in the project window",
                 _ => UMASettings.NotifyProjectWindowTypeDisplayChanged());
 
-            DrawBoolProperty("ignoreBackupFolders", "Ignore Backup Folders", "If true, UMA will ignore any folders named 'Backup' when indexing assets. This can help prevent issues with automatic backup systems.");
+            DrawBoolProperty("autoAddToGlobalLibrary", "Auto-add to Global Library", "If true, new slots, overlays and races are added to the Global Library when they are created, imported, duplicated or moved into the project, and removed when they are deleted. The library is saved once each import has finished. Assets with 'No Auto Add' set are skipped.");
+            DrawBoolProperty("ignoreBackupFolders","Ignore Backup Folders", "If true, UMA will ignore any folders named 'Backup' when indexing assets. This can help prevent issues with automatic backup systems.");
             DrawBoolProperty("showWelcomeToUMA", "Show Welcome Window", "If true, UMA will show the welcome window when the project is loaded");
             DrawBoolProperty(
                 "showToolbar",

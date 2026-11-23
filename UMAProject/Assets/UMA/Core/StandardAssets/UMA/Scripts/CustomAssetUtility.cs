@@ -177,25 +177,44 @@ namespace UMA
             return assetPathAndName;
         }
         /// <summary>
-        /// Replaces an existing asset of the type T
+        /// Replaces an existing asset of the type T. When an asset of type T is already at the path,
+        /// its contents are reset to a fresh instance's defaults in place, so it keeps its GUID and
+        /// every recipe, library entry and object field that points at it stays linked. Otherwise a
+        /// new asset is created at the path. The caller fills in the returned asset and saves it.
         /// </summary>
         /// <param name="existingAssetPath">The full path relative to 'Assets' (including extension) of the existing asset to be replaced.</param>
         /// <param name="selectCreatedAsset">If true the created asset will be selected after it is created (and show in the inspector)</param>
         /// <returns>t</returns>
         public static T ReplaceAsset<T>(string existingAssetPath, bool selectCreatedAsset = true) where T : ScriptableObject
         {
-            T asset = ScriptableObject.CreateInstance<T>();
-
             string assetPathAndName = UnityFriendlyPath(existingAssetPath);
 
-            var existingAsset = AssetDatabase.LoadAssetAtPath(assetPathAndName, typeof(T));
-            if (existingAsset != null)
+            T asset = AssetDatabase.LoadMainAssetAtPath(assetPathAndName) as T;
+            if (asset != null && asset.GetType() == typeof(T))
             {
-                AssetDatabase.DeleteAsset(assetPathAndName);
+                // Overwrite the data, not the file: deleting and recreating gives the asset a new GUID.
+                T defaults = ScriptableObject.CreateInstance<T>();
+                try
+                {
+                    string keepName = asset.name;
+                    EditorUtility.CopySerialized(defaults, asset);
+                    asset.name = keepName;
+                }
+                finally
+                {
+                    UnityEngine.Object.DestroyImmediate(defaults);
+                }
+                EditorUtility.SetDirty(asset);
             }
-
-            AssetDatabase.CreateAsset(asset, assetPathAndName);
-            AssetDatabase.SaveAssets();
+            else
+            {
+                asset = ScriptableObject.CreateInstance<T>();
+                if (AssetDatabase.LoadAssetAtPath(assetPathAndName, typeof(T)) != null)
+                {
+                    AssetDatabase.DeleteAsset(assetPathAndName);
+                }
+                AssetDatabase.CreateAsset(asset, assetPathAndName);
+            }
 
             if (selectCreatedAsset)
             {

@@ -25,7 +25,7 @@ application, immediate shader properties, and build-lane expression DNA, see
   - `AfterRecipeGenerated(avatar)` — modifies the merged recipe before generation (shared colors, overlay transforms, mesh modifiers).
   - `PreApply / Apply / PostApply(umaData)` — modifies the live skeleton and renderers after the skeleton is built.
   - `Restore` — restores only the bones touched by an effect to the post-DNA baseline.
-- `DNABuildType` flags (`None, Texture, Mesh, Rig, BlendShape, SharedColors, MeshModifiers, Base, All`) tell the pipeline what dirty work is needed.
+- `DNABuildType` flags (`None, Texture, Mesh, Rig, BlendShape, SharedColors, MeshModifiers, MaterialProperty, Base, All, RendererOnly`) tell the pipeline what dirty work is needed. `RendererOnly` (`BlendShape | MaterialProperty`) is what is set straight on the renderers: it needs no build, and the generator sets it again at the end of every build, including texture-only and mesh-only builds.
 - Because effects act on the live skeleton and materials, sliders in the DCA inspector feel immediate. You do not need to rebake slot meshes for most changes.
 
 ---
@@ -82,7 +82,7 @@ Methods:
 - `GetDefaultDNA(race)` — creates a `DNAInstanceCollection` filled with instances using `defaultValue` and linked parent group.
 - `Reset()` — clears cached dictionary.
 
-`DNAInstance`: `{ Name, Value 0..1, enabled bool, parentGroup DNAGroup }`
+`DNAInstance`: `{ Name, Value 0..1, enabled bool, parentGroup DNAGroup }`. `parentGroup` is not part of saved character text: only names, values and enabled flags are saved, and the group is found again by DNA name.
 
 `DNAInstanceCollection`:
 - `dnaInstances: List<DNAInstance>` — flat list to process.
@@ -187,17 +187,17 @@ If you want 50% larger at mapped=1, set `ScaleFactor=(0.5,0.5,0.5)`.
 
 ### DNAEffect_BoneTransform
 
-Absolute lerp toward target transform.
+Offsets one bone's position, rotation and scale together, the way a bone pose does for a single bone.
 
 | Field | Description |
 |---|---|
 | `boneName` | Target. |
-| `Position` | Target local position. |
-| `Rotation` | Target local euler degrees. |
-| `Scale` | Target local scale. |
+| `Position` | Offset added to the local position at mapped=1. `(0,0,0)` leaves the position alone. |
+| `Rotation` | Euler degrees applied on top of the local rotation at mapped=1. `(0,0,0)` leaves the rotation alone. |
+| `Scale` | Multiplier for the local scale at mapped=1. `(1,1,1)` leaves the scale alone. |
 
-Current code lerps: `current + (current - target)*mapped` for pos/scale and `Slerp(current, quatTarget*current, mapped)` for rot. Intent is absolute blending; author target values by copying the bone's desired transform in pose tool and using a 0..1 curve.  
-`AreaEffect = Rig`. Best for pose-like DNA that needs precise end points.
+It calls `UMASkeleton.Morph`, the same call a `UMABonePose` uses: `position += Position * mapped`, `rotation = Slerp(current, current * Rotation, mapped)`, `scale = Lerp(current, current * Scale, mapped)`. The values are offsets from whatever the bone holds when the effect runs, not a target, so the effect stacks with bone poses and the other bone effects in the order they run.  
+`AreaEffect = Rig`. Best when one DNA needs to move, turn and scale the same bone.
 
 ### DNAEffect_BlendShape
 
@@ -223,17 +223,17 @@ Executes in `AfterRecipeGenerated` via `avatar.AddMeshModifiers(meshModifier.Get
 
 ### DNAEffect_OverlayUVTransform
 
-UV rectangle transform for an overlay.
+Moves, scales and turns an overlay. mapped=0 leaves the overlay untransformed; mapped=1 gives the full values.
 
 | Field | Description |
 |---|---|
 | `overlayName` | Overlay name to find with `umaRecipe.FindFirstOverlay(name)` after merge. Case-sensitive. |
-| `offset` | `Vector2` multiplied by mapped. |
-| `scale` | `Vector2` multiplied by mapped. |
-| `rotation` | Float 0..360 multiplied by mapped. |
+| `offset` | `Vector2`, as a fraction of the texture. Translate = `offset * mapped`. |
+| `scale` | `Vector2`. Scale = `Lerp((1,1), scale, mapped)`, so mapped=0 is the overlay's own size. It never goes below 0.001. |
+| `rotation` | Degrees. Rotation = `rotation * mapped`, wrapped to 0..360. |
 
-Sets `overlay.Translate`, `Scale`, `Rotation`.  
-`AreaEffect = Texture`. Useful for sliding tattoos, makeup, or scaling detail overlays.
+Sets `overlay.Translate`, `Scale`, `Rotation` and `overlay.instanceTransformed` (the texture merge only reads the transform of an overlay marked as transformed). The effect owns the overlay's instance transform: a transform stored in the recipe for that overlay is replaced, and mapped=0 clears it. A slot's base overlay cannot be transformed; use it on overlays drawn on top.  
+`AreaEffect = Texture`. Runs at the default DNA value too (`AppliesAtDefaultValue`), and again whenever the DNA value changes on a loaded character. Useful for sliding tattoos, makeup, or scaling detail overlays.
 
 ### DNAEffect_SharedColor
 
@@ -247,7 +247,7 @@ Full color lerp + combine into a shared color channel.
 | `TextureNumber` | Channel index in `OverlayColorData` (0 = base). |
 | `colorType` | `BaseMultiplier` (colorizes/darkens) or `Additive` (brightens/add overlay). Maps to `OverlayColorData.SetColor(index, isAdditive, col)` |
 
-`AreaEffect = Texture`. Runs in `AfterRecipeGenerated`. Requires color to exist on DCA; will `EnsureChannels`.
+`AreaEffect = Texture | SharedColors`. Runs in `AfterRecipeGenerated`, at the default DNA value too (`AppliesAtDefaultValue`). The color is worked out from `FromColor` and `ToColor` alone and replaces the shared color; the color the character had is not read. Requires color to exist on DCA; will `EnsureChannels`.
 
 ### DNAEffect_SharedColorChannel
 
@@ -277,7 +277,13 @@ Writes into `OverlayColorData.PropertyBlock` for shader customization (e.g. `_Co
 | `floatValue` | When `Float` flag set: `property Value = mapped * floatValue`. Inspector label shows "Zero Float Value" but current code multiplies only. |
 
 Creates `UMAColorProperty` / `UMAFloatProperty` if missing.  
-`AreaEffect = Texture`.
+`AreaEffect = Texture | SharedColors`. Runs at the default DNA value too (`AppliesAtDefaultValue`).
+
+### DNAEffect_RuntimeMaterialProperty
+
+Writes a float, color, vector and/or texture shader property through the renderers' `MaterialPropertyBlock`, with no texture or mesh build.
+
+`AreaEffect = MaterialProperty`. As character DNA it is written in `PostApply`: at the end of every build, and straight away when its DNA value changes on a loaded character. A Dynamic Expression Player writes the same property as often as the expression moves (see `DynamicExpressionPlayer.md`). A texture that is not assigned leaves the property as it is.
 
 ---
 
@@ -431,7 +437,8 @@ You can duplicate this DNA, rename to `muscularity_female`, adjust `ScaleFactor`
 ## Gotchas & What to Look For
 
 - **Asset name = DNA key.** Renaming file renames key. If you rename after characters saved, old recipes will have `Unknown DNA` instances. Use `GetUnknownDNAInstances()` to detect. Keep names stable, use `displayName` for UI.
-- **Missing parentGroup.** Hand-built `DNAInstance` without group won't enforce `MaxTotalValue` and won't appear in grouped UI. `GetDefaultDNA` sets it; if constructing manually, assign.
+- **Effects skipped at the default.** An effect that runs in `AfterRecipeGenerated` is skipped while its DNA is at `defaultValue`, unless it returns `AppliesAtDefaultValue` (the color effects and the overlay transform do). A mesh modifier effect is skipped there, so its mapping must give 0 at the default: with Min 0, Max 1 and a default of 0.5 the character shows nothing at 0.5 and half the modifier at 0.51. The DNA inspector warns about this under **Performance and validation**.
+- **Missing parentGroup.** Hand-built `DNAInstance` without group won't enforce `MaxTotalValue` and won't appear in grouped UI. A character loaded from saved text has no group on its instances until the DNA is prepared for its race. `GetDefaultDNA` sets it; if constructing manually, assign.
 - **Bone names must match skeleton exactly.** Check `TPose` or generated skeleton hierarchy. Logs won't always error, just skip if `HasBone` false (some effects check, some don't).
 - **BlendShape names must exist on all LODs you use.** If missing on lower LOD, no error, just silent skip.
 - **`defaultValue` skipped optimization.** If your effect should run even at default (e.g. color always set), set default slightly outside range or ensure `ValueDiffers`. Better: make default 0.5 neutral and handle neutral in curve min/max=0 mapping.

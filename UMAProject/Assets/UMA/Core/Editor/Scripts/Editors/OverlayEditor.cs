@@ -118,8 +118,103 @@ namespace UMA.Editors
             return UMAAssetIndexer.Instance.HasOverlay(_overlayData.overlayName);
         }
 
+        /// <summary>An overlay's position and transform, as the positioner sets them.</summary>
+        internal struct PopupState
+        {
+            public Rect rect;
+            public bool transformed;
+            public float rotation;
+            public Vector2 scale;
+            public Vector2 translate;
+
+            public static PopupState Of(OverlayData overlay) => new PopupState
+            {
+                rect = overlay.rect,
+                transformed = overlay.instanceTransformed,
+                rotation = overlay.Rotation,
+                scale = overlay.Scale,
+                translate = overlay.Translate,
+            };
+
+            /// <summary>Copies the chosen fields into another state.</summary>
+            public void ApplyTo(ref PopupState state, PopupFields fields)
+            {
+                if ((fields & PopupFields.Rect) != 0)
+                {
+                    state.rect = rect;
+                }
+                if ((fields & PopupFields.Transform) != 0)
+                {
+                    state.transformed = transformed;
+                    state.rotation = rotation;
+                    state.scale = scale;
+                    state.translate = translate;
+                }
+            }
+
+            public void ApplyTo(OverlayData overlay, PopupFields fields = PopupFields.All)
+            {
+                if ((fields & PopupFields.Rect) != 0)
+                {
+                    overlay.rect = rect;
+                }
+                if ((fields & PopupFields.Transform) != 0)
+                {
+                    overlay.instanceTransformed = transformed;
+                    overlay.Rotation = rotation;
+                    overlay.Scale = scale;
+                    overlay.Translate = translate;
+                }
+            }
+
+            public bool Same(PopupState other, PopupFields fields = PopupFields.All) =>
+                ((fields & PopupFields.Rect) == 0 || rect == other.rect) &&
+                ((fields & PopupFields.Transform) == 0 || (transformed == other.transformed &&
+                    rotation == other.rotation && scale == other.scale && translate == other.translate));
+
+            /// <summary>Which fields differ from <paramref name="other"/>.</summary>
+            public PopupFields Changed(PopupState other) =>
+                (Same(other, PopupFields.Rect) ? PopupFields.None : PopupFields.Rect) |
+                (Same(other, PopupFields.Transform) ? PopupFields.None : PopupFields.Transform);
+        }
+
+        /// <summary>The positioner's two kinds of change: the rect, and the transform (rotation, scale, translation).</summary>
+        [Flags]
+        internal enum PopupFields
+        {
+            None = 0,
+            Rect = 1,
+            Transform = 2,
+            All = Rect | Transform,
+        }
+
+        // What the open positioner did: changed the overlay (a preview or a write), wrote it into the
+        // recipe, and the values it last left. Cancel puts back only what it changed, and only while
+        // nothing else has changed it since.
+        private bool _popupTouched;
+        private bool _popupWrote;
+        private PopupState _popupLast;
+        // The values the positioner opened with, or last wrote: what it believes the recipe holds. Only the
+        // fields that differ from these are written (Update Recipe wrote the unchanged transform too, over a
+        // newer rotation), and the overlay is found in a changed recipe by them.
+        private PopupState _popupBase;
+        private bool? _popupGraphAutoSave;
+
+        private void NotePopupChange()
+        {
+            _popupTouched = true;
+            _popupLast = PopupState.Of(_overlayData);
+        }
+
         private void OpenPositioningPopup()
         {
+            _popupTouched = false;
+            _popupWrote = false;
+            _popupBase = PopupState.Of(_overlayData);
+            // A positioner can remain open after its graph switches recipes or closes.
+            var owner = CharacterBaseEditor.FindWorkingCopyOwner(_recipeContext, _recipe, out _);
+            _popupGraphAutoSave = owner is EditorWindow || (owner is CharacterBaseEditor inspector && inspector.HostAutoSave != null)
+                ? owner.WritesToDisk : (bool?)null;
             OverlayRectPositionWindow.Open(this, _slotData, _overlayData, _baseOverlayData);
         }
 
@@ -141,10 +236,10 @@ namespace UMA.Editors
                 UMAUpdateProcessor.UpdateOverlay(_overlayData.asset);
             }
 
-            if (_recipeContext != null)
+            NotePopupChange();
+            if (!PopupState.Of(_overlayData).Same(_popupBase, PopupFields.Rect))
             {
-                EditorUtility.SetDirty(_recipeContext);
-                AssetDatabase.SaveAssetIfDirty(_recipeContext);
+                CommitPopupToRecipe("Position Overlay", PopupFields.Rect);
             }
 
             ForceUpdateSceneAvatarsUsingOverlay();
@@ -165,6 +260,7 @@ namespace UMA.Editors
                 PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetUmaObjectId());
             }
 
+            NotePopupChange();
             RepaintEditorViews();
         }
 
@@ -181,10 +277,10 @@ namespace UMA.Editors
                 PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetUmaObjectId());
             }
 
-            if (_recipeContext != null)
+            NotePopupChange();
+            if (!PopupState.Of(_overlayData).Same(_popupBase, PopupFields.Transform))
             {
-                EditorUtility.SetDirty(_recipeContext);
-                AssetDatabase.SaveAssetIfDirty(_recipeContext);
+                CommitPopupToRecipe("Position Overlay", PopupFields.Transform);
             }
 
             ForceUpdateSceneAvatarsUsingOverlay();
@@ -273,12 +369,52 @@ namespace UMA.Editors
             return false;
         }
 
-        internal void RestorePopupRects(Rect recipeRect, Rect assetRect)
+        /// <summary>
+        /// Writes the overlay's position into the recipe now. It used to wait for the recipe inspector's next
+        /// draw, so an update made after the recipe was deselected was lost.
+        /// </summary>
+        /// <param name="fields">What changed: when the recipe is written as it is now (not the open editor's
+        /// copy), only these go in. Writing the rect wrote the transform too, over a newer rotation.</param>
+        /// <param name="expectedInRecipe">For Cancel: write only while the recipe still holds these values for
+        /// the overlay (what the positioner wrote), so a newer edit made elsewhere is not undone.</param>
+        private bool CommitPopupToRecipe(string undoName, PopupFields fields, PopupState? expectedInRecipe = null)
         {
-            _overlayData.rect = recipeRect;
-            _popupRectChanged = true;
+            if (_recipeContext == null || CharacterBaseEditor.IsRecipeSaveBlocked(_recipeContext))
+            {
+                return false;
+            }
+            Undo.RecordObject(_recipeContext, undoName);
+            bool wrote;
+            var owner = CharacterBaseEditor.FindWorkingCopyOwner(_recipeContext, _recipe, out _);
+            if (owner != null && owner.WorkingCopyInSync)
+            {
+                // The open inspector (or graph) still matches the asset: write its working copy, as its own
+                // controls do (with Automatic Updates off the edit stays pending there).
+                wrote = CharacterBaseEditor.WriteWorkingCopy(_recipeContext, _recipe);
+            }
+            else
+            {
+                // The recipe was deselected, reloaded or saved from elsewhere since this window opened. Writing
+                // the copy it opened with would put back an older recipe (a slot saved from another inspector
+                // disappeared), so only this overlay's position goes into the recipe as it is now.
+                wrote = WritePositionIntoCurrentRecipe(fields, expectedInRecipe ?? _popupBase, owner);
+            }
+            if (wrote)
+            {
+                PopupState.Of(_overlayData).ApplyTo(ref _popupBase, fields);
+            }
+            _popupWrote |= wrote;
+            return wrote;
+        }
 
-            if (_overlayData.asset != null)
+        /// <summary>
+        /// Cancel in the positioner: puts back the overlay's position and transform from when it opened, but
+        /// only what the positioner changed, and only while nothing else has changed them since. An untouched
+        /// positioner's Cancel wrote its opening values back, undoing a newer edit made elsewhere.
+        /// </summary>
+        private void CancelPopup(PopupState original, Rect assetRect, bool restoreAsset)
+        {
+            if (restoreAsset && _overlayData.asset != null)
             {
                 _overlayData.asset.rect = assetRect;
                 _overlayData.asset.lastActionTime = Time.realtimeSinceStartup;
@@ -287,23 +423,204 @@ namespace UMA.Editors
                 UMAUpdateProcessor.UpdateOverlay(_overlayData.asset);
             }
 
+            // Only the fields the positioner changed (the rect, the transform or both).
+            PopupFields changed = _popupTouched ? _popupLast.Changed(original) : PopupFields.None;
+            if (changed != PopupFields.None)
+            {
+                if (!PopupState.Of(_overlayData).Same(_popupLast, changed))
+                {
+                    Debug.LogWarning("Cancel did not put back the position of '" + _overlayData.overlayName +
+                        "': it was changed elsewhere after the positioner changed it.", _recipeContext);
+                }
+                else
+                {
+                    original.ApplyTo(_overlayData, changed);
+                    _popupRectChanged = true;
+                    if (_overlayData.asset != null)
+                    {
+                        PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetUmaObjectId());
+                    }
+                    if (_popupWrote)
+                    {
+                        CommitPopupToRecipe("Cancel Overlay Position", changed, _popupLast);
+                    }
+                    ForceUpdateSceneAvatarsUsingOverlay();
+                }
+            }
+            _popupTouched = false;
+            _popupWrote = false;
             RepaintEditorViews();
         }
 
-        internal void RestorePopupTransforms(bool instanceTransformed, float rotation, Vector2 scale, Vector2 translate)
+        private static string SlotKey(SlotData slot)
         {
-            _overlayData.instanceTransformed = instanceTransformed;
-            _overlayData.Rotation = rotation;
-            _overlayData.Scale = scale;
-            _overlayData.Translate = translate;
-            _popupRectChanged = true;
+            if (slot == null) return null;
+            return slot.isPlaceholderSlot ? "placeholder:" + slot.placeholderSlotName : (slot.asset != null ? slot.asset.slotName : null);
+        }
 
-            if (_overlayData.asset != null)
+        /// <summary>
+        /// Loads the recipe as it is now, sets this overlay's position and transform there, and saves that.
+        /// The overlay is found by its slot and name and by the values the positioner expects it to hold for
+        /// the fields being written (where it was in this window's copy first). A layer found by its place
+        /// alone could be another one after a reorder, and its values could be newer than the positioner's.
+        /// When it is not found, or more than one could be it, nothing is written and the user is told.
+        /// </summary>
+        internal bool WritePositionIntoCurrentRecipe(PopupFields fields, PopupState expected, CharacterBaseEditor.IRecipeWorkingCopyOwner owner)
+        {
+            if (!(_recipeContext is UMARecipeBase recipeBase) || _recipe == null || _recipe.slotDataList == null)
             {
-                PopupChangedOverlayAssetIds.Add(_overlayData.asset.GetUmaObjectId());
+                return false;
             }
 
-            RepaintEditorViews();
+            int slotIndex = -1;
+            int overlayIndex = -1;
+            for (int i = 0; i < _recipe.slotDataList.Length && slotIndex < 0; i++)
+            {
+                List<OverlayData> overlays = _recipe.slotDataList[i]?.GetOverlayList();
+                if (overlays == null) continue;
+                for (int j = 0; j < overlays.Count; j++)
+                {
+                    if (ReferenceEquals(overlays[j], _overlayData))
+                    {
+                        slotIndex = i;
+                        overlayIndex = j;
+                        break;
+                    }
+                }
+            }
+
+            string problem = null;
+            UMAData.UMARecipe current = new UMAData.UMARecipe();
+            try
+            {
+                recipeBase.Load(current);
+            }
+            catch (UMAResourceNotFoundException)
+            {
+                current = null;
+            }
+
+            OverlayData target = null;
+            if (slotIndex < 0)
+            {
+                problem = "this window's overlay is no longer in its recipe";
+            }
+            else if (current == null || CharacterBaseEditor.MissingAssetsMessage(current) != null)
+            {
+                problem = "the recipe no longer loads completely";
+            }
+            else
+            {
+                string slotKey = SlotKey(_recipe.slotDataList[slotIndex]);
+                var candidates = new List<OverlayData>();
+                OverlayData samePlace = null;
+                bool sameNameFound = false;
+                var seenLists = new HashSet<List<OverlayData>>();
+                for (int i = 0; current.slotDataList != null && i < current.slotDataList.Length; i++)
+                {
+                    SlotData currentSlot = current.slotDataList[i];
+                    if (currentSlot == null || SlotKey(currentSlot) != slotKey)
+                    {
+                        continue;
+                    }
+                    List<OverlayData> currentOverlays = currentSlot.GetOverlayList();
+                    if (currentOverlays == null || !seenLists.Add(currentOverlays))
+                    {
+                        continue;
+                    }
+                    for (int j = 0; j < currentOverlays.Count; j++)
+                    {
+                        OverlayData candidate = currentOverlays[j];
+                        if (candidate == null || candidate.overlayName != _overlayData.overlayName)
+                        {
+                            continue;
+                        }
+                        sameNameFound = true;
+                        if (!PopupState.Of(candidate).Same(expected, fields))
+                        {
+                            continue;
+                        }
+                        candidates.Add(candidate);
+                        if (i == slotIndex && j == overlayIndex)
+                        {
+                            samePlace = candidate;
+                        }
+                    }
+                }
+                if (candidates.Count == 1)
+                {
+                    target = candidates[0];
+                }
+                else if (candidates.Count > 1)
+                {
+                    // Layers of one overlay usually differ in what the positioner does not write (their colors).
+                    // The layer now in the old place can be the other one after a reorder, so that place only
+                    // decides between layers that match this window's overlay in everything else too: those are
+                    // interchangeable, and writing either gives the same recipe.
+                    var matching = candidates.FindAll(candidate => SameUnwrittenSettings(candidate, fields));
+                    if (matching.Count == 1)
+                    {
+                        target = matching[0];
+                    }
+                    else if (matching.Count > 1)
+                    {
+                        target = matching.Contains(samePlace) ? samePlace : matching[0];
+                    }
+                }
+                if (target == null)
+                {
+                    problem = candidates.Count > 1 ? "more than one layer of that overlay could be it (the layers were reordered)" :
+                        sameNameFound ? "the overlay's position there was changed elsewhere after the positioner opened or wrote it" :
+                        "the overlay is no longer in it";
+                }
+            }
+
+            if (target == null)
+            {
+                string message = "The overlay position was not written into '" + _recipeContext.name + "': the recipe was changed or reloaded since the positioner opened, and " +
+                    problem + ". Select the recipe and position the overlay again.";
+                Debug.LogWarning(message, _recipeContext);
+                EditorUtility.DisplayDialog("Overlay position not saved", message, "OK");
+                return false;
+            }
+
+            PopupState.Of(_overlayData).ApplyTo(target, fields);
+            recipeBase.Save(current);
+            EditorUtility.SetDirty(recipeBase);
+            // Automatic Updates off: stays an unsaved change until Save Recipe (or File > Save Project).
+            if (owner?.WritesToDisk ?? _popupGraphAutoSave ?? CharacterBaseEditor._AutomaticUpdates)
+            {
+                if (EditorUtility.IsPersistent(recipeBase))
+                {
+                    AssetDatabase.SaveAssetIfDirty(recipeBase);
+                }
+                if (recipeBase is UMATextRecipe textRecipe)
+                {
+                    UMAUpdateProcessor.UpdateRecipe(textRecipe);
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// True when <paramref name="candidate"/> matches this window's overlay in everything the positioner is not
+        /// writing: the other positioner fields, the color (shared or not), shader properties, UV set and multiplier.
+        /// </summary>
+        internal bool SameUnwrittenSettings(OverlayData candidate, PopupFields written)
+        {
+            OverlayData mine = _overlayData;
+            if (!PopupState.Of(candidate).Same(PopupState.Of(mine), PopupFields.All & ~written))
+            {
+                return false;
+            }
+            bool candidateShared = candidate.colorData != null && candidate.colorData.IsASharedColor;
+            bool mineShared = mine.colorData != null && mine.colorData.IsASharedColor;
+            return candidateShared == mineShared &&
+                (!mineShared || candidate.colorData.name == mine.colorData.name) &&
+                candidate.colorData == mine.colorData &&
+                OverlayColorData.SameShaderProperties(candidate.colorData, mine.colorData) &&
+                candidate.UVSet == mine.UVSet &&
+                candidate.TransparentMultiplier == mine.TransparentMultiplier;
         }
 
         private bool ConsumePopupRectChanged()
@@ -405,8 +722,8 @@ namespace UMA.Editors
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Add to Global Index"))
                 {
-                    UMAAssetIndexer.Instance.EvilAddAsset(typeof(OverlayDataAsset), _overlayData.asset);
-                    UMAAssetIndexer.Instance.ForceSave();
+                    // Saves the library alone, not the project's other unsaved assets.
+                    UMAGlobalLibraryAutoRegistration.AddAndSave(_overlayData.asset);
                 }
                 GUILayout.EndHorizontal();
             }
@@ -498,9 +815,12 @@ namespace UMA.Editors
                     changed = true;
                 }
             }
-            else
+            else if (_overlayData.UVSet != 0)
             {
-                if (_overlayData.UVSet != 0) 
+                // Kept, not cleared: drawing the row used to set it to 0 and save that, so an overlay whose
+                // material was changed for a while lost its UV set for good.
+                EditorGUILayout.HelpBox("This overlay has UV Set " + _overlayData.UVSet + " set, which only a 'Use Existing Textures' material uses. It is kept, and applies again with such a material.", MessageType.Info);
+                if (GUILayout.Button("Clear UV Set"))
                 {
                     _overlayData.UVSet = 0;
                     changed = true;
@@ -542,7 +862,9 @@ namespace UMA.Editors
             EditorUtility.SetDirty(_recipeContext);
             if (EditorUtility.IsPersistent(_recipeContext))
             {
-                AssetDatabase.SaveAssetIfDirty(_recipeContext);
+                var owner = CharacterBaseEditor.FindWorkingCopyOwner(_recipeContext, _recipe, out _);
+                bool automatic = owner != null ? owner.WritesToDisk : CharacterBaseEditor._AutomaticUpdates;
+                if (automatic && !CharacterBaseEditor.IsRecipeSaveBlocked(_recipeContext)) AssetDatabase.SaveAssetIfDirty(_recipeContext); // off: stays an unsaved change until Save Recipe
             }
         }
 
@@ -557,6 +879,9 @@ namespace UMA.Editors
             private OverlayData _overlayData;
             private Rect _originalRecipeRect;
             private Rect _originalAssetRect;
+            // Set when Update Overlay wrote this rect into the overlay asset.
+            private bool _assetUpdated;
+            private Rect _assetRectWritten;
             private Rect _workingRect;
             private bool _workingInstanceTransformed;
             private float _workingRotation;
@@ -1211,6 +1536,8 @@ namespace UMA.Editors
                 {
                     _owner.ApplyPopupTransform(_workingInstanceTransformed, _workingRotation, _workingScale, _workingTranslate);
                     _owner.ApplyPopupRect(_workingRect, true);
+                    _assetUpdated = true;
+                    _assetRectWritten = _workingRect;
                     _rectChanged = false;
                 }
 
@@ -1234,8 +1561,15 @@ namespace UMA.Editors
 
                 if (GUILayout.Button("Cancel"))
                 {
-                    _owner.RestorePopupTransforms(_originalInstanceTransformed, _originalRotation, _originalScale, _originalTranslate);
-                    _owner.RestorePopupRects(_originalRecipeRect, _originalAssetRect);
+                    bool restoreAsset = _assetUpdated && _overlayData.asset != null && _overlayData.asset.rect == _assetRectWritten;
+                    _owner.CancelPopup(new PopupState
+                    {
+                        rect = _originalRecipeRect,
+                        transformed = _originalInstanceTransformed,
+                        rotation = _originalRotation,
+                        scale = _originalScale,
+                        translate = _originalTranslate,
+                    }, _originalAssetRect, restoreAsset);
                     Close();
                 }
 
@@ -2456,22 +2790,20 @@ namespace UMA.Editors
 
             if (_overlayData.isEmpty)
             {
-                int foundProperty = -1;
+                // Choice 0 is "(not linked)": the popup used to show the first property as selected while the
+                // overlay was not linked to it, and with one property, picking it changed nothing.
+                int foundProperty = 0;
+                propertyNames.Add("(not linked)");
 
                 for (int i = 0; i < _recipe.sharedColors.Length; i++)
                 {
                     if (_recipe.sharedColors[i].channelCount == 0)
                     {
                         int currentPropertyIndex = propertyNames.Count;
-
-                        if (foundProperty == -1)
-                        {
-                            foundProperty = currentPropertyIndex;
-                        }
-
                         propertyNames.Add(_recipe.sharedColors[i].name);
                         PropertyPosition.Add(currentPropertyIndex, i);
-                        if (_overlayData.colorData.GetHashCode() == _recipe.sharedColors[i].GetHashCode())
+                        if (ReferenceEquals(_overlayData.colorData, _recipe.sharedColors[i]) ||
+                            (_overlayData.colorData != null && _overlayData.colorData.GetHashCode() == _recipe.sharedColors[i].GetHashCode()))
                         {
                             foundProperty = currentPropertyIndex;
                         }
@@ -2479,13 +2811,8 @@ namespace UMA.Editors
                 }
 
 
-                if (propertyNames.Count > 0)
+                if (propertyNames.Count > 1)
                 {
-                    if (foundProperty == -1)
-                    {
-                        foundProperty = 0;
-                        changed = true;
-                    }
                     GUIHelper.BeginVerticalPadded(2f, new Color(0.75f, 0.875f, 1f));
                     GUILayout.BeginHorizontal();
                     GUILayout.Label("Select property name");
@@ -2494,11 +2821,21 @@ namespace UMA.Editors
                     GUILayout.EndHorizontal();
                     GUIHelper.EndVerticalPadded(2f);
                     GUILayout.Space(2f);
-                    if (newprop != foundProperty || changed == true)
+                    if (newprop != foundProperty)
                     {
                         changed = true;
-                        int proppos = PropertyPosition[newprop];
-                        _overlayData.colorData = _recipe.sharedColors[proppos];
+                        if (newprop == 0)
+                        {
+                            // Unlink: the overlay keeps a copy of the values, no longer shared.
+                            OverlayColorData unlinked = _overlayData.colorData != null ? _overlayData.colorData.Clone() : new OverlayColorData(0);
+                            unlinked.name = OverlayColorData.UNSHARED;
+                            _overlayData.colorData = unlinked;
+                        }
+                        else
+                        {
+                            int proppos = PropertyPosition[newprop];
+                            _overlayData.colorData = _recipe.sharedColors[proppos];
+                        }
                     }
                 }
                 else

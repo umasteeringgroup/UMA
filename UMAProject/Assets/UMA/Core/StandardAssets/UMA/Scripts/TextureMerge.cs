@@ -593,6 +593,10 @@ namespace UMA
 
 		private void SetupMaterialAndBaseOverlay(ref TextureMergeRect textureMergeRect, UMAData.MaterialFragment source, int textureChannel, UMAData umaData)
 		{
+			// The rects are reused between builds. A base overlay with no texture for this channel draws nothing,
+			// so clear what an earlier build left here.
+			textureMergeRect.tex = null;
+			textureMergeRect.textureEventParms = null;
 			textureMergeRect.transparentPrefill = false;
 			textureMergeRect.transparentPrefillColor = Color.clear;
 			if (source.isNoTextures)
@@ -671,6 +675,10 @@ namespace UMA
 
 		public void SetupMaterialAndBaseOverlay(UMAData.MaterialFragment source, int textureChannel, UMAData umaData)
 		{
+			// The rects are reused between builds; a fragment with no textures must not draw what an earlier build left.
+			textureMergeRects[textureMergeRectCount].tex = null;
+			textureMergeRects[textureMergeRectCount].textureEventParms = null;
+			textureMergeRects[textureMergeRectCount].transparentPrefill = false;
 			if (!source.isNoTextures)
 			{
 				textureMergeRects[textureMergeRectCount].transform = false;

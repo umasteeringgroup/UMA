@@ -17,7 +17,7 @@ namespace UMA.Editors.Tests
     {
         private const string SourceRacePath = "Assets/UMA2/Races/HumanMale/RaceData/Human Male.asset";
         private const string TargetRacePath = "Assets/UMA/UMA3/Races/HumanMale30.asset";
-        private const string BardFolder = "Assets/Content/UMA RPG Starter 1/MB1 Bard refit";
+        private const string BardFolder = UMA2ContentTestAssets.RpgStarter + "/MB1 Bard refit";
         private const string TempFolder = "Assets/UMA_RigConversionTestTemp";
         private const float ExactTolerance = 1e-4f;      // metres, over real data with ~2 m coordinates
         // Metres. Joints differ by up to ~7.5 cm between the two bodies, but no Bard slot's vertices
@@ -43,6 +43,7 @@ namespace UMA.Editors.Tests
         [SetUp]
         public void SetUp()
         {
+            UMA2ContentTestAssets.RequireFolder(BardFolder);
             sourceRace = AssetDatabase.LoadAssetAtPath<RaceData>(SourceRacePath);
             targetRace = AssetDatabase.LoadAssetAtPath<RaceData>(TargetRacePath);
             Assert.IsNotNull(sourceRace, SourceRacePath);

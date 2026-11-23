@@ -110,7 +110,12 @@ namespace UMA.Editors
                 }
 
                 EditorUtility.SetDirty(targetWardrobeRecipe);
-                AssetDatabase.SaveAssetIfDirty(targetWardrobeRecipe);
+                // Automatic Updates off: an unsaved change like any other edit, so it does not also
+                // write the recipe edits still waiting for Save Recipe.
+                if (SaveEditsToDisk)
+                {
+                    AssetDatabase.SaveAssetIfDirty(targetWardrobeRecipe);
+                }
                 changed = true;
             }
             EditorGUI.EndDisabledGroup();

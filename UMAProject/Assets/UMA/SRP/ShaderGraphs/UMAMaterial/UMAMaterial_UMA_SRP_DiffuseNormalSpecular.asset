@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UMA_Core::UMA.UMAMaterial
   supportsSourceUVCropping: 0
   _material: {fileID: 2100000, guid: 157a073a02ea18542956a088584644e0, type: 2}
-  _HDRPMaterial: {fileID: 0}
+  _HDRPMaterial: {fileID: 2100000, guid: a93030df32e80924d96aa0d94b89b433, type: 2}
   _secondPass: {fileID: 0}
   _HDRPSecondPass: {fileID: 0}
   _hasSpeedMaterialBackup: 0

@@ -590,7 +590,9 @@ namespace UMA.TexturePaint.Editor
                 GUILayout.Label(new GUIContent("Save failed", persistenceError), EditorStyles.miniLabel,
                     GUILayout.MaxWidth(90f));
             if (!string.IsNullOrEmpty(workspaceStatus) && EditorApplication.timeSinceStartup < workspaceStatusUntil)
-                GUILayout.Label(workspaceStatus, EditorStyles.miniLabel, GUILayout.MaxWidth(260f));
+                // The line clips: a wide window gives it more room, and the tooltip always has the whole note.
+                GUILayout.Label(new GUIContent(workspaceStatus, workspaceStatus), EditorStyles.miniLabel,
+                    GUILayout.MaxWidth(Mathf.Clamp(rect.width - 760f, 260f, 720f)));
             TextureSet active = ActiveTextureSet;
             string target = active?.surface?.slotNames != null && active.surface.slotNames.Count > 0
                 ? string.Join(", ", active.surface.slotNames) : "No slot";
@@ -650,7 +652,7 @@ namespace UMA.TexturePaint.Editor
             string undoLabel = CanUndoLightweight ? "Undo " + LightweightUndoLabel : "Undo";
             string redoLabel = CanRedoLightweight ? "Redo " + LightweightRedoLabel : "Redo";
             if (canUndo) menu.AddItem(new GUIContent(undoLabel + $"\t{kb}+Z"), false, PerformWorkspaceUndo);
-            else menu.AddDisabledItem(new GUIContent($"Undo\t{kb}   +Z"));
+            else menu.AddDisabledItem(new GUIContent($"Undo\t{kb}+Z"));
             if (canRedo) menu.AddItem(new GUIContent(redoLabel + $"\t{kb}+Shift+Z"), false, PerformWorkspaceRedo);
             else menu.AddDisabledItem(new GUIContent($"Redo\t{kb}+Shift+Z"));
             menu.AddSeparator(string.Empty);
@@ -1236,6 +1238,9 @@ namespace UMA.TexturePaint.Editor
                 case TexturePaintChannel.Thickness: return "Thick";
                 case TexturePaintChannel.DetailMask: return "Detail";
                 case TexturePaintChannel.NormalControl: return "NC";
+                case TexturePaintChannel.WrinkleHeight: return "WH";
+                case TexturePaintChannel.WrinkleCrease: return "WC";
+                case TexturePaintChannel.WrinkleFlush: return "WF";
                 default: return channel.ToString();
             }
         }
@@ -2337,7 +2342,9 @@ namespace UMA.TexturePaint.Editor
                 if (EditorGUI.EndChangeCheck())
                     ChangeLayerMetadata(set, layer, layer.name, opacity, blend);
             }
-            if (GUI.Button(menu, "⋮", EditorStyles.miniButton)) ShowLayerMenu(set, layer, index);
+            if (GUI.Button(menu, new GUIContent("⋮", "Layer commands: rename, duplicate, convert, copy from below, " +
+                    "masks and merging. Right-clicking the row opens the same menu."), EditorStyles.miniButton))
+                ShowLayerMenu(set, layer, index);
 
             layer.effects ??= new TexturePaintLayerEffects();
             layer.effects.Normalize();
@@ -2440,7 +2447,6 @@ namespace UMA.TexturePaint.Editor
                     DragAndDrop.AcceptDrag();
                     if (MoveLayerWithHistory(set, from, index)) SyncActiveLayerSelection(set);
                     DragAndDrop.SetGenericData(LayerDragKey, null);
-                    MarkDocumentDirty();
                 }
                 Event.current.Use();
             }
@@ -3125,7 +3131,8 @@ namespace UMA.TexturePaint.Editor
                     break;
             }
             if (TexturePaintChannelUtility.IsAuxiliary(selectedChannel))
-                EditorGUILayout.HelpBox("Normal Control is painter-owned and has no OverlayData material source. Use a texture, sprite, or grayscale value.", MessageType.None);
+                EditorGUILayout.HelpBox(TexturePaintChannelUtility.DisplayName(selectedChannel) +
+                    " is painter-owned and has no OverlayData material source. Use a texture, sprite, or grayscale value.", MessageType.None);
             Vector2 tiling = fillSettings?.tiling ?? Vector2.one;
             Vector2 offset = fillSettings?.offset ?? Vector2.zero;
             float rotation = fillSettings?.rotation ?? 0f;
@@ -3231,6 +3238,11 @@ namespace UMA.TexturePaint.Editor
                 RefreshPaintSourceForChannel();
             TextureChannelTarget target = set?.GetChannel(selectedChannel);
             if (target == null) EditorGUILayout.HelpBox("The active target has no matching logical channel.", MessageType.Warning);
+            if (TexturePaintChannelUtility.IsWrinkle(selectedChannel) && set != null)
+                EditorGUILayout.HelpBox(WrinkleChannelHelp(selectedChannel), MessageType.None);
+            if (set != null && !set.HasWrinkleHeight && !string.IsNullOrEmpty(set.WrinkleStatus) &&
+                TexturePaintChannelUtility.IsWrinkle(selectedChannel))
+                EditorGUILayout.HelpBox(set.WrinkleStatus, MessageType.Info);
             if (selectedChannel == TexturePaintChannel.NormalControl && set != null)
             {
                 EditorGUILayout.HelpBox("Neutral gray (0.5) leaves the normal unchanged. Darker values recess the surface; lighter values raise it. The generated normal is used for 3D preview and export.", MessageType.None);
@@ -3337,6 +3349,7 @@ namespace UMA.TexturePaint.Editor
                 SceneToolbarMirrorX = EditorGUILayout.Toggle("Mirror Layer X", SceneToolbarMirrorX);
             EditorGUI.EndChangeCheck();
             DrawBrushAssetActions();
+            DrawBrushNeedsPixelsHint(ActiveTextureSet);
             if (tool == TexturePaintTool.Plugin && controller.Plugins.Brushes.Count > 0)
             {
                 string[] names = new string[controller.Plugins.Brushes.Count];
@@ -3368,6 +3381,8 @@ namespace UMA.TexturePaint.Editor
                 DrawProjectionProperties(set, layer);
                 layer = CurrentProjection(set, layer.id) ?? layer;
             }
+            if (!IsLayerMaskMode(set) && DrawConvertToPaintLayerButton(set, layer))
+                GUIUtility.ExitGUI(); // The layer was replaced: the rest of this pass would draw the old one.
             if (layer.kind == TexturePaintLayerKind.Plugin && !instance && !IsLayerMaskMode(set))
                 DrawPluginLayerProperties(set, layer);
             if (instance && !IsLayerMaskMode(set))
@@ -3764,7 +3779,10 @@ namespace UMA.TexturePaint.Editor
                 if (layer.channels.ContainsKey(channel)) authored.Add(channel);
 
             if (authored.Count == 0)
-                EditorGUILayout.HelpBox("This layer has no authored channel texture yet.", MessageType.Info);
+                EditorGUILayout.HelpBox(layer.kind == TexturePaintLayerKind.Paint
+                    ? "This layer has no channel texture yet. Paint on it, add a channel above, or right-click the layer " +
+                      "and choose Copy from Below to start from what is under it."
+                    : "This layer has no authored channel texture yet.", MessageType.Info);
             for (int i = 0; i < authored.Count; i++)
             {
                 TexturePaintChannel channel = authored[i];
@@ -3794,6 +3812,7 @@ namespace UMA.TexturePaint.Editor
 
         private void DrawAddLayerChannelControls(TextureSet set, TexturePaintLayer layer)
         {
+            DrawWrinkleTileHint(set);
             var available = new List<TexturePaintChannel>();
             foreach (TexturePaintChannel channel in Enum.GetValues(typeof(TexturePaintChannel)))
                 if (set.GetChannel(channel) != null && !layer.channels.ContainsKey(channel))
@@ -3837,6 +3856,15 @@ namespace UMA.TexturePaint.Editor
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.FlexibleSpace();
+                if (layer.kind == TexturePaintLayerKind.Paint &&
+                    GUILayout.Button(new GUIContent("Copy from Below",
+                        "Fill this channel with the result of everything under the layer, so Blur, Smear and Clone " +
+                        "have pixels to work on. The layers below are not changed."), GUILayout.Width(112f)))
+                {
+                    CopyLayerChannelFromBelow(set, layer, channel);
+                    GUILayout.EndHorizontal();
+                    GUIUtility.ExitGUI();
+                }
                 bool remove = GUILayout.Button(new GUIContent("Remove Channel",
                     "Remove this channel texture and its settings."), GUILayout.Width(108f));
                 GUILayout.EndHorizontal();
@@ -3956,10 +3984,64 @@ namespace UMA.TexturePaint.Editor
             }
         }
 
+        /// <summary>
+        /// On a UDIM target of a generated character only the head tile uses the expression wrinkle material. When the
+        /// active tile has no wrinkle channels but another tile of the same target does, offer to switch to it.
+        /// </summary>
+        private void DrawWrinkleTileHint(TextureSet set)
+        {
+            if (set == null || set.HasWrinkleHeight || set.GetChannel(TexturePaintChannel.WrinkleCrease) != null ||
+                controller?.LogicalTargets == null) return;
+            TextureSet wrinkleSet = null;
+            string tile = null;
+            foreach (TexturePaintLogicalTarget target in controller.LogicalTargets.Targets)
+            {
+                bool containsActive = target.members.Exists(member => member.textureSets.Contains(set));
+                if (!containsActive) continue;
+                foreach (TexturePaintLogicalTargetMember member in target.members)
+                foreach (TextureSet candidate in member.textureSets)
+                    if (candidate != null && candidate.HasWrinkleHeight)
+                    { wrinkleSet = candidate; tile = member.udimTileNumber > 0 ? member.udimTileNumber.ToString() : member.slotName; }
+            }
+            if (wrinkleSet == null) return;
+            EditorGUILayout.HelpBox($"The wrinkle channels (Wrinkle Height, Crease, Flush) are on tile {tile}, which uses the " +
+                "expression wrinkle material. The active tile has none.", MessageType.Info);
+            if (!GUILayout.Button("Edit Wrinkles on Tile " + tile)) return;
+            for (int i = 0; i < controller.Textures.Sets.Count; i++)
+            {
+                if (!ReferenceEquals(controller.Textures.Sets[i], wrinkleSet)) continue;
+                selectedSurface = i;
+                SyncActiveLayerSelection(wrinkleSet);
+                ApplyWorkspaceDisplay();
+                workspaceAddLayerChannel = TexturePaintChannel.WrinkleHeight;
+                break;
+            }
+        }
+
+        /// <summary>What a wrinkle channel does, shown under the channel picker.</summary>
+        internal static string WrinkleChannelHelp(TexturePaintChannel channel)
+        {
+            switch (channel)
+            {
+                case TexturePaintChannel.WrinkleHeight:
+                    return "Expression wrinkle relief. Mid gray (0.5) is flat; darker digs a crease, lighter raises skin " +
+                        "(black and white are -/+2.5 mm). New layers blend it with Overlay, so painting adds to the wrinkles " +
+                        "below. It becomes the wrinkle map's red and green slope, and shows only inside a wrinkle zone, at " +
+                        "that zone's weight (Preview Material > Wrinkle Zone Weights).";
+                case TexturePaintChannel.WrinkleCrease:
+                    return "Expression wrinkle crease depth (wrinkle map blue): darkens ambient light inside creases. " +
+                        "0 is none; paint it where you dig creases in Wrinkle Height.";
+                case TexturePaintChannel.WrinkleFlush:
+                    return "Expression wrinkle flush (wrinkle map alpha): where squeezed skin turns slightly redder. 0 is none.";
+                default: return string.Empty;
+            }
+        }
+
         internal static string LayerChannelTypeName(TexturePaintChannel channel)
         {
             if (channel == TexturePaintChannel.Normal) return "Normal Map";
             if (channel == TexturePaintChannel.NormalControl) return "Height / Grayscale";
+            if (channel == TexturePaintChannel.WrinkleHeight) return "Wrinkle Height / Grayscale";
             if (TexturePaintChannelUtility.IsColor(channel)) return "Color";
             if (TexturePaintChannelUtility.IsGrayscale(channel)) return "Grayscale";
             if (channel == TexturePaintChannel.Custom) return "Custom";
@@ -4081,7 +4163,8 @@ namespace UMA.TexturePaint.Editor
                     break;
             }
             if (TexturePaintChannelUtility.IsAuxiliary(channel))
-                EditorGUILayout.HelpBox("Normal Control accepts texture, sprite, or grayscale value sources; it is not present in OverlayData materials.", MessageType.None);
+                EditorGUILayout.HelpBox(TexturePaintChannelUtility.DisplayName(channel) +
+                    " accepts texture, sprite, or grayscale value sources; it is not present in OverlayData materials.", MessageType.None);
             if (layer.kind == TexturePaintLayerKind.Fill && source.source != TexturePaintBrushSource.Color)
             {
                 if (!shareFillTransform)
@@ -4131,6 +4214,7 @@ namespace UMA.TexturePaint.Editor
                 case TexturePaintChannel.Albedo: return Color.white;
                 case TexturePaintChannel.Normal: return new Color(0.5f, 0.5f, 1f, 1f);
                 case TexturePaintChannel.NormalControl: return new Color(0.5f, 0.5f, 0.5f, 1f);
+                case TexturePaintChannel.WrinkleHeight: return new Color(0.5f, 0.5f, 0.5f, 1f);
                 case TexturePaintChannel.Roughness:
                 case TexturePaintChannel.AmbientOcclusion:
                 case TexturePaintChannel.DetailMask: return Color.white;
@@ -5075,7 +5159,7 @@ namespace UMA.TexturePaint.Editor
             if (string.IsNullOrEmpty(path) || string.IsNullOrWhiteSpace(newName)) return;
             string error = AssetDatabase.RenameAsset(path, newName.Trim());
             if (!string.IsNullOrEmpty(error)) EditorUtility.DisplayDialog("Rename Brush", error, "OK");
-            else { workspaceBrushesDirty = true; workspaceRenameBrush = newName.Trim(); AssetDatabase.SaveAssets(); }
+            else { workspaceBrushesDirty = true; workspaceRenameBrush = newName.Trim(); AssetDatabase.SaveAssetIfDirty(preset); }
         }
 
         private void DuplicateBrushAsset(BrushPreset preset)
@@ -5085,7 +5169,7 @@ namespace UMA.TexturePaint.Editor
             string destination = AssetDatabase.GenerateUniqueAssetPath(Path.Combine(Path.GetDirectoryName(source) ?? "Assets",
                 preset.name + " Copy.asset").Replace('\\', '/'));
             if (!AssetDatabase.CopyAsset(source, destination)) return;
-            AssetDatabase.SaveAssets(); workspaceBrushesDirty = true;
+            workspaceBrushesDirty = true;
             BrushPreset copy = AssetDatabase.LoadAssetAtPath<BrushPreset>(destination);
             if (copy != null)
             {
@@ -5481,11 +5565,69 @@ namespace UMA.TexturePaint.Editor
             if (!set.layers.Contains(created)) return;
             SyncActiveLayerSelection(set);
             SelectLayerChannelForEditing(created, firstChannel);
-            string status = $"Added '{overlay.overlayName}' as a {created.channels.Count}-channel Fill layer.";
+            int channelCount = created.channels.Count;
+            string tileReport = AssignUdimTileOverlays(set, created, overlay);
+            if (tileReport != null) SyncActiveLayerSelection(set);
+            string status = $"Added '{overlay.overlayName}' as a {channelCount}-channel Fill layer.";
+            if (!string.IsNullOrEmpty(tileReport)) status += " " + tileReport;
             if (unsupportedBlends.Count > 0)
                 status += " Unsupported UMA blend modes use Normal: " +
                     string.Join(", ", unsupportedBlends) + ".";
             ShowWorkspaceStatus(status);
+        }
+
+        /// <summary>
+        /// After a Fill layer is made from one UDIM tile's overlay (for example UMA30_Body_UDIM1001), gives every other
+        /// tile of the target its own matching overlay (UMA30_Body_UDIM1002, ...) as a tile override, and No contribution
+        /// where there is none. Returns a short report, or null when the target is not UDIM or the overlay belongs to no
+        /// tile (it then stays a shared source on every tile). One undo step.
+        /// </summary>
+        private string AssignUdimTileOverlays(TextureSet set, TexturePaintLayer layer, OverlayDataAsset picked)
+        {
+            TexturePaintLogicalTarget target = controller?.LogicalLayers?.FindTarget(set);
+            if (target?.isUdim != true || layer == null || string.IsNullOrEmpty(layer.logicalLayerId)) return null;
+            TexturePaintLogicalLayerBinding binding = controller.LogicalLayers.Resolve(target, layer.logicalLayerId);
+            if (binding == null || !binding.complete) return null;
+
+            var tiles = new List<TexturePaintUdimTileOverlays.Tile>();
+            foreach (TexturePaintLogicalTargetMember member in target.members)
+            {
+                var own = new List<OverlayDataAsset>();
+                foreach (OverlayData data in member.sourceOverlays)
+                    if (data?.asset != null && !own.Contains(data.asset)) own.Add(data.asset);
+                tiles.Add(new TexturePaintUdimTileOverlays.Tile { number = member.udimTileNumber, ownOverlays = own });
+            }
+            int pickedTile = TexturePaintUdimTileOverlays.TileOf(picked, tiles);
+            if (pickedTile <= 0) return null;
+
+            var changes = new Dictionary<TexturePaintLogicalTargetMember, TexturePaintFillTileSources>();
+            var assigned = new List<string>();
+            var empty = new List<string>();
+            for (int i = 0; i < target.members.Count; i++)
+            {
+                TexturePaintLogicalTargetMember member = target.members[i];
+                if (member.udimTileNumber == pickedTile) continue;
+                OverlayDataAsset own = TexturePaintUdimTileOverlays.Find(picked, pickedTile, tiles[i]);
+                TextureSet memberSet = binding.members.Find(item => ReferenceEquals(item.targetMember, member))?.textureSet;
+                bool compatible = false;
+                if (own != null && memberSet != null)
+                    foreach (TexturePaintChannel channel in Enum.GetValues(typeof(TexturePaintChannel)))
+                        if (!TexturePaintChannelUtility.IsAuxiliary(channel) &&
+                            memberSet.TryResolveOverlaySource(own, channel, normalConvention, false, out _, out _))
+                        { compatible = true; break; }
+                changes[member] = compatible
+                    ? new TexturePaintFillTileSources { mode = TexturePaintFillTileMode.Override, overlay = own }
+                    : new TexturePaintFillTileSources { mode = TexturePaintFillTileMode.NoContribution };
+                if (compatible) assigned.Add(member.udimTileNumber + ": " + own.overlayName);
+                else empty.Add(member.udimTileNumber.ToString());
+            }
+            if (changes.Count == 0) return null;
+            if (!ChangeFillTileSourcesBatch(set, layer, changes, "Assign UDIM Tile Overlays"))
+                return $"Tile overlays could not be assigned; every tile uses '{picked.overlayName}'.";
+            string report = $"Tile {pickedTile} uses it";
+            if (assigned.Count > 0) report += "; tile overlays " + string.Join(", ", assigned);
+            if (empty.Count > 0) report += "; no matching overlay (No contribution) on " + string.Join(", ", empty);
+            return report + ". Change them under UDIM Sources.";
         }
 
         private void AddOverlayPathLayer(TextureSet set, OverlayDataAsset overlay)
@@ -5928,16 +6070,8 @@ namespace UMA.TexturePaint.Editor
                 });
             else menu.AddDisabledItem(new GUIContent("Remove from Group"));
             if (layer.kind == TexturePaintLayerKind.Fill || layer.kind == TexturePaintLayerKind.Projection)
-                menu.AddItem(new GUIContent("Rasterize to Paint Layer"), false, () =>
-                {
-                    set.activeLayerIndex = index;
-                    bool hasVDM = layer.projectionSettings?.GetChannelSource(TexturePaintChannel.NormalControl)?.vdm?.enabled == true;
-                    if (hasVDM && !EditorUtility.DisplayDialog("Rasterize VDM Relief",
-                        "Rasterizing removes the editable VDM placement needed for future geometry output. Duplicate the layer first if you want to keep it.",
-                        "Rasterize", "Cancel")) return;
-                    if (RasterizeFillLayerWithHistory(set, layer))
-                        SyncActiveLayerSelection(set);
-                });
+                menu.AddItem(new GUIContent("Convert to Paint Layer"), false, () => ConvertToPaintLayer(set, layer));
+            AddCopyFromBelowMenuItems(menu, set, layer);
             menu.AddSeparator(string.Empty);
             if (layer.layerMask == null)
             {
@@ -5996,6 +6130,109 @@ namespace UMA.TexturePaint.Editor
             menu.AddSeparator(string.Empty);
             AddLayerMergeMenuItems(menu, set, layer, index);
             menu.ShowAsContext();
+        }
+
+        /// <summary>
+        /// Convert to Paint Layer: the generated pixels and effective mask of a Fill or Projection layer become paint
+        /// pixels the brush tools can edit. The layer keeps its place, channels and blending, and loses its source.
+        /// </summary>
+        private bool ConvertToPaintLayer(TextureSet set, TexturePaintLayer layer)
+        {
+            if (set == null || layer == null) return false;
+            // A projection edit replaces the layer object: find the live one by identity.
+            int index = set.layers.IndexOf(layer);
+            if (index < 0) index = set.layers.FindIndex(candidate => candidate?.id == layer.id);
+            if (index < 0) return false;
+            layer = set.layers[index];
+            if (layer.kind != TexturePaintLayerKind.Fill && layer.kind != TexturePaintLayerKind.Projection) return false;
+            set.activeLayerIndex = index;
+            bool hasVDM = layer.projectionSettings?.GetChannelSource(TexturePaintChannel.NormalControl)?.vdm?.enabled == true;
+            if (hasVDM && !EditorUtility.DisplayDialog("Convert VDM Relief",
+                "Converting removes the editable VDM placement needed for future geometry output. Duplicate the layer first if you want to keep it.",
+                "Convert", "Cancel")) return false;
+            if (!RasterizeFillLayerWithHistory(set, layer)) return false;
+            SyncActiveLayerSelection(set);
+            return true;
+        }
+
+        /// <summary>Fill and Projection layer properties: the conversion that lets the brush tools edit the layer.</summary>
+        private bool DrawConvertToPaintLayerButton(TextureSet set, TexturePaintLayer layer)
+        {
+            if (layer == null || layer.links?.instance?.IsSet == true ||
+                (layer.kind != TexturePaintLayerKind.Fill && layer.kind != TexturePaintLayerKind.Projection)) return false;
+            string kind = layer.kind == TexturePaintLayerKind.Fill ? "Fill" : "Projection";
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                GUILayout.FlexibleSpace();
+                if (!GUILayout.Button(new GUIContent("Convert to Paint Layer",
+                        $"Turn this {kind} layer into a Paint layer with the same pixels, so Paint, Erase, Blur, Smear and " +
+                        $"Clone can edit it. Its {kind} source settings are removed; Undo brings them back. Duplicate the " +
+                        "layer first to keep an editable copy."), GUILayout.Width(160f))) return false;
+            }
+            return ConvertToPaintLayer(set, layer);
+        }
+
+        /// <summary>
+        /// Paint layer menu: Copy from Below, one entry per channel of the target. Blur, Smear, Clone, Dodge and Burn
+        /// read the Paint layer they work on, so a layer needs a copy of what is under it before they can change it.
+        /// </summary>
+        private void AddCopyFromBelowMenuItems(GenericMenu menu, TextureSet set, TexturePaintLayer layer)
+        {
+            if (layer?.kind != TexturePaintLayerKind.Paint) return;
+            bool available = CanCopyLayerChannelFromBelow(set, layer, out _);
+            List<TexturePaintChannel> channels = GetSelectableChannels(set);
+            for (int i = 0; i < channels.Count; i++)
+            {
+                TexturePaintChannel channel = channels[i];
+                var content = new GUIContent("Copy from Below/" + TexturePaintChannelUtility.DisplayName(channel));
+                if (available) menu.AddItem(content, false, () => CopyLayerChannelFromBelow(set, layer, channel));
+                else menu.AddDisabledItem(content);
+            }
+        }
+
+        /// <summary>Copy from Below from the UI. Asks before replacing pixels the layer already has on the channel.</summary>
+        private void CopyLayerChannelFromBelow(TextureSet set, TexturePaintLayer layer, TexturePaintChannel channel)
+        {
+            if (set == null || layer == null) return;
+            FinishProjectionEdit();
+            if (strokeActive) EndPaint();
+            string channelName = TexturePaintChannelUtility.DisplayName(channel);
+            if (layer.channels.ContainsKey(channel) && !EditorUtility.DisplayDialog("Copy from Below",
+                    $"Replace what '{layer.name}' has on {channelName} with a copy of everything below the layer?\n\n" +
+                    "Undo remains available.", "Replace", "Cancel")) return;
+            int index = set.layers.IndexOf(layer);
+            if (index < 0) return;
+            if (set.activeLayerIndex != index)
+            {
+                set.activeLayerIndex = index;
+                SyncActiveLayerSelection(set);
+            }
+            if (!CopyLayerChannelFromBelowWithHistory(set, layer, channel)) return;
+            if (IsLayerMaskMode(set)) ExitLayerMaskMode();
+            SelectLayerChannelForEditing(layer, channel);
+            SetLayerChannelExpanded(LayerChannelFoldoutId(layer, channel), true);
+        }
+
+        /// <summary>
+        /// Under the brush controls: says why Blur, Smear, Clone, Dodge or Burn does nothing on a Paint layer that has
+        /// no pixels on the selected channel, and offers the copy that gives it some.
+        /// </summary>
+        private void DrawBrushNeedsPixelsHint(TextureSet set)
+        {
+            if (tool != TexturePaintTool.Blur && tool != TexturePaintTool.Smear && tool != TexturePaintTool.Clone &&
+                tool != TexturePaintTool.Dodge && tool != TexturePaintTool.Burn) return;
+            if (set == null || IsLayerMaskMode(set) || (uint)set.activeLayerIndex >= (uint)set.layers.Count) return;
+            TexturePaintLayer layer = set.layers[set.activeLayerIndex];
+            if (layer == null || layer.kind != TexturePaintLayerKind.Paint ||
+                layer.channels.ContainsKey(selectedChannel) || set.GetChannel(selectedChannel) == null ||
+                !CanCopyLayerChannelFromBelow(set, layer, out _)) return;
+            string channelName = TexturePaintChannelUtility.DisplayName(selectedChannel);
+            EditorGUILayout.HelpBox($"{tool} changes the pixels of the layer it works on, and '{layer.name}' has none on " +
+                $"{channelName} yet. Copy what is below into this layer to work on it. The layers below stay as they are.",
+                MessageType.Info);
+            if (GUILayout.Button(new GUIContent($"Copy {channelName} from Below",
+                    "Fill this channel of the Paint layer with the result of everything under it.")))
+                CopyLayerChannelFromBelow(set, layer, selectedChannel);
         }
 
         private void EnterLayerMaskMode(TextureSet set, TexturePaintLayer layer)
@@ -7276,9 +7513,14 @@ namespace UMA.TexturePaint.Editor
                 "Ctrl/Cmd+D Duplicate Layer    F2 Rename    Delete Remove\n" +
                 "Ctrl/Cmd+S Save";
 
+        internal static double StatusDuration(string message) =>
+            Mathf.Clamp(3f + ((message?.Length ?? 0) - 40) / 20f, 3f, 12f);
+
         private void ShowWorkspaceStatus(string message)
         {
-            workspaceStatus = message; workspaceStatusUntil = EditorApplication.timeSinceStartup + 3d;
+            // Three seconds for a short note; longer notes stay about as long as they take to read.
+            workspaceStatus = message;
+            workspaceStatusUntil = EditorApplication.timeSinceStartup + StatusDuration(message);
             TexturePaintDockWindow.RepaintOpenWindows();
             TexturePaintUVWindow.RepaintOpenWindows();
             TexturePaintBrushWindow.RepaintOpenWindows();
@@ -7403,6 +7645,7 @@ namespace UMA.TexturePaint.Editor
             {
                 case TexturePaintChannel.Normal: return new Color(0.5f, 0.5f, 1f, 1f);
                 case TexturePaintChannel.NormalControl: return new Color(0.5f, 0.5f, 0.5f, 1f);
+                case TexturePaintChannel.WrinkleHeight: return new Color(0.5f, 0.5f, 0.5f, 1f);
                 case TexturePaintChannel.Albedo: return Color.white;
                 case TexturePaintChannel.AmbientOcclusion: return Color.white;
                 case TexturePaintChannel.Roughness: return Color.white;

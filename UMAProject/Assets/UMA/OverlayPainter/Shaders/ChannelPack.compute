@@ -2,6 +2,8 @@
 #pragma kernel CSPackChannels
 #pragma kernel CSApplyNormalControl
 #pragma kernel CSApplyPluginTile
+#pragma kernel CSApplyWrinkleHeight
+#pragma kernel CSGrayFromRed
 
 Texture2D<float4> _Source;
 Texture2D<float4> _Red;
@@ -40,6 +42,14 @@ int _PluginBlend;
 int _PluginChannel;
 int _PluginMaskMode;
 float _PluginOpacity;
+// Expression wrinkles (UMA3SkinWrinkles.hlsl): Wrinkle Height drives the red and green slope of _WrinkleMap.
+Texture2D<float4> _WrinkleHeight;
+Texture2D<float4> _WrinkleHeightBase;
+Texture2D<float4> _WrinkleFrame;
+Texture2D<float4> _WrinkleAux;
+float _WrinkleHeightScale;
+float _WrinkleMaxSlope;
+SamplerState sampler_LinearClamp;
 
 float ReadComponent(float4 value, int component)
 {
@@ -203,4 +213,73 @@ void CSApplyPluginTile(uint3 id : SV_DispatchThreadID)
         destination.rgb = value.xxx;
     }
     _Destination[pixel] = destination;
+}
+
+// Height change in mm from the height the session started with.
+float WrinkleDelta(int2 pixel)
+{
+    pixel = clamp(pixel, int2(0, 0), _TextureSize - 1);
+    return (_WrinkleHeight.Load(int3(pixel, 0)).r - _WrinkleHeightBase.Load(int3(pixel, 0)).r) * _WrinkleHeightScale;
+}
+
+bool WrinkleCovered(int2 pixel)
+{
+    return all(pixel >= 0) && all(pixel < _TextureSize) && _WrinkleAux.Load(int3(pixel, 0)).r > 0.5;
+}
+
+// Central difference where both neighbours are on the mesh, one-sided at an island edge, 0 on a lone texel.
+float WrinkleDerivative(int2 pixel, int2 step)
+{
+    bool plus = WrinkleCovered(pixel + step);
+    bool minus = WrinkleCovered(pixel - step);
+    if (plus && minus) return (WrinkleDelta(pixel + step) - WrinkleDelta(pixel - step)) * 0.5;
+    if (plus) return WrinkleDelta(pixel + step) - WrinkleDelta(pixel);
+    if (minus) return WrinkleDelta(pixel) - WrinkleDelta(pixel - step);
+    return 0.0;
+}
+
+// The GPU twin of UMAWrinkleSourceMaps.AddSlopes: the slope of the height change is added to the source map's
+// slope along each texel's own tangent frame. Texels whose height did not change keep the source values exactly.
+// Padding texels (outside the UV islands) copy the covered texel the baker copies when that texel changed.
+[numthreads(16,16,1)]
+void CSApplyWrinkleHeight(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(id.xy) + _TileOffset;
+    if (any(pixel < 0) || any(pixel >= _TextureSize)) return;
+    int2 texel = pixel;
+    float4 aux = _WrinkleAux.Load(int3(pixel, 0));
+    if (aux.r < 0.5 && aux.a > 0.5) texel = int2(aux.gb + 0.5);
+    // Unchanged texels, padding included, keep their own source values (block compression stores a padding texel
+    // slightly differently from the island texel it copies).
+    float2 rg = _Source.Load(int3(pixel, 0)).rg;
+    if (WrinkleCovered(texel))
+    {
+        float gx = WrinkleDerivative(texel, int2(1, 0));
+        float gy = WrinkleDerivative(texel, int2(0, 1));
+        if (gx != 0.0 || gy != 0.0)
+        {
+            rg = _Source.Load(int3(texel, 0)).rg;
+            float2 xy = rg * 2.0 - 1.0;
+            float z = sqrt(max(1e-8, 1.0 - dot(xy, xy)));
+            float2 slope = -xy / z;
+            float4 frame = _WrinkleFrame.Load(int3(texel, 0));
+            slope += float2(dot(frame.xy, float2(gx, gy)), dot(frame.zw, float2(gx, gy)));
+            slope = clamp(slope, -_WrinkleMaxSlope, _WrinkleMaxSlope);
+            rg = normalize(float3(-slope, 1.0)).xy * 0.5 + 0.5;
+        }
+    }
+    _Destination[pixel] = float4(rg, 0.0, 1.0);
+}
+
+// A single-channel height texture (any size) as gray RGB at the destination's size.
+[numthreads(16,16,1)]
+void CSGrayFromRed(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= (uint2)_DispatchSize)) return;
+    int2 pixel = int2(id.xy);
+    if (any(pixel >= _TextureSize)) return;
+    float2 uv = (float2(pixel) + 0.5) / float2(_TextureSize);
+    float value = _Source.SampleLevel(sampler_LinearClamp, uv, 0).r;
+    _Destination[pixel] = float4(value, value, value, 1.0);
 }

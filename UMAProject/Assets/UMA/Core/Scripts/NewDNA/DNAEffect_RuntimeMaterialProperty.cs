@@ -6,7 +6,9 @@ namespace UMA
 {
     /// <summary>
     /// Applies a shader property through renderer MaterialPropertyBlocks without
-    /// regenerating UMA textures or meshes.
+    /// regenerating UMA textures or meshes. As character DNA it is written at the end of
+    /// every build and whenever its DNA value changes; an expression player writes it as
+    /// often as the expression moves.
     /// </summary>
     [Serializable]
     public sealed class DNAEffect_RuntimeMaterialProperty : DNAEffect
@@ -50,7 +52,7 @@ namespace UMA
             new List<Material>(4);
 
         public override DNAInstanceCollection.DNABuildType AreaEffect =>
-            DNAInstanceCollection.DNABuildType.None;
+            DNAInstanceCollection.DNABuildType.MaterialProperty;
 
         public override ExpressionEffectPhase ExpressionPhases =>
             ExpressionEffectPhase.RuntimeMaterial;
@@ -59,6 +61,16 @@ namespace UMA
             "Writes a float, color, vector, and/or texture through a renderer " +
             "MaterialPropertyBlock. This is safe for continuously animated " +
             "wrinkle, blush, and similar shader controls.";
+
+        /// <summary>
+        /// Character DNA: the generator and the avatar call this for the effects that
+        /// are set on the renderers. It is the same write an expression player does.
+        /// </summary>
+        public override void PostApply(UMAData avatar, DNA dna, float value)
+        {
+            base.PostApply(avatar, dna, value);
+            ApplyExpressionMaterial(avatar, dna, value);
+        }
 
         public override void ApplyExpressionMaterial(
             UMAData avatar,
@@ -160,7 +172,10 @@ namespace UMA
                             propertyId,
                             vectorValue);
                     }
-                    if ((parameterType & ParameterType.Texture) != 0)
+                    // A property block cannot hold "no texture": SetTexture throws on null.
+                    // An unset texture leaves the property as it is.
+                    if ((parameterType & ParameterType.Texture) != 0 &&
+                        textureValue != null)
                     {
                         _propertyBlock.SetTexture(
                             propertyId,

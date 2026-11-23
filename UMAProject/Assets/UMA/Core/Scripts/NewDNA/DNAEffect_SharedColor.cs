@@ -45,15 +45,21 @@ namespace UMA
             colorType = (ColorType)UnityEditor.EditorGUILayout.EnumPopup("Color Type", colorType);
         }
 #endif
-        // Updating a sharedcolor only touches textures
-        public override DNAInstanceCollection.DNABuildType AreaEffect => DNABuildType.Texture;
+        // The color is written while the recipe is loaded, so a DNA change needs that step run again
+        // (SharedColors), not only the textures redrawn from the colors already in place.
+        public override DNAInstanceCollection.DNABuildType AreaEffect => DNABuildType.Texture | DNABuildType.SharedColors;
         public override ExpressionEffectPhase ExpressionPhases =>
             ExpressionEffectPhase.BuildAfterRecipe;
+
+        // The color is worked out from FromColor and ToColor alone and written outright, so the default
+        // DNA value must write it too. Otherwise the color of the last value that was not the default stays.
+        public override bool AppliesAtDefaultValue => true;
+
         /// <inheritdoc />
         public override void AfterRecipeGenerated(UMAData avatar, DNA dna, float value)
-        {            
+        {
             base.AfterRecipeGenerated(avatar, dna, value);
-            if (avatar != null && !string.IsNullOrEmpty(sharedColorName))
+            if (avatar is DynamicCharacterAvatar && !string.IsNullOrEmpty(sharedColorName))
             {
                 value = GetMappedValue(value);
                 OverlayColorData sharedColor = (avatar as DynamicCharacterAvatar).GetColor(sharedColorName);

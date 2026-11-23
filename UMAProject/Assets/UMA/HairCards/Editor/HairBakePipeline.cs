@@ -147,11 +147,20 @@ namespace UMA.HairCards.Editor
             private readonly Dictionary<UnityEngine.Object, UnityEngine.Object> backups =
                 new Dictionary<UnityEngine.Object, UnityEngine.Object>();
             private readonly List<string> createdPaths = new List<string>();
+            private readonly List<UnityEngine.Object> changedAssets;
             private bool committed;
+
+            /// <param name="changedAssets">Receives every existing asset the bake changes (each one it backs up),
+            /// so the caller can save exactly those after the bake, committed or rolled back.</param>
+            public BakeTransaction(List<UnityEngine.Object> changedAssets)
+            {
+                this.changedAssets = changedAssets;
+            }
 
             public void Backup(UnityEngine.Object target)
             {
                 if (target == null || backups.ContainsKey(target)) return;
+                if (changedAssets != null && !changedAssets.Contains(target)) changedAssets.Add(target);
                 UnityEngine.Object snapshot = UnityEngine.Object.Instantiate(target);
                 snapshot.hideFlags = HideFlags.HideAndDontSave;
                 backups.Add(target, snapshot);
@@ -265,10 +274,11 @@ namespace UMA.HairCards.Editor
                     outcome.warnings.Add(skinningWarning);
                 }
 
+                List<UnityEngine.Object> changedAssets = new List<UnityEngine.Object>();
                 try
                 {
                     if(groom.CharacterBinding!=null) HairCharacterBindingUtility.Skin(groom,build);
-                    using BakeTransaction transaction = new BakeTransaction();
+                    using BakeTransaction transaction = new BakeTransaction(changedAssets);
                     AssetDatabase.StartAssetEditing();
                     Mesh meshAsset = null;
                     if (settings.createMesh)
@@ -311,7 +321,10 @@ namespace UMA.HairCards.Editor
                 finally
                 {
                     AssetDatabase.StopAssetEditing();
-                    AssetDatabase.SaveAssets();
+                    // Only what the bake wrote or changed (and restored, after a rollback), never the
+                    // project's other unsaved assets.
+                    SaveIfAsset(outcome.assets);
+                    SaveIfAsset(changedAssets);
                     AssetDatabase.Refresh();
                 }
             }
@@ -553,6 +566,15 @@ namespace UMA.HairCards.Editor
             }
             EditorUtility.SetDirty(recipe);
             return recipe;
+        }
+
+        private static void SaveIfAsset(IReadOnlyList<UnityEngine.Object> assets)
+        {
+            for (int i = 0; i < assets.Count; i++)
+            {
+                UnityEngine.Object asset = assets[i];
+                if (asset != null && EditorUtility.IsPersistent(asset)) AssetDatabase.SaveAssetIfDirty(asset);
+            }
         }
 
         private static void AddAssetsToIndexer(IReadOnlyList<UnityEngine.Object> assets)

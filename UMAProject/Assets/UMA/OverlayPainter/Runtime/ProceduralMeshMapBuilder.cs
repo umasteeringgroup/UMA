@@ -35,6 +35,17 @@ namespace UMA.TexturePaint
 
     public static class ProceduralMeshMapBuilder
     {
+        /// <summary>
+        /// Normals from the shape of a mesh that has none. Vertices at one position (the copies along a UV seam or
+        /// where slots connect) get one shared normal, which Mesh.RecalculateNormals does not do.
+        /// </summary>
+        internal static Vector3[] ShapeNormals(Vector3[] vertices, int[] triangles)
+        {
+            var normals = new Vector3[vertices.Length];
+            new UMABuddyNormals(vertices, triangles).Recalculate(vertices, normals, true);
+            return normals;
+        }
+
         public static ProceduralMeshMaps Build(ReconstructedSurface surface, int width, int height,
             TexturePaintOperationContext operation = default, TexturePaintMeshMapMask requestedMaps = TexturePaintMeshMapMask.All)
         {
@@ -48,8 +59,8 @@ namespace UMA.TexturePaint
                 throw new ArgumentException("Mesh maps require vertices, UV0, and triangles.", nameof(surface));
             if (normals.Length != vertices.Length)
             {
-                mesh.RecalculateNormals();
-                normals = mesh.normals;
+                normals = ShapeNormals(vertices, triangles);
+                mesh.normals = normals;
             }
 
             width = Mathf.Max(16, width);

@@ -11,7 +11,8 @@ namespace UMA
     // painting does.
     public partial class VertexEditorStage
     {
-        [SerializeField] private bool showVertexColorsView;
+        // Not serialized, like the other display options: see showOriginalMaterials.
+        [NonSerialized] private bool showVertexColorsView;
         [SerializeField] private bool showHairRootToTipSection;
         [SerializeField] private HairRootToTip.EndRule hairTieRule = HairRootToTip.EndRule.TextureTop;
         [SerializeField] private List<string> hairHeadSlotNames = new List<string>();
@@ -232,15 +233,9 @@ namespace UMA
                 EditorGUILayout.HelpBox(hairLastResult, hairLastResultType);
             }
 
-            using (new EditorGUI.DisabledScope(!vertexPaintDirty))
-            {
-                if (GUILayout.Button(new GUIContent(
-                        "Save Colors to SlotDataAsset",
-                        "Write the hair slot's colors into its SlotDataAsset. Save as MeshModifier, in Vertex Paint, keeps them in a MeshModifier instead.")))
-                {
-                    SaveVertexPaintToSlotDataAsset();
-                }
-            }
+            EditorGUILayout.LabelField(
+                "Save the colors from the Save panel of the Vertex Editor window: Save Vertex Colors to Slot writes them into the hair slot, Save as Mesh Modifier keeps them in a MeshModifier.",
+                EditorStyles.wordWrappedMiniLabel);
         }
 
         /// <summary>The other slots shown on the stage, which the hair could grow from.</summary>

@@ -78,6 +78,7 @@ namespace UMA
         public Mesh BakedMesh;
         public MeshHideAsset CurrentHideAsset;
         public MeshHideAssetCollection CurrentHideCollection;
+        [NonSerialized] private UnityEngine.Object[] selectionBeforeOpen;
         private readonly Dictionary<MeshHideAsset, string> meshHideLoadWarnings = new Dictionary<MeshHideAsset, string>();
 
         private int selectedLOD;
@@ -252,6 +253,14 @@ namespace UMA
         [SerializeField]
         private bool paintMirrorX;
         private bool paintAddMode = true;
+        [NonSerialized] private bool lastDrawnShift;
+
+        /// <summary>
+        /// The brushes' mode for this event: Hide Faces or Unhide Faces from the toolbar, inverted while Shift is
+        /// held, so a quick correction does not need a trip to the toolbar. The Select tool keeps its own
+        /// Shift (hide) and Ctrl (unhide) drags.
+        /// </summary>
+        private bool BrushAddsFaces(Event evt) => paintMode && evt != null && evt.shift ? !paintAddMode : paintAddMode;
         private PaintBrushMode paintBrushMode = PaintBrushMode.Point;
         // Brush radius on the model, in meters (shown in millimeters).
         [SerializeField]
@@ -520,6 +529,7 @@ namespace UMA
             stage.titleContent.image = EditorGUIUtility.IconContent("Mesh Icon").image;
             stage.thisDCA = DCA;
             stage.CurrentHideAsset = hideAsset;
+            stage.selectionBeforeOpen = Selection.objects;
             StageUtility.GoToStage(stage, true);
             return stage;
         }
@@ -537,6 +547,7 @@ namespace UMA
             stage.titleContent.image = EditorGUIUtility.IconContent("Mesh Icon").image;
             stage.thisDCA = DCA;
             stage.CurrentHideCollection = hideCollection;
+            stage.selectionBeforeOpen = Selection.objects;
             StageUtility.GoToStage(stage, true);
             return stage;
         }
@@ -621,6 +632,8 @@ namespace UMA
 
             Tools.hidden = true;
             SceneView.duringSceneGui += OnSceneGUI;
+            EditorApplication.modifierKeysChanged -= OnModifierKeysChanged;
+            EditorApplication.modifierKeysChanged += OnModifierKeysChanged;
             Undo.undoRedoPerformed += OnUndoRedoSelection;
             NeedsCameraSetup = true;
 
@@ -929,6 +942,7 @@ namespace UMA
             RestoreOriginalWearableVisibility();
 
             SceneView.duringSceneGui -= OnSceneGUI;
+            EditorApplication.modifierKeysChanged -= OnModifierKeysChanged;
             Undo.undoRedoPerformed -= OnUndoRedoSelection;
             Tools.hidden = false;
 
@@ -977,6 +991,51 @@ namespace UMA
             originalSlotSuppressed = null;
             originalWearableDisabled = null;
 
+            RestoreSelectionAfterClose(selectionBeforeOpen);
+            selectionBeforeOpen = null;
+        }
+
+        /// <summary>
+        /// Unity clears the selection when it changes stages. Once the stage has closed, select again what was
+        /// selected when it opened (for example the Mesh Hide Asset in the Project window) and ping an asset
+        /// so its place in the Project window shows.
+        /// </summary>
+        private static void RestoreSelectionAfterClose(UnityEngine.Object[] selection)
+        {
+            if (selection == null || selection.Length == 0)
+            {
+                return;
+            }
+
+            void Restore()
+            {
+                if (StageUtility.GetCurrentStage() is FaceEditorStage)
+                {
+                    return; // still closing; try on the next update
+                }
+
+                EditorApplication.update -= Restore;
+                var alive = new List<UnityEngine.Object>(selection.Length);
+                foreach (var item in selection)
+                {
+                    if (item != null)
+                    {
+                        alive.Add(item);
+                    }
+                }
+                if (alive.Count == 0)
+                {
+                    return;
+                }
+
+                Selection.objects = alive.ToArray();
+                if (EditorUtility.IsPersistent(alive[0]))
+                {
+                    EditorGUIUtility.PingObject(alive[0]);
+                }
+            }
+
+            EditorApplication.update += Restore;
         }
 
         private void OnUndoRedoSelection()
@@ -998,8 +1057,32 @@ namespace UMA
             DoSceneGUI(view);
         }
 
+        /// <summary>
+        /// Unity reports a Shift press or release here even when the Scene view never gets the key event
+        /// (released over a panel, over a slot that is not editable, or with another window focused), so the
+        /// brush colour, the Hide/Unhide highlight and the tool label always follow Shift.
+        /// </summary>
+        private void OnModifierKeysChanged()
+        {
+            if (!closing)
+            {
+                SceneView.RepaintAll();
+            }
+        }
+
         private void DoSceneGUI(SceneView sceneView)
         {
+            // Failsafe for the above: any event that arrives with a different Shift state redraws once.
+            Event current = Event.current;
+            if (current != null && current.shift != lastDrawnShift)
+            {
+                lastDrawnShift = current.shift;
+                if (current.type != EventType.Repaint && current.type != EventType.Layout)
+                {
+                    sceneView.Repaint();
+                }
+            }
+
             if (NeedsCameraSetup)
             {
                 SetupCamera(sceneView);
@@ -1095,7 +1178,7 @@ namespace UMA
             }
 
             float brushRadius = GetPaintBrushRadiusPixels(sceneView, mousePosition);
-            Color brushColor = paintAddMode ? new Color(0.25f, 0.75f, 1f, 0.9f) : new Color(1f, 0.35f, 0.25f, 0.9f);
+            Color brushColor = BrushAddsFaces(currentEvent) ? new Color(0.25f, 0.75f, 1f, 0.9f) : new Color(1f, 0.35f, 0.25f, 0.9f);
 
             Handles.BeginGUI();
             try
@@ -1736,6 +1819,13 @@ namespace UMA
                 return;
             }
 
+            // Opened on a Mesh Hide Asset or collection (dropped on the avatar, or from the Rig Profile Editor):
+            // face the avatar and frame the slots it hides, which loading has already made editable.
+            if ((CurrentHideAsset != null || CurrentHideCollection != null) && FrameSelectedSlots(view, cameraAnchor.transform.rotation))
+            {
+                return;
+            }
+
             view.LookAtDirect(cameraAnchor.transform.position, cameraAnchor.transform.rotation, 2.5f);
             view.Repaint();
         }
@@ -1860,12 +1950,14 @@ namespace UMA
             }
 
             toolbar.Separator(ref y);
-            if (toolbar.Toggle(ref y, "Hide", "Hide Faces", "Painting and selecting hide faces (shown in red).", paintAddMode))
+            // Highlight the mode the brushes paint in right now, so holding Shift shows the other one.
+            bool brushAdds = BrushAddsFaces(Event.current);
+            if (toolbar.Toggle(ref y, "Hide", "Hide Faces", "Painting and selecting hide faces (shown in red). Hold Shift while painting to unhide instead.", brushAdds))
             {
                 paintAddMode = true;
                 SceneView.RepaintAll();
             }
-            if (toolbar.Toggle(ref y, "Unhide", "Unhide Faces", "Painting and selecting unhide faces.", !paintAddMode))
+            if (toolbar.Toggle(ref y, "Unhide", "Unhide Faces", "Painting and selecting unhide faces. Hold Shift while painting to hide instead.", !brushAdds))
             {
                 paintAddMode = false;
                 SceneView.RepaintAll();
@@ -1923,7 +2015,7 @@ namespace UMA
                 EditorGUIUtility.SetIconSize(new Vector2(16f, 16f));
                 Color oldContent = GUI.contentColor;
                 GUI.contentColor = StageFloatingToolbar.IconTint;
-                GUILayout.Label(new GUIContent(" " + item.label + (paintAddMode ? "  (Hide)" : "  (Unhide)"), FaceToolbar.GetIcon(item.icon), item.tooltip), EditorStyles.boldLabel);
+                GUILayout.Label(new GUIContent(" " + item.label + (BrushAddsFaces(Event.current) ? "  (Hide)" : "  (Unhide)"), FaceToolbar.GetIcon(item.icon), item.tooltip), EditorStyles.boldLabel);
                 GUI.contentColor = oldContent;
                 EditorGUIUtility.SetIconSize(oldIconSize);
             }
@@ -1980,16 +2072,7 @@ namespace UMA
                 return;
             }
 
-            const float buttonWidth = 86f;
-            const float buttonHeight = 26f;
-            const float margin = 8f;
-            Rect buttonRect = new Rect(sceneView.position.width - buttonWidth - margin, 28f, buttonWidth, buttonHeight);
-
-            Color previousBackground = GUI.backgroundColor;
-            GUI.backgroundColor = new Color(0.82f, 0.25f, 0.2f, 1f);
-            bool pressed = GUI.Button(buttonRect, "Close", EditorStyles.miniButton);
-            GUI.backgroundColor = previousBackground;
-            if (pressed)
+            if (StageFloatingToolbar.DrawCloseButton(sceneView, "Close Face Editor"))
             {
                 RequestClose();
                 Event.current.Use();
@@ -2223,38 +2306,16 @@ namespace UMA
                 return new Rect(0f, 0f, 0f, 0f);
             }
 
-            // `SceneView.position` is in GUI coordinates (top-left origin) and includes toolbars.
-            // `camera.pixelRect` is in pixel coordinates (bottom-left origin) and excludes toolbars.
-            // We can use both to derive the inset margins (as suggested) and then build a GUI-space usable rect.
-
-            Rect full = view.position;
-            Camera cam = view.camera;
-            if (cam == null)
+            // The camera area in GUI points, with the origin at its top-left (the origin Handles.BeginGUI uses).
+            // `SceneView.position` is the whole window, wider and taller when toolbars are docked along its
+            // edges, and `camera.pixelRect` is in pixels, not points, on a scaled display.
+            Rect viewport = view.cameraViewport;
+            if (viewport.width > 1f && viewport.height > 1f)
             {
-                return new Rect(0f, 0f, full.width, full.height);
+                return new Rect(0f, 0f, viewport.width, viewport.height);
             }
 
-            Rect pixelView = cam.pixelRect;
-
-            // Convert pixelView Y values (bottom-left origin) into GUI-space Y values (top-left origin).
-            // In GUI-space:
-            // - pixelView top edge = full.height - pixelView.yMax
-            // - pixelView bottom edge = full.height - pixelView.yMin
-            float viewTopGui = full.height - pixelView.yMax;
-            float viewBottomGui = full.height - pixelView.yMin;
-
-            float topToolbar = Mathf.Max(0f, viewTopGui - 0f);
-            float bottomToolbar = Mathf.Max(0f, full.height - viewBottomGui);
-            float leftToolbar = Mathf.Max(0f, pixelView.xMin - 0f);
-            float rightToolbar = Mathf.Max(0f, full.width - pixelView.xMax);
-
-            float x = leftToolbar;
-            float y = topToolbar;
-            float w = Mathf.Max(0f, full.width - leftToolbar - rightToolbar);
-            float h = Mathf.Max(0f, full.height - topToolbar - bottomToolbar);
-
-            // Return in local GUI coords (origin 0,0 inside the SceneView GUI event).
-            return new Rect(x, y, w, h);
+            return new Rect(0f, 0f, view.position.width, view.position.height);
         }
 
         private void DoMeshHideAssetsWindow(int id)
@@ -3456,17 +3517,29 @@ namespace UMA
                 return;
             }
 
-            Bounds bounds;
-            if (!TryGetSelectedSlotBoundsWorld(out bounds))
+            if (!FrameSelectedSlots(view, view.rotation))
             {
-                bounds = new Bounds(FaceObject.transform.position, Vector3.one);
+                FrameBounds(view, new Bounds(FaceObject.transform.position, Vector3.one), view.rotation);
+            }
+        }
+
+        /// <summary>Points the Scene view at the editable slots from the given direction. False when no editable slot is on the mesh.</summary>
+        private bool FrameSelectedSlots(SceneView view, Quaternion rotation)
+        {
+            if (view == null || FaceObject == null || BakedMesh == null || !TryGetSelectedSlotBoundsWorld(out Bounds bounds))
+            {
+                return false;
             }
 
+            FrameBounds(view, bounds, rotation);
+            return true;
+        }
+
+        private static void FrameBounds(SceneView view, Bounds bounds, Quaternion rotation)
+        {
             float radius = Mathf.Max(0.01f, bounds.extents.magnitude);
             float distance = Mathf.Max(0.1f, radius * 1.5f);
-
-            Quaternion rot = view.rotation;
-            view.LookAtDirect(bounds.center, rot, distance);
+            view.LookAtDirect(bounds.center, rotation, distance);
             view.Repaint();
         }
 
@@ -4307,6 +4380,13 @@ namespace UMA
                 // Let normal selection continue too.
             }
 
+            if (paintMode && (evt.keyCode == KeyCode.LeftShift || evt.keyCode == KeyCode.RightShift) &&
+                (evt.type == EventType.KeyDown || evt.type == EventType.KeyUp))
+            {
+                // Redraw the brush in the other mode's colour as soon as Shift goes down or up.
+                SceneView.RepaintAll();
+            }
+
             if (evt.alt)
             {
                 return;
@@ -4346,7 +4426,7 @@ namespace UMA
 
                 if (isPaintDragging)
                 {
-                    bool add = paintMode ? paintAddMode : evt.shift;
+                    bool add = paintMode ? BrushAddsFaces(evt) : evt.shift;
                     RecordSelectionUndo(add ? "Paint Add Faces" : "Paint Remove Faces");
                     ApplyPaintSelectionAtMouse(evt.mousePosition, add, paintMode, view);
                     evt.Use();
@@ -4364,7 +4444,7 @@ namespace UMA
             {
                 if (isPaintDragging)
                 {
-                    bool add = paintMode ? paintAddMode : evt.shift;
+                    bool add = paintMode ? BrushAddsFaces(evt) : evt.shift;
                     ApplyPaintSelectionAtMouse(evt.mousePosition, add, paintMode, view);
                 }
                 else

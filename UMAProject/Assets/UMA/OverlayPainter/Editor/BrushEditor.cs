@@ -70,7 +70,7 @@ namespace UMA.TexturePaint.Editor
         {
             string path = EditorUtility.SaveFilePanelInProject("Create Brush Library", "Overlay Painter Brush Library", "asset", string.Empty);
             if (string.IsNullOrEmpty(path)) return;
-            library = CreateInstance<BrushLibrary>(); AssetDatabase.CreateAsset(library, path); AssetDatabase.SaveAssets();
+            library = CreateInstance<BrushLibrary>(); AssetDatabase.CreateAsset(library, path); AssetDatabase.SaveAssetIfDirty(library);
             TexturePaintStageWindow.ActiveStage?.SetCurrentBrushLibrary(library);
         }
 
@@ -82,7 +82,7 @@ namespace UMA.TexturePaint.Editor
             library.Add(preset);
             TexturePaintStageWindow.ActiveStage?.RecordBrushLibraryChange(library, preset,
                 library.Brushes.Count - 1, true);
-            EditorUtility.SetDirty(library); AssetDatabase.SaveAssets();
+            EditorUtility.SetDirty(library); AssetDatabase.SaveAssetIfDirty(library);
             selection = library.Brushes.Count - 1;
         }
 
@@ -113,7 +113,7 @@ namespace UMA.TexturePaint.Editor
             AssetDatabase.CreateAsset(preset, path); library.Add(preset);
             TexturePaintStageWindow.ActiveStage?.RecordBrushLibraryChange(library, preset,
                 library.Brushes.Count - 1, true);
-            EditorUtility.SetDirty(library); AssetDatabase.SaveAssets();
+            EditorUtility.SetDirty(library); AssetDatabase.SaveAssetIfDirty(library);
             selection = library.Brushes.Count - 1;
         }
     }
@@ -275,7 +275,7 @@ namespace UMA.TexturePaint.Editor
                 created.Add(preset);
             }
             EditorUtility.SetDirty(library);
-            AssetDatabase.SaveAssets();
+            AssetDatabase.SaveAssetIfDirty(library);
             Undo.CollapseUndoOperations(undoGroup);
             return created;
         }

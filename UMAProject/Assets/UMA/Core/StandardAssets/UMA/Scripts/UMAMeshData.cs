@@ -1788,6 +1788,11 @@ namespace UMA
 				}
 
 				var boneIterator = bone.parent;
+				if (boneIterator == null)
+				{
+					// A bone at the very top has no parent to record.
+					continue;
+				}
 				var boneIteratorChild = bone;
 				var boneHash = UMAUtils.StringToHash(boneIterator.name);
 				var childHash = UMAUtils.StringToHash(boneIteratorChild.name);
@@ -1801,6 +1806,11 @@ namespace UMA
 
 					boneIteratorChild = boneIterator;
 					boneIterator = boneIterator.parent;
+					if (boneIterator == null)
+					{
+						// Reached the top without passing the root bone (it is not an ancestor of this bone).
+						break;
+					}
 					childHash = boneHash;
 					boneHash = UMAUtils.StringToHash(boneIterator.name);
 				}
@@ -1849,12 +1859,21 @@ namespace UMA
 				}
 			}
 
-			while (rootBone.parent != null)
+			if (rootBone == null)
 			{
-				rootBone = rootBone.parent;
+				// Every bone reference is missing (a NullReferenceException here before).
+				throw new InvalidOperationException("The skinned mesh's root bone and all of its bones are missing. " +
+					"The bones a slot's mesh is skinned to must be in the model, under the Root Bone '" + RootBoneName + "'.");
 			}
 
-			return RecursiveFindBone(rootBone, RootBoneName);
+			Transform top = rootBone;
+			while (top.parent != null)
+			{
+				top = top.parent;
+			}
+
+			// No bone with the root bone's name: the renderer's own root (or first bone) instead of none.
+			return RecursiveFindBone(top, RootBoneName) ?? rootBone;
 		}
 
 		/// <summary>

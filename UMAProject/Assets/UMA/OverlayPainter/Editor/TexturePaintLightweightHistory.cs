@@ -1496,14 +1496,19 @@ namespace UMA.TexturePaint.Editor
                 ShowWorkspaceStatus(error);
                 return false;
             }
+            // UDIM tiles of a generated character can use different materials: only the head tile has the expression
+            // wrinkle material, for example. Add the channel to the members that support it and leave the others as
+            // they are; refuse only when no member supports it.
+            List<TexturePaintLogicalLayerMember> unsupported = peers.FindAll(peer => peer.textureSet.GetChannel(channel) == null);
+            if (unsupported.Count == peers.Count)
+            {
+                ShowWorkspaceStatus($"Target member '{unsupported[0].targetMember?.slotName}' does not support {channel}.");
+                return false;
+            }
+            if (unsupported.Count > 0) peers = peers.FindAll(peer => peer.textureSet.GetChannel(channel) != null);
             for (int i = 0; i < peers.Count; i++)
             {
                 TexturePaintLogicalLayerMember peer = peers[i];
-                if (peer.textureSet.GetChannel(channel) == null)
-                {
-                    ShowWorkspaceStatus($"Target member '{peer.targetMember?.slotName}' does not support {channel}.");
-                    return false;
-                }
                 if (peer.layer.channels.ContainsKey(channel))
                 {
                     ShowWorkspaceStatus($"{channel} is already present on this logical layer.");
@@ -1539,7 +1544,9 @@ namespace UMA.TexturePaint.Editor
                             locked = false,
                             contribution = 1f,
                             opacity = 1f,
-                            blendMode = peer.layer.blendMode
+                            // Painted Wrinkle Height is relative: Overlay adds to the wrinkles below (mid gray changes nothing).
+                            blendMode = peer.layer.UsesRelativeWrinkleHeight(channel)
+                                ? TexturePaintBlendMode.Overlay : peer.layer.blendMode
                         };
                     var location = new LayerChannelLocation
                     {
@@ -1591,12 +1598,17 @@ namespace UMA.TexturePaint.Editor
             if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
                     out string error))
             { ShowWorkspaceStatus(error); return false; }
+            // Members whose material lacks the channel never had it (see AddLayerChannelWithHistory).
+            List<TexturePaintLogicalLayerMember> holders = peers.FindAll(peer => peer.layer.channels.ContainsKey(channel));
+            List<TexturePaintLogicalLayerMember> missing = peers.FindAll(peer => !peer.layer.channels.ContainsKey(channel));
+            if (holders.Count == 0 || missing.Exists(peer => peer.textureSet.GetChannel(channel) != null))
+            { ShowWorkspaceStatus($"{channel} is not present on every logical layer member."); return false; }
+            peers = holders;
             var removed = new List<LayerChannelLocation>(peers.Count);
             for (int i = 0; i < peers.Count; i++)
             {
                 TexturePaintLogicalLayerMember peer = peers[i];
-                if (!peer.layer.channels.TryGetValue(channel, out EditableTextureTarget target))
-                { ShowWorkspaceStatus($"{channel} is not present on every logical layer member."); return false; }
+                peer.layer.channels.TryGetValue(channel, out EditableTextureTarget target);
                 TexturePaintLayerEffects beforeEffects = peer.layer.effects?.Clone() ??
                     new TexturePaintLayerEffects();
                 TexturePaintLayerEffects afterEffects = beforeEffects.Clone();
@@ -1630,6 +1642,132 @@ namespace UMA.TexturePaint.Editor
                             !ReferenceEquals(attached, removed[i].target)) removed[i].target?.Dispose();
                 });
             MarkDocumentDirty(peers);
+            return true;
+        }
+
+        private sealed class LayerChannelSwap
+        {
+            public TextureSet set;
+            public TexturePaintLayer layer;
+            public TexturePaintChannel channel;
+            public EditableTextureTarget before;
+            public EditableTextureTarget after;
+            public TexturePaintLayerChannelSettings settingsBefore;
+            public TexturePaintLayerChannelSettings settingsAfter;
+        }
+
+        private static void ApplyLayerChannelSwap(LayerChannelSwap swap, bool after)
+        {
+            EditableTextureTarget target = after ? swap.after : swap.before;
+            TexturePaintLayerChannelSettings settings = after ? swap.settingsAfter : swap.settingsBefore;
+            if (target != null) swap.layer.channels[swap.channel] = target;
+            else swap.layer.channels.Remove(swap.channel);
+            if (settings != null) swap.layer.channelSettings[swap.channel] = settings.Clone();
+            else swap.layer.channelSettings.Remove(swap.channel);
+            swap.set.BindPreviewTextures();
+        }
+
+        /// <summary>True when Copy from Below can fill a channel of this layer. Only Paint layers hold pixels the brush edits.</summary>
+        internal bool CanCopyLayerChannelFromBelow(TextureSet set, TexturePaintLayer layer, out string reason)
+        {
+            reason = null;
+            if (set == null || layer == null || !set.layers.Contains(layer)) reason = "No texture layer is selected.";
+            else if (layer.kind != TexturePaintLayerKind.Paint) reason = "Copy from Below needs a Paint layer.";
+            else if (layer.links?.instance?.IsSet == true) reason = "This layer is an instance. Make it independent first.";
+            else if (set.compositor?.IsAvailable != true) reason = "Copy from Below requires the layer compositor.";
+            return reason == null;
+        }
+
+        /// <summary>
+        /// Copy from Below: fills one channel of a Paint layer with the result of everything under the layer (the
+        /// source texture and the layers below), on every member of the logical layer whose material has the channel.
+        /// The channel is set to replace what is below (Normal blend, full opacity), so the picture is unchanged
+        /// until the copy is edited. Blur, Smear and Clone read the layer they paint on: this gives them pixels.
+        /// </summary>
+        private bool CopyLayerChannelFromBelowWithHistory(TextureSet set, TexturePaintLayer layer,
+            TexturePaintChannel channel)
+        {
+            if (!CanCopyLayerChannelFromBelow(set, layer, out string reason))
+            {
+                ShowWorkspaceStatus(reason);
+                return false;
+            }
+            if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers,
+                    out string error))
+            {
+                ShowWorkspaceStatus(error);
+                return false;
+            }
+            // UDIM tiles can use different materials (see AddLayerChannelWithHistory): copy on the tiles that have the channel.
+            peers = peers.FindAll(peer => peer.textureSet.GetChannel(channel) != null);
+            if (peers.Count == 0)
+            {
+                ShowWorkspaceStatus($"This target has no {TexturePaintChannelUtility.DisplayName(channel)} channel.");
+                return false;
+            }
+
+            var swaps = new List<LayerChannelSwap>(peers.Count);
+            bool failed = false;
+            for (int i = 0; i < peers.Count; i++)
+            {
+                TexturePaintLogicalLayerMember peer = peers[i];
+                TextureChannelTarget baseChannel = peer.textureSet.GetChannel(channel);
+                var target = new EditableTextureTarget(peer.layer.name + " " + channel,
+                    baseChannel.Texture.width, baseChannel.Texture.height, baseChannel.format, null, Color.clear);
+                if (!peer.textureSet.CopyBelowLayerInto(channel, peer.layer, target))
+                {
+                    target.Dispose();
+                    failed = true;
+                    break;
+                }
+                peer.layer.channels.TryGetValue(channel, out EditableTextureTarget previous);
+                TexturePaintLayerChannelSettings settingsBefore = peer.layer.GetChannelSettings(channel, false)?.Clone();
+                TexturePaintLayerChannelSettings settingsAfter = settingsBefore?.Clone() ??
+                    new TexturePaintLayerChannelSettings { channel = channel, contribution = 1f };
+                // The copy is the complete result so far: it must replace, at full strength, or it is applied twice.
+                settingsAfter.enabled = true;
+                settingsAfter.opacity = 1f;
+                settingsAfter.blendMode = TexturePaintBlendMode.Normal;
+                settingsAfter.hasNormalControlStrength = false;
+                settingsAfter.normalControlInvert = false;
+                settingsAfter.normalControlRadius = 1;
+                settingsAfter.sourceSettings ??= new TexturePaintChannelSourceSettings
+                {
+                    source = TexturePaintBrushSource.Color,
+                    color = DefaultChannelSourceColor(channel),
+                    normalConvention = normalConvention
+                };
+                swaps.Add(new LayerChannelSwap
+                {
+                    set = peer.textureSet, layer = peer.layer, channel = channel,
+                    before = previous, after = target,
+                    settingsBefore = settingsBefore, settingsAfter = settingsAfter
+                });
+            }
+            if (failed)
+            {
+                for (int i = 0; i < swaps.Count; i++) swaps[i].after.Dispose();
+                ShowWorkspaceStatus("The layers below could not be rendered for the copy.");
+                return false;
+            }
+
+            for (int i = 0; i < swaps.Count; i++) ApplyLayerChannelSwap(swaps[i], true);
+            PushLightweightCommand("Copy Channel from Below",
+                () => { for (int i = 0; i < swaps.Count; i++) ApplyLayerChannelSwap(swaps[i], false); },
+                () => { for (int i = 0; i < swaps.Count; i++) ApplyLayerChannelSwap(swaps[i], true); },
+                () =>
+                {
+                    for (int i = 0; i < swaps.Count; i++)
+                    {
+                        LayerChannelSwap swap = swaps[i];
+                        swap.layer.channels.TryGetValue(swap.channel, out EditableTextureTarget attached);
+                        if (swap.before != null && !ReferenceEquals(attached, swap.before)) swap.before.Dispose();
+                        if (!ReferenceEquals(attached, swap.after)) swap.after.Dispose();
+                    }
+                });
+            MarkDocumentDirty(peers);
+            ShowWorkspaceStatus($"Copied {TexturePaintChannelUtility.DisplayName(channel)} from below into '{layer.name}'. " +
+                "The layer now replaces that channel, so Blur, Smear and Clone have pixels to work on.");
             return true;
         }
 
@@ -1845,6 +1983,68 @@ namespace UMA.TexturePaint.Editor
             return true;
         }
 
+        /// <summary>
+        /// Sets the UDIM tile sources of several tiles of one Fill layer as a single undo step. Tiles missing from
+        /// <paramref name="changes"/> keep their sources. Returns false (changing nothing) when a tile cannot be generated.
+        /// </summary>
+        private bool ChangeFillTileSourcesBatch(TextureSet set, TexturePaintLayer layer,
+            IReadOnlyDictionary<TexturePaintLogicalTargetMember, TexturePaintFillTileSources> changes, string label)
+        {
+            if (layer?.kind != TexturePaintLayerKind.Fill || changes == null || changes.Count == 0) return false;
+            if (!TryResolveLogicalPeers(set, layer, out List<TexturePaintLogicalLayerMember> peers, out string error))
+            { ShowWorkspaceStatus(error); return false; }
+            peers.RemoveAll(peer => peer.targetMember == null || !changes.ContainsKey(peer.targetMember));
+            if (peers.Count == 0) return false;
+            var before = new List<LayerLocation>();
+            var after = new List<LayerLocation>();
+            foreach (TexturePaintLogicalLayerMember peer in peers)
+            {
+                TexturePaintLayer working = peer.textureSet.CloneLayer(peer.layer, peer.layer.name, true);
+                if (working == null)
+                {
+                    foreach (LayerLocation pending in after) pending.layer.Dispose();
+                    return false;
+                }
+                working.fillTileSources = changes[peer.targetMember].Clone();
+                working.fillTileSources.bakeOverlayCoverage = true;
+                // As in the single-tile edit: per-tile sources carry their own coverage, so turn off the automatic
+                // mask that applies the shared overlay's coverage.
+                TexturePaintLayerMaskTextureOverlaySettings mask = working.layerMask?.effects?.textureOverlay;
+                Texture2D sharedCoverage = TextureSet.GetOverlayFillCoverage(working.fillSettings?.sourceOverlay);
+                if (working.fillSettings?.source == TexturePaintBrushSource.Overlay &&
+                    mask != null && mask.enabled && sharedCoverage != null && mask.texture == sharedCoverage &&
+                    mask.sourceChannel == TexturePaintLayerMaskTextureChannel.Alpha &&
+                    mask.combine == TexturePaintBlendMode.Multiply && mask.opacity == 1f &&
+                    !mask.invert && mask.tiling == Vector2.one && mask.offset == Vector2.zero && mask.rotation == 0f)
+                    mask.enabled = false;
+                if (!peer.textureSet.RegenerateFillLayer(working))
+                {
+                    working.Dispose();
+                    foreach (LayerLocation pending in after) pending.layer.Dispose();
+                    ShowWorkspaceStatus("The tile Fill source could not be generated. No tiles were changed.");
+                    return false;
+                }
+                int index = peer.textureSet.layers.IndexOf(peer.layer);
+                before.Add(new LayerLocation { set = peer.textureSet, layer = peer.layer, index = index });
+                after.Add(new LayerLocation { set = peer.textureSet, layer = working, index = index });
+            }
+            for (int i = 0; i < before.Count; i++)
+                SwapLayerSnapshot(before[i].set, before[i].layer, after[i].layer, before[i].index);
+            PushLightweightCommand(label,
+                () => { for (int i = 0; i < before.Count; i++)
+                    SwapLayerSnapshot(before[i].set, after[i].layer, before[i].layer, before[i].index); },
+                () => { for (int i = 0; i < before.Count; i++)
+                    SwapLayerSnapshot(before[i].set, before[i].layer, after[i].layer, after[i].index); },
+                () => { for (int i = 0; i < before.Count; i++)
+                {
+                    DisposeLayerIfDetached(before[i].set, before[i].layer);
+                    DisposeLayerIfDetached(after[i].set, after[i].layer);
+                } });
+            MarkDocumentDirty(peers);
+            UnityEditor.SceneView.RepaintAll();
+            return true;
+        }
+
         private void ChangeFillLayer(TextureSet set, TexturePaintLayer layer, TexturePaintChannel channel,
             TexturePaintFillSettings settings)
         {
@@ -2000,7 +2200,7 @@ namespace UMA.TexturePaint.Editor
 
             for (int i = 0; i < before.Count; i++)
                 SwapLayerSnapshot(before[i].set, before[i].layer, after[i].layer, before[i].index);
-            PushLightweightCommand("Rasterize " + layer.kind + " Layer",
+            PushLightweightCommand("Convert " + layer.kind + " Layer to Paint",
                 () =>
                 {
                     for (int i = 0; i < before.Count; i++)
@@ -2022,7 +2222,7 @@ namespace UMA.TexturePaint.Editor
                     }
                 });
             MarkDocumentDirtyAfterStructuralChange();
-            ShowWorkspaceStatus($"Rasterized '{layer.name}' to an editable Paint layer.");
+            ShowWorkspaceStatus($"Converted '{layer.name}' to a Paint layer. Undo brings the {layer.kind} layer back.");
             return true;
         }
 

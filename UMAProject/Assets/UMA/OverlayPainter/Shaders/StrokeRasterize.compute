@@ -41,6 +41,12 @@ int _PaintSourceKind;
 int _VectorNormal;
 int _MaskMode;
 float _MaskEraseValue;
+// 1 when the destination is a layer texture: transparent where nothing was painted, straight alpha.
+// 0 for the editable base texture and for layer masks, which are opaque.
+int _LayerTarget;
+// 1 when Erase paints the editable base: it brings back _EraseOriginal, the base before it was first painted.
+int _EraseToOriginal;
+Texture2D<float4> _EraseOriginal;
 int _LimitStrokeCoverage;
 int _RestrictToTriangle;
 int _TriangleBoundaryMask;
@@ -177,6 +183,43 @@ float4 DepositStraightAlpha(float4 current, float4 strokeBase, float3 candidate,
     return float4(outputAlpha > 1e-7 ? outputPremultiplied / outputAlpha : float3(0.0, 0.0, 0.0), outputAlpha);
 }
 
+// Erase, Dodge, Burn, Smear and Clone on a layer texture. The layer is transparent where nothing was painted,
+// so these tools must respect its coverage instead of filling it:
+//   Erase takes coverage away and leaves the colour.
+//   Dodge and Burn change the colour and leave the coverage.
+//   Smear and Clone move colour together with its coverage (blended premultiplied, so a transparent
+//   source pixel does not darken the colour).
+// reference is the pixel the change is measured from: the stroke start with Cap Per Stroke, else the
+// current pixel. amount is how much of the change to apply.
+float4 ApplyLayerTool(float4 current, float4 reference, float4 desired, float amount)
+{
+    if (_Operation == 1)
+        return float4(current.rgb, saturate(current.a - amount * reference.a));
+    float3 candidate = BlendRGB(reference.rgb, desired.rgb, _BlendMode);
+    if (_Operation == 4 || _Operation == 5)
+        return float4(current.rgb + amount * (candidate - reference.rgb), current.a);
+    float alpha = saturate(current.a + amount * (desired.a - reference.a));
+    float3 premultiplied = current.rgb * current.a +
+        amount * (candidate * desired.a - reference.rgb * reference.a);
+    return float4(alpha > 1e-5 ? premultiplied / alpha : current.rgb, alpha);
+}
+
+// Erase on the editable base: move toward the original base pixel, all four components, whatever the brush blend.
+float4 EraseToOriginal(int2 pixel, float4 current, float4 reference, float amount)
+{
+    float4 original = _EraseOriginal.Load(int3(pixel, 0));
+    return current + amount * (original - reference);
+}
+
+// A layer normal stays a unit vector after a tool changed it. A transparent or neutral pixel is left alone.
+float4 KeepLayerNormal(float4 value)
+{
+    if (_VectorNormal == 0) return value;
+    float3 normal = value.rgb * 2.0 - 1.0;
+    float len = length(normal);
+    return len > 1e-4 ? float4(normal / len * 0.5 + 0.5, value.a) : value;
+}
+
 float4 NormalizeMaskValue(float4 value)
 {
     if (_MaskMode == 0) return value;
@@ -230,6 +273,16 @@ void CSMain(uint3 dispatchID : SV_DispatchThreadID)
         if (contribution <= 0.00001) return;
         _StrokeCoverage[coveragePixel] = saturate(usedCoverage + contribution);
         float4 strokeBase = _StrokeBase.Load(int3(coveragePixel, 0));
+        if (_EraseToOriginal != 0 && _Operation == 1)
+        {
+            _Destination[pixel] = KeepLayerNormal(EraseToOriginal(pixel, current, strokeBase, contribution));
+            return;
+        }
+        if (_LayerTarget != 0 && _Operation != 0)
+        {
+            _Destination[pixel] = KeepLayerNormal(ApplyLayerTool(current, strokeBase, desired, contribution));
+            return;
+        }
         float3 candidate = BlendRGB(strokeBase.rgb, desired.rgb, _BlendMode);
         // contribution already contains source alpha; deposit toward a fully covered
         // layer texel so partial-alpha paint is not multiplied a second time.
@@ -239,6 +292,16 @@ void CSMain(uint3 dispatchID : SV_DispatchThreadID)
         if (_VectorNormal != 0)
             deposited.rgb = normalize(deposited.rgb * 2.0 - 1.0) * 0.5 + 0.5;
         _Destination[pixel] = NormalizeMaskValue(deposited);
+        return;
+    }
+    if (_EraseToOriginal != 0 && _Operation == 1)
+    {
+        _Destination[pixel] = KeepLayerNormal(EraseToOriginal(pixel, current, current, sourceWeight));
+        return;
+    }
+    if (_LayerTarget != 0 && _Operation != 0)
+    {
+        _Destination[pixel] = KeepLayerNormal(ApplyLayerTool(current, current, desired, sourceWeight));
         return;
     }
     float3 blended = BlendRGB(current.rgb, desired.rgb, _BlendMode);
@@ -293,12 +356,32 @@ void CSStamp(uint3 dispatchID : SV_DispatchThreadID)
         if (contribution <= 0.00001) return;
         _StrokeCoverage[coveragePixel] = saturate(usedCoverage + contribution);
         float4 strokeBase = _StrokeBase.Load(int3(coveragePixel, 0));
+        if (_EraseToOriginal != 0 && _Operation == 1)
+        {
+            _Destination[pixel] = KeepLayerNormal(EraseToOriginal(pixel, current, strokeBase, contribution));
+            return;
+        }
+        if (_LayerTarget != 0 && _Operation != 0)
+        {
+            _Destination[pixel] = KeepLayerNormal(ApplyLayerTool(current, strokeBase, desired, contribution));
+            return;
+        }
         float3 candidate = BlendRGB(strokeBase.rgb, desired.rgb, _BlendMode);
         float4 deposited = _Operation == 0
             ? DepositStraightAlpha(current, strokeBase, candidate, contribution)
             : current + contribution * (float4(candidate, 1.0) - strokeBase);
         if (_VectorNormal != 0) deposited.rgb = normalize(deposited.rgb * 2.0 - 1.0) * 0.5 + 0.5;
         _Destination[pixel] = NormalizeMaskValue(deposited);
+        return;
+    }
+    if (_EraseToOriginal != 0 && _Operation == 1)
+    {
+        _Destination[pixel] = KeepLayerNormal(EraseToOriginal(pixel, current, current, sourceWeight));
+        return;
+    }
+    if (_LayerTarget != 0 && _Operation != 0)
+    {
+        _Destination[pixel] = KeepLayerNormal(ApplyLayerTool(current, current, desired, sourceWeight));
         return;
     }
     float3 blended = BlendRGB(current.rgb, desired.rgb, _BlendMode);
@@ -400,10 +483,18 @@ void CSBatch(uint3 dispatchID : SV_DispatchThreadID)
             float contribution = min(sourceWeight, max(0.0, sourceLimit - usedCoverage));
             if (contribution <= 0.00001) continue;
             usedCoverage = saturate(usedCoverage + contribution);
-            current = _Operation == 0
+            if (_EraseToOriginal != 0 && _Operation == 1)
+                current = EraseToOriginal(pixel, current, strokeBase, contribution);
+            else if (_LayerTarget != 0 && _Operation != 0)
+                current = ApplyLayerTool(current, strokeBase, desired, contribution);
+            else current = _Operation == 0
                 ? DepositStraightAlpha(current, strokeBase, candidate, contribution)
                 : current + contribution * (float4(candidate, 1.0) - strokeBase);
         }
+        else if (_EraseToOriginal != 0 && _Operation == 1)
+            current = EraseToOriginal(pixel, current, current, sourceWeight);
+        else if (_LayerTarget != 0 && _Operation != 0)
+            current = ApplyLayerTool(current, current, desired, sourceWeight);
         else
         {
             if (_VectorNormal != 0)
@@ -423,7 +514,9 @@ void CSBatch(uint3 dispatchID : SV_DispatchThreadID)
         }
     }
     if (_LimitStrokeCoverage != 0) _StrokeCoverage[coveragePixel] = usedCoverage;
-    if (_VectorNormal != 0) current.rgb = normalize(current.rgb * 2.0 - 1.0) * 0.5 + 0.5;
+    if ((_LayerTarget != 0 && _Operation != 0) || (_EraseToOriginal != 0 && _Operation == 1))
+        current = KeepLayerNormal(current);
+    else if (_VectorNormal != 0) current.rgb = normalize(current.rgb * 2.0 - 1.0) * 0.5 + 0.5;
     _Destination[pixel] = NormalizeMaskValue(current);
 }
 

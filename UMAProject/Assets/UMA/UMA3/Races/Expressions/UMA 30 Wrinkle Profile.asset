@@ -1,0 +1,540 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d90bda1e3dd94c4583fe0ea73a5adc3, type: 3}
+  m_Name: UMA 30 Wrinkle Profile
+  m_EditorClassIdentifier: UMA_Core::UMA.UMAWrinkleProfile
+  strength: 1
+  rules:
+  - expression: leftBrowUp_Down
+    zone: 1
+    positive: 1
+    negative: -0.5
+  - expression: leftBrowUp_Down
+    zone: 2
+    positive: 0.2
+    negative: 0
+  - expression: leftBrowUp_Down
+    zone: 3
+    positive: 0
+    negative: 0.3
+  - expression: leftBrowUp_Down
+    zone: 4
+    positive: 0
+    negative: 0.25
+  - expression: leftCheekPuff_Squint
+    zone: 6
+    positive: -0.2
+    negative: 1
+  - expression: leftCheekPuff_Squint
+    zone: 8
+    positive: -0.6
+    negative: 0.3
+  - expression: leftCheekPuff_Squint
+    zone: 10
+    positive: -0.3
+    negative: 0
+  - expression: leftEyeOpen_Close
+    zone: 6
+    positive: -0.2
+    negative: 0.2
+  - expression: leftMouthSmile_Frown
+    zone: 8
+    positive: 1
+    negative: -0.3
+  - expression: leftMouthSmile_Frown
+    zone: 6
+    positive: 0.4
+    negative: 0
+  - expression: leftMouthSmile_Frown
+    zone: 10
+    positive: 0.3
+    negative: 0.7
+  - expression: leftMouthSmile_Frown
+    zone: 13
+    positive: 0
+    negative: 0.3
+  - expression: leftUpperLipUp_Down
+    zone: 8
+    positive: 0.5
+    negative: -0.3
+  - expression: leftUpperLipUp_Down
+    zone: 5
+    positive: 0.25
+    negative: 0
+  - expression: leftLowerLipUp_Down
+    zone: 13
+    positive: 0.5
+    negative: -0.3
+  - expression: leftLowerLipUp_Down
+    zone: 12
+    positive: 0.2
+    negative: 0
+  - expression: rightBrowUp_Down
+    zone: 2
+    positive: 1
+    negative: -0.5
+  - expression: rightBrowUp_Down
+    zone: 1
+    positive: 0.2
+    negative: 0
+  - expression: rightBrowUp_Down
+    zone: 3
+    positive: 0
+    negative: 0.3
+  - expression: rightBrowUp_Down
+    zone: 4
+    positive: 0
+    negative: 0.25
+  - expression: rightCheekPuff_Squint
+    zone: 7
+    positive: -0.2
+    negative: 1
+  - expression: rightCheekPuff_Squint
+    zone: 9
+    positive: -0.6
+    negative: 0.3
+  - expression: rightCheekPuff_Squint
+    zone: 11
+    positive: -0.3
+    negative: 0
+  - expression: rightEyeOpen_Close
+    zone: 7
+    positive: -0.2
+    negative: 0.2
+  - expression: rightMouthSmile_Frown
+    zone: 9
+    positive: 1
+    negative: -0.3
+  - expression: rightMouthSmile_Frown
+    zone: 7
+    positive: 0.4
+    negative: 0
+  - expression: rightMouthSmile_Frown
+    zone: 11
+    positive: 0.3
+    negative: 0.7
+  - expression: rightMouthSmile_Frown
+    zone: 13
+    positive: 0
+    negative: 0.3
+  - expression: rightUpperLipUp_Down
+    zone: 9
+    positive: 0.5
+    negative: -0.3
+  - expression: rightUpperLipUp_Down
+    zone: 5
+    positive: 0.25
+    negative: 0
+  - expression: rightLowerLipUp_Down
+    zone: 13
+    positive: 0.5
+    negative: -0.3
+  - expression: rightLowerLipUp_Down
+    zone: 12
+    positive: 0.2
+    negative: 0
+  - expression: midBrowUp_Down
+    zone: 1
+    positive: 0.6
+    negative: -0.4
+  - expression: midBrowUp_Down
+    zone: 2
+    positive: 0.6
+    negative: -0.4
+  - expression: midBrowUp_Down
+    zone: 3
+    positive: 0
+    negative: 0.5
+  - expression: midBrowUp_Down
+    zone: 4
+    positive: 0
+    negative: 0.7
+  - expression: browsIn
+    zone: 3
+    positive: 1
+    negative: -0.5
+  - expression: browsIn
+    zone: 4
+    positive: 0.3
+    negative: 0
+  - expression: noseSneer
+    zone: 5
+    positive: 1
+    negative: 0
+  - expression: noseSneer
+    zone: 4
+    positive: 0.5
+    negative: 0
+  - expression: noseSneer
+    zone: 3
+    positive: 0.2
+    negative: 0
+  - expression: noseSneer
+    zone: 8
+    positive: 0.4
+    negative: 0
+  - expression: noseSneer
+    zone: 9
+    positive: 0.4
+    negative: 0
+  - expression: mouthNarrow_Pucker
+    zone: 12
+    positive: 1
+    negative: 0
+  - expression: mouthNarrow_Pucker
+    zone: 13
+    positive: 0.5
+    negative: 0
+  - expression: mouthNarrow_Pucker
+    zone: 10
+    positive: 0.4
+    negative: 0
+  - expression: mouthNarrow_Pucker
+    zone: 11
+    positive: 0.4
+    negative: 0
+  - expression: mouthNarrow_Pucker
+    zone: 8
+    positive: -0.3
+    negative: 0
+  - expression: mouthNarrow_Pucker
+    zone: 9
+    positive: -0.3
+    negative: 0
+  - expression: jawOpen_Close
+    zone: 13
+    positive: -0.4
+    negative: 0
+  - expression: jawOpen_Close
+    zone: 12
+    positive: -0.4
+    negative: 0
+  - expression: jawOpen_Close
+    zone: 8
+    positive: -0.2
+    negative: 0
+  - expression: jawOpen_Close
+    zone: 9
+    positive: -0.2
+    negative: 0
+  - expression: HappyFace
+    zone: 8
+    positive: 1
+    negative: 0
+  - expression: HappyFace
+    zone: 9
+    positive: 1
+    negative: 0
+  - expression: HappyFace
+    zone: 6
+    positive: 0.8
+    negative: 0
+  - expression: HappyFace
+    zone: 7
+    positive: 0.8
+    negative: 0
+  - expression: HappyFace
+    zone: 10
+    positive: 0.3
+    negative: 0
+  - expression: HappyFace
+    zone: 11
+    positive: 0.3
+    negative: 0
+  - expression: HappyFace
+    zone: 5
+    positive: 0.2
+    negative: 0
+  - expression: JovialFace
+    zone: 8
+    positive: 0.8
+    negative: 0
+  - expression: JovialFace
+    zone: 9
+    positive: 0.8
+    negative: 0
+  - expression: JovialFace
+    zone: 6
+    positive: 1
+    negative: 0
+  - expression: JovialFace
+    zone: 7
+    positive: 1
+    negative: 0
+  - expression: JovialFace
+    zone: 1
+    positive: 0.3
+    negative: 0
+  - expression: JovialFace
+    zone: 2
+    positive: 0.3
+    negative: 0
+  - expression: SadFace
+    zone: 10
+    positive: 0.7
+    negative: 0
+  - expression: SadFace
+    zone: 11
+    positive: 0.7
+    negative: 0
+  - expression: SadFace
+    zone: 13
+    positive: 0.6
+    negative: 0
+  - expression: SadFace
+    zone: 3
+    positive: 0.3
+    negative: 0
+  - expression: SadFace
+    zone: 1
+    positive: 0.4
+    negative: 0
+  - expression: SadFace
+    zone: 2
+    positive: 0.4
+    negative: 0
+  - expression: SourFace
+    zone: 1
+    positive: 0.6
+    negative: 0
+  - expression: SourFace
+    zone: 2
+    positive: 0.6
+    negative: 0
+  - expression: SourFace
+    zone: 3
+    positive: 0.3
+    negative: 0
+  - expression: SourFace
+    zone: 10
+    positive: 0.2
+    negative: 0
+  - expression: SourFace
+    zone: 11
+    positive: 0.2
+    negative: 0
+  - expression: DespairFace
+    zone: 1
+    positive: 0.7
+    negative: 0
+  - expression: DespairFace
+    zone: 2
+    positive: 0.7
+    negative: 0
+  - expression: DespairFace
+    zone: 8
+    positive: -0.3
+    negative: 0
+  - expression: DespairFace
+    zone: 9
+    positive: -0.3
+    negative: 0
+  - expression: DespairFace
+    zone: 13
+    positive: -0.5
+    negative: 0
+  - expression: DespairFace
+    zone: 12
+    positive: -0.5
+    negative: 0
+  - expression: StupidFace
+    zone: 3
+    positive: 0.3
+    negative: 0
+  - expression: StupidFace
+    zone: 13
+    positive: -0.3
+    negative: 0
+  - expression: StupidFace
+    zone: 12
+    positive: -0.3
+    negative: 0
+  - expression: YawnFace
+    zone: 6
+    positive: 0.7
+    negative: 0
+  - expression: YawnFace
+    zone: 7
+    positive: 0.7
+    negative: 0
+  - expression: YawnFace
+    zone: 4
+    positive: 0.3
+    negative: 0
+  - expression: YawnFace
+    zone: 13
+    positive: -0.4
+    negative: 0
+  - expression: YawnFace
+    zone: 12
+    positive: -0.4
+    negative: 0
+  - expression: YawnFace
+    zone: 1
+    positive: -0.3
+    negative: 0
+  - expression: YawnFace
+    zone: 2
+    positive: -0.3
+    negative: 0
+  - expression: viseme_U
+    zone: 12
+    positive: 0.9
+    negative: 0
+  - expression: viseme_U
+    zone: 13
+    positive: 0.4
+    negative: 0
+  - expression: viseme_U
+    zone: 10
+    positive: 0.3
+    negative: 0
+  - expression: viseme_U
+    zone: 11
+    positive: 0.3
+    negative: 0
+  - expression: viseme_U
+    zone: 8
+    positive: -0.2
+    negative: 0
+  - expression: viseme_U
+    zone: 9
+    positive: -0.2
+    negative: 0
+  - expression: viseme_CH
+    zone: 12
+    positive: 0.8
+    negative: 0
+  - expression: viseme_CH
+    zone: 13
+    positive: 0.3
+    negative: 0
+  - expression: viseme_CH
+    zone: 10
+    positive: 0.3
+    negative: 0
+  - expression: viseme_CH
+    zone: 11
+    positive: 0.3
+    negative: 0
+  - expression: viseme_O
+    zone: 12
+    positive: 0.5
+    negative: 0
+  - expression: viseme_O
+    zone: 10
+    positive: 0.2
+    negative: 0
+  - expression: viseme_O
+    zone: 11
+    positive: 0.2
+    negative: 0
+  - expression: viseme_O
+    zone: 13
+    positive: -0.2
+    negative: 0
+  - expression: viseme_RR
+    zone: 12
+    positive: 0.4
+    negative: 0
+  - expression: viseme_RR
+    zone: 10
+    positive: 0.15
+    negative: 0
+  - expression: viseme_RR
+    zone: 11
+    positive: 0.15
+    negative: 0
+  - expression: viseme_nn
+    zone: 12
+    positive: 0.3
+    negative: 0
+  - expression: viseme_kk
+    zone: 12
+    positive: 0.2
+    negative: 0
+  - expression: viseme_DD
+    zone: 12
+    positive: 0.15
+    negative: 0
+  - expression: viseme_PP
+    zone: 12
+    positive: 0.3
+    negative: 0
+  - expression: viseme_PP
+    zone: 13
+    positive: 0.5
+    negative: 0
+  - expression: viseme_FF
+    zone: 13
+    positive: 0.3
+    negative: 0
+  - expression: viseme_E
+    zone: 12
+    positive: -0.3
+    negative: 0
+  - expression: viseme_E
+    zone: 8
+    positive: 0.2
+    negative: 0
+  - expression: viseme_E
+    zone: 9
+    positive: 0.2
+    negative: 0
+  - expression: viseme_E
+    zone: 13
+    positive: -0.2
+    negative: 0
+  - expression: viseme_I
+    zone: 12
+    positive: -0.3
+    negative: 0
+  - expression: viseme_I
+    zone: 8
+    positive: 0.2
+    negative: 0
+  - expression: viseme_I
+    zone: 9
+    positive: 0.2
+    negative: 0
+  - expression: viseme_I
+    zone: 13
+    positive: -0.2
+    negative: 0
+  - expression: viseme_SS
+    zone: 12
+    positive: -0.2
+    negative: 0
+  - expression: viseme_SS
+    zone: 8
+    positive: 0.15
+    negative: 0
+  - expression: viseme_SS
+    zone: 9
+    positive: 0.15
+    negative: 0
+  - expression: viseme_aa
+    zone: 13
+    positive: -0.5
+    negative: 0
+  - expression: viseme_aa
+    zone: 12
+    positive: -0.4
+    negative: 0
+  - expression: viseme_aa
+    zone: 8
+    positive: -0.2
+    negative: 0
+  - expression: viseme_aa
+    zone: 9
+    positive: -0.2
+    negative: 0

@@ -53,6 +53,8 @@ MonoBehaviour:
   convertRenderTexture: 0
   useAsyncConversion: 1
   asyncMipRegen: 1
+  keepConvertedTexturesReadable: 0
+  forceGPUTextureCompression: 1
   convertMipMaps: 1
   atlasResolution: 2048
   editorAtlasResolution: 2048

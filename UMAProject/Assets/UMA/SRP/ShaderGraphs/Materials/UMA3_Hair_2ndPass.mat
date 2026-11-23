@@ -72,12 +72,12 @@ Material:
     m_Ints: []
     m_Floats:
     - _AlphaClip: 0
-    - _AlphaClip2: 0.5
-    - _AlphaModulation: 2
+    - _AlphaClip2: 0.482
+    - _AlphaModulation: 0.98
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 0
-    - _BumpScale: 0.5
+    - _BumpScale: 0.652
     - _CastShadows: 0
     - _CenterDarken: 0.072
     - _CenterDarkenEnd: 0.16
@@ -89,7 +89,7 @@ Material:
     - _OcclusionInensity: 1
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _RecalcNormalBlend: 0.65
+    - _RecalcNormalBlend: 0.5
     - _RecalculateNormals: 1
     - _ReceiveShadows: 1
     - _Root_Shift: 0.2
@@ -97,7 +97,7 @@ Material:
     - _ShadowClip: 0.5
     - _Smoothness: 0.193
     - _SpecularMix: 0.5
-    - _SpecularMultiplier: 0.307
+    - _SpecularMultiplier: 0.612
     - _SpecularPowerScale: 30
     - _SpecularShift: 0
     - _SrcBlend: 5
@@ -109,7 +109,7 @@ Material:
     - _ZWrite: 0
     - _ZWriteControl: 0
     m_Colors:
-    - _BaseColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _BaseColor: {r: 0.42745095, g: 0.25958586, b: 0.18823525, a: 1}
     - _CenterOffset: {r: 0, g: 0, b: 0, a: 0}
     - _HairCenterWS: {r: 0, g: 0, b: 0, a: 0}
     - _HairSpinWS: {r: 0, g: 0, b: 0, a: 0}
@@ -117,8 +117,8 @@ Material:
     - _HairSwayShape: {r: 0, g: 0, b: 0, a: 0}
     - _HairSwayWS: {r: 0, g: 0, b: 0, a: 0}
     - _Normal: {r: 0, g: 0, b: 0, a: 0}
-    - _RootColor: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
-    - _SpecularTint: {r: 0.654902, g: 0.24259722, b: 0.00759451, a: 1}
-    - _Tip_Color: {r: 0.8196079, g: 0.8196079, b: 0.8196079, a: 1}
+    - _RootColor: {r: 0.18238989, g: 0.0666452, b: 0.024662752, a: 1}
+    - _SpecularTint: {r: 0.3522012, g: 0.3522012, b: 0.3522012, a: 1}
+    - _Tip_Color: {r: 0.69182384, g: 0.35918942, b: 0.09789946, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

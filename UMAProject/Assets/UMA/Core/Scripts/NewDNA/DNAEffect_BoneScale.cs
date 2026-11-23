@@ -41,6 +41,15 @@ namespace UMA
             ScaleFactor = UnityEditor.EditorGUILayout.Vector3Field("Scale Factor", ScaleFactor);
         }
 #endif
+        /// <summary>
+        /// The bone's scale is multiplied by (1 + ScaleFactor * mappedValue).
+        /// </summary>
+        public override bool TryGetScaleFactor(float value, out Vector3 factor)
+        {
+            factor = Vector3.one + ScaleFactor * GetMappedValue(value);
+            return true;
+        }
+
         /// <inheritdoc />
         public override void Restore(UMAData avatar, DNA dna, float value)
         {

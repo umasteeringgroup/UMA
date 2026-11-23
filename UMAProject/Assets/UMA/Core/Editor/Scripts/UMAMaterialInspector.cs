@@ -21,6 +21,8 @@ namespace UMA.Editors
         private bool[] channelExpanded = new bool[3];
         private static bool showMaterialInspector = false;
         Editor innerEditor = null;
+        // Copies Material Preview edits to the second-pass material.
+        private readonly UMAMaterialPreviewSync previewSync = new UMAMaterialPreviewSync();
         private bool shaderParmsFoldout = false;
         private bool shaderKeywordsFoldout = false;
         private int _selectedShaderKeywordIndex = 0;
@@ -138,14 +140,35 @@ namespace UMA.Editors
                     }
                 }
                 //GUIHelper.BeginVerticalPadded(10, new Color(0.85f, 0.85f, 0.85f));
-                EditorGUILayout.HelpBox("Select an avatar in the scene, and use the material properties below to adjust the template material and see the changes in real time",MessageType.Info);
+                Material secondPassTemplate = source.secondPass != source.material ? source.secondPass : null;
+                string previewHelp = "Select an avatar in the scene, and use the material properties below to adjust the template material and see the changes in real time";
+                if (secondPassTemplate != null)
+                {
+                    previewHelp += "\n\nThis UMAMaterial has a second pass (" + secondPassTemplate.name + "). A property you change here is changed on the second-pass material too, if it has that property, except the settings that set up each pass: surface type, blending, depth, culling, stencil, alpha clipping and shadow casting.";
+                }
+                EditorGUILayout.HelpBox(previewHelp, MessageType.Info);
                 dca = EditorGUILayout.ObjectField("Preview Avatar", dca, typeof(DynamicCharacterAvatar), true) as DynamicCharacterAvatar;
                 DrawFoldoutInspector(source.material, ref innerEditor);
                 //GUILayout.Label("This is the material inspector for the material used by this UMAMaterial.", _centeredStyle);
                 //GUIHelper.EndVerticalPadded(10);
 
-                if (Event.current.type == EventType.Repaint && innerEditor != null && dca != null)
+                // Also catches Undo and edits made elsewhere while the preview is open, since it compares with the last values seen.
+                if (previewSync.MirrorChanges(source.material, secondPassTemplate) > 0)
                 {
+                    EditorUtility.SetDirty(secondPassTemplate);
+                }
+
+                List<UMAData.GeneratedMaterial> generatedMaterials = dca != null && dca.umaData != null && dca.umaData.generatedMaterials != null
+                    ? dca.umaData.generatedMaterials.materials
+                    : null;
+                if (Event.current.type == EventType.Repaint && innerEditor != null && dca != null && generatedMaterials != null && generatedMaterials.Count > 0)
+                {
+                    // The avatar knows which of its materials came from which pass: refresh both.
+                    UMAMaterialPreviewSync.SyncGeneratedMaterials(source, generatedMaterials);
+                }
+                else if (Event.current.type == EventType.Repaint && innerEditor != null && dca != null)
+                {
+                    // Not built yet in this session: match the first pass by name and shader.
                     SkinnedMeshRenderer[] smr = dca.GetComponentsInChildren<SkinnedMeshRenderer>(true);
                     if (smr != null && smr.Length > 0)
                     {
@@ -154,6 +177,11 @@ namespace UMA.Editors
                             foreach(Material mat in s.sharedMaterials)
                             {
                                 if (mat == null)
+                                {
+                                    continue;
+                                }
+                                // Never give a second-pass material the first pass's settings (it would lose its own blending).
+                                if (secondPassTemplate != null && mat.name.StartsWith(secondPassTemplate.name))
                                 {
                                     continue;
                                 }
@@ -211,7 +239,15 @@ namespace UMA.Editors
                     innerEditor.serializedObject.ApplyModifiedProperties();
                     EditorUtility.SetDirty(source.material);
                     AssetDatabase.SaveAssetIfDirty(source.material);
+                    if (secondPassTemplate != null)
+                    {
+                        AssetDatabase.SaveAssetIfDirty(secondPassTemplate);
+                    }
                 }
+            }
+            else
+            {
+                previewSync.Reset();
             }
 
             EditorGUILayout.PropertyField(materialTypeProperty, new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
@@ -530,6 +566,7 @@ namespace UMA.Editors
                         }
                         
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("DownSample"), new GUIContent("Down Sample", "Decrease size to save texture memory"));
+                        EditorGUILayout.PropertyField(channel.FindPropertyRelative("NeverCompress"), new GUIContent("Never Compress", "Keep this channel's atlas uncompressed, whatever the generator's compression settings. For data that block compression damages, such as ids or values packed per component."));
                         EditorGUI.EndDisabledGroup();
                         EditorGUILayout.PropertyField(channel.FindPropertyRelative("sourceTextureName"), new GUIContent("Source Texture Name", "For use with procedural materials, leave empty otherwise."));
 

@@ -19,14 +19,16 @@ For the clearest and most reusable result, place the avatar in a neutral pose be
 1. Select the GameObject containing the `DynamicCharacterAvatar`.
 2. In the avatar Inspector, find the **Editing tools** section, just below **Character & race** (in Standard and Advanced view).
 3. Select **Open Vertex Editor (Sculpt, Paint, Mesh Modifiers)**.
-4. Unity opens the dedicated Mesh Modifier editing stage and the Mesh Modifiers window.
-5. The editor opens in **Sculpt** mode by default. You can return to it at any time with the **Sculpt** button at the top of the tools panel; the other buttons there are **Vertex Paint**, **Advanced** and **Blendshapes**.
+4. Unity opens the Vertex Editor in the Scene view and its companion **Vertex Editor** window (it used to be called Mesh Modifiers), which holds the workflows, the **Save** panel, the build options, and the Advanced and Blendshapes editors.
+5. The editor opens in **Sculpt** mode the first time. You can return to it at any time with the **Sculpt** button at the top of the tools panel; the other buttons there are **Vertex Paint**, **Advanced** and **Blendshapes**.
 
-To inspect an existing Mesh Modifier, drag the asset onto the Mesh Modifier drop area in the avatar Inspector. **Save MeshModifier** can contain changes for one or several slots; it does not destructively edit their source meshes.
+The editor remembers your tool choices between sessions, per user: the mode, the display options (**Original Materials**, **Vertex Colors** and **Wireframe**), each mode's brush with its radius, effect, falloff and options, and the Advanced selection tool, tab and action. It opens on them again next time, also after Unity restarts. A remembered choice that no longer exists falls back to its default. **Sculpt '\<shape\>'** in Transfer Blend Shapes always opens in Sculpt.
+
+To inspect an existing Mesh Modifier, drag the asset onto the Mesh Modifier drop area in the avatar Inspector. A Mesh Modifier can contain changes for one or several slots; it does not destructively edit their source meshes.
 
 ### The stage layout
 
-- The **tools panel** on the left of the Scene view holds the mode buttons, the display toggles and the options for the current mode. **Modifier Name** and **Save MeshModifier** sit at its bottom and stay visible however far the options are scrolled.
+- The **tools panel** on the left of the Scene view holds the mode buttons, the display toggles and the options for the current mode. Its last line, always in view, says whether anything is unsaved; its **Save...** button opens the Save panel. All saving is done in the [Save panel](#save-your-work).
 - The **Slots** panel chooses which slots are shown and which the tools may edit. See [Choose the slots to sculpt](#choose-the-slots-to-sculpt).
 - The **floating toolbar** beside the panels holds the nine sculpt brushes, **Mask Paint**, **Mask Erase** and **Frame**, which frames the character from the starting camera angle. Hover a button for its name and what it does. Drag the toolbar's grip to move it, or double-click the grip to dock it beside the panels again. Its position is remembered.
 - **Close** at the top right of the Scene view leaves the stage.
@@ -37,37 +39,48 @@ The UMA Toolbar overlay is hidden while the stage is open, because its commands 
 
 The vertex editor opens with its existing pastel materials and wireframe enabled. Two independent toggles below the mode buttons let you change the preview without affecting saved data:
 
-- **Original Materials** switches between the pastel editor materials and the materials captured from the generated UMA renderer.
+- **Original Materials** switches between the pastel editor materials and the materials captured from the generated UMA renderer. The setting is remembered between sessions, and Undo does not change it.
 - **Wireframe** shows or hides the wireframe. It is drawn on the editable slots only; slots that are read-only in the Slots panel are drawn without it, so the wires show what the tools can change. The setting is remembered between sessions. The Scene view's own **Shaded Wireframe** draw mode still draws wires on everything, if you want that.
 
 You can therefore use pastel with or without wireframe, or inspect the original textured materials with or without wireframe. These options affect only the editing-stage display and remain active across preview mesh rebuilds.
+
+### Lighting
+
+The stage lights the model with three point lighting: a key light, a fill light and a rim light, with matching ambient light and reflections. The same setup is used in the Built-in pipeline, URP and HDRP; the active pipeline is detected when the editor opens. The **Lighting** section below the display toggles controls it:
+
+- **Scenario** picks the lighting condition: **Studio** (neutral, the default), **Outdoors - Sunny**, **Outdoors - Overcast**, **Outdoors - Sunset**, **Indoors** and **Night**. Hover over the field for a description of the current one.
+- **Rotation** turns all three lights around the model, 0 to 360 degrees, so you can see a shape lit from any side without moving the camera.
+- **Brightness** makes the lights and the ambient light brighter or dimmer. 1 is the scenario as designed.
+- **Shadows** lets the key light cast shadows. The fill and rim lights never do.
+
+The lighting applies to the pastel materials and to **Original Materials** alike, is remembered between sessions, and only exists in the editing stage: the scene's own lights, ambient settings and volumes are not used and not changed. The Scene view's background keeps its normal color in every scenario. To see the model without any shading, as before, turn off the Scene view's own lighting button in its toolbar; it is on again the next time the editor opens.
 
 ## Quick Start
 
 1. Select **Sculpt**.
 2. In the **Slots** panel, click **S** beside the slot you want to change. It becomes the only editable slot.
-3. Choose a sculpt brush on the floating toolbar. **Add**, **Remove**, and **Smooth** are the easiest tools to learn; **Heal**, **Grab**, **Crease**, **Pinch**, **Plane**, **Boundary**, and **Elastic Deform** provide more specialized deformation. The **Tool** row of the panel names the active brush and what it does.
+3. Choose a sculpt brush on the floating toolbar. **Add**, **Remove**, and **Smooth** are the easiest tools to learn; **Heal**, **Beautify**, **Grab**, **Crease**, **Pinch**, **Plane**, **Boundary**, and **Elastic Deform** provide more specialized deformation. The last group on the toolbar changes what is on the surface instead of its shape: **Comb Normals**, **Smooth Normals** and **UV Sculpt**. The **Tool** row of the panel names the active brush and what it does.
 4. In the **Brush** section, start with a modest **Radius (mm)**, an **Effect %** around 10–25, and **Smooth** falloff.
 5. Move the pointer over the editable slot. A 3D ring appears on a valid surface.
 6. Hold the left mouse button and drag across the surface.
-7. Release the button to finish the stroke and recalculate the mesh normals.
+7. Release the button to finish the stroke. The normals around the vertices that moved are brought up to date.
 8. Repeat with smaller brushes and lower strength for refinement.
-9. Enter a descriptive **Modifier Name**, then select **Save MeshModifier**.
+9. In the **Save** panel of the Vertex Editor window, choose how to keep it. **Save as Mesh Modifier** is the usual choice; see [Save your work](#save-your-work).
 
-The Save button is disabled until at least one vertex differs from the original preview state.
+Each save button is disabled, with the reason under it, until there is something it can save.
 
 ## Reading the 3D Brush
 
 The sculpt brush is drawn in world space rather than as a flat circle on the screen.
 
 - The ring is tangent to the surface under the pointer.
-- The short line through its center indicates the averaged surface normal and therefore the direction used by Add and Remove.
+- The short line through its center indicates the averaged surface normal and therefore the direction used by Add and Remove. Only the normals on the side of the surface you are pointing at count, so on double-sided geometry (a reversed copy of the surface at the same positions, common on UMA 2 clothing) and two-layer garments the brush still points out of the surface.
 - The ring continually changes position and orientation as it crosses the mesh.
 - The brush ring and normal indicator are drawn in thick, high-visibility red in every sculpt and mask mode.
 - The brush ignores the Scene depth buffer, preventing nearby triangles or overlapping clothing from clipping portions of the indicator.
 - The mask is shown as a colored wash over the mesh while **Show** is on in the **Mask** section. Stronger mask weights are tinted more strongly.
 
-The brush appears only when the pointer raycasts against an editable slot. If clothing overlaps a body slot and only the body is editable, a stroke cannot begin on the clothing. Hide or suppress an obstructing slot temporarily if you need access to a covered surface.
+The brush appears only when the pointer is over an editable slot. With **Ignore Locked Slots** on (the default, in the Brush section), the brush passes through slots that are not editable and reaches the editable slot behind them: solo the inside of a garment, or a slot covered by hair or a beard, and sculpt it through what is in front. Turn it off to have a locked slot in front block the brush. The option is shared with Vertex Paint and remembered.
 
 Hold **Alt** to use normal Scene navigation. Sculpting is suspended during Alt navigation and while the pointer is over a panel or the floating toolbar.
 
@@ -94,7 +107,7 @@ With one editable slot, the brush and raycast ignore everything else. With sever
 
 With several editable slots, co-located boundary vertices are treated as welded across them. Position, mask, and normal changes are synchronized at those seams, which helps keep connected pieces together. A Boundary stroke ignores a per-slot open edge when UMA recognizes it as a seam joined to another editable slot.
 
-Locking or hiding a slot ends the current stroke but keeps that slot's edits in the sculpt session. **Save MeshModifier** includes all changed slots, even ones you have since locked. The commands that overwrite a base slot or create a new slot need exactly one editable slot; solo the slot first.
+Locking or hiding a slot ends the current stroke but keeps that slot's edits in the sculpt session. **Save as Mesh Modifier** includes all changed slots, even ones you have since locked. **Save to Base Slot** and **Save as New Slot** need exactly one editable slot; solo the slot first.
 
 The saved modifier uses the slot's source-slot key when one is available. This allows the modifier to target the correct UMA slot rather than an incidental generated instance name.
 
@@ -133,6 +146,20 @@ Both buttons work on every editable slot, keep vertices at the same position tog
 Heal has nothing to do when the movement is already even. If **Heal Masked** reports that it moved vertices by a fraction of a millimeter, the fold you see is not in the blendshape or the sculpt. It is usually the pose: a generated character's limbs can be rolled about their length compared with the pose the slot was modelled in, and clothing weighted to two limbs folds between them. Check the slot in the pose it was modelled in before sculpting it (the Transfer Blend Shapes preview draws that pose).
 
 Heal makes an area move like its surroundings. If the surroundings are pulled in two directions, such as cloth spanning a gap, the healed area settles between them and may still need a Grab stroke.
+
+### Beautify
+
+Beautify straightens the lines of the mesh. Each vertex under the brush slides across the surface until it is in line with its neighbors on either side, along each edge loop through it. Use it where polygons are crooked: a wobbling edge loop around a joint, quads pulled into kites by an earlier sculpt, a patch that Smooth would shrink.
+
+Slots are stored as triangles, so Beautify first works out the modelled quads: an edge that is the longest edge of both triangles it joins is a quad's diagonal and is not treated as a line of the mesh. A regular vertex then has four edges, two each way, and belongs where the two lines through its opposite neighbors meet. A vertex with six edges (a triangle mesh) has three such lines. Any other vertex (a pole) moves to the middle of its neighbors.
+
+- **Even Spacing** also evens out the distances between the vertices along each line. At 0 (the default) the spacing stays as modelled, so the closer loops at a joint stay closer and only the wobble goes. At 1 a vertex goes to the middle of its neighbors on those lines.
+- **Keep Shape** (on by default) moves vertices only across the surface and puts each one back on the triangles it left, so the silhouette does not change. Turn it off to straighten the lines in depth as well, which flattens the surface under the brush.
+- **Keep Texture** (on by default) gives each vertex that moves the UV of the place it moved to, so the texture stays where it is on the body. A vertex on a UV seam has no single UV to take and is left where it is. With it off the texture moves with the vertices. It is not used while a blendshape is loaded.
+
+Open edges never move, and that includes the edges a slot shares with its neighbors (the body's UDIM borders), so seams between slots stay closed. **Effect %** sets how far one stroke goes; brush again, or turn on **Constant Application**, for more. The mask, **Connected Only**, **Front Faces Only** and **X Symmetry** apply as for Smooth.
+
+With **Keep Texture** on, the changed UVs are saved with the sculpt, as [UV Sculpt](#uv-sculpt) describes.
 
 ### Grab
 
@@ -206,7 +233,7 @@ For Boundary, Radius is also the maximum surface distance over which the edge de
 
 A vertex cannot keep accumulating displacement simply because the mouse is held still over it. UMA tracks the maximum influence received by each vertex for the current stroke. Moving closer to a vertex may increase it up to the stronger applicable limit, but repeatedly sampling the same point cannot exceed that limit. Release the mouse to reset the limits and begin another pass.
 
-Grab, Boundary, and Elastic are anchored drag tools rather than sampled paint strokes. For them, Effect % scales the captured weights and therefore how strongly the region follows the drag.
+Grab, Boundary, Elastic, and UV Sculpt are anchored drag tools rather than sampled paint strokes. For them, Effect % scales the captured weights and therefore how strongly the region follows the drag.
 
 For controlled work, prefer several strokes at a low percentage. This makes it easier to undo a single pass and avoids abrupt changes.
 
@@ -233,6 +260,12 @@ Enable **Connected Only** to restrict a stroke to the connected surface componen
 
 Disable it when you intentionally want the brush to affect multiple disconnected pieces within the target slot.
 
+## Front Faces Only
+
+Enable **Front Faces Only** to change only vertices whose normal faces the brush. A stroke on the outside of a garment with two separate layers (an outer shell and a lining a few millimetres in) then leaves the lining alone, and the far side of a thin part inside the radius is not pushed. It applies to the brushes that work under the pointer and to Grab and Elastic; the mask brushes and Boundary ignore it.
+
+Double-sided geometry is different: its two sides share their vertex positions, and vertices at one position always move together so the surface does not split. Front Faces Only does not separate them, and does not need to.
+
 ## X Symmetry
 
 Enable **X Symmetry** to apply a corresponding stroke across the character's local X axis. UMA reflects the brush position and surface direction, so the mirrored sample affects vertices inside the reflected brush rather than requiring identical vertex indices.
@@ -243,9 +276,9 @@ Inspect asymmetric clothing, offset accessories, and deliberately asymmetric top
 
 ## Live Normal Updates
 
-Enable **Live Normal Updates** to recalculate the preview mesh normals after every brush sample. This lets the 3D brush orientation and original-material lighting respond immediately to the changing surface during a stroke.
+Enable **Live Normal Updates** to bring the preview mesh normals up to date after every brush sample. This lets the 3D brush orientation and original-material lighting respond immediately to the changing surface during a stroke.
 
-The option is disabled by default because repeated normal calculation costs additional CPU time, especially on dense meshes and fast strokes. When disabled, normals are still recalculated automatically when the mouse button is released and the stroke ends.
+The option is disabled by default because repeated normal calculation costs additional CPU time, especially on dense meshes and fast strokes. When disabled, normals are still brought up to date automatically when the mouse button is released and the stroke ends.
 
 ## Constant Application
 
@@ -253,12 +286,61 @@ Normally one stroke moves each vertex at most once to the brush's full effect, h
 
 Enable **Constant Application** to keep applying the brush while the mouse button is held, also when the pointer does not move. **Every (ms)** sets how often the brush is applied again; the default is 100 ms, and a smaller value builds up faster. Each application starts a new dab at the pointer, so holding still keeps pushing, smoothing or flattening the area, and a slow drag does more than a fast one.
 
-- It applies to the sculpt brushes that work under the pointer (Add, Remove, Smooth, Crease, Pinch, Plane) and to the mask brushes. Grab, Boundary and Elastic are anchored drags and are not affected.
+- It applies to the sculpt brushes that work under the pointer (Add, Remove, Smooth, Beautify, Crease, Pinch, Plane) and to the mask brushes. Grab, Boundary, Elastic and UV Sculpt are anchored drags and are not affected.
 - The whole press is still one stroke: one Undo step puts everything it did back.
 - With the option off the brushes behave exactly as described above.
 - The setting and its interval are remembered between sessions.
 
 Start with a low **Effect %** when using it; the effect of one application is repeated ten times a second at the default interval.
+
+## Normals
+
+The **Normals** section, and the **Comb Normals** and **Smooth Normals** brushes in the last group on the toolbar, change vertex normals without moving any vertex. Use them to fix shading after sculpting, or the dark or light patches left by a poke-through fix.
+
+- **Show Normals** draws the editable slots' normals as short lines, **Length (mm)** long. Normals changed by a normals tool are orange. On large selections only the normals near the brush are drawn.
+- **Recalculate** works out the editable slots' normals again from their current shape, by the [battle buddy rule](#battle-buddies) below. One Undo step.
+- **Reset** puts the editable slots' normals back to the slot's own. One Undo step.
+- **Comb Normals** (brush): drag across the surface and the normals under the brush tilt toward the direction of the stroke, at most 80 degrees in one stroke. **Effect %**, **Radius** and **Falloff** work as for the other brushes; the mask, **Connected Only** and **X Symmetry** apply.
+- **Smooth Normals** (brush): the normals under the brush are evened out with their neighbors, across UV seams.
+
+The normals brushes change only normals that face the brush, so the reversed side of double-sided geometry is left as it is. Tangents are kept perpendicular to the changed normals, so normal maps still shade correctly.
+
+When a shape stroke ends (and during the stroke with **Live Normal Updates**), the normals around the vertices that moved turn by as much as the faces there turned. Every other normal is left exactly as it was, and normals you combed or smoothed, or that came with the slot, keep their character and turn with the surface. The same holds for Heal, AutoSculpt and loading a blendshape to edit.
+
+### Battle buddies
+
+Vertices at the same position are battle buddies: the copies a mesh has along the edge of every UV island, and the copies where two slots connect. They are one point of the surface, so whenever the editor works out normals it treats them as a single vertex and gives them one normal. This holds for **Recalculate**, for shape strokes, and for **Recalculate Normals** in the Mesh Modifier editor and on a Slot Data Asset. A different normal on each copy shows as a line in the shading along the seam.
+
+- A buddy in a slot that is not editable keeps its normal, and its buddies in editable slots take that normal. The connection then still has one normal, and what the editor shows is what the saved slots give. To recalculate a connection from the shape, make the slots on both sides editable.
+- A shape stroke that reaches buddies whose normals differ gives them one normal.
+- The one exception is geometry that is double sided by having a reversed copy at the same positions. Its two sides face opposite ways and cannot share a normal, so each side keeps its own.
+
+A Slot Data Asset is one slot, so its own **Recalculate Normals and Tangents** can only join the buddies inside that slot. Where the slot connects to another slot, the normals come from that slot's faces alone; recalculate connections in the Vertex Editor with both slots editable.
+
+Changed normals are saved with the sculpt: **Save as Mesh Modifier** adds a **Vertex Normal** modifier for each slot whose normals you changed, and **Save to Base Slot** and **Save as New Slot** write them into the slot's MeshData. A slot whose only change is its normals can be saved too.
+
+## UV Sculpt
+
+**UV Sculpt**, the last brush on the toolbar, drags the texture across the surface. No vertex moves; the UVs of the vertices under the brush change. Use it to put a painted feature where the shape is: a knee, an elbow crease, a nipple or a navel that sits a little off on a body texture shared between meshes.
+
+Choosing the brush turns on **Original Materials**, because the editor's pastel materials have no texture to see.
+
+1. Set **Radius** generously. The texture cannot be carried out of the brush, so the radius should be well over the distance you want to move it; about three times is comfortable.
+2. Set **Effect %**. At 100 the texture under the pointer stays under the pointer. Lower values make it follow part of the way, for small corrections.
+3. Press on the feature and drag it to where it belongs. The texture under the middle of the brush follows the pointer and fades out to nothing at the brush's edge by the **Falloff**. Release to finish; the whole drag is one Undo step.
+
+It is an anchored drag like Grab: the brush stays where you pressed, and the drag is measured on the Scene camera's view plane, so look at the surface roughly face on. On a surface that leans away from the camera the texture still stays under the pointer.
+
+- The texture stops where a triangle would fold over itself in the texture, and a drag longer than the radius bunches it up against the brush's edge. The panel says so when that happens: undo, and use a larger radius.
+- **Lock Borders** leaves the UVs on the edges of UV islands (the UV seams) and on open edges as they are. The islands then keep their outline in the texture, and the texture next to a seam is squeezed or stretched instead of moving across it. With it off, the islands either side of a seam each move by their own layout, which keeps a texture that is continuous across the seam continuous.
+- **Reset UVs** puts the editable slots' UVs back to what they were when the editor opened, or were last saved into the slot. One Undo step.
+- The mask, **Connected Only**, **Front Faces Only** and **X Symmetry** apply. With several editable slots, one drag moves the texture on every editable slot inside the brush, so it does not stop at the seam between two slots.
+- Copies of a vertex that share a UV (hard edges) keep sharing it, so no new seam appears.
+- Tangents are turned with the texture when the stroke ends, so normal maps still shade the right way.
+
+Moving a UV moves every texture the slot uses, on every overlay, together. It does not change the texture files, and other meshes that use the same textures are not affected.
+
+Changed UVs are saved with the sculpt: **Save as Mesh Modifier** adds a **Vertex UV** modifier for each slot whose UVs you changed (and a Vertex Normal modifier that carries the turned tangents), and **Save to Base Slot** and **Save as New Slot** write the UVs and tangents into the slot's MeshData. A blendshape holds movement only, so **Save as Blendshape** does not keep UV changes, and UV Sculpt is not available while a blendshape is loaded with **Edit Blendshape**. To fix where a feature sits on a base body for every character, solo the slot and use **Save to Base Slot**.
 
 ## Sculpt Masks
 
@@ -314,23 +396,42 @@ One AutoSculpt run is one Unity Undo operation. Normals, bounds, and the picking
 
 UMA samples points between drag events based on a fraction of the brush radius. This fills gaps when the pointer moves quickly, although slow, deliberate strokes still produce the most predictable result.
 
-One complete mouse-down to mouse-up gesture is registered as one Unity Undo operation. Use **Edit > Undo** or the normal Undo shortcut to restore the state before that stroke. Redo reapplies it. Grab, Boundary, and Elastic freeze their affected area, working plane, and target slot at mouse-down. Normals, bounds, and the picking collider are refreshed when a stroke finishes so the next stroke follows the updated surface.
+One complete mouse-down to mouse-up gesture is registered as one Unity Undo operation. Use **Edit > Undo** or the normal Undo shortcut to restore the state before that stroke. Redo reapplies it. Grab, Boundary, Elastic, and UV Sculpt freeze their affected area, working plane, and target slot at mouse-down. Normals, bounds, and the picking collider are refreshed when a stroke finishes so the next stroke follows the updated surface.
 
 Undo steps back one stroke at a time and leaves earlier strokes, and a blendshape loaded for editing, in place. The character is rebuilt after an Undo or Redo only when that step changed what it is built from: a Mesh Modifier, a vertex adjustment, or a **Rebuild Now**, **Rebuild to T-Pose** or **Reset Build**. A rebuild replaces the sculpted mesh, so undoing one of those steps drops strokes that were not saved.
 
 Ending or interrupting an interaction safely resets per-stroke tracking. This includes mouse-up, leaving the Scene view, changing tool modes, changing slots, or closing the editing stage.
 
-## Save the Sculpt as a Mesh Modifier
+## Save Your Work
+
+Every way of saving is in the **Save** panel at the top of the **Vertex Editor** window; the Scene view panel has no save buttons. The panel starts with what is not saved yet, then lists each way of saving with what it writes. A button that cannot be used now is disabled, with the reason under it (for example, that one slot must be soloed). After a save the panel says what was written, with **Show** to find the asset in the Project window.
+
+| Save | What it writes | Changes the project's slots? |
+| --- | --- | --- |
+| **Save as Mesh Modifier** | One MeshModifier asset with everything from the session: sculpt, changed normals and UVs, vertex colors, Advanced adjustments and vertex-set modifiers. | No |
+| **Save to '\<name\>'** | The strokes, into a blendshape loaded with **Edit Blendshape**. Shown only while one is loaded. | Yes, the blendshape |
+| **Save to Base Slot** | The soloed slot's sculpt (positions, normals and UVs) into its SlotDataAsset. | Yes |
+| **Save as New Slot** | A new SlotDataAsset: a copy of the soloed slot with the sculpt. | No, adds one |
+| **Save as Blendshape** | The sculpt as a 100% blendshape on every slot it changed. Movement only: UV changes are not in it. | Yes, a blendshape |
+| **Save Vertex Colors to Slot** | The soloed slot's painted colors into its SlotDataAsset. | Yes |
+| **Save Vertex Selection** | The selected vertices to a JSON file (load it again in Advanced). | No |
+
+Saving into a slot asset does not close the editor. What was written becomes the new starting point, so a later save adds only what you sculpt after it, and nothing is applied twice.
+
+### Leaving with unsaved work
+
+When you close the Vertex Editor (its **Close** button, or the Vertex Editor window) with unsaved work, a **Leave the Vertex Editor** dialog says what is not saved and offers the ways of saving that fit it, each with a line on what it does. Choose one; the dialog comes back with whatever is still unsaved, until everything is saved or you choose **Leave Without Saving** (or **Stay**, from the Close button). Closing because scripts recompile or Play mode starts cannot ask, and drops unsaved work as before.
+
+### Save as Mesh Modifier
 
 1. Finish the current stroke by releasing the mouse.
 2. Inspect the result from several angles and use Undo or Smooth where needed.
-3. Set **Modifier Name** at the bottom of the panel. The default is `<SlotName> Sculpt` with one editable slot, or `Multi-Slot Sculpt` with several.
-4. Select **Save MeshModifier**. It also saves any painted vertex colors from Vertex Paint.
-5. Choose a location under the project's `Assets` folder.
+3. Set **Name** in the Save panel. It is the suggested file name and the name of the sculpt modifiers. The default is `<SlotName> Sculpt` with one editable slot, or `Multi-Slot Sculpt` with several. With painted colors, **Paint Name** names their modifier.
+4. Select **Save as Mesh Modifier...** and choose a location under the project's `Assets` folder.
 
 The selected save folder is remembered for the project. Saving to an existing path replaces the Mesh Modifier asset at that path.
 
-The saved asset contains one modifier stack for each changed slot. Each stack uses a `VertexDeltaAdjustmentCollection` containing only that slot's nonzero vertex deltas. This means a multi-slot or **Autosculpt Editable Slots** result can be kept together in one Mesh Modifier asset. It does not include:
+The saved asset contains one modifier stack for each changed slot. Each stack uses a `VertexDeltaAdjustmentCollection` containing only that slot's nonzero vertex deltas. A slot whose normals or UVs were changed also gets a `VertexNormalAdjustmentCollection` or a `VertexUVAdjustmentCollection` with the changed vertices. This means a multi-slot or **Autosculpt Editable Slots** result can be kept together in one Mesh Modifier asset. It does not include:
 
 - Selection state.
 - The sculpt mask.
@@ -339,19 +440,19 @@ The saved asset contains one modifier stack for each changed slot. Each stack us
 
 Saving does not overwrite any source slot mesh. Keep the asset in the project and assign it through the normal UMA recipe, DNA, or Mesh Modifier workflow appropriate to your character.
 
-## Save the Sculpt as a Blendshape
+### Save as Blendshape
 
-Under **More Save Options**, Sculpt mode can store the current sculpt deltas as a blendshape directly on every changed slot's source `SlotDataAsset`. This preserves the base vertex positions and creates one frame at 100% weight. The frame contains the sculpt session's vertex deltas, with normal and tangent deltas worked out from how the shape bends the slot.
+**Save as Blendshape** stores the current sculpt deltas as a blendshape directly on every changed slot's source `SlotDataAsset`. This preserves the base vertex positions and creates one frame at 100% weight. The frame contains the sculpt session's vertex deltas, with normal and tangent deltas worked out from how the shape bends the slot.
 
 The deltas are stored in the slot's own mesh space. The stage sculpts the character as it stands, skinned and with its DNA, so each vertex's movement is taken back through the character's skinning before it is stored; dialling the saved shape in on a rebuilt character then puts the vertices where they were sculpted. The shape is written to the slot's asset in the project: the base slot when the character wears a copy the race baked blendshapes into, and the original slot when it wears a UMA 2 slot through [legacy rig conversion](SlotRigConversion.md#automatic-conversion).
 
 1. Finish the current stroke and inspect the result.
 2. Enter a shared **Blendshape Name**. UMA uses this name on every slot changed during the sculpt session.
-3. Select **Save Sculpt as Blendshape**.
+3. Select **Save as Blendshape**.
 4. If that name already exists on any target slot, choose **Replace** to replace its existing blendshape data or **Cancel** to leave every target unchanged.
 5. Regenerate the avatar before testing the saved blendshape.
 
-The operation supports one or several editable slots and **Autosculpt Editable Slots** results. Only slots with nonzero sculpt deltas are changed. Saving is registered as one Unity Undo operation and writes the affected `SlotDataAsset` assets immediately.
+The operation supports one or several editable slots and **Autosculpt Editable Slots** results. Only slots with nonzero sculpt deltas are changed. Saving is registered as one Unity Undo operation and writes only the affected `SlotDataAsset` assets.
 
 Two changed slot instances cannot save different results to the same source `SlotDataAsset`. UMA stops the entire operation in that ambiguous case; give the instances independent slot assets and save again.
 
@@ -364,7 +465,7 @@ The blendshape stores only deformation introduced during the current sculpt sess
 1. Choose the **Blendshape**. The list holds every blendshape the character's slots have in the project.
 2. Select **Edit '\<name\>'**. Every slot that has the shape, the body included, is shown with it fully dialled in. Finish or discard any other sculpt first; the button is disabled while there are unsaved strokes.
 3. Make the slots to change editable in the **Slots** panel and sculpt as usual. Lock the body to sculpt clothing against it. Masks, X Symmetry and AutoSculpt work as they do for any sculpt.
-4. Select **Save to '\<name\>'**. The strokes made since loading are added to the blendshape on every slot they touched. A slot that did not have the shape gets it.
+4. Select **Save to '\<name\>'** in the Save panel of the Vertex Editor window. The strokes made since loading are added to the blendshape on every slot they touched. A slot that did not have the shape gets it.
 5. Keep sculpting and save again, or select **Stop Editing** to show the character at rest. Strokes that were not saved are dropped, after a confirmation.
 
 What is saved:
@@ -374,29 +475,29 @@ What is saved:
 - Slots worn through legacy rig conversion are edited like any other; their strokes are written to the original UMA 2 slot.
 - Saving is one Unity Undo operation and writes the affected `SlotDataAsset` assets immediately. Regenerate characters to load the changed shape.
 
-While a blendshape is loaded, **Save MeshModifier** and **Save Sculpt as Blendshape** under another name store only the strokes made since loading. Loading or saving a blendshape clears the stroke Undo history, because earlier strokes belong to another starting shape. Rebuilding the character ends the edit; load the blendshape again to continue.
+While a blendshape is loaded, **Save as Mesh Modifier** and **Save as Blendshape** under another name store only the strokes made since loading. Loading or saving a blendshape clears the stroke Undo history, because earlier strokes belong to another starting shape. Rebuilding the character ends the edit; load the blendshape again to continue.
 
-The Blendshape Transfer dialog opens this mode directly with **Sculpt '\<shape\>'**: on a temporary character wearing the dialog's target slots, with only those slots editable. A shape the dialog has only previewed is loaded too; the panel says how many slots show a shape that is not on them yet, and **Save** writes it with the strokes. The temporary character goes when the editor closes.
+The Blendshape Transfer dialog opens this mode directly with **Sculpt '\<shape\>'**: on a temporary character wearing the dialog's target slots, with only those slots editable. A shape the dialog has only previewed is loaded too; the panel says how many slots show a shape that is not on them yet, and **Save to '\<shape\>'** writes it with the strokes. The temporary character goes when the editor closes.
 
 ## Save the Sculpt into a Slot
 
-**More Save Options** also offers two ways to bake the current slot's sculpted vertex and normal changes directly into slot `MeshData`. These commands need exactly one editable slot; solo the slot you intend to save first. The operations apply only the delta created during the sculpt session, so unrelated generated DNA and Mesh Modifier deformation are not baked into the source mesh.
+**Save to Base Slot** and **Save as New Slot**, in the Save panel, bake the current slot's sculpted vertex, normal and UV changes directly into slot `MeshData`. They need exactly one editable slot; solo the slot you intend to save first. The operations apply only the delta created during the sculpt session, so unrelated generated DNA and Mesh Modifier deformation are not baked into the source mesh.
 
-As for a blendshape, the sculpt is taken back through the character's skinning before it is stored, so the saved mesh, worn by a rebuilt character, sits where it was sculpted. Both commands are disabled while a blendshape is loaded with **Edit Blendshape**, when strokes are changes to that shape and not to the slot's rest mesh.
+As for a blendshape, the sculpt is taken back through the character's skinning before it is stored, so the saved mesh, worn by a rebuilt character, sits where it was sculpted. Both are disabled while a blendshape is loaded with **Edit Blendshape**, when strokes are changes to that shape and not to the slot's rest mesh.
 
 ### Overwrite the base slot
 
-Select **Save slot modifications to base slot** to replace the `MeshData` of the slot's asset in the project. That is the selected slot's own asset, with two exceptions: when the character wears a copy the race baked blendshapes into, the sculpt goes into the base slot behind it, and when it wears a UMA 2 slot through legacy rig conversion, into the original slot. UMA names the asset in this warning before changing it:
+Select **Save to Base Slot** to replace the `MeshData` of the slot's asset in the project. That is the selected slot's own asset, with two exceptions: when the character wears a copy the race baked blendshapes into, the sculpt goes into the base slot behind it, and when it wears a UMA 2 slot through legacy rig conversion, into the original slot. UMA names the asset in a warning before changing it.
 
-> Warning, this will overwrite the MeshData on '\<asset\>' with the new values!
+Choose **Cancel** to return to sculpting without changing the asset. Choose **Overwrite MeshData** to record the asset for Unity Undo, write a deep-copied mesh containing the sculpt deltas, and save only that asset. The editor stays open: keep sculpting, or save other work, and the character shows the new slot when it is rebuilt after you leave.
 
-Choose **Cancel** to return to sculpting without changing the asset. Choose **Overwrite MeshData** to record the asset for Unity Undo, write a deep-copied mesh containing the sculpt deltas, save the asset, and exit the Mesh Modifier editing stage.
+Saving a slot also releases it from the Global Library and drops the slot's race-baked copies. A race with prebaked blendshapes wears a copy of each base slot with those shapes baked in, made the first time it is needed and reused after that; the next character build makes a new copy from the slot as saved. This holds for every save in the editor that writes a slot: the sculpt, a blendshape, vertex colors and weights.
 
 This is a destructive content-authoring operation. Commit or back up the original slot before overwriting it if you may need to recover the source shape later.
 
 ### Create a new slot
 
-Use **New Slot Name** to name a derived slot. Its default is `<SlotName>_modified`. Select **Save slot modifications to a new slot**, choose an asset location, and UMA creates a new `SlotDataAsset` before exiting the editor.
+Use **New Slot Name** to name a derived slot. Its default is `<SlotName>_modified`. Select **Save as New Slot...**, choose an asset location, and UMA creates a new `SlotDataAsset`. The editor stays open.
 
 The new asset receives:
 
@@ -456,9 +557,9 @@ Topology boundaries have fewer neighbors. Use a smaller brush and lower strength
 
 The slot may not be geometrically symmetric around local X = 0, or the mirrored vertex may be outside the matching tolerance. Disable symmetry and sculpt the other side manually.
 
-### Save MeshModifier is disabled
+### A save button is disabled
 
-No vertex currently differs from the sculpt session's original preview. Perform a sculpt stroke or AutoSculpt operation with nonzero Effect %, and ensure the region is not fully masked.
+The reason is under the button. For the sculpt saves it is usually that no vertex differs from the session's starting shape yet (perform a stroke with nonzero Effect %, and check the region is not fully masked), or that the save needs one soloed slot.
 
 ### A Boundary stroke will not start
 
@@ -490,6 +591,6 @@ Mesh Modifiers address source-slot vertex indices. Confirm that the other charac
 - AutoSculpt uses axis-aligned ray/triangle tests against the chosen occluder; Radius is its search distance and Radius × Effect % is its maximum pull.
 - With several editable slots, recognized co-located seam vertices are synchronized across them, and every changed slot is saved as its own modifier stack.
 - The preview mesh collider is refreshed during sculpting so later samples follow the changed surface.
-- Normals and bounds are recalculated when the stroke ends.
+- The normals around moved vertices, and the bounds, are brought up to date when the stroke ends.
 - The modifier is stored using `VertexDeltaAdjustmentCollection`; no sculpt-specific runtime data format is required.
 - The source mesh topology must remain compatible with the saved vertex indices.

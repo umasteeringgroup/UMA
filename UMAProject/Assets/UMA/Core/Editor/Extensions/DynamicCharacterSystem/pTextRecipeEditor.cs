@@ -133,6 +133,7 @@ namespace UMA.Editors
 			SlotData[] currentSlots = _recipe.GetAllSlots();
 			bool couldAddDNA = false;
 			bool DNAConvertersAdded = false;
+			bool raceChanged = false;
 			if (currentDNA.Length == 0 && currentSlots != null)
 			{
 				var thisDNAConverterList = standardRaceData.dnaConverterList;
@@ -153,13 +154,20 @@ namespace UMA.Editors
 				if (couldAddDNA || standardRaceData.useNewDNA)
 				{
 					GUILayout.BeginHorizontal();
-					_recipe.raceData = EditorGUILayout.ObjectField("RaceData: ", _recipe.raceData, typeof(RaceData), false) as RaceData;
+					RaceData pickedRace = EditorGUILayout.ObjectField("RaceData: ", _recipe.raceData, typeof(RaceData), false) as RaceData;
+					if (pickedRace != _recipe.raceData)
+					{
+						// Report the new race so the recipe saves it (the toolbar's race field does the same).
+						_recipe.raceData = pickedRace;
+						raceChanged = true;
+					}
 					if (GUILayout.Button("Add DNA"))
 					{
 						if (standardRaceData.useNewDNA)
 						{
 							_recipe.ClearDna();
-							standardRaceData.dnaConverterList = new DynamicDNAConverterController[0];
+							// The recipe gets the race's DNA collection defaults. The race asset itself is
+							// left alone (this used to empty its DNA converter list in memory, unsaved).
 							var dnaInstanceCollection = standardRaceData.DNACollection.GetDefaultDNA(_recipe.raceData);
 							_recipe.AddDna(new UMADnaInstance(dnaInstanceCollection));
 
@@ -195,7 +203,7 @@ namespace UMA.Editors
 					GUILayout.EndHorizontal();
 				}
 			}
-			return DNAConvertersAdded;
+			return DNAConvertersAdded || raceChanged;
 		}
 
 		private bool TextRecipeGUI()

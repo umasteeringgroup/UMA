@@ -479,6 +479,10 @@ namespace UMA
             res.smooshInvertY = smooshInvertY;
             res.smooshInvertZ = smooshInvertZ;
             res.smooshInvertDist = smooshInvertDist;
+            // Also stored in recipes: a recipe merged by dropping it lost them.
+            res.smooshTargetTag = smooshTargetTag;
+            res.smooshableTag = smooshableTag;
+            res.UVSet = UVSet;
             res.meshModifiers = new List<MeshModifier.Modifier>(meshModifiers);
             res.isPlaceholderSlot = isPlaceholderSlot;
             res.placeholderSlotName = placeholderSlotName;

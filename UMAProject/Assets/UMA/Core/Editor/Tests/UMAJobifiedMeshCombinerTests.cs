@@ -531,6 +531,110 @@ namespace UMA.Editors.Tests
             }
         }
 
+        // Unity keeps a descriptor's firstVertex/vertexCount when DontRecalculateBounds is set
+        // (Mesh.SetSubMeshes honours it from Unity 6.6), and the renderer statistics add
+        // vertexCount once per submesh draw. A descriptor that spans the whole mesh therefore
+        // multiplied the reported vertex count by the number of materials.
+        [Test]
+        [Category("UMA")]
+        [Category("MeshCombiner")]
+        public void MeshDataCombineGivesEachSubmeshOnlyItsOwnVertexRange()
+        {
+            var gameObject = new GameObject("root");
+            var assets = new List<SlotDataAsset>();
+            Mesh outputMesh = null;
+            try
+            {
+                int rootHash = UMAUtils.StringToHash(gameObject.name);
+                // Source vertex blocks: A = 0..2 (submesh 0), B = 3..5 (submesh 1), C = 6..8 (submesh 1).
+                int[] targets = { 0, 1, 1 };
+                var sources = new List<SkinnedMeshCombiner.CombineInstance>();
+                for (int s = 0; s < targets.Length; s++)
+                {
+                    var asset = ScriptableObject.CreateInstance<SlotDataAsset>();
+                    assets.Add(asset);
+                    asset.name = "VertexRangeSlot" + s;
+                    asset.meshData = new UMAMeshData
+                    {
+                        SlotName = asset.slotName,
+                        vertexCount = 3,
+                        vertices = new[] { new Vector3(s, 0f, 0f), new Vector3(s + 1f, 0f, 0f), new Vector3(s, 1f, 0f) },
+                        normals = new[] { Vector3.forward, Vector3.forward, Vector3.forward },
+                        subMeshCount = 1,
+                        submeshes = new[] { new SubMeshTriangles(new[] { 0, 1, 2 }) },
+                        bindPoses = new[] { Matrix4x4.identity },
+                        boneNameHashes = new[] { rootHash },
+                        umaBones = new[] { new UMATransform(gameObject.transform, rootHash, 0) },
+                        ManagedBonesPerVertex = new byte[] { 1, 1, 1 },
+                        ManagedBoneWeights = new[]
+                        {
+                            new BoneWeight1 { boneIndex = 0, weight = 1f },
+                            new BoneWeight1 { boneIndex = 0, weight = 1f },
+                            new BoneWeight1 { boneIndex = 0, weight = 1f }
+                        }
+                    };
+                    sources.Add(new SkinnedMeshCombiner.CombineInstance
+                    {
+                        meshData = asset.meshData,
+                        slotData = new SlotData(asset),
+                        targetSubmeshIndices = new[] { targets[s] }
+                    });
+                }
+
+                var renderer = gameObject.AddComponent<SkinnedMeshRenderer>();
+                renderer.rootBone = gameObject.transform;
+                var umaData = gameObject.AddComponent<UMAData>();
+                umaData.umaRoot = gameObject;
+                umaData.umaRecipe = new UMAData.UMARecipe();
+                umaData.skeleton = new UMASkeleton(gameObject.transform);
+
+                SkinnedMeshCombinerMeshAPI.CombineIntoRenderer(
+                    renderer,
+                    sources.ToArray(),
+                    umaData,
+                    0,
+                    1024,
+                    new Dictionary<string, float>(),
+                    Quaternion.identity,
+                    false,
+                    false);
+
+                outputMesh = renderer.sharedMesh;
+                Assert.NotNull(outputMesh);
+                Assert.AreEqual(9, outputMesh.vertexCount);
+                Assert.AreEqual(2, outputMesh.subMeshCount);
+
+                SubMeshDescriptor first = outputMesh.GetSubMesh(0);
+                SubMeshDescriptor second = outputMesh.GetSubMesh(1);
+                Assert.AreEqual(0, first.firstVertex);
+                Assert.AreEqual(3, first.vertexCount, "Submesh 0 must not claim the vertices of submesh 1.");
+                Assert.AreEqual(3, second.firstVertex);
+                Assert.AreEqual(6, second.vertexCount);
+                Assert.AreEqual(outputMesh.vertexCount, first.vertexCount + second.vertexCount,
+                    "Disjoint submeshes must add up to the mesh's vertex count, not a multiple of it.");
+
+                for (int i = 0; i < outputMesh.subMeshCount; i++)
+                {
+                    SubMeshDescriptor descriptor = outputMesh.GetSubMesh(i);
+                    foreach (int index in outputMesh.GetIndices(i))
+                    {
+                        Assert.GreaterOrEqual(index, descriptor.firstVertex);
+                        Assert.Less(index, descriptor.firstVertex + descriptor.vertexCount);
+                    }
+                }
+            }
+            finally
+            {
+                foreach (var asset in assets)
+                {
+                    asset.meshData?.submeshes?[0]?.DisposeNativeTriangles(true);
+                    UnityEngine.Object.DestroyImmediate(asset);
+                }
+                if (outputMesh != null) UnityEngine.Object.DestroyImmediate(outputMesh);
+                UnityEngine.Object.DestroyImmediate(gameObject);
+            }
+        }
+
         [TestCase(false)]
         [TestCase(true)]
         [Category("UMA")]
