@@ -437,7 +437,30 @@ namespace UMA
             return changed;
         }
 
+        /// <summary>
+        /// A Use Existing Textures material gives each overlay texture straight to the shader, which only a
+        /// TintedTexture channel does. Sets every channel to that type; other material types are left alone.
+        /// </summary>
+        /// <returns>True when a channel was changed.</returns>
+        public static bool EnsureChannelTypesForMaterialType(MaterialType type, MaterialChannel[] materialChannels)
+        {
+            if (type != MaterialType.UseExistingTextures || materialChannels == null)
+            {
+                return false;
+            }
 
+            bool changed = false;
+            for (int i = 0; i < materialChannels.Length; i++)
+            {
+                if (materialChannels[i].channelType != ChannelType.TintedTexture)
+                {
+                    materialChannels[i].channelType = ChannelType.TintedTexture;
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
 
         [Serializable]
         public struct MaterialChannel

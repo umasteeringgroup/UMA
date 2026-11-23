@@ -331,6 +331,16 @@ namespace UMA.ClothesDesigner.Editor
             }
             fit.FinalQuality = EditorGUILayout.Toggle(new GUIContent("Final Quality", "More substeps: stiffer cloth and fewer creases from the solver, slower."), fit.FinalQuality);
             DesignerSession.ShowSeams = EditorGUILayout.Toggle(new GUIContent("Show Seams", "Draw each seam in the Scene view: its two edges, and a thread from each point to the point it is sewn to. Colours match the Pattern Canvas."), DesignerSession.ShowSeams);
+            EditorGUI.BeginChangeCheck();
+            var view = (ClothView)EditorGUILayout.EnumPopup(new GUIContent("Show", "Texture: each piece's outline, grain and name. Stretch: how much longer the cloth is than the flat pattern. Body Distance: how far it is from the body."), DesignerSession.View);
+            if (EditorGUI.EndChangeCheck()) { DesignerSession.View = view; session.RefreshView(); }
+            if (view == ClothView.Stretch) GUILayout.Label("Blue no stretch, green 5%, yellow 10%, red 20% or more.", EditorStyles.wordWrappedMiniLabel);
+            else if (view == ClothView.BodyDistance) GUILayout.Label("Red in the body, orange closer than the clearance, green at the clearance, blue 3 cm and more.", EditorStyles.wordWrappedMiniLabel);
+            bool within = EditorGUILayout.Toggle(new GUIContent("Fold onto Itself", "Keep cloth of one piece apart from itself too, where it folds onto itself (deep folds, gathers, a long skirt), not only from other pieces. Needs a Cloth Thickness above 0."), session.FitData.selfCollideWithinPieces);
+            if (within != session.FitData.selfCollideWithinPieces) { Undo.RecordObject(session.FitData, "Fold onto Itself"); session.FitData.selfCollideWithinPieces = within; session.ApplyFabric(); }
+            DrawWornUnder(session);
+            bool backFaces = EditorGUILayout.Toggle(new GUIContent("Show Back Faces", "Draw the cloth from both sides, so the inside of the clothes shows through openings. Only the Scene view's preview: the baked slot is one-sided unless its material draws both faces (see Inside Facing in Publish)."), DesignerSession.ShowBackFaces);
+            if (backFaces != DesignerSession.ShowBackFaces) { DesignerSession.ShowBackFaces = backFaces; session.RefreshPreview(); }
 
             ClothesFit data = session.FitData;
             MeshLevel level = data.overrideMeshLevel ? data.meshLevel : session.Pattern.meshLevel;
@@ -354,6 +364,55 @@ namespace UMA.ClothesDesigner.Editor
             }
         }
 
+        /// <summary>Clothes the body wears under these: the cloth drapes over them.</summary>
+        private static UMAWardrobeRecipe wornToAdd;
+
+        private void DrawWornUnder(DesignerSession session)
+        {
+            List<UMAWardrobeRecipe> worn = session.FitData.wornUnder;
+            EditorGUILayout.LabelField(new GUIContent("Worn Underneath", "Clothes the body wears under the clothes being made. The cloth drapes over them; the sizes still follow the body itself."), new GUIContent(worn.Count == 0 ? "nothing" : worn.Count + " recipes"));
+            for (int i = 0; i < worn.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Space(16f);
+                GUILayout.Label(worn[i] != null ? worn[i].name : "(missing)", EditorStyles.miniLabel);
+                if (GUILayout.Button("Remove", EditorStyles.miniButton, GUILayout.Width(60f)))
+                {
+                    var list = new List<UMAWardrobeRecipe>(worn);
+                    list.RemoveAt(i);
+                    session.SetWornUnder(list);
+                    GUIUtility.ExitGUI();
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(16f);
+            wornToAdd = (UMAWardrobeRecipe)EditorGUILayout.ObjectField(wornToAdd, typeof(UMAWardrobeRecipe), false);
+            using (new EditorGUI.DisabledScope(wornToAdd == null))
+            {
+                if (GUILayout.Button("Wear", EditorStyles.miniButton, GUILayout.Width(60f)))
+                {
+                    var list = new List<UMAWardrobeRecipe>(worn) { wornToAdd };
+                    wornToAdd = null;
+                    session.SetWornUnder(list);
+                    GUIUtility.ExitGUI();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+            if (worn.Count > 0)
+            {
+                bool over = EditorGUILayout.Toggle(new GUIContent("  Size over Them", "Measure the chest, waist and hips round the clothes worn underneath, so the sizes fit over them (a jacket over a shirt). Off: the sizes follow the body itself."), session.FitData.sizeOverWorn);
+                if (over != session.FitData.sizeOverWorn)
+                {
+                    Undo.RecordObject(session.FitData, "Size over Worn Clothes");
+                    session.FitData.sizeOverWorn = over;
+                    session.CaptureBody();
+                    session.RebuildCloth(false);
+                    GUIUtility.ExitGUI();
+                }
+            }
+        }
+
         private void DrawToolsSection(DesignerSession session)
         {
             if (!Section("Tools", "Cloth Tools")) return;
@@ -363,6 +422,18 @@ namespace UMA.ClothesDesigner.Editor
             if (session.Tool == ClothTool.Place)
             {
                 DrawPlaceTool(session);
+                return;
+            }
+            if (session.Tool == ClothTool.Measure)
+            {
+                GUILayout.Label("Click two points on the cloth or the body. A third click starts again.", wrapStyle);
+                if (session.MeasureHasA && session.MeasureHasB) EditorGUILayout.LabelField("Distance", session.MeasureDistanceCm.ToString("0.0") + " cm");
+                if (session.MeasureHasA)
+                {
+                    EditorGUILayout.LabelField(new GUIContent("Round the Cloth", "How far round the cloth is at the first point's height: the tape measure round the outside."), session.MeasureClothGirthCm > 0f ? session.MeasureClothGirthCm.ToString("0.0") + " cm" : "no cloth there");
+                    EditorGUILayout.LabelField(new GUIContent("Round the Body", "The body at the same height, arms left out."), session.MeasureBodyGirthCm > 0f ? session.MeasureBodyGirthCm.ToString("0.0") + " cm" : "-");
+                    if (session.MeasureClothGirthCm > 0f && session.MeasureBodyGirthCm > 0f) EditorGUILayout.LabelField("Ease", (session.MeasureClothGirthCm - session.MeasureBodyGirthCm).ToString("+0.0;-0.0") + " cm");
+                }
                 return;
             }
             session.BrushRadius = EditorGUILayout.Slider(new GUIContent("Radius (cm)", "How much cloth around the point is moved or pinned."), session.BrushRadius * 100f, 1f, 30f) / 100f;
@@ -388,7 +459,9 @@ namespace UMA.ClothesDesigner.Editor
 
         private void DrawPlaceTool(DesignerSession session)
         {
-            GUILayout.Label("Click a piece to select it, then drag it round the body or up and down. Shift-drag up or down moves it out from or in towards the body. Escape during a drag puts it back.", wrapStyle);
+            GUILayout.Label("Click a piece to select it, then drag it round the body or up and down. Shift-drag up or down moves it out from or in towards the body. On an arm or leg, Ctrl-drag tilts its tube and Ctrl+Shift-drag moves its far end in or out. Escape during a drag puts it back.", wrapStyle);
+            bool guide = EditorGUILayout.Toggle(new GUIContent("Show Layout Guide", "Draw the selected piece's layout shape (the oval, cone or tube it is laid on before sewing), with handles: the yellow dot turns it round the body or limb, Top moves it up or down (along an arm), Distance moves it out or in, and on arms and legs End Distance moves its far end and Tilt tilts it. Selecting a piece here also selects it on the Pattern Canvas, and the other way round."), DesignerSession.ShowLayoutGuide);
+            if (guide != DesignerSession.ShowLayoutGuide) { DesignerSession.ShowLayoutGuide = guide; SceneView.RepaintAll(); }
             if (session.Fit.SimTime > 0f)
             {
                 EditorGUILayout.HelpBox("Moving a piece lays all the pieces out again. Simulate afterwards.", MessageType.None);
@@ -420,8 +493,23 @@ namespace UMA.ClothesDesigner.Editor
             float distance = EditorGUILayout.DelayedFloatField(new GUIContent("Distance (cm)", "How much farther from the body than the other pieces it starts. Use it for a piece that goes over another, like a pocket or a band."), current.distanceCm);
             float across = EditorGUILayout.DelayedFloatField(new GUIContent("Across (cm)", "Moves the piece sideways round its part (across it, when laid flat), towards its right as drawn. A piece is otherwise centred by its outline's middle."), current.acrossCm);
             bool flat = EditorGUILayout.Toggle(new GUIContent("Lay Flat", "Lay the piece flat beside its part, facing out, instead of wrapped round it. For pieces that wrap poorly, like the two halves of a sock."), current.flat);
+            float tilt = current.tiltDeg, endDistance = current.endDistanceCm;
+            if (PiecePlacement.IsLimb(part))
+            {
+                tilt = Mathf.Clamp(EditorGUILayout.DelayedFloatField(new GUIContent("Tilt (deg)", arm
+                    ? "Turns the tube the piece is wrapped on about the shoulder joint: positive lowers the cuff end below the arm, negative raises it. It moves only as far as the arm still fits inside, so a close sleeve barely moves; give its end more room with End Distance first. Ctrl-drag the piece up or down to tilt it."
+                    : "Turns the tube the piece is wrapped on about its top: positive moves the hem end out from the other leg, negative in. It moves only as far as the leg still fits inside. Ctrl-drag the piece up or down to tilt it."), current.tiltDeg),
+                    -Arrangement.MaxTiltDeg, Arrangement.MaxTiltDeg);
+                endDistance = EditorGUILayout.DelayedFloatField(new GUIContent("End Distance (cm)", (arm ? "How much farther out the cuff end starts than the top; negative brings it in towards the wrist. " : "How much farther out the hem end starts than the top; negative brings it in towards the ankle. ")
+                    + "It changes evenly along the piece. A piece is never laid " + (arm ? "inside the clearance from the arm, or narrower than it is cut." : "closer than half a centimetre to the leg.") + " Ctrl+Shift-drag the piece up or down to change it."), current.endDistanceCm);
+            }
+            if (session.ClothReady)
+            {
+                bool frozen = EditorGUILayout.Toggle(new GUIContent("Freeze", "Hold this piece where it is while the rest is simulated: drape one layer, freeze it, then drape the next over it."), session.IsFrozen(index));
+                if (frozen != session.IsFrozen(index)) { session.SetFrozen(index, frozen); GUIUtility.ExitGUI(); }
+            }
             var next = current.Clone();
-            next.part = part; next.angle = angle; next.topAboveShoulderCm = top; next.distanceCm = distance; next.acrossCm = across; next.flat = flat;
+            next.part = part; next.angle = angle; next.topAboveShoulderCm = top; next.distanceCm = distance; next.acrossCm = across; next.flat = flat; next.tiltDeg = tilt; next.endDistanceCm = endDistance;
             if (!next.SameAs(current))
             {
                 session.SetPlacement(index, next);
@@ -489,6 +577,12 @@ namespace UMA.ClothesDesigner.Editor
             p.addRim = EditorGUILayout.Toggle(new GUIContent("Rim", "A narrow band round each opening joining the outside to the facing, so the edge shows the cloth's thickness."), p.addRim);
             if (p.addRim) p.rimThicknessMm = EditorGUILayout.Slider(new GUIContent("  Rim Thickness (mm)", "How thick the edge looks: the facing lies this far inside the cloth."), p.rimThicknessMm, 0.5f, 15f);
             DrawSlotLevel(session, p);
+            p.fullThickness = EditorGUILayout.Toggle(new GUIContent("Full Thickness", "Give the whole garment a thickness: a turned-in copy of all of it, joined at every opening. About twice the triangles; use it for thick cloth seen from both sides (coats, capes)."), p.fullThickness);
+            if (p.fullThickness) p.thicknessMm = EditorGUILayout.Slider(new GUIContent("  Thickness (mm)"), p.thicknessMm, 0.5f, 15f);
+            p.lodLevels = EditorGUILayout.IntSlider(new GUIContent("LOD Slots", "Coarser copies of the slot for distant characters (Name_LOD1, _LOD2 ...), each meshed at half again the edge length of the one before. UMA's Simple LOD component swaps them in by name."), p.lodLevels, 0, 3);
+            p.addParts = EditorGUILayout.Toggle(new GUIContent("Buttons and Parts", "Add the pattern's buttons (tacks marked Button) and parts to the slot, moving with the cloth."), p.addParts);
+            p.addTopstitch = EditorGUILayout.Toggle(new GUIContent("Topstitching", "Draw the seams' topstitching (set on each seam on the Pattern Canvas) into a texture overlay on the clothes."), p.addTopstitch);
+            if (p.addTopstitch) p.topstitchColor = EditorGUILayout.ColorField(new GUIContent("  Thread Colour"), p.topstitchColor);
             if (EditorGUI.EndChangeCheck()) session.MarkFitChanged();
 
             List<string> problems = GarmentBaker.Validate(session.Fit);
@@ -529,6 +623,16 @@ namespace UMA.ClothesDesigner.Editor
                     if (GUILayout.Button(new GUIContent("View Try-On", "Point the Scene view at the character wearing the baked clothes."))) session.FrameTryOn();
                 }
                 EditorGUILayout.EndHorizontal();
+                EditorGUI.BeginChangeCheck();
+                var clip = (AnimationClip)EditorGUILayout.ObjectField(new GUIContent("Try-On Animation", "An animation played on the try-on character, to see the clothes move. Scrub it with Time."), session.FitData.tryOnClip, typeof(AnimationClip), false);
+                if (EditorGUI.EndChangeCheck()) { Undo.RecordObject(session.FitData, "Try-On Animation"); session.FitData.tryOnClip = clip; session.TryOnTime = 0f; session.RefreshTryOnView(); }
+                if (session.FitData.tryOnClip != null && session.TryOnVisible)
+                {
+                    float t = EditorGUILayout.Slider(new GUIContent("  Time (s)"), session.TryOnTime, 0f, session.FitData.tryOnClip.length);
+                    if (!Mathf.Approximately(t, session.TryOnTime)) { session.TryOnTime = t; session.RefreshTryOnView(); }
+                    bool play = GUILayout.Toggle(session.TryOnPlaying, session.TryOnPlaying ? "Stop" : "Play", GUI.skin.button);
+                    if (play != session.TryOnPlaying) session.TryOnPlaying = play;
+                }
                 if (session.TryOnVisible && session.TryOnArmsRaised)
                 {
                     float angle = EditorGUILayout.Slider(new GUIContent("  Arm Angle (deg)", "Where the arms are, from hanging at the sides: 90 level, 180 straight up. Above about 30 degrees the shoulder blades and collarbones turn too, a third of the movement, as a body does."), session.TryOnArmAngle, 0f, 180f);
@@ -767,12 +871,14 @@ namespace UMA.ClothesDesigner.Editor
             EditorGUI.BeginChangeCheck();
             float damping = EditorGUILayout.Slider(new GUIContent("Damping", "How quickly movement dies down. Changes how fast the cloth settles, not where."), session.FitData.damping, 0f, 10f);
             float clearance = EditorGUILayout.Slider(new GUIContent("Clearance (mm)", "The gap kept between the cloth and the skin."), session.FitData.clearanceCm * 10f, 0f, 20f);
+            float thickness = EditorGUILayout.Slider(new GUIContent("Cloth Thickness (mm)", "The least distance kept between pieces once they are sewn, so a collar lies on the shirt instead of through it. 0 lets pieces pass through each other. A piece does not collide with itself."), session.FitData.clothThicknessMm, 0f, 10f);
             bool torsoOnly = EditorGUILayout.Toggle(new GUIContent("Weights from Torso Only", "The clothes take their bone weights from the body without the arms. Clothes with a piece laid round an arm (sleeves) always take them from the arms too."), session.FitData.donorsExcludeArms);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(session.FitData, "Simulation Settings");
                 session.FitData.damping = damping;
                 session.FitData.clearanceCm = clearance / 10f;
+                session.FitData.clothThicknessMm = thickness;
                 session.FitData.donorsExcludeArms = torsoOnly;
                 session.MarkFitChanged();
             }
@@ -809,6 +915,17 @@ namespace UMA.ClothesDesigner.Editor
             float softness = EditorGUILayout.Slider(new GUIContent("Softness", "0 stiff, like leather; 1 limp, like silk."), fabric.Softness, 0f, 1f);
             float weight = EditorGUILayout.Slider(new GUIContent("Weight (g/m²)", "As fabric is sold: shirting about 120, denim 450, leather 800."), fabric.GramsPerSquareMetre, 30f, 900f);
             float friction = EditorGUILayout.Slider(new GUIContent("Friction", "How much the cloth grips the body: 0 slides, 1 grips."), fabric.friction, 0f, 1f);
+            // Woven cloth gives more across the grain than along it, and most on the bias; knits stretch most across.
+            bool grain = EditorGUILayout.Toggle(new GUIContent("Stretch by Grain", "Stretch differently across the grain (the weft) and on the bias than along it (Stretch above). The piece's Grain sets the direction."), fabric.HasGrain);
+            float cross = fabric.crossStretchCompliance, bias = fabric.biasStretchCompliance;
+            if (grain)
+            {
+                float crossSlider = EditorGUILayout.Slider(new GUIContent("  Across the Grain", "0 firm to 1 very elastic, across the grain."), FabricSettings.StretchSlider(Mathf.Max(0f, cross >= 0f ? cross : fabric.stretchCompliance)), 0f, 1f);
+                float biasSlider = EditorGUILayout.Slider(new GUIContent("  On the Bias", "0 firm to 1 very elastic, diagonally to the grain. Woven cloth gives most here."), FabricSettings.StretchSlider(Mathf.Max(0f, bias >= 0f ? bias : Mathf.Max(fabric.stretchCompliance, cross))), 0f, 1f);
+                cross = FabricSettings.StretchFromSlider(crossSlider);
+                bias = FabricSettings.StretchFromSlider(biasSlider);
+            }
+            else { cross = -1f; bias = -1f; }
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(session.Pattern, "Fabric");
@@ -816,6 +933,8 @@ namespace UMA.ClothesDesigner.Editor
                 if (!Mathf.Approximately(softness, fabric.Softness)) fabric.Softness = softness;
                 if (!Mathf.Approximately(weight, fabric.GramsPerSquareMetre)) fabric.GramsPerSquareMetre = weight;
                 fabric.friction = friction;
+                fabric.crossStretchCompliance = cross;
+                fabric.biasStretchCompliance = bias;
                 FabricPreset preset = FabricPresets.Find(fabric.preset);
                 if (preset == null || !preset.Settings.SameValues(fabric)) fabric.preset = FabricPresets.Custom;
                 session.SyncToData();

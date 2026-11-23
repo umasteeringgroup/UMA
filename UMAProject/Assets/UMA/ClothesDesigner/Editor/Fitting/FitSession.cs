@@ -59,7 +59,7 @@ namespace UMA.ClothesDesigner.Editor
             Messages.AddRange(Mesh.warnings);
             Arranged = Arrangement.Arrange(Pattern, Fit, Mesh, Body);
             Messages.AddRange(Arranged.messages);
-            Model = ClothModel.Build(Mesh, PieceFabrics(), Arranged.positions);
+            Model = ClothModel.Build(Mesh, PieceFabrics(), Arranged.positions, ModelOptions());
             Positions = (Vector3[])Arranged.positions.Clone();
             SimTime = 0f;
             if (Fit.drape != null && Fit.drape.Matches(Mesh.revision, Mesh.VertexCount))
@@ -74,6 +74,35 @@ namespace UMA.ClothesDesigner.Editor
             }
             CreateSolver();
             RefreshPins();
+        }
+
+        /// <summary>What the model is built with: interfacing, the pattern's own settings, and the fit's frozen pieces.</summary>
+        private ClothModelOptions ModelOptions()
+        {
+            var frozen = new HashSet<int>();
+            if (Fit != null && Fit.frozenPieces != null)
+            {
+                foreach (string id in Fit.frozenPieces)
+                {
+                    int index = Pattern.IndexOfPiece(id);
+                    if (index >= 0) frozen.Add(index);
+                }
+            }
+            return new ClothModelOptions
+            {
+                Interfacing = PieceInterfacing(),
+                Pattern = Pattern,
+                FrozenPieces = frozen,
+                SelfWithinPieces = Fit != null && Fit.selfCollideWithinPieces,
+                TrianglesFaceIn = Arranged != null && Arranged.flipTriangles
+            };
+        }
+
+        private List<InterfacingLevel> PieceInterfacing()
+        {
+            var list = new List<InterfacingLevel>(Pattern.pieces.Count);
+            foreach (PatternPiece piece in Pattern.pieces) list.Add(piece != null ? piece.interfacing : InterfacingLevel.None);
+            return list;
         }
 
         private List<FabricSettings> PieceFabrics()
@@ -92,7 +121,7 @@ namespace UMA.ClothesDesigner.Editor
             if (!HasCloth) return;
             SyncPositions();
             Vector3[] keep = (Vector3[])Positions.Clone();
-            Model = ClothModel.Build(Mesh, PieceFabrics(), Arranged.positions);
+            Model = ClothModel.Build(Mesh, PieceFabrics(), Arranged.positions, ModelOptions());
             DisposeSolver();
             Positions = keep;
             CreateSolver();
@@ -144,6 +173,9 @@ namespace UMA.ClothesDesigner.Editor
                 : Physics.gravity;
             SimParams p = ClothModel.Params(Fit.damping, Fit.clearanceCm * 0.01f, Closure, GravityScale, gravity, FinalQuality, Mesh != null ? Mesh.edgeLengthCm : 2f);
             if (!Sewn) p.damping = Mathf.Max(p.damping, 6f);
+            // Pieces keep apart once sewn: laid out, pieces may overlap (a full skirt's panels) and must pass to sew.
+            p.thickness = Fit.clothThicknessMm * 0.001f;
+            p.selfCollide = Sewn && Fit.clothThicknessMm > 0f ? 1 : 0;
             return p;
         }
 

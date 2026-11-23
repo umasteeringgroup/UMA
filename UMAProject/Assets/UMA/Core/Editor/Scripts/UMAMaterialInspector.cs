@@ -373,20 +373,90 @@ namespace UMA.Editors
                         channelsProperty.ClearArray();
                         serializedObject.ApplyModifiedProperties();
                     }
-                    if (NewMatType == UMAMaterial.MaterialType.UseExistingTextures)
-                    {
-                        // When changing to UseExistingTexture, all channels are forced to UseExistingTexture and no atlas is created.
-                        var list = serializedObject.FindProperty("channels");
-                        for (int i=0;i<list.arraySize;i++)
-                        {
-                            SerializedProperty channel = list.GetArrayElementAtIndex(i);
-                            var channelProperty = channel.FindPropertyRelative("channelType");
-                            channelProperty.intValue = (int)UMAMaterial.ChannelType.TintedTexture;
-                        }
-                        serializedObject.ApplyModifiedProperties();
-                    }
                     Repaint();
                 }
+                // Not only on a type change: channels added while the type is already Use Existing Textures
+                // must become TintedTexture too (the first channels of an empty list are created as Texture).
+                if (ApplyUseExistingTexturesChannelRule(serializedObject))
+                {
+                    Repaint();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets every channel of a Use Existing Textures material to TintedTexture, the only channel type that
+        /// gives the overlay texture straight to the shader. Other material types are left alone.
+        /// </summary>
+        /// <returns>True when a channel was changed and applied.</returns>
+        internal static bool ApplyUseExistingTexturesChannelRule(SerializedObject serializedMaterial)
+        {
+            SerializedProperty materialType = serializedMaterial.FindProperty("materialType");
+            if (materialType.hasMultipleDifferentValues ||
+                materialType.intValue != (int)UMAMaterial.MaterialType.UseExistingTextures)
+            {
+                return false;
+            }
+
+            if (!ForceTintedTextureChannels(serializedMaterial.FindProperty("channels")))
+            {
+                return false;
+            }
+
+            serializedMaterial.ApplyModifiedProperties();
+            return true;
+        }
+
+        private static bool IsTintedTextureChannel(SerializedProperty channel)
+        {
+            SerializedProperty channelType = channel.FindPropertyRelative("channelType");
+            return !channelType.hasMultipleDifferentValues &&
+                   channelType.intValue == (int)UMAMaterial.ChannelType.TintedTexture;
+        }
+
+        private static bool ForceTintedTextureChannels(SerializedProperty channels)
+        {
+            bool changed = false;
+            for (int i = 0; i < channels.arraySize; i++)
+            {
+                SerializedProperty channel = channels.GetArrayElementAtIndex(i);
+                if (!IsTintedTextureChannel(channel))
+                {
+                    channel.FindPropertyRelative("channelType").intValue = (int)UMAMaterial.ChannelType.TintedTexture;
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
+        // Shown for materials saved before channels added later were given the right type.
+        private static void DrawTintedTextureChannelWarning(SerializedProperty channels, UMAMaterial.MaterialType materialType)
+        {
+            if (materialType != UMAMaterial.MaterialType.UseExistingTextures || channels == null)
+            {
+                return;
+            }
+
+            int wrongChannels = 0;
+            for (int i = 0; i < channels.arraySize; i++)
+            {
+                if (!IsTintedTextureChannel(channels.GetArrayElementAtIndex(i)))
+                {
+                    wrongChannels++;
+                }
+            }
+
+            if (wrongChannels == 0)
+            {
+                return;
+            }
+
+            EditorGUILayout.HelpBox(
+                $"{wrongChannels} of {channels.arraySize} channels are not saved as TintedTexture. UMA builds a texture for those channels instead of using the overlay texture directly.",
+                MessageType.Warning);
+            if (GUILayout.Button("Set all channels to TintedTexture"))
+            {
+                ForceTintedTextureChannels(channels);
             }
         }
 
@@ -438,6 +508,7 @@ namespace UMA.Editors
             //GUIHelper.FoldoutBar(channelListExpanded, "Texture Channels");
             {
                 DrawUseExistingTextureChannelWarning(list, materialType);
+                DrawTintedTextureChannelWarning(list, materialType);
                 GUIHelper.BeginVerticalPadded(10, new Color(0.75f, 0.875f, 1f));
                 GUILayout.Label("Texture Channels", _centeredStyle);
                 EditorGUILayout.PropertyField(list.FindPropertyRelative("Array.size"));

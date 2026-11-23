@@ -21,12 +21,37 @@ namespace UMA.ClothesDesigner.Editor
         [Min(0.01f)] public float density = 0.2f;
         /// <summary>How much the cloth grips the body: 0 slides, 1 grips.</summary>
         [Range(0f, 1f)] public float friction = 0.35f;
+        /// <summary>How easily the cloth stretches across the grain (the weft). Negative: the same as along it.</summary>
+        public float crossStretchCompliance = -1f;
+        /// <summary>How easily the cloth stretches on the bias (diagonally to the grain). Negative: the same as along it.</summary>
+        public float biasStretchCompliance = -1f;
+
+        /// <summary>True when the cloth stretches differently along the grain, across it or on the bias.</summary>
+        public bool HasGrain => crossStretchCompliance >= 0f || biasStretchCompliance >= 0f;
+
+        /// <summary>
+        /// The stretch compliance in a direction on the flat piece, given the grain's direction: the
+        /// values along, across and on the bias, blended by the direction (cos^4, sin^4 and 2 sin^2 cos^2,
+        /// which add up to one).
+        /// </summary>
+        public float StretchAt(Vector2 direction, Vector2 grain)
+        {
+            if (direction.sqrMagnitude < 1e-12f) return stretchCompliance;
+            float along = stretchCompliance;
+            float across = crossStretchCompliance >= 0f ? crossStretchCompliance : along;
+            float bias = biasStretchCompliance >= 0f ? biasStretchCompliance : Mathf.Max(along, across);
+            float c = Vector2.Dot(direction.normalized, grain.normalized);
+            float c2 = c * c, s2 = 1f - c2;
+            return along * c2 * c2 + across * s2 * s2 + bias * 2f * c2 * s2;
+        }
 
         public FabricSettings Clone() => (FabricSettings)MemberwiseClone();
 
         public bool SameValues(FabricSettings other) =>
             other != null && Mathf.Approximately(stretchCompliance, other.stretchCompliance) && Mathf.Approximately(bendCompliance, other.bendCompliance)
-            && Mathf.Approximately(density, other.density) && Mathf.Approximately(friction, other.friction);
+            && Mathf.Approximately(density, other.density) && Mathf.Approximately(friction, other.friction)
+            && Mathf.Approximately(Mathf.Max(-1f, crossStretchCompliance), Mathf.Max(-1f, other.crossStretchCompliance))
+            && Mathf.Approximately(Mathf.Max(-1f, biasStretchCompliance), Mathf.Max(-1f, other.biasStretchCompliance));
 
         public void CopyValuesFrom(FabricSettings other)
         {
@@ -35,7 +60,15 @@ namespace UMA.ClothesDesigner.Editor
             bendCompliance = other.bendCompliance;
             density = other.density;
             friction = other.friction;
+            crossStretchCompliance = other.crossStretchCompliance;
+            biasStretchCompliance = other.biasStretchCompliance;
         }
+
+        /// <summary>The Stretch slider's value for a compliance (0 firm to 1 very elastic).</summary>
+        public static float StretchSlider(float compliance) => compliance <= StretchMin ? 0f : Mathf.Clamp01(Mathf.Log10(compliance / StretchMin) / StretchDecades);
+
+        /// <summary>The compliance for a Stretch slider value.</summary>
+        public static float StretchFromSlider(float value) => value <= 0.001f ? 1e-8f : StretchMin * Mathf.Pow(10f, Mathf.Clamp01(value) * StretchDecades);
 
         // ---- The artist's sliders: 0 to 1 over the range the solver responds to (measured 2026-11-22) ----
 

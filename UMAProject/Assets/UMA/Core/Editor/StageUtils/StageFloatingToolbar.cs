@@ -77,6 +77,23 @@ namespace UMA
                 return false;
             }
 
+            Rect rect = CloseButtonRect(view, label, out GUIContent content);
+            Color previousBackground = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(0.82f, 0.25f, 0.2f, 1f);
+            bool pressed = GUI.Button(rect, content, closeButtonStyle);
+            GUI.backgroundColor = previousBackground;
+            return pressed;
+        }
+
+        /// <summary>
+        /// Where <see cref="DrawCloseButton"/> draws the button, in the same coordinates. A stage that lets
+        /// tools take clicks before it draws its panels must count this as panel, or the tool takes the
+        /// click and the button never closes the stage.
+        /// </summary>
+        public static Rect CloseButtonRect(SceneView view, string label) => CloseButtonRect(view, label, out _);
+
+        private static Rect CloseButtonRect(SceneView view, string label, out GUIContent content)
+        {
             if (closeButtonStyle == null)
             {
                 closeButtonStyle = new GUIStyle(GUI.skin.button)
@@ -90,16 +107,10 @@ namespace UMA
             // and taller whenever toolbars are docked along its edges.
             Rect area = view.cameraViewport;
             float width = area.width > 1f ? area.width : view.position.width;
-            var content = new GUIContent(label, "Close this editor and return to the scene. Asks first if there are unsaved changes.");
+            content = new GUIContent(label, "Close this editor and return to the scene. Asks first if there are unsaved changes.");
             Vector2 size = closeButtonStyle.CalcSize(content);
             size.y = Mathf.Max(size.y, 24f);
-            Rect rect = new Rect(Mathf.Round((width - size.x) * 0.5f), 6f, size.x, size.y);
-
-            Color previousBackground = GUI.backgroundColor;
-            GUI.backgroundColor = new Color(0.82f, 0.25f, 0.2f, 1f);
-            bool pressed = GUI.Button(rect, content, closeButtonStyle);
-            GUI.backgroundColor = previousBackground;
-            return pressed;
+            return new Rect(Mathf.Round((width - size.x) * 0.5f), 6f, size.x, size.y);
         }
 
         public static Color IconTint => EditorGUIUtility.isProSkin

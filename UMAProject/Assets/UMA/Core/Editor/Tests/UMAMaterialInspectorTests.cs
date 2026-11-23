@@ -84,6 +84,52 @@ namespace UMA.Editors.Tests
             Assert.That(CaptureOpenedWindows(), Is.Empty);
         }
 
+        [Test]
+        public void ChannelsAddedToAnEmptyUseExistingTexturesMaterialBecomeTintedTexture()
+        {
+            material.materialType = UMAMaterial.MaterialType.UseExistingTextures;
+            using var serialized = new SerializedObject(material);
+            serialized.FindProperty("channels").arraySize = 2;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            // The first channels of an empty list are created zeroed, which is ChannelType.Texture.
+            Assert.That(material.channels.Select(c => c.channelType), Is.All.EqualTo(UMAMaterial.ChannelType.Texture));
+
+            Assert.That(UMAMaterialInspector.ApplyUseExistingTexturesChannelRule(serialized), Is.True);
+            Assert.That(material.channels.Select(c => c.channelType), Is.All.EqualTo(UMAMaterial.ChannelType.TintedTexture));
+            Assert.That(UMAMaterialInspector.ApplyUseExistingTexturesChannelRule(serialized), Is.False);
+        }
+
+        [TestCase(UMAMaterial.MaterialType.Atlas)]
+        [TestCase(UMAMaterial.MaterialType.NoAtlas)]
+        public void ChannelTypesOfGeneratedTextureMaterialsAreLeftAlone(UMAMaterial.MaterialType type)
+        {
+            material.materialType = type;
+            material.channels = new[]
+            {
+                new UMAMaterial.MaterialChannel { channelType = UMAMaterial.ChannelType.DiffuseTexture },
+                new UMAMaterial.MaterialChannel { channelType = UMAMaterial.ChannelType.NormalMap }
+            };
+            using var serialized = new SerializedObject(material);
+
+            Assert.That(UMAMaterialInspector.ApplyUseExistingTexturesChannelRule(serialized), Is.False);
+            Assert.That(UMAMaterial.EnsureChannelTypesForMaterialType(type, material.channels), Is.False);
+            Assert.That(material.channels.Select(c => c.channelType), Is.EqualTo(new[]
+                { UMAMaterial.ChannelType.DiffuseTexture, UMAMaterial.ChannelType.NormalMap }));
+        }
+
+        [Test]
+        public void UseExistingTexturesChannelsBuiltInCodeBecomeTintedTexture()
+        {
+            var channels = new[]
+            {
+                new UMAMaterial.MaterialChannel { channelType = UMAMaterial.ChannelType.Texture },
+                new UMAMaterial.MaterialChannel { channelType = UMAMaterial.ChannelType.NormalMap }
+            };
+
+            Assert.That(UMAMaterial.EnsureChannelTypesForMaterialType(UMAMaterial.MaterialType.UseExistingTextures, channels), Is.True);
+            Assert.That(channels.Select(c => c.channelType), Is.All.EqualTo(UMAMaterial.ChannelType.TintedTexture));
+        }
+
         [UnityTest]
         public IEnumerator ValidRequestOpensOneLockedInspectorWithoutRepeatingOnLaterUpdates()
         {

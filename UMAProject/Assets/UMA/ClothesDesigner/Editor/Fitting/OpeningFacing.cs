@@ -147,9 +147,11 @@ namespace UMA.ClothesDesigner.Editor
                 if (kv.Value != 1) continue;
                 int a = (int)(kv.Key >> 32), b = (int)(kv.Key & 0xffffffff);
                 int e = SegmentEdge(mesh, pattern, a, b);
-                if (e < 0) continue;
+                // The rim of a hole cut in a piece is an opening too.
+                bool hole = e < 0 && a < mesh.onHole.Count && b < mesh.onHole.Count && mesh.onHole[a] && mesh.onHole[b];
+                if (e < 0 && !hole) continue;
                 List<PatternEdge> edges = pattern.pieces[mesh.piece[a]].edges;
-                if (e >= edges.Count || !edges[e].opening) continue;
+                if (!hole && (e >= edges.Count || !edges[e].opening)) continue;
                 segments.Add((a, b, edgeThird[kv.Key]));
                 atOpening[a] = atOpening[b] = true;
             }

@@ -57,12 +57,25 @@ namespace UMA.ClothesDesigner.Editor
     [CreateAssetMenu(menuName = "UMA/Clothes Designer/Clothes Pattern", fileName = "New Clothes Pattern")]
     public sealed class ClothesPattern : ScriptableObject
     {
-        /// <summary>2: each piece has its own fabric, and placement a distance from the body.</summary>
-        public const int CurrentSchemaVersion = 2;
+        /// <summary>
+        /// 2: each piece has its own fabric, and placement a distance from the body.
+        /// 3: lines inside pieces (seam lines, folds, holes), tacks and buttons, attached parts.
+        /// </summary>
+        public const int CurrentSchemaVersion = 3;
 
         public int schemaVersion = CurrentSchemaVersion;
         public List<PatternPiece> pieces = new List<PatternPiece>();
         public List<PatternSeam> seams = new List<PatternSeam>();
+        /// <summary>Single stitches between two points anywhere on the pieces: tacks and buttons.</summary>
+        public List<PatternTack> tacks = new List<PatternTack>();
+        /// <summary>Small hard parts fixed to the cloth: buttons, buckles, zip pulls.</summary>
+        public List<PatternPart> parts = new List<PatternPart>();
+        /// <summary>A picture shown behind the pieces on the Pattern Canvas, to trace.</summary>
+        public Texture2D referenceImage;
+        /// <summary>The picture's lower left corner on the canvas (cm) and its height there (cm).</summary>
+        public Vector2 referenceOrigin = new Vector2(-50f, 0f);
+        [Min(1f)] public float referenceHeightCm = 100f;
+        [Range(0.05f, 1f)] public float referenceOpacity = 0.35f;
         public List<PatternDimension> dimensions = new List<PatternDimension>();
         public MeshLevel meshLevel = MeshLevel.Medium;
         [Min(0.3f)] public float customEdgeLengthCm = 2f;
@@ -129,7 +142,12 @@ namespace UMA.ClothesDesigner.Editor
                     + (piece.placement.distanceCm != 0f ? ";" + piece.placement.distanceCm.ToString("R") : "")
                     + (piece.placement.part != BodyPart.Torso ? ";" + piece.placement.part : "")
                     + (piece.placement.flat ? ";flat" : "")
-                    + (piece.placement.acrossCm != 0f ? ";x" + piece.placement.acrossCm.ToString("R") : "") : "").Append('|');
+                    + (piece.placement.acrossCm != 0f ? ";x" + piece.placement.acrossCm.ToString("R") : "")
+                    + (piece.placement.tiltDeg != 0f ? ";t" + piece.placement.tiltDeg.ToString("R") : "")
+                    + (piece.placement.endDistanceCm != 0f ? ";e" + piece.placement.endDistanceCm.ToString("R") : "") : "").Append('|');
+                // Only when set, so drapes kept before pieces had them still match.
+                if (PatternPiece.DetailOf(piece) != 1f) text.Append("detail").Append(PatternPiece.DetailOf(piece).ToString("R")).Append('|');
+                if (piece.interfacing != InterfacingLevel.None) text.Append("interfacing").Append(piece.interfacing).Append('|');
                 for (int i = 0; i < piece.points.Count; i++)
                 {
                     text.Append(piece.points[i].position.x.ToString("R")).Append(',').Append(piece.points[i].position.y.ToString("R")).Append(';');
@@ -140,13 +158,17 @@ namespace UMA.ClothesDesigner.Editor
                 // Darts and pleats shape the cloth; listed only when there are any, so older drapes still match.
                 if (piece.darts != null) foreach (PatternDart d in piece.darts) if (d != null) text.Append("d").Append(JsonUtility.ToJson(d));
                 if (piece.pleats != null) foreach (PatternPleat p in piece.pleats) if (p != null) text.Append("p").Append(JsonUtility.ToJson(p));
+                // Lines change the mesh; likewise only when there are any. (Elastic, layers and pressure only
+                // change how the cloth moves, like its fabric, so a kept drape stays valid.)
+                if (piece.lines != null) foreach (PatternLine l in piece.lines) if (l != null) text.Append("l").Append(JsonUtility.ToJson(l));
                 text.Append('\n');
             }
+            if (tacks != null) foreach (PatternTack t in tacks) if (t != null) text.Append("t").Append(t.pieceA).Append(t.a.x.ToString("R")).Append(t.a.y.ToString("R")).Append(t.pieceB).Append(t.b.x.ToString("R")).Append(t.b.y.ToString("R")).Append('\n');
             foreach (PatternSeam s in seams)
             {
                 if (s == null) continue;
                 text.Append(s.a.pieceId).Append(s.a.edgeId).Append(s.a.start.ToString("R")).Append(s.a.end.ToString("R"))
-                    .Append(s.b.pieceId).Append(s.b.edgeId).Append(s.b.start.ToString("R")).Append(s.b.end.ToString("R")).Append(s.reversed).Append('\n');
+                    .Append(s.b.pieceId).Append(s.b.edgeId).Append(s.b.start.ToString("R")).Append(s.b.end.ToString("R")).Append(s.reversed).Append(s.folded ? "folded" : "").Append('\n');
             }
             foreach (PatternDimension d in dimensions)
             {
@@ -171,6 +193,12 @@ namespace UMA.ClothesDesigner.Editor
             if (pieces == null) pieces = new List<PatternPiece>();
             if (seams == null) seams = new List<PatternSeam>();
             if (dimensions == null) dimensions = new List<PatternDimension>();
+            if (tacks == null) tacks = new List<PatternTack>();
+            if (parts == null) parts = new List<PatternPart>();
+            tacks.RemoveAll(t => t == null);
+            parts.RemoveAll(t => t == null);
+            foreach (PatternTack t in tacks) if (string.IsNullOrEmpty(t.id)) t.id = NewId();
+            foreach (PatternPart t in parts) if (string.IsNullOrEmpty(t.id)) t.id = NewId();
             if (uvLayout == null) uvLayout = new UvLayoutSettings();
             foreach (PatternPiece piece in pieces)
             {
@@ -187,10 +215,18 @@ namespace UMA.ClothesDesigner.Editor
                 if (piece.fabric == null || string.IsNullOrEmpty(piece.fabric.preset)) piece.fabric = FabricPresets.Create(FabricPresets.DefaultName);
                 if (piece.darts == null) piece.darts = new List<PatternDart>();
                 if (piece.pleats == null) piece.pleats = new List<PatternPleat>();
+                if (piece.meshDetail < 1f) piece.meshDetail = 1f;
                 piece.darts.RemoveAll(d => d == null);
                 piece.pleats.RemoveAll(p => p == null);
                 foreach (PatternDart d in piece.darts) if (string.IsNullOrEmpty(d.id)) d.id = NewId();
                 foreach (PatternPleat p in piece.pleats) if (string.IsNullOrEmpty(p.id)) p.id = NewId();
+                if (piece.lines == null) piece.lines = new List<PatternLine>();
+                piece.lines.RemoveAll(l => l == null);
+                foreach (PatternLine l in piece.lines)
+                {
+                    if (string.IsNullOrEmpty(l.id)) l.id = NewId();
+                    if (l.points == null) l.points = new List<Vector2>();
+                }
             }
             foreach (PatternSeam seam in seams) if (seam != null && string.IsNullOrEmpty(seam.id)) seam.id = NewId();
             if (schemaVersion < CurrentSchemaVersion)
@@ -213,19 +249,80 @@ namespace UMA.ClothesDesigner.Editor
                 if (PatternGeometry.OutlineSelfIntersects(piece)) problems.Add("The outline of '" + piece.name + "' crosses itself.");
                 if (Mathf.Abs(PatternGeometry.SignedArea(PatternGeometry.SampleOutline(piece, 1f, null))) < 1f) problems.Add("'" + piece.name + "' has no area.");
                 problems.AddRange(DartGeometry.FindProblems(piece));
+                problems.AddRange(LineGeometry.FindProblems(piece));
             }
             foreach (PatternSeam seam in seams)
             {
                 if (seam == null) continue;
                 if (!SpanResolves(seam.a) || !SpanResolves(seam.b)) problems.Add("A seam refers to an edge that no longer exists. Unsew it and sew it again.");
             }
+            for (int i = 0; i < seams.Count; i++)
+            {
+                for (int j = i + 1; j < seams.Count; j++)
+                {
+                    if (seams[i] == null || seams[j] == null) continue;
+                    if (Overlap(seams[i].a, seams[j].a) || Overlap(seams[i].a, seams[j].b) || Overlap(seams[i].b, seams[j].a) || Overlap(seams[i].b, seams[j].b))
+                    {
+                        problems.Add("Two seams use the same stretch of an edge. Unsew one of them.");
+                    }
+                }
+            }
+            if (tacks != null)
+            {
+                foreach (PatternTack tack in tacks)
+                {
+                    if (tack == null) continue;
+                    PatternPiece a = FindPiece(tack.pieceA), b = FindPiece(tack.pieceB);
+                    if (a == null || b == null) { problems.Add("A tack is on a piece that no longer exists. Delete it."); continue; }
+                    if (!LineGeometry.Inside(a, tack.a) || !LineGeometry.Inside(b, tack.b)) problems.Add("A tack between '" + a.name + "' and '" + b.name + "' is outside its piece. Move it inside.");
+                }
+            }
             return problems;
         }
+
+        private static bool Overlap(SeamSpan x, SeamSpan y) =>
+            x.pieceId == y.pieceId && x.edgeId == y.edgeId && x.start < y.end - 1e-4f && y.start < x.end - 1e-4f;
 
         private bool SpanResolves(SeamSpan span)
         {
             PatternPiece piece = FindPiece(span.pieceId);
-            return piece != null && piece.IndexOfEdge(span.edgeId) >= 0 && span.end > span.start;
+            return piece != null && (piece.IndexOfEdge(span.edgeId) >= 0 || piece.FindLine(span.edgeId) != null) && span.end > span.start;
+        }
+
+        /// <summary>Every seam with a side on this edge (or line inside a piece).</summary>
+        public List<PatternSeam> FindSeamsOn(string pieceId, string edgeId)
+        {
+            var found = new List<PatternSeam>();
+            foreach (PatternSeam seam in seams)
+            {
+                if (seam == null) continue;
+                if ((seam.a.pieceId == pieceId && seam.a.edgeId == edgeId) || (seam.b.pieceId == pieceId && seam.b.edgeId == edgeId)) found.Add(seam);
+            }
+            return found;
+        }
+
+        /// <summary>
+        /// The longest stretch of an edge (or line) that no seam uses yet, as fractions of its length.
+        /// False when it is sewn all along.
+        /// </summary>
+        public bool FreeSpan(string pieceId, string edgeId, out float start, out float end)
+        {
+            var used = new List<Vector2>();
+            foreach (PatternSeam seam in FindSeamsOn(pieceId, edgeId))
+            {
+                if (seam.a.pieceId == pieceId && seam.a.edgeId == edgeId) used.Add(new Vector2(seam.a.start, seam.a.end));
+                if (seam.b.pieceId == pieceId && seam.b.edgeId == edgeId) used.Add(new Vector2(seam.b.start, seam.b.end));
+            }
+            used.Sort((x, y) => x.x.CompareTo(y.x));
+            start = 0f; end = 0f;
+            float at = 0f;
+            used.Add(new Vector2(1f, 1f));
+            foreach (Vector2 u in used)
+            {
+                if (u.x - at > end - start) { start = at; end = u.x; }
+                at = Mathf.Max(at, u.y);
+            }
+            return end - start > 0.01f;
         }
     }
 
@@ -251,6 +348,43 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>Pleats folded at an edge of this piece.</summary>
         public List<PatternPleat> pleats = new List<PatternPleat>();
         public UvIsland uvIsland = new UvIsland();
+        /// <summary>
+        /// How much finer than the pattern's Mesh Level this piece is meshed (1 to 4): small pieces such as
+        /// collars and cuffs need more triangles to hold a curve or a point than a body panel does.
+        /// </summary>
+        [Range(1f, 4f)] public float meshDetail = 1f;
+        /// <summary>A stiffening layer fused to the piece: stands, collars, cuffs, waistbands and plackets.</summary>
+        public InterfacingLevel interfacing;
+        /// <summary>Lines drawn inside the piece: lines to sew other pieces onto (pockets, patches), folds and holes.</summary>
+        public List<PatternLine> lines = new List<PatternLine>();
+        /// <summary>
+        /// Which layer of the clothes the piece is: where two pieces cross, the one with the higher layer is
+        /// kept outside the other (a jacket front over a shirt front, a pocket over its panel).
+        /// </summary>
+        public int layer;
+        /// <summary>A linked mirror keeps the shape of the piece it was mirrored from (<see cref="mirrorOf"/>): edit the original.</summary>
+        public bool mirrorLinked;
+        /// <summary>
+        /// Pushes the piece out from the body like padding or air in a puffer jacket (0 none, 1 strong).
+        /// </summary>
+        [Range(0f, 1f)] public float pressure;
+
+        public PatternLine FindLine(string lineId)
+        {
+            if (lines == null) return null;
+            foreach (PatternLine l in lines) if (l != null && l.id == lineId) return l;
+            return null;
+        }
+
+        public int IndexOfLine(string lineId)
+        {
+            if (lines == null) return -1;
+            for (int i = 0; i < lines.Count; i++) if (lines[i] != null && lines[i].id == lineId) return i;
+            return -1;
+        }
+
+        /// <summary>The piece's mesh detail, kept in range (old patterns have none).</summary>
+        public static float DetailOf(PatternPiece piece) => piece == null || piece.meshDetail < 1f ? 1f : Mathf.Min(piece.meshDetail, 4f);
 
         public PatternDart FindDart(string dartId)
         {
@@ -287,6 +421,92 @@ namespace UMA.ClothesDesigner.Editor
         public Vector2 position;
     }
 
+    public enum PatternLineKind
+    {
+        /// <summary>A line to sew an edge of another piece onto: a pocket, a patch, a strap.</summary>
+        Seam = 0,
+        /// <summary>A crease the cloth keeps: a trouser crease, a lapel's roll line.</summary>
+        Fold = 1,
+        /// <summary>A closed shape cut out of the piece.</summary>
+        Hole = 2
+    }
+
+    /// <summary>
+    /// A line drawn inside a piece (cm, as drawn): straight from point to point, open or closed. The cloth's
+    /// mesh keeps it as edges, so an edge of another piece can be sewn to it, the cloth can crease along
+    /// it, or the shape it encloses can be cut out.
+    /// </summary>
+    [Serializable]
+    public sealed class PatternLine
+    {
+        public string id;
+        public string name;
+        public PatternLineKind kind;
+        public List<Vector2> points = new List<Vector2>();
+        /// <summary>The last point joins the first: a shape.</summary>
+        public bool closed;
+        /// <summary>Folds: how far the cloth is folded from flat, in degrees (0 flat, 180 folded back on itself).</summary>
+        [Range(0f, 170f)] public float foldAngle = 60f;
+        /// <summary>Folds: the crease points in towards the body (a valley) instead of out (a ridge).</summary>
+        public bool foldInward;
+        /// <summary>For a linked mirror: the line of the original this one copies.</summary>
+        public string mirrorOfLine;
+    }
+
+    /// <summary>
+    /// A single stitch holding two points together, anywhere on the pieces: a tack, or a button and its
+    /// buttonhole. Each point is on a piece, in its centimetres as drawn.
+    /// </summary>
+    [Serializable]
+    public sealed class PatternTack
+    {
+        public string id;
+        public string pieceA;
+        public Vector2 a;
+        public string pieceB;
+        public Vector2 b;
+        /// <summary>A button: the bake puts a button on the first piece here.</summary>
+        public bool button;
+        /// <summary>The button's diameter (mm).</summary>
+        [Min(2f)] public float buttonDiameterMm = 12f;
+    }
+
+    public enum PartShape
+    {
+        /// <summary>A flat round button.</summary>
+        Button = 0,
+        /// <summary>A flat rectangle: a buckle plate, a label, a patch.</summary>
+        Plate = 1,
+        /// <summary>A mesh of your own.</summary>
+        Mesh = 2
+    }
+
+    /// <summary>
+    /// A small hard part fixed to the cloth: a button, a buckle, a zip pull. The bake adds it to the slot,
+    /// moving with the cloth under it. It takes its texture from the cloth's texture where it sits, so
+    /// painting that spot paints the part.
+    /// </summary>
+    [Serializable]
+    public sealed class PatternPart
+    {
+        public string id;
+        public string name;
+        public string pieceId;
+        /// <summary>Where on the piece (cm, as drawn).</summary>
+        public Vector2 position;
+        public PartShape shape;
+        /// <summary>Its size across (mm): a button's diameter, a plate's width, a mesh's largest side.</summary>
+        [Min(1f)] public float sizeMm = 12f;
+        /// <summary>A plate's height, as a share of its width.</summary>
+        [Min(0.05f)] public float aspect = 0.6f;
+        /// <summary>How far it stands out from the cloth (mm).</summary>
+        [Min(0.1f)] public float heightMm = 2.5f;
+        /// <summary>Turned on the cloth, in degrees from the piece's up.</summary>
+        public float rotation;
+        /// <summary>Shape Mesh: the mesh. Its z axis points out of the cloth and its y axis up the piece.</summary>
+        public Mesh mesh;
+    }
+
     /// <summary>An edge of a piece's outline: straight, or a cubic Bézier with two handles.</summary>
     [Serializable]
     public sealed class PatternEdge
@@ -300,6 +520,12 @@ namespace UMA.ClothesDesigner.Editor
         public Vector2 handleB;
         /// <summary>An intentional opening (hem, neckline, armhole): never sewn, drawn as open.</summary>
         public bool opening;
+        /// <summary>Elastic sewn along the edge: it draws the edge up to <see cref="elasticPercent"/> of its length and stretches back.</summary>
+        public bool elastic;
+        /// <summary>With elastic: the edge's length at rest, as a percentage of its drawn length.</summary>
+        [Range(30f, 100f)] public float elasticPercent = 75f;
+        /// <summary>For a linked mirror: the edge of the original this one copies.</summary>
+        public string mirrorOfEdge;
     }
 
     /// <summary>Part of one edge, as fractions of its length.</summary>
@@ -325,6 +551,26 @@ namespace UMA.ClothesDesigner.Editor
         public SeamSpan a;
         public SeamSpan b;
         public bool reversed;
+        /// <summary>
+        /// A fold: piece b is turned over piece a along the seam, like a collar's leaf over its stand or a cuff
+        /// turned back. Draw the turned piece as it looks turned over (seen from outside), so its edge runs
+        /// the same way as the other one (not reversed), and lay it out already turned, a little farther out.
+        /// The simulation holds the turn as it was laid out.
+        /// </summary>
+        public bool folded;
+        /// <summary>Topstitching drawn along the seam when the clothes are baked.</summary>
+        public TopstitchKind topstitch;
+        /// <summary>How far from the seam the topstitching runs (mm).</summary>
+        [Min(0.5f)] public float topstitchOffsetMm = 3f;
+    }
+
+    public enum TopstitchKind
+    {
+        None = 0,
+        /// <summary>One row of stitches on each side of the seam.</summary>
+        Single = 1,
+        /// <summary>Two rows on each side, as on jeans.</summary>
+        Double = 2
     }
 
     /// <summary>A size control: a fixed length, or a body measurement plus an allowance (ease).</summary>
@@ -417,6 +663,20 @@ namespace UMA.ClothesDesigner.Editor
         public float lengthCm;
     }
 
+    /// <summary>
+    /// A stiffening layer fused to a piece. It stiffens the piece against folding across its height (as
+    /// drawn), so a collar stand stays standing and a cuff stays flat, while it can still curve round the
+    /// neck or the wrist.
+    /// </summary>
+    public enum InterfacingLevel
+    {
+        None = 0,
+        /// <summary>Holds its shape but bends: collar leaves, plackets.</summary>
+        Light = 1,
+        /// <summary>Stands up on its own: collar stands, cuffs, waistbands.</summary>
+        Firm = 2
+    }
+
     /// <summary>The part of the body a piece is laid round before sewing.</summary>
     public enum BodyPart
     {
@@ -459,12 +719,27 @@ namespace UMA.ClothesDesigner.Editor
         /// such as half a sock is not the part it should sit on.
         /// </summary>
         public float acrossCm;
+        /// <summary>
+        /// Arm and leg pieces: turns the tube the piece is wrapped on about its top, in degrees. On an arm
+        /// a positive tilt lowers the far end (towards the wrist, below the arm); on a leg it moves the far
+        /// end out from the other leg. The tube moves only as far as the limb still fits inside it.
+        /// </summary>
+        public float tiltDeg;
+        /// <summary>
+        /// Arm and leg pieces: how much farther from the limb the piece's far end starts than its top, in cm;
+        /// negative brings the far end (the cuff, the hem) closer. The distance changes evenly along the piece.
+        /// </summary>
+        public float endDistanceCm;
 
         public PiecePlacement Clone() => (PiecePlacement)MemberwiseClone();
 
         public bool SameAs(PiecePlacement o) =>
             o != null && Mathf.Approximately(angle, o.angle) && Mathf.Approximately(topAboveShoulderCm, o.topAboveShoulderCm)
-            && Mathf.Approximately(distanceCm, o.distanceCm) && part == o.part && flat == o.flat && Mathf.Approximately(acrossCm, o.acrossCm);
+            && Mathf.Approximately(distanceCm, o.distanceCm) && part == o.part && flat == o.flat && Mathf.Approximately(acrossCm, o.acrossCm)
+            && Mathf.Approximately(tiltDeg, o.tiltDeg) && Mathf.Approximately(endDistanceCm, o.endDistanceCm);
+
+        /// <summary>True for the parts whose pieces are wrapped on a tube along a limb (arms and legs).</summary>
+        public static bool IsLimb(BodyPart part) => IsArm(part) || IsLeg(part);
 
         /// <summary>What <see cref="topAboveShoulderCm"/> is measured from, in words for the panel.</summary>
         public static string TopLabel(BodyPart part)

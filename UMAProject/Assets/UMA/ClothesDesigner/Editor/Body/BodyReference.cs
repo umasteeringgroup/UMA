@@ -26,11 +26,24 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>Bone index (into Skin.Bones) of the chest, used for vertices no body surface is near.</summary>
         public int FallbackBone;
 
+        /// <summary>
+        /// Slots of clothes the character wears under the clothes being made: the cloth collides with them,
+        /// but the body is measured and laid out without them.
+        /// </summary>
+        public HashSet<string> WornSlots = new HashSet<string>();
+        /// <summary>Measure the chest, waist and hips round the clothes worn underneath, so the sizes fit over them.</summary>
+        public bool SizeOverWorn;
+
         /// <summary>Captures the character as it stands. The character is not generated again.</summary>
-        public static BodyReference Capture(DynamicCharacterAvatar avatar)
+        public static BodyReference Capture(DynamicCharacterAvatar avatar) => Capture(avatar, null, false);
+
+        /// <param name="wornSlots">Slots of clothes worn underneath: collided with, and laid round.</param>
+        /// <param name="sizeOverWorn">Measure the chest, waist and hips round them too, so sizes fit over them.</param>
+        public static BodyReference Capture(DynamicCharacterAvatar avatar, ICollection<string> wornSlots, bool sizeOverWorn = false)
         {
             var timer = System.Diagnostics.Stopwatch.StartNew();
-            var body = new BodyReference();
+            var body = new BodyReference { SizeOverWorn = sizeOverWorn };
+            if (wornSlots != null) foreach (string s in wornSlots) if (!string.IsNullOrEmpty(s)) body.WornSlots.Add(s);
             body.Skin = UMASlotSkinTransfer.CaptureTargetData(avatar, 0, false);
             body.Surface = UMASlotSkinTransfer.BuildTargetSurface(body.Skin);
             body.Collider = new BodyCollider(body.Surface.Triangles);
@@ -89,6 +102,12 @@ namespace UMA.ClothesDesigner.Editor
 
         private bool TriangleIsArm(UMASlotSkinTransfer.TriangleInfo t) => ArmVertex[t.Index0] && ArmVertex[t.Index1];
 
+        /// <summary>A triangle of clothes worn underneath: collided with, not measured.</summary>
+        public bool IsWorn(UMASlotSkinTransfer.TriangleInfo t) => WornSlots.Count > 0 && t.SlotName != null && WornSlots.Contains(t.SlotName);
+
+        /// <summary>Left out when measuring the body: arms, and clothes worn underneath.</summary>
+        private bool NotMeasured(UMASlotSkinTransfer.TriangleInfo t) => TriangleIsArm(t) || IsWorn(t);
+
         private Vector3 LocalBonePosition(Animator animator, HumanBodyBones bone, out bool found)
         {
             Transform t = animator != null ? animator.GetBoneTransform(bone) : null;
@@ -118,7 +137,7 @@ namespace UMA.ClothesDesigner.Editor
                 float top = armY;
                 foreach (UMASlotSkinTransfer.TriangleInfo t in body.Surface.Triangles)
                 {
-                    if (body.TriangleIsArm(t)) continue;
+                    if (body.NotMeasured(t)) continue;
                     Vector3 p = t.A;
                     float ax = Mathf.Abs(p.x);
                     if (ax > armX * 0.55f && ax < armX && p.y > top && p.y < limit) top = p.y;
@@ -132,9 +151,9 @@ namespace UMA.ClothesDesigner.Editor
                 marks.waistY = b.min.y + b.size.y * 0.65f;
                 marks.hipY = b.min.y + b.size.y * 0.5f;
             }
-            marks.chestCm = body.Circumference(marks.chestY, out Rect chestBox) * 100f;
-            marks.waistCm = body.Circumference(marks.waistY, out _) * 100f;
-            marks.hipCm = body.Circumference(marks.hipY, out _) * 100f;
+            marks.chestCm = body.Circumference(marks.chestY, out Rect chestBox, body.SizeOverWorn) * 100f;
+            marks.waistCm = body.Circumference(marks.waistY, out _, body.SizeOverWorn) * 100f;
+            marks.hipCm = body.Circumference(marks.hipY, out _, body.SizeOverWorn) * 100f;
             marks.torsoCenter = chestBox.center;
             marks.valid = marks.chestCm > 0f;
             if (marks.valid) MeasureLimbs(body, animator, marks);
@@ -187,7 +206,7 @@ namespace UMA.ClothesDesigner.Editor
                 axis /= length;
                 foreach (UMASlotSkinTransfer.TriangleInfo t in body.Surface.Triangles)
                 {
-                    if (!body.TriangleIsArm(t) || (t.A.x < cx) != left) continue;
+                    if (!body.TriangleIsArm(t) || body.IsWorn(t) || (t.A.x < cx) != left) continue;
                     Vector3 d = t.A - root;
                     float s = Vector3.Dot(d, axis) / length;
                     if (s < 0.1f || s > 0.95f) continue;
@@ -197,6 +216,8 @@ namespace UMA.ClothesDesigner.Editor
                 }
             }
             marks.armRadius = Percentile(armDistances, 0.9f, 0.05f);
+            marks.leftArmProfile = ArmProfile(body, marks, true);
+            marks.rightArmProfile = ArmProfile(body, marks, false);
             marks.upperArmCm = 2f * Mathf.PI * Percentile(upperArm, 0.5f, 0.045f) * 100f;
             marks.armLengthCm = ((marks.leftWrist - marks.leftShoulder).magnitude + (marks.rightWrist - marks.rightShoulder).magnitude) * 50f;
 
@@ -204,7 +225,7 @@ namespace UMA.ClothesDesigner.Editor
             var legDistances = new List<float>();
             foreach (UMASlotSkinTransfer.TriangleInfo t in body.Surface.Triangles)
             {
-                if (body.TriangleIsArm(t)) continue;
+                if (body.NotMeasured(t)) continue;
                 Vector3 p = t.A;
                 if (p.y > marks.crotchY - 0.03f || p.y < ankleY + 0.05f) continue;
                 bool left = p.x < cx;
@@ -234,6 +255,63 @@ namespace UMA.ClothesDesigner.Editor
             marks.headHalf = body.HalfExtentsAbout(marks.headCenter, neckMid, marks.headTopY - 0.01f);
         }
 
+        /// <summary>
+        /// How far one arm's surface (and anything worn on it) reaches from the shoulder-to-wrist axis, along
+        /// the arm from just above the shoulder joint to the wrist, so sleeves can be laid close to it: wide at
+        /// the shoulder, narrow at the wrist. The hand is left out, which with its fingers spread would count
+        /// as several times the wrist's thickness.
+        /// </summary>
+        private static float[] ArmProfile(BodyReference body, BodyLandmarks marks, bool left)
+        {
+            Vector3 root = left ? marks.leftShoulder : marks.rightShoulder;
+            Vector3 axis = (left ? marks.leftWrist : marks.rightWrist) - root;
+            float length = axis.magnitude;
+            if (length < 0.05f) return new float[0];
+            axis /= length;
+            float step = BodyLandmarks.ArmProfileStepM, start = BodyLandmarks.ArmProfileStartM;
+            int count = Mathf.Max(1, Mathf.CeilToInt((length - 0.01f - start) / step));
+            var samples = new List<float>[count];
+            for (int i = 0; i < count; i++) samples[i] = new List<float>();
+            float cx = marks.torsoCenter.x;
+            void Add(Vector3 p)
+            {
+                if ((p.x < cx) != left) return;
+                Vector3 d = p - root;
+                float along = Vector3.Dot(d, axis);
+                int k = Mathf.FloorToInt((along - start) / step);
+                if (k >= 0 && k < count) samples[k].Add((d - axis * along).magnitude);
+            }
+            foreach (UMASlotSkinTransfer.TriangleInfo t in body.Surface.Triangles)
+            {
+                if (!body.TriangleIsArm(t)) continue;
+                Add(t.A); Add(t.B); Add(t.C);
+            }
+            var raw = new float[count];
+            // The farthest point, not a percentile: a sleeve laid closer than the farthest point would start
+            // inside the clearance there, and the arrangement would then move every piece out.
+            for (int i = 0; i < count; i++) raw[i] = samples[i].Count >= 5 ? Percentile(samples[i], 1f, -1f) : -1f;
+            // Fill sparse samples from the nearest measured one; none at all falls back to the one radius.
+            for (int i = 0; i < count; i++)
+            {
+                if (raw[i] >= 0f) continue;
+                for (int s = 1; s < count && raw[i] < 0f; s++)
+                {
+                    if (i - s >= 0 && samples[i - s].Count >= 5) raw[i] = Percentile(samples[i - s], 1f, -1f);
+                    else if (i + s < count && samples[i + s].Count >= 5) raw[i] = Percentile(samples[i + s], 1f, -1f);
+                }
+                if (raw[i] < 0f) raw[i] = marks.armRadius;
+            }
+            // The widest of each sample and its neighbours, for the bulges between them.
+            var profile = new float[count];
+            for (int i = 0; i < count; i++)
+            {
+                profile[i] = raw[i];
+                if (i > 0) profile[i] = Mathf.Max(profile[i], raw[i - 1]);
+                if (i + 1 < count) profile[i] = Mathf.Max(profile[i], raw[i + 1]);
+            }
+            return profile;
+        }
+
         private static float Percentile(List<float> values, float fraction, float fallback)
         {
             if (values.Count == 0) return fallback;
@@ -254,9 +332,12 @@ namespace UMA.ClothesDesigner.Editor
         /// The tape-measure length around the body (arms left out) at a height: the perimeter of the
         /// convex outline of the cross-section, in metres. <paramref name="box"/> is the section's x/z extent.
         /// </summary>
-        public float Circumference(float y, out Rect box)
+        public float Circumference(float y, out Rect box) => Circumference(y, out box, false);
+
+        /// <param name="withWorn">Round the clothes worn underneath too.</param>
+        public float Circumference(float y, out Rect box, bool withWorn)
         {
-            List<Vector2> points = CrossSection(y);
+            List<Vector2> points = CrossSection(y, withWorn);
             box = new Rect();
             if (points.Count < 3) return 0f;
             Vector2 min = points[0], max = points[0];
@@ -269,12 +350,15 @@ namespace UMA.ClothesDesigner.Editor
         }
 
         /// <summary>Where the body (arms left out) crosses a horizontal plane, as (x, z) points.</summary>
-        public List<Vector2> CrossSection(float y)
+        public List<Vector2> CrossSection(float y) => CrossSection(y, false);
+
+        /// <param name="withWorn">Include clothes worn underneath (for laying pieces round them, not for measuring).</param>
+        public List<Vector2> CrossSection(float y, bool withWorn)
         {
             var points = new List<Vector2>();
             foreach (UMASlotSkinTransfer.TriangleInfo t in Surface.Triangles)
             {
-                if (TriangleIsArm(t)) continue;
+                if (TriangleIsArm(t) || (!withWorn && IsWorn(t))) continue;
                 AddCrossing(points, t.A, t.B, y);
                 AddCrossing(points, t.B, t.C, y);
                 AddCrossing(points, t.C, t.A, y);
@@ -317,13 +401,13 @@ namespace UMA.ClothesDesigner.Editor
         /// </summary>
         public Vector2 HalfExtents(float y0, float y1) => HalfExtentsAbout(Landmarks.torsoCenter, y0, y1);
 
-        /// <summary>The same about another centre (x, z), for the head.</summary>
+        /// <summary>The same about another centre (x, z), for the head. Clothes worn underneath count: pieces are laid round them.</summary>
         public Vector2 HalfExtentsAbout(Vector2 c, float y0, float y1)
         {
             float halfX = 0f, halfZ = 0f;
             for (float y = Mathf.Min(y0, y1); y <= Mathf.Max(y0, y1); y += 0.02f)
             {
-                foreach (Vector2 p in CrossSection(y))
+                foreach (Vector2 p in CrossSection(y, true))
                 {
                     halfX = Mathf.Max(halfX, Mathf.Abs(p.x - c.x));
                     halfZ = Mathf.Max(halfZ, Mathf.Abs(p.y - c.y));

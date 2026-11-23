@@ -194,6 +194,55 @@ namespace UMA.ClothesDesigner.Editor
             }
         }
 
+        /// <summary>
+        /// A shirt collar in two parts, as a shirt maker cuts it: a stand sewn along the neckline (firmly
+        /// interfaced, so it stands round the neck) and a leaf on the stand's top edge, turned down over it on
+        /// a folded seam (lightly interfaced, so it holds its points). The leaf is drawn as it looks turned
+        /// down, seen from behind: its neck edge along the top, its points hanging at both ends.
+        /// </summary>
+        private static (PieceBuilder stand, PieceBuilder leaf) ShirtCollar(PatternBuilder b, PieceBuilder front, PieceBuilder back,
+            float standHeight, float leafDepth, float pointLength, string fabric)
+        {
+            // The band is cut as an arc, its ends rising 2.5 cm, as shirt bands are: its top edge is a few
+            // percent shorter than its neck edge, so sewn on it is a cone that hugs the neck and stands.
+            float length = front.Length("Right neckline") + back.Length("Left neckline") + back.Length("Right neckline") + front.Length("Left neckline");
+            const float rise = 2.5f;
+            float half0 = length * 0.5f;
+            float radius = (half0 * half0 + rise * rise) / (2f * rise);
+            float phi = half0 / radius;
+            Vector2 centre = new Vector2(0f, radius);
+            Vector2 OnArc(float r, float a) => new Vector2(r * Mathf.Sin(a), radius - r * Mathf.Cos(a));
+            float rt = radius - standHeight;
+            PieceBuilder stand = b.Piece("Collar Stand")
+                .Point(OnArc(radius, -phi).x, OnArc(radius, -phi).y, "Neck")
+                .Point(OnArc(radius, phi).x, OnArc(radius, phi).y, "Right end", true)
+                .Point(OnArc(rt, phi).x, OnArc(rt, phi).y, "Top")
+                .Point(OnArc(rt, -phi).x, OnArc(rt, -phi).y, "Left end", true)
+                .Arc("Neck", centre).Arc("Top", centre)
+                .Place(BodyPart.Torso, 180f, 6f + standHeight + rise).Fabric(fabric)
+                .Stiffen(InterfacingLevel.Firm, 3f);
+            b.SewAlong(stand, "Neck", (front, "Right neckline"), (back, "Left neckline"), (back, "Right neckline"), (front, "Left neckline"));
+            foreach (PieceBuilder p in new[] { front, back }) p.Opening("Right neckline", false).Opening("Left neckline", false);
+            float half = stand.Length("Top") * 0.5f, flare = 1.5f;
+            PieceBuilder leaf = b.Piece("Collar")
+                .Point(-half - flare, -pointLength, "Outer edge", true)
+                .Point(half + flare, -pointLength, "Right point", true)
+                .Point(half, 0f, "Neck edge")
+                .Point(-half, 0f, "Left point", true)
+                // The outer edge rises from the points to the leaf's depth at the back.
+                .Curve("Outer edge", (half + flare) * 0.7f, (pointLength - leafDepth) * 1.33f, -(half + flare) * 0.7f, (pointLength - leafDepth) * 1.33f)
+                .Place(BodyPart.Torso, 180f, stand.Piece.placement.topAboveShoulderCm, 1f)
+                .Fabric(fabric)
+                .Stiffen(InterfacingLevel.Light, 3f)
+                // The leaf lies over the shirt front: with no layer it poked through it (25 crossing triangle
+                // pairs after 480 frames, none with it; measured 2026-11-23). The cuffs are sewn edge to edge
+                // and are left on the shirt's layer: layering them made crossings worse.
+                .Layer(1);
+            b.SewFolded(stand, "Top", leaf, "Neck edge");
+            stand.Opening("Top", false);
+            return (stand, leaf);
+        }
+
         /// <summary>A stand collar along the neckline, laid round the back above the shoulders.</summary>
         private static PieceBuilder Collar(PatternBuilder b, PieceBuilder front, PieceBuilder back, float height, string fabric, bool closedFront)
         {
@@ -290,7 +339,7 @@ namespace UMA.ClothesDesigner.Editor
 
         public static ClothesPattern OxfordShirt()
         {
-            var b = new PatternBuilder("Oxford Shirt", "Long-sleeved cotton shirt: front, back with a box pleat under a shoulder yoke, sleeves with cuffs, a collar stand and a curved shirt-tail hem. Buttons and the front placket are left out.");
+            var b = new PatternBuilder("Oxford Shirt", "Long-sleeved cotton shirt: front, back with a box pleat under a shoulder yoke, sleeves with interfaced cuffs, a two-part collar (a firm stand and a leaf turned down over it on a folded seam) and a curved shirt-tail hem. Buttons and the front placket are left out.");
             var d = new Bodice { halfWidth = 28f, hemHalfWidth = 28f, length = 78f, shoulderX = 19f, shoulderDrop = 4.5f, neckX = 8.5f, neckDepth = 8f, underarmY = 53.5f, hemDrop = 5f };
             PieceBuilder front = BodicePiece(b, "Front", d, 0f, "Cotton");
             // The back below the yoke: its top is the yoke seam, 6 cm below the shoulder point, with a box
@@ -336,7 +385,8 @@ namespace UMA.ClothesDesigner.Editor
             b.SewAlong(left, "Left cap", (back, "Left armhole"), (yoke, "Left armhole"));
             front.Opening("Left armhole", false).Opening("Right armhole", false);
             Cuffs(b, right, left, 23f, 6f, 49f, "Cotton");
-            Collar(b, front, yoke, 4f, "Cotton", false);
+            foreach (PatternPiece cuff in b.Pattern.pieces) if (cuff.name.EndsWith("Cuff")) { cuff.interfacing = InterfacingLevel.Firm; cuff.meshDetail = 2f; }
+            ShirtCollar(b, front, yoke, 3.5f, 4.5f, 7f, "Cotton");
             b.Width("Chest", BodyMeasurement.Chest, 112f, 12f, 2, d.underarmY - 3f, front, back);
             b.Length("Sleeve length", BodyMeasurement.ArmLength, 52f, -5f, right, left);
             return b.Finish();

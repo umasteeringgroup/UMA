@@ -16,7 +16,20 @@ namespace UMA.ClothesDesigner.Editor
         Pin = 1,
         ErasePin = 2,
         /// <summary>Move a piece round the body, up and down, and out from it, before sewing.</summary>
-        Place = 3
+        Place = 3,
+        /// <summary>Measure between two points on the cloth or the body, and round them at a height.</summary>
+        Measure = 4
+    }
+
+    /// <summary>How the cloth is coloured in the Scene view.</summary>
+    public enum ClothView
+    {
+        /// <summary>The UV check texture: each piece's outline, grain and name.</summary>
+        Texture = 0,
+        /// <summary>How much longer the cloth is than the flat pattern: blue none, green 5%, red 20% or more.</summary>
+        Stretch = 1,
+        /// <summary>How far the cloth is from the body: red inside it, orange within the clearance, then green to blue at 3 cm.</summary>
+        BodyDistance = 2
     }
 
     /// <summary>
@@ -48,8 +61,29 @@ namespace UMA.ClothesDesigner.Editor
         public bool Running;
         public bool Settled;
         public ClothTool Tool = ClothTool.Place;
-        /// <summary>The piece the Place tool has selected, or -1.</summary>
-        public int PlacePiece = -1;
+        private int placePiece = -1;
+        /// <summary>
+        /// The selected piece, or -1: the one the Place tool moves and shows the layout guide of, and the one
+        /// the Pattern Canvas has selected. Either side choosing a piece selects it in the other.
+        /// </summary>
+        public int PlacePiece
+        {
+            get => placePiece;
+            set
+            {
+                if (placePiece == value) return;
+                placePiece = value;
+                SelectedPieceChanged?.Invoke();
+            }
+        }
+        /// <summary>The selected piece changed, in the Scene view or on the Pattern Canvas.</summary>
+        public event Action SelectedPieceChanged;
+        /// <summary>Show the selected piece's layout guide, with handles to move it, while the Place tool is on.</summary>
+        public static bool ShowLayoutGuide
+        {
+            get => EditorPrefs.GetBool("UMA.ClothesDesigner.ShowLayoutGuide", true);
+            set => EditorPrefs.SetBool("UMA.ClothesDesigner.ShowLayoutGuide", value);
+        }
         public float BrushRadius = 0.06f;
         public float BrushStrength = 1f;
         public PinKind NewPinKind = PinKind.Body;
@@ -94,6 +128,11 @@ namespace UMA.ClothesDesigner.Editor
         private Mesh tryOnMesh;
         private Quaternion[] tryOnArmRest;
         public bool TryOnArmsRaised;
+        /// <summary>Where the try-on animation is (s), and whether it plays.</summary>
+        public float TryOnTime;
+        public bool TryOnPlaying;
+        private bool tryOnSampled;
+        private double lastTryOnTick;
         /// <summary>Where Arms Raised puts the arms (degrees from hanging at the sides: 90 level, 180 straight up).</summary>
         public float TryOnArmAngle = 150f;
         private string builtShapeKey, builtFabricKey, builtRevision, builtFitPlacementKey;
@@ -104,6 +143,269 @@ namespace UMA.ClothesDesigner.Editor
         private Vector3[] prePlacePositions;
         private float placeStartT, placeStartY;
         private Vector2 placeStartMouse;
+
+        // ---- Clothes worn underneath -------------------------------------------------------------
+
+        private readonly HashSet<string> wornSlotNames = new HashSet<string>();
+        private readonly List<string> wornWardrobeSlots = new List<string>();
+
+        /// <summary>The slots of the clothes the body now wears underneath.</summary>
+        public IReadOnlyCollection<string> WornSlotNames => wornSlotNames;
+
+        /// <summary>
+        /// Puts the fit's Worn Underneath clothes on the stage's character (taking off what was put on
+        /// before), and reads the body again: the cloth then collides with them, while the sizes still
+        /// follow the body's own measurements.
+        /// </summary>
+        public void ApplyWornUnder()
+        {
+            DynamicCharacterAvatar dca = Stage != null ? Stage.Character : null;
+            if (dca == null || dca.umaData == null || FitData == null) return;
+            bool any = wornWardrobeSlots.Count > 0;
+            foreach (UMAWardrobeRecipe r in FitData.wornUnder) if (r != null) any = true;
+            if (!any) return;
+            foreach (string slot in wornWardrobeSlots) dca.ClearSlot(slot);
+            wornWardrobeSlots.Clear();
+            var before = new HashSet<string>();
+            dca.BuildCharacter(false, true);
+            foreach (SlotData s in dca.umaData.umaRecipe.slotDataList) if (s != null) before.Add(s.slotName);
+            foreach (UMAWardrobeRecipe r in FitData.wornUnder)
+            {
+                if (r == null) continue;
+                dca.SetSlot(r);
+                wornWardrobeSlots.Add(r.wardrobeSlot);
+            }
+            dca.BuildCharacter(false, true);
+            wornSlotNames.Clear();
+            foreach (SlotData s in dca.umaData.umaRecipe.slotDataList) if (s != null && !before.Contains(s.slotName)) wornSlotNames.Add(s.slotName);
+            // The stage keeps its modelled pose through its own rebuild; the body is read again after it.
+            Stage.RebuildCharacter(false);
+            CaptureBody();
+            if (Fit.HasCloth) RebuildCloth(false);
+        }
+
+        public void SetWornUnder(List<UMAWardrobeRecipe> recipes)
+        {
+            if (FitData == null) return;
+            Undo.RecordObject(FitData, "Worn Underneath");
+            FitData.wornUnder = recipes;
+            ApplyWornUnder();
+            NotifyChanged();
+        }
+
+        // ---- Frozen pieces ------------------------------------------------------------------------
+
+        public bool IsFrozen(int pieceIndex) =>
+            FitData != null && Pattern != null && pieceIndex >= 0 && pieceIndex < Pattern.pieces.Count && FitData.frozenPieces.Contains(Pattern.pieces[pieceIndex].id);
+
+        /// <summary>Holds a piece where it is while the rest is simulated, or lets it go again. The drape is kept.</summary>
+        public void SetFrozen(int pieceIndex, bool frozen)
+        {
+            if (IsFrozen(pieceIndex) == frozen || FitData == null) return;
+            Undo.RecordObject(FitData, frozen ? "Freeze Piece" : "Unfreeze Piece");
+            string id = Pattern.pieces[pieceIndex].id;
+            if (frozen) FitData.frozenPieces.Add(id); else FitData.frozenPieces.Remove(id);
+            ApplyFabric();
+        }
+
+        // ---- How the cloth is shown -----------------------------------------------------------------
+
+        private const string ClothViewPref = "UMA.ClothesDesigner.ClothView";
+        private static ClothView? clothView;
+
+        public static ClothView View
+        {
+            get
+            {
+                if (!clothView.HasValue) clothView = (ClothView)EditorPrefs.GetInt(ClothViewPref, 0);
+                return clothView.Value;
+            }
+            set
+            {
+                if (View == value) return;
+                clothView = value;
+                EditorPrefs.SetInt(ClothViewPref, (int)value);
+            }
+        }
+
+        private Material mapMaterial;
+
+        /// <summary>The colour of a stretch (fraction longer than the flat pattern): blue, green at 5%, yellow at 10%, red from 20%.</summary>
+        public static Color StretchColor(float stretch)
+        {
+            float s = Mathf.Max(0f, stretch);
+            if (s < 0.05f) return Color.Lerp(new Color(0.2f, 0.4f, 1f), new Color(0.2f, 0.85f, 0.3f), s / 0.05f);
+            if (s < 0.1f) return Color.Lerp(new Color(0.2f, 0.85f, 0.3f), new Color(1f, 0.9f, 0.2f), (s - 0.05f) / 0.05f);
+            return Color.Lerp(new Color(1f, 0.9f, 0.2f), new Color(1f, 0.15f, 0.1f), Mathf.Clamp01((s - 0.1f) / 0.1f));
+        }
+
+        /// <summary>The colour of a distance from the body (m): red inside, orange within the clearance, green to blue at 3 cm.</summary>
+        public static Color DistanceColor(float distance, float clearance)
+        {
+            if (distance < 0f) return new Color(1f, 0.1f, 0.1f);
+            if (distance < clearance * 0.9f) return new Color(1f, 0.55f, 0.1f);
+            return Color.Lerp(new Color(0.2f, 0.85f, 0.3f), new Color(0.2f, 0.4f, 1f), Mathf.Clamp01((distance - clearance) / 0.03f));
+        }
+
+        /// <summary>Each point's colour in the Stretch or Body Distance view.</summary>
+        public Color[] MapColors(ClothView view)
+        {
+            Vector3[] x = Fit.Positions;
+            var colors = new Color[x.Length];
+            if (view == ClothView.Stretch)
+            {
+                var most = new float[x.Length];
+                foreach (ClothConstraint c in Fit.Model.Constraints)
+                {
+                    if (c.kind != (int)ConstraintKind.Stretch || c.rest < 1e-6f) continue;
+                    float s = (Vector3.Distance(x[c.a], x[c.b]) - c.rest) / c.rest;
+                    if (s > most[c.a]) most[c.a] = s;
+                    if (s > most[c.b]) most[c.b] = s;
+                }
+                for (int i = 0; i < x.Length; i++) colors[i] = StretchColor(most[i]);
+            }
+            else
+            {
+                float clearance = FitData.clearanceCm * 0.01f;
+                BodyCollider body = Body.Collider;
+                System.Threading.Tasks.Parallel.For(0, x.Length, i =>
+                    colors[i] = body.ClosestNear(x[i], 0.02f, out _, out _, out float d) ? DistanceColor(d, clearance) : DistanceColor(1f, clearance));
+            }
+            return colors;
+        }
+
+        /// <summary>Puts the view's colours on the preview, or the texture back.</summary>
+        private void ApplyView(MeshRenderer renderer)
+        {
+            ClothView view = View;
+            if (view == ClothView.Texture || !Fit.HasCloth)
+            {
+                if (renderer.sharedMaterial != previewMaterial) renderer.sharedMaterial = previewMaterial;
+                return;
+            }
+            if (mapMaterial == null)
+            {
+                // Unlit and showing the points' colours in every render pipeline.
+                mapMaterial = new Material(Shader.Find("Sprites/Default")) { hideFlags = HideFlags.DontSave };
+            }
+            renderer.sharedMaterial = mapMaterial;
+            Color[] colors = MapColors(view);
+            previewMesh.SetColors(previewBackFaces ? Doubled(colors) : colors);
+        }
+
+        public void RefreshView()
+        {
+            if (preview != null && previewMesh != null) ApplyView(preview.GetComponent<MeshRenderer>());
+            SceneView.RepaintAll();
+        }
+
+        // ---- Measure tool -----------------------------------------------------------------------------
+
+        public bool MeasureHasA, MeasureHasB;
+        public Vector3 MeasureA, MeasureB;
+        /// <summary>How far round the cloth and the body are at the first point's height (cm), 0 when nothing is there.</summary>
+        public float MeasureClothGirthCm, MeasureBodyGirthCm;
+
+        /// <summary>The distance between the two measured points (cm).</summary>
+        public float MeasureDistanceCm => MeasureHasA && MeasureHasB ? Vector3.Distance(MeasureA, MeasureB) * 100f : 0f;
+
+        /// <summary>The front-most body triangle under a ray.</summary>
+        public bool RaycastBody(Ray ray, out Vector3 point)
+        {
+            point = Vector3.zero;
+            if (Body == null) return false;
+            BodyCollider c = Body.Collider;
+            float best = float.MaxValue;
+            for (int t = 0; t < c.TriangleCount; t++)
+            {
+                if (!RayTriangle(ray, c.A[t], c.B[t], c.C[t], out float d) || d >= best) continue;
+                best = d;
+                point = ray.origin + ray.direction * d;
+            }
+            return best < float.MaxValue;
+        }
+
+        private static bool RayTriangle(Ray ray, Vector3 a, Vector3 b, Vector3 c, out float distance)
+        {
+            distance = 0f;
+            Vector3 e1 = b - a, e2 = c - a, h = Vector3.Cross(ray.direction, e2);
+            float det = Vector3.Dot(e1, h);
+            if (Mathf.Abs(det) < 1e-12f) return false;
+            float inv = 1f / det;
+            Vector3 s = ray.origin - a;
+            float u = inv * Vector3.Dot(s, h);
+            if (u < 0f || u > 1f) return false;
+            Vector3 q = Vector3.Cross(s, e1);
+            float w = inv * Vector3.Dot(ray.direction, q);
+            if (w < 0f || u + w > 1f) return false;
+            distance = inv * Vector3.Dot(e2, q);
+            return distance > 0f;
+        }
+
+        /// <summary>Sets the next measured point: the first, then the second, then the first again.</summary>
+        public void AddMeasurePoint(Vector3 point)
+        {
+            if (!MeasureHasA || MeasureHasB)
+            {
+                MeasureA = point; MeasureHasA = true; MeasureHasB = false;
+                MeasureClothGirthCm = ClothGirthCm(point.y);
+                MeasureBodyGirthCm = Body != null ? Body.Circumference(point.y, out _) * 100f : 0f;
+            }
+            else { MeasureB = point; MeasureHasB = true; }
+            NotifyChanged();
+        }
+
+        /// <summary>How far round the cloth is at a height (cm): the perimeter of the convex outline of where it crosses the height.</summary>
+        public float ClothGirthCm(float y)
+        {
+            if (!Fit.HasCloth) return 0f;
+            Vector3[] x = Fit.Positions;
+            var crossings = new List<Vector2>();
+            List<int> tris = Fit.Mesh.triangles;
+            for (int t = 0; t + 2 < tris.Count; t += 3)
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    Vector3 p = x[tris[t + k]], q = x[tris[t + (k + 1) % 3]];
+                    if ((p.y - y) * (q.y - y) >= 0f) continue;
+                    Vector3 at = Vector3.Lerp(p, q, (y - p.y) / (q.y - p.y));
+                    crossings.Add(new Vector2(at.x, at.z));
+                }
+            }
+            if (crossings.Count < 3) return 0f;
+            List<Vector2> hull = BodyReference.ConvexHull(crossings);
+            float perimeter = 0f;
+            for (int i = 0; i < hull.Count; i++) perimeter += (hull[i] - hull[(i + 1) % hull.Count]).magnitude;
+            return perimeter * 100f;
+        }
+
+        private void MeasureSceneGUI(Event e, int id)
+        {
+            if (e.type == EventType.Repaint && MeasureHasA)
+            {
+                Handles.color = new Color(1f, 0.85f, 0.2f);
+                Handles.DotHandleCap(0, MeasureA, Quaternion.identity, HandleUtility.GetHandleSize(MeasureA) * 0.02f, EventType.Repaint);
+                if (MeasureHasB)
+                {
+                    Handles.DotHandleCap(0, MeasureB, Quaternion.identity, HandleUtility.GetHandleSize(MeasureB) * 0.02f, EventType.Repaint);
+                    Handles.DrawAAPolyLine(3f, MeasureA, MeasureB);
+                    Handles.Label((MeasureA + MeasureB) * 0.5f, MeasureDistanceCm.ToString("0.0") + " cm");
+                }
+            }
+            if (e.GetTypeForControl(id) == EventType.MouseDown && e.button == 0)
+            {
+                Ray ray = HandleUtility.GUIPointToWorldRay(e.mousePosition);
+                bool onCloth = Raycast(ray, out Vector3 cloth, out _, out _);
+                bool onBody = RaycastBody(ray, out Vector3 body);
+                if (onCloth || onBody)
+                {
+                    // The nearer of the two.
+                    Vector3 hit = onCloth && (!onBody || (cloth - ray.origin).sqrMagnitude <= (body - ray.origin).sqrMagnitude) ? cloth : body;
+                    AddMeasurePoint(hit);
+                }
+                e.Use();
+            }
+        }
 
         public DesignerSession(VertexEditorStage stage)
         {
@@ -127,7 +429,7 @@ namespace UMA.ClothesDesigner.Editor
             BodyProblem = null;
             try
             {
-                Body = BodyReference.Capture(Stage.Character);
+                Body = BodyReference.Capture(Stage.Character, wornSlotNames, FitData == null || FitData.sizeOverWorn);
             }
             catch (Exception ex)
             {
@@ -298,8 +600,9 @@ namespace UMA.ClothesDesigner.Editor
                 Pattern.Migrate();
                 savedPatternJson = JsonUtility.ToJson(Pattern);
             }
-            // The body shape the fit was made on.
+            // The body shape the fit was made on, and what it wears underneath.
             ApplyFitDna();
+            ApplyWornUnder();
             RebuildCloth(false);
         }
 
@@ -460,11 +763,26 @@ namespace UMA.ClothesDesigner.Editor
         private string ShapeKey()
         {
             if (Pattern == null || FitData == null) return string.Empty;
+            // What only changes how the cloth moves (fabric, layer, pressure, elastic) is left out.
             var kept = new FabricSettings[Pattern.pieces.Count];
-            for (int i = 0; i < kept.Length; i++) { kept[i] = Pattern.pieces[i].fabric; Pattern.pieces[i].fabric = blankFabric; }
+            var keptLayer = new int[kept.Length];
+            var keptPressure = new float[kept.Length];
+            var keptElastic = new List<(PatternEdge edge, bool on, float percent)>();
+            for (int i = 0; i < kept.Length; i++)
+            {
+                PatternPiece piece = Pattern.pieces[i];
+                kept[i] = piece.fabric; piece.fabric = blankFabric;
+                keptLayer[i] = piece.layer; piece.layer = 0;
+                keptPressure[i] = piece.pressure; piece.pressure = 0f;
+                foreach (PatternEdge e in piece.edges) { keptElastic.Add((e, e.elastic, e.elasticPercent)); e.elastic = false; e.elasticPercent = 75f; }
+            }
             string pattern;
             try { pattern = JsonUtility.ToJson(Pattern); }
-            finally { for (int i = 0; i < kept.Length; i++) Pattern.pieces[i].fabric = kept[i]; }
+            finally
+            {
+                for (int i = 0; i < kept.Length; i++) { Pattern.pieces[i].fabric = kept[i]; Pattern.pieces[i].layer = keptLayer[i]; Pattern.pieces[i].pressure = keptPressure[i]; }
+                foreach (var k in keptElastic) { k.edge.elastic = k.on; k.edge.elasticPercent = k.percent; }
+            }
             return pattern + "|" + FitPlacementKey() + "|" + FitData.overrideMeshLevel + FitData.meshLevel + FitData.customEdgeLengthCm.ToString("R");
         }
 
@@ -475,7 +793,17 @@ namespace UMA.ClothesDesigner.Editor
         {
             if (Pattern == null) return string.Empty;
             var text = new System.Text.StringBuilder();
-            foreach (PatternPiece piece in Pattern.pieces) text.Append(JsonUtility.ToJson(piece.fabric)).Append('\n');
+            foreach (PatternPiece piece in Pattern.pieces)
+            {
+                text.Append(JsonUtility.ToJson(piece.fabric)).Append(piece.layer).Append(';').Append(piece.pressure.ToString("R"));
+                foreach (PatternEdge e in piece.edges) if (e.elastic) text.Append(";e").Append(e.id).Append(e.elasticPercent.ToString("R"));
+                text.Append('\n');
+            }
+            if (FitData != null)
+            {
+                text.Append(FitData.selfCollideWithinPieces);
+                foreach (string id in FitData.frozenPieces) text.Append(';').Append(id);
+            }
             return text.ToString();
         }
 
@@ -581,6 +909,8 @@ namespace UMA.ClothesDesigner.Editor
             placement.part = values.part;
             placement.flat = values.flat;
             placement.acrossCm = values.acrossCm;
+            placement.tiltDeg = values.tiltDeg;
+            placement.endDistanceCm = values.endDistanceCm;
             RebuildCloth(false);
         }
 
@@ -660,6 +990,16 @@ namespace UMA.ClothesDesigner.Editor
 
         private void Tick()
         {
+            if (TryOnPlaying && tryOn != null && FitData != null && FitData.tryOnClip != null)
+            {
+                double now = EditorApplication.timeSinceStartup;
+                float dt = lastTryOnTick > 0 ? (float)Math.Min(0.1, now - lastTryOnTick) : 0f;
+                lastTryOnTick = now;
+                TryOnTime = Mathf.Repeat(TryOnTime + dt, Mathf.Max(0.01f, FitData.tryOnClip.length));
+                RefreshTryOnView();
+                NotifyChanged();
+            }
+            else lastTryOnTick = 0;
             if (Stage == null || !Fit.HasCloth) return;
             if (Running || dragging)
             {
@@ -742,14 +1082,18 @@ namespace UMA.ClothesDesigner.Editor
             }
             if (previewMesh == null) previewMesh = new Mesh { name = "Clothes Designer Cloth", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32, hideFlags = HideFlags.DontSave };
             previewMesh.Clear();
-            previewMesh.SetVertices(Fit.Positions);
             previewTriangles = Fit.Mesh.triangles.ToArray();
             if (Fit.Arranged != null && Fit.Arranged.flipTriangles)
             {
                 for (int t = 0; t < previewTriangles.Length; t += 3) { int tmp = previewTriangles[t + 1]; previewTriangles[t + 1] = previewTriangles[t + 2]; previewTriangles[t + 2] = tmp; }
             }
-            previewMesh.SetTriangles(previewTriangles, 0);
-            previewMesh.SetUVs(0, Fit.Mesh.uv);
+            // With back faces shown, a second copy of every point faces the other way: drawn whatever the
+            // material's culling, and lit from its own side.
+            int n = Fit.Positions.Length;
+            previewBackFaces = ShowBackFaces;
+            previewMesh.SetVertices(previewBackFaces ? Doubled(Fit.Positions) : Fit.Positions);
+            previewMesh.SetTriangles(previewBackFaces ? WithBackFaces(previewTriangles, n) : previewTriangles, 0);
+            previewMesh.SetUVs(0, previewBackFaces ? Doubled(Fit.Mesh.uv.ToArray()) : Fit.Mesh.uv.ToArray());
             preview.GetComponent<MeshFilter>().sharedMesh = previewMesh;
             if (previewTexture != null) UnityEngine.Object.DestroyImmediate(previewTexture);
             previewTexture = UvCheckTexture.Draw(Pattern, Fit.Mesh, 512);
@@ -770,12 +1114,72 @@ namespace UMA.ClothesDesigner.Editor
             UpdatePreview();
         }
 
+        private double lastMapTime;
+
         private void UpdatePreview()
         {
-            if (previewMesh == null || !Fit.HasCloth || Fit.Positions.Length != previewMesh.vertexCount) return;
-            previewMesh.SetVertices(Fit.Positions);
-            previewMesh.SetNormals(WeldedNormals(Fit.Positions));
+            int n = Fit.Positions.Length;
+            if (previewMesh == null || !Fit.HasCloth || n * (previewBackFaces ? 2 : 1) != previewMesh.vertexCount) return;
+            Vector3[] normals = WeldedNormals(Fit.Positions);
+            if (previewBackFaces)
+            {
+                previewMesh.SetVertices(Doubled(Fit.Positions));
+                previewMesh.SetNormals(WithBackFaceNormals(normals));
+            }
+            else
+            {
+                previewMesh.SetVertices(Fit.Positions);
+                previewMesh.SetNormals(normals);
+            }
             previewMesh.RecalculateBounds();
+            // The colour views are worked out from the whole cloth: a few times a second while it moves.
+            double now = EditorApplication.timeSinceStartup;
+            if (preview != null && (View == ClothView.Texture || now - lastMapTime > 0.25 || !Running))
+            {
+                lastMapTime = now;
+                ApplyView(preview.GetComponent<MeshRenderer>());
+            }
+        }
+
+        /// <summary>
+        /// The triangles of a mesh drawn from both sides: the triangles, then each again on the copy of its
+        /// points (offset by <paramref name="vertexCount"/>) wound the other way.
+        /// </summary>
+        public static int[] WithBackFaces(int[] triangles, int vertexCount)
+        {
+            var drawn = new int[triangles.Length * 2];
+            System.Array.Copy(triangles, drawn, triangles.Length);
+            for (int t = 0; t + 2 < triangles.Length; t += 3)
+            {
+                int o = triangles.Length + t;
+                drawn[o] = triangles[t] + vertexCount; drawn[o + 1] = triangles[t + 2] + vertexCount; drawn[o + 2] = triangles[t + 1] + vertexCount;
+            }
+            return drawn;
+        }
+
+        /// <summary>The normals for <see cref="WithBackFaces"/>: the normals, then each turned round for the copy.</summary>
+        public static Vector3[] WithBackFaceNormals(Vector3[] normals)
+        {
+            Vector3[] both = Doubled(normals);
+            for (int v = normals.Length; v < both.Length; v++) both[v] = -both[v];
+            return both;
+        }
+
+        private static T[] Doubled<T>(T[] source)
+        {
+            var both = new T[source.Length * 2];
+            System.Array.Copy(source, both, source.Length);
+            System.Array.Copy(source, 0, both, source.Length, source.Length);
+            return both;
+        }
+
+        private bool previewBackFaces;
+
+        /// <summary>Draws the preview again, for a change in how it is shown (back faces).</summary>
+        public void RefreshPreview()
+        {
+            if (Fit.HasCloth && previewMesh != null) RebuildPreviewMesh();
+            SceneView.RepaintAll();
         }
 
         /// <summary>Normals where every sewn group of copies shares one normal (the battle-buddy rule, by the seams).</summary>
@@ -807,7 +1211,8 @@ namespace UMA.ClothesDesigner.Editor
             if (previewMesh != null) UnityEngine.Object.DestroyImmediate(previewMesh);
             if (previewMaterial != null) UnityEngine.Object.DestroyImmediate(previewMaterial);
             if (previewTexture != null) UnityEngine.Object.DestroyImmediate(previewTexture);
-            preview = null; previewMesh = null; previewMaterial = null; previewTexture = null;
+            if (mapMaterial != null) UnityEngine.Object.DestroyImmediate(mapMaterial);
+            preview = null; previewMesh = null; previewMaterial = null; previewTexture = null; mapMaterial = null;
         }
 
         // ---- Undo -----------------------------------------------------------------------------
@@ -855,7 +1260,12 @@ namespace UMA.ClothesDesigner.Editor
             int id = GUIUtility.GetControlID(FocusType.Passive);
             DrawSeams(view);
             DrawPins();
-            if (Tool == ClothTool.Place) DrawPieceOutlines();
+            if (Tool == ClothTool.Place)
+            {
+                DrawPieceOutlines();
+                // Before the tool's own clicks, so a handle under the pointer takes the click.
+                LayoutGuideGUI(e, e.alt || pointerOverPanel);
+            }
             if (e.type == EventType.Layout && !e.alt) HandleUtility.AddDefaultControl(id);
             if (e.alt || pointerOverPanel) { hoverValid = false; hoverPiece = -1; return; }
 
@@ -869,6 +1279,11 @@ namespace UMA.ClothesDesigner.Editor
             if (Tool == ClothTool.Place)
             {
                 PlaceSceneGUI(view, e, id);
+                return;
+            }
+            if (Tool == ClothTool.Measure)
+            {
+                MeasureSceneGUI(e, id);
                 return;
             }
             if (e.type == EventType.Repaint && hoverValid && !dragging)
@@ -933,7 +1348,7 @@ namespace UMA.ClothesDesigner.Editor
                     break;
                 case EventType.MouseDrag:
                     if (GUIUtility.hotControl != id || !placing) break;
-                    UpdatePlace(HandleUtility.GUIPointToWorldRay(e.mousePosition), e.mousePosition, e.shift, view);
+                    UpdatePlace(HandleUtility.GUIPointToWorldRay(e.mousePosition), e.mousePosition, e.shift, view, EditorGUI.actionKey);
                     e.Use();
                     break;
                 case EventType.MouseUp:
@@ -971,13 +1386,34 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>
         /// Moves the piece so the point that was grabbed follows the pointer round the body and up or
         /// down; with Shift, moving the pointer up or down moves the piece out from or in towards the body.
-        /// The pieces are previewed laid out; the cloth is rebuilt when the button is released.
+        /// On an arm or a leg, with Ctrl (Cmd on a Mac) moving the pointer down tilts the piece's tube
+        /// (lowers a sleeve's cuff end), and with Ctrl and Shift moving it up or down takes the far end out
+        /// or in. The pieces are previewed laid out; the cloth is rebuilt when the button is released.
         /// </summary>
-        public void UpdatePlace(Ray ray, Vector2 mouse, bool outward, SceneView view)
+        public void UpdatePlace(Ray ray, Vector2 mouse, bool outward, SceneView view, bool limbShape = false)
         {
             if (!placing) return;
             PiecePlacement placement = EditablePlacement(PlacePiece, out _);
-            if (outward)
+            placement.tiltDeg = placeStart.tiltDeg;
+            placement.endDistanceCm = placeStart.endDistanceCm;
+            if (limbShape && PiecePlacement.IsLimb(placement.part))
+            {
+                placement.angle = placeStart.angle;
+                placement.topAboveShoulderCm = placeStart.topAboveShoulderCm;
+                placement.distanceCm = placeStart.distanceCm;
+                float dy = mouse.y - placeStartMouse.y;
+                if (outward)
+                {
+                    // Pointer up takes the far end out; 20 pixels a centimetre.
+                    placement.endDistanceCm = Mathf.Round((placeStart.endDistanceCm - dy * 0.05f) * 10f) / 10f;
+                }
+                else
+                {
+                    // Pointer down tilts the far end down; 4 pixels a degree.
+                    placement.tiltDeg = Mathf.Clamp(Mathf.Round(placeStart.tiltDeg + dy * 0.25f), -Arrangement.MaxTiltDeg, Arrangement.MaxTiltDeg);
+                }
+            }
+            else if (outward)
             {
                 placement.angle = placeStart.angle;
                 placement.topAboveShoulderCm = placeStart.topAboveShoulderCm;
@@ -1011,6 +1447,7 @@ namespace UMA.ClothesDesigner.Editor
         {
             if (!Fit.HasCloth) return;
             Arrangement.Result layout = Arrangement.Arrange(Pattern, FitData, Fit.Mesh, Body, Fit.Arranged.gap);
+            previewArranged = layout;
             Fit.Positions = layout.positions;
             UpdatePreview();
             SceneView.RepaintAll();
@@ -1021,9 +1458,9 @@ namespace UMA.ClothesDesigner.Editor
         {
             if (!placing) return;
             placing = false;
+            previewArranged = null;
             PiecePlacement placement = EditablePlacement(PlacePiece, out _);
-            bool moved = !Mathf.Approximately(placement.angle, placeStart.angle) || !Mathf.Approximately(placement.topAboveShoulderCm, placeStart.topAboveShoulderCm)
-                || !Mathf.Approximately(placement.distanceCm, placeStart.distanceCm);
+            bool moved = !placement.SameAs(placeStart);
             if (moved)
             {
                 int keep = PlacePiece;
@@ -1038,10 +1475,13 @@ namespace UMA.ClothesDesigner.Editor
         {
             if (!placing) return;
             placing = false;
+            previewArranged = null;
             PiecePlacement placement = EditablePlacement(PlacePiece, out _);
             placement.angle = placeStart.angle;
             placement.topAboveShoulderCm = placeStart.topAboveShoulderCm;
             placement.distanceCm = placeStart.distanceCm;
+            placement.tiltDeg = placeStart.tiltDeg;
+            placement.endDistanceCm = placeStart.endDistanceCm;
             Fit.Positions = prePlacePositions;
             UpdatePreview();
             SceneView.RepaintAll();
@@ -1088,6 +1528,235 @@ namespace UMA.ClothesDesigner.Editor
             if (plane.Raycast(ray, out float enter)) { point = ray.origin + ray.direction * enter; return true; }
             point = Vector3.zero;
             return false;
+        }
+
+        // ---- Layout guide -----------------------------------------------------------------------
+
+        /// <summary>The handles of the layout guide, each one a placement value.</summary>
+        public enum GuideHandle { None, Faces, Top, Distance, EndDistance, Tilt }
+        private GuideHandle guideDrag;
+        private Vector3 guideStart;
+        private Arrangement.GuideRing guideRing;
+        private Arrangement.Result previewArranged;
+        private static GUIStyle guideLabelStyle;
+        private static readonly Color GuideColor = new Color(0.35f, 0.85f, 1f, 0.75f);
+        private static readonly Color GuideFacesColor = new Color(1f, 0.85f, 0.1f);
+        private static readonly Color GuideEndColor = new Color(0.3f, 1f, 0.9f);
+
+        /// <summary>The layout the guide shows: the one being previewed during a move, otherwise the cloth's.</summary>
+        private Arrangement.Result GuideSource => placing && previewArranged != null ? previewArranged : Fit.Arranged;
+
+        /// <summary>The selected piece's guide rings, or null when it has none (none selected, or laid flat).</summary>
+        public Arrangement.GuideRing[] SelectedGuide
+        {
+            get
+            {
+                Arrangement.Result source = GuideSource;
+                if (PlacePiece < 0 || source == null || source.guides == null || PlacePiece >= source.guides.Length) return null;
+                Arrangement.GuideRing[] rings = source.guides[PlacePiece];
+                return rings != null && rings.Length > 0 ? rings : null;
+            }
+        }
+
+        /// <summary>
+        /// Where each handle of the selected piece's guide is, and the direction it moves in (for the Faces
+        /// handle, the way round the part). False when the piece has no guide.
+        /// </summary>
+        public bool GuideHandlePosition(GuideHandle handle, out Vector3 position, out Vector3 direction)
+        {
+            position = direction = Vector3.zero;
+            Arrangement.GuideRing[] rings = SelectedGuide;
+            PiecePlacement placement = PlacePiece >= 0 ? EditablePlacement(PlacePiece, out _) : null;
+            if (rings == null || placement == null) return false;
+            // A quarter of the way down, where the piece has cloth at its middle (its top may be a neckline).
+            Arrangement.GuideRing first = Arrangement.HandleRing(rings), last = rings[rings.Length - 1];
+            float t = Arrangement.GuideAngle(placement);
+            switch (handle)
+            {
+                case GuideHandle.Faces:
+                    position = first.Point(t);
+                    direction = (first.Point(t + 0.01f) - position).normalized;
+                    return true;
+                case GuideHandle.Top:
+                    position = first.Point(t);
+                    direction = -first.axis;
+                    return true;
+                case GuideHandle.Distance:
+                    position = first.Point(t);
+                    direction = first.Out(t);
+                    return true;
+                case GuideHandle.EndDistance:
+                    if (!PiecePlacement.IsLimb(placement.part)) return false;
+                    position = last.Point(t);
+                    direction = last.Out(t);
+                    return true;
+                case GuideHandle.Tilt:
+                    if (!PiecePlacement.IsLimb(placement.part)) return false;
+                    // Under the far end of an arm (tilting lowers it); outside the far end of a leg.
+                    direction = PiecePlacement.IsArm(placement.part) ? -last.up : placement.part == BodyPart.LeftLeg ? Vector3.left : Vector3.right;
+                    position = last.center + direction * Mathf.Max(last.a, last.b);
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// The selected piece's layout guide while the Place tool is on: the oval, cone or tube it is laid on,
+        /// with handles for Faces, the top, Distance and, on arms and legs, End Distance and Tilt. Dragging a
+        /// handle previews the layout like dragging the piece; the cloth is built again on release.
+        /// </summary>
+        private void LayoutGuideGUI(Event e, bool drawOnly)
+        {
+            // A handle let go (or Escape): the move ends, as when a dragged piece is let go.
+            if (guideDrag != GuideHandle.None && GUIUtility.hotControl == 0) EndGuideMove();
+            if (!ShowLayoutGuide) return;
+            Arrangement.GuideRing[] rings = SelectedGuide;
+            PiecePlacement placement = PlacePiece >= 0 ? EditablePlacement(PlacePiece, out _) : null;
+            if (rings == null || placement == null) return;
+            float t = Arrangement.GuideAngle(placement);
+            if (e.type == EventType.Repaint) DrawGuide(rings, t);
+
+            bool limb = PiecePlacement.IsLimb(placement.part);
+            GuideHandlePosition(GuideHandle.Faces, out Vector3 face, out _);
+            float size = HandleUtility.GetHandleSize(face);
+            if (guideLabelStyle == null) guideLabelStyle = new GUIStyle(EditorStyles.whiteMiniLabel) { fontStyle = FontStyle.Bold };
+
+            void Arrow(GuideHandle kind, Color color, string label)
+            {
+                if (!GuideHandlePosition(kind, out Vector3 at, out Vector3 dir)) return;
+                Handles.color = color;
+                float length = HandleUtility.GetHandleSize(at) * 0.7f;
+                if (drawOnly)
+                {
+                    if (e.type == EventType.Repaint) Handles.ArrowHandleCap(0, at, Quaternion.LookRotation(dir), length, EventType.Repaint);
+                    return;
+                }
+                EditorGUI.BeginChangeCheck();
+                Vector3 moved = Handles.Slider(at, dir, length, Handles.ArrowHandleCap, 0f);
+                if (EditorGUI.EndChangeCheck()) MoveGuide(kind, at, moved, dir);
+                if (e.type == EventType.Repaint) Handles.Label(at + dir * length * 1.15f, label, guideLabelStyle);
+            }
+
+            Arrow(GuideHandle.Top, Handles.yAxisColor, "Top");
+            Arrow(GuideHandle.Distance, Handles.zAxisColor, "Distance");
+            if (limb)
+            {
+                Arrow(GuideHandle.EndDistance, GuideEndColor, "End Distance");
+                Arrow(GuideHandle.Tilt, Handles.xAxisColor, "Tilt");
+            }
+            Handles.color = GuideFacesColor;
+            float dot = size * 0.09f;
+            if (drawOnly)
+            {
+                if (e.type == EventType.Repaint) Handles.SphereHandleCap(0, face, Quaternion.identity, dot, EventType.Repaint);
+            }
+            else
+            {
+                EditorGUI.BeginChangeCheck();
+                Vector3 moved = Handles.FreeMoveHandle(face, dot, Vector3.zero, Handles.SphereHandleCap);
+                if (EditorGUI.EndChangeCheck()) MoveGuide(GuideHandle.Faces, face, moved, Vector3.zero);
+            }
+        }
+
+        /// <summary>
+        /// A guide handle moved from <paramref name="from"/> (where it was when the drag began) to
+        /// <paramref name="to"/>: the placement value it stands for follows, and the layout is previewed.
+        /// </summary>
+        public void MoveGuide(GuideHandle kind, Vector3 from, Vector3 to, Vector3 direction)
+        {
+            if (guideDrag == GuideHandle.None)
+            {
+                PiecePlacement start = EditablePlacement(PlacePiece, out UnityEngine.Object owner);
+                Arrangement.GuideRing[] rings = SelectedGuide;
+                if (start == null || rings == null || placing) return;
+                Undo.RecordObject(owner, "Move Piece");
+                Running = false;
+                placing = true;
+                placeStart = start.Clone();
+                prePlacePositions = (Vector3[])Fit.SyncPositions().Clone();
+                guideDrag = kind;
+                guideStart = from;
+                guideRing = kind == GuideHandle.Tilt || kind == GuideHandle.EndDistance ? rings[rings.Length - 1] : Arrangement.HandleRing(rings);
+            }
+            if (guideDrag != kind) return;
+            PiecePlacement placement = EditablePlacement(PlacePiece, out _);
+            float moved = Vector3.Dot(to - guideStart, direction);
+            switch (kind)
+            {
+                case GuideHandle.Top:
+                    placement.topAboveShoulderCm = Mathf.Round((placeStart.topAboveShoulderCm + moved * 100f) * 2f) / 2f;
+                    break;
+                case GuideHandle.Distance:
+                    placement.distanceCm = Mathf.Round((placeStart.distanceCm + moved * 100f) * 10f) / 10f;
+                    break;
+                case GuideHandle.EndDistance:
+                    placement.endDistanceCm = Mathf.Round((placeStart.endDistanceCm + moved * 100f) * 10f) / 10f;
+                    break;
+                case GuideHandle.Faces:
+                {
+                    float turn = Mathf.DeltaAngle(guideRing.AngleOf(guideStart) * Mathf.Rad2Deg, guideRing.AngleOf(to) * Mathf.Rad2Deg);
+                    if (placement.part == BodyPart.LeftArm) turn = -turn;
+                    placement.angle = Mathf.Round(Mathf.DeltaAngle(0f, placeStart.angle + turn));
+                    break;
+                }
+                case GuideHandle.Tilt:
+                {
+                    float tilt0 = placeStart.tiltDeg * Mathf.Deg2Rad, degrees;
+                    if (PiecePlacement.IsArm(placement.part))
+                    {
+                        // The far end's distance along the arm from the shoulder joint; it drops by along * sin(tilt).
+                        float along = Mathf.Max(0.05f, (guideRing.downCm - placeStart.topAboveShoulderCm) * 0.01f);
+                        degrees = Mathf.Asin(Mathf.Clamp((along * Mathf.Sin(tilt0) + moved) / along, -1f, 1f)) * Mathf.Rad2Deg;
+                    }
+                    else
+                    {
+                        // A leg's far end moves out by its depth below the top times tan(tilt).
+                        float down = Mathf.Max(0.05f, guideRing.downCm * 0.01f);
+                        degrees = Mathf.Atan((down * Mathf.Tan(tilt0) + moved) / down) * Mathf.Rad2Deg;
+                    }
+                    placement.tiltDeg = Mathf.Clamp(Mathf.Round(degrees), -Arrangement.MaxTiltDeg, Arrangement.MaxTiltDeg);
+                    break;
+                }
+            }
+            PreviewLayout();
+        }
+
+        /// <summary>Ends a guide handle's move (the handle was let go), building the cloth again.</summary>
+        public void EndGuideMove()
+        {
+            if (guideDrag == GuideHandle.None) return;
+            guideDrag = GuideHandle.None;
+            EndPlace();
+        }
+
+        private static readonly Vector3[] guideRingPoints = new Vector3[49];
+
+        private void DrawGuide(Arrangement.GuideRing[] rings, float t)
+        {
+            UnityEngine.Rendering.CompareFunction oldZTest = Handles.zTest;
+            // Faint where the body or cloth is in front, clear where it is not.
+            for (int pass = 0; pass < 2; pass++)
+            {
+                Handles.zTest = pass == 0 ? UnityEngine.Rendering.CompareFunction.Greater : UnityEngine.Rendering.CompareFunction.LessEqual;
+                Color ring = pass == 0 ? new Color(GuideColor.r, GuideColor.g, GuideColor.b, 0.2f) : GuideColor;
+                Handles.color = ring;
+                int last = rings.Length - 1;
+                for (int i = 0; i <= last; i++)
+                {
+                    // The top and bottom rings, and one every 5 cm between.
+                    if (i != 0 && i != last && Mathf.RoundToInt(rings[i].downCm) % 5 != 0) continue;
+                    for (int k = 0; k <= 48; k++) guideRingPoints[k] = rings[i].Point(k * Mathf.PI * 2f / 48f);
+                    Handles.DrawAAPolyLine(i == 0 || i == last ? 2.5f : 1.5f, guideRingPoints);
+                }
+                // Four lines along the shape, the piece's middle in its own colour.
+                for (int q = 0; q < 4; q++)
+                {
+                    float angle = t + q * Mathf.PI * 0.5f;
+                    Handles.color = q == 0 ? (pass == 0 ? new Color(GuideFacesColor.r, GuideFacesColor.g, GuideFacesColor.b, 0.25f) : GuideFacesColor) : ring;
+                    for (int i = 0; i < last; i++) Handles.DrawAAPolyLine(q == 0 ? 2.5f : 1.5f, rings[i].Point(angle), rings[i + 1].Point(angle));
+                }
+            }
+            Handles.zTest = oldZTest;
         }
 
         private void DrawPieceOutlines()
@@ -1240,6 +1909,25 @@ namespace UMA.ClothesDesigner.Editor
             FitData.pins.Clear();
             Fit.RefreshPins();
             NotifyChanged();
+        }
+
+        private const string ShowBackFacesPref = "UMA.ClothesDesigner.ShowBackFaces";
+        private static bool? showBackFaces;
+
+        /// <summary>Whether the cloth in the Scene view is drawn from both sides, so its inside shows (on by default).</summary>
+        public static bool ShowBackFaces
+        {
+            get
+            {
+                if (!showBackFaces.HasValue) showBackFaces = EditorPrefs.GetBool(ShowBackFacesPref, true);
+                return showBackFaces.Value;
+            }
+            set
+            {
+                if (ShowBackFaces == value) return;
+                showBackFaces = value;
+                EditorPrefs.SetBool(ShowBackFacesPref, value);
+            }
         }
 
         private const string ShowSeamsPref = "UMA.ClothesDesigner.ShowSeams";
@@ -1422,6 +2110,21 @@ namespace UMA.ClothesDesigner.Editor
                     }
                 }
             }
+            // The try-on animation, at its time (the arms are then raised on top of it, when asked).
+            AnimationClip clip = FitData != null ? FitData.tryOnClip : null;
+            if (clip == null && tryOnSampled)
+            {
+                // Back to the pose it was built in.
+                tryOnSampled = false;
+                ShowTryOn();
+                return;
+            }
+            if (clip != null && animator != null)
+            {
+                clip.SampleAnimation(animator.gameObject, Mathf.Clamp(TryOnTime, 0f, clip.length));
+                tryOnSampled = true;
+                if (TryOnArmsRaised) tryOnArmRest = null;
+            }
             SkinnedMeshRenderer[] renderers = tryOn.umaData.GetRenderers();
             if (renderers == null || renderers.Length == 0) return;
             if (tryOnMesh == null) tryOnMesh = new Mesh { name = "Try-On", hideFlags = HideFlags.DontSave };
@@ -1492,7 +2195,7 @@ namespace UMA.ClothesDesigner.Editor
             if (tryOnView != null) UnityEngine.Object.DestroyImmediate(tryOnView);
             if (tryOnMesh != null) UnityEngine.Object.DestroyImmediate(tryOnMesh);
             if (tryOn != null) UnityEngine.Object.DestroyImmediate(tryOn.gameObject);
-            tryOnView = null; tryOnMesh = null; tryOn = null; tryOnArmRest = null;
+            tryOnView = null; tryOnMesh = null; tryOn = null; tryOnArmRest = null; tryOnSampled = false; TryOnPlaying = false;
         }
 
         // ---- Unsaved work and closing --------------------------------------------------------------

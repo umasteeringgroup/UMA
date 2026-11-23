@@ -11,7 +11,7 @@ namespace UMA.ClothesDesigner.Editor
     /// <summary>The cloth tools' names and tooltips, shared by the Scene view toolbar and the panel.</summary>
     public static class ClothToolInfo
     {
-        public static readonly ClothTool[] Order = { ClothTool.Place, ClothTool.Grab, ClothTool.Pin, ClothTool.ErasePin };
+        public static readonly ClothTool[] Order = { ClothTool.Place, ClothTool.Grab, ClothTool.Pin, ClothTool.ErasePin, ClothTool.Measure };
 
         public static string Name(ClothTool tool)
         {
@@ -20,6 +20,7 @@ namespace UMA.ClothesDesigner.Editor
                 case ClothTool.Place: return "Place";
                 case ClothTool.Grab: return "Grab";
                 case ClothTool.Pin: return "Pin";
+                case ClothTool.Measure: return "Measure";
                 default: return "Erase Pin";
             }
         }
@@ -34,6 +35,8 @@ namespace UMA.ClothesDesigner.Editor
                     return "Grab: drag the cloth; the cloth within the Radius follows the pointer. Release to let it settle; Escape puts it back.";
                 case ClothTool.Pin:
                     return "Pin: click or drag on the cloth to hold it where it is. Pins are kept on the pattern, so they survive a new mesh level.";
+                case ClothTool.Measure:
+                    return "Measure: click two points on the cloth or the body for the distance between them; the panel also shows how far round the cloth and the body are at the first point's height.";
                 default:
                     return "Erase Pin: click or drag on pinned cloth to release it.";
             }
@@ -57,6 +60,7 @@ namespace UMA.ClothesDesigner.Editor
                 case ClothTool.Place: return BuiltIn("MoveTool");
                 case ClothTool.Grab: return BuiltIn("ViewToolMove");
                 case ClothTool.Pin: return PinIcon();
+                case ClothTool.Measure: return BuiltIn("ScaleTool");
                 default: return BuiltIn("Grid.EraserTool");
             }
         }
@@ -114,7 +118,7 @@ namespace UMA.ClothesDesigner.Editor
         private bool contextWasActive;
 
         public ClothToolsOverlay() : base(
-            PlaceClothToolToggle.Id, GrabClothToolToggle.Id, PinClothToolToggle.Id, ErasePinClothToolToggle.Id,
+            PlaceClothToolToggle.Id, GrabClothToolToggle.Id, PinClothToolToggle.Id, ErasePinClothToolToggle.Id, MeasureClothToolToggle.Id,
             ClothToolbarGap.Id,
             ClothSimulateToggle.Id, ClothStepButton.Id, ClothResetButton.Id, ClothKeepDrapeButton.Id)
         {
@@ -316,5 +320,12 @@ namespace UMA.ClothesDesigner.Editor
     {
         public const string Id = "UMA/ClothesDesigner/ErasePin";
         public ErasePinClothToolToggle() : base(ClothTool.ErasePin) { }
+    }
+
+    [EditorToolbarElement(Id, typeof(SceneView))]
+    public sealed class MeasureClothToolToggle : ClothToolToggle
+    {
+        public const string Id = "UMA/ClothesDesigner/Measure";
+        public MeasureClothToolToggle() : base(ClothTool.Measure) { }
     }
 }

@@ -92,6 +92,10 @@ namespace UMA.ClothesDesigner.Editor
             size = max - min;
         }
 
+        /// <summary>True when two pieces map the pattern into the texture the same way (the halves of a cut piece).</summary>
+        public static bool SameIsland(UvIsland a, UvIsland b) =>
+            a != null && b != null && a.placed && b.placed && a.offset == b.offset && Mathf.Approximately(a.scale, b.scale) && Mathf.Approximately(a.rotation, b.rotation);
+
         /// <summary>The UV of a point on a piece as drawn (before the sizes are applied).</summary>
         public static Vector2 ToUV(ClothesPattern pattern, int pieceIndex, Vector2 drawn)
         {
@@ -140,7 +144,8 @@ namespace UMA.ClothesDesigner.Editor
                     problems.Add("'" + name + "' has grown out of its place in the texture. Use Repack UVs.");
                 for (int q = p + 1; q < pieces; q++)
                 {
-                    if (has[q] && bounds[p].Overlaps(bounds[q])) problems.Add("'" + name + "' and '" + pattern.pieces[q].name + "' overlap in the texture. Use Repack UVs.");
+                    // Halves of a piece that was cut share its island: they cannot overlap there.
+                    if (has[q] && bounds[p].Overlaps(bounds[q]) && !SameIsland(pattern.pieces[p].uvIsland, pattern.pieces[q].uvIsland)) problems.Add("'" + name + "' and '" + pattern.pieces[q].name + "' overlap in the texture. Use Repack UVs.");
                 }
             }
             // Collapsed or flipped UV triangles.

@@ -39,7 +39,7 @@ namespace UMA.ClothesDesigner.Editor.Tests
         public void ClothTools_EachHasAnIconAndATooltip_InTheToolbarAndThePanel()
         {
             UnityEngine.GUIContent[] panel = ClothToolInfo.PanelContents();
-            Assert.That(panel.Length, Is.EqualTo(4));
+            Assert.That(panel.Length, Is.EqualTo(5), "Place, Grab, Pin, Erase Pin and Measure");
             for (int i = 0; i < ClothToolInfo.Order.Length; i++)
             {
                 ClothTool tool = ClothToolInfo.Order[i];

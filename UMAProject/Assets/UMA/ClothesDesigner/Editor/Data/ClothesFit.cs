@@ -28,11 +28,23 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>How quickly the cloth's movement dies down, per second. Only changes how fast it settles, not where.</summary>
         [Min(0f)] public float damping = 1.5f;
         [Min(0f)] public float clearanceCm = 0.6f;
+        /// <summary>The least distance kept between pieces of the cloth once sewn (mm), so a collar lies on the shirt instead of through it. 0 lets pieces pass through each other.</summary>
+        [Range(0f, 10f)] public float clothThicknessMm = 2f;
+        /// <summary>Keep cloth of one piece apart from itself as well (deep folds, gathers), not only from other pieces.</summary>
+        public bool selfCollideWithinPieces = true;
+        /// <summary>Pieces (by id) held where they are while the rest is simulated.</summary>
+        public List<string> frozenPieces = new List<string>();
+        /// <summary>Clothes the body wears under these: the cloth drapes over them.</summary>
+        public List<UMAWardrobeRecipe> wornUnder = new List<UMAWardrobeRecipe>();
+        /// <summary>With clothes worn underneath: the sizes follow the chest, waist and hips measured round them.</summary>
+        public bool sizeOverWorn = true;
         public bool overrideMeshLevel;
         public MeshLevel meshLevel = MeshLevel.Medium;
         [Min(0.3f)] public float customEdgeLengthCm = 2f;
         /// <summary>Weight donors leave out the arms (right for a vest; turn off for sleeves).</summary>
         public bool donorsExcludeArms = true;
+        /// <summary>An animation to play on the try-on character, to see the clothes move.</summary>
+        public AnimationClip tryOnClip;
         public List<ClothPin> pins = new List<ClothPin>();
         public AcceptedDrape drape = new AcceptedDrape();
         public PublishSettings publish = new PublishSettings();
@@ -96,6 +108,14 @@ namespace UMA.ClothesDesigner.Editor
         public Vector2 headCenter, headHalf;
         /// <summary>How far the arm and leg surfaces reach from their axes (m; most of the limb, not the widest bulge).</summary>
         public float armRadius, legRadius;
+        /// <summary>
+        /// How far each arm's surface reaches from its shoulder-to-wrist axis, every
+        /// <see cref="ArmProfileStepM"/> along it from <see cref="ArmProfileStartM"/> (m); the hand is left out.
+        /// Empty for a body measured before the profile was kept: <see cref="armRadius"/> is used then.
+        /// </summary>
+        public float[] leftArmProfile = new float[0], rightArmProfile = new float[0];
+        public const float ArmProfileStepM = 0.02f;
+        public const float ArmProfileStartM = -0.06f;
         public float armLengthCm, waistToAnkleCm, inseamCm, neckCm, headCm, thighCm, upperArmCm;
 
         /// <summary>The point at a height on the line from a hip joint through its ankle (carried on above the hip and below the ankle).</summary>
@@ -104,6 +124,19 @@ namespace UMA.ClothesDesigner.Editor
             Vector3 hip = left ? leftHip : rightHip, ankle = left ? leftAnkle : rightAnkle;
             float drop = hip.y - ankle.y;
             return Vector3.LerpUnclamped(hip, ankle, drop > 1e-4f ? (hip.y - y) / drop : 0f);
+        }
+
+        /// <summary>
+        /// How far the arm's surface reaches from its axis at a distance along it from the shoulder joint (m),
+        /// the profile's value between its samples (the last one past the wrist, the first one above the shoulder).
+        /// </summary>
+        public float ArmSurfaceRadius(bool left, float along)
+        {
+            float[] profile = left ? leftArmProfile : rightArmProfile;
+            if (profile == null || profile.Length == 0) return armRadius;
+            float f = Mathf.Clamp((along - ArmProfileStartM) / ArmProfileStepM - 0.5f, 0f, profile.Length - 1);
+            int i = Mathf.Min(profile.Length - 2, (int)f);
+            return i < 0 ? profile[0] : Mathf.Lerp(profile[i], profile[i + 1], f - i);
         }
 
         /// <summary>
@@ -205,6 +238,21 @@ namespace UMA.ClothesDesigner.Editor
         public bool bakeNormalMap = true;
         /// <summary>The normal map's size in texels; 0 uses the pattern's texture size (UVs tab).</summary>
         public int normalMapSize;
+        /// <summary>
+        /// Coarser copies of the slot for distant characters, named Slot_LOD1, _LOD2 ..., each meshed at
+        /// half again the edge length of the one before. UMA's Simple LOD swaps them in by name.
+        /// </summary>
+        [Range(0, 3)] public int lodLevels;
+        /// <summary>Give the whole garment a thickness: a turned-in copy of all of it, joined at every opening.</summary>
+        public bool fullThickness;
+        /// <summary>With full thickness: how thick the cloth is (mm).</summary>
+        [Min(0.2f)] public float thicknessMm = 2f;
+        /// <summary>Add the pattern's buttons and parts (buckles, zip pulls) to the slot.</summary>
+        public bool addParts = true;
+        /// <summary>Draw the seams' topstitching into a texture overlay on the clothes.</summary>
+        public bool addTopstitch = true;
+        /// <summary>The topstitching's colour.</summary>
+        public Color topstitchColor = new Color(0.92f, 0.85f, 0.6f, 1f);
 
         /// <summary>The edge length the slot is baked at (cm), given the drape's.</summary>
         public float BakeEdgeLengthCm(float drapeEdgeCm) => bakeAtOwnLevel ? ClothesPattern.EdgeLengthCm(bakeMeshLevel, bakeCustomEdgeLengthCm) : drapeEdgeCm;

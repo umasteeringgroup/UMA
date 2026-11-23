@@ -55,6 +55,18 @@ namespace UMA.ClothesDesigner.Editor
         }
 
         /// <summary>
+        /// A folded seam: piece b's edge is turned over piece a's (a collar's leaf over its stand). b is drawn
+        /// as it looks turned over, so the two edges run the same way.
+        /// </summary>
+        public PatternSeam SewFolded(PieceBuilder a, string edgeA, PieceBuilder b, string edgeB)
+        {
+            PatternSeam seam = Sew(a, edgeA, b, edgeB);
+            seam.reversed = false;
+            seam.folded = true;
+            return seam;
+        }
+
+        /// <summary>
         /// Sews one edge along several others in turn, each taking the share of it its length asks for:
         /// a collar or a band along a neckline made of several edges.
         /// </summary>
@@ -171,6 +183,17 @@ namespace UMA.ClothesDesigner.Editor
         }
 
         public PieceBuilder Fabric(string preset) { Piece.fabric = FabricPresets.Create(preset); return this; }
+
+        /// <summary>Which layer of the clothes the piece is: a higher layer is kept outside a lower one where they cross.</summary>
+        public PieceBuilder Layer(int layer) { Piece.layer = layer; return this; }
+
+        /// <summary>Stiffens the piece (collar stands, cuffs) and meshes it finer than the rest.</summary>
+        public PieceBuilder Stiffen(InterfacingLevel interfacing, float meshDetail)
+        {
+            Piece.interfacing = interfacing;
+            Piece.meshDetail = meshDetail;
+            return this;
+        }
 
         public PieceBuilder Pleat(string edgeName, PleatKind kind, float position, float depthCm, float stitchedCm, bool pressed = true)
         {

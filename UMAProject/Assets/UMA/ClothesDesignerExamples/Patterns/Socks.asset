@@ -14,61 +14,61 @@ MonoBehaviour:
   m_EditorClassIdentifier: UMA.ClothesDesigner.Editor::UMA.ClothesDesigner.Editor.ClothesPattern
   schemaVersion: 2
   pieces:
-  - id: a5ecc1d3a03a462d8dd23e6cbf96c29c
+  - id: c1d8c403bdfe445a8015c6437adc1716
     name: Left Sock Outside
     points:
-    - id: 7ec8e93f5be947a49173697278c767c1
+    - id: c45d157f037140319fbd2c7ce08a9542
       position: {x: 0, y: 0}
-    - id: 14909b5dc14c46318356d52157530286
+    - id: a863d561a9f94f649f9e10939e994a19
       position: {x: 33, y: 0}
-    - id: 0d327240f09a40e1b13d26a1f5252263
+    - id: b0266cabe96f4e198cb799c7d9a078d1
       position: {x: 30.5, y: 13}
-    - id: e444a188e2f2408eae7aa916faa2389d
+    - id: d14d7909a98747f59d3b5ea0342b385a
       position: {x: 30.5, y: 30}
-    - id: e9f6ca0d98964ea6bc64f8f1f87ba1ce
+    - id: b1512b40258c490e90a7bbc6de524a82
       position: {x: 20, y: 30}
-    - id: c0b24a1cc5a44ff0b27d36aeb154f373
+    - id: 84e1d85a39c84fcf877b12bfb28b8a23
       position: {x: 19, y: 16}
-    - id: e7bd2e6c1af94834aa494cebf549990a
+    - id: b319c13dff0443e7a27af9bedabb637c
       position: {x: 0, y: 8}
     edges:
-    - id: a0b2b1968c83427f8ffd96f97edc003a
+    - id: 5dcd6fe6aa624aa3a2847b063b66c121
       name: Sole
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 0
-    - id: 1d8bbee6545a46a6b13199bef9220d59
+    - id: d8cd3cc7015847c5b8720759a7eaddf6
       name: Heel
       curved: 1
       handleA: {x: 3, y: 4}
       handleB: {x: 0.5, y: -4}
       opening: 0
-    - id: c9636dc76d444b6998b702122e6b62a6
+    - id: bfeb38509869408fb8c23a17bfcf213b
       name: Back
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 0
-    - id: f6d46a6f97b24391921e6b4c69046ba3
+    - id: 4491d92684ed41b2aa3d67f398061d4a
       name: Top
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 1
-    - id: 8c374570e07a4f24b766aba036bd13b3
+    - id: 5ba36bf6dabe44dd83b2dda634adabc6
       name: Front
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 0
-    - id: efae5a3f4ca448b5a4c6eaff9f3bb226
+    - id: 22c326e1bed849978cff2964a627fd2e
       name: Instep
       curved: 1
       handleA: {x: -6, y: -1}
       handleB: {x: 6, y: 2}
       opening: 0
-    - id: 28b9bdf40636443699c0c4c8b24113be
+    - id: f79893a3d0e842d0ac0422f59bb882b1
       name: Toe
       curved: 1
       handleA: {x: -5, y: 0}
@@ -102,68 +102,70 @@ MonoBehaviour:
         y: 0.0078125
         width: 0.48828122
         height: 0.38862178
-  - id: 5ec01e748c9245ffb1c57ec56b5ad940
+    meshDetail: 1
+    interfacing: 0
+  - id: 9df1c884b0ae484d9a73086058fc2e8c
     name: Left Sock Inside
     points:
-    - id: b5c47e4fb94645bb9882ffc0fd404d52
+    - id: a8f1d9d9a2ac4b3a8993506b11952153
       position: {x: 74, y: 0}
-    - id: a4fd1754195d47a6a336afe9d6e6e871
+    - id: 8e755a1ef8a44698a6fdc8b2899cdc5e
       position: {x: 74, y: 8}
-    - id: e1c84b90b02541f69987a7b47709ee7d
+    - id: 9ac67cc74af143379c7d227e2748495a
       position: {x: 55, y: 16}
-    - id: c08bdcc9125940e3b87f74caf62a329c
+    - id: 47b2043924864fbf894417a0c44fee24
       position: {x: 54, y: 30}
-    - id: 1fe0cc760cb546699568151eb913ba39
+    - id: 5e0719cf230a479fa1d6cd35b76fe4aa
       position: {x: 43.5, y: 30}
-    - id: be765dbc47ab400aa2490cc61f6b487d
+    - id: 60fb2c83e8a348d2b35c622234dda3ea
       position: {x: 43.5, y: 13}
-    - id: c75363dcae754dca815da3cce67195fe
+    - id: 90ac19d9587c455a8cf67e74a721cbb2
       position: {x: 41, y: 0}
     edges:
-    - id: d935fe376bbd4d0bb91000d7c3c7dddc
+    - id: edab268401b34bbfbb0bc398ae8ed77f
       name: Toe
       curved: 1
       handleA: {x: 5, y: 0}
       handleB: {x: 5, y: 0}
       opening: 0
-    - id: 64cc2fbde71946c5af9262b22d43f3c2
+    - id: debfb84d144a4d1eb969f8b9c128d1a6
       name: Instep
       curved: 1
       handleA: {x: -6, y: 2}
       handleB: {x: 6, y: -1}
       opening: 0
-    - id: e4713a49278649a195b84b2058e1bdf0
+    - id: 62b5260bb33542cdabfd4167ebf65b88
       name: Front
       curved: 0
       handleA: {x: -0, y: 0}
       handleB: {x: -0, y: 0}
       opening: 0
-    - id: 6a75c46e2d2e45f3ae0e25e51fa18dd4
+    - id: 20ab9c8f1ca446668145052dfc27d3dc
       name: Top
       curved: 0
       handleA: {x: -0, y: 0}
       handleB: {x: -0, y: 0}
       opening: 1
-    - id: 1629dc47df494786a0f17564f13d395c
+    - id: 6f8d1ef58d1047eb885f994916cc374d
       name: Back
       curved: 0
       handleA: {x: -0, y: 0}
       handleB: {x: -0, y: 0}
       opening: 0
-    - id: d58f9853354949748d56ade7d9b51c0f
+    - id: c5655295c84f4ae080ce2f587c0b7b4c
       name: Heel
       curved: 1
       handleA: {x: -0.5, y: -4}
       handleB: {x: -3, y: 4}
       opening: 0
-    - id: b73011fe6b504949be2a27a8c59d8ab4
+    - id: 98c69c67965f4d92b07debb96420ebc7
       name: Sole
       curved: 0
       handleA: {x: -0, y: 0}
       handleB: {x: -0, y: 0}
       opening: 0
     grainAngle: -0
-    mirrorOf: a5ecc1d3a03a462d8dd23e6cbf96c29c
+    mirrorOf: c1d8c403bdfe445a8015c6437adc1716
     placement:
       angle: -90
       topAboveShoulderCm: -101
@@ -190,68 +192,70 @@ MonoBehaviour:
         y: 0.0078125
         width: 0.48828125
         height: 0.38862178
-  - id: c44b8240ceb649cc8a371509a19ca297
+    meshDetail: 1
+    interfacing: 0
+  - id: d361ba79d635449f8ac06d16927bf231
     name: Right Sock Outside
     points:
-    - id: bdc6c614c84347cf955ac2023fea7efb
+    - id: 80bb0073db6649cfae08371c1975baf1
       position: {x: 115, y: 0}
-    - id: ec846ad310494bd08139fbd981e4dec5
+    - id: c6a5ba81133f4226b68aced480233030
       position: {x: 115, y: 8}
-    - id: 9301190bbf7c40658d53257b5ab1ba48
+    - id: 419f1e3dea8c40fa855c872e2df40ab6
       position: {x: 96, y: 16}
-    - id: 12425bc10bd24bb793a234cc49664945
+    - id: b41cb5ac62d54a76a4a3577948f6e8ee
       position: {x: 95, y: 30}
-    - id: 4f25943df86a4ba390db0bfbb98690e6
+    - id: a3974ba45b284d8da0f9c51db66134d6
       position: {x: 84.5, y: 30}
-    - id: 1e03ef921bf5473791f9e8b397f698d5
+    - id: 388051073e444ddb9766cc5c088423c7
       position: {x: 84.5, y: 13}
-    - id: 68828cd78a654829a3e06a5e6155bdfc
+    - id: 94f31f9bf7374f6fb2790cf2cb7c4641
       position: {x: 82, y: 0}
     edges:
-    - id: 3c2bb44b6bf24b8ba57cde257752f10f
+    - id: cdaa5f4b35ff465080be6fb3a6c4d745
       name: Toe
       curved: 1
       handleA: {x: 5, y: 0}
       handleB: {x: 5, y: 0}
       opening: 0
-    - id: dc1a197ca4f5464e8b7498ae9e951ad1
+    - id: d16bb3962e5542e190540cffd041b08a
       name: Instep
       curved: 1
       handleA: {x: -6, y: 2}
       handleB: {x: 6, y: -1}
       opening: 0
-    - id: cc64b09973fa4d488aa202c54c29bb62
+    - id: 578478a09de14dcf9655b0e827927072
       name: Front
       curved: 0
       handleA: {x: -0, y: 0}
       handleB: {x: -0, y: 0}
       opening: 0
-    - id: 33f744aaff38445dae9cdc2f1e93797d
+    - id: d49707775e3044868b0b17e4362aaa81
       name: Top
       curved: 0
       handleA: {x: -0, y: 0}
       handleB: {x: -0, y: 0}
       opening: 1
-    - id: 7c3fd01e78e74048b1e187505facc105
+    - id: 15382d0764cd4c2d9b4294f61da24cce
       name: Back
       curved: 0
       handleA: {x: -0, y: 0}
       handleB: {x: -0, y: 0}
       opening: 0
-    - id: b961d70490b9488ba4cecc3f6ec5de8f
+    - id: 1aa14424887a4bad8f17596ba9727ccf
       name: Heel
       curved: 1
       handleA: {x: -0.5, y: -4}
       handleB: {x: -3, y: 4}
       opening: 0
-    - id: c3934cf1008048d0a3afab373ae367d7
+    - id: 7c1d5f11e2014f2884cc6204835ccae3
       name: Sole
       curved: 0
       handleA: {x: -0, y: 0}
       handleB: {x: -0, y: 0}
       opening: 0
     grainAngle: -0
-    mirrorOf: a5ecc1d3a03a462d8dd23e6cbf96c29c
+    mirrorOf: c1d8c403bdfe445a8015c6437adc1716
     placement:
       angle: -90
       topAboveShoulderCm: -101
@@ -278,68 +282,70 @@ MonoBehaviour:
         y: 0.40424678
         width: 0.4882813
         height: 0.38862178
-  - id: 5df1a566e563467a871366bff7b235fb
+    meshDetail: 1
+    interfacing: 0
+  - id: 3549b6a16c0a4224b5403bc8b68cf603
     name: Right Sock Inside
     points:
-    - id: bd2edfa49b084aa1b3b4cb01e8be18ee
+    - id: 41e345acd8c9460d9e98b34df973cc13
       position: {x: 123, y: 0}
-    - id: 953096c620824a2aba8881a572f337de
+    - id: 805e96066a9f43e192cc65d157acd1e9
       position: {x: 156, y: 0}
-    - id: 32b2e78af0094e1e978ef50190f9cb16
+    - id: 2139097ec74a4f278db0174842340417
       position: {x: 153.5, y: 13}
-    - id: 2579a20d581948d8870c5ebbca2333dd
+    - id: 31b5c8eee5a0471eaa6b193c733fbe63
       position: {x: 153.5, y: 30}
-    - id: ab309d09206646d59e154033e3975319
+    - id: 22681f45d2f74c81ac12ee97088f56b7
       position: {x: 143, y: 30}
-    - id: da5397c7561a4584bbedf8866b180ed5
+    - id: 92b0bbb78f134549b2250ecb43123442
       position: {x: 142, y: 16}
-    - id: e10627de3eaf4a0486641ac9dab48e6b
+    - id: b25dffd778dd41e18314e9cd24d15a91
       position: {x: 123, y: 8}
     edges:
-    - id: f556436fb7b0495ab36b28d1e5307881
+    - id: 6e4b23c741dd4c67b63e1ff95b4073cd
       name: Sole
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 0
-    - id: a97827c111aa4521b03bc8946b745b7a
+    - id: 099934b5d08f49f8a05278d81cc10cab
       name: Heel
       curved: 1
       handleA: {x: 3, y: 4}
       handleB: {x: 0.5, y: -4}
       opening: 0
-    - id: 48150f91b3544980993e806fb4a190ba
+    - id: 7e6d7d018406443c98a29b23792cd4c6
       name: Back
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 0
-    - id: 2faee6e30f4a453ba725582bf8abd010
+    - id: ffdf7954ffec4a8e97ca5421a6839728
       name: Top
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 1
-    - id: 8477d354e9454fb588297bfcb48c994b
+    - id: d7fead4d949c4c7ca58b54aad649f4f9
       name: Front
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 0
-    - id: 11c8685a221247c2afc5df902033a29d
+    - id: fb18c3f50ae543baa5e69ba3f35c67e1
       name: Instep
       curved: 1
       handleA: {x: -6, y: -1}
       handleB: {x: 6, y: 2}
       opening: 0
-    - id: 4806621996784696bb5d9d6d77cc15f4
+    - id: 53290946c757421dad708cd92b83ff07
       name: Toe
       curved: 1
       handleA: {x: -5, y: 0}
       handleB: {x: -5, y: 0}
       opening: 0
     grainAngle: 0
-    mirrorOf: c44b8240ceb649cc8a371509a19ca297
+    mirrorOf: d361ba79d635449f8ac06d16927bf231
     placement:
       angle: 90
       topAboveShoulderCm: -101
@@ -366,151 +372,165 @@ MonoBehaviour:
         y: 0.40424678
         width: 0.488281
         height: 0.38862178
+    meshDetail: 1
+    interfacing: 0
   seams:
-  - id: c8156c61f8c2450d88a035731cdc4d11
+  - id: 5c8b70d0fbbb49e5b9f9e3a35a192210
     a:
-      pieceId: a5ecc1d3a03a462d8dd23e6cbf96c29c
-      edgeId: a0b2b1968c83427f8ffd96f97edc003a
+      pieceId: c1d8c403bdfe445a8015c6437adc1716
+      edgeId: 5dcd6fe6aa624aa3a2847b063b66c121
       start: 0
       end: 1
     b:
-      pieceId: 5ec01e748c9245ffb1c57ec56b5ad940
-      edgeId: b73011fe6b504949be2a27a8c59d8ab4
+      pieceId: 9df1c884b0ae484d9a73086058fc2e8c
+      edgeId: 98c69c67965f4d92b07debb96420ebc7
       start: 0
       end: 1
     reversed: 1
-  - id: 5ec5514f478d4440992790fe07950741
+    folded: 0
+  - id: 43cd2bc9e98e4ed9b11a7191f26b2e9a
     a:
-      pieceId: a5ecc1d3a03a462d8dd23e6cbf96c29c
-      edgeId: 1d8bbee6545a46a6b13199bef9220d59
+      pieceId: c1d8c403bdfe445a8015c6437adc1716
+      edgeId: d8cd3cc7015847c5b8720759a7eaddf6
       start: 0
       end: 1
     b:
-      pieceId: 5ec01e748c9245ffb1c57ec56b5ad940
-      edgeId: d58f9853354949748d56ade7d9b51c0f
+      pieceId: 9df1c884b0ae484d9a73086058fc2e8c
+      edgeId: c5655295c84f4ae080ce2f587c0b7b4c
       start: 0
       end: 1
     reversed: 1
-  - id: 4fe1e4b3afb640779d81dd97292f864a
+    folded: 0
+  - id: 739b81d9b46c4f8191a1b30854d6ba90
     a:
-      pieceId: a5ecc1d3a03a462d8dd23e6cbf96c29c
-      edgeId: c9636dc76d444b6998b702122e6b62a6
+      pieceId: c1d8c403bdfe445a8015c6437adc1716
+      edgeId: bfeb38509869408fb8c23a17bfcf213b
       start: 0
       end: 1
     b:
-      pieceId: 5ec01e748c9245ffb1c57ec56b5ad940
-      edgeId: 1629dc47df494786a0f17564f13d395c
+      pieceId: 9df1c884b0ae484d9a73086058fc2e8c
+      edgeId: 6f8d1ef58d1047eb885f994916cc374d
       start: 0
       end: 1
     reversed: 1
-  - id: 40b19dc1a4eb494ea319f03d5983a9c4
+    folded: 0
+  - id: c9e212765ec04268806f1d454adb11aa
     a:
-      pieceId: a5ecc1d3a03a462d8dd23e6cbf96c29c
-      edgeId: 8c374570e07a4f24b766aba036bd13b3
+      pieceId: c1d8c403bdfe445a8015c6437adc1716
+      edgeId: 5ba36bf6dabe44dd83b2dda634adabc6
       start: 0
       end: 1
     b:
-      pieceId: 5ec01e748c9245ffb1c57ec56b5ad940
-      edgeId: e4713a49278649a195b84b2058e1bdf0
+      pieceId: 9df1c884b0ae484d9a73086058fc2e8c
+      edgeId: 62b5260bb33542cdabfd4167ebf65b88
       start: 0
       end: 1
     reversed: 1
-  - id: 291eb4d29b30409d9bee29cb4e490d99
+    folded: 0
+  - id: 00abeba9929641b686d0c64da180adcd
     a:
-      pieceId: a5ecc1d3a03a462d8dd23e6cbf96c29c
-      edgeId: efae5a3f4ca448b5a4c6eaff9f3bb226
+      pieceId: c1d8c403bdfe445a8015c6437adc1716
+      edgeId: 22c326e1bed849978cff2964a627fd2e
       start: 0
       end: 1
     b:
-      pieceId: 5ec01e748c9245ffb1c57ec56b5ad940
-      edgeId: 64cc2fbde71946c5af9262b22d43f3c2
+      pieceId: 9df1c884b0ae484d9a73086058fc2e8c
+      edgeId: debfb84d144a4d1eb969f8b9c128d1a6
       start: 0
       end: 1
     reversed: 1
-  - id: 73952e66f8b1482ba0ba423208e0a5da
+    folded: 0
+  - id: 25b5f0bd9e8c41959d134ba6879cfa5b
     a:
-      pieceId: a5ecc1d3a03a462d8dd23e6cbf96c29c
-      edgeId: 28b9bdf40636443699c0c4c8b24113be
+      pieceId: c1d8c403bdfe445a8015c6437adc1716
+      edgeId: f79893a3d0e842d0ac0422f59bb882b1
       start: 0
       end: 1
     b:
-      pieceId: 5ec01e748c9245ffb1c57ec56b5ad940
-      edgeId: d935fe376bbd4d0bb91000d7c3c7dddc
+      pieceId: 9df1c884b0ae484d9a73086058fc2e8c
+      edgeId: edab268401b34bbfbb0bc398ae8ed77f
       start: 0
       end: 1
     reversed: 1
-  - id: 7070a8122cf54b6ab38df219d1891cd3
+    folded: 0
+  - id: cd55cfe30db740809c2ecf82fe1ac303
     a:
-      pieceId: c44b8240ceb649cc8a371509a19ca297
-      edgeId: c3934cf1008048d0a3afab373ae367d7
+      pieceId: d361ba79d635449f8ac06d16927bf231
+      edgeId: 7c1d5f11e2014f2884cc6204835ccae3
       start: 0
       end: 1
     b:
-      pieceId: 5df1a566e563467a871366bff7b235fb
-      edgeId: f556436fb7b0495ab36b28d1e5307881
+      pieceId: 3549b6a16c0a4224b5403bc8b68cf603
+      edgeId: 6e4b23c741dd4c67b63e1ff95b4073cd
       start: 0
       end: 1
     reversed: 1
-  - id: 8ba932d9f35f4dc7a32dc8451640c5ee
+    folded: 0
+  - id: f520cab411204957a210e1af51f440de
     a:
-      pieceId: c44b8240ceb649cc8a371509a19ca297
-      edgeId: b961d70490b9488ba4cecc3f6ec5de8f
+      pieceId: d361ba79d635449f8ac06d16927bf231
+      edgeId: 1aa14424887a4bad8f17596ba9727ccf
       start: 0
       end: 1
     b:
-      pieceId: 5df1a566e563467a871366bff7b235fb
-      edgeId: a97827c111aa4521b03bc8946b745b7a
+      pieceId: 3549b6a16c0a4224b5403bc8b68cf603
+      edgeId: 099934b5d08f49f8a05278d81cc10cab
       start: 0
       end: 1
     reversed: 1
-  - id: 86758ecba7f94babbb06cedd022bfc7f
+    folded: 0
+  - id: 4785c4bb3eac4459af3f4696012eca01
     a:
-      pieceId: c44b8240ceb649cc8a371509a19ca297
-      edgeId: 7c3fd01e78e74048b1e187505facc105
+      pieceId: d361ba79d635449f8ac06d16927bf231
+      edgeId: 15382d0764cd4c2d9b4294f61da24cce
       start: 0
       end: 1
     b:
-      pieceId: 5df1a566e563467a871366bff7b235fb
-      edgeId: 48150f91b3544980993e806fb4a190ba
+      pieceId: 3549b6a16c0a4224b5403bc8b68cf603
+      edgeId: 7e6d7d018406443c98a29b23792cd4c6
       start: 0
       end: 1
     reversed: 1
-  - id: 83154ad5183b4a5ca6cd544e4ecba2c6
+    folded: 0
+  - id: ea8b7fa1286a4258aa4afaaa62a650eb
     a:
-      pieceId: c44b8240ceb649cc8a371509a19ca297
-      edgeId: cc64b09973fa4d488aa202c54c29bb62
+      pieceId: d361ba79d635449f8ac06d16927bf231
+      edgeId: 578478a09de14dcf9655b0e827927072
       start: 0
       end: 1
     b:
-      pieceId: 5df1a566e563467a871366bff7b235fb
-      edgeId: 8477d354e9454fb588297bfcb48c994b
+      pieceId: 3549b6a16c0a4224b5403bc8b68cf603
+      edgeId: d7fead4d949c4c7ca58b54aad649f4f9
       start: 0
       end: 1
     reversed: 1
-  - id: 122919c3d42049f2ba2c2e350a04eb1e
+    folded: 0
+  - id: 3205d105713d4da29b3fe0827aef3079
     a:
-      pieceId: c44b8240ceb649cc8a371509a19ca297
-      edgeId: dc1a197ca4f5464e8b7498ae9e951ad1
+      pieceId: d361ba79d635449f8ac06d16927bf231
+      edgeId: d16bb3962e5542e190540cffd041b08a
       start: 0
       end: 1
     b:
-      pieceId: 5df1a566e563467a871366bff7b235fb
-      edgeId: 11c8685a221247c2afc5df902033a29d
+      pieceId: 3549b6a16c0a4224b5403bc8b68cf603
+      edgeId: fb18c3f50ae543baa5e69ba3f35c67e1
       start: 0
       end: 1
     reversed: 1
-  - id: 1a607e57c6e044ef963fcace9f45c9b2
+    folded: 0
+  - id: eee9460fa70d4138a07b415350028f80
     a:
-      pieceId: c44b8240ceb649cc8a371509a19ca297
-      edgeId: 3c2bb44b6bf24b8ba57cde257752f10f
+      pieceId: d361ba79d635449f8ac06d16927bf231
+      edgeId: cdaa5f4b35ff465080be6fb3a6c4d745
       start: 0
       end: 1
     b:
-      pieceId: 5df1a566e563467a871366bff7b235fb
-      edgeId: 4806621996784696bb5d9d6d77cc15f4
+      pieceId: 3549b6a16c0a4224b5403bc8b68cf603
+      edgeId: 53290946c757421dad708cd92b83ff07
       start: 0
       end: 1
     reversed: 1
+    folded: 0
   dimensions: []
   meshLevel: 2
   customEdgeLengthCm: 2

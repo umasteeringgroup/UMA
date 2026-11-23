@@ -36,6 +36,13 @@ namespace UMA.ClothesDesigner.Editor
             public int FacingTriangles, RimTriangles;
             /// <summary>How long each stage took, for finding a slow bake.</summary>
             public List<string> Timings = new List<string>();
+            /// <summary>Triangles of buttons and parts added to the slot.</summary>
+            public int PartTriangles;
+            /// <summary>The LOD slots baked (Name_LOD1 ...), coarsest last, and their triangle counts.</summary>
+            public readonly List<SlotDataAsset> LodSlots = new List<SlotDataAsset>();
+            public readonly List<int> LodTriangles = new List<int>();
+            /// <summary>The topstitching overlay, when there was any.</summary>
+            public OverlayDataAsset TopstitchOverlay;
             public readonly List<MeshHideAsset> MeshHides = new List<MeshHideAsset>();
             public readonly List<string> Messages = new List<string>();
         }
@@ -99,98 +106,53 @@ namespace UMA.ClothesDesigner.Editor
             }
             var result = new Result { Vertices = mesh.VertexCount, Triangles = mesh.TriangleCount, SlotEdgeCm = mesh.edgeLengthCm, DrapeEdgeCm = drapeMesh.edgeLengthCm };
             foreach (string warning in mesh != drapeMesh ? mesh.warnings : new List<string>()) result.Messages.Add("Slot mesh: " + warning);
-            int[] group = WeldGroups(mesh.VertexCount, mesh.stitches);
-
             result.Timings = timings;
             Mark("slot mesh");
-            // 2. Weights from the body's surface; copies of a welded point take the same weights.
-            // Sleeves (any piece laid round an arm) take weights from the arms whatever the setting.
-            UMASlotSkinTransfer.TargetSurface donors = fit.donorsExcludeArms && !HasArmPieces(session.Pattern, fit) ? body.SurfaceWithoutArms() : body.Surface;
-            UMASlotSkinTransfer.WeightTransferResult weights = UMASlotSkinTransfer.TransferWeights(positions, donors, body.FallbackBone);
-            result.FallbackVertices = weights.FallbackVertices;
-            weights = ShareWeights(weights, group);
-            for (int v = 0; v < positions.Length; v++)
-            {
-                // Search the full 10 cm: the plain search stops at about one grid cell and would call a loose hem far.
-                // Most vertices are near the body: the quick search settles them; only the others search wider.
-                if (body.Collider.Closest(positions[v], out _, out Vector3 near, out _) && (positions[v] - near).magnitude <= 0.1f) continue;
-                if (!body.Collider.Closest(positions[v], 0.1f, out _, out Vector3 onBody, out _) || (positions[v] - onBody).magnitude > 0.1f) result.FarVertices++;
-            }
-            CheckWeights(weights, group, result);
 
-            Mark("weights");
-            // 3. Triangles facing out.
-            int[] triangles = FacingOut(mesh, session.Arranged.flipTriangles);
+            // 2-4. Weights, facing or thickness, parts, then the slot, overlay and recipe.
+            SlotGeometry geometry = Geometry(session, mesh, positions, result.Messages);
+            result.FallbackVertices = geometry.weights.FallbackVertices;
+            result.FarVertices = geometry.farVertices;
+            result.MaxWeightSumError = geometry.maxWeightSumError;
+            result.SeamWeightsMatch = geometry.seamWeightsMatch;
+            result.FacingTriangles = geometry.facingTriangles;
+            result.RimTriangles = geometry.rimTriangles;
+            result.PartTriangles = geometry.partTriangles;
+            result.Vertices = geometry.positions.Length;
+            result.Triangles = geometry.triangles.Length / 3;
+            int[] triangles = geometry.clothTriangles;
+            Mark("weights, facing and parts");
+            result.Published = PublishGeometry(session, geometry, settings.slotName, settings.createWardrobeRecipe, settings.existingOverlay);
+            Mark("build and publish slot");
 
-            // 3b. A facing inside the openings and a rim round them, copies of the cloth with its weights and UVs.
-            Vector3[] slotPositions = positions;
-            int[] slotTriangles = triangles;
-            IList<Vector2> slotUv = mesh.uv;
-            UMASlotSkinTransfer.WeightTransferResult slotWeights = weights;
-            if (settings.addFacing || settings.addRim)
+            // 4b. Coarser copies for distant characters, each meshed half again as coarse, drawn with the same overlay.
+            for (int level = 1; level <= Mathf.Clamp(settings.lodLevels, 0, 3) && result.Published.Slot != null; level++)
             {
-                OpeningFacing.Output facing = OpeningFacing.Build(mesh, session.Pattern, positions, triangles, group,
-                    settings.addFacing, settings.facingDepthCm * 0.01f, settings.addRim, settings.rimThicknessMm * 0.001f);
-                slotPositions = facing.positions;
-                slotTriangles = facing.triangles;
-                slotUv = facing.uv;
-                slotWeights = CopyWeights(weights, facing.sourceOf);
-                result.FacingTriangles = facing.facingTriangles;
-                result.RimTriangles = facing.rimTriangles;
-                result.Vertices = slotPositions.Length;
-                result.Triangles = slotTriangles.Length / 3;
-                if (facing.facingTriangles > 0 || facing.rimTriangles > 0)
+                float lodEdge = mesh.edgeLengthCm * Mathf.Pow(1.5f, level);
+                PatternMesh lodMesh = PatternMesher.Build(session.Pattern, drapeMesh.scales, lodEdge);
+                Vector3[] lodPositions = Weld(new PatternMeshSampler(drapeMesh).Carry(drape, lodMesh), WeldGroups(lodMesh.VertexCount, lodMesh.stitches));
+                var lodMessages = new List<string>();
+                SlotGeometry lod = Geometry(session, lodMesh, lodPositions, lodMessages);
+                UMASlotPublisher.Result published = PublishGeometry(session, lod, settings.slotName + "_LOD" + level, false, result.Published.Overlay);
+                if (published.Slot != null)
                 {
-                    result.Messages.Add("Added " + (settings.addFacing ? "a " + settings.facingDepthCm.ToString("0.#") + " cm facing inside the openings (" + facing.facingTriangles + " triangles)" : "")
-                        + (settings.addFacing && settings.addRim ? " and " : "")
-                        + (settings.addRim ? "a " + settings.rimThicknessMm.ToString("0.#") + " mm rim round them (" + facing.rimTriangles + " triangles)" : "") + ".");
+                    result.LodSlots.Add(published.Slot);
+                    result.LodTriangles.Add(lod.triangles.Length / 3);
+                    result.Published.CreatedPaths.AddRange(published.CreatedPaths);
                 }
             }
-            Mark("facing and rim");
-
-            // 4. The slot mesh in bind space, normals by the battle-buddy rule, UVs from the pattern.
-            var geometry = new UMASlotSkinTransfer.SourceGeometry { TargetLocalVertices = slotPositions, Triangles = slotTriangles };
-            Mesh slotMesh = null;
-            GameObject temporary = null;
-            try
+            if (result.LodSlots.Count > 0)
             {
-                slotMesh = UMASlotSkinTransfer.BuildSlotMesh(geometry, body.Skin, slotWeights, new UMASlotSkinTransfer.SlotMeshOptions
-                {
-                    SlotName = settings.slotName,
-                    RecalculateMissingNormals = true
-                });
-                slotMesh.SetUVs(0, new List<Vector2>(slotUv));
-                slotMesh.RecalculateTangents();
-                temporary = UMASlotSkinTransfer.CreateTemporaryRenderer(body.Skin.Renderer);
-                var renderer = temporary.GetComponent<SkinnedMeshRenderer>();
-                renderer.sharedMesh = slotMesh;
-                renderer.bones = body.Skin.Bones;
-                renderer.rootBone = body.Skin.RootBone;
-
-                EnsureFolder(settings.folder);
-                var request = new UMASlotPublisher.Request
-                {
-                    SlotName = settings.slotName,
-                    FolderPath = settings.folder,
-                    AddToGlobalLibrary = settings.addToGlobalLibrary,
-                    // Baking again updates the same assets: their GUIDs, and anything using them, stay.
-                    UpdateInPlace = true,
-                    OverwriteExisting = false,
-                    CreateWardrobeRecipe = settings.createWardrobeRecipe,
-                    Race = fit.race != null ? fit.race : session.Body.Skin.RaceData,
-                    WardrobeSlot = settings.wardrobeSlot,
-                    ExistingOverlay = settings.existingOverlay,
-                    OverlayMaterial = settings.material
-                };
-                result.Published = UMASlotPublisher.Publish(request, renderer, body.Skin);
+                result.Messages.Add("Baked " + result.LodSlots.Count + " LOD slots (" + string.Join(", ", result.LodTriangles) + " triangles, against " + result.Triangles + "). A character swaps them in by distance with UMA's Simple LOD component.");
             }
-            finally
+            Mark("LOD slots");
+
+            // 4c. Topstitching: a texture overlay over the clothes' own, on the same slot.
+            if (settings.addTopstitch && GarmentExtras.HasTopstitch(session.Pattern) && result.Published.Overlay != null && result.Published.Recipe != null)
             {
-                if (temporary != null) UnityEngine.Object.DestroyImmediate(temporary);
-                if (slotMesh != null) UnityEngine.Object.DestroyImmediate(slotMesh);
+                result.TopstitchOverlay = AddTopstitchOverlay(session, result);
             }
-
-            Mark("build and publish slot");
+            Mark("topstitch");
             // 5. A texture that shows the pieces, so the UVs can be checked on the character.
             if (settings.makeUvCheckTexture && settings.existingOverlay == null && result.Published.Overlay != null)
             {
@@ -256,6 +218,218 @@ namespace UMA.ClothesDesigner.Editor
             if (!result.SeamWeightsMatch) result.Messages.Add("Some sewn seam copies ended with different weights.");
             if (MaterialCullsBackFaces(settings.material) && result.FacingTriangles == 0) result.Messages.Add("The chosen material hides back faces, so the inside of the clothes is invisible at the neck, armholes and hem. Turn on Inside Facing, or use a double-sided material.");
             return result;
+        }
+
+        /// <summary>A slot's geometry before it is built: positions, triangles, UVs and weights, and what was added.</summary>
+        private sealed class SlotGeometry
+        {
+            public Vector3[] positions;
+            public int[] triangles, clothTriangles;
+            public List<Vector2> uv;
+            public UMASlotSkinTransfer.WeightTransferResult weights;
+            public int farVertices, facingTriangles, rimTriangles, partTriangles;
+            public float maxWeightSumError;
+            public bool seamWeightsMatch;
+        }
+
+        /// <summary>
+        /// Weights from the body, the cloth facing out, the facing and rim (or a full thickness), and the
+        /// buttons and parts, for a cloth mesh at welded positions.
+        /// </summary>
+        private static SlotGeometry Geometry(FitSession session, PatternMesh mesh, Vector3[] positions, List<string> messages)
+        {
+            BodyReference body = session.Body;
+            ClothesFit fit = session.Fit;
+            PublishSettings settings = fit.publish;
+            int[] group = WeldGroups(mesh.VertexCount, mesh.stitches);
+            // Sleeves (any piece laid round an arm) take weights from the arms whatever the setting.
+            UMASlotSkinTransfer.TargetSurface donors = fit.donorsExcludeArms && !HasArmPieces(session.Pattern, fit) ? body.SurfaceWithoutArms() : body.Surface;
+            UMASlotSkinTransfer.WeightTransferResult weights = UMASlotSkinTransfer.TransferWeights(positions, donors, body.FallbackBone);
+            int fallback = weights.FallbackVertices;
+            weights = ShareWeights(weights, group);
+            var g = new SlotGeometry();
+            for (int v = 0; v < positions.Length; v++)
+            {
+                // Search the full 10 cm: the plain search stops at about one grid cell and would call a loose hem far.
+                if (body.Collider.Closest(positions[v], out _, out Vector3 near, out _) && (positions[v] - near).magnitude <= 0.1f) continue;
+                if (!body.Collider.Closest(positions[v], 0.1f, out _, out Vector3 onBody, out _) || (positions[v] - onBody).magnitude > 0.1f) g.farVertices++;
+            }
+            var check = new Result();
+            CheckWeights(weights, group, check);
+            g.maxWeightSumError = check.MaxWeightSumError;
+            g.seamWeightsMatch = check.SeamWeightsMatch;
+            int[] triangles = FacingOut(mesh, session.Arranged.flipTriangles);
+            g.clothTriangles = triangles;
+
+            Vector3[] slotPositions = positions;
+            int[] slotTriangles = triangles;
+            IList<Vector2> slotUv = mesh.uv;
+            int[] sourceOf = null;
+            // A full thickness is a facing reaching everywhere, joined to the outside at every opening.
+            bool full = settings.fullThickness;
+            if (full || settings.addFacing || settings.addRim)
+            {
+                OpeningFacing.Output facing = full
+                    ? OpeningFacing.Build(mesh, session.Pattern, positions, triangles, group, true, 1000f, true, settings.thicknessMm * 0.001f)
+                    : OpeningFacing.Build(mesh, session.Pattern, positions, triangles, group, settings.addFacing, settings.facingDepthCm * 0.01f, settings.addRim, settings.rimThicknessMm * 0.001f);
+                slotPositions = facing.positions;
+                slotTriangles = facing.triangles;
+                slotUv = facing.uv;
+                sourceOf = facing.sourceOf;
+                g.facingTriangles = facing.facingTriangles;
+                g.rimTriangles = facing.rimTriangles;
+                if (full) messages.Add("Gave the clothes a " + settings.thicknessMm.ToString("0.#") + " mm thickness (" + (facing.facingTriangles + facing.rimTriangles) + " triangles inside and round the openings).");
+                else if (facing.facingTriangles > 0 || facing.rimTriangles > 0)
+                {
+                    messages.Add("Added " + (settings.addFacing ? "a " + settings.facingDepthCm.ToString("0.#") + " cm facing inside the openings (" + facing.facingTriangles + " triangles)" : "")
+                        + (settings.addFacing && settings.addRim ? " and " : "")
+                        + (settings.addRim ? "a " + settings.rimThicknessMm.ToString("0.#") + " mm rim round them (" + facing.rimTriangles + " triangles)" : "") + ".");
+                }
+            }
+            if (settings.addParts)
+            {
+                var pos = new List<Vector3>(slotPositions);
+                var tris = new List<int>(slotTriangles);
+                var uv = new List<Vector2>(slotUv);
+                var source = new List<int>(sourceOf ?? Identity(positions.Length));
+                g.partTriangles = GarmentExtras.AddParts(session.Pattern, mesh, positions, triangles, pos, tris, uv, source, messages);
+                if (g.partTriangles > 0)
+                {
+                    slotPositions = pos.ToArray(); slotTriangles = tris.ToArray(); slotUv = uv; sourceOf = source.ToArray();
+                    messages.Add("Added " + GarmentExtras.PartsOf(session.Pattern).Count + " buttons and parts (" + g.partTriangles + " triangles).");
+                }
+            }
+            g.positions = slotPositions;
+            g.triangles = slotTriangles;
+            g.uv = new List<Vector2>(slotUv);
+            g.weights = sourceOf != null ? CopyWeights(weights, sourceOf) : weights;
+            g.weights.FallbackVertices = fallback;
+            return g;
+        }
+
+        private static int[] Identity(int count)
+        {
+            var list = new int[count];
+            for (int i = 0; i < count; i++) list[i] = i;
+            return list;
+        }
+
+        /// <summary>
+        /// Keeps assets the bake writes out of the Global Library when Add to Global Library is off. UMA
+        /// adds new slots, overlays and recipes to the library by itself once their import has finished
+        /// (UMAGlobalLibraryAutoRegistration); its No Auto Add flag stops that. With the setting on, the
+        /// flag is cleared, so the assets are added as before.
+        /// </summary>
+        public static void KeepOutOfLibrary(UnityEngine.Object asset, bool keepOut)
+        {
+            if (!(asset is IUMAIndexOptions options) || options.NoAutoAdd == keepOut) return;
+            options.NoAutoAdd = keepOut;
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssetIfDirty(asset);
+        }
+
+        /// <summary>Builds the slot mesh in bind space (normals by the battle-buddy rule) and publishes it.</summary>
+        private static UMASlotPublisher.Result PublishGeometry(FitSession session, SlotGeometry g, string slotName, bool createRecipe, OverlayDataAsset overlay)
+        {
+            BodyReference body = session.Body;
+            ClothesFit fit = session.Fit;
+            PublishSettings settings = fit.publish;
+            var source = new UMASlotSkinTransfer.SourceGeometry { TargetLocalVertices = g.positions, Triangles = g.triangles };
+            Mesh slotMesh = null;
+            GameObject temporary = null;
+            try
+            {
+                slotMesh = UMASlotSkinTransfer.BuildSlotMesh(source, body.Skin, g.weights, new UMASlotSkinTransfer.SlotMeshOptions
+                {
+                    SlotName = slotName,
+                    RecalculateMissingNormals = true
+                });
+                slotMesh.SetUVs(0, g.uv);
+                slotMesh.RecalculateTangents();
+                temporary = UMASlotSkinTransfer.CreateTemporaryRenderer(body.Skin.Renderer);
+                var renderer = temporary.GetComponent<SkinnedMeshRenderer>();
+                renderer.sharedMesh = slotMesh;
+                renderer.bones = body.Skin.Bones;
+                renderer.rootBone = body.Skin.RootBone;
+
+                EnsureFolder(settings.folder);
+                var request = new UMASlotPublisher.Request
+                {
+                    SlotName = slotName,
+                    FolderPath = settings.folder,
+                    AddToGlobalLibrary = settings.addToGlobalLibrary,
+                    // Baking again updates the same assets: their GUIDs, and anything using them, stay.
+                    UpdateInPlace = true,
+                    OverwriteExisting = false,
+                    CreateWardrobeRecipe = createRecipe,
+                    Race = fit.race != null ? fit.race : session.Body.Skin.RaceData,
+                    WardrobeSlot = settings.wardrobeSlot,
+                    ExistingOverlay = overlay,
+                    OverlayMaterial = settings.material
+                };
+                UMASlotPublisher.Result published = UMASlotPublisher.Publish(request, renderer, body.Skin);
+                bool keepOut = !settings.addToGlobalLibrary;
+                KeepOutOfLibrary(published.Slot, keepOut);
+                if (published.Overlay != null && published.Overlay != overlay) KeepOutOfLibrary(published.Overlay, keepOut);
+                KeepOutOfLibrary(published.Recipe, keepOut);
+                return published;
+            }
+            finally
+            {
+                if (temporary != null) UnityEngine.Object.DestroyImmediate(temporary);
+                if (slotMesh != null) UnityEngine.Object.DestroyImmediate(slotMesh);
+            }
+        }
+
+        /// <summary>
+        /// Draws the topstitching into a texture, makes (or updates) an overlay with it in the clothes'
+        /// material, and puts the overlay on the recipe's slot over the clothes' own overlay.
+        /// </summary>
+        private static OverlayDataAsset AddTopstitchOverlay(FitSession session, Result result)
+        {
+            PublishSettings settings = session.Fit.publish;
+            OverlayDataAsset main = result.Published.Overlay;
+            UMAMaterial material = main.material != null ? main.material : settings.material;
+            if (material == null || material.channels == null || material.channels.Length == 0) { result.Messages.Add("No topstitching: the overlay has no material."); return null; }
+            string baseName = UMASlotSkinTransfer.MakeSafeAssetName(settings.slotName) + "_Topstitch";
+            string texturePath = settings.folder.TrimEnd('/') + "/" + baseName + ".png";
+            Texture2D texture = GarmentExtras.WriteTopstitch(session.Pattern, texturePath, session.Pattern.uvLayout.bakeResolution, settings.topstitchColor);
+            result.Published.CreatedPaths.Add(texturePath);
+            string overlayPath = settings.folder.TrimEnd('/') + "/" + baseName + "_Overlay.asset";
+            OverlayDataAsset overlay = AssetDatabase.LoadAssetAtPath<OverlayDataAsset>(overlayPath);
+            bool created = overlay == null;
+            if (created)
+            {
+                overlay = ScriptableObject.CreateInstance<OverlayDataAsset>();
+                overlay.name = baseName + "_Overlay";
+            }
+            overlay._oldOverlayName = baseName;
+            overlay.material = material;
+            var textures = new Texture[material.channels.Length];
+            textures[0] = texture;
+            overlay.textureList = textures;
+            overlay.noAutoAdd = !settings.addToGlobalLibrary;
+            if (created) { AssetDatabase.CreateAsset(overlay, overlayPath); result.Published.CreatedPaths.Add(overlayPath); }
+            EditorUtility.SetDirty(overlay);
+            AssetDatabase.SaveAssetIfDirty(overlay);
+            if (settings.addToGlobalLibrary) UMAGlobalLibraryAutoRegistration.AddAndSave(overlay);
+
+            // The recipe wears the slot with the clothes' overlay, then the topstitching over it.
+            UMAWardrobeRecipe recipe = result.Published.Recipe;
+            RaceData race = session.Fit.race != null ? session.Fit.race : session.Body.Skin.RaceData;
+            var umaRecipe = new UMAData.UMARecipe();
+            umaRecipe.ClearDna();
+            umaRecipe.SetRace(race);
+            var slotData = new SlotData(result.Published.Slot);
+            if (race != null && !string.IsNullOrWhiteSpace(race.raceName)) slotData.Races = new[] { race.raceName };
+            slotData.AddOverlay(new OverlayData(main));
+            slotData.AddOverlay(new OverlayData(overlay));
+            umaRecipe.SetSlot(0, slotData);
+            recipe.Save(umaRecipe);
+            EditorUtility.SetDirty(recipe);
+            AssetDatabase.SaveAssetIfDirty(recipe);
+            result.Messages.Add("Topstitching drawn into '" + baseName + "', an overlay over the clothes' own on the same slot.");
+            return overlay;
         }
 
         private static Vector3[] Weld(Vector3[] positions, int[] group)
@@ -424,6 +598,7 @@ namespace UMA.ClothesDesigner.Editor
             {
                 int e = session.Mesh.boundaryEdge[v];
                 if (e >= 0 && session.Pattern.pieces[session.Mesh.piece[v]].edges[e].opening) openings.Add(cloth[v]);
+                else if (v < session.Mesh.onHole.Count && session.Mesh.onHole[v]) openings.Add(cloth[v]);
             }
             var baked = new Mesh();
             int restored = 0;

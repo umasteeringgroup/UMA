@@ -21,10 +21,70 @@ namespace UMA.ClothesDesigner.Editor
             public float gap;
             public Vector2 semiAxes;
             public readonly List<string> messages = new List<string>();
+            /// <summary>
+            /// Per piece, the rings of the shape it was laid on, from its top down, one per centimetre of it;
+            /// empty for a piece laid flat. For drawing the layout guide and its handles.
+            /// </summary>
+            public GuideRing[][] guides;
         }
+
+        /// <summary>
+        /// One ring of the shape a piece is wrapped on (an oval round the torso or head, a circle round an
+        /// arm or leg), at one row of the piece. <see cref="Point"/> at the piece's angle is where its middle lies.
+        /// </summary>
+        public struct GuideRing
+        {
+            public Vector3 center;
+            /// <summary>Along the part, away from the piece's top.</summary>
+            public Vector3 axis;
+            /// <summary>Angle 0 (the front; the top of an arm) and a quarter turn on.</summary>
+            public Vector3 up, side;
+            /// <summary>Radii towards <see cref="up"/> and <see cref="side"/> (m).</summary>
+            public float a, b;
+            /// <summary>How far down the piece the ring is, from its top (cm).</summary>
+            public float downCm;
+
+            public Vector3 Point(float t) => center + up * (a * Mathf.Cos(t)) + side * (b * Mathf.Sin(t));
+            /// <summary>The direction out from the ring at an angle.</summary>
+            public Vector3 Out(float t) => (up * (Mathf.Cos(t) / Mathf.Max(1e-4f, a)) + side * (Mathf.Sin(t) / Mathf.Max(1e-4f, b))).normalized;
+            /// <summary>The angle of a point round the ring (its projection onto the ring's plane).</summary>
+            public float AngleOf(Vector3 p)
+            {
+                Vector3 d = p - center;
+                return Mathf.Atan2(Vector3.Dot(d, side) / Mathf.Max(1e-4f, b), Vector3.Dot(d, up) / Mathf.Max(1e-4f, a));
+            }
+        }
+
+        /// <summary>
+        /// The ring the Faces, Top and Distance handles sit on: a quarter of the way down the piece, where its
+        /// middle has cloth (the top ring may be above a neckline or a sleeve cap's curve).
+        /// </summary>
+        public static GuideRing HandleRing(GuideRing[] rings) => rings[rings.Length / 4];
+
+        /// <summary>The angle round its guide rings (radians) at which a piece's middle lies: its Faces value, mirrored on the left arm.</summary>
+        public static float GuideAngle(PiecePlacement placement) =>
+            (placement.part == BodyPart.LeftArm ? -placement.angle : placement.angle) * Mathf.Deg2Rad;
 
         /// <summary>A leg piece goes from the torso's cylinder to the leg's over at least this height above the crotch.</summary>
         public const float LegBlendCm = 12f;
+        /// <summary>How far out from the body the pieces start, before any are moved out to clear it (m).</summary>
+        public const float DefaultGapM = 0.04f;
+        /// <summary>
+        /// How far a sleeve starts from the arm's surface (m), where it is not cut wider. Closer than the
+        /// torso's gap: a sleeve laid farther out covers less of the way round, and its underarm seam then
+        /// closes above the arm instead of under it.
+        /// </summary>
+        public const float ArmGapM = 0.015f;
+        /// <summary>
+        /// When a sleeve's edges would meet higher than this above the arm's axis (in arm radii) near its
+        /// far end, its seam is likely to close above the arm: the arrangement says so.
+        /// </summary>
+        public const float HighestSeamClose = 0.5f;
+        /// <summary>The most a limb's tube can be tilted, either way (degrees).</summary>
+        public const float MaxTiltDeg = 60f;
+        /// <summary>The rows the width of arm pieces is added up in (cm along the arm), and the first row's place.</summary>
+        private const int ArmRowCount = 200;
+        private const int ArmRowStartCm = -40;
 
         private static readonly Vector3 Front = Vector3.forward;
         /// <summary>The body's left: the renderer's -x, as the torso's 90 degrees.</summary>
@@ -51,8 +111,6 @@ namespace UMA.ClothesDesigner.Editor
                 minX[p] = Mathf.Min(minX[p], mesh.layout[v].x);
                 maxX[p] = Mathf.Max(maxX[p], mesh.layout[v].x);
             }
-            for (int p = 0; p < pieces; p++) centerX[p] = (minX[p] + maxX[p]) * 0.5f;
-
             var piecePlacement = new PiecePlacement[pieces];
             var part = new BodyPart[pieces];
             bool fellBack = false;
@@ -62,6 +120,36 @@ namespace UMA.ClothesDesigner.Editor
                 part[p] = piecePlacement[p].part;
                 if (part[p] != BodyPart.Torso && !marks.limbs) { part[p] = BodyPart.Torso; fellBack = true; }
             }
+            // Pieces with the same placement that touch on the canvas (the parts of a piece that was cut)
+            // are laid out as the piece they were cut from: one top and one middle for them all.
+            var minY = new float[pieces];
+            for (int p = 0; p < pieces; p++) minY[p] = float.MaxValue;
+            for (int v = 0; v < mesh.VertexCount; v++) minY[mesh.piece[v]] = Mathf.Min(minY[mesh.piece[v]], mesh.layout[v].y);
+            var groupOf = new int[pieces];
+            for (int p = 0; p < pieces; p++) groupOf[p] = p;
+            int Root(int p) { while (groupOf[p] != p) p = groupOf[p] = groupOf[groupOf[p]]; return p; }
+            const float touch = 0.5f;
+            for (int p = 0; p < pieces; p++)
+            {
+                if (top[p] == float.MinValue) continue;
+                for (int q = p + 1; q < pieces; q++)
+                {
+                    if (top[q] == float.MinValue || !piecePlacement[p].SameAs(piecePlacement[q])) continue;
+                    bool across = minX[p] <= maxX[q] + touch && minX[q] <= maxX[p] + touch;
+                    bool along = minY[p] <= top[q] + touch && minY[q] <= top[p] + touch;
+                    if (across && along) groupOf[Root(q)] = Root(p);
+                }
+            }
+            for (int p = 0; p < pieces; p++)
+            {
+                int r = Root(p);
+                if (r == p) continue;
+                top[r] = Mathf.Max(top[r], top[p]); minX[r] = Mathf.Min(minX[r], minX[p]); maxX[r] = Mathf.Max(maxX[r], maxX[p]);
+                minY[r] = Mathf.Min(minY[r], minY[p]);
+            }
+            for (int p = 0; p < pieces; p++) { int r = Root(p); top[p] = top[r]; minX[p] = minX[r]; maxX[p] = maxX[r]; minY[p] = minY[r]; }
+            Dictionary<(BodyPart, int), float[]> armRows = ArmRowWidths(mesh, piecePlacement, part, top);
+            for (int p = 0; p < pieces; p++) centerX[p] = (minX[p] + maxX[p]) * 0.5f;
             if (fellBack) result.messages.Add("This body has no humanoid arms, legs and head to lay pieces round; those pieces are laid round the torso.");
 
             // The torso's cylinder spans the torso pieces (and the hips, for trousers).
@@ -79,7 +167,7 @@ namespace UMA.ClothesDesigner.Editor
             Vector2 half = body.HalfExtents(lowest, marks.shoulderTopY - 0.05f);
             Vector2 center = marks.torsoCenter;
             float clearance = fit.clearanceCm * 0.01f;
-            float gap = fixedGap ?? 0.04f;
+            float gap = fixedGap ?? DefaultGapM;
             for (int attempt = 0; attempt < 8; attempt++)
             {
                 float a = half.x + gap, b = half.y + gap;
@@ -92,13 +180,32 @@ namespace UMA.ClothesDesigner.Editor
                 }
                 var positions = new Vector3[mesh.VertexCount];
                 var outward = new Vector3[mesh.VertexCount];
+                // Per arm piece: the least share of the way round the arm it covers near its far end.
+                var wrapAtEnd = new float[pieces];
+                // Per arm piece: how high above the arm's axis its seam would close near the far end, in arm radii.
+                var closesAt = new float[pieces];
+                for (int p = 0; p < pieces; p++) { wrapAtEnd[p] = float.MaxValue; closesAt[p] = float.MinValue; }
+                var rings = new Dictionary<int, GuideRing>[pieces];
+                for (int p = 0; p < pieces; p++) rings[p] = new Dictionary<int, GuideRing>();
+                // The first point of each centimetre row of a piece that is wrapped (not flat, not a folded layer) records its ring.
+                void Ring(int p, float under, float downM, Vector3 ringCenter, Vector3 ringAxis, Vector3 ringUp, Vector3 ringSide, float ra, float rb)
+                {
+                    if (piecePlacement[p].flat || under > 0f) return;
+                    int row = Mathf.RoundToInt(downM * 100f);
+                    if (rings[p].ContainsKey(row)) return;
+                    rings[p][row] = new GuideRing { center = ringCenter, axis = ringAxis, up = ringUp, side = ringSide, a = ra, b = rb, downCm = row };
+                }
                 for (int v = 0; v < mesh.VertexCount; v++)
                 {
                     int p = mesh.piece[v];
                     PiecePlacement placement = piecePlacement[p];
-                    float extra = Mathf.Max(-gap + 0.005f, placement.distanceCm * 0.01f);
                     float x = (mesh.layout[v].x - centerX[p] + placement.acrossCm) * 0.01f;
                     float down = (top[p] - mesh.layout[v].y) * 0.01f;
+                    // Limbs: the distance can change evenly from the piece's top to its far end.
+                    float height = top[p] - minY[p];
+                    float towardsEnd = height > 1e-4f ? Mathf.Clamp01((top[p] - mesh.layout[v].y) / height) : 0f;
+                    float distance = placement.distanceCm + (PiecePlacement.IsLimb(part[p]) ? placement.endDistanceCm * towardsEnd : 0f);
+                    float extra = Mathf.Max(-gap + 0.005f, distance * 0.01f);
                     // Folded pleat layers lie a little under the one above them, towards the body.
                     float under = mesh.layoutDepth[v] * 0.01f;
                     Vector3 position, normal;
@@ -109,6 +216,7 @@ namespace UMA.ClothesDesigner.Editor
                             Vector2 axes = new Vector2(marks.headHalf.x + gap + extra, marks.headHalf.y + gap + extra);
                             float y = marks.headTopY + placement.topAboveShoulderCm * 0.01f - down;
                             position = OnEllipse(Table(axes), marks.headCenter, axes, placement, x, y, under, out normal);
+                            Ring(p, under, down, new Vector3(marks.headCenter.x, y, marks.headCenter.y), Vector3.down, Front, BodyLeft, axes.y, axes.x);
                             break;
                         }
                         case BodyPart.LeftArm:
@@ -118,9 +226,42 @@ namespace UMA.ClothesDesigner.Editor
                             marks.ArmFrame(left, out Vector3 root, out Vector3 axis, out Vector3 up, out Vector3 side);
                             // 90 is the front of either arm; the left arm's frame turns the other way.
                             float angle = (left ? -placement.angle : placement.angle) * Mathf.Deg2Rad;
-                            Vector3 c = root + axis * (down - placement.topAboveShoulderCm * 0.01f);
-                            float r = Mathf.Max(0.01f, marks.armRadius + gap + extra - under);
-                            position = OnCylinder(c, axis, up, side, r, angle, x, placement.flat, out normal);
+                            float along = down - placement.topAboveShoulderCm * 0.01f;
+                            // A cone round the arm as it is (wide at the shoulder, narrow at the wrist), never
+                            // closer than the clearance check allows, and never narrower than the sleeve is cut
+                            // at that row, or the cloth would overlap round it.
+                            float surface = marks.ArmSurfaceRadius(left, along);
+                            float limbGap = ArmGapM + (gap - DefaultGapM);
+                            float closest = clearance + 0.006f;
+                            float armExtra = Mathf.Max(closest - limbGap, distance * 0.01f);
+                            float rowWidth = RowWidth(armRows, part[p], placement, along);
+                            float r = Mathf.Max(surface + limbGap + armExtra, rowWidth / (2f * Mathf.PI));
+                            // Tilted, the tube turns about the shoulder joint (positive lowers its far end), but
+                            // its middle moves off the arm's only as far as the arm still fits inside it: a
+                            // loose sleeve can hang below the arm, a close one stays round it.
+                            float tilt = Mathf.Clamp(placement.tiltDeg, -MaxTiltDeg, MaxTiltDeg) * Mathf.Deg2Rad;
+                            float drop = Mathf.Clamp(along * Mathf.Sin(tilt), -Mathf.Max(0f, r - surface - closest), Mathf.Max(0f, r - surface - closest));
+                            Vector3 c = root + axis * along - up * drop;
+                            if (!placement.flat && rowWidth > 0f && towardsEnd >= 0.6f)
+                            {
+                                // Where the two edges meet when the seam closes: the middle of the chord between
+                                // them, above the tube's middle when the piece covers less than half of the way
+                                // round. Seen from the arm's axis, in arm radii.
+                                float share = Mathf.Min(1f, rowWidth / (2f * Mathf.PI * r));
+                                float meet = (r * Mathf.Cos(Mathf.PI * share) - drop) / Mathf.Max(0.005f, surface);
+                                closesAt[p] = Mathf.Max(closesAt[p], meet);
+                                wrapAtEnd[p] = Mathf.Min(wrapAtEnd[p], share);
+                            }
+                            position = OnCylinder(c, axis, up, side, Mathf.Max(0.01f, r - under), angle, x, placement.flat, out normal);
+                            Ring(p, under, down, c, axis, up, side, r, r);
+                            // The profile is the arm's alone: a point that still starts against the body (the
+                            // thumb past the cuff, the side under the arm) is moved out on its own, rather than
+                            // the check below moving every piece out.
+                            for (int k = 0; k < 4 && !placement.flat; k++)
+                            {
+                                if (!body.Collider.Closest(position, out _, out _, out float d) || d >= closest) break;
+                                position += normal * (closest - d + 0.001f);
+                            }
                             break;
                         }
                         case BodyPart.LeftLeg:
@@ -131,8 +272,15 @@ namespace UMA.ClothesDesigner.Editor
                             Vector3 c = marks.LegAxisAt(left, y);
                             c.y = y;
                             float r = Mathf.Max(0.01f, marks.legRadius + gap + extra - under);
+                            // Tilted, the tube's far end moves out from the other leg (in, when negative), as far
+                            // as the leg still fits inside it.
+                            float tilt = Mathf.Clamp(placement.tiltDeg, -MaxTiltDeg, MaxTiltDeg) * Mathf.Deg2Rad;
+                            float slack = Mathf.Max(0f, r - marks.legRadius - clearance - 0.006f);
+                            float spread = Mathf.Clamp(down * Mathf.Tan(tilt), -slack, slack);
+                            c += (left ? BodyLeft : -BodyLeft) * spread;
                             float angle = placement.angle * Mathf.Deg2Rad;
                             position = OnCylinder(c, Vector3.down, Front, BodyLeft, r, angle, x, placement.flat, out normal);
+                            Ring(p, under, down, c, Vector3.down, Front, BodyLeft, r, r);
                             // Between the crotch and the hips the leg's cylinder turns into the torso's.
                             float blendTop = Mathf.Max(marks.hipY, marks.crotchY + LegBlendCm * 0.01f);
                             float span = blendTop - marks.crotchY;
@@ -152,6 +300,7 @@ namespace UMA.ClothesDesigner.Editor
                             Vector2 axes = new Vector2(a + extra, b + extra);
                             float y = marks.shoulderTopY + placement.topAboveShoulderCm * 0.01f - down;
                             position = OnEllipse(Table(axes), center, axes, placement, x, y, under, out normal);
+                            Ring(p, under, down, new Vector3(center.x, y, center.y), Vector3.down, Front, BodyLeft, axes.y, axes.x);
                             break;
                         }
                     }
@@ -171,8 +320,23 @@ namespace UMA.ClothesDesigner.Editor
                     result.positions = positions;
                     result.gap = gap;
                     result.semiAxes = new Vector2(a, b);
+                    result.guides = new GuideRing[pieces][];
+                    for (int p = 0; p < pieces; p++)
+                    {
+                        var list = new List<GuideRing>(rings[p].Values);
+                        list.Sort((r0, r1) => r0.downCm.CompareTo(r1.downCm));
+                        result.guides[p] = list.ToArray();
+                    }
                     if (inside > 0) result.messages.Add(inside + " points of the cloth start inside or against the body. Move the pieces further out before simulating.");
-                    else if (attempt > 0) result.messages.Add("The pieces were moved " + Mathf.RoundToInt((gap - 0.04f) * 100f) + " cm further out so that none starts inside the body.");
+                    else if (attempt > 0) result.messages.Add("The pieces were moved " + Mathf.RoundToInt((gap - DefaultGapM) * 100f) + " cm further out so that none starts inside the body.");
+                    for (int p = 0; p < pieces; p++)
+                    {
+                        if (closesAt[p] > HighestSeamClose)
+                        {
+                            result.messages.Add("'" + pattern.pieces[p].name + "' is laid round only " + Mathf.RoundToInt(wrapAtEnd[p] * 100f)
+                                + "% of the way round the arm near its far end, so its seam may close above the arm instead of under it. Bring its End Distance or Distance in, or tilt it down.");
+                        }
+                    }
                     // Which way the triangles face: compare with the direction out from each piece's part.
                     float facing = 0f;
                     for (int t = 0; t < mesh.triangles.Count; t += 3)
@@ -187,6 +351,55 @@ namespace UMA.ClothesDesigner.Editor
                 gap += 0.02f;
             }
             return result;
+        }
+
+        /// <summary>
+        /// How wide the arm pieces are, added up per centimetre along each arm (by their placement's top, not
+        /// tilted): pieces on one arm at the same distance go round it together, like the halves of a
+        /// two-piece sleeve. A piece set farther out (a cuff, a band) is counted on its own.
+        /// </summary>
+        private static Dictionary<(BodyPart, int), float[]> ArmRowWidths(PatternMesh mesh, PiecePlacement[] placements, BodyPart[] part, float[] top)
+        {
+            var result = new Dictionary<(BodyPart, int), float[]>();
+            int pieces = placements.Length;
+            var rowMin = new float[ArmRowCount];
+            var rowMax = new float[ArmRowCount];
+            for (int p = 0; p < pieces; p++)
+            {
+                if (!PiecePlacement.IsArm(part[p]) || placements[p].flat || top[p] == float.MinValue) continue;
+                for (int i = 0; i < ArmRowCount; i++) { rowMin[i] = float.MaxValue; rowMax[i] = float.MinValue; }
+                for (int v = mesh.pieceStart[p]; v < mesh.pieceStart[p] + mesh.pieceCount[p]; v++)
+                {
+                    int row = Mathf.FloorToInt(top[p] - mesh.layout[v].y - placements[p].topAboveShoulderCm) - ArmRowStartCm;
+                    if (row < 0 || row >= ArmRowCount) continue;
+                    rowMin[row] = Mathf.Min(rowMin[row], mesh.layout[v].x);
+                    rowMax[row] = Mathf.Max(rowMax[row], mesh.layout[v].x);
+                }
+                var key = (part[p], Mathf.RoundToInt(placements[p].distanceCm * 10f));
+                if (!result.TryGetValue(key, out float[] widths)) result[key] = widths = new float[ArmRowCount];
+                // A centimetre's row of a coarser mesh can miss the outline's points: take each row's extent
+                // with its neighbours'.
+                for (int i = 0; i < ArmRowCount; i++)
+                {
+                    float lo = rowMin[i], hi = rowMax[i];
+                    if (hi < lo) continue;
+                    for (int j = Mathf.Max(0, i - 1); j <= Mathf.Min(ArmRowCount - 1, i + 1); j++)
+                    {
+                        if (rowMax[j] < rowMin[j]) continue;
+                        lo = Mathf.Min(lo, rowMin[j]); hi = Mathf.Max(hi, rowMax[j]);
+                    }
+                    widths[i] += (hi - lo) * 0.01f;
+                }
+            }
+            return result;
+        }
+
+        /// <summary>The arm pieces' added-up width (m) at a distance along the arm (m) from the shoulder joint.</summary>
+        private static float RowWidth(Dictionary<(BodyPart, int), float[]> rows, BodyPart part, PiecePlacement placement, float along)
+        {
+            if (!rows.TryGetValue((part, Mathf.RoundToInt(placement.distanceCm * 10f)), out float[] widths)) return 0f;
+            int row = Mathf.FloorToInt(along * 100f) - ArmRowStartCm;
+            return row >= 0 && row < ArmRowCount ? widths[row] : 0f;
         }
 
         /// <summary>A point of a piece wrapped on an upright elliptical cylinder (torso, head), and the direction out from it.</summary>

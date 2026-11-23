@@ -11,7 +11,7 @@
 | Tank Top | front, back | scoop neck, narrow straps |
 | Crop Top | front, back | fitted spandex to the waist |
 | Polo Shirt | front, back, 2 sleeves, collar | a stand collar sewn along four neckline edges |
-| Oxford Shirt | front, back, yoke, 2 sleeves, 2 cuffs, collar | box pleat under a yoke, cuffs, shirt-tail hem |
+| Oxford Shirt | front, back, yoke, 2 sleeves, 2 cuffs, collar stand, collar | two-part collar (firm arc-cut stand, leaf turned down on a folded seam), interfaced cuffs, box pleat under a yoke, shirt-tail hem |
 | Hoodie | front, back, 2 sleeves, 2 cuffs, 2 bands, 2 hood panels | rib bands that gather, a hood laid round the head |
 | Short Pants | 4 leg pieces | trousers laid round the legs and hips |
 | Jeans | 4 leg pieces, 2 waistband halves | denim, length follows the inseam |

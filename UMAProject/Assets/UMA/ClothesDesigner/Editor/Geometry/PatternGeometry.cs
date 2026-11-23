@@ -48,12 +48,33 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>Points along an edge at evenly spaced fractions of its length (arc length, not curve parameter).</summary>
         public sealed class EdgeCurve
         {
-            private readonly Vector2[] samples = new Vector2[CurveSteps + 1];
-            private readonly float[] lengths = new float[CurveSteps + 1];
-            public float Length => lengths[CurveSteps];
+            private readonly Vector2[] samples;
+            private readonly float[] lengths;
+            private readonly int steps;
+            public float Length => lengths[steps];
+
+            /// <summary>A line from point to point (a line drawn inside a piece), closed back to its first point or open.</summary>
+            public EdgeCurve(IList<Vector2> polyline, bool closed)
+            {
+                int count = polyline.Count + (closed ? 1 : 0);
+                steps = Mathf.Max(1, count - 1);
+                samples = new Vector2[steps + 1];
+                lengths = new float[steps + 1];
+                for (int i = 0; i <= steps; i++)
+                {
+                    samples[i] = polyline.Count == 0 ? Vector2.zero : polyline[Mathf.Min(i, count - 1) % polyline.Count];
+                    lengths[i] = i == 0 ? 0f : lengths[i - 1] + (samples[i] - samples[i - 1]).magnitude;
+                }
+            }
+
+            /// <summary>The fraction of the length at which each point of a polyline curve lies.</summary>
+            public float FractionOfPoint(int index) => Length > 0f ? lengths[Mathf.Clamp(index, 0, steps)] / Length : 0f;
 
             public EdgeCurve(PatternPiece piece, int edgeIndex, PieceScale scale)
             {
+                steps = CurveSteps;
+                samples = new Vector2[CurveSteps + 1];
+                lengths = new float[CurveSteps + 1];
                 EdgeControlPoints(piece, edgeIndex, scale, out Vector2 p0, out Vector2 p1, out Vector2 p2, out Vector2 p3, out bool curved);
                 for (int i = 0; i <= CurveSteps; i++)
                 {
@@ -68,7 +89,7 @@ namespace UMA.ClothesDesigner.Editor
             {
                 float target = Mathf.Clamp01(fraction) * Length;
                 if (Length <= 0f) return samples[0];
-                int lo = 0, hi = CurveSteps;
+                int lo = 0, hi = steps;
                 while (hi - lo > 1)
                 {
                     int mid = (lo + hi) / 2;
@@ -79,11 +100,18 @@ namespace UMA.ClothesDesigner.Editor
                 return Vector2.Lerp(samples[lo], samples[hi], s);
             }
 
+            /// <summary>The direction of travel at a fraction of the length.</summary>
+            public Vector2 Tangent(float fraction)
+            {
+                Vector2 d = At(Mathf.Min(1f, fraction + 0.01f)) - At(Mathf.Max(0f, fraction - 0.01f));
+                return d.sqrMagnitude > 1e-12f ? d.normalized : Vector2.right;
+            }
+
             /// <summary>The fraction of the edge's length nearest to a point, and the distance to it.</summary>
             public float Nearest(Vector2 point, out float distance)
             {
                 float best = float.MaxValue, bestFraction = 0f;
-                for (int i = 0; i < CurveSteps; i++)
+                for (int i = 0; i < steps; i++)
                 {
                     Vector2 a = samples[i], b = samples[i + 1];
                     Vector2 ab = b - a;
@@ -190,6 +218,36 @@ namespace UMA.ClothesDesigner.Editor
             return maxX > minX;
         }
 
+        /// <summary>
+        /// The height range of the pieces stacked with one: those that touch or overlap it in height and
+        /// across, and those touching them in turn. A single piece's own bounds when nothing is stacked on it.
+        /// </summary>
+        private static Rect StackOf(List<(int index, Rect bounds)> listed, Rect start)
+        {
+            Rect stack = start;
+            var used = new bool[listed.Count];
+            bool grew = true;
+            while (grew)
+            {
+                grew = false;
+                for (int i = 0; i < listed.Count; i++)
+                {
+                    if (used[i]) continue;
+                    Rect b = listed[i].bounds;
+                    float across = Mathf.Min(b.xMax, stack.xMax) - Mathf.Max(b.xMin, stack.xMin);
+                    // Above or below (touching within half a centimetre), not side by side at the same height.
+                    bool touching = Mathf.Abs(b.yMin - stack.yMax) < 0.5f || Mathf.Abs(b.yMax - stack.yMin) < 0.5f;
+                    bool inside = b.yMin >= stack.yMin - 0.5f && b.yMax <= stack.yMax + 0.5f;
+                    if (across > 0.5f && (touching || inside))
+                    {
+                        used[i] = true;
+                        if (!inside) { stack = Rect.MinMaxRect(Mathf.Min(stack.xMin, b.xMin), Mathf.Min(stack.yMin, b.yMin), Mathf.Max(stack.xMax, b.xMax), Mathf.Max(stack.yMax, b.yMax)); grew = true; }
+                    }
+                }
+            }
+            return stack;
+        }
+
         public static float MeasurementCm(BodyLandmarks body, BodyMeasurement measurement)
         {
             if (body == null || !body.valid) return 0f;
@@ -234,26 +292,51 @@ namespace UMA.ClothesDesigner.Editor
                     if (total <= 0f) continue;
                     float target = dim.kind == DimensionKind.Width ? total / Mathf.Max(1, dim.shareCount) : total;
                     float drawn = 0f;
+                    // Pieces stacked on the canvas (one above the other, touching or overlapping in height, as
+                    // the halves of a piece cut across are) are sized as one: a length over the stack's
+                    // whole height, and a piece the width line misses takes the width of the one it is cut from.
+                    List<(int index, Rect bounds)> listed = new List<(int, Rect)>();
                     foreach (string pieceId in dim.pieceIds)
                     {
                         int index = pattern.IndexOfPiece(pieceId);
-                        if (index < 0) continue;
+                        if (index >= 0) listed.Add((index, pattern.pieces[index].Bounds()));
+                    }
+                    var sized = new List<int>();
+                    var missed = new List<int>();
+                    foreach ((int index, Rect bounds) in listed)
+                    {
                         PatternPiece piece = pattern.pieces[index];
-                        List<Vector2> outline = SampleOutline(piece, 0.5f, null);
                         if (dim.kind == DimensionKind.Width)
                         {
-                            if (!WidthAt(outline, dim.lineY, out float minX, out float maxX)) continue;
+                            List<Vector2> outline = SampleOutline(piece, 0.5f, null);
+                            if (!WidthAt(outline, dim.lineY, out float minX, out float maxX)) { missed.Add(index); continue; }
                             // Only the fabric left once darts and pleats are sewn goes round the body.
                             drawn = maxX - minX - DartGeometry.IntakeAcross(piece, dim.lineY);
-                            if (drawn <= 0.5f) continue;
+                            if (drawn <= 0.5f) { missed.Add(index); continue; }
                             scales[index].sx = target / drawn;
+                            sized.Add(index);
                         }
                         else
                         {
-                            Rect b = piece.Bounds();
-                            drawn = b.height;
-                            if (drawn > 0f) scales[index].sy = target / drawn;
+                            Rect stack = StackOf(listed, bounds);
+                            drawn = stack.height;
+                            if (drawn > 0f) { scales[index].sy = target / drawn; scales[index].y0 = stack.yMin; }
                         }
+                    }
+                    foreach (int index in missed)
+                    {
+                        // The sized piece this one lies above or below, overlapping it most across.
+                        Rect b = pattern.pieces[index].Bounds();
+                        int best = -1;
+                        float overlap = 0.5f;
+                        foreach (int other in sized)
+                        {
+                            Rect o = pattern.pieces[other].Bounds();
+                            float across = Mathf.Min(b.xMax, o.xMax) - Mathf.Max(b.xMin, o.xMin);
+                            bool stacked = b.yMin <= o.yMax + 0.5f && o.yMin <= b.yMax + 0.5f;
+                            if (stacked && across > overlap) { overlap = across; best = other; }
+                        }
+                        if (best >= 0) { scales[index].sx = scales[best].sx; scales[index].cx = scales[best].cx; }
                     }
                     report?.Add(new EvaluatedDimension { dimension = dim, drawnCm = drawn, targetCm = target, measuredCm = measured, fromBody = fromBody });
                 }

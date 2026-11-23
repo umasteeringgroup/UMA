@@ -265,6 +265,92 @@ namespace UMA.Editors.Tests
             Assert.That(FormatReport(results), Is.EqualTo("No installed plugin sources were found."));
         }
 
+        [Test]
+        public void BuiltManifestWrittenAsInstalledManifestDescribesTheFilesOnDisk()
+        {
+            Assert.That(UMAContentPackageArchiveValidator.TryValidate(archive, UMAContentKind.HairCards, out var info, out string error), Is.True, error);
+            string json = info.Archive.TextByPath[UMAContentCatalog.ManifestPath(UMAContentKind.HairCards)];
+            string guid = UMAContentCatalog.ManifestGuid(UMAContentKind.HairCards);
+            string installed = Path.Combine(directory, "installed-manifest", UMAContentCatalog.ManifestFileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(installed));
+
+            Assert.That(WriteInstalledManifest(installed, guid, json), Is.True);
+            Assert.That(File.ReadAllText(installed), Is.EqualTo(json), "An install of this package must leave the manifest unchanged.");
+            Assert.That(File.ReadAllText(installed + ".meta"), Does.Contain("guid: " + guid + "\n"));
+
+            // Removal keeps any file whose hash differs from the installed manifest, so every record must match the disk.
+            var manifest = UnityEngine.JsonUtility.FromJson<UMAContentManifest>(File.ReadAllText(installed));
+            Assert.That(UMAContentPackageArchiveValidator.TryValidateManifestStructure(manifest, UMAContentKind.HairCards, out error), Is.True, error);
+            var files = manifest.assets.Where(a => a.bytes > 0).ToArray();
+            Assert.That(files, Is.Not.Empty);
+            foreach (var asset in files)
+            {
+                Assert.That(Hash(asset.path), Is.EqualTo(asset.sha256), asset.path);
+                Assert.That(Hash(asset.path + ".meta"), Is.EqualTo(asset.metaSha256), asset.path + ".meta");
+            }
+        }
+
+        [Test]
+        public void WritingInstalledManifestSkipsIdenticalFilesAndRepairsConvertedLineEndings()
+        {
+            Assert.That(UMAContentPackageArchiveValidator.TryValidate(archive, UMAContentKind.HairCards, out var info, out string error), Is.True, error);
+            string json = info.Archive.TextByPath[UMAContentCatalog.ManifestPath(UMAContentKind.HairCards)];
+            string guid = UMAContentCatalog.ManifestGuid(UMAContentKind.HairCards);
+            string installed = Path.Combine(directory, "rewritten-manifest", UMAContentCatalog.ManifestFileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(installed));
+            Assert.That(WriteInstalledManifest(installed, guid, json), Is.True);
+            byte[] meta = File.ReadAllBytes(installed + ".meta");
+
+            var stamp = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            File.SetLastWriteTimeUtc(installed, stamp);
+            File.SetLastWriteTimeUtc(installed + ".meta", stamp);
+            Assert.That(WriteInstalledManifest(installed, guid, json), Is.False, "Identical files must not be rewritten or reimported.");
+            Assert.That(File.GetLastWriteTimeUtc(installed), Is.EqualTo(stamp));
+            Assert.That(File.GetLastWriteTimeUtc(installed + ".meta"), Is.EqualTo(stamp));
+
+            // A version-control checkout can convert both files to CRLF; the stale copy must be replaced, read-only or not.
+            File.WriteAllText(installed, json.Replace("\n", "\r\n"));
+            File.WriteAllBytes(installed + ".meta", System.Text.Encoding.UTF8.GetBytes(
+                System.Text.Encoding.UTF8.GetString(meta).Replace("\n", "\r\n")));
+            File.SetAttributes(installed, File.GetAttributes(installed) | FileAttributes.ReadOnly);
+            try { Assert.That(WriteInstalledManifest(installed, guid, json), Is.True); }
+            finally { File.SetAttributes(installed, File.GetAttributes(installed) & ~FileAttributes.ReadOnly); }
+            Assert.That(File.ReadAllText(installed), Is.EqualTo(json));
+            Assert.That(File.ReadAllBytes(installed + ".meta"), Is.EqualTo(meta));
+        }
+
+        [Test]
+        public void BuildReportNamesPackagesWhoseInstalledManifestWasNotUpdated()
+        {
+            var kinds = new[] { UMAContentKind.HairCards, UMAContentKind.HairCardsTests };
+            var results = RunBatch(kinds, kind => Path.Combine(directory, kind + ".unitypackage"), _ => false);
+            Assert.That(FormatReport(results), Does.Not.Contain("installed manifest"));
+            typeof(UMAPluginPackageBuilder.PackageBuildResult).GetProperty("InstalledManifestError")
+                .SetValue(results[1], "Access to the path is denied.");
+            string report = FormatReport(results);
+            Assert.That(report, Does.Contain("Built: 2   Failed: 0"));
+            Assert.That(report, Does.Contain("Hair Card Tests: built, but its installed manifest was not updated."));
+            Assert.That(report, Does.Contain("Access to the path is denied."));
+        }
+
+        private static bool WriteInstalledManifest(string path, string guid, string json)
+        {
+            var method = typeof(UMAPluginPackageBuilder).GetMethod("WriteInstalledManifest",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+            try { return (bool)method.Invoke(null, new object[] { path, guid, json }); }
+            catch (System.Reflection.TargetInvocationException exception)
+            {
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(exception.InnerException).Throw();
+                throw;
+            }
+        }
+
+        private static string Hash(string path)
+        {
+            using var sha = System.Security.Cryptography.SHA256.Create(); using var file = File.OpenRead(path);
+            return BitConverter.ToString(sha.ComputeHash(file)).Replace("-", "").ToLowerInvariant();
+        }
+
         private static UMAPluginPackageBuilder.PackageBuildResult[] RunBatch(UMAContentKind[] kinds,
             Func<UMAContentKind, string> build, Func<int, bool> cancel) =>
             (UMAPluginPackageBuilder.PackageBuildResult[])typeof(UMAPluginPackageBuilder)

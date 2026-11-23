@@ -38,6 +38,26 @@ namespace UMA.ClothesDesigner.Editor
         public int[] pieceCount;
         public PieceScale[] scales;
         public float edgeLengthCm;
+        /// <summary>Each piece's own edge length (cm): the Mesh Level's, divided by the piece's mesh detail.</summary>
+        public float[] pieceEdgeCm;
+        /// <summary>Indices into <see cref="stitches"/> of the stitches on folded seams.</summary>
+        public readonly List<int> foldedStitches = new List<int>();
+        /// <summary>
+        /// For each entry of <see cref="creases"/>: how far the cloth is folded there from flat, in degrees
+        /// (a fold line drawn inside a piece), or -1 for a pleat's fold, which rests folded as laid out.
+        /// </summary>
+        public readonly List<float> creaseAngle = new List<float>();
+        /// <summary>Per vertex: on the rim of a hole cut in a piece. A hole's rim is an opening.</summary>
+        public readonly List<bool> onHole = new List<bool>();
+        /// <summary>Indices into <see cref="stitches"/> of the single stitches (tacks and buttons).</summary>
+        public readonly List<int> tackStitches = new List<int>();
+        /// <summary>For each of the pattern's tacks: its vertex on the first piece and on the second (-1 when it could not be placed).</summary>
+        public readonly List<Vector2Int> tackVertices = new List<Vector2Int>();
+        /// <summary>Mesh edges that run along a piece's outline: the two vertices and the edge's index on the piece.</summary>
+        public readonly List<Vector3Int> outlineSegments = new List<Vector3Int>();
+
+        /// <summary>A piece's edge length (cm).</summary>
+        public float EdgeCmOf(int piece) => pieceEdgeCm != null && piece >= 0 && piece < pieceEdgeCm.Length ? pieceEdgeCm[piece] : edgeLengthCm;
         public string revision;
 
         public int VertexCount => flat.Count;
@@ -93,29 +113,67 @@ namespace UMA.ClothesDesigner.Editor
             public int dart = -1; // index into the piece's edge darts: the opening, replaced by the legs
         }
 
-        private static PatternMesh TryBuild(ClothesPattern pattern, PieceScale[] scales, float h, float boundaryFactor, out bool recovered)
+        private static PatternMesh TryBuild(ClothesPattern pattern, PieceScale[] scales, float hBase, float boundaryFactor, out bool recovered)
         {
             recovered = true;
             var mesh = new PatternMesh();
             int pieceTotal = pattern.pieces.Count;
             mesh.pieceStart = new int[pieceTotal];
             mesh.pieceCount = new int[pieceTotal];
-            float bh = h * boundaryFactor;
+            // Each piece's spacing: the Mesh Level's, finer for pieces with more detail.
+            var pieceH = new float[pieceTotal];
+            for (int p = 0; p < pieceTotal; p++) pieceH[p] = hBase / PatternPiece.DetailOf(pattern.pieces[p]);
+            mesh.pieceEdgeCm = (float[])pieceH.Clone();
 
             // Curves, darts, pleats and what they take out of each edge.
+            // Lines drawn inside a piece are sampled like edges: line l of a piece is its "edge" n + l.
             var curves = new PatternGeometry.EdgeCurve[pieceTotal][];
             var intakes = new List<Vector2>[pieceTotal][];
             var edgeDarts = new List<DartGeometry.EdgeDartShape>[pieceTotal];
             var pleats = new List<(PatternPleat pleat, DartGeometry.PleatShape shape)>[pieceTotal];
+            // Points every edge and line must have a vertex at: a line's corners, and where a line's end meets an edge.
+            var extraBreaks = new List<float>[pieceTotal][];
+            // For each line: the edge and fraction its start and its end sit on, or edge -1 for an end inside the piece.
+            var lineEnds = new (int startEdge, float startF, int endEdge, float endF)[pieceTotal][];
             for (int p = 0; p < pieceTotal; p++)
             {
                 PatternPiece piece = pattern.pieces[p];
-                curves[p] = new PatternGeometry.EdgeCurve[piece.points.Count];
-                intakes[p] = new List<Vector2>[piece.points.Count];
+                int edgeCount = piece.points.Count, lineCount = piece.lines != null ? piece.lines.Count : 0;
+                curves[p] = new PatternGeometry.EdgeCurve[edgeCount + lineCount];
+                intakes[p] = new List<Vector2>[edgeCount + lineCount];
+                extraBreaks[p] = new List<float>[edgeCount + lineCount];
+                lineEnds[p] = new (int, float, int, float)[lineCount];
+                for (int e = 0; e < edgeCount + lineCount; e++) extraBreaks[p][e] = new List<float>();
                 for (int e = 0; e < piece.points.Count; e++)
                 {
                     curves[p][e] = new PatternGeometry.EdgeCurve(piece, e, scales[p]);
                     intakes[p][e] = DartGeometry.Intakes(piece, e);
+                }
+                for (int l = 0; l < lineCount; l++)
+                {
+                    PatternLine line = piece.lines[l];
+                    intakes[p][edgeCount + l] = new List<Vector2>();
+                    lineEnds[p][l] = (-1, 0f, -1, 0f);
+                    if (line == null || line.points.Count < 2) continue;
+                    PatternGeometry.EdgeCurve curve = LineGeometry.Curve(line, scales[p]);
+                    curves[p][edgeCount + l] = curve;
+                    bool closed = LineGeometry.IsClosed(line);
+                    for (int k = 1; k < line.points.Count - (closed ? 0 : 1); k++) extraBreaks[p][edgeCount + l].Add(curve.FractionOfPoint(k));
+                    if (closed) continue;
+                    for (int end = 0; end < 2; end++)
+                    {
+                        Vector2 at = line.points[end == 0 ? 0 : line.points.Count - 1];
+                        if (!LineGeometry.OnOutline(piece, at, LineGeometry.SnapCm, out int onEdge, out float fraction)) continue;
+                        // At a corner the outline already has a vertex; elsewhere the edge gets one.
+                        if (fraction > 1f - 0.01f) { onEdge = (onEdge + 1) % edgeCount; fraction = 0f; }
+                        else if (fraction < 0.01f) fraction = 0f;
+                        bool inIntake = false;
+                        foreach (Vector2 intake in intakes[p][onEdge]) if (fraction > intake.x - Eps && fraction < intake.y + Eps) inIntake = true;
+                        if (inIntake) { mesh.warnings.Add("A line on '" + piece.name + "' ends in a dart or pleat; move its end along the edge."); continue; }
+                        if (fraction > 0f) extraBreaks[p][onEdge].Add(fraction);
+                        if (end == 0) { lineEnds[p][l].startEdge = onEdge; lineEnds[p][l].startF = fraction; }
+                        else { lineEnds[p][l].endEdge = onEdge; lineEnds[p][l].endF = fraction; }
+                    }
                 }
                 edgeDarts[p] = new List<DartGeometry.EdgeDartShape>();
                 foreach (PatternDart dart in piece.darts)
@@ -146,6 +204,9 @@ namespace UMA.ClothesDesigner.Editor
                 var breaks = new List<float> { 0f, 1f };
                 breaks.AddRange(Boundaries(a));
                 foreach (float u in Boundaries(b)) breaks.Add(seam.reversed ? 1f - u : u);
+                // A vertex one side must have (a line's corner, a line ending on the edge) is a vertex on both.
+                foreach (float extra in extraBreaks[pa][ea]) if (Unmap(a, extra, out float u)) breaks.Add(u);
+                foreach (float extra in extraBreaks[pb][eb]) if (Unmap(b, extra, out float u)) breaks.Add(seam.reversed ? 1f - u : u);
                 breaks.Sort();
                 for (int k = 0; k + 1 < breaks.Count; k++)
                 {
@@ -155,7 +216,8 @@ namespace UMA.ClothesDesigner.Editor
                     float fb0, fb1;
                     if (seam.reversed) { fb0 = MapU(b, 1f - u1, true); fb1 = MapU(b, 1f - u0, false); }
                     else { fb0 = MapU(b, u0, true); fb1 = MapU(b, u1, false); }
-                    int count = Mathf.Max(1, Mathf.CeilToInt(Mathf.Max((fa1 - fa0) * la, (fb1 - fb0) * lb) / bh));
+                    // Each side asks for as many points as its own spacing needs; the finer side wins.
+                    int count = Mathf.Max(1, Mathf.CeilToInt(Mathf.Max((fa1 - fa0) * la / (pieceH[pa] * boundaryFactor), (fb1 - fb0) * lb / (pieceH[pb] * boundaryFactor))));
                     fixedCounts.Add((pa, ea, fa0, fa1, count));
                     fixedCounts.Add((pb, eb, fb0, fb1, count));
                 }
@@ -168,19 +230,23 @@ namespace UMA.ClothesDesigner.Editor
             for (int p = 0; p < pieceTotal; p++)
             {
                 PatternPiece piece = pattern.pieces[p];
+                float h = pieceH[p], bh = h * boundaryFactor;
                 int n = piece.points.Count;
+                int lineTotal = piece.lines != null ? piece.lines.Count : 0;
                 mesh.pieceStart[p] = mesh.VertexCount;
 
-                // How each edge is sampled: intervals between every break, an edge dart's opening replaced by its legs.
-                var items = new List<EdgeItem>[n];
-                for (int e = 0; e < n; e++)
+                // How each edge (and line) is sampled: intervals between every break, an edge dart's opening replaced by its legs.
+                var items = new List<EdgeItem>[n + lineTotal];
+                for (int e = 0; e < n + lineTotal; e++)
                 {
+                    items[e] = new List<EdgeItem>();
+                    if (curves[p][e] == null) continue;
                     var breaks = new List<float> { 0f, 1f };
                     foreach (var f in fixedCounts) if (f.p == p && f.e == e) { breaks.Add(f.a); breaks.Add(f.b); }
                     foreach (Vector2 i in intakes[p][e]) { breaks.Add(i.x); breaks.Add(i.y); }
                     foreach (var pl in pleats[p]) if (pl.shape.edge == e) breaks.AddRange(pl.shape.lineFractions);
+                    breaks.AddRange(extraBreaks[p][e]);
                     breaks.Sort();
-                    items[e] = new List<EdgeItem>();
                     for (int i = 0; i + 1 < breaks.Count; i++)
                     {
                         float a = breaks[i], b = breaks[i + 1];
@@ -204,7 +270,7 @@ namespace UMA.ClothesDesigner.Editor
                 // The outline, with dart legs.
                 var points = new List<Vector2>();
                 var pointEdge = new List<int>();
-                var edgeSamples = new List<(float f, int v)>[n];
+                var edgeSamples = new List<(float f, int v)>[n + lineTotal];
                 var legs = new List<(int dart, List<int> legA, List<int> legB)>();
                 var pointWhat = new List<string>();
                 for (int e = 0; e < n; e++)
@@ -285,6 +351,92 @@ namespace UMA.ClothesDesigner.Editor
                     if (pl.pleat.depthCm < bh * 0.6f) mesh.warnings.Add("A pleat on '" + piece.name + "' is shallower than this mesh level can show; use a finer Mesh Level.");
                     pleatLines.Add(lines);
                 }
+
+                // Lines drawn inside the piece: kept as mesh edges, so they can be sewn to, creased or cut out.
+                var lineVertices = new List<int>[lineTotal];
+                var holeRims = new List<int>();
+                for (int l = 0; l < lineTotal; l++)
+                {
+                    int e = n + l;
+                    PatternGeometry.EdgeCurve curve = curves[p][e];
+                    if (curve == null) continue;
+                    PatternLine line = piece.lines[l];
+                    bool closed = LineGeometry.IsClosed(line);
+                    int startVertex = lineEnds[p][l].startEdge >= 0 ? OutlineVertexAt(lineEnds[p][l].startEdge, lineEnds[p][l].startF) : -1;
+                    int endVertex = lineEnds[p][l].endEdge >= 0 ? OutlineVertexAt(lineEnds[p][l].endEdge, lineEnds[p][l].endF) : -1;
+                    edgeSamples[e] = new List<(float, int)>();
+                    var vertices = new List<int>();
+                    // Lines that meet (a pocket's sides at its corners) share the vertex there: two points
+                    // in one place would break the triangulation.
+                    int SharedOrNew(Vector2 q)
+                    {
+                        for (int i = outlineCount; i < points.Count; i++) if ((points[i] - q).sqrMagnitude < 1e-6f) return i;
+                        points.Add(q); pointEdge.Add(-1);
+                        return points.Count - 1;
+                    }
+                    foreach (EdgeItem item in items[e])
+                    {
+                        for (int k = 0; k < item.count; k++)
+                        {
+                            float f = item.a + (item.b - item.a) * k / item.count;
+                            int v;
+                            if (!closed && f < Eps && startVertex >= 0) v = startVertex;
+                            else if (!closed && f < Eps) v = SharedOrNew(curve.At(f));
+                            else { v = points.Count; points.Add(curve.At(f)); pointEdge.Add(-1); }
+                            edgeSamples[e].Add((f, v));
+                            vertices.Add(v);
+                        }
+                    }
+                    if (vertices.Count == 0) continue;
+                    int last;
+                    if (closed) last = vertices[0];
+                    else if (endVertex >= 0) last = endVertex;
+                    else last = SharedOrNew(curve.At(1f));
+                    edgeSamples[e].Add((1f, last));
+                    vertices.Add(last);
+                    lineVertices[l] = vertices;
+                    var polyline = new List<Vector2>(vertices.Count);
+                    foreach (int v in vertices) polyline.Add(points[v]);
+                    linePolylines.Add(polyline);
+                    if (line.kind == PatternLineKind.Hole)
+                    {
+                        holePolygons.Add(polyline.GetRange(0, polyline.Count - 1));
+                        holeRims.AddRange(vertices);
+                    }
+                }
+
+                // Tacks: a vertex where each one holds this piece, on a point that is already there when one is close.
+                var tackPoints = new List<Vector2>();
+                var tackLocal = new List<(int tack, bool first, int v)>();
+                if (pattern.tacks != null)
+                {
+                    for (int ti = 0; ti < pattern.tacks.Count; ti++)
+                    {
+                        PatternTack tack = pattern.tacks[ti];
+                        if (tack == null) continue;
+                        for (int side = 0; side < 2; side++)
+                        {
+                            if ((side == 0 ? tack.pieceA : tack.pieceB) != piece.id) continue;
+                            Vector2 q = scales[p].Apply(side == 0 ? tack.a : tack.b);
+                            int v = -1;
+                            float nearest = 0.4f * h;
+                            for (int i = 0; i < points.Count; i++)
+                            {
+                                float d = (points[i] - q).magnitude;
+                                if (d < nearest) { nearest = d; v = i; }
+                            }
+                            if (v < 0)
+                            {
+                                if (!PatternGeometry.PointInPolygon(outline, q)) { mesh.warnings.Add("A tack on '" + piece.name + "' is outside the piece."); continue; }
+                                v = points.Count;
+                                points.Add(q);
+                                pointEdge.Add(-1);
+                                tackPoints.Add(q);
+                            }
+                            tackLocal.Add((ti, side == 0, v));
+                        }
+                    }
+                }
                 int constrainedCount = points.Count;
 
                 // Interior lattice, kept away from every outline, hole and fold line so they stay mesh edges.
@@ -294,6 +446,7 @@ namespace UMA.ClothesDesigner.Editor
                 near.AddPolyline(outline, true);
                 foreach (List<Vector2> hole in holePolygons) near.AddPolyline(hole, true);
                 foreach (List<Vector2> line in linePolylines) near.AddPolyline(line, false);
+                foreach (Vector2 q in tackPoints) near.AddPolyline(new List<Vector2> { q }, false);
                 float rowStep = h * 0.8660254f;
                 int row = 0;
                 for (float y = bounds.yMin + rowStep * 0.5f; y < bounds.yMax; y += rowStep, row++)
@@ -318,6 +471,20 @@ namespace UMA.ClothesDesigner.Editor
 
                 int baseIndex = mesh.VertexCount;
                 for (int i = 0; i < points.Count; i++) AddVertex(mesh, scales[p], points[i], p, pointEdge[i]);
+                foreach (int v in holeRims) mesh.onHole[baseIndex + v] = true;
+                foreach (var t in tackLocal)
+                {
+                    while (mesh.tackVertices.Count < pattern.tacks.Count) mesh.tackVertices.Add(new Vector2Int(-1, -1));
+                    Vector2Int pair = mesh.tackVertices[t.tack];
+                    if (t.first) pair.x = baseIndex + t.v; else pair.y = baseIndex + t.v;
+                    mesh.tackVertices[t.tack] = pair;
+                }
+                // The outline's own segments, for elastic along an edge.
+                for (int i = 0; i < outlineCount; i++)
+                {
+                    int j = (i + 1) % outlineCount;
+                    if (pointEdge[i] >= 0 && pointEdge[j] >= 0) mesh.outlineSegments.Add(new Vector3Int(baseIndex + i, baseIndex + j, pointEdge[i]));
+                }
 
                 var edgeSet = new HashSet<long>(EdgeKeyComparer.Instance);
                 for (int t = 0; t < tris.Count; t += 3)
@@ -348,6 +515,15 @@ namespace UMA.ClothesDesigner.Editor
                     foreach (List<int> line in lines)
                     {
                         for (int i = 0; i + 1 < line.Count; i++) if (!edgeSet.Contains(EdgeKey(line[i], line[i + 1]))) Unrecovered("a pleat fold on '" + piece.name + "'");
+                    }
+                }
+                for (int l = 0; l < lineTotal; l++)
+                {
+                    List<int> vertices = lineVertices[l];
+                    if (vertices == null) continue;
+                    for (int i = 0; i + 1 < vertices.Count; i++)
+                    {
+                        if (vertices[i] != vertices[i + 1] && !edgeSet.Contains(EdgeKey(vertices[i], vertices[i + 1]))) Unrecovered(LineGeometry.Describe(piece.lines[l], l) + " on '" + piece.name + "'");
                     }
                 }
                 if (lost) recovered = false;
@@ -386,19 +562,43 @@ namespace UMA.ClothesDesigner.Editor
                     for (int l = 0; l < lines.Length; l++)
                     {
                         if (!s.crease[l]) continue;
-                        for (int k = 0; k + 1 < lines[l].Count; k++) mesh.creases.Add(new Vector2Int(baseIndex + lines[l][k], baseIndex + lines[l][k + 1]));
+                        for (int k = 0; k + 1 < lines[l].Count; k++)
+                        {
+                            mesh.creases.Add(new Vector2Int(baseIndex + lines[l][k], baseIndex + lines[l][k + 1]));
+                            mesh.creaseAngle.Add(-1f);
+                        }
                     }
                 }
 
-                var global = new List<(float f, int v)>[n];
-                for (int e = 0; e < n; e++)
+                var global = new List<(float f, int v)>[n + lineTotal];
+                for (int e = 0; e < n + lineTotal; e++)
                 {
-                    global[e] = new List<(float, int)>(edgeSamples[e].Count);
-                    foreach (var s in edgeSamples[e]) global[e].Add((s.f, baseIndex + s.v));
+                    global[e] = new List<(float, int)>(edgeSamples[e] != null ? edgeSamples[e].Count : 0);
+                    if (edgeSamples[e] != null) foreach (var s in edgeSamples[e]) global[e].Add((s.f, baseIndex + s.v));
                 }
                 edgeSamplesAll[p] = global;
 
                 LayOutPleats(mesh, p, pleats[p], curves[p]);
+
+                // Fold lines: a crease that rests folded by the line's angle, laid out a little off flat so
+                // the crease turns the way it was drawn (a ridge out from the body, or a valley in).
+                for (int l = 0; l < lineTotal; l++)
+                {
+                    List<int> vertices = lineVertices[l];
+                    PatternLine line = piece.lines[l];
+                    if (vertices == null || line.kind != PatternLineKind.Fold || line.foldAngle <= 0.5f) continue;
+                    float nudge = LineGeometry.FoldNudgeCm * Mathf.Clamp01(line.foldAngle / 60f) * (line.foldInward ? 1f : -1f);
+                    for (int i = 0; i < vertices.Count; i++)
+                    {
+                        if (i + 1 < vertices.Count && vertices[i] != vertices[i + 1])
+                        {
+                            mesh.creases.Add(new Vector2Int(baseIndex + vertices[i], baseIndex + vertices[i + 1]));
+                            mesh.creaseAngle.Add(line.foldAngle);
+                        }
+                        // Not the ends on the outline: they are sewn or hemmed with the rest of their edge.
+                        if (vertices[i] >= outlineCount) mesh.layoutDepth[baseIndex + vertices[i]] += nudge;
+                    }
+                }
             }
 
             // Seam stitches: what is left on each side, in order, one vertex to one vertex.
@@ -417,6 +617,20 @@ namespace UMA.ClothesDesigner.Editor
                     int other = reversed ? vb[vb.Count - 1 - k] : vb[k];
                     if (va[k] == other) continue;
                     AddStitch(mesh, va[k], other, plan.seam);
+                    if (pattern.seams[plan.seam].folded) mesh.foldedStitches.Add(mesh.stitches.Count - 1);
+                }
+            }
+
+            // Tacks and buttons: one stitch each.
+            if (pattern.tacks != null)
+            {
+                while (mesh.tackVertices.Count < pattern.tacks.Count) mesh.tackVertices.Add(new Vector2Int(-1, -1));
+                for (int ti = 0; ti < pattern.tacks.Count; ti++)
+                {
+                    Vector2Int pair = mesh.tackVertices[ti];
+                    if (pair.x < 0 || pair.y < 0 || pair.x == pair.y) continue;
+                    AddStitch(mesh, pair.x, pair.y, group++);
+                    mesh.tackStitches.Add(mesh.stitches.Count - 1);
                 }
             }
             return mesh;
@@ -476,6 +690,7 @@ namespace UMA.ClothesDesigner.Editor
             mesh.layoutDepth.Add(0f);
             mesh.piece.Add(piece);
             mesh.boundaryEdge.Add(edge);
+            mesh.onHole.Add(false);
             mesh.uv.Add(Vector2.zero);
         }
 
@@ -548,11 +763,39 @@ namespace UMA.ClothesDesigner.Editor
             }
         }
 
+        /// <summary>The piece and edge a seam's side is on. A line inside the piece counts as edge (edge count + line index).</summary>
         private static bool Resolve(ClothesPattern pattern, SeamSpan span, out int pieceIndex, out int edgeIndex)
         {
             pieceIndex = pattern.IndexOfPiece(span.pieceId);
             edgeIndex = pieceIndex >= 0 ? pattern.pieces[pieceIndex].IndexOfEdge(span.edgeId) : -1;
+            if (edgeIndex < 0 && pieceIndex >= 0)
+            {
+                PatternPiece piece = pattern.pieces[pieceIndex];
+                int line = piece.IndexOfLine(span.edgeId);
+                if (line >= 0 && piece.lines[line].points.Count >= 2) edgeIndex = piece.points.Count + line;
+            }
             return edgeIndex >= 0 && span.end > span.start;
+        }
+
+        /// <summary>
+        /// The fraction of the length left (see <see cref="MapU"/>) at an edge fraction. False when the
+        /// fraction is taken out by a dart or pleat, outside the span, or at the end of a part already.
+        /// </summary>
+        private static bool Unmap(List<Vector2> parts, float fraction, out float u)
+        {
+            u = 0f;
+            float total = Total(parts), at = 0f;
+            if (total <= 0f) return false;
+            foreach (Vector2 part in parts)
+            {
+                if (fraction > part.x + 1e-4f && fraction < part.y - 1e-4f)
+                {
+                    u = (at + fraction - part.x) / total;
+                    return true;
+                }
+                at += part.y - part.x;
+            }
+            return false;
         }
 
         /// <summary>The parts of a span left after the intakes (fractions, in order).</summary>
@@ -613,7 +856,9 @@ namespace UMA.ClothesDesigner.Editor
             }
             int edge = e;
             float f = end;
-            if (f >= 1f - Eps) { edge = (e + 1) % pattern.pieces[p].points.Count; f = 0f; }
+            // An edge's last corner is the next edge's first point; a line holds its own end.
+            int edgeCount = pattern.pieces[p].points.Count;
+            if (e < edgeCount && f >= 1f - Eps) { edge = (e + 1) % edgeCount; f = 0f; }
             foreach (var s in samples[p][edge]) if (Mathf.Abs(s.f - f) < Eps) { result.Add(s.v); break; }
             return result;
         }

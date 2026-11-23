@@ -19,13 +19,18 @@
     "ownedPaths": [
         "Assets/UMA/ClothesDesignerTests/CapsuleBodyFixture.cs",
         "Assets/UMA/ClothesDesignerTests/ClothesDesignerWorkflowTests.cs",
+        "Assets/UMA/ClothesDesignerTests/CollarTests.cs",
         "Assets/UMA/ClothesDesignerTests/DartsAndPleatsTests.cs",
         "Assets/UMA/ClothesDesignerTests/DrapeDetailTests.cs",
+        "Assets/UMA/ClothesDesignerTests/EditingAndBakeExtrasTests.cs",
         "Assets/UMA/ClothesDesignerTests/FabricAndPlacementTests.cs",
         "Assets/UMA/ClothesDesignerTests/MeshAndUvTests.cs",
         "Assets/UMA/ClothesDesignerTests/OpeningFacingTests.cs",
+        "Assets/UMA/ClothesDesignerTests/PatternFeatureTests.cs",
         "Assets/UMA/ClothesDesignerTests/PatternTests.cs",
         "Assets/UMA/ClothesDesignerTests/SamplePatternsTests.cs",
+        "Assets/UMA/ClothesDesignerTests/SelfCollisionTests.cs",
+        "Assets/UMA/ClothesDesignerTests/SleeveLayoutTests.cs",
         "Assets/UMA/ClothesDesignerTests/SolverAndBakeTests.cs",
         "Assets/UMA/ClothesDesignerTests/TryOnPoseTests.cs",
         "Assets/UMA/ClothesDesignerTests/UMA.ClothesDesigner.Editor.Tests.asmdef",
@@ -35,98 +40,138 @@
         {
             "path": "Assets/UMA/ClothesDesignerTests/CapsuleBodyFixture.cs",
             "guid": "f53512925a182e547b2917512e69bf81",
-            "bytes": 5336,
-            "sha256": "60224929bd9283cf1205df8445c5f8bec9b504742190a23c567e472ad52ea20d",
-            "metaBytes": 59,
-            "metaSha256": "b6673cd36d2009118123958d1388a2ef144f19f9e18eea65b668d0aa113a0ad2"
+            "bytes": 5456,
+            "sha256": "81c331009386c29f6e01630d4cad39e0ec41e2f1f28b4dce338a1a931b1f93f4",
+            "metaBytes": 60,
+            "metaSha256": "11b6d7edfd9162415a0c48f1fa36f9f13e5deba2470e7af5748894e729f89621"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/ClothesDesignerWorkflowTests.cs",
             "guid": "40fefbbe3466e634cb12b05025b5db5e",
-            "bytes": 2833,
-            "sha256": "482c1129589b5455c3f6dd7fb0010b2cef3a605c7285e5e8883a7104a5b4bc83",
+            "bytes": 2943,
+            "sha256": "c4cea171a01d5599e40f3e733b556745561cb6455eeb6f5543aaab466acfe34c",
+            "metaBytes": 60,
+            "metaSha256": "820af26e99ce8c2a3e2ad61a4255779505ccd91af0603616485e3dfdfec7cfd7"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerTests/CollarTests.cs",
+            "guid": "c61381b5541df5043845671463533b68",
+            "bytes": 8706,
+            "sha256": "ed04731a326070b3eac830c408e7352539379781f96c245173d4bc328c3202fa",
             "metaBytes": 59,
-            "metaSha256": "b9553ceccfb00b4f6bf06fae7a4816737bd92b4a1af3153a4a8a60c63d7594da"
+            "metaSha256": "d3abc5dd21e384fa71fc93dd09cec9fe99a5adbdc4b3413ca9ec07d91b5f8380"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/DartsAndPleatsTests.cs",
             "guid": "cc3f81f752699d74c9761d4c9c369730",
-            "bytes": 16199,
-            "sha256": "196e279736d4b2d25fc0c5d32bf7011f31d3effd777413e06853ee53e99dba61",
-            "metaBytes": 59,
-            "metaSha256": "39f5084ea53d636f0f220f2eda5b9b39002b3e0fae699d2a79039805143e8820"
+            "bytes": 16505,
+            "sha256": "a1dd48489d667de7df2c14974ceeef62e0b5d9d692ba11f59dab3123763d93d7",
+            "metaBytes": 60,
+            "metaSha256": "e7140d6e1017ac926bb425830eabe79f4d23218be943a67f5a165c77e4852a5c"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/DrapeDetailTests.cs",
             "guid": "7dd27cd60a6e4e643921491df077cb9c",
-            "bytes": 6843,
-            "sha256": "29112b99a723f74f0ea813d9edf2e9b0a2fae0c87e5fae52e8feb7d94c853b03",
+            "bytes": 6980,
+            "sha256": "437f35834ebb4d858234de4a57935d4c531a33a3aba1f4fb2f2b2df53dc81c67",
+            "metaBytes": 60,
+            "metaSha256": "5f2b236219374a2ee31a68e12684c6e137ec688434bbd2948267f6991da2a569"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerTests/EditingAndBakeExtrasTests.cs",
+            "guid": "34b90ee2c42cb7d41ad8f89c3dc96456",
+            "bytes": 14939,
+            "sha256": "90deea139d0a82a6c78361c6fcc73bd76b878cab8e1822c29908af4d6a05922f",
             "metaBytes": 59,
-            "metaSha256": "11d5cfcd4f2b43d8f57b043e77a2164d860e6e04def76b60d98f795f4e9ab188"
+            "metaSha256": "cd31c945fbe938a39fb6be33d0cdac059a45bb8606e1bf2c092f728192d04996"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/FabricAndPlacementTests.cs",
             "guid": "943c9e41b5b126246bbe28a436ec33d5",
-            "bytes": 11804,
-            "sha256": "3c36e4d053751489d764b5571f1c4090747227b3bb375054e2dafb9a3b1274f8",
-            "metaBytes": 59,
-            "metaSha256": "88d25c8a09f720a8d3a62705177fd1b4d65b0978ae23fe319844966b18f2e740"
+            "bytes": 12032,
+            "sha256": "8f5e57688e0e78deb562827367fb8719abdaa804243011026d3f81d2e494912d",
+            "metaBytes": 60,
+            "metaSha256": "951cf28e13f31c6d99203fee42806ce47390685705f009c4bcb1cfb55d2ad762"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/MeshAndUvTests.cs",
             "guid": "44aaf05938cbef943b8b24e6352323c2",
-            "bytes": 7651,
-            "sha256": "25f5099a46cf63dc65bb2e75ea6bc09bcad57c3cdce04e769a43957d111f901d",
-            "metaBytes": 59,
-            "metaSha256": "5b8e63af195784a86137c67033777417cd4a967d923e29564c7c118bccd89495"
+            "bytes": 7835,
+            "sha256": "4d09dc84086f51ade43817baa9d70d10cd892ae8a4a1f0d5ad3efe7606e59351",
+            "metaBytes": 60,
+            "metaSha256": "45cb9edb69bac287e2f6d4a6359f035d904fd5ddc40133f1951873c835023614"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/OpeningFacingTests.cs",
             "guid": "5252c69b83cbe6242b3c997e17924f6c",
-            "bytes": 9959,
-            "sha256": "71a3d39db5f7ec1d4eb8e67078888d29b9b104854b722948994eebba4e667fdf",
+            "bytes": 10144,
+            "sha256": "fbbbbd95d1c346f699f8d158dae9702c5897c3230a6ce274b19e80c1b7f93138",
+            "metaBytes": 60,
+            "metaSha256": "e46a89a903399316c1b4c9cb6dfad70c8bdfbfc4a7c4cf218f9e1c67192c71b2"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerTests/PatternFeatureTests.cs",
+            "guid": "9f4ce3966ba46514d85ac5be27cc7cf9",
+            "bytes": 21753,
+            "sha256": "0265bf0f603ebb21a4c8df48eccdbaab750785e7336bd478105f17e777a181cd",
             "metaBytes": 59,
-            "metaSha256": "7e5894d247736c8d8962f2122d308434e80dd4bcb2a868495c68fb83c9ca050a"
+            "metaSha256": "d622ff4c11eb5136179aa75d13be19d3e951f77644c6327cc8b7739089115b8f"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/PatternTests.cs",
             "guid": "91509a956b311bc48b380125f0585537",
-            "bytes": 8655,
-            "sha256": "401edced39171b2204080e97bdca8f7f578e44bcf3a1c94d64ca879b211669e3",
-            "metaBytes": 59,
-            "metaSha256": "f1736000a04d5db40f7b5bbf7185f4f36cfa8403d5c6e64021e382e67761e4b1"
+            "bytes": 8855,
+            "sha256": "312ef48502800bbe987b2186ad7ca48531c1bafa5128165977b2031d32470805",
+            "metaBytes": 60,
+            "metaSha256": "412e5fab8da12cc220614c8db6be849323e9b1b0b1740cb9384ebf2a3380a714"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/SamplePatternsTests.cs",
             "guid": "eb72348eeedec5d49bcc3872be268f4a",
-            "bytes": 11726,
-            "sha256": "43fa7aa3639cd6a561d478254c172f27f305697ec8a2dee7e1a57c88e500bafc",
+            "bytes": 11920,
+            "sha256": "48e4840081e3e5167f623bdef66cb6180ed6be68fa4cc2bcb21c86991e47c7e5",
+            "metaBytes": 60,
+            "metaSha256": "a19c0d5cb76363f26aab89f3e21846bfa7bb49ea91b1dfd24023622dfe7ed85d"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerTests/SelfCollisionTests.cs",
+            "guid": "938d7c4fd03da8347aff7f2c52172eaf",
+            "bytes": 11448,
+            "sha256": "3aca4b468785e94d92b08d72157fc3b0982906e103055aacfcd766c8599a90c9",
             "metaBytes": 59,
-            "metaSha256": "837c74eb4be2ecf1bcde1b9f36fda05206fc854ddb4be60e7a07a971cd5b93a0"
+            "metaSha256": "b0bb4b12498c30f7374688729c9191cdeae57d70095af17a7162d00c57710041"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerTests/SleeveLayoutTests.cs",
+            "guid": "d4515da93ba1b874bbec418a8f6ba359",
+            "bytes": 13186,
+            "sha256": "4c5cded9d47ce69e94dcd04be67e43e1d0fdb3a54202946b398374cf99de99e0",
+            "metaBytes": 59,
+            "metaSha256": "60730e0cae6c8210cce4a34ad809f604e3bedccce71e7a01431fe6d56cfdbaf3"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/SolverAndBakeTests.cs",
             "guid": "17d516ed62fbb2a489d4271dd30c61f2",
-            "bytes": 13683,
-            "sha256": "cdeb7cbf9297ced89deb88e418510a58f9ae0158b429e706eb904026f0660c45",
-            "metaBytes": 59,
-            "metaSha256": "414cd2325379e2a8ec178cc475a677724a03c3fd7f248a7240fd74be7f59ccc4"
+            "bytes": 13945,
+            "sha256": "59b30466df05178cb3f996632dd9002beff4157770abe0427d0f9a2bae4c25fc",
+            "metaBytes": 60,
+            "metaSha256": "6242c65f07a67aee95d975592fa9aa4396e8320fa20690aead7e7ca98a348e01"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/TryOnPoseTests.cs",
             "guid": "e92cc1558a3a472478454a0bfa778557",
-            "bytes": 1971,
-            "sha256": "ab9afbff7cf38f282bd52d8548dec4c41e31c2c20ad9f68fc23d00294bcb1ecc",
-            "metaBytes": 59,
-            "metaSha256": "e55a7355ba7bcda02f39589126edb56dda0d4b7cff9956c50b84927636e7d5de"
+            "bytes": 2016,
+            "sha256": "597650b69c1507cf6c440bf7e121aa1a4f39a299ea4dba4b93ac3abedd834dae",
+            "metaBytes": 60,
+            "metaSha256": "1988c642aa158bf9996fad36a41d5ca5923bde951f49579a437357502a276e04"
         },
         {
             "path": "Assets/UMA/ClothesDesignerTests/UMA.ClothesDesigner.Editor.Tests.asmdef",
             "guid": "c803c7e7cfcf0014b84117e39c44ccd8",
-            "bytes": 879,
-            "sha256": "b9743ef60ae02f1ed3fd14ac28eb95bd06ffa13841df24a43b58f9e9d6d22716",
-            "metaBytes": 166,
-            "metaSha256": "60e51a72eccdb3326b81542365354240e79fa7a66d4bf811ceef01b00108f078"
+            "bytes": 914,
+            "sha256": "1da4d06c6d4dced26a17b83bb6abc23fdc996e11726f848623491d154fab7152",
+            "metaBytes": 173,
+            "metaSha256": "1bfca63e2636ecc93ca247699206f2f6d919feee01a893c705ae86afa8e93a86"
         }
     ]
 }

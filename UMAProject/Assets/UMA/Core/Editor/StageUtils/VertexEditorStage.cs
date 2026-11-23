@@ -6322,8 +6322,11 @@ namespace UMA
 
             Event currentEvent = Event.current;
             Vector2 mousePos = currentEvent.mousePosition;
+            // The Close button counts as panel too: a plugin workflow or brush that takes every click would
+            // otherwise take the click meant for it, and Close would do nothing.
             bool mouseOverAnyWindow = leftPanelRect.Contains(mousePos) ||
-                (ShowStageToolbar && StageToolbar.Contains(mousePos));
+                (ShowStageToolbar && StageToolbar.Contains(mousePos)) ||
+                (!closing && StageFloatingToolbar.CloseButtonRect(sceneView, CloseButtonLabel).Contains(mousePos));
             // Let SceneView handle built-in focus shortcut (F) when the cursor is not over our UI.
             if (!mouseOverAnyWindow && currentEvent.type == EventType.KeyDown && currentEvent.keyCode == KeyCode.F)
             {
@@ -10142,6 +10145,8 @@ namespace UMA
             SceneView.RepaintAll();
         }
 
+        private const string CloseButtonLabel = "Close Vertex Editor";
+
         private void DrawStageCloseButton(SceneView sceneView)
         {
             if (sceneView == null || closing)
@@ -10149,7 +10154,7 @@ namespace UMA
                 return;
             }
 
-            if (StageFloatingToolbar.DrawCloseButton(sceneView, "Close Vertex Editor"))
+            if (StageFloatingToolbar.DrawCloseButton(sceneView, CloseButtonLabel))
             {
                 RequestClose();
                 Event.current.Use();
