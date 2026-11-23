@@ -1,0 +1,303 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84502f13ce032214195115124a93b406, type: 3}
+  m_Name: Tank Top
+  m_EditorClassIdentifier: UMA.ClothesDesigner.Editor::UMA.ClothesDesigner.Editor.ClothesPattern
+  schemaVersion: 2
+  pieces:
+  - id: 16c9264830314fc99e67bfcc234f425f
+    name: Front
+    points:
+    - id: 8324f4cdd39a469f908f39e818c4eed2
+      position: {x: 0, y: 0}
+    - id: de6a3ea0d1f8447da10ae6e203b314d3
+      position: {x: 52, y: 0}
+    - id: ead251af8d704030ac9a51a35be5edbc
+      position: {x: 52, y: 41}
+    - id: 3b5a7fcb335e44348c8df1eac18a4a4b
+      position: {x: 38, y: 64}
+    - id: 1a3efbb320be43f6b6c8ede0805d55ed
+      position: {x: 33, y: 66}
+    - id: 63c987a658924d4397b8995841a0e3b0
+      position: {x: 26, y: 50}
+    - id: 23b9338c6826462cb57879ebc59d5ccf
+      position: {x: 19, y: 66}
+    - id: b7a747033b7e4cf5996705b4568bc59f
+      position: {x: 14, y: 64}
+    - id: 6900ac1e07f04b27a84b4b043d07ca80
+      position: {x: 0, y: 41}
+    edges:
+    - id: 75d73060300546af99f650980365182b
+      name: Hem
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: c5d6cd7ee10b405e88c98ac22b101cea
+      name: Right side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 8e4635a9599f4710983bf1c97cc3d226
+      name: Right armhole
+      curved: 1
+      handleA: {x: -9.8, y: 2.3}
+      handleB: {x: 0, y: -9.2}
+      opening: 1
+    - id: 5023528924284bc7a3b07b9efb9186fc
+      name: Right shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 08e235c692a14ddc97c2f149a2a9c9b5
+      name: Right neckline
+      curved: 1
+      handleA: {x: -0.7, y: -8.8}
+      handleB: {x: 3.8500001, y: 0}
+      opening: 1
+    - id: 12ad7192b6e6406e8c56c5a79d960c67
+      name: Left neckline
+      curved: 1
+      handleA: {x: -3.8500001, y: 0}
+      handleB: {x: 0.7, y: -8.8}
+      opening: 1
+    - id: f6e7299f4a98421297f02c60a3a08ffc
+      name: Left shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 2a91ee2eb5cc4cb1a266b04c08ed3df7
+      name: Left armhole
+      curved: 1
+      handleA: {x: 0, y: -9.2}
+      handleB: {x: 9.8, y: 2.3}
+      opening: 1
+    - id: 1322791d081d4b72a29047e8aeb7dc71
+      name: Left side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 0
+      topAboveShoulderCm: 4
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Jersey
+      stretchCompliance: 0.05
+      bendCompliance: 3
+      density: 0.18
+      friction: 0.4
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: 0.0078125, y: 0.0078125}
+      scale: 0.009390024
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.0078125
+        width: 0.48828122
+        height: 0.61974156
+  - id: 4ee922820c724d968a8224bafa45dc9d
+    name: Back
+    points:
+    - id: 67b92dddde514f8eac40de690a839ad1
+      position: {x: 60, y: 0}
+    - id: fbceda241dfb4ce48792374f41792ab5
+      position: {x: 112, y: 0}
+    - id: acb5e43a2db042f3abd44b76be511c52
+      position: {x: 112, y: 41}
+    - id: 267ec5ac867b443e8d5ea833c78e1182
+      position: {x: 98, y: 64}
+    - id: 3e0534b79c17448dbab77f804629bdb1
+      position: {x: 93, y: 66}
+    - id: 17fd5203c02d4f6cb7f3db4cbf02425f
+      position: {x: 86, y: 57}
+    - id: a0f197b263804afbbee78f1c6facb538
+      position: {x: 79, y: 66}
+    - id: 3c51abfe8db341069f1e468d7d013ffe
+      position: {x: 74, y: 64}
+    - id: 0b218ad994b3409285428672a7ffddb4
+      position: {x: 60, y: 41}
+    edges:
+    - id: b2f27d506c4e4f55bf593f11cfd4d782
+      name: Hem
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: 9f36b3869e024a7aaa81ce4a7735c98f
+      name: Right side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: b44b2b85e400430f9172a2a63211f741
+      name: Right armhole
+      curved: 1
+      handleA: {x: -9.8, y: 2.3}
+      handleB: {x: 0, y: -9.2}
+      opening: 1
+    - id: 254a9caed5984ceaa04242eeb99e8230
+      name: Right shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 8b00c9fb12614dc09fc23472c37f7e95
+      name: Right neckline
+      curved: 1
+      handleA: {x: -0.7, y: -4.9500003}
+      handleB: {x: 3.8500001, y: 0}
+      opening: 1
+    - id: 0070c554ad9a4642b4d787724005b12d
+      name: Left neckline
+      curved: 1
+      handleA: {x: -3.8500001, y: 0}
+      handleB: {x: 0.7, y: -4.9500003}
+      opening: 1
+    - id: 4153f4d84aa74e71820c8f55a87a19b3
+      name: Left shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 52d360b1ac7d4dcdb81350382453f5a1
+      name: Left armhole
+      curved: 1
+      handleA: {x: 0, y: -9.2}
+      handleB: {x: 9.8, y: 2.3}
+      opening: 1
+    - id: ff4ebbf02d7c4a8582a7e7d8008fef89
+      name: Left side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 180
+      topAboveShoulderCm: 4
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Jersey
+      stretchCompliance: 0.05
+      bendCompliance: 3
+      density: 0.18
+      friction: 0.4
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -0.059495162, y: 0.0078125}
+      scale: 0.009390024
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.50390625
+        y: 0.0078125
+        width: 0.48828122
+        height: 0.61974156
+  seams:
+  - id: 65ffe5f511644b39b82a1306ec130db0
+    a:
+      pieceId: 16c9264830314fc99e67bfcc234f425f
+      edgeId: c5d6cd7ee10b405e88c98ac22b101cea
+      start: 0
+      end: 1
+    b:
+      pieceId: 4ee922820c724d968a8224bafa45dc9d
+      edgeId: ff4ebbf02d7c4a8582a7e7d8008fef89
+      start: 0
+      end: 1
+    reversed: 1
+  - id: d4e271a845024f28be8f3d8d4bc84318
+    a:
+      pieceId: 16c9264830314fc99e67bfcc234f425f
+      edgeId: 1322791d081d4b72a29047e8aeb7dc71
+      start: 0
+      end: 1
+    b:
+      pieceId: 4ee922820c724d968a8224bafa45dc9d
+      edgeId: 9f36b3869e024a7aaa81ce4a7735c98f
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 3bf892755370435eb22f76aca8f32466
+    a:
+      pieceId: 16c9264830314fc99e67bfcc234f425f
+      edgeId: 5023528924284bc7a3b07b9efb9186fc
+      start: 0
+      end: 1
+    b:
+      pieceId: 4ee922820c724d968a8224bafa45dc9d
+      edgeId: 4153f4d84aa74e71820c8f55a87a19b3
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 7bc47c91d19e4df9bcfff4f7dcc43055
+    a:
+      pieceId: 16c9264830314fc99e67bfcc234f425f
+      edgeId: f6e7299f4a98421297f02c60a3a08ffc
+      start: 0
+      end: 1
+    b:
+      pieceId: 4ee922820c724d968a8224bafa45dc9d
+      edgeId: 254a9caed5984ceaa04242eeb99e8230
+      start: 0
+      end: 1
+    reversed: 1
+  dimensions:
+  - id: a4fe9ec776874cfd90ff4928766fb355
+    name: Chest
+    kind: 0
+    measurement: 1
+    fixedCm: 106
+    allowanceCm: 6
+    shareCount: 2
+    lineY: 38
+    pieceIds:
+    - 16c9264830314fc99e67bfcc234f425f
+    - 4ee922820c724d968a8224bafa45dc9d
+  - id: 78504258fa80488785c39a294f6cadf1
+    name: Length
+    kind: 1
+    measurement: 4
+    fixedCm: 66
+    allowanceCm: 29
+    shareCount: 1
+    lineY: 0
+    pieceIds:
+    - 16c9264830314fc99e67bfcc234f425f
+    - 4ee922820c724d968a8224bafa45dc9d
+  meshLevel: 1
+  customEdgeLengthCm: 2
+  uvLayout:
+    bakeResolution: 1024
+    gutterPixels: 8
+    aspect: 1
+  notes: Sleeveless jersey tank with a scoop neck and narrow straps.

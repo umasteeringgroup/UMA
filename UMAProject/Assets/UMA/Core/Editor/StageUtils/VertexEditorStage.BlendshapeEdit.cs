@@ -623,14 +623,29 @@ namespace UMA
         /// </summary>
         public static VertexEditorStage ShowStageForSlots(RaceData race, IList<SlotDataAsset> slots, out string message)
         {
+            return ShowStageOnTemporaryCharacter(race, slots, true, out message);
+        }
+
+        /// <summary>
+        /// Builds the temporary character of a race, puts it in the modelled pose and opens the editor
+        /// on it. With <paramref name="requireSlots"/> the given slots are added to the character and
+        /// become the only editable ones; without it the character is the race's base recipe alone.
+        /// </summary>
+        private static VertexEditorStage ShowStageOnTemporaryCharacter(RaceData race, IList<SlotDataAsset> slots, bool requireSlots, out string message)
+        {
             message = null;
+            if (!CloseOpenVertexEditor())
+            {
+                message = "The Vertex Editor that is open was kept.";
+                return null;
+            }
             var generator = UMAAssetIndexer.Instance != null ? UMAAssetIndexer.Instance.Generator : null;
             if (race == null || generator == null)
             {
                 message = race == null ? "Choose a race." : "No UMA generator is available to build the character.";
                 return null;
             }
-            var avatarObject = new GameObject("Blendshape Sculpt Character (temporary)") { hideFlags = HideFlags.DontSave };
+            var avatarObject = new GameObject(requireSlots ? "Blendshape Sculpt Character (temporary)" : "Vertex Editor Character (temporary)") { hideFlags = HideFlags.DontSave };
             var notes = new List<string>();
             VertexEditorStage stage = null;
             UmaTPose plainTPose = null;
@@ -659,7 +674,7 @@ namespace UMA
                 var names = new HashSet<string>(StringComparer.Ordinal);
                 var added = new List<KeyValuePair<SlotDataAsset, OverlayDataAsset>>();
                 UMAData.UMARecipe recipe = avatar.umaData.umaRecipe;
-                foreach (SlotDataAsset slot in slots)
+                foreach (SlotDataAsset slot in slots ?? (IList<SlotDataAsset>)Array.Empty<SlotDataAsset>())
                 {
                     if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || !names.Add(slot.slotName))
                     {
@@ -677,8 +692,7 @@ namespace UMA
                     recipe.SetSlot(recipe.slotDataList.Length, slotData);
                     added.Add(new KeyValuePair<SlotDataAsset, OverlayDataAsset>(slot, overlay));
                 }
-                if (names.Count == 0)
-
+                if (requireSlots && names.Count == 0)
                 {
                     message = "None of the slots could be put on a character. " + string.Join(" ", notes);
                     return null;

@@ -747,16 +747,19 @@ namespace UMA
 
         internal void ActivateSelectionAuthoringMode()
         {
+            DeactivateWorkflow();
             ChangeSceneToolMode(SceneToolMode.Select);
         }
 
         internal void ActivateSculptAuthoringMode()
         {
+            DeactivateWorkflow();
             ChangeSceneToolMode(SceneToolMode.Sculpt);
         }
 
         internal void ActivateVertexPaintAuthoringMode()
         {
+            DeactivateWorkflow();
             ChangeSceneToolMode(SceneToolMode.VertexPaint);
         }
 
@@ -1587,6 +1590,10 @@ namespace UMA
             {
                 return null;
             }
+            if (!CloseOpenVertexEditor())
+            {
+                return null;
+            }
 
             VertexEditorStage stage = ScriptableObject.CreateInstance<VertexEditorStage>();
             stage.titleContent = new GUIContent();
@@ -1617,6 +1624,10 @@ namespace UMA
 
         public static void OpenSlotWeightEditor(SlotDataAsset slotAsset)
         {
+            if (!CloseOpenVertexEditor())
+            {
+                return;
+            }
             if (slotAsset == null)
             {
                 EditorUtility.DisplayDialog("View and Edit weights", "Select a SlotDataAsset asset in the Project window.", "OK");
@@ -1657,6 +1668,10 @@ namespace UMA
 
         internal static void ShowSlotWeightEditorStage(SlotDataAsset slotAsset, RaceData race)
         {
+            if (!CloseOpenVertexEditor())
+            {
+                return;
+            }
             if (slotAsset == null || race == null)
             {
                 EditorUtility.DisplayDialog("View and Edit weights", "Select a slot and race before opening the weight editor.", "OK");
@@ -1688,6 +1703,10 @@ namespace UMA
 
         public static void OpenCurrentCharacterWeightViewer(DynamicCharacterAvatar avatar)
         {
+            if (!CloseOpenVertexEditor())
+            {
+                return;
+            }
             if (!TryValidateCurrentCharacterWeightAvatar(avatar, out string errorMessage))
             {
                 EditorUtility.DisplayDialog("View Current Character Weights", errorMessage, "OK");
@@ -1711,6 +1730,10 @@ namespace UMA
 
         public static void OpenTouchupWeights(DynamicCharacterAvatar avatar)
         {
+            if (!CloseOpenVertexEditor())
+            {
+                return;
+            }
             if (!TryValidateCurrentCharacterWeightAvatar(avatar, out string errorMessage))
             {
                 EditorUtility.DisplayDialog("Touchup Weights", errorMessage, "OK");
@@ -6061,6 +6084,7 @@ namespace UMA
 
         private void CloseStageResources()
         {
+            CloseWorkflows();
             Undo.undoRedoPerformed -= OnTouchupWeightUndoRedo;
             Undo.undoRedoPerformed -= OnSculptMaskUndoRedo;
             AssemblyReloadEvents.beforeAssemblyReload -= ReleaseSculptMaskResources;
@@ -6307,6 +6331,13 @@ namespace UMA
             }
 
             Handles.SetCamera(sceneView.camera);
+            if (WorkflowExtensionsAllowed && activeWorkflow != null)
+            {
+                // A plugin workflow has the Scene view; the stage's own tools stay quiet.
+                RunActiveWorkflowSceneGUI(sceneView, mouseOverAnyWindow);
+                DrawGUIWindows(sceneView);
+                return;
+            }
             if (!slotWeightEditorMode && sceneToolMode == SceneToolMode.Sculpt)
             {
                 HandleSculptSceneGUI(sceneView, currentEvent, mouseOverAnyWindow);
@@ -9537,7 +9568,7 @@ namespace UMA
 
         /// <summary>Advanced vertex selection (also used by the slot weight editor).</summary>
         private bool ShowAdvancedToolbar =>
-            !touchupWeightsMode &&
+            !touchupWeightsMode && activeWorkflow == null &&
             (sceneToolMode == SceneToolMode.Select || sceneToolMode == SceneToolMode.SelectionBrush) &&
             (slotWeightEditorMode || modifierEditor == null || !modifierEditor.IsBlendshapeExtractionWorkflow);
 
@@ -10682,6 +10713,11 @@ namespace UMA
 
         private int GetAuthoringWorkflowIndex()
         {
+            if (activeWorkflow != null)
+            {
+                // A plugin workflow is active: none of the built-in buttons is lit.
+                return -1;
+            }
             if (sceneToolMode == SceneToolMode.Sculpt)
             {
                 return 0;
@@ -10716,6 +10752,7 @@ namespace UMA
                 return;
             }
 
+            DeactivateWorkflow();
             switch (requestedWorkflow)
             {
                 case 0:
@@ -10767,6 +10804,10 @@ namespace UMA
                 GUILayout.Space(3f);
                 DrawAuthoringWorkflowToolbar();
                 GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(3f);
+                DrawWorkflowExtensionBar();
+                GUILayout.EndHorizontal();
             }
             if (slotWeightEditorMode || GetAuthoringWorkflowIndex() == 2)
             {
@@ -10790,6 +10831,14 @@ namespace UMA
             DrawWireframeOption();
             DrawLightingOptions();
 
+            if (!slotWeightEditorMode && activeWorkflow != null)
+            {
+                GUIHelper.BeginVerticalPadded(5, new Color(0.93f, 0.87f, 0.78f), EditorStyles.helpBox);
+                DrawActiveWorkflowTools();
+                GUIHelper.EndVerticalPadded(5);
+                EndToolsScroll(240f);
+                return;
+            }
             if (sceneToolMode == SceneToolMode.Sculpt)
             {
                 GUIHelper.BeginVerticalPadded(5, new Color(0.75f, 0.85f, 1f), EditorStyles.helpBox);
@@ -15523,6 +15572,7 @@ namespace UMA
             {
                 RefreshTouchupWeightVisualization();
             }
+            NotifyWorkflowCharacterRebuilt();
         }
 
         public void UpdateSelections()

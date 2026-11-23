@@ -1,0 +1,292 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84502f13ce032214195115124a93b406, type: 3}
+  m_Name: Crop Top
+  m_EditorClassIdentifier: UMA.ClothesDesigner.Editor::UMA.ClothesDesigner.Editor.ClothesPattern
+  schemaVersion: 2
+  pieces:
+  - id: 05ca5c84ec5e4edb93eb81c5fd5e5b55
+    name: Front
+    points:
+    - id: ef1245d880fa4ba48b2918e5a3861ceb
+      position: {x: 1, y: 0}
+    - id: 6cb78b7be7884e04be1ff88f2e30da5c
+      position: {x: 47, y: 0}
+    - id: a1af758e2b804b4f9a14fa99cc364775
+      position: {x: 48, y: 17}
+    - id: 722d5571f30546e6bc0a062c7c4af1c1
+      position: {x: 37, y: 38}
+    - id: 8476da0e39c6496686520de3da2c1534
+      position: {x: 31.5, y: 40}
+    - id: 74c8f60a0c834c329daf1471b4801a49
+      position: {x: 24, y: 29}
+    - id: 88f90915d89c4dbe87f925081399a323
+      position: {x: 16.5, y: 40}
+    - id: 0616db0c9a874643a62935e691d562b7
+      position: {x: 11, y: 38}
+    - id: 2865fa4bdb6e4965baedb3765298f9b2
+      position: {x: 0, y: 17}
+    edges:
+    - id: 9b49314111544de4874a0e236b984fbd
+      name: Hem
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: f615f98d259f4209958cb17db338fcd1
+      name: Right side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: fd8a2c3484d94044b1033728d74f6aac
+      name: Right armhole
+      curved: 1
+      handleA: {x: -7.7, y: 2.1000001}
+      handleB: {x: 0, y: -8.400001}
+      opening: 1
+    - id: d19817b46fd14d7db253e88d95b64b60
+      name: Right shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: d98402c126864fdf9dea6337eaa17101
+      name: Right neckline
+      curved: 1
+      handleA: {x: -0.75, y: -6.05}
+      handleB: {x: 4.125, y: 0}
+      opening: 1
+    - id: 15df740a8abf4daeb836c43b4996ad8e
+      name: Left neckline
+      curved: 1
+      handleA: {x: -4.125, y: 0}
+      handleB: {x: 0.75, y: -6.05}
+      opening: 1
+    - id: 23dbe7b114eb4e3c95d586e3e0aca990
+      name: Left shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 48d9740d424b4643b03a4d958c67bf5e
+      name: Left armhole
+      curved: 1
+      handleA: {x: 0, y: -8.400001}
+      handleB: {x: 7.7, y: 2.1000001}
+      opening: 1
+    - id: 8bb97b87fa124bf5b0bdd557ad39f307
+      name: Left side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 0
+      topAboveShoulderCm: 4
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Spandex
+      stretchCompliance: 0.1
+      bendCompliance: 10
+      density: 0.2
+      friction: 0.5
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: 0.0078125, y: 0.0078125}
+      scale: 0.012207031
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.0078125
+        width: 0.5859375
+        height: 0.48828125
+  - id: 382b8f9040ba4a9c9f72a194cbb9cede
+    name: Back
+    points:
+    - id: d7d0e14d2c384eaa95b79b6ef25250ec
+      position: {x: 57, y: 0}
+    - id: 90b1b40988b34fd7822c4f92b088cec2
+      position: {x: 103, y: 0}
+    - id: 7c58ae9d9cd9454b8cec889828b8a546
+      position: {x: 104, y: 17}
+    - id: 78a941e2c321473d9fecb0245551b336
+      position: {x: 93, y: 38}
+    - id: a6d5d2453ea14f4b800d8989770d532f
+      position: {x: 87.5, y: 40}
+    - id: e63d8e98f241422aad1414b7bde00d07
+      position: {x: 80, y: 35}
+    - id: e848fd282d494255b01ad150b1a7f8a5
+      position: {x: 72.5, y: 40}
+    - id: 8ab23897faf7477d95664542db167c5e
+      position: {x: 67, y: 38}
+    - id: 258ffc4f85464e6b9987bad05215f6dc
+      position: {x: 56, y: 17}
+    edges:
+    - id: d80990e51214408ea03a7fc451816305
+      name: Hem
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: 66485976009f418b9a64d1c2c050af47
+      name: Right side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 969cb5c748144bcb89a2fd1541e350e8
+      name: Right armhole
+      curved: 1
+      handleA: {x: -7.7, y: 2.1000001}
+      handleB: {x: 0, y: -8.400001}
+      opening: 1
+    - id: 7d73b2189012425699886a3d472f9f98
+      name: Right shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 12f1d5c0d8254008bf316243ae4464a5
+      name: Right neckline
+      curved: 1
+      handleA: {x: -0.75, y: -2.75}
+      handleB: {x: 4.125, y: 0}
+      opening: 1
+    - id: 172be645167b48d288a8ca3f4653e08d
+      name: Left neckline
+      curved: 1
+      handleA: {x: -4.125, y: 0}
+      handleB: {x: 0.75, y: -2.75}
+      opening: 1
+    - id: 44000925ad104039bd48e312370ca3f4
+      name: Left shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: e8535a896b3c4c608a94096c51129f3d
+      name: Left armhole
+      curved: 1
+      handleA: {x: 0, y: -8.400001}
+      handleB: {x: 7.7, y: 2.1000001}
+      opening: 1
+    - id: bfae982713c54308968a2a5ae638f391
+      name: Left side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 180
+      topAboveShoulderCm: 4
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Spandex
+      stretchCompliance: 0.1
+      bendCompliance: 10
+      density: 0.2
+      friction: 0.5
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -0.67578125, y: 0.50390625}
+      scale: 0.012207031
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.50390625
+        width: 0.5859375
+        height: 0.48828125
+  seams:
+  - id: f5bf994ba6314c3ea752c200980d4218
+    a:
+      pieceId: 05ca5c84ec5e4edb93eb81c5fd5e5b55
+      edgeId: f615f98d259f4209958cb17db338fcd1
+      start: 0
+      end: 1
+    b:
+      pieceId: 382b8f9040ba4a9c9f72a194cbb9cede
+      edgeId: bfae982713c54308968a2a5ae638f391
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 0dc19de7b9064f319c04e711dce0239f
+    a:
+      pieceId: 05ca5c84ec5e4edb93eb81c5fd5e5b55
+      edgeId: 8bb97b87fa124bf5b0bdd557ad39f307
+      start: 0
+      end: 1
+    b:
+      pieceId: 382b8f9040ba4a9c9f72a194cbb9cede
+      edgeId: 66485976009f418b9a64d1c2c050af47
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 64e9cd7eb1674e8bb07ea18e95c196a6
+    a:
+      pieceId: 05ca5c84ec5e4edb93eb81c5fd5e5b55
+      edgeId: d19817b46fd14d7db253e88d95b64b60
+      start: 0
+      end: 1
+    b:
+      pieceId: 382b8f9040ba4a9c9f72a194cbb9cede
+      edgeId: 44000925ad104039bd48e312370ca3f4
+      start: 0
+      end: 1
+    reversed: 1
+  - id: e8244dafd96643458981d5d5aaf963d2
+    a:
+      pieceId: 05ca5c84ec5e4edb93eb81c5fd5e5b55
+      edgeId: 23dbe7b114eb4e3c95d586e3e0aca990
+      start: 0
+      end: 1
+    b:
+      pieceId: 382b8f9040ba4a9c9f72a194cbb9cede
+      edgeId: 7d73b2189012425699886a3d472f9f98
+      start: 0
+      end: 1
+    reversed: 1
+  dimensions:
+  - id: 8ad7fce6b52d4a6996f9afe1ed3f512e
+    name: Chest
+    kind: 0
+    measurement: 1
+    fixedCm: 96
+    allowanceCm: -4
+    shareCount: 2
+    lineY: 14
+    pieceIds:
+    - 05ca5c84ec5e4edb93eb81c5fd5e5b55
+    - 382b8f9040ba4a9c9f72a194cbb9cede
+  meshLevel: 1
+  customEdgeLengthCm: 2
+  uvLayout:
+    bakeResolution: 1024
+    gutterPixels: 8
+    aspect: 1
+  notes: Fitted sleeveless top in spandex, ending at the waist.

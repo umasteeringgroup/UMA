@@ -1,0 +1,285 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84502f13ce032214195115124a93b406, type: 3}
+  m_Name: Pencil Skirt
+  m_EditorClassIdentifier: UMA.ClothesDesigner.Editor::UMA.ClothesDesigner.Editor.ClothesPattern
+  schemaVersion: 2
+  pieces:
+  - id: 46bd4d2de6cb4624a2ba5498809da573
+    name: Front
+    points:
+    - id: 94ff9b4e2a954ab5b1ca89317cb2fbe6
+      position: {x: 2, y: 0}
+    - id: 5f5b386bfea144b6b487b8670e0a2e7c
+      position: {x: 59, y: 0}
+    - id: a37c769317574b1ca9c4a55dbe4fe9b9
+      position: {x: 61, y: 40}
+    - id: d27617c3570d4115b5449b343f72b3dd
+      position: {x: 51, y: 60}
+    - id: 6fcd8966bf21432cbe23ff99cf905ba9
+      position: {x: 10, y: 60}
+    - id: 99c6a1ef82854e1e9606061abc87fd4a
+      position: {x: 0, y: 40}
+    edges:
+    - id: 9122e2429e3845dc8afa4fde7a14241c
+      name: Hem
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: 45d3f162d97e4f048866c518a2ec073a
+      name: Right side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 5ee8cd4d03354bba8c45c83b24d376c0
+      name: Right hip
+      curved: 1
+      handleA: {x: 0.5, y: 10}
+      handleB: {x: 3, y: -8}
+      opening: 0
+    - id: 97299529ae4b41aa8b67a384cc3f55d8
+      name: Waist
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: d31df810f8374908ba6ad5848af9ab5a
+      name: Left hip
+      curved: 1
+      handleA: {x: -3, y: -8}
+      handleB: {x: -0.5, y: 10}
+      opening: 0
+    - id: 9ac97199fbc74066bcd3c5e923872253
+      name: Left side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 0
+      topAboveShoulderCm: -37
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Wool
+      stretchCompliance: 0.00000001
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.45
+    darts:
+    - id: a6f58dc2675a46c09e9012e782988400
+      kind: 0
+      edgeId: 97299529ae4b41aa8b67a384cc3f55d8
+      position: 0.3
+      widthCm: 2.5
+      tip: {x: 38.5, y: 47}
+      tip2: {x: 30.5, y: 0}
+      curveCm: 0
+      widestAt: 0.5
+      roundness: 0.5
+    - id: 8f8536099989449f9b5346de9e85920d
+      kind: 0
+      edgeId: 97299529ae4b41aa8b67a384cc3f55d8
+      position: 0.7
+      widthCm: 2.5
+      tip: {x: 22.5, y: 47}
+      tip2: {x: 30.5, y: 0}
+      curveCm: 0
+      widestAt: 0.5
+      roundness: 0.5
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: 0.007987093, y: 0.0078125}
+      scale: 0.0081380205
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.0078125
+        width: 0.49676844
+        height: 0.48828122
+  - id: f81a7c06cd1c4a74a2c32cdfe0a49c68
+    name: Back
+    points:
+    - id: 09ad81d800544618a92bf3001be52c2c
+      position: {x: 71, y: 0}
+    - id: d5cf8939fd01498baf017160da4afc74
+      position: {x: 128, y: 0}
+    - id: 717ae6792a9b4038be7058566b58c9dc
+      position: {x: 130, y: 40}
+    - id: 111affeff51541929125698d4736723a
+      position: {x: 121, y: 60}
+    - id: b4d87c170d3e463598003563d466324d
+      position: {x: 78, y: 60}
+    - id: 7720cd2ac11f4b21ac7c9b866218c3d6
+      position: {x: 69, y: 40}
+    edges:
+    - id: 5d6db535fe234a6999db27f238865ed2
+      name: Hem
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: 91b781dd67c84345b2086af0ad4ca65b
+      name: Right side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 24f3b26d6b304e819c857ea6ffbbedda
+      name: Right hip
+      curved: 1
+      handleA: {x: 0.5, y: 10}
+      handleB: {x: 3, y: -8}
+      opening: 0
+    - id: 9d856a3e7e6c42e38f94c6321e88fcc6
+      name: Waist
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+    - id: eccc548895154f43bd3e341ca0002550
+      name: Left hip
+      curved: 1
+      handleA: {x: -3, y: -8}
+      handleB: {x: -0.5, y: 10}
+      opening: 0
+    - id: 36e4183952a74a2bb4ed7ce5eb263d34
+      name: Left side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 180
+      topAboveShoulderCm: -37
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Wool
+      stretchCompliance: 0.00000001
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.45
+    darts:
+    - id: 1a7340a1fff94ff08e41b86648f454df
+      kind: 0
+      edgeId: 9d856a3e7e6c42e38f94c6321e88fcc6
+      position: 0.3
+      widthCm: 3.5
+      tip: {x: 107.5, y: 47}
+      tip2: {x: 99.5, y: 0}
+      curveCm: 0
+      widestAt: 0.5
+      roundness: 0.5
+    - id: c39a871d57934a52a2dba7f378ee1148
+      kind: 0
+      edgeId: 9d856a3e7e6c42e38f94c6321e88fcc6
+      position: 0.7
+      widthCm: 3.5
+      tip: {x: 91.5, y: 47}
+      tip2: {x: 99.5, y: 0}
+      curveCm: 0
+      widestAt: 0.5
+      roundness: 0.5
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -0.55350614, y: 0.50390625}
+      scale: 0.0081380205
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.50390625
+        width: 0.4968288
+        height: 0.48828122
+  seams:
+  - id: 77b2d584f50c44bcaebf187822a7d134
+    a:
+      pieceId: 46bd4d2de6cb4624a2ba5498809da573
+      edgeId: 45d3f162d97e4f048866c518a2ec073a
+      start: 0
+      end: 1
+    b:
+      pieceId: f81a7c06cd1c4a74a2c32cdfe0a49c68
+      edgeId: 36e4183952a74a2bb4ed7ce5eb263d34
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 16ad8b2e26ad4d61a684515e1a5f1f8e
+    a:
+      pieceId: 46bd4d2de6cb4624a2ba5498809da573
+      edgeId: 5ee8cd4d03354bba8c45c83b24d376c0
+      start: 0
+      end: 1
+    b:
+      pieceId: f81a7c06cd1c4a74a2c32cdfe0a49c68
+      edgeId: eccc548895154f43bd3e341ca0002550
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 0b7fad7e760040b089da03ecaecce6e8
+    a:
+      pieceId: 46bd4d2de6cb4624a2ba5498809da573
+      edgeId: 9ac97199fbc74066bcd3c5e923872253
+      start: 0
+      end: 1
+    b:
+      pieceId: f81a7c06cd1c4a74a2c32cdfe0a49c68
+      edgeId: 91b781dd67c84345b2086af0ad4ca65b
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 4c76fce071da4932b64252fc4f3e5501
+    a:
+      pieceId: 46bd4d2de6cb4624a2ba5498809da573
+      edgeId: d31df810f8374908ba6ad5848af9ab5a
+      start: 0
+      end: 1
+    b:
+      pieceId: f81a7c06cd1c4a74a2c32cdfe0a49c68
+      edgeId: 24f3b26d6b304e819c857ea6ffbbedda
+      start: 0
+      end: 1
+    reversed: 1
+  dimensions:
+  - id: ae7dfd9cdfe24ba5896bcf0d98a42662
+    name: Hip
+    kind: 0
+    measurement: 3
+    fixedCm: 122
+    allowanceCm: 5
+    shareCount: 2
+    lineY: 40
+    pieceIds:
+    - 46bd4d2de6cb4624a2ba5498809da573
+    - f81a7c06cd1c4a74a2c32cdfe0a49c68
+  meshLevel: 1
+  customEdgeLengthCm: 2
+  uvLayout:
+    bakeResolution: 1024
+    gutterPixels: 8
+    aspect: 1
+  notes: 'Fitted wool skirt to the knee: two waist darts on each panel, sized by
+    the hips.'

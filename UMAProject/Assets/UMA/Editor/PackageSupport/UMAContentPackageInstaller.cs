@@ -145,6 +145,9 @@ namespace UMA.Editors.PackageSupport
         public static void InstallDismembermentFromFile() => InstallFromFile(UMAContentKind.Dismemberment);
         public static void InstallDismembermentExamplesFromFile() => InstallFromFile(UMAContentKind.DismembermentExamples);
         public static void InstallDismembermentTestsFromFile() => InstallFromFile(UMAContentKind.DismembermentTests);
+        public static void InstallClothesDesignerFromFile() => InstallFromFile(UMAContentKind.ClothesDesigner);
+        public static void InstallClothesDesignerExamplesFromFile() => InstallFromFile(UMAContentKind.ClothesDesignerExamples);
+        public static void InstallClothesDesignerTestsFromFile() => InstallFromFile(UMAContentKind.ClothesDesignerTests);
 
         public static bool IsInstallingAllPlugins =>
             !string.IsNullOrEmpty(SessionState.GetString(InstallAllSessionKey, string.Empty));

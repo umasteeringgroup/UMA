@@ -517,6 +517,10 @@ namespace UMA
         {
             EndSculptStroke(true);
             EndVertexPaintStroke(true);
+            if (!ResolveWorkflowUnsavedWork(canStay))
+            {
+                return false;
+            }
             for (int round = 0; round < 12; round++)
             {
                 UnsavedWork work = GetUnsavedWork(true);

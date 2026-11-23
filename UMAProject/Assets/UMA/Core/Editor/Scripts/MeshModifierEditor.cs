@@ -688,6 +688,13 @@ namespace UMA
             SyncWorkflowFromSceneTool();
             windowScroll = EditorGUILayout.BeginScrollView(windowScroll);
             DrawWorkflowNavigation();
+            if (vertexEditorStage != null && vertexEditorStage.ActiveWorkflow != null)
+            {
+                // A plugin workflow is active: the window's body is the plugin's.
+                vertexEditorStage.DrawActiveWorkflowWindow();
+                EditorGUILayout.EndScrollView();
+                return;
+            }
             DrawSavePanel();
             DrawAssetControls();
 
@@ -758,12 +765,19 @@ namespace UMA
         private void DrawWorkflowNavigation()
         {
             GUILayout.Label("Authoring Workflow", centeredLabel);
+            // While a plugin workflow is active none of the built-in buttons is lit.
+            bool pluginWorkflowActive = vertexEditorStage != null && vertexEditorStage.ActiveWorkflow != null;
+            int shownWorkflow = pluginWorkflowActive ? -1 : (int)authoringWorkflow;
             int selectedWorkflow = GUILayout.Toolbar(
-                (int)authoringWorkflow,
+                shownWorkflow,
                 new[] { "Sculpt", "Vertex Paint", "Advanced", "Blendshapes" });
-            if (selectedWorkflow != (int)authoringWorkflow)
+            if (selectedWorkflow != shownWorkflow)
             {
                 SwitchAuthoringWorkflow((AuthoringWorkflow)selectedWorkflow);
+            }
+            if (vertexEditorStage != null)
+            {
+                vertexEditorStage.DrawWorkflowExtensionBar();
             }
         }
 

@@ -1006,6 +1006,12 @@ function Test-CoreFileIncluded([string]$relativePath) {
         $normalized.StartsWith("OverlayPainterExamples/", [StringComparison]::OrdinalIgnoreCase) -or
         $normalized.Equals("OverlayPainterTests.meta", [StringComparison]::OrdinalIgnoreCase) -or
         $normalized.StartsWith("OverlayPainterTests/", [StringComparison]::OrdinalIgnoreCase) -or
+        $normalized.Equals("ClothesDesigner.meta", [StringComparison]::OrdinalIgnoreCase) -or
+        $normalized.StartsWith("ClothesDesigner/", [StringComparison]::OrdinalIgnoreCase) -or
+        $normalized.Equals("ClothesDesignerExamples.meta", [StringComparison]::OrdinalIgnoreCase) -or
+        $normalized.StartsWith("ClothesDesignerExamples/", [StringComparison]::OrdinalIgnoreCase) -or
+        $normalized.Equals("ClothesDesignerTests.meta", [StringComparison]::OrdinalIgnoreCase) -or
+        $normalized.StartsWith("ClothesDesignerTests/", [StringComparison]::OrdinalIgnoreCase) -or
         $normalized.Equals("UMA3.meta", [StringComparison]::OrdinalIgnoreCase) -or
         $normalized.StartsWith("UMA3/", [StringComparison]::OrdinalIgnoreCase) -or
         $normalized.Equals("UMA2.meta", [StringComparison]::OrdinalIgnoreCase) -or
@@ -1082,7 +1088,7 @@ function Assert-CoreStaging([string]$source, [string]$destination, $sourceFiles)
     if ([string]$package.name -ne "com.umasteeringgroup.uma") {
         throw "Core staging has the wrong package identity"
     }
-    foreach ($forbidden in @("UMADismemberment", "UMADismemberment.meta", "HairCards", "HairCards.meta", "OverlayPainter", "OverlayPainter.meta", "OverlayPainterExamples", "OverlayPainterExamples.meta", "OverlayPainterTests", "OverlayPainterTests.meta", "UMA3", "UMA3.meta", "UMA2", "UMA2.meta",
+    foreach ($forbidden in @("UMADismemberment", "UMADismemberment.meta", "HairCards", "HairCards.meta", "OverlayPainter", "OverlayPainter.meta", "OverlayPainterExamples", "OverlayPainterExamples.meta", "OverlayPainterTests", "OverlayPainterTests.meta", "ClothesDesigner", "ClothesDesigner.meta", "ClothesDesignerExamples", "ClothesDesignerExamples.meta", "ClothesDesignerTests", "ClothesDesignerTests.meta", "UMA3", "UMA3.meta", "UMA2", "UMA2.meta",
             "Settings", "Settings.meta",
             "Temp", "Temp.meta", "Tasks", "Tasks.meta",
             "SRP/UMAURPManifest.json", "SRP/UMAHDRPManifest.json")) {

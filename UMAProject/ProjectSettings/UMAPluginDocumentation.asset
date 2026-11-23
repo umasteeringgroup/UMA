@@ -29,3 +29,7 @@ MonoBehaviour:
     displayName: UMA2Compatibility
     documentationGuid: 0490dc311142f92438ba060621c9ff36
     descriptorGuid: f60fc75df3b6bef4184621af11594eef
+  - pluginId: clothes-designer
+    displayName: Clothes Designer
+    documentationGuid: 8d8bcaef5f2d2f645923dffee0b47983
+    descriptorGuid: 3e1c79e8703c67042be351c35bdafcd5

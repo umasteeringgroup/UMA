@@ -21,7 +21,10 @@ namespace UMA.Editors.PackageSupport
         DismembermentExamples,
         DismembermentTests,
         Uma2CompatibilityExamples,
-        Uma2CompatibilityTests
+        Uma2CompatibilityTests,
+        ClothesDesigner,
+        ClothesDesignerExamples,
+        ClothesDesignerTests
     }
 
     public static class UMAContentCatalog
@@ -44,6 +47,9 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.Dismemberment => "dismemberment",
             UMAContentKind.DismembermentExamples => "dismemberment-examples",
             UMAContentKind.DismembermentTests => "dismemberment-tests",
+            UMAContentKind.ClothesDesigner => "clothes-designer",
+            UMAContentKind.ClothesDesignerExamples => "clothes-designer-examples",
+            UMAContentKind.ClothesDesignerTests => "clothes-designer-tests",
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -62,6 +68,9 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.Dismemberment => "Dismemberment",
             UMAContentKind.DismembermentExamples => "Dismemberment Examples",
             UMAContentKind.DismembermentTests => "Dismemberment Tests",
+            UMAContentKind.ClothesDesigner => "Clothes Designer",
+            UMAContentKind.ClothesDesignerExamples => "Clothes Designer Examples",
+            UMAContentKind.ClothesDesignerTests => "Clothes Designer Tests",
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -80,6 +89,9 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.Dismemberment => "Assets/UMA/UMADismemberment",
             UMAContentKind.DismembermentExamples => "Assets/UMA/UMADismemberment/Samples",
             UMAContentKind.DismembermentTests => "Assets/UMA/UMADismemberment/Tests",
+            UMAContentKind.ClothesDesigner => "Assets/UMA/ClothesDesigner",
+            UMAContentKind.ClothesDesignerExamples => "Assets/UMA/ClothesDesignerExamples",
+            UMAContentKind.ClothesDesignerTests => "Assets/UMA/ClothesDesignerTests",
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -111,6 +123,9 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.Dismemberment => new[] { "core" },
             UMAContentKind.DismembermentExamples => new[] { "core", "dismemberment", "uma3", "srp" },
             UMAContentKind.DismembermentTests => new[] { "core", "dismemberment", "test-framework" },
+            UMAContentKind.ClothesDesigner => new[] { "core" },
+            UMAContentKind.ClothesDesignerExamples => new[] { "core", "clothes-designer", "uma3", "srp" },
+            UMAContentKind.ClothesDesignerTests => new[] { "core", "clothes-designer", "test-framework" },
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -125,6 +140,7 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.OverlayPainterExamples or UMAContentKind.OverlayPainterTests => UMAContentKind.OverlayPainter,
             UMAContentKind.HairCardsExamples or UMAContentKind.HairCardsTests => UMAContentKind.HairCards,
             UMAContentKind.DismembermentExamples or UMAContentKind.DismembermentTests => UMAContentKind.Dismemberment,
+            UMAContentKind.ClothesDesignerExamples or UMAContentKind.ClothesDesignerTests => UMAContentKind.ClothesDesigner,
             _ => null
         };
 
@@ -156,6 +172,9 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.Dismemberment => "Runtime UMA mesh dismemberment, cut capping, detached-piece ownership and physics, surface cuts, bleeding and fluid decals. Includes editor configuration and documentation. Normal UMA avatar generation does not require this plugin.",
             UMAContentKind.DismembermentExamples => "Dismemberment demo scene, callbacks, UI helper scripts, cap materials and surface-fluid profiles. Requires Dismemberment, UMA3 Content and SRP Support.",
             UMAContentKind.DismembermentTests => "Optional automated dismemberment geometry, physics, resource and surface-cut tests. Requires Dismemberment and Unity Test Framework.",
+            UMAContentKind.ClothesDesigner => "Design clothes for a UMA race from sewing patterns in the Vertex Editor, and publish them as ordinary slots and wardrobe recipes. This first version adds the Clothes Designer workflow and prepares the body the clothes are fitted to; drafting, sewing and draping follow. Published clothes need only UMA at runtime.",
+            UMAContentKind.ClothesDesignerExamples => "Example material for learning the Clothes Designer. Requires Clothes Designer, UMA 3 Content and render pipeline support.",
+            UMAContentKind.ClothesDesignerTests => "Optional automated tests for the Clothes Designer. Requires Clothes Designer and Unity Test Framework.",
             _ => string.Empty
         };
 
@@ -173,6 +192,9 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.Dismemberment => "Dismemberment",
             UMAContentKind.DismembermentExamples => "DismembermentExamples",
             UMAContentKind.DismembermentTests => "DismembermentTests",
+            UMAContentKind.ClothesDesigner => "ClothesDesigner",
+            UMAContentKind.ClothesDesignerExamples => "ClothesDesignerExamples",
+            UMAContentKind.ClothesDesignerTests => "ClothesDesignerTests",
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -190,6 +212,9 @@ namespace UMA.Editors.PackageSupport
             UMAContentKind.Dismemberment => "1a936e502e1b4d81b2f97b4e8ce0b563",
             UMAContentKind.DismembermentExamples => "d14a3c192acf4fce9caa7ef74dc87eb0",
             UMAContentKind.DismembermentTests => "9ea72f06bca04ee7a4d2100630cffe54",
+            UMAContentKind.ClothesDesigner => "6d9ff568f87a4a3ba33b272b6b77ac2c",
+            UMAContentKind.ClothesDesignerExamples => "8767f0b1347a4787b6979b504f2c89fa",
+            UMAContentKind.ClothesDesignerTests => "4009aff20b1d4f0aa751042b69c2916e",
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
 
@@ -209,6 +234,9 @@ namespace UMA.Editors.PackageSupport
                 UMAContentKind.Dismemberment => new[] { "Runtime/UMA.Dismemberment.Runtime.asmdef", "Editor/UMA.Dismemberment.Editor.asmdef", "Editor/DismembermentPluginActions.cs", "UMAPluginDocumentation.json" },
                 UMAContentKind.DismembermentExamples => new[] { "Scripts/UMA.Dismemberment.Samples.asmdef", "Materials/SliceFill.mat" },
                 UMAContentKind.DismembermentTests => new[] { "Editor/UMA.Dismemberment.Editor.Tests.asmdef" },
+                UMAContentKind.ClothesDesigner => new[] { "Editor/UMA.ClothesDesigner.Editor.asmdef", "Editor/ClothesDesignerPluginActions.cs", "Editor/ClothesDesignerWorkflow.cs", "Shaders/ClothesDesignerClothSolver.compute", "UMAPluginDocumentation.json" },
+                UMAContentKind.ClothesDesignerExamples => new[] { "README.md", "Patterns/Sleeveless Vest.asset", "Patterns/T-Shirt.asset", "Patterns/Jeans.asset" },
+                UMAContentKind.ClothesDesignerTests => new[] { "UMA.ClothesDesigner.Editor.Tests.asmdef" },
                 _ => throw new ArgumentOutOfRangeException(nameof(kind))
             };
             return paths.Select(path => Root(kind) + "/" + path).ToArray();

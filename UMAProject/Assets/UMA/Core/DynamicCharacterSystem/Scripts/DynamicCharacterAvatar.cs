@@ -84,7 +84,7 @@ namespace UMA.CharacterSystem
 
             OverlayColorData skinColor = new OverlayColorData(1);
             skinColor.name = "Default";
-            skinColor.color = new Color(1f, 0.9f, 0.9f);
+            skinColor.color = new Color(1f, 1f, 1f);
             skinColor.add = Color.black;
 
             var res = new GameObject("New Dynamic Character Avatar");

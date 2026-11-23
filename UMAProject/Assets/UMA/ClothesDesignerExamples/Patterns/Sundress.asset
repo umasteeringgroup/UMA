@@ -1,0 +1,293 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84502f13ce032214195115124a93b406, type: 3}
+  m_Name: Sundress
+  m_EditorClassIdentifier: UMA.ClothesDesigner.Editor::UMA.ClothesDesigner.Editor.ClothesPattern
+  schemaVersion: 2
+  pieces:
+  - id: c5b7ed674ebc453591a466f97b582599
+    name: Front
+    points:
+    - id: c48302e7cc8840e3bcd13fef608442c2
+      position: {x: 0, y: 0}
+    - id: 145ae9849334443d86e88f634213e8f5
+      position: {x: 84, y: 0}
+    - id: a357503944db455a86256c11e6aa0019
+      position: {x: 68, y: 79}
+    - id: 0a4b0723c06943329f69b5d58d72f5ee
+      position: {x: 54, y: 102.5}
+    - id: a7f867cc0e9c4373966430c11791f046
+      position: {x: 51, y: 104}
+    - id: 7eab6847e51948889ec06b91517cb594
+      position: {x: 42, y: 90}
+    - id: cc5c0fa70ccd4411a6398654ad5bb11f
+      position: {x: 33, y: 104}
+    - id: 63cfd545a1164de0874511d445602421
+      position: {x: 30, y: 102.5}
+    - id: f3685a6dad7244bd9b80a1129ed97bf1
+      position: {x: 16, y: 79}
+    edges:
+    - id: 14a3362030a04818b3c3ae8477db13e5
+      name: Hem
+      curved: 1
+      handleA: {x: 14, y: -3}
+      handleB: {x: -14, y: -3}
+      opening: 1
+    - id: 77c48ee513f7494d904ac26bb45c9e5c
+      name: Right side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 58df39ac460e4ea8a21afa05f96c9a67
+      name: Right armhole
+      curved: 1
+      handleA: {x: -9.8, y: 2.3500001}
+      handleB: {x: 0, y: -9.400001}
+      opening: 1
+    - id: 9312193dcd2d44d58dfea2f70db1de12
+      name: Right shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 28905a2ecf1b4f868d09d30e1c3ff35f
+      name: Right neckline
+      curved: 0
+      handleA: {x: -0.90000004, y: -7.7000003}
+      handleB: {x: 4.9500003, y: 0}
+      opening: 1
+    - id: dfcb6eb9048f41f997176addff5a8713
+      name: Left neckline
+      curved: 0
+      handleA: {x: -4.9500003, y: 0}
+      handleB: {x: 0.90000004, y: -7.7000003}
+      opening: 1
+    - id: a219ea2d26354b96a141cb40aa28f3ff
+      name: Left shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 934019da6ae542b3890ca829a56717e4
+      name: Left armhole
+      curved: 1
+      handleA: {x: 0, y: -9.400001}
+      handleB: {x: 9.8, y: 2.3500001}
+      opening: 1
+    - id: 0883f0ea722c46cd8ccef883ecfa04ad
+      name: Left side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 0
+      topAboveShoulderCm: 4
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Silk
+      stretchCompliance: 0.00000001
+      bendCompliance: 30
+      density: 0.08
+      friction: 0.15
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: 0.0078125, y: 0.020888874}
+      scale: 0.005812872
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.0078125
+        width: 0.48828125
+        height: 0.6176151
+  - id: 737a906418ad4979bb14c6a74240d197
+    name: Back
+    points:
+    - id: 7594ae6f35704f0b86c4d9db3325c897
+      position: {x: 92, y: 0}
+    - id: 32c6c98c1812477e88a8318a303e6195
+      position: {x: 176, y: 0}
+    - id: 70ca2e2d63734071b77dec0ffe610061
+      position: {x: 160, y: 79}
+    - id: d63508287cc94b3ca041dd8e52f71578
+      position: {x: 146, y: 102.5}
+    - id: 0d9adc1cc3eb4849989588a03ce934b7
+      position: {x: 143, y: 104}
+    - id: 547e6fd691544fc19b09329b0233eeec
+      position: {x: 134, y: 94}
+    - id: 6d08d98c16a94c12b7b9f397101abee2
+      position: {x: 125, y: 104}
+    - id: 29393a4ea2ef458ebe43f719df50f2ca
+      position: {x: 122, y: 102.5}
+    - id: 9e1f175cff874829a1cea7e48be4b5a5
+      position: {x: 108, y: 79}
+    edges:
+    - id: 27bde13bc28d45f380b63227a0f93795
+      name: Hem
+      curved: 1
+      handleA: {x: 14, y: -3}
+      handleB: {x: -14, y: -3}
+      opening: 1
+    - id: 76d005c9f5f44fe38dbecce1baa2cf6e
+      name: Right side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: ed7efe0d0620458289088c82f8215c86
+      name: Right armhole
+      curved: 1
+      handleA: {x: -9.8, y: 2.3500001}
+      handleB: {x: 0, y: -9.400001}
+      opening: 1
+    - id: a94e5fc571f4433ea32338bebbcccd9d
+      name: Right shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: 7bd5368a8a4d4172b13dae2b677fed64
+      name: Right neckline
+      curved: 0
+      handleA: {x: -0.90000004, y: -5.5}
+      handleB: {x: 4.9500003, y: 0}
+      opening: 1
+    - id: 5f25efbee2224059a64d21b5dc713ebd
+      name: Left neckline
+      curved: 0
+      handleA: {x: -4.9500003, y: 0}
+      handleB: {x: 0.90000004, y: -5.5}
+      opening: 1
+    - id: 0887064b63914a2ab217207696f28f60
+      name: Left shoulder
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    - id: b359623061544ef094b4611ecb26d3f8
+      name: Left armhole
+      curved: 1
+      handleA: {x: 0, y: -9.400001}
+      handleB: {x: 9.8, y: 2.3500001}
+      opening: 1
+    - id: 1911a2ada0584555ac0d80f58e966370
+      name: Left side
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 180
+      topAboveShoulderCm: 4
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+    fabric:
+      preset: Silk
+      stretchCompliance: 0.00000001
+      bendCompliance: 30
+      density: 0.08
+      friction: 0.15
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -0.030877993, y: 0.020888874}
+      scale: 0.005812872
+      rotation: -0
+      reserved:
+        serializedVersion: 2
+        x: 0.50390625
+        y: 0.0078125
+        width: 0.48828125
+        height: 0.6176151
+  seams:
+  - id: 2a86a0e6f5b64d07a63808f7242e142d
+    a:
+      pieceId: c5b7ed674ebc453591a466f97b582599
+      edgeId: 77c48ee513f7494d904ac26bb45c9e5c
+      start: 0
+      end: 1
+    b:
+      pieceId: 737a906418ad4979bb14c6a74240d197
+      edgeId: 1911a2ada0584555ac0d80f58e966370
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 3c2aa5ed4fce405393509b4de909a50e
+    a:
+      pieceId: c5b7ed674ebc453591a466f97b582599
+      edgeId: 0883f0ea722c46cd8ccef883ecfa04ad
+      start: 0
+      end: 1
+    b:
+      pieceId: 737a906418ad4979bb14c6a74240d197
+      edgeId: 76d005c9f5f44fe38dbecce1baa2cf6e
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 8dcba49303d24a7da5058a43cd2f8fe9
+    a:
+      pieceId: c5b7ed674ebc453591a466f97b582599
+      edgeId: 9312193dcd2d44d58dfea2f70db1de12
+      start: 0
+      end: 1
+    b:
+      pieceId: 737a906418ad4979bb14c6a74240d197
+      edgeId: 0887064b63914a2ab217207696f28f60
+      start: 0
+      end: 1
+    reversed: 1
+  - id: 0a78b68af2794be2b1b9bf00686ebb2c
+    a:
+      pieceId: c5b7ed674ebc453591a466f97b582599
+      edgeId: a219ea2d26354b96a141cb40aa28f3ff
+      start: 0
+      end: 1
+    b:
+      pieceId: 737a906418ad4979bb14c6a74240d197
+      edgeId: a94e5fc571f4433ea32338bebbcccd9d
+      start: 0
+      end: 1
+    reversed: 1
+  dimensions:
+  - id: a194919cd9464a34890e0361e6a31eb4
+    name: Chest
+    kind: 0
+    measurement: 1
+    fixedCm: 104
+    allowanceCm: 4
+    shareCount: 2
+    lineY: 76
+    pieceIds:
+    - c5b7ed674ebc453591a466f97b582599
+    - 737a906418ad4979bb14c6a74240d197
+  meshLevel: 1
+  customEdgeLengthCm: 2
+  uvLayout:
+    bakeResolution: 1024
+    gutterPixels: 8
+    aspect: 1
+  notes: Flowing silk dress with narrow straps and a square neck, flaring to the
+    knee.

@@ -73,6 +73,18 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2]._color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2]._color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2]._color.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
       propertyPath: characterColors._colors.Array.data[0].isBaseColor
       value: 1
       objectReference: {fileID: 0}
@@ -82,6 +94,22 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
       propertyPath: characterColors._colors.Array.data[2].isBaseColor
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].displayColor.b
+      value: 0.41960788
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].displayColor.g
+      value: 0.48627454
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].displayColor.r
+      value: 0.68235296
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].showDisplayColor
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
@@ -125,6 +153,10 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].channelAdditiveMask.Array.data[2].a
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
       propertyPath: 'preloadWardrobeRecipes.recipes.Array.data[0]._compatibleRaces.Array.data[0]'
       value: Human Female 3.0
       objectReference: {fileID: 0}
@@ -143,6 +175,126 @@ PrefabInstance:
     - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
       propertyPath: 'preloadWardrobeRecipes.recipes.Array.data[3]._compatibleRaces.Array.data[1]'
       value: Human Male 3.0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.size
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[0].p10.name
+      value: _Base_Color
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[1].p10.name
+      value: _SubsurfaceColor
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[2].p11.name
+      value: _SSSBlend
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[3].p11.name
+      value: _Skinmask_Amount
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[2].p11.Value
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[3].p11.Value
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[0].p10.Value.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[0].p10.Value.b
+      value: 0.7780546
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[0].p10.Value.g
+      value: 0.80234057
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[0].p10.Value.r
+      value: 0.84313726
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[0].p12.Scale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[0].p12.Scale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[0].propertType
+      value: UMAColorProperty
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[1].p10.Value.b
+      value: 0.06686832
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[1].p10.Value.g
+      value: 0.15810873
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[1].p10.Value.r
+      value: 0.9245283
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[1].p12.Scale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[1].p12.Scale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[1].propertType
+      value: UMAColorProperty
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[2].p12.Scale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[2].p12.Scale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[2].propertType
+      value: UMAFloatProperty
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[3].p12.Scale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[3].p12.Scale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[3].propertType
+      value: UMAFloatProperty
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[0].p10.stringRepresentation
+      value: Color;#D7CDC6FF;_Base_Color
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[1].p10.stringRepresentation
+      value: Color;#EC281100;_SubsurfaceColor
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[2].p11.stringRepresentation
+      value: Float;0.4000;_SSSBlend
+      objectReference: {fileID: 0}
+    - target: {fileID: 11453600, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}
+      propertyPath: characterColors._colors.Array.data[2].PropertyBlock.serializedProperties.Array.data[3].p11.stringRepresentation
+      value: Float;1.0000;_Skinmask_Amount
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7177144072677387642, guid: 5c80fc4442f8349969abea6c1a0f1faa, type: 3}

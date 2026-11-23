@@ -1,0 +1,305 @@
+// Clothes Designer cloth solver: small-step XPBD, the same steps in the same order as ClothSolverCpu.
+// Editor only: loaded from the plugin folder, never from Resources, so it is not in a player build.
+//
+// Two ways to run a frame, with the same results:
+// - CSFrame: one workgroup runs every substep of the frame, its threads sharing out each stage and
+//   waiting for each other between stages. One dispatch a frame: for small and medium cloth, where
+//   hundreds of tiny dispatches (a stage per constraint colour per substep) cost more than the work.
+// - CSPredict, CSSolve (once per colour), CSPins, CSCollide, CSVelocity: a dispatch per stage, using
+//   the whole GPU, for large cloth.
+// CSCandidates runs once a frame before either.
+#pragma kernel CSPredict
+#pragma kernel CSSolve
+#pragma kernel CSPins
+#pragma kernel CSCollide
+#pragma kernel CSVelocity
+#pragma kernel CSCandidates
+#pragma kernel CSFrame
+
+#define CANDIDATES 8
+#define FRAME_THREADS 1024
+
+struct Constraint
+{
+    int a;
+    int b;
+    float rest;
+    int kind;
+    float compliance;
+};
+
+struct Pin
+{
+    int particle;
+    float3 target;
+    float weight;
+};
+
+RWStructuredBuffer<float3> _X;
+RWStructuredBuffer<float3> _Prev;
+RWStructuredBuffer<float3> _V;
+StructuredBuffer<float> _W;
+StructuredBuffer<float> _Fric;
+StructuredBuffer<Constraint> _Constraints;
+StructuredBuffer<int2> _Colors;
+StructuredBuffer<Pin> _Pins;
+StructuredBuffer<float3> _TA;
+StructuredBuffer<float3> _TB;
+StructuredBuffer<float3> _TC;
+StructuredBuffer<float3> _TN;
+StructuredBuffer<int> _CellStart;
+StructuredBuffer<int> _CellTris;
+RWStructuredBuffer<int> _Cand;
+
+int _Count;
+int _Offset;
+int _RangeCount;
+int _PinCount;
+int _ColorCount;
+int _Substeps;
+float _H;
+float _Keep;
+float _Closure;
+float _InvH2;
+float _AlphaStitch;
+float _MaxSpeed;
+float _Clearance;
+float _Range;
+float _CandidateRange;
+float _CellSize;
+float4 _G;
+float4 _GridOrigin;
+int4 _Dims;
+
+// ---- The stages, shared by both ways ----------------------------------------------------------
+
+void Predict(int i)
+{
+    _Prev[i] = _X[i];
+    if (_W[i] <= 0.0) return;
+    float3 vel = (_V[i] + _G.xyz * _H) * _Keep;
+    _V[i] = vel;
+    _X[i] = _X[i] + vel * _H;
+}
+
+void SolveConstraint(int index)
+{
+    Constraint con = _Constraints[index];
+    float rest = con.kind == 2 ? con.rest * _Closure : con.rest;
+    // Stretch and bend take the compliance of their piece's fabric.
+    float alpha = con.kind == 2 ? _AlphaStitch : con.compliance * _InvH2;
+    float wa = _W[con.a];
+    float wb = _W[con.b];
+    float wsum = wa + wb;
+    if (wsum <= 0.0) return;
+    float3 d = _X[con.a] - _X[con.b];
+    float len = length(d);
+    if (len < 1e-9) return;
+    float3 n = d / len;
+    float lambda = -(len - rest) / (wsum + alpha);
+    _X[con.a] = _X[con.a] + n * (wa * lambda);
+    _X[con.b] = _X[con.b] - n * (wb * lambda);
+}
+
+void ApplyPin(int k)
+{
+    Pin pin = _Pins[k];
+    _X[pin.particle] = lerp(_X[pin.particle], pin.target, saturate(pin.weight));
+}
+
+float3 ClosestOnTriangle(float3 p, float3 a, float3 b, float3 c)
+{
+    float3 ab = b - a;
+    float3 ac = c - a;
+    float3 ap = p - a;
+    float d1 = dot(ab, ap);
+    float d2 = dot(ac, ap);
+    if (d1 <= 0.0 && d2 <= 0.0) return a;
+    float3 bp = p - b;
+    float d3 = dot(ab, bp);
+    float d4 = dot(ac, bp);
+    if (d3 >= 0.0 && d4 <= d3) return b;
+    float vc = d1 * d4 - d3 * d2;
+    if (vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0) return a + ab * (d1 / (d1 - d3));
+    float3 cp = p - c;
+    float d5 = dot(ab, cp);
+    float d6 = dot(ac, cp);
+    if (d6 >= 0.0 && d5 <= d6) return c;
+    float vb = d5 * d2 - d1 * d6;
+    if (vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0) return a + ac * (d2 / (d2 - d6));
+    float va = d3 * d6 - d5 * d4;
+    if (va <= 0.0 && (d4 - d3) >= 0.0 && (d5 - d6) >= 0.0) return b + (c - b) * ((d4 - d3) / ((d4 - d3) + (d5 - d6)));
+    float denom = 1.0 / (va + vb + vc);
+    return a + ab * (vb * denom) + ac * (vc * denom);
+}
+
+void Collide(int i)
+{
+    if (_W[i] <= 0.0) return;
+    float3 pos = _X[i];
+    float best = _Range * _Range;
+    int bestTri = -1;
+    float3 bestPoint = pos;
+    for (int k = 0; k < CANDIDATES; k++)
+    {
+        int t = _Cand[i * CANDIDATES + k];
+        if (t < 0) break;
+        float3 q = ClosestOnTriangle(pos, _TA[t], _TB[t], _TC[t]);
+        float3 dq = q - pos;
+        float d2 = dot(dq, dq);
+        if (d2 < best)
+        {
+            best = d2;
+            bestTri = t;
+            bestPoint = q;
+        }
+    }
+    if (bestTri < 0) return;
+    float3 nrm = _TN[bestTri];
+    float dist = dot(pos - bestPoint, nrm);
+    if (dist >= _Clearance) return;
+    float push = _Clearance - dist;
+    pos += nrm * push;
+    // Coulomb friction: the grip is limited by how hard the cloth was pressed into the body.
+    float3 moved = pos - _Prev[i];
+    float3 tangential = moved - nrm * dot(moved, nrm);
+    float slide = length(tangential);
+    float grip = _Fric[i] * push;
+    if (slide > 1e-12) pos -= tangential * min(1.0, grip / slide);
+    _X[i] = pos;
+}
+
+void UpdateVelocity(int i)
+{
+    float3 vel = (_X[i] - _Prev[i]) / _H;
+    float speed = length(vel);
+    if (speed > _MaxSpeed) vel *= _MaxSpeed / speed;
+    _V[i] = vel;
+}
+
+// ---- A dispatch per stage -----------------------------------------------------------------------
+
+[numthreads(64, 1, 1)]
+void CSPredict(uint3 id : SV_DispatchThreadID)
+{
+    int i = (int)id.x;
+    if (i >= _Count) return;
+    Predict(i);
+}
+
+[numthreads(64, 1, 1)]
+void CSSolve(uint3 id : SV_DispatchThreadID)
+{
+    int k = (int)id.x;
+    if (k >= _RangeCount) return;
+    SolveConstraint(_Offset + k);
+}
+
+[numthreads(64, 1, 1)]
+void CSPins(uint3 id : SV_DispatchThreadID)
+{
+    int k = (int)id.x;
+    if (k >= _PinCount) return;
+    ApplyPin(k);
+}
+
+[numthreads(64, 1, 1)]
+void CSCollide(uint3 id : SV_DispatchThreadID)
+{
+    int i = (int)id.x;
+    if (i >= _Count) return;
+    Collide(i);
+}
+
+[numthreads(64, 1, 1)]
+void CSVelocity(uint3 id : SV_DispatchThreadID)
+{
+    int i = (int)id.x;
+    if (i >= _Count) return;
+    UpdateVelocity(i);
+}
+
+// ---- A whole frame in one workgroup --------------------------------------------------------------
+
+[numthreads(FRAME_THREADS, 1, 1)]
+void CSFrame(uint3 tid : SV_GroupThreadID)
+{
+    int t = (int)tid.x;
+    for (int s = 0; s < _Substeps; s++)
+    {
+        for (int i = t; i < _Count; i += FRAME_THREADS) Predict(i);
+        DeviceMemoryBarrierWithGroupSync();
+        for (int c = 0; c < _ColorCount; c++)
+        {
+            int2 range = _Colors[c];
+            for (int k = t; k < range.y; k += FRAME_THREADS) SolveConstraint(range.x + k);
+            DeviceMemoryBarrierWithGroupSync();
+        }
+        for (int p = t; p < _PinCount; p += FRAME_THREADS) ApplyPin(p);
+        DeviceMemoryBarrierWithGroupSync();
+        for (int j = t; j < _Count; j += FRAME_THREADS) Collide(j);
+        DeviceMemoryBarrierWithGroupSync();
+        for (int v = t; v < _Count; v += FRAME_THREADS) UpdateVelocity(v);
+        DeviceMemoryBarrierWithGroupSync();
+    }
+}
+
+// Once a frame: the nearest body triangles of each particle, sorted. The substeps only test these.
+[numthreads(64, 1, 1)]
+void CSCandidates(uint3 id : SV_DispatchThreadID)
+{
+    int i = (int)id.x;
+    if (i >= _Count) return;
+    float3 pos = _X[i];
+    int3 dims = _Dims.xyz;
+    float radius = _CandidateRange;
+    int ids[CANDIDATES];
+    float dist[CANDIDATES];
+    for (int k = 0; k < CANDIDATES; k++)
+    {
+        ids[k] = -1;
+        dist[k] = 3.402823e38;
+    }
+    int3 c0 = clamp((int3)floor((pos - radius - _GridOrigin.xyz) / _CellSize), int3(0, 0, 0), dims - 1);
+    int3 c1 = clamp((int3)floor((pos + radius - _GridOrigin.xyz) / _CellSize), int3(0, 0, 0), dims - 1);
+    float limit = radius * radius;
+    for (int z = c0.z; z <= c1.z; z++)
+    {
+        for (int y = c0.y; y <= c1.y; y++)
+        {
+            for (int x = c0.x; x <= c1.x; x++)
+            {
+                int cell = x + dims.x * (y + dims.y * z);
+                int end = _CellStart[cell + 1];
+                for (int k2 = _CellStart[cell]; k2 < end; k2++)
+                {
+                    int t = _CellTris[k2];
+                    float plane = dot(pos - _TA[t], _TN[t]);
+                    if (plane * plane >= min(limit, dist[CANDIDATES - 1])) continue;
+                    float3 dq = ClosestOnTriangle(pos, _TA[t], _TB[t], _TC[t]) - pos;
+                    float d2 = dot(dq, dq);
+                    if (d2 >= limit || d2 >= dist[CANDIDATES - 1]) continue;
+                    bool listed = false;
+                    for (int q = 0; q < CANDIDATES; q++)
+                    {
+                        if (ids[q] == t) listed = true;
+                    }
+                    if (listed) continue;
+                    int at = CANDIDATES - 1;
+                    for (int m = CANDIDATES - 1; m > 0; m--)
+                    {
+                        if (dist[m - 1] > d2)
+                        {
+                            dist[m] = dist[m - 1];
+                            ids[m] = ids[m - 1];
+                            at = m - 1;
+                        }
+                    }
+                    dist[at] = d2;
+                    ids[at] = t;
+                }
+            }
+        }
+    }
+    for (int k3 = 0; k3 < CANDIDATES; k3++) _Cand[i * CANDIDATES + k3] = ids[k3];
+}

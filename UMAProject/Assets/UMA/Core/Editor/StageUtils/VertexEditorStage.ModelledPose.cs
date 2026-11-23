@@ -30,7 +30,7 @@ namespace UMA
         /// A copy of a T-pose asset that does not carry a stored human pose, so the generator leaves the
         /// skeleton in the T-pose itself. Null when the asset has no stored pose to leave out.
         /// </summary>
-        internal static UmaTPose CreateTPoseWithoutHumanPose(UmaTPose source)
+        public static UmaTPose CreateTPoseWithoutHumanPose(UmaTPose source)
         {
             if (source == null || !source.HasExtractedHumanPose())
             {
@@ -57,7 +57,7 @@ namespace UMA
         /// left alone, so this can be called after every rebuild.
         /// </summary>
         /// <returns>How many bones were turned.</returns>
-        internal static int ApplyModelledPose(DynamicCharacterAvatar avatar)
+        public static int ApplyModelledPose(DynamicCharacterAvatar avatar)
         {
             UMAData data = avatar != null ? avatar.umaData : null;
             if (data == null || data.skeleton == null || data.umaRecipe == null || data.umaRecipe.slotDataList == null)

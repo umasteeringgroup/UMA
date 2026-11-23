@@ -51,7 +51,12 @@ namespace UMA
                 showOriginalMaterials = VertexEditorToolSettings.WriteBool(showOriginalMaterials),
                 showVertexColors = VertexEditorToolSettings.WriteBool(showVertexColorsView),
 
-                workflow = CurrentAuthoringWorkflow().ToString(),
+                // A plugin workflow is never stored: the Vertex Editor always opens on one of its own
+                // workflows, and a plugin's is started by the plugin's command or its button. While
+                // one is active the choice kept is the built-in workflow used before it.
+                workflow = activeWorkflow != null
+                    ? workflowBeforePlugin.ToString()
+                    : CurrentAuthoringWorkflow().ToString(),
                 advancedMode = rememberedAdvancedMode.ToString(),
                 advancedTool = rememberedAdvancedTool.ToString(),
                 defineMode = currentDefineMode.ToString(),
