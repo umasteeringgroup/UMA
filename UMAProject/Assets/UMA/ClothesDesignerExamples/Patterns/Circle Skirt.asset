@@ -14,37 +14,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: UMA.ClothesDesigner.Editor::UMA.ClothesDesigner.Editor.ClothesPattern
   schemaVersion: 2
   pieces:
-  - id: 2c0f1709565743c185113c76a52021f9
+  - id: d5a8448a7cd1413a802a1dbc91f88e7a
     name: Front Panel
     points:
-    - id: 8807c2801cd14b1999d9db17e8817dbc
+    - id: 3cfd8e46acd84fd3a27ae8fd65739659
       position: {x: 0, y: -46.76864}
-    - id: b47671cbab464da09b5799158bc461e7
+    - id: ab932a29a2fd4902a071d6ff0f4aa72d
       position: {x: 93.53728, y: -46.76864}
-    - id: 1c0e39dbdbc644cf9751cb8dc76df279
+    - id: b40a449fb36b46f1969c925eee8bbe7f
       position: {x: 54.646404, y: -7.877767}
-    - id: 4591b0d8bdf64ed3b7c9f93340f69d51
+    - id: 181f9598d743464ab66b63edac65f415
       position: {x: 38.890873, y: -7.877767}
     edges:
-    - id: 969000149dc44150a1ef9cb97996be0b
+    - id: f90c393a855640eeb073e2916320fa47
       name: Hem
       curved: 1
       handleA: {x: 25.829609, y: -25.829609}
       handleB: {x: -25.829609, y: -25.829609}
       opening: 1
-    - id: f6d42870175740739c7298c48e643989
+    - id: 34b5dd1ec6bc444893d8d2d512a62d01
       name: Right side
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 0
-    - id: 213d3101efb144d685d6dd5582db8060
+    - id: b08fb7f390b54e34a97d569984954edd
       name: Waist
       curved: 1
       handleA: {x: -4.350771, y: -4.350771}
       handleB: {x: 4.350771, y: -4.350771}
       opening: 1
-    - id: a46253176b2440439f12ed2597c6f4f9
+    - id: 84cc3cc39ce54093a6f8d73c12176420
       name: Left side
       curved: 0
       handleA: {x: 0, y: 0}
@@ -78,37 +78,39 @@ MonoBehaviour:
         y: 0.0078125
         width: 0.4882812
         height: 0.30414364
-  - id: ff3425d963214223a120d28eb359b3e6
+    meshDetail: 1
+    interfacing: 0
+  - id: 9935cbeb0d264303a42dcf60ab136599
     name: Left Panel
     points:
-    - id: 867e859452044ad192d0e47dcce510b4
+    - id: 1c8dfaf6cb2b453a96e8100009115ade
       position: {x: 101.53727, y: -46.76864}
-    - id: 82aec42348a2496da2bcf77652221eb7
+    - id: 7b8aecc7b597431580495aa61ee7c0ff
       position: {x: 195.07455, y: -46.76864}
-    - id: 47148efc89474ec1b06aa0734763bd82
+    - id: 376cd6e8fc3b4d6ba87bd6690e50d9ac
       position: {x: 156.18367, y: -7.877767}
-    - id: d040cbf6217f4a6fb4839ed4ab39fd58
+    - id: c5799eefbc1b45f6b9a141f682333dfc
       position: {x: 140.42815, y: -7.877767}
     edges:
-    - id: fb685a9c902f4cec83800e7d65998795
+    - id: 595c5ca464e04790942a4e80282bd34b
       name: Hem
       curved: 1
       handleA: {x: 25.829609, y: -25.829609}
       handleB: {x: -25.829609, y: -25.829609}
       opening: 1
-    - id: 436113f7c1e1448983600bc222afa777
+    - id: 8d30f642b41a4a39b50b80bbf1cdcae7
       name: Right side
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 0
-    - id: 69fa03c26d4b4367bf0281544f063c17
+    - id: 94f7b81317494f778cb523e3c9b530be
       name: Waist
       curved: 1
       handleA: {x: -4.350771, y: -4.350771}
       handleB: {x: 4.350771, y: -4.350771}
       opening: 1
-    - id: 93abb3b39d7c4c5ea42e9cd3593ccb3a
+    - id: fd76be10aa7b472b96c9ae0cc92cd92b
       name: Left side
       curved: 0
       handleA: {x: 0, y: 0}
@@ -142,37 +144,39 @@ MonoBehaviour:
         y: 0.0078125
         width: 0.48828125
         height: 0.30414364
-  - id: 0940aaf06db047728c90c2d6d98a0cee
+    meshDetail: 1
+    interfacing: 0
+  - id: 102d979133ad4002bdfaf46f518c1925
     name: Back Panel
     points:
-    - id: fdf93a9ddd664781a032519306c70dfc
+    - id: d1c2e75fe65d4c6a817d87802aba23d4
       position: {x: 203.07455, y: -46.76864}
-    - id: 5e715fd240fe4299819610d609a01d6e
+    - id: 952f2af537ca407898ca3ada500aa576
       position: {x: 296.61185, y: -46.76864}
-    - id: cbe6b33c67a744aa9c369bf32875d726
+    - id: c9181a62cb7648b98f449d310efaa954
       position: {x: 257.72098, y: -7.877767}
-    - id: 29bab1c40050483fa1d74c7272ebc9f0
+    - id: a3837a82cc5a4b2f8d02410d428045ee
       position: {x: 241.96544, y: -7.877767}
     edges:
-    - id: 63f7ac3aadeb4753aa35b2450c0d5201
+    - id: b5f708fcc82d4b9b814bedb2626c5485
       name: Hem
       curved: 1
       handleA: {x: 25.829609, y: -25.829609}
       handleB: {x: -25.829609, y: -25.829609}
       opening: 1
-    - id: 49870c2f954b490aae5433022c62c535
+    - id: 43227ad1999249a994c701aa2f958b37
       name: Right side
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 0
-    - id: 4b52db77b08a4c02b38b37b3e983c63e
+    - id: 77c39bf446c54a20a6191111d091dee0
       name: Waist
       curved: 1
       handleA: {x: -4.350771, y: -4.350771}
       handleB: {x: 4.350771, y: -4.350771}
       opening: 1
-    - id: fc0321c2359c4578821eac1fea7f286f
+    - id: 606ff50fe07541a0a5fbad98e4962026
       name: Left side
       curved: 0
       handleA: {x: 0, y: 0}
@@ -206,37 +210,39 @@ MonoBehaviour:
         y: 0.31976864
         width: 0.48828128
         height: 0.30414364
-  - id: 41669fc73b864159b9010ec3bd64ddc6
+    meshDetail: 1
+    interfacing: 0
+  - id: 19f3931800bb434e9d83a919c6f5de93
     name: Right Panel
     points:
-    - id: 878f33c8dc0943419d1362592aaf832c
+    - id: 4c172ccfb13444f3ab1b5ac06367a567
       position: {x: 304.61182, y: -46.76864}
-    - id: f4e3b2a80c054c5a82b6518c180f97d7
+    - id: 29509e55979e4d28ab53e046acbe9b71
       position: {x: 398.1491, y: -46.76864}
-    - id: 38a656aec6804744a111bf395c32e497
+    - id: d388c1f78cbb43b69c3c6d081d0f6dfb
       position: {x: 359.25824, y: -7.877767}
-    - id: ef2cca7485da426590debcc1653f81d8
+    - id: d57ca09f35b5414e9b612f85677fa89e
       position: {x: 343.5027, y: -7.877767}
     edges:
-    - id: 9fbdca3e136c409fb97394edcb458ec6
+    - id: a91dd94f56c444b4b2a1a5db1efb94b9
       name: Hem
       curved: 1
       handleA: {x: 25.829609, y: -25.829609}
       handleB: {x: -25.829609, y: -25.829609}
       opening: 1
-    - id: da4447960d844cec807ebe7d13f81f83
+    - id: 35cac7af20c04044a594067d7bca7d7a
       name: Right side
       curved: 0
       handleA: {x: 0, y: 0}
       handleB: {x: 0, y: 0}
       opening: 0
-    - id: 92bc5a7c5a21475d8dbfd0952c5d58d3
+    - id: adb5705ccbb945bd9cc9d25b2d5d2c97
       name: Waist
       curved: 1
       handleA: {x: -4.350771, y: -4.350771}
       handleB: {x: 4.350771, y: -4.350771}
       opening: 1
-    - id: 156bed16eaef4eb49684e4d085135bff
+    - id: a0d3ec7fdacd4202a140f514f3609b0d
       name: Left side
       curved: 0
       handleA: {x: 0, y: 0}
@@ -270,55 +276,61 @@ MonoBehaviour:
         y: 0.6317248
         width: 0.48828128
         height: 0.30414364
+    meshDetail: 1
+    interfacing: 0
   seams:
-  - id: 4c150ab33c464c7e98d2b4035157dcdc
+  - id: 2bcdb7eab0fd4fc5b4116a8e19094dc1
     a:
-      pieceId: 2c0f1709565743c185113c76a52021f9
-      edgeId: f6d42870175740739c7298c48e643989
+      pieceId: d5a8448a7cd1413a802a1dbc91f88e7a
+      edgeId: 34b5dd1ec6bc444893d8d2d512a62d01
       start: 0
       end: 1
     b:
-      pieceId: ff3425d963214223a120d28eb359b3e6
-      edgeId: 93abb3b39d7c4c5ea42e9cd3593ccb3a
+      pieceId: 9935cbeb0d264303a42dcf60ab136599
+      edgeId: fd76be10aa7b472b96c9ae0cc92cd92b
       start: 0
       end: 1
     reversed: 1
-  - id: 105416f3353f491fa393ba6f6247c54e
+    folded: 0
+  - id: cffef8e8ba3541d3a4154d6bd6a99a83
     a:
-      pieceId: ff3425d963214223a120d28eb359b3e6
-      edgeId: 436113f7c1e1448983600bc222afa777
+      pieceId: 9935cbeb0d264303a42dcf60ab136599
+      edgeId: 8d30f642b41a4a39b50b80bbf1cdcae7
       start: 0
       end: 1
     b:
-      pieceId: 0940aaf06db047728c90c2d6d98a0cee
-      edgeId: fc0321c2359c4578821eac1fea7f286f
+      pieceId: 102d979133ad4002bdfaf46f518c1925
+      edgeId: 606ff50fe07541a0a5fbad98e4962026
       start: 0
       end: 1
     reversed: 1
-  - id: 43d1486c557443948a5540a8078cd78a
+    folded: 0
+  - id: 95587c80bb6547f3a68e247e4a4d7113
     a:
-      pieceId: 0940aaf06db047728c90c2d6d98a0cee
-      edgeId: 49870c2f954b490aae5433022c62c535
+      pieceId: 102d979133ad4002bdfaf46f518c1925
+      edgeId: 43227ad1999249a994c701aa2f958b37
       start: 0
       end: 1
     b:
-      pieceId: 41669fc73b864159b9010ec3bd64ddc6
-      edgeId: 156bed16eaef4eb49684e4d085135bff
+      pieceId: 19f3931800bb434e9d83a919c6f5de93
+      edgeId: a0d3ec7fdacd4202a140f514f3609b0d
       start: 0
       end: 1
     reversed: 1
-  - id: bbaf48e9e79b40878dd09c6797968ddd
+    folded: 0
+  - id: 3a9f3e1e268243e2b4adf4f19ad80ebf
     a:
-      pieceId: 41669fc73b864159b9010ec3bd64ddc6
-      edgeId: da4447960d844cec807ebe7d13f81f83
+      pieceId: 19f3931800bb434e9d83a919c6f5de93
+      edgeId: 35cac7af20c04044a594067d7bca7d7a
       start: 0
       end: 1
     b:
-      pieceId: 2c0f1709565743c185113c76a52021f9
-      edgeId: a46253176b2440439f12ed2597c6f4f9
+      pieceId: d5a8448a7cd1413a802a1dbc91f88e7a
+      edgeId: 84cc3cc39ce54093a6f8d73c12176420
       start: 0
       end: 1
     reversed: 1
+    folded: 0
   dimensions: []
   meshLevel: 1
   customEdgeLengthCm: 2

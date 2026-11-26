@@ -15,9 +15,29 @@
 #pragma kernel CSVelocity
 #pragma kernel CSCandidates
 #pragma kernel CSFrame
+#pragma kernel CSSelfClear
+#pragma kernel CSSelfCount
+#pragma kernel CSSelfScan
+#pragma kernel CSSelfInsert
+#pragma kernel CSSelfCandidates
+#pragma kernel CSSelfPush
+#pragma kernel CSSelfApply
 
 #define CANDIDATES 8
 #define FRAME_THREADS 1024
+// Cloth on cloth (ClothSolverShared's numbers).
+#define SELF_K 4
+#define SELF_HASH 65536
+#define SELF_SPAN 4
+#define SELF_CELL 0.025
+#define SELF_MARGIN 0.01
+#define SELF_MAX_PUSH 0.01
+#define SELF_GROWTH 0.0005
+#define SELF_BESIDE 0.0002
+// Layers, one way (ClothSolverShared.LayerReach, LayerMaxPush, LayerFacing).
+#define LAYER_REACH 0.03
+#define LAYER_MAX_PUSH 0.004
+#define LAYER_FACING 0.5
 
 struct Constraint
 {
@@ -40,6 +60,14 @@ RWStructuredBuffer<float3> _Prev;
 RWStructuredBuffer<float3> _V;
 StructuredBuffer<float> _W;
 StructuredBuffer<float> _Fric;
+// The nearest sewn point and the point it is sewn to, or (-1, -1): cloth near a seam still open does not grip the body
+// (ClothModel.SeamPair).
+StructuredBuffer<int2> _Partner;
+#define OPEN_SEAM_M 0.002
+// ClothSolverShared.CollisionTieM.
+#define COLLISION_TIE_M 0.0005
+// ClothSolverShared.SharpEdgeCos.
+#define SHARP_EDGE_COS 0.9
 StructuredBuffer<Constraint> _Constraints;
 StructuredBuffer<int2> _Colors;
 StructuredBuffer<Pin> _Pins;
@@ -50,6 +78,28 @@ StructuredBuffer<float3> _TN;
 StructuredBuffer<int> _CellStart;
 StructuredBuffer<int> _CellTris;
 RWStructuredBuffer<int> _Cand;
+StructuredBuffer<int> _Tris;
+StructuredBuffer<int> _Piece;
+StructuredBuffer<int> _Weld;
+StructuredBuffer<int> _NearStart;
+StructuredBuffer<int> _Near;
+RWStructuredBuffer<int> _SelfCand;
+RWStructuredBuffer<int> _HashCount;
+RWStructuredBuffer<int> _HashStart;
+RWStructuredBuffer<int> _HashTris;
+RWStructuredBuffer<float3> _SelfDelta;
+RWStructuredBuffer<float> _SelfTarget;
+RWStructuredBuffer<int> _LayerCand;
+StructuredBuffer<float2> _Flat;
+StructuredBuffer<int> _Layer;
+StructuredBuffer<float> _Pressure;
+int _TriCount;
+int _SelfCollide;
+int _Layered;
+int _SelfWithin;
+int _OutSign;
+float _MinFlat;
+float _Thickness;
 
 int _Count;
 int _Offset;
@@ -60,6 +110,7 @@ int _Substeps;
 float _H;
 float _Keep;
 float _Closure;
+float _LateClosure;
 float _InvH2;
 float _AlphaStitch;
 float _MaxSpeed;
@@ -78,6 +129,10 @@ void Predict(int i)
     _Prev[i] = _X[i];
     if (_W[i] <= 0.0) return;
     float3 vel = (_V[i] + _G.xyz * _H) * _Keep;
+    // Padding or air: a push out from the body, along the nearest body triangle's normal.
+    // Written without branches: a branch here keeps CSFrame's thread syncs from compiling on D3D.
+    int near0 = _Cand[i * CANDIDATES];
+    vel += _TN[max(near0, 0)] * (_Pressure[i] * _H * (near0 >= 0 ? 1.0 : 0.0));
     _V[i] = vel;
     _X[i] = _X[i] + vel * _H;
 }
@@ -85,9 +140,10 @@ void Predict(int i)
 void SolveConstraint(int index)
 {
     Constraint con = _Constraints[index];
-    float rest = con.kind == 2 ? con.rest * _Closure : con.rest;
+    // Stitches close over the sewing; a free piece's late stitches (kind 3) after it. Chosen by value, without branches.
+    float rest = con.rest * (con.kind == 2 ? _Closure : (con.kind == 3 ? _LateClosure : 1.0));
     // Stretch and bend take the compliance of their piece's fabric.
-    float alpha = con.kind == 2 ? _AlphaStitch : con.compliance * _InvH2;
+    float alpha = con.kind >= 2 ? _AlphaStitch : con.compliance * _InvH2;
     float wa = _W[con.a];
     float wb = _W[con.b];
     float wsum = wa + wb;
@@ -137,7 +193,8 @@ void Collide(int i)
 {
     if (_W[i] <= 0.0) return;
     float3 pos = _X[i];
-    float best = _Range * _Range;
+    float bestD = _Range;
+    float bestS = 0.0;
     int bestTri = -1;
     float3 bestPoint = pos;
     for (int k = 0; k < CANDIDATES; k++)
@@ -145,18 +202,23 @@ void Collide(int i)
         int t = _Cand[i * CANDIDATES + k];
         if (t < 0) break;
         float3 q = ClosestOnTriangle(pos, _TA[t], _TB[t], _TC[t]);
-        float3 dq = q - pos;
-        float d2 = dot(dq, dq);
-        if (d2 < best)
-        {
-            best = d2;
-            bestTri = t;
-            bestPoint = q;
-        }
+        float d = length(q - pos);
+        float s = dot(pos - q, _TN[t]);
+        // As ClothSolverShared.Replaces: the nearer wins, but at a sharp edge near-ties go by its shape (convex: the more
+        // outside reading, concave: the more inside). Choices on values only (no branch on data around a barrier).
+        int prior = max(bestTri, 0);
+        bool sharp = dot(_TN[t], _TN[prior]) < SHARP_EDGE_COS;
+        bool convex = dot((_TA[t] + _TB[t] + _TC[t]) / 3.0 - _TA[prior], _TN[prior]) < 0.0;
+        bool tiedBetter = (d <= bestD + COLLISION_TIE_M) && (convex ? (s > bestS) : (s < bestS));
+        bool take = d < _Range && (bestTri < 0 || d < bestD - COLLISION_TIE_M || (sharp ? tiedBetter : (d < bestD)));
+        bestTri = take ? t : bestTri;
+        bestPoint = take ? q : bestPoint;
+        bestS = take ? s : bestS;
+        bestD = take ? d : bestD;
     }
     if (bestTri < 0) return;
     float3 nrm = _TN[bestTri];
-    float dist = dot(pos - bestPoint, nrm);
+    float dist = bestS;
     if (dist >= _Clearance) return;
     float push = _Clearance - dist;
     pos += nrm * push;
@@ -164,14 +226,105 @@ void Collide(int i)
     float3 moved = pos - _Prev[i];
     float3 tangential = moved - nrm * dot(moved, nrm);
     float slide = length(tangential);
-    float grip = _Fric[i] * push;
+    // No grip while this point's seam is open, measured at the substep's start (as the CPU solver does). Written
+    // without a data-dependent branch, which CSFrame cannot have.
+    int2 seam = _Partner[i];
+    float3 apart = _Prev[max(seam.x, 0)] - _Prev[max(seam.y, 0)];
+    float open = (seam.x >= 0 && dot(apart, apart) > OPEN_SEAM_M * OPEN_SEAM_M) ? 1.0 : 0.0;
+    float grip = _Fric[i] * push * (1.0 - open);
     if (slide > 1e-12) pos -= tangential * min(1.0, grip / slide);
     _X[i] = pos;
+}
+
+// Whether a particle is over or under a triangle rather than beside it (q: its closest point there).
+bool Overlaps(float3 pos, float3 q, float3 unitNormal)
+{
+    float3 off = pos - q;
+    float along = dot(off, unitNormal);
+    return dot(off, off) - along * along <= SELF_BESIDE * SELF_BESIDE;
+}
+
+uint SelfHash(int3 c)
+{
+    return (((uint)c.x * 73856093u) ^ ((uint)c.y * 19349663u) ^ ((uint)c.z * 83492791u)) & (SELF_HASH - 1);
+}
+
+// How far to move a particle so it keeps the thickness from the cloth it started the frame beside.
+float3 ClothPush(int i)
+{
+    if (_W[i] <= 0.0) return float3(0, 0, 0);
+    float3 pos = _X[i];
+    float r = _Thickness + SELF_MARGIN;
+    float best = 0.0;
+    float target = _SelfTarget[i];
+    float3 push = float3(0, 0, 0);
+    for (int k = 0; k < SELF_K; k++)
+    {
+        int code = _SelfCand[i * SELF_K + k];
+        if (code == 0) break;
+        int t = abs(code) - 1;
+        float side = code > 0 ? 1.0 : -1.0;
+        float3 a = _X[_Tris[t * 3]];
+        float3 b = _X[_Tris[t * 3 + 1]];
+        float3 c = _X[_Tris[t * 3 + 2]];
+        float3 n = cross(b - a, c - a);
+        float len = length(n);
+        if (len < 1e-12) continue;
+        n /= len;
+        float3 q = ClosestOnTriangle(pos, a, b, c);
+        float3 off = pos - q;
+        if (dot(off, off) > r * r || !Overlaps(pos, q, n)) continue;
+        float d = dot(off, n) * side;
+        if (d >= target) continue;
+        // Half: the other layer's particles are pushed the other way by as much.
+        float amount = min(0.5 * (target - d), SELF_MAX_PUSH);
+        if (amount > best) { best = amount; push = n * (side * amount); }
+    }
+    // Layers, moving only this cloth: under a higher layer it is kept the thickness inside it; over a lower layer that
+    // lies against the body (so cannot go further in) it is kept the thickness outside it (ClothSolverCpu.ClothPush).
+    int lcode = _Layered != 0 ? _LayerCand[i] : 0;
+    if (lcode != 0)
+    {
+        int lt = abs(lcode) - 1;
+        float3 la = _X[_Tris[lt * 3]];
+        float3 lb = _X[_Tris[lt * 3 + 1]];
+        float3 lc = _X[_Tris[lt * 3 + 2]];
+        float3 ln = cross(lb - la, lc - la);
+        float llen = length(ln);
+        if (llen > 1e-12)
+        {
+            ln = ln / llen * _OutSign;
+            float3 lq = ClosestOnTriangle(pos, la, lb, lc);
+            float ld = dot(pos - lq, ln);
+            if (lcode > 0)
+            {
+                if (ld + _Thickness > 0.0) push -= ln * min(ld + _Thickness, LAYER_MAX_PUSH);
+            }
+            else
+            {
+                int bt = _Cand[i * CANDIDATES];
+                if (bt >= 0 && _Thickness - ld > 0.0)
+                {
+                    float under = dot(lq - ClosestOnTriangle(lq, _TA[bt], _TB[bt], _TC[bt]), _TN[bt]);
+                    if (under < _Clearance + _Thickness) push += ln * min(_Thickness - ld, LAYER_MAX_PUSH);
+                }
+            }
+        }
+    }
+    return push;
 }
 
 void UpdateVelocity(int i)
 {
     float3 vel = (_X[i] - _Prev[i]) / _H;
+    // A push away from cloth may stop an approach but must not add separating speed
+    // (ClothSolverShared.LimitPushSpeed). Without branches, as in Predict.
+    float3 push = _SelfDelta[i] * (_SelfCollide != 0 ? 1.0 : 0.0);
+    float plen = length(push);
+    float3 pn = push / max(plen, 1e-12);
+    float vn = dot(vel, pn);
+    float cap = max(dot(vel - push / _H, pn), 0.0);
+    vel -= pn * (max(vn - cap, 0.0) * (plen > 1e-12 ? 1.0 : 0.0));
     float speed = length(vel);
     if (speed > _MaxSpeed) vel *= _MaxSpeed / speed;
     _V[i] = vel;
@@ -237,11 +390,257 @@ void CSFrame(uint3 tid : SV_GroupThreadID)
         }
         for (int p = t; p < _PinCount; p += FRAME_THREADS) ApplyPin(p);
         DeviceMemoryBarrierWithGroupSync();
+        if (_SelfCollide != 0)
+        {
+            // Every push from the same positions, then all applied; before the body, which has the last word.
+            for (int j2 = t; j2 < _Count; j2 += FRAME_THREADS) _SelfDelta[j2] = ClothPush(j2);
+            DeviceMemoryBarrierWithGroupSync();
+            for (int j3 = t; j3 < _Count; j3 += FRAME_THREADS) _X[j3] = _X[j3] + _SelfDelta[j3];
+            DeviceMemoryBarrierWithGroupSync();
+        }
         for (int j = t; j < _Count; j += FRAME_THREADS) Collide(j);
         DeviceMemoryBarrierWithGroupSync();
         for (int v = t; v < _Count; v += FRAME_THREADS) UpdateVelocity(v);
         DeviceMemoryBarrierWithGroupSync();
     }
+}
+
+// ---- Cloth on cloth, once a frame: a hashed grid of the cloth's triangles, then each particle's nearest
+// triangles of other pieces and the side it is on. The substeps push with CSSelfPush and CSSelfApply.
+
+[numthreads(64, 1, 1)]
+void CSSelfClear(uint3 id : SV_DispatchThreadID)
+{
+    if ((int)id.x < SELF_HASH) _HashCount[id.x] = 0;
+}
+
+// The cells a triangle is listed in: those its bounds touch, at most SELF_SPAN along each axis.
+void TriangleCells(int t, out int3 c0, out int3 c1)
+{
+    float3 a = _X[_Tris[t * 3]];
+    float3 b = _X[_Tris[t * 3 + 1]];
+    float3 c = _X[_Tris[t * 3 + 2]];
+    c0 = (int3)floor(min(a, min(b, c)) / SELF_CELL);
+    c1 = min((int3)floor(max(a, max(b, c)) / SELF_CELL), c0 + (SELF_SPAN - 1));
+}
+
+// Counts each bucket's triangles.
+[numthreads(64, 1, 1)]
+void CSSelfCount(uint3 id : SV_DispatchThreadID)
+{
+    int t = (int)id.x;
+    if (t >= _TriCount) return;
+    int3 c0, c1;
+    TriangleCells(t, c0, c1);
+    for (int z = c0.z; z <= c1.z; z++)
+        for (int y = c0.y; y <= c1.y; y++)
+            for (int x = c0.x; x <= c1.x; x++)
+                InterlockedAdd(_HashCount[SelfHash(int3(x, y, z))], 1);
+}
+
+// Adds the counts up into each bucket's start (one workgroup), and leaves the start in _HashCount as
+// the cursor CSSelfInsert fills from.
+#define SCAN_THREADS 1024
+groupshared int gsScan[SCAN_THREADS];
+[numthreads(SCAN_THREADS, 1, 1)]
+void CSSelfScan(uint3 tid : SV_GroupThreadID)
+{
+    int t = (int)tid.x;
+    const int per = SELF_HASH / SCAN_THREADS;
+    int first = t * per;
+    int sum = 0;
+    for (int k = 0; k < per; k++) sum += _HashCount[first + k];
+    gsScan[t] = sum;
+    GroupMemoryBarrierWithGroupSync();
+    for (int offset = 1; offset < SCAN_THREADS; offset <<= 1)
+    {
+        int add = t >= offset ? gsScan[t - offset] : 0;
+        GroupMemoryBarrierWithGroupSync();
+        gsScan[t] += add;
+        GroupMemoryBarrierWithGroupSync();
+    }
+    int run = gsScan[t] - sum;
+    for (int k2 = 0; k2 < per; k2++)
+    {
+        int count = _HashCount[first + k2];
+        _HashStart[first + k2] = run;
+        _HashCount[first + k2] = run;
+        run += count;
+    }
+    if (t == SCAN_THREADS - 1) _HashStart[SELF_HASH] = run;
+}
+
+// Lists each triangle in its buckets.
+[numthreads(64, 1, 1)]
+void CSSelfInsert(uint3 id : SV_DispatchThreadID)
+{
+    int t = (int)id.x;
+    if (t >= _TriCount) return;
+    int3 c0, c1;
+    TriangleCells(t, c0, c1);
+    for (int z = c0.z; z <= c1.z; z++)
+        for (int y = c0.y; y <= c1.y; y++)
+            for (int x = c0.x; x <= c1.x; x++)
+            {
+                int slot;
+                InterlockedAdd(_HashCount[SelfHash(int3(x, y, z))], 1, slot);
+                _HashTris[slot] = t;
+            }
+}
+
+[numthreads(64, 1, 1)]
+void CSSelfCandidates(uint3 id : SV_DispatchThreadID)
+{
+    int i = (int)id.x;
+    if (i >= _Count) return;
+    int ids[SELF_K];
+    float dist[SELF_K];
+    for (int k = 0; k < SELF_K; k++) { ids[k] = -1; dist[k] = 3.402823e38; _SelfCand[i * SELF_K + k] = 0; }
+    _SelfTarget[i] = _Thickness;
+    if (_W[i] <= 0.0) return;
+    float3 pos = _X[i];
+    float r = _Thickness + SELF_MARGIN;
+    int myPiece = _Piece[i], myWeld = _Weld[i];
+    // The cells within reach (the cell is more than twice the reach: at most two along each axis).
+    int3 q0 = (int3)floor((pos - r) / SELF_CELL);
+    int3 q1 = (int3)floor((pos + r) / SELF_CELL);
+    for (int cz = q0.z; cz <= q1.z; cz++)
+    for (int cy = q0.y; cy <= q1.y; cy++)
+    for (int cx = q0.x; cx <= q1.x; cx++)
+    {
+        uint bucket = SelfHash(int3(cx, cy, cz));
+        int end = _HashStart[bucket + 1];
+        for (int j = _HashStart[bucket]; j < end; j++)
+        {
+            int t = _HashTris[j];
+            int va = _Tris[t * 3], vb = _Tris[t * 3 + 1], vc = _Tris[t * 3 + 2];
+            if (_Weld[va] == myWeld || _Weld[vb] == myWeld || _Weld[vc] == myWeld) continue;
+            // A piece's own cloth only where it is far from this point on the flat piece: a fold, not a neighbour.
+            if (_Piece[va] == myPiece)
+            {
+                if (_SelfWithin == 0) continue;
+                float2 fp = _Flat[i];
+                float m2 = _MinFlat * _MinFlat;
+                float2 da = _Flat[va] - fp, db = _Flat[vb] - fp, dc = _Flat[vc] - fp;
+                if (dot(da, da) < m2 || dot(db, db) < m2 || dot(dc, dc) < m2) continue;
+            }
+            float3 dq = ClosestOnTriangle(pos, _X[va], _X[vb], _X[vc]) - pos;
+            float d2 = dot(dq, dq);
+            if (d2 >= r * r) continue;
+            // Not cloth within two rings of this particle's seam (ClothModel.Near).
+            bool nearSeam = false;
+            int nearEnd = _NearStart[i + 1];
+            for (int nj = _NearStart[i]; nj < nearEnd; nj++)
+            {
+                int g = _Near[nj];
+                if (g == _Weld[va] || g == _Weld[vb] || g == _Weld[vc]) nearSeam = true;
+            }
+            if (nearSeam) continue;
+            float3 tnorm = cross(_X[vb] - _X[va], _X[vc] - _X[va]);
+            float tlen = length(tnorm);
+            if (tlen < 1e-12 || !Overlaps(pos, dq + pos, tnorm / tlen)) continue;
+            bool listed = false;
+            for (int q = 0; q < SELF_K; q++) { if (ids[q] == t) listed = true; }
+            if (listed) continue;
+            // Kept by distance, then triangle number: the same set whatever order the grid lists them in.
+            if (d2 > dist[SELF_K - 1] || (d2 == dist[SELF_K - 1] && t > ids[SELF_K - 1])) continue;
+            int at = SELF_K - 1;
+            for (int m = SELF_K - 1; m > 0; m--)
+            {
+                if (dist[m - 1] > d2 || (dist[m - 1] == d2 && ids[m - 1] > t)) { dist[m] = dist[m - 1]; ids[m] = ids[m - 1]; at = m - 1; }
+                else break;
+            }
+            dist[at] = d2;
+            ids[at] = t;
+        }
+    }
+    for (int k2 = 0; k2 < SELF_K; k2++)
+    {
+        int t2 = ids[k2];
+        if (t2 < 0) break;
+        float3 a = _X[_Tris[t2 * 3]];
+        float3 b = _X[_Tris[t2 * 3 + 1]];
+        float3 c = _X[_Tris[t2 * 3 + 2]];
+        float3 q2 = ClosestOnTriangle(pos, a, b, c);
+        float3 n2 = cross(b - a, c - a);
+        int side = dot(pos - q2, n2) >= 0.0 ? 1 : -1;
+        // Pieces of different layers: the higher layer belongs outside, whichever side it is on now.
+        int vt = _Tris[t2 * 3];
+        if (_Piece[vt] != myPiece && _Layer[vt] != _Layer[i]) side = (_Layer[i] > _Layer[vt] ? 1 : -1) * _OutSign;
+        _SelfCand[i * SELF_K + k2] = side * (t2 + 1);
+        float len2 = length(n2);
+        if (len2 > 1e-12) _SelfTarget[i] = min(_SelfTarget[i], max(0.0, dot(pos - q2, n2 / len2) * side) + SELF_GROWTH);
+    }
+    // Layers: the nearest triangle of a higher layer over this particle, or else of a lower layer under it, within reach,
+    // facing the way the body under it does and lying between it and the body, not at its seam: t + 1, -(t + 1) or 0
+    // (ClothSolverCpu.FindLayerCandidate).
+    _LayerCand[i] = 0;
+    int bodyTri = _Cand[i * CANDIDATES];
+    if (_Layered == 0 || bodyTri < 0) return;
+    float3 bodyN = _TN[bodyTri];
+    float3 bodyQ = ClosestOnTriangle(pos, _TA[bodyTri], _TB[bodyTri], _TC[bodyTri]);
+    float lr = LAYER_REACH;
+    float bestUp = lr * lr, bestDown = lr * lr;
+    int upT = -1, downT = -1;
+    int myLayer = _Layer[i];
+    int3 l0 = (int3)floor((pos - lr) / SELF_CELL);
+    int3 l1 = (int3)floor((pos + lr) / SELF_CELL);
+    for (int lz = l0.z; lz <= l1.z; lz++)
+    for (int ly = l0.y; ly <= l1.y; ly++)
+    for (int lx = l0.x; lx <= l1.x; lx++)
+    {
+        uint lbucket = SelfHash(int3(lx, ly, lz));
+        int lend = _HashStart[lbucket + 1];
+        for (int lj = _HashStart[lbucket]; lj < lend; lj++)
+        {
+            int lt = _HashTris[lj];
+            int ta0 = _Tris[lt * 3], tb0 = _Tris[lt * 3 + 1], tc0 = _Tris[lt * 3 + 2];
+            int otherLayer = _Layer[ta0];
+            if (otherLayer == myLayer) continue;
+            bool up = otherLayer > myLayer;
+            float lbest = up ? bestUp : bestDown;
+            int lbestT = up ? upT : downT;
+            float3 pa = _X[ta0], pb = _X[tb0], pc = _X[tc0];
+            float3 lq = ClosestOnTriangle(pos, pa, pb, pc);
+            float3 lo = lq - pos;
+            float ld2 = dot(lo, lo);
+            if (ld2 > lbest || (lbestT >= 0 && ld2 == lbest && lt >= lbestT)) continue;
+            float3 ln = cross(pb - pa, pc - pa);
+            float llen = length(ln);
+            if (llen < 1e-12) continue;
+            ln = ln / llen * _OutSign;
+            if (!Overlaps(pos, lq, ln)) continue;
+            if (dot(ln, bodyN) < LAYER_FACING) continue;
+            if (dot(bodyQ - lq, ln) >= 0.0) continue;
+            bool lnear = false;
+            int lnearEnd = _NearStart[i + 1];
+            for (int nk = _NearStart[i]; nk < lnearEnd; nk++)
+            {
+                int g = _Near[nk];
+                if (g == _Weld[ta0] || g == _Weld[tb0] || g == _Weld[tc0]) lnear = true;
+            }
+            if (lnear) continue;
+            if (up) { bestUp = ld2; upT = lt; }
+            else { bestDown = ld2; downT = lt; }
+        }
+    }
+    _LayerCand[i] = upT >= 0 ? upT + 1 : (downT >= 0 ? -(downT + 1) : 0);
+}
+
+[numthreads(64, 1, 1)]
+void CSSelfPush(uint3 id : SV_DispatchThreadID)
+{
+    int i = (int)id.x;
+    if (i >= _Count) return;
+    _SelfDelta[i] = ClothPush(i);
+}
+
+[numthreads(64, 1, 1)]
+void CSSelfApply(uint3 id : SV_DispatchThreadID)
+{
+    int i = (int)id.x;
+    if (i >= _Count) return;
+    _X[i] = _X[i] + _SelfDelta[i];
 }
 
 // Once a frame: the nearest body triangles of each particle, sorted. The substeps only test these.

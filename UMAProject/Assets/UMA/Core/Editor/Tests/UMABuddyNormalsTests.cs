@@ -157,6 +157,47 @@ namespace UMA.Editors.Tests
             Assert.That(normals[4], Is.EqualTo(LeftFace));
             Assert.That(Vector3.Angle(normals[5], RightFace(60f)), Is.LessThan(0.05f));
         }
+
+        [Test]
+        public void SharpEdge_BuddiesOnTwoSidesKeepANormalEach_AndStayOnePosition()
+        {
+            Vector3[] positions = Fold(90f);
+            var normals = new Vector3[6];
+            // The fold edge marked sharp: the left triangle's copies are side 1, the right's side 2.
+            var buddies = new UMABuddyNormals(positions, FoldTriangles) { Sides = new[] { 1, 1, 1, 2, 2, 2 } };
+            buddies.Recalculate(positions, normals);
+
+            Assert.That(buddies.GroupOf(0), Is.EqualTo(buddies.GroupOf(3)), "Still buddies: one position, tracked as one.");
+            Assert.That(Vector3.Angle(normals[0], LeftFace), Is.LessThan(0.05f));
+            Assert.That(Vector3.Angle(normals[3], RightFace(90f)), Is.LessThan(0.05f));
+            Assert.That(Vector3.Angle(normals[0], normals[3]), Is.EqualTo(90f).Within(0.1f));
+        }
+
+        [Test]
+        public void SharpEdge_WithoutSidesOrWithOneSide_IsTheSharedNormalAsBefore()
+        {
+            Vector3[] positions = Fold(90f);
+            var plain = new Vector3[6];
+            var oneSide = new Vector3[6];
+            new UMABuddyNormals(positions, FoldTriangles).Recalculate(positions, plain);
+            new UMABuddyNormals(positions, FoldTriangles) { Sides = new[] { 7, 7, 7, 7, 7, 7 } }.Recalculate(positions, oneSide);
+
+            Assert.That(plain[0], Is.EqualTo(plain[3]), "Buddies share one normal.");
+            Assert.That(oneSide, Is.EqualTo(plain));
+        }
+
+        [Test]
+        public void SharpEdge_FollowKeepsEachSidesOwnNormal()
+        {
+            Vector3[] before = Fold(20f);
+            Vector3[] after = Fold(60f);
+            Vector3[] beforeNormals = { LeftFace, LeftFace, LeftFace, RightFace(20f), RightFace(20f), RightFace(20f) };
+            var normals = (Vector3[])beforeNormals.Clone();
+            new UMABuddyNormals(before, FoldTriangles) { Sides = new[] { 1, 1, 1, 2, 2, 2 } }.Follow(before, after, beforeNormals, normals);
+
+            Assert.That(Vector3.Angle(normals[0], LeftFace), Is.LessThan(0.05f), "The left side did not turn.");
+            Assert.That(Vector3.Angle(normals[3], RightFace(60f)), Is.LessThan(0.05f), "The right side turned with its face, on its own.");
+        }
     }
 }
 #endif

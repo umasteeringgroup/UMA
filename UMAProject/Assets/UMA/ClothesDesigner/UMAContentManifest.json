@@ -20,10 +20,34 @@
     ],
     "ownedPaths": [
         "Assets/UMA/ClothesDesigner/Documentation",
+        "Assets/UMA/ClothesDesigner/Documentation/!Clothes Designer - Start Here.md",
         "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Fit Existing Slot.md",
         "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Fitting and Publishing.md",
+        "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Garment Generator.md",
         "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Pattern Canvas.md",
         "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Quick Start.md",
+        "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Troubleshooting.md",
+        "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 1 - Your First Garment.md",
+        "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 2 - A Pattern from Scratch.md",
+        "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 3 - The Garment Generator.md",
+        "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 4 - Texturing with the Overlay Painter.md",
+        "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 5 - Working from Existing Clothes.md",
+        "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 6 - Game-Ready Clothes.md",
+        "Assets/UMA/ClothesDesigner/Documentation/Images",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Canvas_HalfFront.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Canvas_Sewn.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Canvas_Trims.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Designer_Overview.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Designer_PublishSection.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Designer_SizeTool.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Generator_Hoodie.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Painter_Layers.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Painter_Trims.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Publish_Window.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Samples_Browser.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Tutorial2_Drape.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Tutorial2_FrontPiece.png",
+        "Assets/UMA/ClothesDesigner/Documentation/Images/Tutorial2_Seams.png",
         "Assets/UMA/ClothesDesigner/Editor",
         "Assets/UMA/ClothesDesigner/Editor/Body",
         "Assets/UMA/ClothesDesigner/Editor/Body/BodyReference.cs",
@@ -36,36 +60,77 @@
         "Assets/UMA/ClothesDesigner/Editor/Data/ClothesPattern.cs",
         "Assets/UMA/ClothesDesigner/Editor/Data/Fabric.cs",
         "Assets/UMA/ClothesDesigner/Editor/Data/PatternEditing.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Data/PieceSizing.cs",
         "Assets/UMA/ClothesDesigner/Editor/Data/VestPattern.cs",
         "Assets/UMA/ClothesDesigner/Editor/Fitting",
         "Assets/UMA/ClothesDesigner/Editor/Fitting/Arrangement.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/BodyLayoutMap.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/BodyRegionBrush.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/BodyShapes.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/ClothMotion.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/ClothRoller.cs",
         "Assets/UMA/ClothesDesigner/Editor/Fitting/DrapeNormalMap.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/FitPaint.cs",
         "Assets/UMA/ClothesDesigner/Editor/Fitting/FitSession.cs",
         "Assets/UMA/ClothesDesigner/Editor/Fitting/GarmentBaker.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/GarmentExtras.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/GarmentLooks.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/GarmentTrims.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/GarmentWeights.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/HairSmoosh.cs",
         "Assets/UMA/ClothesDesigner/Editor/Fitting/OpeningFacing.cs",
         "Assets/UMA/ClothesDesigner/Editor/Fitting/PatternFromMesh.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/PatternOnBody.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/PieceThickness.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/QuadObjWriter.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Fitting/SharpEdges.cs",
         "Assets/UMA/ClothesDesigner/Editor/Fitting/SlotRefit.cs",
         "Assets/UMA/ClothesDesigner/Editor/Fitting/UvCheckTexture.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Generator",
+        "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentBody.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentGenerator.Bottoms.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentGenerator.Tops.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentGenerator.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentGeneratorWindow.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentPresets.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentStyle.cs",
         "Assets/UMA/ClothesDesigner/Editor/Geometry",
         "Assets/UMA/ClothesDesigner/Editor/Geometry/DartGeometry.cs",
         "Assets/UMA/ClothesDesigner/Editor/Geometry/Delaunay2D.cs",
         "Assets/UMA/ClothesDesigner/Editor/Geometry/EdgeKeyComparer.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Geometry/LineGeometry.cs",
         "Assets/UMA/ClothesDesigner/Editor/Geometry/PatternGeometry.cs",
         "Assets/UMA/ClothesDesigner/Editor/Geometry/PatternMeshSampler.cs",
         "Assets/UMA/ClothesDesigner/Editor/Geometry/PatternMesher.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Geometry/QuadRemesher.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Geometry/RegionPieces.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Geometry/RegionUnfold.cs",
         "Assets/UMA/ClothesDesigner/Editor/Geometry/UvLayout.cs",
         "Assets/UMA/ClothesDesigner/Editor/Samples",
         "Assets/UMA/ClothesDesigner/Editor/Samples/PatternBuilder.cs",
         "Assets/UMA/ClothesDesigner/Editor/Samples/SamplePatterns.cs",
+        "Assets/UMA/ClothesDesigner/Editor/Samples/SamplePictures.cs",
         "Assets/UMA/ClothesDesigner/Editor/Simulation",
         "Assets/UMA/ClothesDesigner/Editor/Simulation/ClothModel.cs",
         "Assets/UMA/ClothesDesigner/Editor/Simulation/ClothSolverCpu.cs",
         "Assets/UMA/ClothesDesigner/Editor/Simulation/ClothSolverGpu.cs",
         "Assets/UMA/ClothesDesigner/Editor/UI",
+        "Assets/UMA/ClothesDesigner/Editor/UI/CanvasSnapping.cs",
         "Assets/UMA/ClothesDesigner/Editor/UI/ClothToolsOverlay.cs",
         "Assets/UMA/ClothesDesigner/Editor/UI/ClothesDesignerUndoState.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/DesignerSession.BodyRegion.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/DesignerSession.PatternTools.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/DesignerSession.Sizing.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/DesignerSession.Thickness.cs",
         "Assets/UMA/ClothesDesigner/Editor/UI/DesignerSession.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/DesignerTemporaryObjects.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/FitToolsOverlay.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/PatternCanvasWindow.Editing.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/PatternCanvasWindow.PatternTools.cs",
         "Assets/UMA/ClothesDesigner/Editor/UI/PatternCanvasWindow.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/PublishClothesWindow.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/SampleBrowserWindow.cs",
+        "Assets/UMA/ClothesDesigner/Editor/UI/SizePreview.cs",
         "Assets/UMA/ClothesDesigner/Editor/UMA.ClothesDesigner.Editor.asmdef",
         "Assets/UMA/ClothesDesigner/Shaders",
         "Assets/UMA/ClothesDesigner/Shaders/ClothesDesignerClothSolver.compute",
@@ -78,408 +143,928 @@
             "guid": "8d8bcaef5f2d2f645923dffee0b47983",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "8fa4a768b5434690e6500bbed9b465ec5e10aa16ef0fcd29b0460a2764de5f1c"
+            "metaBytes": 180,
+            "metaSha256": "8670a7ad65912549d2371c2a8c48b299fd10530b7ed262515f308dcacddd6f82"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/!Clothes Designer - Start Here.md",
+            "guid": "a1bb2b199582289408d7910ebabd24ec",
+            "bytes": 8980,
+            "sha256": "01efcee6d75307eed08f68da719334c45acf1bc7d2fda126e7ac0947e9c18d4d",
+            "metaBytes": 158,
+            "metaSha256": "725719e86ce0b27249491a45384ca48150be408c22136b6dde4bbec3e4baa0cd"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Fit Existing Slot.md",
             "guid": "cd96cd1dc2db46d47bca30d7e8104284",
-            "bytes": 1622,
-            "sha256": "0fd469c98629d8840bbd10d5e64597a6ec69d00f395ad4b44d1e146107d83f1b",
-            "metaBytes": 158,
-            "metaSha256": "6760c39da2bbda8eb8d52086a52d16f26a3adef5ae28fae0cefc27ab0cecf484"
+            "bytes": 2030,
+            "sha256": "1f4eed3f91c23ade7484c8cf9a61fc879158e9904f396ffeb876c08a3c545a98",
+            "metaBytes": 165,
+            "metaSha256": "cf005d13b7b34127c3cadfbe83b4aab1db320fdd5515c28b2b4580807e282ced"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Fitting and Publishing.md",
             "guid": "3f71be902b74fe7438deda7f82d7e5ce",
-            "bytes": 14053,
-            "sha256": "dbca0ff18ca5105219b463e1cba0d9a74916d66f1ed120f2a347ef71371683c9",
+            "bytes": 53844,
+            "sha256": "d194f48cbd8c9deb653e3703d65f0057b4e5ed59dbd9774d9d228b3c8cb38033",
+            "metaBytes": 165,
+            "metaSha256": "8814dc4b8b8be5e47fe8130032e01808bf0cf9daac0b75d29bb5ad2791e03368"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Garment Generator.md",
+            "guid": "eeb885f5d2683064fbbce6582b53b56e",
+            "bytes": 7173,
+            "sha256": "6425e7a178717e9341749a381d56dd0e401496d7f6b8eca4afc88fb7b8686f6f",
             "metaBytes": 158,
-            "metaSha256": "31e840d76b0149b55b9bee8fd8ed25653b62eb885acac3f4ea89c5470a8399a2"
+            "metaSha256": "89ce8646d93d118660bd44d27d6e746bd9f0ada99ca774008ac36a75b5a4db79"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Pattern Canvas.md",
             "guid": "ef35a194f0517e244bbc0238d1ee1c5d",
-            "bytes": 7893,
-            "sha256": "c8dd066013184b595db30949e11cfd44439e88ed2575fc09010f1b41ed6f11df",
-            "metaBytes": 158,
-            "metaSha256": "071ecdd415c2a4e4f1c099786cdbdda7d73987e7357471d349f6fb77f7870366"
+            "bytes": 29814,
+            "sha256": "a90adbdec039b6aad31c776b68e451d46b7d078a399d230c994c47ee45f60c77",
+            "metaBytes": 165,
+            "metaSha256": "4d550f8b268f8e8c40e45ca90d919225c3e75590f6dbc9c87030a71ffb01e6d7"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Quick Start.md",
             "guid": "b91307a602455d741982a5caabc1c20e",
-            "bytes": 8828,
-            "sha256": "477d500312af980411cc309c6742d56aad7baed1a34ef0e5091d0e55c4ed2d46",
+            "bytes": 16116,
+            "sha256": "3fa1002db1ddb6286773b021afe527b83170ef778c10c9bc2b126fb8bc52fbf3",
+            "metaBytes": 165,
+            "metaSha256": "7d7604568766b2aaf567f9dc255f717c0df59216fd0a33824d04a62791241c67"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Troubleshooting.md",
+            "guid": "97aed140535028e4a98cb7342fe7a170",
+            "bytes": 13575,
+            "sha256": "d5749b2a52b3e37fa6f98b802874a071b10cf751cdbbefeb3346e90aa4a3cdb1",
             "metaBytes": 158,
-            "metaSha256": "03e271b09db8ba492910db4117e746ffb060ee9c9d6f5b1d8109ab2f2365bab2"
+            "metaSha256": "7ea52c7574e0b24217381bc50e317280902e8afe4f433e61c63a62e132cd52a9"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 1 - Your First Garment.md",
+            "guid": "ba95adc52384fdd4ba71cb9ef7fa40e2",
+            "bytes": 11448,
+            "sha256": "139d30405ae6bd22cd8634fe5b7f223bbb0d30b7d7e946d932b141576c5f29f5",
+            "metaBytes": 158,
+            "metaSha256": "6438918045186188fbc84d29d22e361cba95eb3db985bdabf73bfd5c2988edea"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 2 - A Pattern from Scratch.md",
+            "guid": "7cb2deb730565fe48978ddae4068584c",
+            "bytes": 11264,
+            "sha256": "7336fb6d277c36d70a0637274442d933a61916bc313bb60590d8bce266f6a12e",
+            "metaBytes": 158,
+            "metaSha256": "f9c7c2ff79ccc73a10a5ecfe4b26a96869e5816e43b225c48e77dbe10dc792a7"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 3 - The Garment Generator.md",
+            "guid": "2d9d846ac8380a54eaad98a0819b0c40",
+            "bytes": 6962,
+            "sha256": "9ee8c6d2140803a7c911be45efb006f6c6b9057835d8f90d57d8d42bc8f6952a",
+            "metaBytes": 158,
+            "metaSha256": "c51fb3a02f20cb77b25239ae860e07801043fdee47de8159bfadf74457241a5c"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 4 - Texturing with the Overlay Painter.md",
+            "guid": "de65d93eb1d975240b4228909074cb52",
+            "bytes": 10535,
+            "sha256": "60586fcb9c08f0fd2a5e2227509432c19340914781dadffe5d1eb63973133de7",
+            "metaBytes": 158,
+            "metaSha256": "dc838cb3bcb62a224c0687669905d37f7f87baefcad979ab3c98de3d8b61e36e"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 5 - Working from Existing Clothes.md",
+            "guid": "3417f30b81c312c45842c42c3c52c837",
+            "bytes": 7552,
+            "sha256": "5a6423ed3ad2a4f826f74875cdf06c5c16c3049f9af13aaa063a4a252ee57144",
+            "metaBytes": 158,
+            "metaSha256": "b43ffd224d242061c69edfff96c2081be6d372104f56585c397384b4bd37f8b7"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Clothes Designer - Tutorial 6 - Game-Ready Clothes.md",
+            "guid": "20482dd5ac4a3c246ba9c7559603ec04",
+            "bytes": 9334,
+            "sha256": "299905cce15ace9709760210996a0f30e90dafa792db7e8c0ec027d26cf31067",
+            "metaBytes": 158,
+            "metaSha256": "2dfcc0ed30986d363fbabbf7875ee5479bba12fd82eb191477159f7a6cd6e967"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images",
+            "guid": "a0f3a282a8cbada43b7bb79c6fb0b6f0",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "23be2e8ff12cf05efd707cab69b1f5837d13155905fff2a3bc8720a0e542f00e"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Canvas_HalfFront.png",
+            "guid": "4cdca388c3a57154685e5cae3c5c9d78",
+            "bytes": 220475,
+            "sha256": "6870e99245b88221b1f08c53a1c1231362f4229c2429663b41840f706b2415a0",
+            "metaBytes": 3364,
+            "metaSha256": "f3380910cdbc0a828016127d56f72aea9aab5ec3b669193a63c6c3e84d476fab"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Canvas_Sewn.png",
+            "guid": "6a6b6f1dd1ef30041806b5c11ed93fc5",
+            "bytes": 239540,
+            "sha256": "86420dc476bfb5f5641eae6250aa6e058cf5adf165a4b2129ca54cd3ff27fc57",
+            "metaBytes": 3364,
+            "metaSha256": "0eb630634ca439a44dea428a664a7b41f24cd0a69f3a2b448cffee05e738206a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Canvas_Trims.png",
+            "guid": "c17210fa265fdff4ea5d7ef92cbbb51a",
+            "bytes": 362902,
+            "sha256": "cee4684acfb517d9ab730e0d4262b8ed4454dbe31d4b411dd9ccb0d4aa46f747",
+            "metaBytes": 3364,
+            "metaSha256": "e6014982779a1efb4f0725e8eeef6d42e34b9dc887ac253a402f213363c2a9c9"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Designer_Overview.png",
+            "guid": "ffb89ca455559bf4888508beeb5aadfb",
+            "bytes": 282658,
+            "sha256": "da2c81f5f1f957082669f2eb8fbddb6828d5e038226a08e9a5e6ed36c2412279",
+            "metaBytes": 3364,
+            "metaSha256": "b9d634f114f96a2f1989e2d178d9783af413b427e5470bf3275fd3811a02988a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Designer_PublishSection.png",
+            "guid": "eda568c67f50b7f4bb9dead3ab633c9b",
+            "bytes": 95946,
+            "sha256": "687adb560609969cc63dbdc5414bc274f9085f1ea8b0bb0df2e4b126f6db3a4a",
+            "metaBytes": 3364,
+            "metaSha256": "3b2c409cdd31cf942ff4b4fec4f1f5a36d61c20f103fe9afdc089b54202f803d"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Designer_SizeTool.png",
+            "guid": "749fc8c000be18d47a1dacd7db28723a",
+            "bytes": 264197,
+            "sha256": "f14cd6ce5c863de9d03161e58a5ff261abb64c70e07f4cbcc3731467e385174f",
+            "metaBytes": 3364,
+            "metaSha256": "32cae7ac946a1bbf98e5de7d54a0a15608d20a951878d2437651fb8abe1c9ee3"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Generator_Hoodie.png",
+            "guid": "79226b0da5840754cbff72ce154b0b06",
+            "bytes": 407410,
+            "sha256": "5359ac87a6b5514f5abe10a92a1a526d3f1b259329724871e1d61befb4b53e2f",
+            "metaBytes": 3364,
+            "metaSha256": "951c30ec717c84b42a3ccda09a4bcd24b0e5edf8016d300b5258e8dc492e4e73"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Painter_Layers.png",
+            "guid": "4405db9a0834fc5488c2b30261e91b42",
+            "bytes": 60033,
+            "sha256": "f3f2df646b53b5edc1080167007ccc3b086c3f8d0402e2ebd8ab4735cd32fd27",
+            "metaBytes": 3364,
+            "metaSha256": "ebbdb8348c0a78a8827aaf8c02b9b766e27a8b84cbf992fce0dc38803a578c12"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Painter_Trims.png",
+            "guid": "e61a01beec5681b41ac64f2fa4c47626",
+            "bytes": 393230,
+            "sha256": "61b87c78ab0f2f93622e3469a6efd66f0754f5a5075045e927b3f6dbc5c7d052",
+            "metaBytes": 3364,
+            "metaSha256": "2f890b60d37e1e27c03feb53404299ccb1ff3fbab51e243739a908eaacd90aa0"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Publish_Window.png",
+            "guid": "37db2b79b4bb25c47b49f904bd8ea878",
+            "bytes": 51275,
+            "sha256": "bc9c98d3840fad22fcc1842e21e7432dd0420b6cf1b439b2086b0d129edf8d67",
+            "metaBytes": 3364,
+            "metaSha256": "01a5aaec2c1e9b3671418b3c8d4c3559190178cab6dbfa8387675ab7ef47cc0a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Samples_Browser.png",
+            "guid": "a38b6ee2af8cb1242957da6d9fb3d7d9",
+            "bytes": 133902,
+            "sha256": "f2570e541b4d20882e66fc6d291ecec73401372075c2787600ce9f9b83ca9067",
+            "metaBytes": 3364,
+            "metaSha256": "5512589a81a9029b7169213a5a10c6421623eaca4c3785a9bf960cebf6b46c41"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Tutorial2_Drape.png",
+            "guid": "280a257bda8fd5a4b9b30fbe6811910c",
+            "bytes": 774009,
+            "sha256": "d8a8f63398772f2e626a6d953bbf637600eef20a140a98c9eb91b342945a0a07",
+            "metaBytes": 3364,
+            "metaSha256": "9630491a3d5d9ed68df0a2b5eeb3b3a851f2af004898291ee4cfaef4a91b6c1f"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Tutorial2_FrontPiece.png",
+            "guid": "0179ea4cda4d7834582f44b15aad0570",
+            "bytes": 58971,
+            "sha256": "6eeb192fcd9c69ceb00f92accf9931b79435e0da56753d58dcd7266a2de0901a",
+            "metaBytes": 3364,
+            "metaSha256": "7ad18bc74df3e5229b51adfd8e02a4e03f0d3077a981d87328fa20f6feb52e9a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Documentation/Images/Tutorial2_Seams.png",
+            "guid": "383bb810302911a4396d1002ad376a1c",
+            "bytes": 25121,
+            "sha256": "c859e7a7f0b0b379cb04b968673d6984ee19ac6117479905f89b1a21c36a473f",
+            "metaBytes": 3364,
+            "metaSha256": "356e8f315bba63ea6a5d6c98b4bad07dc50303292ec3a6fd7481eb73ac78ae61"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor",
             "guid": "59ba1985cbb72e14bbce3274440f295d",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "0decf63cd308591bd79320942e1cceed227e135957571f6107b01bf7f779ecb4"
+            "metaBytes": 180,
+            "metaSha256": "1e539af7b321c25c29b7901e058c2323854d9fe2f031d5212b03ee2a8d59a215"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Body",
             "guid": "347dc97700694774cab127e425adf00b",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "f53c1b0275b0f8befce4e7af2279a4b5a9c6afe7f741ca04fb389ad14460091f"
+            "metaBytes": 180,
+            "metaSha256": "b834df4f57f08369997014c8dead025f18eec3c8d16a389eaec86c972435c7d6"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Body/BodyReference.cs",
             "guid": "7e4167c6ec8e4fb4da4c71ea6fada7e0",
-            "bytes": 25148,
-            "sha256": "167b911328c69c9c41b933ad237c601be3800f0c8ce3c0f951b7ebd560d7e930",
-            "metaBytes": 59,
-            "metaSha256": "4ebe699f5fabefaf3fa88ea200f538094e8b37ebec6d672feb20e745962c8e9f"
+            "bytes": 30575,
+            "sha256": "087ded410cfb3c993a5fbe84f8fe6835ebb0801916d1980673ae3e837beff900",
+            "metaBytes": 60,
+            "metaSha256": "a288d33d4822e63bf90c964707a7872f6dfefc5e1eded8e95e5d562122ac756b"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/ClothesDesignerLauncher.cs",
             "guid": "2828fd30c682428438b6863f97f0d40a",
-            "bytes": 6468,
-            "sha256": "24347cea6dc50a2491fc4769fa8078ce80991320ea8e56a4b3b34a8a0adc0853",
-            "metaBytes": 59,
-            "metaSha256": "8fce0940bbb9d277323fe9456c224f0f1b2f7ca459d98676512e29f5925a9561"
+            "bytes": 6628,
+            "sha256": "4fbeb69f19a5e21e6f47ca90b1619da3bd8b883c04910cda9758465b9da42d7f",
+            "metaBytes": 60,
+            "metaSha256": "05735528a73979b80cdca62f5ec694ebd8b700cf248b1574881f0cc81325e679"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/ClothesDesignerPluginActions.cs",
             "guid": "2c10d1b718d15e848a6c74d0a95a57c8",
-            "bytes": 4971,
-            "sha256": "9d3d2d2e2adf92a07973db92a8063e826f55dcd632237d8c7a96838452873327",
-            "metaBytes": 59,
-            "metaSha256": "1d701c7ea97f6b2d627d4017d9b0424ed32e105ee281acc83ce1caf48b35985e"
+            "bytes": 5081,
+            "sha256": "fbaefaf570d3ea35032273fee5caa2c5972a8142309c53d3983521e1d9932b7b",
+            "metaBytes": 60,
+            "metaSha256": "2b0752537e4707ce92c0b8311d76fc598daaf952ba732295b3ff290e7b921fc2"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/ClothesDesignerRacePicker.cs",
             "guid": "6a5b706b9707e31428e21b041b41732d",
-            "bytes": 3932,
-            "sha256": "acad852724505176dbb7275138c8ed3d887f08711b912639793ddd349201656b",
-            "metaBytes": 59,
-            "metaSha256": "fb916b5d8b0d06ede117aa0afd5c7a1d6f415ae5964165582bcb9bdb2e4e8fd3"
+            "bytes": 4021,
+            "sha256": "eba0d76110b5afbcf02fb14689e13bc67e89fadf7313c630ac8896a861d95b4e",
+            "metaBytes": 60,
+            "metaSha256": "ebe24e7634afc0ff720dcf2e62af5a23813cc17c81233e88b1584309b05fc5ab"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/ClothesDesignerWorkflow.cs",
             "guid": "d5426314c376f9644a0c7693d1382e06",
-            "bytes": 51873,
-            "sha256": "401f4867ce761475edf02840745c210ae81cecae84bad5571a1233f809a836f7",
-            "metaBytes": 59,
-            "metaSha256": "336bdea0a99569315548a39fd499c07fff486fbdd6dd9380c278cf70d0f461c0"
+            "bytes": 92786,
+            "sha256": "f74355e3c529fa4f2ab0d034d2587a46f5c73397d2993754daf988c3b91b84fa",
+            "metaBytes": 60,
+            "metaSha256": "2015725ba2fd89acc382f0193eb9a4784bbaab93fdc8aa5863939b35abc7ee1c"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Data",
             "guid": "2674bedfbffe52648991c2645d1c95fb",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "f8a6a239635beb1ed48573492d8ce6d2edf8b02faa9d477b0dbcdb076d58a2e4"
+            "metaBytes": 180,
+            "metaSha256": "99967c8dff065be316e9eb962b23f50fe903e9b1c2ef26689deec0845c3e1023"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Data/ClothesFit.cs",
             "guid": "576b41e9a2937b5419395b42c02866d7",
-            "bytes": 10361,
-            "sha256": "f979a0171541990df86a7b2dfd40f754533f237aa18d607a87dd7017b9fd3f4f",
-            "metaBytes": 59,
-            "metaSha256": "ad1fd7f02fa9845ba32bec13675ea506ac93c55128794385a9abd9a2f1ba0c75"
+            "bytes": 19348,
+            "sha256": "a647b2b7d414452519ea0fe6237ddee8afa24f9fe727205636875ef6609e9dfa",
+            "metaBytes": 60,
+            "metaSha256": "2e1809943ae423bfc8e925953c2e16e0d8930a6697bb93417dbd3e74c7fdb6d0"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Data/ClothesPattern.cs",
             "guid": "84502f13ce032214195115124a93b406",
-            "bytes": 24754,
-            "sha256": "633cacf15f025bacf9d2a16cc171e15d492c2ce104823c563953565373b6fe3c",
-            "metaBytes": 59,
-            "metaSha256": "964af0ec99ea6101bbb5f8dfa1adc785ed859f86add03a822c2a7a45a53e5aff"
+            "bytes": 48693,
+            "sha256": "f18d4bd02f59daefefb864ce2c93ded3a6099b71e6e507a75c3504ec91272185",
+            "metaBytes": 60,
+            "metaSha256": "881644d1f426e552e8735ce32e64294a2def9d0149cac60e3217f02d291cd3c3"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Data/Fabric.cs",
             "guid": "5ee65caf9dcdba444b0fc28828df1233",
-            "bytes": 7006,
-            "sha256": "77f7ddeff9e4f300cd9b9d7e7a7e3285ab9f642fa92ff50493397509636da332",
-            "metaBytes": 59,
-            "metaSha256": "3f296ee7bc91048ec570166753c5cb6a968784467ec3dee84b5af9fe45470893"
+            "bytes": 10044,
+            "sha256": "1aaa5257a0bedbda5419ea2a2f62023471f7c13aba2778e8bf4646097e14d3b3",
+            "metaBytes": 60,
+            "metaSha256": "04f1397d594e6146652ebc1f514f84ce4f6d7b8c7d9f3476f48d912f0b8586b6"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Data/PatternEditing.cs",
             "guid": "aa95f094f85f64a4cafbef30a7a62095",
-            "bytes": 16167,
-            "sha256": "faaecbd4efb41617df1febc5ad5d4adfd18a81e3c6b5d489b4420bf187a42842",
+            "bytes": 92068,
+            "sha256": "7e3007ed18fd2adf8bbed93cd2157a255c7e7262ad4d288a78782124a20bbce2",
+            "metaBytes": 60,
+            "metaSha256": "949b82a54a29c161fc6de8ecb98e064d9f068868d9b09d080b4e0cb4be489265"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Data/PieceSizing.cs",
+            "guid": "0ad6257354ff47a44ab723a541232544",
+            "bytes": 24932,
+            "sha256": "e1e0fb88e4478479b4d85f2be2445e4e5879230954a9c1b0e5f476d4bd2abfe2",
             "metaBytes": 59,
-            "metaSha256": "5b06c338a631522ec86f28c4d3820fd59e4d451991fd0240e73dc98af2514a9e"
+            "metaSha256": "73ba506ec5882a77be6d368b2e72cbeac5a27f86ce2489c4dce1ebced73e369c"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Data/VestPattern.cs",
             "guid": "0dffc2f84b0dcd44283b034daca6fff3",
-            "bytes": 4816,
-            "sha256": "74f1945c28e23ae020b305229b26e77665ca0cfe1bacf4a518d3ab9fe791ad33",
-            "metaBytes": 59,
-            "metaSha256": "0d23c01ce737c10b12701938de614e593af2bd859c87d49eb8072fc4520acf4e"
+            "bytes": 4908,
+            "sha256": "70dab01509baabf922870df1f5f639dc9acec324686ceb72b14057aab25a256f",
+            "metaBytes": 60,
+            "metaSha256": "f1413ac784266f30024f9df45f996c9a71a263a1e2ac9ca54deb1787584ef9f2"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Fitting",
             "guid": "0534f1119296b9b45a3e7aab500efa4a",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "9c6e0e9920006ef6e4f6afe53b199f18fc76a020760463c4fd1440fc360b0586"
+            "metaBytes": 180,
+            "metaSha256": "736c621d9cbe367a70fea38759f3d19c19157591446b268e06065b9704a042f9"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/Arrangement.cs",
             "guid": "0f49cb8111b4b8d439e66818726563c4",
-            "bytes": 18670,
-            "sha256": "63dfecbd51945cb7a495c2adbbafa4ec0b1441711d11d82fd9d80fa1568f25e6",
+            "bytes": 42041,
+            "sha256": "8e087cdb44f1e0c74418d4349e47ca97b463fae703bb64c7278beb066f5de215",
+            "metaBytes": 60,
+            "metaSha256": "2080b2476dc664775a8a4665ef6a1acfd213f40bb5e55e89d4e91bcaeab993ff"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/BodyLayoutMap.cs",
+            "guid": "e4499b9e6582816448c244f1157234cd",
+            "bytes": 6252,
+            "sha256": "986aea4a74c064dfee39418bc32821b99018fe049c834d1b007219e4d359118a",
             "metaBytes": 59,
-            "metaSha256": "739ffb3aff838eff551e7d57ca01a22e6862540da893dab128a118bd776f5ebf"
+            "metaSha256": "11da6a245bbecbb5f955d1112e9229ea951cafc0175c308ac4c7e1ef942e8cca"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/BodyRegionBrush.cs",
+            "guid": "d8d877444509d674482bd5c8478b0a1c",
+            "bytes": 16411,
+            "sha256": "33f7c40d05a068f7384e146ac70778e718de4c76006586e5f73cac6ea9f2ec2e",
+            "metaBytes": 59,
+            "metaSha256": "e19d9cb183b830ead2fd8bf753b73b834b04383955b60739ab15fe06794cb819"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/BodyShapes.cs",
+            "guid": "2bc2b504cd3780a4a8e3902528ff9b56",
+            "bytes": 14393,
+            "sha256": "1ebf8b879eb7f683c040329bb4f684f86784d7f87af96f0c72ffc8a315fcf3e0",
+            "metaBytes": 59,
+            "metaSha256": "9286af01841b95e136f330c90c766bc0c0ea4ef40c7f89b292048550f013707a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/ClothMotion.cs",
+            "guid": "d22eced2cfa2d734d8282dabed0040f2",
+            "bytes": 8228,
+            "sha256": "ca4695ac0c1069dbd2eb3493ce9d56a95b7115b1cad2a56bcf7834fa0a31c99e",
+            "metaBytes": 59,
+            "metaSha256": "75c3782d92b0e66d02709b7a9588b94ddfc879aba0c5eac07775046a2561f8ef"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/ClothRoller.cs",
+            "guid": "f1c9cd19b827d96459c7c245d06b8c16",
+            "bytes": 13579,
+            "sha256": "29b47ba477d0f178c0e8a870c7f595a44345d1d02eef51a6f12713742ce51657",
+            "metaBytes": 59,
+            "metaSha256": "186635f9ba61355c78f57cc4c09b9f6da9073e0b2a47b6bdbadd5c24189520f5"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/DrapeNormalMap.cs",
             "guid": "ec4e07206db3c1e438bdab872f2be7a6",
-            "bytes": 10256,
-            "sha256": "dd132f82c744e43b513d48cd1ae22642b76fd00c8e3257b267f29810f9eaed48",
+            "bytes": 10454,
+            "sha256": "5171acd13d932f250e1d71dbf00329522d379ec706bfd608537ed88ae215d16b",
+            "metaBytes": 60,
+            "metaSha256": "33f9ee95d72769a1e39af08e27eb28a953253bd5361c7602674e2d06d707094d"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/FitPaint.cs",
+            "guid": "1034115230e2090498018326ff409a7a",
+            "bytes": 16977,
+            "sha256": "bd18e35d6b8c3859b7da1127d984033a3b0e1c1e2ad7d33351731a0bf5852aad",
             "metaBytes": 59,
-            "metaSha256": "5f6e06e59dca355ed89492bccf1f5e6de27ab7e2017abced4b212f32c2be62cf"
+            "metaSha256": "9237e47bde403a326366e233a3e0cbb5136b6a1fef1b80f142a8e87451f2c335"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/FitSession.cs",
             "guid": "859ff0392ef710646907a06aa880341e",
-            "bytes": 12553,
-            "sha256": "4b69b7556a143d385fb9ab02ca33f88e69370cb54bfd7db02ace33e4b4213255",
-            "metaBytes": 59,
-            "metaSha256": "d575fca79d6d5ce3dd2a7a3d61e96c0c2d6df82507a573e772980e7d2c630f74"
+            "bytes": 29616,
+            "sha256": "31c33a31d57f2c37380cc73e7c298be408a77a3791a45a55facc40a9fdbbc371",
+            "metaBytes": 60,
+            "metaSha256": "dcd2144d2b81b5166438762c3bdf16323fc9ada45cc82f533209768718198926"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/GarmentBaker.cs",
             "guid": "791c4ec5a369e0845a8def550264f640",
-            "bytes": 29271,
-            "sha256": "a7dc4b8fbacda24f722cff0c92db7c8d3fbb81c5cf76b6f1adecf3be90872ca9",
+            "bytes": 55502,
+            "sha256": "56bbb382432dcd5f0da0b5094bf4af434aee03d44c8052ee8e7f2a78c7103646",
+            "metaBytes": 60,
+            "metaSha256": "a5cb2d4bba9b9c0a4369d43c494887820afedb55007e37ac812c6b8d2e8bb2aa"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/GarmentExtras.cs",
+            "guid": "846612d5ad0229f4eac393251bec183d",
+            "bytes": 14537,
+            "sha256": "c20c812f874dea42de125c37906b0598e91c355a7b61f40bad3e57e446d319fd",
             "metaBytes": 59,
-            "metaSha256": "c7524b2ee4e7f44971723501383d8937b972acb57a22588bce9b66a1147d6d7b"
+            "metaSha256": "bc8c2009f84ae22b48cc370c100ebec8780a3c3e6ef18ca1332d2b5a784502d8"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/GarmentLooks.cs",
+            "guid": "54bf411969457c34b93fb6d0bb85dd54",
+            "bytes": 20980,
+            "sha256": "a12d218ddf60fcf000733b9cc343fe67b9272eef81bb146da79e5f018d9ccbd4",
+            "metaBytes": 59,
+            "metaSha256": "861b0ba99758b2f35df253c95eac1a52430c754c34d6b28fed22af4fd539bf3a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/GarmentTrims.cs",
+            "guid": "211f3e0eed6c3bf4f94116aca86eb661",
+            "bytes": 5483,
+            "sha256": "0e66cc20d65b5178d940ba86b2ade142f0104610d122cb10c6dec75db1375041",
+            "metaBytes": 59,
+            "metaSha256": "42ae6dce8d644657ca13cb4eee544eded29745eb8f0aab5aca622d257f4d4c31"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/GarmentWeights.cs",
+            "guid": "238f3e177f7754740a66cb84a2372dd5",
+            "bytes": 12002,
+            "sha256": "697a398f62bfb75618201b98f94c39f677194b8541435c5b8d2d87758b1c94fc",
+            "metaBytes": 59,
+            "metaSha256": "c1cf649ee1f8943b935dd0cde4f4d82ced487cc1aea6d15cdb6ca2a2c4928f3a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/HairSmoosh.cs",
+            "guid": "13ff7a61faa0bf64eb709d995dee7d66",
+            "bytes": 14512,
+            "sha256": "5f2f9680f02da73a069db88793af8a8613eef6925a41384e4897e49617f2baf8",
+            "metaBytes": 59,
+            "metaSha256": "910b070035c0448b6362e1f5f6328c7713a4600986abf3ee98bd3381a21f7c92"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/OpeningFacing.cs",
             "guid": "754892c6aaa40394ca5291c5902731a8",
-            "bytes": 9910,
-            "sha256": "48eb60c4dfb44cc23b712767ef4509941d8836d192ad93706ba86e250c47f270",
-            "metaBytes": 59,
-            "metaSha256": "b68ce3bb5851756985888787cac8361429cc37a9a9c3686b8965316a4f17a775"
+            "bytes": 10328,
+            "sha256": "34aef7ff9cebc349074e21e32030e36d553a330a34fa350f4bd0f6e1fc648750",
+            "metaBytes": 60,
+            "metaSha256": "537700840b69e7e4572d080aa704229bb836d857ae2411b7cb97da9e4b07f16a"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/PatternFromMesh.cs",
             "guid": "03d20beb45e31a543b866a43b5232088",
-            "bytes": 42148,
-            "sha256": "049d3db52bbcadb72a1553be735779b21cfe7a4941b69e7759f6dd480dd80caf",
+            "bytes": 42155,
+            "sha256": "0c733d3e094b3d5d86152387108032f71b4ac413660402bcc1dd9078b067fb4b",
+            "metaBytes": 60,
+            "metaSha256": "c69e93716954e7130c4d355ce0d442100ed06fe0dcbfddb2d665bdd48c755746"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/PatternOnBody.cs",
+            "guid": "ec3b71620423a51408a889d1ae5d3416",
+            "bytes": 12302,
+            "sha256": "afe512348478baba677e1e215fdb4e2fe455f63237c49cc72cb1923369095fa8",
             "metaBytes": 59,
-            "metaSha256": "11614a75e81d7a8ec868a4cd0af016a2b756122ddbd23aeba4467a31cb2dead2"
+            "metaSha256": "1ac8bb23378c8707232214cd9bfef0c655e2fe3feb9d707b871104dc10f82fad"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/PieceThickness.cs",
+            "guid": "ee61f5a94ed8c8c4093b21aab793da4e",
+            "bytes": 8264,
+            "sha256": "bd474161650f05cff3c95dac072bd651d36f9a5eeb849b644d29241762d1912c",
+            "metaBytes": 59,
+            "metaSha256": "703a93da9f1677d1e575a8b31eefe85fb4cb3483a48ca1ee5d85d62ef0c45374"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/QuadObjWriter.cs",
+            "guid": "aa8cc64e9eaad3a49b0235ad1532fef4",
+            "bytes": 4307,
+            "sha256": "397912ecc23014fb6bc4f1e8eaa8b1d7e5e7c49cc0291de1aaf00d3646323c0f",
+            "metaBytes": 59,
+            "metaSha256": "76c0ce703d1f5afd97855f76c898dd0d34f04ef6b5043b303215cae5f2bcf6b9"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/SharpEdges.cs",
+            "guid": "71acbef49c4728146a8b9ab0611218d0",
+            "bytes": 7239,
+            "sha256": "0c3aa425cb92cc802660589c302371ae9af4162e55ea6e2530c77c3c09876954",
+            "metaBytes": 59,
+            "metaSha256": "0d13aa4a28309c64d765b99b40d2c1d57677085fb58312a156016de9ef764b5e"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/SlotRefit.cs",
             "guid": "278ca86509c94aa40a27175fabffedc7",
-            "bytes": 14338,
-            "sha256": "c76532f6851221976b2e70cdc2d4461977d71f670129b1d94352417a67f124a9",
-            "metaBytes": 59,
-            "metaSha256": "a8ce463557dde3c4eb71ab9b7a11f746c69a28a5031ecbc00124c9fb8392f50f"
+            "bytes": 16059,
+            "sha256": "4833ca6f2a3bc6f6ecd8c30de0af03ae1d3f2e89f4dfe36ff811218d99dcdf46",
+            "metaBytes": 60,
+            "metaSha256": "4fcf88b58da070f44f2373d3a965d04eca3a375dc16b20a6547b1255794983c2"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Fitting/UvCheckTexture.cs",
             "guid": "bfda0209f88d60545a68cfdb16fe5e14",
-            "bytes": 10812,
-            "sha256": "a628eda41b5253d5ab91fe2eb813e4b7d7783ef5af26c0d365f6bf509432e444",
+            "bytes": 10996,
+            "sha256": "a724afeca2df232cebcdcc4b19ec108c246c409fadb73181f8251c55327b4ba6",
+            "metaBytes": 60,
+            "metaSha256": "f409b83f6ed33ce6cb6e90dceed19c37c31d3bbe12a8ed65ed139a3cc8e160b4"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Generator",
+            "guid": "0ecaa0ac877c22046a838bc9b3850dc6",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "e3df103822f17199fb9f21fc27234788493cf8447520b89dec18827da3aead8c"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentBody.cs",
+            "guid": "76b20c7b9479d1e428ab888e4a4c7ead",
+            "bytes": 8490,
+            "sha256": "71f980c9b853210a445bcd57b7a9dc06d2f0a538cca8367b7c709be5b709bdd2",
             "metaBytes": 59,
-            "metaSha256": "25b18bb06050e30f5c6ca86532c5ba99e35a93dc0e3313170d66206d6446ad57"
+            "metaSha256": "fdce91f12064f3802002903441a6e28764805b1eef38ff58fe8a861590e5fa2a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentGenerator.Bottoms.cs",
+            "guid": "a626e75f2b5534b4899efde76f25a352",
+            "bytes": 20061,
+            "sha256": "2f830da51519cc5cc45f4db8b71fc043d5dc00f5d116d9554c1db3d372409949",
+            "metaBytes": 59,
+            "metaSha256": "dbcfacfb20115030964a67b625c0d5bdacd4ff2199e7841f6c4c91e581b2ce86"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentGenerator.Tops.cs",
+            "guid": "12178a3ae162d3641b614672beaf5f9c",
+            "bytes": 36010,
+            "sha256": "f04bee65b63c1541545910cff9cc28fd3366817bb4ec9e9182a7c4e4781a447a",
+            "metaBytes": 59,
+            "metaSha256": "64338d08194643cbd239f61ada3f7cdde182a0a2bc87005d12b5735b4660a592"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentGenerator.cs",
+            "guid": "83101d53b8bdbff4583da022486e3f59",
+            "bytes": 10186,
+            "sha256": "c165d65f096ed82facd1c1ef3403f645dd6b84c3693d9c48611d48539b9b7043",
+            "metaBytes": 59,
+            "metaSha256": "07d0886af40242580af5a2cd21e80e2acd2b90c348deedbdec03a7a91a6b3b9f"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentGeneratorWindow.cs",
+            "guid": "c4d4a3a6073b6004098ab684fbdffb09",
+            "bytes": 28674,
+            "sha256": "a174670d3bac8af0534256faaacbca19e2f3bf3e5ee3d48906caa25d86cda303",
+            "metaBytes": 59,
+            "metaSha256": "edf104a91baf647f88aef596e2fb686e4fe98dcfdff92987905199aead8523f1"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentPresets.cs",
+            "guid": "aed0a43b4c57c17428ba3299a1f6cc71",
+            "bytes": 19562,
+            "sha256": "d8be3071834ccbe3fdf95df5330dd57134d19a610b3d7c2074c56148920cacf7",
+            "metaBytes": 59,
+            "metaSha256": "60803514969ebe8aa3d8568d37d2399aff15be38fc909bd591e8f6ff017a9359"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Generator/GarmentStyle.cs",
+            "guid": "4ea3e377d9cea6349bc74cfe1e97510e",
+            "bytes": 9580,
+            "sha256": "b597e767fa8f286b0204fec04be7eb47bcf52845704ce0b87e94ef26fbfc6806",
+            "metaBytes": 59,
+            "metaSha256": "577af70f0c9376c149081e8fc9b6fe5cb8b0a12134aa67b8456c02eb66208e7e"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Geometry",
             "guid": "cbc773cf479677f44812f4f5ed648e99",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "29fcc8925257647731dc1971026b840d3229e90a8b41cb1b95cd1dc3b031fd0f"
+            "metaBytes": 180,
+            "metaSha256": "0d2106041963762ef99bd0665f6267fcdcf480dc878b450b4d3f9b7bcac6416a"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/DartGeometry.cs",
             "guid": "5df6a1d68c094a440ad38dbe492daeb1",
-            "bytes": 20072,
-            "sha256": "8833b325d32cd60bd87c37bb4a09433abe749d67354e298dbac6963fd318183c",
-            "metaBytes": 59,
-            "metaSha256": "0971a97add1818f9116450c124023db5379b875c45b6d4a27318a265a8148090"
+            "bytes": 21626,
+            "sha256": "4dc581ae817c9ed8024eb340ac931b5b5d55d1e9f7d6e1e75f0411b5b156a94b",
+            "metaBytes": 60,
+            "metaSha256": "e703050c31e4d35290dbd75e8237cfd20ed3e9876fb8e49b1dc6545e8fb569e4"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/Delaunay2D.cs",
             "guid": "c443f467f15045d4985bcaaf01b4fdc9",
-            "bytes": 6984,
-            "sha256": "f2ea4b3f3e92227ad23e522c09ed3aab76c63b9063ff09d167af0b197ecbb656",
-            "metaBytes": 59,
-            "metaSha256": "3f35757ec3a6949c3581c01ab4adf2efc1726693f1c3b3f670c4af5fa9af5aa4"
+            "bytes": 7159,
+            "sha256": "0840ad09c059c94e1f31192b980d9758c9a6d32f63a82d225cfb9e0c18e5c38b",
+            "metaBytes": 60,
+            "metaSha256": "c3cc50fe68e253bf4966a15c951434e252e3c922efa324772f4922f48159ad34"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/EdgeKeyComparer.cs",
             "guid": "c371a1bdbf44d2d429dfe00f0e2a7947",
-            "bytes": 918,
-            "sha256": "6bbc888b7128fef23bc7a7b3d37cce462fd73b0415796e1cd872bdca0798a3b7",
+            "bytes": 942,
+            "sha256": "77e7a73558e2fe48e5929f391a297d2ad3825a05ac9da1a1f1e1209ca7f1e871",
+            "metaBytes": 60,
+            "metaSha256": "18cefca5ac8cdd3356d83e2129440dd89ae6543228cf49ca8fd3e1e0ede42b27"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/LineGeometry.cs",
+            "guid": "b231302a38869a04eb4cfffe7eb65505",
+            "bytes": 9434,
+            "sha256": "2d95095bc45005f15bc8f6449c860c88a10715af3e449b12eaf4094680329d8e",
             "metaBytes": 59,
-            "metaSha256": "b0a82460fff4c6026d93634f37598b3e4345afd72333d64620e280e5ae050fee"
+            "metaSha256": "668e784b239eef6d8f686218aeac2ae6330245f33f425886f6007c7a3af4ec4d"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/PatternGeometry.cs",
             "guid": "a62dfc72e93420a4bbd507908c55817a",
-            "bytes": 12667,
-            "sha256": "e573d4b2a80d361e40dd7749ec5c59219e4cbe211fcebcb62de116e67a3fb09a",
-            "metaBytes": 59,
-            "metaSha256": "c79e5237bb18b5db2f11f5c2c259090feda9da0431ed03574fa4a030ee5b33b2"
+            "bytes": 18104,
+            "sha256": "115993035f7c06e573c42073e793a993a501b9ef3875f7a319ff91c490311dcd",
+            "metaBytes": 60,
+            "metaSha256": "5169d0aa92a579278a204f723e1c98443d8c55ed7d1d927157ff18da0680ca23"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/PatternMeshSampler.cs",
             "guid": "89e4ccda0cff8d941b05956dc1c79c62",
-            "bytes": 6526,
-            "sha256": "2ccaf682c25b8feb726e7243486016808cde8fd4112f260acabfc79592538323",
-            "metaBytes": 59,
-            "metaSha256": "b517fe602982fb44d81a4b1c6684e04cb394cfe4ba7e4f8876fe10a6e8d25138"
+            "bytes": 7157,
+            "sha256": "9a828bd93514275b6ddd1e7384fd3b676b1ea01f6cdd993c369b2b76ad48a5bc",
+            "metaBytes": 60,
+            "metaSha256": "747eee906e3267abd1271c3772930f114f4ba04e73789b98269cf12645c44174"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/PatternMesher.cs",
             "guid": "989c25b12a043bc4891823ba765ab3b8",
-            "bytes": 32813,
-            "sha256": "6eb46b0e03e5eae58e19fdcbbebe3f75b9b21cdbf74825837dd10b168b10c831",
+            "bytes": 58099,
+            "sha256": "93364189152891741c11be91125b8ce4a494b93c85562063e6f3ff653a32a0e6",
+            "metaBytes": 60,
+            "metaSha256": "2f817fa6d953ab14857fce770916f588bdedf4fa66819dd1960b82e5c485aa28"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/QuadRemesher.cs",
+            "guid": "fea29504a76217a4197c13aa018c781c",
+            "bytes": 23471,
+            "sha256": "0033c35579d83bdeaad7eaf5ad3f7588a7b41e8beafd664e94221eb94e6c79ca",
             "metaBytes": 59,
-            "metaSha256": "01d5be23d086748786752699bd7e4a98e048e9f145ca1c001d9e49ecba91ef75"
+            "metaSha256": "7f536f2155e7147148d9844c677a0bf2f6ede8dd1c8c4a9a4a6a5b3e8e87c5d0"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/RegionPieces.cs",
+            "guid": "30b670abebad4d74f9b36cf164394df8",
+            "bytes": 17954,
+            "sha256": "adf22d0ae644680e726740c35f709f86743647111ba862d86021f1f9adeefaa2",
+            "metaBytes": 59,
+            "metaSha256": "b5e049bc1a3c534ef45a0ee29d1630fba44bd9a67688f0ff8d68b7ceb71a7314"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/RegionUnfold.cs",
+            "guid": "73b47a060027128409428191d95c397c",
+            "bytes": 47076,
+            "sha256": "d3e3601c8d726c75f6b924837b9c18e6095119b60faa7f71f7034bf97fcb3954",
+            "metaBytes": 59,
+            "metaSha256": "0712c348d87d7e514ebeb9b9bb8827d2d1a9915aa894b159a23aa0c2a1019752"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Geometry/UvLayout.cs",
             "guid": "96a064d6d58f74e4c89764b141d02761",
-            "bytes": 8632,
-            "sha256": "cfa84329efd27ae6b035e11370e08d5001fd43db8220692ab9ec1c365b9ee5f0",
-            "metaBytes": 59,
-            "metaSha256": "d3b9b20250fb83424825c3b01093cbbca98c87f07205836d5a0e028efa4cdf46"
+            "bytes": 36595,
+            "sha256": "26b021dee50ca0660d900a47e8c19b2c9932f9f8ec6fa403b460759ad4747b61",
+            "metaBytes": 60,
+            "metaSha256": "de1bf33444080f1369e35ddaf6c88eae8d85188241c990da399ad6458b5c2310"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Samples",
             "guid": "61d10a0bcc64a094793c6fc997d24020",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "b5c5afffe6f5e02bc026c6b81043277185d4916ecff158b3293b18867afb6ba3"
+            "metaBytes": 180,
+            "metaSha256": "2a8274f17030303e6953e84cc6a7ac5b0a1235c71f046881e0617eb040c712e7"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Samples/PatternBuilder.cs",
             "guid": "a58929f854325bc48a2a6f067fead5cb",
-            "bytes": 9944,
-            "sha256": "4845ca9cdf31e2f86c91a731123b2495cd8e1d92218b3c4ebab5407dc1e645b7",
-            "metaBytes": 59,
-            "metaSha256": "5f2fd041b05185e1543db2cfbab7e8ee94d372cf3d1773c302889120d9d30806"
+            "bytes": 11830,
+            "sha256": "942462691ef527a822b9452145503f690582f2fa04624da05aa84df36d7ea1ac",
+            "metaBytes": 60,
+            "metaSha256": "c7847ef92622e7ee4b58468dc8a3b913cadde7f4698afee17a385ed9ab358a5f"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Samples/SamplePatterns.cs",
             "guid": "5729d72279b4a2c46bc7c726fb8786fe",
-            "bytes": 44347,
-            "sha256": "c70388bac9a575923cf91831546b1e3bde4c3b130c0d03f61d02508c467f277b",
+            "bytes": 78970,
+            "sha256": "47c75e1171296cb37256c2b7b45104d4fa4b7dcc38a7ee1f98abda685fa9f8c9",
+            "metaBytes": 60,
+            "metaSha256": "f6be7a6a0547fab6e03ce02f9d698aaf38befa96b97005941b1795b22da5b375"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/Samples/SamplePictures.cs",
+            "guid": "55990878ca516e045bab84fde69f6a6c",
+            "bytes": 27047,
+            "sha256": "2ed767a1e5186b810b76619b282225e7124106ea49569c3cdeaad6123cf19c23",
             "metaBytes": 59,
-            "metaSha256": "d38071d8003d6cdcff6fb74ac463927154f77b8036b19eef82c6372b7e0f2055"
+            "metaSha256": "402178e43a7c1d801dc0eb45af023c140dd8bb4f8197c644fed373f75c4b52b1"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Simulation",
             "guid": "b378ac8019bbe66479e170000903852d",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "81c5597fb0cdc412bde74dc1feb2a27f5948d6fbbf26fa86a3d3f7d62466ca7b"
+            "metaBytes": 180,
+            "metaSha256": "ca75b10912aa2921c16151e682dada103dec8043c8d3cd9ae29e8574c9e9c5b7"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Simulation/ClothModel.cs",
             "guid": "1ad6accd1dfdfce48a03af9b578978db",
-            "bytes": 17349,
-            "sha256": "dc0d9a0179617bd5ccc6649c735b1afa31f07eec7e2386403143d54c2bc422c6",
-            "metaBytes": 59,
-            "metaSha256": "7890601e909b175aefae3dfc6b055d34927c70179996dd6d67227e073feba87d"
+            "bytes": 48067,
+            "sha256": "32ea9186a7f9a3dc881e954ab1c3b79b16a6378282d7020b30788167efc84035",
+            "metaBytes": 60,
+            "metaSha256": "e6690d4e05cdeb087b9c319d87ee40ab45171af1d319a5d1095d04830b2f1605"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Simulation/ClothSolverCpu.cs",
             "guid": "5f1979b0ea17f4c49a9db4baa36391e3",
-            "bytes": 14822,
-            "sha256": "e1c450ff889b459f31eaddbb8193f8f8b9f47c83179bdb5300aa2745ede7ce0f",
-            "metaBytes": 59,
-            "metaSha256": "3042d46ef6e0c6afbc9336081726a59ee7f27fb37221a9310c74704023abbffe"
+            "bytes": 44110,
+            "sha256": "eb72f0d0a27813b4d3c66d3586a10401219b6e9367c33b023227fd47c340628b",
+            "metaBytes": 60,
+            "metaSha256": "6b0191d199b6ee0296e47a28418d11cedb2e91ca3bfa91f13e575083c7028c12"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/Simulation/ClothSolverGpu.cs",
             "guid": "5074bb08e0b79da4d9be777465f38385",
-            "bytes": 13160,
-            "sha256": "30842cc1908c04335278f8575be5305042f624a312564000298b712fa51049c1",
-            "metaBytes": 59,
-            "metaSha256": "4b0937ce7ef67dc341840bfa6a82fbb63ec022aa2e95a02018e500a1aefed003"
+            "bytes": 22577,
+            "sha256": "8b22e1278bd5d143277dd87d3e685f3ac80c288f12aeb40b452b40b46a72e65a",
+            "metaBytes": 60,
+            "metaSha256": "7a2ab67f0ae1d39dc6b4feacd63e584a2e0bdfe117b0fe05fa4a246d202ff98f"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/UI",
             "guid": "f8190498019b43b45bf24a2d1dcc2866",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "3f74c8b3b4922ea60be8b630ce1bb684542960d64013daff0c7efb687b233bd3"
+            "metaBytes": 180,
+            "metaSha256": "c850dae01821c807d6f442fb7d4819c2f5c549694ed71303ef243076c564bd0c"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/CanvasSnapping.cs",
+            "guid": "d020f29e03329a142bc93c8b369f8062",
+            "bytes": 4283,
+            "sha256": "51540623c010e5aec75a20accd8b16bb1de9b6f4fc78815b56af4eda587939d9",
+            "metaBytes": 59,
+            "metaSha256": "5f7bd76f8357946049cd70548b625497695594d33afee7e28ead55ec9c4a6d38"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/UI/ClothToolsOverlay.cs",
             "guid": "e99a775b2f66879489ec50fdfdfc6388",
-            "bytes": 13483,
-            "sha256": "3153959ecbaf6352e3986f82038d6219f81e937031168b3f59f5861e75b6306e",
-            "metaBytes": 59,
-            "metaSha256": "1185b44f1d153152e9e75a307bdfdecb0b53ccf83bc3c2452a9eb1585024738a"
+            "bytes": 26974,
+            "sha256": "d0f14c2d06601eec712daf3b2c1d8c48976fa0a38f1726aecff4adc696a4e212",
+            "metaBytes": 60,
+            "metaSha256": "100b996f1d6dbcaf42b25282848baac9dda32aadc408c396e4e39c78bd424614"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/UI/ClothesDesignerUndoState.cs",
             "guid": "45eb99571116fd94b981100d539fcc36",
-            "bytes": 936,
-            "sha256": "9a83055ad411177724f55f7725031ee5e830602727576340c79477eb62e7efe0",
+            "bytes": 958,
+            "sha256": "4b2f09be9acb7b845b044a0bc6634a644c24095e5f055518f8a7661110cbccf3",
+            "metaBytes": 60,
+            "metaSha256": "0b3bc2e5a6bf6f90256d2b58726514c399cbd3e746a33e4de1df9572d0e79c72"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/DesignerSession.BodyRegion.cs",
+            "guid": "573d8f62fd5683a4aa47f4ecdadb2dd8",
+            "bytes": 8535,
+            "sha256": "0e94e879c85a1de1f851f2ceeb61a3e64c3fa3a5d50fde9a57c5a58339cf42a2",
             "metaBytes": 59,
-            "metaSha256": "c08a4d0e2f3a1c1d947e07a5df9883e7a5251100ac8c35d13eabd430af77d8e9"
+            "metaSha256": "093a4323a3f179ec3441cb70a883013d3eed069949300099ad6cde801e1ad14b"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/DesignerSession.PatternTools.cs",
+            "guid": "520ab83521d818b4bb58b19f89052af6",
+            "bytes": 10690,
+            "sha256": "f7b2863b479151c4c67b93f61cb44c91d544dc1886f26652847936038b98b452",
+            "metaBytes": 59,
+            "metaSha256": "ecfc1f3b1e0722294d41417bed733e1dee1bead4a3ccbfafb64610d448d909eb"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/DesignerSession.Sizing.cs",
+            "guid": "d3a55282947a16f4dab9595ab14329c8",
+            "bytes": 31261,
+            "sha256": "b65f4c40580d01289d54c325d1bd2868ef3744cf3a823a3ca9d5f04e00f27acd",
+            "metaBytes": 59,
+            "metaSha256": "1d05e0123affb1bb6d409f03810024a230fad6f2e805dd1ae04b5631efb37e30"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/DesignerSession.Thickness.cs",
+            "guid": "0645c9309ce06a04486946c9c324e605",
+            "bytes": 7788,
+            "sha256": "3e3eec7783a2cb9eb812546e1287fbedcd31f6e5dd0c2f63405c26185608492f",
+            "metaBytes": 59,
+            "metaSha256": "a2807c6272c66ce6d1dd1c75c1f47c057692be282b782d93db11772bd65a968d"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/UI/DesignerSession.cs",
             "guid": "f0cfede9b04da914693f77a5a8beb005",
-            "bytes": 73036,
-            "sha256": "5c72409cbc7977daaf4939b41545d4153b3626c2dd9e93699526fdc1bf4b1519",
+            "bytes": 150980,
+            "sha256": "adfd039f5335ba3cca890ed817fdb6bf05d0efbeb39b0086bd4f8ed89ade4a59",
+            "metaBytes": 60,
+            "metaSha256": "3b5949c255ba325cb46ed175a1fd3ee108ac87228343bcc0a3673c51b201ebb4"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/DesignerTemporaryObjects.cs",
+            "guid": "49b97afecd71d7f43b381764d2deff2d",
+            "bytes": 5938,
+            "sha256": "167ddc7686a631c9317833851cf32669d1bf28b1698ad7aef43f51002161b9fb",
             "metaBytes": 59,
-            "metaSha256": "930c72f32156aa07c98f8bf0fde6e3d0de534e5ac22bb8e111f6a7a923b399d8"
+            "metaSha256": "725373f3867b470e8a566872cee5812fc171eec4edca821c8504e874bd48dcae"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/FitToolsOverlay.cs",
+            "guid": "67b15fa0d6d22304199b5b5c3ccdd03e",
+            "bytes": 12387,
+            "sha256": "c31189074e215902dc7ba9c27386a5f5c458adf49e1242322dcd4c47b5c3b4a5",
+            "metaBytes": 59,
+            "metaSha256": "b8f00d72a4ab2b6f287978b3ae07fdb413d177055ee772907a6ebc0683497c1c"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/PatternCanvasWindow.Editing.cs",
+            "guid": "18c298f52a7baec4c9dc08816ff4c5ed",
+            "bytes": 43719,
+            "sha256": "6edd9590358a089606fc7afccebea13823670c366c247382adc4452c8817fee9",
+            "metaBytes": 59,
+            "metaSha256": "5ddaf0fa6376f89646e7b25a34467d0b4bbf74d748c9c1704e8a7fe308564c7f"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/PatternCanvasWindow.PatternTools.cs",
+            "guid": "8fd19057bf621c047b0071c2ed68da8d",
+            "bytes": 20248,
+            "sha256": "9f7c82e17bf419f4e7b30c325060ee3ff962e8538ad1fc6b24a5c67fc2069f25",
+            "metaBytes": 59,
+            "metaSha256": "c7abbef8ae2370da9a2af31ce80a5516aac586d0c06b1d84cc1761cf983256ad"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/UI/PatternCanvasWindow.cs",
             "guid": "60bae09d6c49b7b448860e735ae33c0b",
-            "bytes": 63483,
-            "sha256": "cf2fee04b40aaa40d8f01f2ddd3ce3fdb68fa291c71ed6be4097b22bf4f3e301",
+            "bytes": 132770,
+            "sha256": "054d56226e5b2d29cf34248fc16a3e7f7b27bcc8c5f30a0cd38fdb244afbe6a8",
+            "metaBytes": 60,
+            "metaSha256": "3606c6ac6ada6e18148982b54f815e1bd87e70d0baf954d95129fd2ce1407cc1"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/PublishClothesWindow.cs",
+            "guid": "43e77f73aae996547b159094b6f91526",
+            "bytes": 13989,
+            "sha256": "b621a6341a229f76e56b2596fee024dcaf150e0f1b795ea5a05b6638e8d12c85",
             "metaBytes": 59,
-            "metaSha256": "c8ba839b48b40732e5d68660de9189c66ae6f2141681ff967a34e13bac76c649"
+            "metaSha256": "ceea5108c3819c22345ecd905c7660f0c469cc9dc83b7198cb8aed51f5a731d3"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/SampleBrowserWindow.cs",
+            "guid": "eee1f4cd8689425498b097b0b9336857",
+            "bytes": 18173,
+            "sha256": "b8ac08d7766d6b36dbacda4cb507938bbf30e1a23e5e1a8b56a205cd026e3faf",
+            "metaBytes": 59,
+            "metaSha256": "38e90356a1663fe4ee007efafc6ca7d8dea83e8ecd3c5cc5e86bd2ad5cbca26f"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesigner/Editor/UI/SizePreview.cs",
+            "guid": "994affb4b2ed7294993670ab207c839a",
+            "bytes": 14500,
+            "sha256": "8b6c7dd50e5366831269803ff6a047734356b3cb498314d606a0f074aa53cc19",
+            "metaBytes": 59,
+            "metaSha256": "d2e7b10626726acfe776cfac4cfd4c96a084aa76abc5d194f9a7f664c4bff473"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Editor/UMA.ClothesDesigner.Editor.asmdef",
             "guid": "7c53025002571254ea2e953b0986f87c",
-            "bytes": 562,
-            "sha256": "f5d5749710906b83f5cadef87d6d8fe16e23eb4ff0ae3b059fbb653dc6f33fce",
-            "metaBytes": 166,
-            "metaSha256": "a1c7a2f41cb7c4f2416cd6a2dc6a60866b9814ebb0ee4f96f7e7f9e134be03d7"
+            "bytes": 585,
+            "sha256": "692e61ba764aaf9ca7c24ac7fa127601951f9d5385bcd96d74c2f736b7c5330e",
+            "metaBytes": 173,
+            "metaSha256": "5c9f5eeb5b223b6a0fde43fbeb36d08ceb5d495ef0ee7ca0458b4dbabf3f2f30"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Shaders",
             "guid": "18c52a5be21ef504eb553c6705df63f0",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "180a972e077ec24ba86d3f3e15bd2ad9db481ad4a1aa5bdf809a550f4b7a9949"
+            "metaBytes": 180,
+            "metaSha256": "8f7c0c6ed0b1600d4f2ec5d97ac5d40f8db1c14a40ed965a2e5c0a566c061909"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/Shaders/ClothesDesignerClothSolver.compute",
             "guid": "54ac81c4b4f2bed44a3dbd7a0287e447",
-            "bytes": 9264,
-            "sha256": "7345ffc11d2479b2b097a9b74f0ffc33be684f771ab4a16c4b9b7ce5d80aa779",
-            "metaBytes": 161,
-            "metaSha256": "ee7a1167cda2a3b02b13663d0274776abdedf2855592c7a167483e17b4eef828"
+            "bytes": 25706,
+            "sha256": "d8eac136d4d910fb775054f63745799da76b73ead39d2ebd7c132a638645b4a8",
+            "metaBytes": 168,
+            "metaSha256": "54112098a8326a9794342ebbe45ffa02e204a3f88860d0e4ff0fef9b67935017"
         },
         {
             "path": "Assets/UMA/ClothesDesigner/UMAPluginDocumentation.json",
             "guid": "3e1c79e8703c67042be351c35bdafcd5",
-            "bytes": 116,
-            "sha256": "82e9cf0a89e425ac65f947b7d4decdfe0121472ab4f1d2ca8e58f6d38fa7dc4e",
-            "metaBytes": 158,
-            "metaSha256": "fe88feea1eb7f1942fbe274eaffc48efc1388e0beb0724c99c3906c90bb60c4b"
+            "bytes": 121,
+            "sha256": "6674d1f2b250d000a6295049778dc189b031455fb3fa863160191748d8149726",
+            "metaBytes": 165,
+            "metaSha256": "92a47bc0812750b0d645747426b1597ee846f435c267c3563b9199d4cc0991f9"
         }
     ]
 }

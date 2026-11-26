@@ -120,9 +120,10 @@ namespace UMA.Editors
                 Messages.Add("Choose a race.");
                 return false;
             }
-            if (race.legacyRig == null)
+            UMARigRestPoseAsset legacyRigAsset = race.GetLegacyRig(out _);
+            if (legacyRigAsset == null)
             {
-                Messages.Add($"'{race.raceName}' has no Legacy Rig, so there is nothing to convert from. Assign one on the race.");
+                Messages.Add($"'{race.raceName}' has no Legacy Rig, and no race it is cross-compatible with has one, so there is nothing to convert from. Assign one on the race.");
                 return false;
             }
             if (!UMARigRestPose.TryFromRace(race, out UMARigRestPose target, out string reason))
@@ -139,7 +140,7 @@ namespace UMA.Editors
 
             Race = race;
             Profile = profile;
-            LegacyRig = race.legacyRig.GetRestPose();
+            LegacyRig = legacyRigAsset.GetRestPose();
             TargetRig = target;
 
             AvatarObject = new GameObject("Rig Profile Preview (not saved)") { hideFlags = HideFlags.DontSave };

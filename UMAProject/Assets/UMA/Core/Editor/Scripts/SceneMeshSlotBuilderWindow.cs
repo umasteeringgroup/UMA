@@ -46,7 +46,23 @@ namespace UMA.Editors
             public string wardrobeSlotName;
             public string existingOverlayAssetRef;
             public string generatedOverlayMaterialRef;
+            // Older saved states have none of these: they start at the field defaults.
+            public int weightMethod = (int)Weighting.UMAWeightMethod.RobustInpaint;
+            public float weightMatchCm = 4f;
+            public float weightMatchAngle = 35f;
+            public int weightMaxBones = 4;
+            public bool weightMirror;
         }
+
+        /// <summary>The weighting methods the window offers (Simulated Fit needs the Clothes Designer's simulation).</summary>
+        private static readonly Weighting.UMAWeightMethod[] WeightMethods =
+        {
+            Weighting.UMAWeightMethod.RobustInpaint,
+            Weighting.UMAWeightMethod.TightSurface,
+            Weighting.UMAWeightMethod.Volumetric,
+            Weighting.UMAWeightMethod.ExactMatch,
+            Weighting.UMAWeightMethod.Auto
+        };
 
         [SerializeField] private DynamicCharacterAvatar targetAvatar;
         [SerializeField] private UnityEngine.Object sourceObject;
@@ -57,6 +73,11 @@ namespace UMA.Editors
         [SerializeField] private int targetRendererIndex;
         [SerializeField] private bool skipReweight;
         [SerializeField] private string manualBoneName = "HeadAdjust";
+        [SerializeField] private Weighting.UMAWeightMethod weightMethod = Weighting.UMAWeightMethod.RobustInpaint;
+        [SerializeField] private float weightMatchCm = 4f;
+        [SerializeField] private float weightMatchAngle = 35f;
+        [SerializeField] private int weightMaxBones = 4;
+        [SerializeField] private bool weightMirror;
         [SerializeField] private bool addToGlobalLibrary = true;
         [SerializeField] private bool overwriteExistingAsset;
         [SerializeField] private bool clearNormals;
@@ -152,8 +173,7 @@ namespace UMA.Editors
                 DrawWardrobeRecipeOptions();
 
                 EditorGUILayout.Space();
-                skipReweight = EditorGUILayout.ToggleLeft("Skip reweight", skipReweight);
-                DrawManualBoneSelector();
+                DrawWeightingOptions();
 
                 EditorGUILayout.Space();
                 addToGlobalLibrary = EditorGUILayout.ToggleLeft("Add to UMA Global Library", addToGlobalLibrary);
@@ -248,13 +268,55 @@ namespace UMA.Editors
             }
         }
 
-        private void DrawManualBoneSelector()
+        /// <summary>
+        /// How the slot gets its bone weights: one of the shared weighting methods (Docs/WeightTransfer.md), or a
+        /// single bone. The single bone is also the fallback for vertices no body is near.
+        /// </summary>
+        private void DrawWeightingOptions()
+        {
+            var labels = new GUIContent[WeightMethods.Length + 1];
+            int index = WeightMethods.Length;
+            for (int i = 0; i < WeightMethods.Length; i++)
+            {
+                labels[i] = new GUIContent(Weighting.UMAWeightSettings.DisplayName(WeightMethods[i]), Weighting.UMAWeightSettings.Describe(WeightMethods[i]));
+                if (!skipReweight && WeightMethods[i] == weightMethod) index = i;
+            }
+            labels[WeightMethods.Length] = new GUIContent("Single Bone (no reweight)", "Every vertex is weighted fully to the bone chosen below: for rigid things such as a helmet or a sword.");
+            if (!skipReweight && index == WeightMethods.Length) index = 0;
+            index = EditorGUILayout.Popup(new GUIContent("Weighting", "How the slot gets its bone weights from the target character's other slots. Hover over a method for when to use it."), index, labels);
+            skipReweight = index == WeightMethods.Length;
+            if (!skipReweight) weightMethod = WeightMethods[index];
+            EditorGUILayout.LabelField(skipReweight ? labels[WeightMethods.Length].tooltip : Weighting.UMAWeightSettings.Describe(weightMethod), EditorStyles.wordWrappedMiniLabel);
+            if (!skipReweight)
+            {
+                if (weightMethod == Weighting.UMAWeightMethod.RobustInpaint || weightMethod == Weighting.UMAWeightMethod.Volumetric || weightMethod == Weighting.UMAWeightMethod.Auto)
+                {
+                    weightMatchCm = EditorGUILayout.Slider(new GUIContent("Match Distance (cm)", "Mesh this close to the body (and facing the same way) copies it; mesh further out is filled in, or takes the field's weights."), weightMatchCm, 0.5f, 15f);
+                    weightMatchAngle = EditorGUILayout.Slider(new GUIContent("Match Angle", "How far the mesh's normal may turn from the body's and still copy it (degrees)."), weightMatchAngle, 5f, 90f);
+                }
+                weightMaxBones = EditorGUILayout.IntSlider(new GUIContent("Max Bones", "The most bones a vertex keeps."), weightMaxBones, 1, 8);
+                weightMirror = EditorGUILayout.Toggle(new GUIContent("Mirror Left/Right", "Make the two sides match: each vertex averages with its mirror image, Left and Right bones swapped by name."), weightMirror);
+            }
+            DrawManualBoneSelector(skipReweight ? "Bone" : "Fallback Bone");
+        }
+
+        private Weighting.UMAWeightSettings WeightSettings() => new Weighting.UMAWeightSettings
+        {
+            Method = weightMethod,
+            MatchDistance = Mathf.Max(0.005f, weightMatchCm * 0.01f),
+            MatchAngleDegrees = weightMatchAngle,
+            MaxBones = Mathf.Clamp(weightMaxBones, 1, 8),
+            MirrorLeftRight = weightMirror
+        };
+
+        private void DrawManualBoneSelector(string label)
         {
             SkinnedMeshRenderer renderer = GetSelectedTargetRenderer(false);
             Transform[] bones = renderer != null ? renderer.bones : null;
+            var content = new GUIContent(label, skipReweight ? "The bone every vertex is weighted to." : "The bone for vertices no body is found near.");
             if (bones == null || bones.Length == 0)
             {
-                manualBoneName = EditorGUILayout.TextField("Manual Bone", manualBoneName);
+                manualBoneName = EditorGUILayout.TextField(content, manualBoneName);
                 return;
             }
 
@@ -271,7 +333,7 @@ namespace UMA.Editors
                 boneNames[i] = bones[i] != null ? bones[i].name : "<missing>";
             }
 
-            int selected = EditorGUILayout.Popup("Manual Bone", currentIndex, boneNames);
+            int selected = EditorGUILayout.Popup(content, currentIndex, Array.ConvertAll(boneNames, n => new GUIContent(n)));
             if (selected >= 0 && selected < bones.Length && bones[selected] != null)
             {
                 manualBoneName = bones[selected].name;
@@ -343,10 +405,11 @@ namespace UMA.Editors
                 EditorUtility.DisplayProgressBar(WindowTitle, "Baking source mesh...", 0.40f);
                 SourceGeometry sourceGeometry = BuildSourceGeometry(source, target.Renderer, targetSurface, out bakedSourceMesh);
 
-                EditorUtility.DisplayProgressBar(WindowTitle, "Transferring weights...", 0.55f);
+                EditorUtility.DisplayProgressBar(WindowTitle, skipReweight ? "Weighting to one bone..." : "Weighting (" + Weighting.UMAWeightSettings.DisplayName(weightMethod) + ")...", 0.55f);
+                Weighting.UMAWeightReport weightReport = null;
                 WeightTransferResult weights = skipReweight
                     ? BuildManualWeights(sourceGeometry.VertexCount, manualBoneIndex)
-                    : TransferWeights(sourceGeometry.TargetLocalVertices, targetSurface, manualBoneIndex);
+                    : TransferWeights(sourceGeometry, target, targetSurface, WeightSettings(), manualBoneIndex, out weightReport);
                 LogWeightTransferVertexDiagnostic(sourceGeometry, target, targetSurface, weights, "HeadAdjust", WeightDiagnosticVertexIndex);
 
                 EditorUtility.DisplayProgressBar(WindowTitle, "Building UMA slot mesh...", 0.72f);
@@ -393,7 +456,13 @@ namespace UMA.Editors
 
                 string raceName = target.RaceData != null ? target.RaceData.raceName : "<unknown race>";
                 string recipeLog = createdRecipe != null ? $", wardrobe recipe: '{AssetDatabase.GetAssetPath(createdRecipe)}'" : string.Empty;
-                Debug.Log($"[UMA] Created SlotDataAsset '{assetPath}' from '{source.DisplayName}' for race '{raceName}'{recipeLog}. Vertices: {sourceGeometry.VertexCount}, triangles: {sourceGeometry.Triangles.Length / 3}, reweight: {(skipReweight ? "manual " + target.Bones[manualBoneIndex].name : "closest face")}, target renderers sampled: {targetSurface.SampledRendererCount}, fallback vertices: {weights.FallbackVertices}.");
+                string weighting = skipReweight ? "single bone " + target.Bones[manualBoneIndex].name : weightReport != null ? weightReport.Summary() : Weighting.UMAWeightSettings.DisplayName(weightMethod);
+                Debug.Log($"[UMA] Created SlotDataAsset '{assetPath}' from '{source.DisplayName}' for race '{raceName}'{recipeLog}. Vertices: {sourceGeometry.VertexCount}, triangles: {sourceGeometry.Triangles.Length / 3}, target renderers sampled: {targetSurface.SampledRendererCount}. Weights: {weighting}");
+                if (weightReport != null)
+                {
+                    foreach (Weighting.UMAWeightScore score in weightReport.Scores) Debug.Log("[UMA] Scene mesh slot weights " + (score.Method == weightReport.Used ? "chosen: " : "tried: ") + score);
+                    foreach (string message in weightReport.Messages) Debug.Log("[UMA] Scene mesh slot weights: " + message);
+                }
             }
             catch (Exception ex)
             {
@@ -1282,7 +1351,12 @@ namespace UMA.Editors
                 createWardrobeRecipe = createWardrobeRecipe,
                 wardrobeSlotName = GetSelectedWardrobeSlot(GetAvatarRaceData(targetAvatar)),
                 existingOverlayAssetRef = SerializeObjectReference(existingOverlayAsset),
-                generatedOverlayMaterialRef = SerializeObjectReference(generatedOverlayMaterial)
+                generatedOverlayMaterialRef = SerializeObjectReference(generatedOverlayMaterial),
+                weightMethod = (int)weightMethod,
+                weightMatchCm = weightMatchCm,
+                weightMatchAngle = weightMatchAngle,
+                weightMaxBones = weightMaxBones,
+                weightMirror = weightMirror
             };
 
             EditorPrefs.SetString(PersistedStateKey, JsonUtility.ToJson(state));
@@ -1331,6 +1405,11 @@ namespace UMA.Editors
                 tagsCsv = state.tagsCsv ?? string.Empty;
                 maxLOD = state.maxLOD;
                 createWardrobeRecipe = state.createWardrobeRecipe;
+                weightMethod = Array.IndexOf(WeightMethods, (Weighting.UMAWeightMethod)state.weightMethod) >= 0 ? (Weighting.UMAWeightMethod)state.weightMethod : Weighting.UMAWeightMethod.RobustInpaint;
+                weightMatchCm = Mathf.Clamp(state.weightMatchCm, 0.5f, 15f);
+                weightMatchAngle = Mathf.Clamp(state.weightMatchAngle, 5f, 90f);
+                weightMaxBones = Mathf.Clamp(state.weightMaxBones, 1, 8);
+                weightMirror = state.weightMirror;
 
                 RaceData raceData = GetAvatarRaceData(targetAvatar);
                 if (!string.IsNullOrWhiteSpace(state.wardrobeSlotName))

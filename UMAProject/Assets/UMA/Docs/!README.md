@@ -6,7 +6,7 @@ UMA can be used for player characters, crowds, character creators, modular NPCs,
 
 ## Current release
 
-**UMA 3.1f6 (package version 3.1.6)** supports **Unity 6.3 and newer**. Its highlights are hair that sways ([Hair Animation](HairAnimation.md)), UMA 2 clothing on UMA 3 characters ([Slot Rig Conversion](SlotRigConversion.md)), body blend shapes transferred to clothing ([Blendshape Transfer](BlendshapeTransfer.md)), and an opt-in subsurface scattering skin shader. For the update from 3.1f5 / 3.1.5, use the [What's New overview](!WhatsNewInUMA3.md#uma-31f6--changes-since-31f5) and [complete release changelog](../CHANGELOG.md#31f6-package-version-316); the [3.1f5 overview](!WhatsNewInUMA3.md#uma-31f5--changes-since-31f3) covers the update from 3.1f3. Feature guides below describe the current workflows; the changelog owns the version-by-version history.
+**UMA 3.1f6 (package version 3.1.6)** supports **Unity 6.3 and newer**. Its highlights are the new optional Clothes Designer plugin, hair that sways ([Hair Animation](HairAnimation.md)), UMA 2 clothing on UMA 3 characters ([Slot Rig Conversion](SlotRigConversion.md)), expression wrinkles on UMA 3 faces ([Expression Wrinkle Maps](ExpressionWrinkleMaps.md)), an opt-in subsurface scattering skin shader, muscle definition from the **Fitness** DNA, and body blend shapes transferred to clothing ([Blendshape Transfer](BlendshapeTransfer.md)). For the update from 3.1f5 / 3.1.5, use the [What's New overview](!WhatsNewInUMA3.md#uma-31f6--changes-since-31f5) and [complete release changelog](../CHANGELOG.md#31f6-package-version-316); the [3.1f5 overview](!WhatsNewInUMA3.md#uma-31f5--changes-since-31f3) covers the update from 3.1f3. Feature guides below describe the current workflows; the changelog owns the version-by-version history.
 
 ## Start Here
 
@@ -73,6 +73,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Texture Tools](TextureTools.md)
 - [Texture Utilities](TextureUtilities.md)
 - [Weight Touchup](WeightTouchup.md)
+- [Copying Bone Weights to Clothes](WeightTransfer.md) — the weighting methods the Clothes Designer and Touchup Weights share (Robust Inpaint, Tight Surface, Volumetric, Exact Match, Simulated Fit, Auto), how they compare, and how a tool calls them.
 - [Hair Animation: An Artist's Guide](HairAnimation.md) - make UMA hair sway, give it root-to-tip vertex colors, and choose settings for short, medium and long hair.
 - [Normal Viewer Repair](NormalViewerRepair.md) — scan, preview, and repair normals across slot boundaries.
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md)

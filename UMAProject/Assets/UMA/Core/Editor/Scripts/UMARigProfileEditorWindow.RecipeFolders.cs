@@ -60,9 +60,10 @@ namespace UMA.Editors
             {
                 foreach (string name in cross) if (!string.IsNullOrEmpty(name)) names.Add(name);
             }
-            if (race.legacyRig != null && !string.IsNullOrEmpty(race.legacyRig.sourceRaceName))
+            UMARigRestPoseAsset legacyRigAsset = race.GetLegacyRig(out _);
+            if (legacyRigAsset != null && !string.IsNullOrEmpty(legacyRigAsset.sourceRaceName))
             {
-                names.Add(race.legacyRig.sourceRaceName);
+                names.Add(legacyRigAsset.sourceRaceName);
             }
             return names;
         }
@@ -158,8 +159,9 @@ namespace UMA.Editors
 
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginChangeCheck();
-            string raceLabel = race == null ? "the race" : race.legacyRig != null && !string.IsNullOrEmpty(race.legacyRig.sourceRaceName)
-                ? $"{race.raceName} or {race.legacyRig.sourceRaceName}" : race.raceName;
+            UMARigRestPoseAsset raceLegacyRig = race != null ? race.GetLegacyRig(out _) : null;
+            string raceLabel = race == null ? "the race" : raceLegacyRig != null && !string.IsNullOrEmpty(raceLegacyRig.sourceRaceName)
+                ? $"{race.raceName} or {raceLegacyRig.sourceRaceName}" : race.raceName;
             folderRecipesForRaceOnly = EditorGUILayout.ToggleLeft(new GUIContent($"Only recipes for {raceLabel}",
                 "List only recipes compatible with the race, a race it is cross-compatible with, or the race its Legacy Rig was baked from."), folderRecipesForRaceOnly);
             if (EditorGUI.EndChangeCheck())

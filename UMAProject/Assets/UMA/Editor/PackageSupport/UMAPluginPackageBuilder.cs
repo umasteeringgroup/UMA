@@ -66,24 +66,87 @@ namespace UMA.Editors.PackageSupport
             public string Package { get; internal set; }
             public Exception Error { get; internal set; }
             public bool Cancelled { get; internal set; }
+            /// <summary>Why the plugin's installed manifest could not be brought up to date with the built package; null otherwise.</summary>
+            public string InstalledManifestError { get; internal set; }
         }
 
-        public static PackageBuildResult[] BuildAllWithResults(string destination)
+        /// <summary>Raised after a build has changed at least one plugin's installed manifest.</summary>
+        public static event Action InstalledManifestsChanged;
+
+        /// <summary>
+        /// Builds every plugin whose sources are present. Unless <paramref name="updateInstalledManifests"/> is false,
+        /// each built package's manifest also becomes that plugin's installed manifest, so the project reports the
+        /// built version and removal sees the packaged files as unchanged.
+        /// </summary>
+        public static PackageBuildResult[] BuildAllWithResults(string destination, bool updateInstalledManifests = true)
         {
             if (!CanBuild()) throw new InvalidOperationException("Wait for the current import or package operation to finish.");
             var kinds = UMAContentCatalog.PluginDisplayOrder.Where(k => UMAContentCatalog.PluginRequiredPaths(k).Any(File.Exists)).ToArray();
+            var manifestErrors = new Dictionary<UMAContentKind, string>();
+            bool manifestsChanged = false;
             try
             {
-                return BuildBatch(kinds, kind =>
+                var results = BuildBatch(kinds, kind =>
                 {
-                    string package = Build(kind, destination);
+                    string package = Build(kind, destination, out string manifestJson);
                     UMAPluginPackageFiles.Remember(kind, package);
+                    if (updateInstalledManifests)
+                    {
+                        // The package is already published; a manifest that cannot be written is reported, not a failed build.
+                        try { manifestsChanged |= UpdateInstalledManifest(kind, manifestJson); }
+                        catch (Exception exception) { manifestErrors[kind] = exception.Message; }
+                    }
                     return package;
                 }, i => EditorUtility.DisplayCancelableProgressBar("Build UMA plugins",
                     UMAContentCatalog.DisplayName(kinds[i]), (float)i / kinds.Length));
+                foreach (var result in results)
+                    if (manifestErrors.TryGetValue(result.Kind, out string error)) result.InstalledManifestError = error;
+                return results;
             }
-            finally { EditorUtility.ClearProgressBar(); }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+                if (manifestsChanged) InstalledManifestsChanged?.Invoke();
+            }
         }
+
+        /// <summary>
+        /// Makes the manifest of a package that was just built from this project the plugin's installed manifest.
+        /// The build hashed the files that are on disk now, so the installed manifest describes them exactly.
+        /// Returns false when the installed manifest was already identical.
+        /// </summary>
+        internal static bool UpdateInstalledManifest(UMAContentKind kind, string manifestJson)
+        {
+            string path = UMAContentCatalog.ManifestPath(kind);
+            if (!WriteInstalledManifest(path, UMAContentCatalog.ManifestGuid(kind), manifestJson)) return false;
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            return true;
+        }
+
+        /// <summary>Writes the manifest and its .meta with the bytes the archive holds. Returns false when both already matched.</summary>
+        internal static bool WriteInstalledManifest(string manifestPath, string manifestGuid, string manifestJson)
+        {
+            if (string.IsNullOrEmpty(manifestJson)) throw new ArgumentException("The built package has no manifest.");
+            bool changed = WriteIfDifferent(manifestPath, manifestJson);
+            return WriteIfDifferent(manifestPath + ".meta", ManifestMeta(manifestGuid)) || changed;
+        }
+
+        private static bool WriteIfDifferent(string path, string text)
+        {
+            byte[] bytes = new UTF8Encoding(false).GetBytes(text);
+            if (File.Exists(path))
+            {
+                if (File.ReadAllBytes(path).AsSpan().SequenceEqual(bytes)) return false;
+                var attributes = File.GetAttributes(path);
+                if ((attributes & FileAttributes.ReadOnly) != 0)
+                    File.SetAttributes(path, attributes & ~FileAttributes.ReadOnly);
+            }
+            File.WriteAllBytes(path, bytes);
+            return true;
+        }
+
+        private static string ManifestMeta(string guid) =>
+            "fileFormatVersion: 2\nguid: " + guid + "\nDefaultImporter:\n  externalObjects: {}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n";
 
         private static PackageBuildResult[] BuildBatch(UMAContentKind[] kinds, Func<UMAContentKind, string> build,
             Func<int, bool> cancel)
@@ -120,12 +183,19 @@ namespace UMA.Editors.PackageSupport
             }
             foreach (var result in results.Where(r => r.Error != null))
                 report.AppendLine().AppendLine(UMAContentCatalog.DisplayName(result.Kind) + ":").AppendLine(result.Error.Message);
+            foreach (var result in results.Where(r => r.InstalledManifestError != null))
+                report.AppendLine().AppendLine(UMAContentCatalog.DisplayName(result.Kind) + ": built, but its installed manifest was not updated. Reinstall it before removing it.")
+                    .AppendLine(result.InstalledManifestError);
             report.AppendLine().Append("Completed packages have been kept.");
             return report.ToString();
         }
 
-        public static string Build(UMAContentKind kind, string destination)
+        /// <summary>Builds one plugin archive. The project, including the plugin's installed manifest, is left untouched.</summary>
+        public static string Build(UMAContentKind kind, string destination) => Build(kind, destination, out _);
+
+        private static string Build(UMAContentKind kind, string destination, out string manifestJson)
         {
+            manifestJson = null;
             if (!UMAContentCatalog.IsPlugin(kind)) throw new ArgumentException("Only plugins can be built here.");
             string output = Path.GetFullPath(destination);
             string assets = Path.GetFullPath(Application.dataPath).TrimEnd(Path.DirectorySeparatorChar);
@@ -168,6 +238,7 @@ namespace UMA.Editors.PackageSupport
             };
             if (!UMAContentPackageArchiveValidator.TryValidateManifestStructure(manifest, kind, out string error))
                 throw new InvalidDataException(error);
+            string json = JsonUtility.ToJson(manifest, true) + "\n";
             Directory.CreateDirectory(output);
             string target = Path.Combine(output, UMAContentCatalog.PackageStem(kind) + "-" + version + ".unitypackage");
             string temporary = target + "." + Guid.NewGuid().ToString("N") + ".tmp";
@@ -184,8 +255,8 @@ namespace UMA.Editors.PackageSupport
                         WriteText(gzip, record.guid + "/pathname", record.path);
                     }
                     string guid = UMAContentCatalog.ManifestGuid(kind);
-                    WriteText(gzip, guid + "/asset", JsonUtility.ToJson(manifest, true) + "\n");
-                    WriteText(gzip, guid + "/asset.meta", "fileFormatVersion: 2\nguid: " + guid + "\nDefaultImporter:\n  externalObjects: {}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n");
+                    WriteText(gzip, guid + "/asset", json);
+                    WriteText(gzip, guid + "/asset.meta", ManifestMeta(guid));
                     WriteText(gzip, guid + "/pathname", manifestPath);
                     gzip.Write(Padding, 0, 512); gzip.Write(Padding, 0, 512);
                 }
@@ -193,6 +264,7 @@ namespace UMA.Editors.PackageSupport
                     throw new InvalidDataException(error);
                 validated = true;
                 PublishValidatedArchive(temporary, target);
+                manifestJson = json;
                 return target;
             }
             catch (Exception exception)

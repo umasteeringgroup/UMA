@@ -121,8 +121,12 @@ started from is not changed. Draw and sew a pattern in the Pattern Canvas (or st
 vest), simulate the drape, pull and pin the cloth, and bake a slot, overlay and wardrobe recipe. The
 drape runs on the GPU through a compute shader in the plugin folder (never in `Resources`, so it is not
 in a player build); a Burst CPU solver runs the same simulation where compute shaders are missing.
-**Fit Existing Slot** refits existing clothing to another body shape. Its guides (Quick Start, Pattern
-Canvas, Fitting and Publishing, Fit Existing Slot) are in the Documentation Browser.
+**Fit Existing Slot** refits existing clothing to another body shape. Its guides are in the
+Documentation Browser under **Clothes Designer**: **Start Here** (the workflow, the list of guides and
+a glossary), **Quick Start**, six tutorials (your first garment, a pattern from scratch, the Garment
+Generator, texturing with the Overlay Painter, working from existing clothes, and game-ready clothes),
+the reference guides (Pattern Canvas, Fitting and Publishing, Garment Generator, Fit Existing Slot) and
+**Troubleshooting**.
 
 Patterns (`ClothesPattern`) and fits (`ClothesFit`) are saved under
 `Assets/UMAProjectData/ClothesDesigner` by default, outside the plugin folder, so they survive removing
@@ -130,7 +134,7 @@ and reinstalling the plugin; opening them again needs the plugin. Baked clothes 
 pattern or a fit.
 
 **Clothes Designer Examples** owns `Assets/UMA/ClothesDesignerExamples` (the Sleeveless Vest pattern,
-twenty more sample patterns from a T-shirt to socks, and a walkthrough) and requires UMA 3 Content and SRP Support. **Clothes Designer Tests** owns `Assets/UMA/ClothesDesignerTests` and requires Unity
+thirty-one more sample patterns from a T-shirt to a hauberk, and a walkthrough) and requires UMA 3 Content and SRP Support. **Clothes Designer Tests** owns `Assets/UMA/ClothesDesignerTests` and requires Unity
 Test Framework. The parent has no dependency on either. Removing the plugin removes its workflow
 from the Vertex Editor, which then shows its four built-in workflows as before. UMA core has no
 Clothes Designer type reference and compiles without the plugin.
@@ -248,6 +252,10 @@ workflow ends it. `stage.ActivateWorkflow(id)` starts it from code, for example 
 - The Vertex Editor never opens on a plugin workflow by itself. **Open Vertex Editor** always gives
   the built-in workflow used last; start yours from your own command with `stage.ActivateWorkflow(id)`,
   or let the user press its button.
+- Override `HidesWorkflowBars` to return true for a workflow that is a tool of its own, started from
+  your own command and left by closing the Vertex Editor: while it is active, the Scene view panel
+  and the Vertex Editor window show neither row of workflow buttons, so it cannot be switched away
+  from by accident. The Clothes Designer does this.
 - One instance serves every stage. Keep per-session data keyed by the stage and release it in
   `OnStageClosing`.
 - Override `HasUnsavedChanges`, `DescribeUnsavedChanges`, `SaveChanges` and `DiscardChanges` to take

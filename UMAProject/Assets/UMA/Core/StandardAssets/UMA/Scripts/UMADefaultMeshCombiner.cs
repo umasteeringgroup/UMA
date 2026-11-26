@@ -856,6 +856,7 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
 
                 var subMesh = mesh.GetSubMesh(cachedMesh ? _submeshBuffer.Count : i);
                 int firstPassSubmeshIndex = _submeshBuffer.Count;
+                cm.materialIndex = firstPassSubmeshIndex;
                 _submeshBuffer.Add(subMesh);
                 _materialBuffer.Add(firstPass);
 
@@ -944,9 +945,9 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
             for (int i = 0; i < chans.Length; i++)
             {
                 var ch = chans[i];
-                if (string.IsNullOrEmpty(ch.materialPropertyName))
+                if (ch.NonShaderTexture || string.IsNullOrEmpty(ch.materialPropertyName))
                     continue;
-                if (source.HasProperty(ch.materialPropertyName))
+                if (source.HasTexture(ch.materialPropertyName) && target.HasTexture(ch.materialPropertyName))
                 {
                     var tex = source.GetTexture(ch.materialPropertyName);
                     if (tex != null)

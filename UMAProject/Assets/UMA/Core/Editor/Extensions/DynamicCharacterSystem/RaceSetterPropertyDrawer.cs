@@ -166,10 +166,12 @@ namespace UMA.CharacterSystem.Editors
 			if (showAdvancedTools && useNewDNA)
 			{
 				// New-DNA races have no DNA converters to inspect; their legacy clothing is fitted by the rig profile instead.
-				bool hasProfile = theRace.legacyRigProfile != null;
+				// The race's own profile, or the one it uses through a cross-compatible race.
+				theRace.GetLegacyRig(out UMASlotRigConversionProfile raceProfile);
+				bool hasProfile = raceProfile != null;
 				var rigProfileContent = new GUIContent("Rig Profile", hasProfile
-					? $"Open '{theRace.legacyRigProfile.name}' in the Rig Profile Editor."
-					: $"{theRace.raceName} has no Legacy Rig Profile. Set one on the race to edit it here.");
+					? $"Open '{raceProfile.name}' in the Rig Profile Editor."
+					: $"{theRace.raceName} has no Legacy Rig Profile, and no race it is cross-compatible with has one. Set one on the race to edit it here.");
 				using (new EditorGUI.DisabledScope(!hasProfile))
 				{
 					if (GUILayout.Button(rigProfileContent))
@@ -178,7 +180,9 @@ namespace UMA.CharacterSystem.Editors
 						var race = theRace;
 						EditorApplication.delayCall += () =>
 						{
-							if (race != null && race.legacyRigProfile != null) UMARigProfileEditorWindow.Open(race, race.legacyRigProfile);
+							if (race == null) return;
+							race.GetLegacyRig(out UMASlotRigConversionProfile openProfile);
+							if (openProfile != null) UMARigProfileEditorWindow.Open(race, openProfile);
 						};
 					}
 				}

@@ -1295,6 +1295,7 @@ namespace UMA.TexturePaint.Editor
             GUI.BeginClip(canvas);
             Rect localTexture = new Rect(textureRect.x - canvas.x, textureRect.y - canvas.y, textureRect.width, textureRect.height);
             DrawUVWireframe(set.surface.mesh, localTexture);
+            if (!maskMode) DrawUVGroupPaths(set, localTexture);
             if (!maskMode) DrawUVPaths(set, localTexture);
             DrawRegionPreview(localTexture,set);
             DrawUVBrushCursor(set, localTexture);
@@ -1424,6 +1425,7 @@ namespace UMA.TexturePaint.Editor
                     return;
                 }
             }
+            if (!IsLayerMaskMode(set) && TryPickGroupUVPath(set, textureRect, current, authoringSplineLayer ? uvSplineLayer.spline : null)) return;
             if (authoringSplineLayer && current.type == EventType.MouseDown && current.button == 0)
             {
                 UVSplineHandleKind selectedHandle = PathEditModeAllowsAdjust(pathEditMode)
@@ -3399,6 +3401,8 @@ namespace UMA.TexturePaint.Editor
             DrawMaterialPresetProvenance(layer);
             if (!string.IsNullOrEmpty(layer.pluginId) && layer.kind != TexturePaintLayerKind.Plugin)
                 EditorGUILayout.LabelField("Extension", layer.pluginId + " " + layer.pluginVersion);
+            if (layer.kind == TexturePaintLayerKind.Group && !IsLayerMaskMode(set))
+                DrawGroupPathOptions(set, layer);
             if (layer.kind != TexturePaintLayerKind.Group && !IsLayerMaskMode(set))
                 DrawLayerChannelProperties(set, layer, layer.kind != TexturePaintLayerKind.Plugin && layer.kind != TexturePaintLayerKind.Reference && layer.links?.instance?.IsSet != true);
         }

@@ -166,9 +166,14 @@ namespace UMA.Editors
             ClosePreview();
             race = newRace;
             rigRace = null;
-            if (race != null && race.legacyRigProfile != null)
+            UMASlotRigConversionProfile raceProfile = null;
+            if (race != null)
             {
-                profile = race.legacyRigProfile;
+                race.GetLegacyRig(out raceProfile);
+            }
+            if (raceProfile != null)
+            {
+                profile = raceProfile;
             }
             LoadPreviewSelection();
             treeDirty = true;
@@ -262,9 +267,15 @@ namespace UMA.Editors
             {
                 SetRace(newRace);
             }
+            UMASlotRigConversionProfile raceProfile = null;
+            RaceData rigSource = null;
+            UMARigRestPoseAsset raceLegacyRig = race != null ? race.GetLegacyRig(out raceProfile, out rigSource, null) : null;
             using (new EditorGUI.DisabledScope(true))
             {
-                EditorGUILayout.ObjectField(new GUIContent("Legacy Rig", "The older rig this race replaces. Set it on the race."), race != null ? race.legacyRig : null, typeof(UMARigRestPoseAsset), false);
+                string rigTip = rigSource != null && rigSource != race
+                    ? $"The older rig this race replaces, from {rigSource.raceName}: {race.raceName} leaves its own Legacy Rig empty and is cross-compatible with it."
+                    : "The older rig this race replaces. Set it on the race, or leave it empty there to use the Legacy Rig of a race it is cross-compatible with.";
+                EditorGUILayout.ObjectField(new GUIContent("Legacy Rig", rigTip), raceLegacyRig, typeof(UMARigRestPoseAsset), false);
             }
 
             EditorGUILayout.BeginHorizontal();
@@ -297,7 +308,11 @@ namespace UMA.Editors
             }
             EditorGUILayout.EndHorizontal();
 
-            if (race != null && profile != null && race.legacyRigProfile != profile)
+            if (race != null && profile != null && race.legacyRigProfile == null && raceProfile == profile && rigSource != null)
+            {
+                EditorGUILayout.HelpBox($"{race.raceName} leaves its Legacy Rig Profile empty and uses this one through a race it is cross-compatible with. Changes here apply to every race that uses it.", MessageType.None);
+            }
+            if (race != null && profile != null && raceProfile != profile)
             {
                 EditorGUILayout.HelpBox($"This profile is not {race.raceName}'s Legacy Rig Profile, so characters do not use it when they are built.", MessageType.Info);
                 if (GUILayout.Button($"Use this profile for {race.raceName}"))
@@ -1622,7 +1637,8 @@ namespace UMA.Editors
                 rigProblem = reason;
                 return;
             }
-            legacyRig = race.legacyRig != null ? race.legacyRig.GetRestPose() : null;
+            UMARigRestPoseAsset legacyRigAsset = race.GetLegacyRig(out _);
+            legacyRig = legacyRigAsset != null ? legacyRigAsset.GetRestPose() : null;
             foreach (KeyValuePair<int, UMATransform> entry in targetRig.Bones)
             {
                 if (entry.Value != null && !string.IsNullOrEmpty(entry.Value.name))
@@ -2101,30 +2117,53 @@ namespace UMA.Editors
 
         private void CreateProfile()
         {
-            string folder = "Assets";
+            UMASlotRigConversionProfile created = CreateProfileAsset(race);
+            SetProfile(created);
+            EditorGUIUtility.PingObject(created);
+        }
+
+        /// <summary>
+        /// Creates an empty profile asset and, when <paramref name="race"/> has no profile of its own, assigns it to the
+        /// race. Writes only the new profile and the race, never other unsaved assets. A race that already had unsaved
+        /// changes gets the profile in memory and is left for its owner to save, so those changes are not written unasked.
+        /// </summary>
+        /// <param name="folder">Where to create it. Null puts it next to the race, or in Assets without one.</param>
+        internal static UMASlotRigConversionProfile CreateProfileAsset(RaceData race, string folder = null)
+        {
             string baseName = "Rig Conversion Profile";
+            string racePath = race != null ? AssetDatabase.GetAssetPath(race) : null;
             if (race != null)
             {
-                string racePath = AssetDatabase.GetAssetPath(race);
-                if (!string.IsNullOrEmpty(racePath))
-                {
-                    folder = Path.GetDirectoryName(racePath).Replace('\\', '/');
-                }
                 baseName = race.raceName + " Legacy Rig Profile";
+            }
+            if (string.IsNullOrEmpty(folder))
+            {
+                folder = !string.IsNullOrEmpty(racePath) ? Path.GetDirectoryName(racePath).Replace('\\', '/') : "Assets";
             }
             string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + baseName + ".asset");
             var created = CreateInstance<UMASlotRigConversionProfile>();
-            AssetDatabase.CreateAsset(created, path);
+            AssetDatabase.CreateAsset(created, path);   // writes the new profile to disk
+            AssetDatabase.SaveAssetIfDirty(created);
             if (race != null && race.legacyRigProfile == null)
             {
+                bool raceHadUnsavedChanges = EditorUtility.IsDirty(race);
                 Undo.RecordObject(race, "Assign Legacy Rig Profile");
                 race.legacyRigProfile = created;
                 EditorUtility.SetDirty(race);
                 UMALegacySlotConverter.ClearCache();
+                if (EditorUtility.IsPersistent(race))
+                {
+                    if (raceHadUnsavedChanges)
+                    {
+                        Debug.Log($"UMA: '{created.name}' is now {race.raceName}'s Legacy Rig Profile. The race already had unsaved changes, so it was not saved; save it to keep the profile.", race);
+                    }
+                    else
+                    {
+                        AssetDatabase.SaveAssetIfDirty(race);
+                    }
+                }
             }
-            AssetDatabase.SaveAssets();
-            SetProfile(created);
-            EditorGUIUtility.PingObject(created);
+            return created;
         }
 
         // --- preview -----------------------------------------------------------------------------

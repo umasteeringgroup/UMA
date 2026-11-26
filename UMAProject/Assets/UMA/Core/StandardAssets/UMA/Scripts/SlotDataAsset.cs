@@ -797,6 +797,17 @@ namespace UMA
         [Tooltip("This object is a smooshable. Any overriden vertexes will be cleared before smooshing.")]
         public bool isSmooshable = false;
 
+        /// <summary>
+        /// Edges marked sharp: a side id per vertex (empty when no edge is sharp). Vertices at one position
+        /// with different ids keep a normal each wherever normals are worked out again (see
+        /// <see cref="UMABuddyNormals.Sides"/>); they stay at one position and move as one.
+        /// </summary>
+        [HideInInspector]
+        public int[] normalSides = new int[0];
+
+        /// <summary>The slot's side ids when they fit its mesh, else null (no sharp edges).</summary>
+        public int[] NormalSidesFor(int vertexCount) => normalSides != null && normalSides.Length == vertexCount && vertexCount > 0 ? normalSides : null;
+
         [Tooltip("This is used to offset the slot for some reason")]
         public Vector3 smooshOffset = Vector3.zero;
 
@@ -1479,7 +1490,7 @@ namespace UMA
                             }
                             // Not Mesh.RecalculateNormals: vertices at one position get one normal (UMABuddyNormals).
                             var buddyNormals = new UnityEngine.Vector3[md.vertices.Length];
-                            new UMA.UMABuddyNormals(md.vertices, allTriangles).Recalculate(md.vertices, buddyNormals, true);
+                            new UMA.UMABuddyNormals(md.vertices, allTriangles) { Sides = NormalSidesFor(md.vertices.Length) }.Recalculate(md.vertices, buddyNormals, true);
                             mesh.normals = buddyNormals;
                             mesh.RecalculateTangents();
                             md.normals = mesh.normals;
@@ -1549,6 +1560,7 @@ namespace UMA
             clone.UnbakedAnimatedBones = (UnbakedAnimatedBones != null) ? (string[])UnbakedAnimatedBones.Clone() : new string[0];
             clone.isClippingPlane = isClippingPlane;
             clone.isSmooshable = isSmooshable;
+            clone.normalSides = normalSides != null ? (int[])normalSides.Clone() : new int[0];
             clone.smooshOffset = smooshOffset;
             clone.smooshExpand = smooshExpand;
             clone.isWildCardSlot = isWildCardSlot;
@@ -1613,6 +1625,7 @@ namespace UMA
             subMeshIndex = source.subMeshIndex;
             isClippingPlane = source.isClippingPlane;
             isSmooshable = source.isSmooshable;
+            normalSides = source.normalSides != null ? (int[])source.normalSides.Clone() : new int[0];
             isBaked = source.isBaked;
             udimGroupId = source.udimGroupId;
             udimGroupName = source.udimGroupName;

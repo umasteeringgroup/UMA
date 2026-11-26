@@ -80,10 +80,21 @@ namespace UMA.ClothesDesigner.Editor
         }
 
         /// <summary>Positions for every vertex of <paramref name="to"/>, taken from <paramref name="positions"/> on this mesh through the flat pattern.</summary>
-        public Vector3[] Carry(Vector3[] positions, PatternMesh to)
+        public Vector3[] Carry(Vector3[] positions, PatternMesh to) => Carry(positions, to, null);
+
+        /// <summary>
+        /// As <see cref="Carry(Vector3[], PatternMesh)"/>, for a pattern some of whose pieces were resized in between:
+        /// <paramref name="drawnBefore"/> gives, for a piece and a point of it as drawn now, where that point was drawn on
+        /// this mesh's pattern (null: in the same place).
+        /// </summary>
+        public Vector3[] Carry(Vector3[] positions, PatternMesh to, System.Func<int, Vector2, Vector2> drawnBefore)
         {
             var result = new Vector3[to.VertexCount];
-            for (int v = 0; v < to.VertexCount; v++) result[v] = Sample(positions, to.piece[v], to.drawn[v]);
+            for (int v = 0; v < to.VertexCount; v++)
+            {
+                int piece = to.piece[v];
+                result[v] = Sample(positions, piece, drawnBefore != null ? drawnBefore(piece, to.drawn[v]) : to.drawn[v]);
+            }
             return result;
         }
 

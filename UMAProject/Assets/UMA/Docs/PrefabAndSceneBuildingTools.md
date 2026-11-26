@@ -64,8 +64,14 @@ Open `UMA > Content Creation > Slots > Scene Mesh Slot Builder`.
 
 This tool creates a `SlotDataAsset` from a mesh already present in the scene and maps it to a generated target DCA. It accepts skinned renderers or MeshFilter/MeshRenderer sources, can select or combine source submeshes, and can reweight vertices against the target surface.
 
-- Normal mode transfers weights using the closest target surface.
-- `Skip reweight` assigns a selected manual bone.
+- **Weighting** chooses how the slot gets its bone weights from the target character's other slots. The methods are the ones the Clothes Designer and Touchup Weights use; see [Copying Bone Weights to Clothes](WeightTransfer.md).
+  - **Robust Inpaint** (the default) copies the body where the mesh lies on it and fills the rest in smoothly.
+  - **Tight Surface** copies the closest point everywhere (what this tool did before).
+  - **Volumetric** suits loose parts that hang away from the body.
+  - **Exact Match** suits meshes cut from the body, matched by position or by the body slot's UVs.
+  - **Auto** tries three methods in seven test poses on a humanoid character and keeps the best.
+  - **Match Distance**, **Match Angle**, **Max Bones** and **Mirror Left/Right** tune them. The Console log says what the vertices got and, for Auto, how each method scored.
+- **Single Bone (no reweight)** weights every vertex to the chosen bone, for rigid things such as a helmet. With the other methods the same bone is the **Fallback Bone** for vertices no body is near.
 - Normal and tangent controls can clear or regenerate data.
 - Output can be added to the UMA Global Library.
 - Optional wardrobe creation generates a recipe and can reuse an existing overlay or create one from source material textures.

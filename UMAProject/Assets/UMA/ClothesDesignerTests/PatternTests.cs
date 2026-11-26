@@ -109,12 +109,65 @@ namespace UMA.ClothesDesigner.Editor.Tests
         }
 
         [Test]
-        public void DeletePoint_RemovesTheSeamOnTheEdgeItTakes()
+        public void MoveEdge_MovesBothItsEnds_ACurvedEdgeKeepsItsShape_AndTheLastEdgeEndsAtTheFirstPoint()
+        {
+            PatternPiece piece = PatternEditing.NewRectanglePiece("Box", new Rect(0f, 0f, 10f, 20f));
+            int n = piece.points.Count;
+            var before = new List<Vector2>();
+            foreach (PatternPoint p in piece.points) before.Add(p.position);
+            piece.edges[1].curved = true;
+            piece.edges[1].handleA = new Vector2(2f, 3f);
+            piece.edges[1].handleB = new Vector2(-1f, 4f);
+            PatternGeometry.EdgeControlPoints(piece, 1, PieceScale.Identity, out Vector2 a0, out Vector2 a1, out Vector2 a2, out Vector2 a3, out _);
+            var delta = new Vector2(3f, -1f);
+            PatternEditing.MoveEdge(piece, 1, delta);
+            for (int i = 0; i < n; i++)
+                Assert.That((piece.points[i].position - (i == 1 || i == 2 ? before[i] + delta : before[i])).magnitude, Is.LessThan(1e-5f), "point " + i);
+            PatternGeometry.EdgeControlPoints(piece, 1, PieceScale.Identity, out Vector2 b0, out Vector2 b1, out Vector2 b2, out Vector2 b3, out _);
+            Assert.That(((b1 - b0) - (a1 - a0)).magnitude, Is.LessThan(1e-5f), "the curve keeps its shape");
+            Assert.That(((b2 - b3) - (a2 - a3)).magnitude, Is.LessThan(1e-5f));
+            PatternEditing.MoveEdge(piece, n - 1, delta);
+            Assert.That((piece.points[n - 1].position - (before[n - 1] + delta)).magnitude, Is.LessThan(1e-5f));
+            Assert.That((piece.points[0].position - (before[0] + delta)).magnitude, Is.LessThan(1e-5f), "the last edge ends at the first point");
+            Vector2 third = piece.points[2].position;
+            PatternEditing.MoveEdge(piece, n, delta);
+            PatternEditing.MoveEdge(piece, -1, delta);
+            Assert.That(piece.points[2].position, Is.EqualTo(third), "no such edge: nothing moves");
+        }
+
+        [Test]
+        public void EdgeInReach_FromInsideAPieceOnlyCloseToTheEdge_FromOutsideTheFullReach()
+        {
+            // A belt half (33 x 6 cm) at about the zoom Frame All gives the Belted Dress: 4.5 pixels a centimetre.
+            PatternPiece belt = PatternEditing.NewRectanglePiece("Belt", new Rect(0f, 0f, 33f, 6f));
+            const float zoom = 4.5f;
+            bool IsTop(int edge) => edge >= 0 && belt.points[edge].position.y > 5.9f && belt.points[(edge + 1) % belt.points.Count].position.y > 5.9f;
+            float inside = PatternCanvasWindow.EdgePickPixelsInside, full = PatternCanvasWindow.EdgePickPixels;
+            Assert.That(PatternCanvasWindow.EdgeInReach(belt, new Vector2(16f, 5f), zoom, inside, out _), Is.EqualTo(-1), "1 cm (4.5 px) inside: the piece, while editing");
+            Assert.That(IsTop(PatternCanvasWindow.EdgeInReach(belt, new Vector2(16f, 5f), zoom, full, out _)), Is.True, "the same, sewing or drawing: the edge");
+            Assert.That(IsTop(PatternCanvasWindow.EdgeInReach(belt, new Vector2(16f, 5.5f), zoom, inside, out float f)), Is.True, "0.5 cm (2.25 px) inside: the edge");
+            Assert.That(f, Is.EqualTo(0.5f).Within(0.05f), "picked half way along");
+            Assert.That(IsTop(PatternCanvasWindow.EdgeInReach(belt, new Vector2(16f, 7.5f), zoom, inside, out _)), Is.True, "1.5 cm (6.75 px) outside: the full reach");
+            Assert.That(PatternCanvasWindow.EdgeInReach(belt, new Vector2(16f, 8f), zoom, inside, out _), Is.EqualTo(-1), "2 cm (9 px) outside: out of reach");
+            Assert.That(PatternCanvasWindow.EdgeInReach(belt, new Vector2(16f, 3f), zoom, full, out _), Is.EqualTo(-1), "the middle, 13.5 px from both edges");
+        }
+
+        [Test]
+        public void DeletePoint_KeepsTheSeamsOfBothEdges_OnTheJoinedEdge()
         {
             ClothesPattern vest = Vest();
             int seams = vest.seams.Count;
-            Assert.That(PatternEditing.DeletePoint(vest, vest.pieces[0], 1), Is.True);
-            Assert.That(vest.seams.Count, Is.EqualTo(seams - 1));
+            PatternPiece front = vest.pieces[0];
+            string hem = front.edges[0].id;
+            float hemLength = PatternGeometry.EdgeLength(front, 0, PieceScale.Identity), sideLength = PatternGeometry.EdgeLength(front, 1, PieceScale.Identity);
+            Assert.That(PatternEditing.DeletePoint(vest, front, 1), Is.True);
+            Assert.That(vest.seams.Count, Is.EqualTo(seams), "The side seam is kept, now on the joined edge.");
+            List<PatternSeam> on = vest.FindSeamsOn(front.id, hem);
+            Assert.That(on.Count, Is.EqualTo(1));
+            SeamSpan mine = on[0].a.pieceId == front.id ? on[0].a : on[0].b;
+            Assert.That(mine.start, Is.EqualTo(hemLength / (hemLength + sideLength)).Within(1e-3f), "Where the side began along the joined edge.");
+            Assert.That(mine.end, Is.EqualTo(1f).Within(1e-3f));
+            Assert.That(front.edges[0].opening, Is.False, "Part of it is sewn now, so it is no longer an opening.");
             Assert.That(vest.FindProblems(), Is.Empty);
         }
 

@@ -2,38 +2,108 @@
 
 ## UMA 3.1f6 — changes since 3.1f5
 
-Package version **3.1.6**, for **Unity 6.3 and newer**. This overview covers the update from the `V3.1.5` release (package version 3.1.5). The [3.1.6 changelog](../CHANGELOG.md#31f6-package-version-316) is the complete change list; the 3.1f5 overview and earlier additions remain below.
+Package version **3.1.6**, for **Unity 6.3 and newer**. This overview covers the update from the `V3.1.5` release (package version 3.1.5). The [3.1.6 changelog](../CHANGELOG.md#31f6-package-version-316) is the complete change list, fixes included; the 3.1f5 overview and earlier additions remain below.
 
 ### Highlights
 
-- **Hair that moves.** Add **UMA > Hair Control** to a character and the hair of slots marked **Hair Control Ready** sways: the tips trail behind when the head moves or turns, swing back, and lean with the wind. The bending happens in the hair shader, so it costs almost nothing and adds no bones. All UMA 3 hair slots are ready to sway, the hair shader gained **Volume Shading**, and the Vertex Editor can make the root-to-tip vertex colors a hair slot needs. Start with [Hair Animation: An Artist's Guide](HairAnimation.md).
-- **UMA 2 clothing on UMA 3 characters.** **Slot Rig Conversion** re-targets slots from the UMA 2 rig to the UMA 3 races, automatically when a character is built or saved as new slots. The **Rig Profile Editor** tunes the fit against a live preview, with per-bone offsets, effectors that reshape cloth or clear it from the body, and automatic Mesh Hide Assets. **Convert Legacy Content** brings a whole folder of UMA 2 wardrobe recipes across. See [Slot Rig Conversion](SlotRigConversion.md).
-- **Clothing that follows body shapes.** **Transfer Blend Shapes** gives clothing slots the blend shapes of a race's body, with a live Scene view preview. See [Blendshape Transfer](BlendshapeTransfer.md).
-- **Higher quality skin.** **Realistic Skin SSS** is an opt-in URP skin shader with subsurface scattering, red shadow edges and backlit ears. The Natural and Matte skin examples use it. See the [skin shader README](../SRP/Shaders/Skin/README.md#realistic-skin-sss).
+- **Clothes Designer (new optional plugin).** Make clothes for any race from sewing patterns: draw and sew flat pieces, drape them on the body with a cloth simulation, and publish a ready-to-wear slot, overlay and wardrobe recipe. Install it from **Welcome to UMA > Plugins**. See [Clothes Designer](#clothes-designer) below.
+- **Hair that moves.** Add **UMA > Hair Control** to a character and its hair sways with movement, head turns and wind. It runs in the hair shader, so it adds no bones and costs almost nothing. All UMA 3 hair is ready to sway. Start with [Hair Animation: An Artist's Guide](HairAnimation.md).
+- **UMA 2 clothing on UMA 3 characters.** Slots built for the UMA 2 rig are converted to the UMA 3 rig automatically when a character is built. UMA 2 wardrobe recipes gain the matching UMA 3 race and mesh hides when you add them to the Global Library or wear them. See [Slot Rig Conversion](SlotRigConversion.md).
+- **Expression wrinkles.** Forehead lines, frown lines, crow's feet and lip lines appear as a UMA 3 face moves and fade at rest. Turn them on for one avatar or for every avatar. See [Expression Wrinkle Maps](ExpressionWrinkleMaps.md).
+- **Realistic Skin SSS.** An opt-in URP skin shader with subsurface scattering, red shadow edges and light through backlit ears. See the [skin shader README](../SRP/Shaders/Skin/README.md#realistic-skin-sss).
+- **Muscle definition on every UMA 3 race.** The **Fitness** DNA now fades in muscle definition on male and female bodies.
+- **Much better HDRP support.** The HDRP hair shader is reworked, and 15 materials that fell back to URP now have HDRP versions.
 
-### Authoring and character customization
+### Clothes Designer
 
-- **Character inspector:** a new **Editing tools** section (in Standard and Advanced view) opens the Vertex Editor, Face Editor, Touchup Weights and Create Slot From Scene Mesh. Advanced view is reorganized into foldable panels grouped by job, each with its own **Help**. See [Dynamic Character Avatar](DynamicCharacterAvatar.md).
-- **Shared colors:** **Assets > UMA > Manage Color Parameters** adds or scales a shader parameter on every color of the selected tables at once (for example `_SpecularMultiplier` x 1.2). See [batch utilities](AssetMenuBatchUtilities.md#manage-color-parameters).
-- **Sculpting:** edit an existing blendshape, save sculpts as blendshapes in the slot's own mesh space, **Heal** badly fitted areas in one step, keep a brush working with **Constant Application**, and undo one stroke at a time. See [Sculpting Mesh Modifiers](MeshModifierSculpting.md).
-- **Vertex painting:** Paint lays down the brush color (white lightens), with **Multiply** as an option; a reworked **Noise** brush; **Fill Slot with White**; and **Hair Root to Tip** for hair vertex colors. See [Mesh Modifiers](MeshModifiers.md).
-- **Touchup Weights:** **Pose Mode** turns bones while you paint, **Weight Colors** shows Blender-style weight colors, the skeleton can be drawn, and vertices split along seams are painted as one. See [Weight Touchup](WeightTouchup.md).
-- **Editing stages:** the Face Editor and Mesh Modifier editor have floating icon toolbars, one **Slots** panel with Show/Edit columns for every tool, and brush sizes in millimeters. The UMA Toolbar hides while any UMA editing stage is open. A Mesh Hide Asset that names a base slot now also applies to its race-baked copy. See [Mesh Hide Assets](MeshHideAssets.md) and [Mesh Modifiers](MeshModifiers.md).
-- **Pose authoring:** clickable Blender-style stick bones in the Bone Pose Editor. See [Bone Pose Editor](BonePoseEditor.md).
-- **Slot building:** **Strip Blendshape Prefix** in Slot Builder and the slot inspector, and a quieter canonical-matrix warning that only counts weighted bones. See [Content Creation](ContentCreation.md).
+Start with **UMA > Clothes Designer > Create Clothes on Race...**. The plugin's guides are in the Documentation Browser under **Clothes Designer**: a Start Here page, a Quick Start, six step-by-step tutorials and a troubleshooting guide.
 
-### Runtime, setup, and shipped content
+- **Pattern Canvas:** draw pieces, sew seams, and add darts, pleats, fold lines, holes, pockets, buttons and elastic edges. It has snapping, mirroring, a knife tool and a reference image to trace.
+- **Garment Generator:** pick a top, dress, kimono, trousers, skirt or jumpsuit from 39 presets. Sliders set length, ease, neckline, collar, sleeves, cuffs and pleats, and the pattern is drafted to the body as you go.
+- **Sample browser:** over 30 sample patterns with pictures, including shirts, a hoodie, trousers, skirts, dresses, underwear, socks and medieval armor.
+- **Fabrics:** presets for cotton, denim, leather, wool, silk, jersey, elastic, spandex, rib, fleece and mail, or set your own stretch, weight and friction.
+- **Cloth tools in the Scene view:** grab, pin, roll, measure and resize pieces directly on the character, all with Undo.
+- **Fit Brush:** paint where cloth should hug, smooth, puff, slim, stiffen or carry extra weight.
+- **Draw on the body:** add darts and pleats on the character, draw a new piece's outline on it, or paint a body region and have it turned into pieces.
+- **Layers and thickness:** belts, collars and waistbands sit over the cloth beneath them, and pieces can have real thickness.
+- **Looks and trims:** give each piece its own fabric texture and color, and place zippers, stitching, piping and lace along edges.
+- **Publishing options:** LOD slots, a normal map baked from the drape, inside facings, body-shape blendshapes driven by DNA, Unity Cloth motion, quad topology and an OBJ export.
+- **Bone weights:** six weighting methods, including one that drapes the clothes in test poses and keeps the best result. See [Copying Bone Weights to Clothes](WeightTransfer.md).
+- **From existing clothes:** convert a modeled wardrobe item into a pattern, or refit an existing slot to another body shape.
+- **Hats and hoods:** **Holds Hair Down** squashes hair inside them.
+- **Works with other tools:** **Publish and Sculpt** opens the result in the Vertex Editor, and **Publish and Open in Overlay Painter** opens it for texturing with the trims as editable paths.
 
-- **Faster builds:** **Recalculate Normals** is about five times faster and is skipped when nothing it reads changed; a rig update keeps its humanoid Avatar when DNA has not changed; repeated skeletons are cloned from a kept copy; and **Reuse Identical Meshes** also covers renderers that recalculate normals. See [generation changes](../CHANGELOG.md#generation-animation-and-physics) and [Atlas and mesh reuse](AtlasAndMeshReuse.md).
-- **Rendering fixes:** characters built with the bone baking combiners no longer render slowly with **Mark Dynamic** on (it is now off in the sample prefabs and scenes), and cloth behaves the same with every mesh combiner. See [Renderer Assets and Cloth](RendererAssetsAndCloth.md).
-- **LOD:** `UMASimpleLOD` can turn Hair Control off for distant characters with **Disable Hair Control at LOD**. See [UMASimpleLOD](UMASimpleLOD.md).
-- **Packaging:** the random-character sample's timing overlay has its own `UMA.Timing` assembly, so a Package Manager install adds nothing to the project's `Assembly-CSharp`.
-- **Skin, hair and character content:** no more seam between face and scalp under dark skin tints; retuned hair colors with a full highlight per color; a fixed hair normal map on front faces; and the rest skeleton of six UMA 3 tops corrected.
-- **Documentation:** the Documentation Browser can sort A to Z, and new guides cover hair animation, slot rig conversion and blendshape transfer.
+### Character and mesh editing
 
-### Optional Overlay Painter and Hair Card Editor
+- **Character inspector:** a new **Editing tools** section opens the Vertex Editor, Face Editor, Touchup Weights and Create Slot From Scene Mesh. Advanced View is reorganized into foldable panels, each with its own **Help**. See [Dynamic Character Avatar](DynamicCharacterAvatar.md).
+- **Vertex Editor lighting:** the model is lit with studio lighting, with six scenarios (Studio, Sunny, Overcast, Sunset, Indoors, Night) plus rotation, brightness and shadows. See [Sculpting Mesh Modifiers](MeshModifierSculpting.md#lighting).
+- **New sculpt brushes:** **UV Sculpt** slides the texture without moving vertices, **Beautify** straightens edge loops, **Heal** repairs pinched or stretched areas, and **Comb Normals** and **Smooth Normals** edit normals. See [Sculpting Mesh Modifiers](MeshModifierSculpting.md).
+- **Sculpt options:** **Constant Application**, **Front Faces Only** and **Ignore Locked Slots**.
+- **Blendshapes:** edit an existing blendshape in Sculpt and save the strokes back into it.
+- **Vertex Paint:** the Paint brush now lays down the brush color, so white lightens. **Multiply** is an option, the **Noise** brush is reworked, and **Hair Root to Tip** makes the vertex colors hair sway needs. See [Mesh Modifiers](MeshModifiers.md).
+- **One Save panel:** every way to save is in one place, with an explanation of each. Leaving with unsaved work asks how to save it. See [Save your work](MeshModifierSculpting.md#save-your-work).
+- **Mesh Modifiers per recipe:** saving edits to a shirt and pants creates one modifier per recipe and offers to add each to its recipe.
+- **Remembered settings:** the Vertex Editor reopens with your last workflow, brush and options.
+- **Transfer Blend Shapes:** give clothing the blendshapes of a race's body so it follows body shapes, with a live preview. See [Blendshape Transfer](BlendshapeTransfer.md).
+- **Touchup Weights:** **Pose Mode** turns bones while you paint, **Weight Colors** shows Blender-style colors, the skeleton can be drawn, and **Copy Weights from the Body** reweights a slot from the character's other slots. See [Weight Touchup](WeightTouchup.md).
+- **Face Editor and Mesh Hides:** a floating icon toolbar, one shared **Slots** panel and brush sizes in millimeters. Hold **Shift** to switch between hide and unhide. The Mesh Hide Asset inspector shows a 3D preview and has an **Edit with first character in scene** button. See [Mesh Hide Assets](MeshHideAssets.md).
+- **Rig Profile Editor:** tune how UMA 2 clothes fit a UMA 3 body against a live preview, with per-bone offsets, effectors that reshape cloth, and automatic mesh hides. **Convert Legacy Content** updates a whole folder of UMA 2 recipes. See [Slot Rig Conversion](SlotRigConversion.md).
+- **Bone Pose Editor:** clickable Blender-style stick bones. See [Bone Pose Editor](BonePoseEditor.md).
+- **Slot Builder:** **Strip Blendshape Prefix**, and a check that offers to fix models imported with **Optimize Game Objects** on. See [Content Creation](ContentCreation.md).
+- **Scene Mesh Slot Builder:** a **Weighting** choice with the same methods as the Clothes Designer.
+- **Model to Race:** filter fields on the blendshape and bone lists. See [Model to Race](ModelToRace.md).
 
-The Overlay Painter workspace has icon toolbar buttons, preview modes in the **View** menu, a **Paint Target** bar, an **Add Layer** menu for every layer type, **Layer** / **Brush** tabs in Properties, and brush sizes in millimeters. The Hair Card Editor replaces Hair Nodes with the **Groom Outliner** and moves Scene tools to a floating toolbar. Hair Card Tests now installs beside the plugin, in `Assets/UMA/HairCardsTests`. See [optional painter changes](../CHANGELOG.md#optional-overlay-painter-updates); install the separate Examples and Tests companions for sample content and validation.
+### Recipes, colors and the Global Library
+
+- **Automatic Global Library registration:** new slots, overlays and races are added when created or imported, and removed when deleted. Turn it off with **Auto-add to Global Library** in **Project Settings > UMA**. See [the Global Library guide](UMAAssetIndexer.md#automatic-registration).
+- **Add a slot to selected recipes:** add a slot, with overlays and shared colors, to many recipes in one step. See [batch utilities](AssetMenuBatchUtilities.md#add-a-slot-to-selected-recipes).
+- **Manage Color Parameters:** add or scale a shader parameter on every color of the selected Shared Color Tables. See [batch utilities](AssetMenuBatchUtilities.md#manage-color-parameters).
+- **Texture Tools:** one window for batch import settings, resizing and PNG conversion. It also finds textures whose import settings do not match how UMA uses them and fixes them. See [Texture Tools](TextureTools.md).
+- **Unsaved asset marker:** the Project window shows an orange dot on assets with unsaved changes.
+- **Safer recipe editing:** a recipe with a missing slot or overlay is locked until you choose **Enable Editing**, so an unrelated edit no longer erases the missing parts. See [Wardrobe Recipe Editor](WardrobeRecipeEditor.md).
+- **Wardrobe Recipe Graph (Unity 6.4+):** Undo and Redo, notes and layout saved with the recipe, and mouse-wheel zoom.
+- **Two-pass material preview:** the UMAMaterial preview updates both passes, such as the UMA 3 hair. See [UMA Materials](UMAMaterial.md).
+- **Placeholder slots:** a new guide shows how one overlay recipe can paint differently named meshes. See [Placeholder Slots](PlaceholderSlots.md).
+
+### Runtime and performance
+
+- **GPU texture compression (experimental):** generated textures are compressed on the GPU and use a quarter of the memory. Eight 2048 atlas channels went from 170.7 MiB to 43 MiB in a Windows player. It has not been run on Android or iOS hardware. See [UMA Generator Setup](UMAGeneratorSetup.md#force-gpu-texture-compression-experimental).
+- **Less texture memory:** converted textures no longer keep a CPU copy, saving about 85 MiB for a character with a four-channel 2048 atlas. **Keep Converted Textures Readable** restores the copy for scripts that read pixels.
+- **Faster builds:** **Recalculate Normals** is about five times faster and is skipped when nothing changed. Skeletons are cloned from a kept copy, and the humanoid Avatar is kept when DNA has not changed. See [Atlas and mesh reuse](AtlasAndMeshReuse.md).
+- **Two-pass materials** now work with the **Atlas** and **No Atlas** material types.
+- **Cloth** behaves the same with every mesh combiner. See [Renderer Assets and Cloth](RendererAssetsAndCloth.md).
+- **Chain jiggle reworked:** ponytails, pigtails and tails gain colliders and look the same at any frame rate. Human Female 3.0 has chest motion without setup. See [Bone Animators](BoneAnimators.md).
+- **DNA effects:** **Runtime Material Property** works on ordinary character DNA, and color effects update when DNA changes at play time.
+- **LOD:** `UMASimpleLOD` can turn hair sway off for distant characters. See [UMASimpleLOD](UMASimpleLOD.md).
+
+### Skin, hair and content
+
+- **Even pore size:** skin detail is one size across the whole body on UMA 3 and UMA 2 characters, and is removed from nails, lips, palms and soles. See the [skin shader README](../SRP/Shaders/Skin/README.md#even-pore-size-across-texture-tiles).
+- **Skin View:** a UMA Toolbar tool with 30 debug views for finding the cause of a skin shading problem. See the [skin shader README](../SRP/Shaders/Skin/README.md#debugging-skin-in-the-scene-view).
+- **Three new adult faces:** MatureFace_1, 2 and 3, for characters in their thirties, forties and fifties.
+- **Normal maps on eight face add-ons,** so wrinkles, scars and blemishes catch the light.
+- **Hair colors retuned:** every hair color now sets its own highlight, and a color looks the same across the race tables.
+- **Hair Volume Shading:** layered hair cards shade as one volume instead of separate flat cards.
+- **HDRP hair:** matches Unity's own `HDRP/Hair` shader, with sway and Volume Shading.
+- **HDRP sample lighting:** the sample environment now matches the URP one.
+
+### Plugins, setup and documentation
+
+- **Overlay Painter:** a reorganized workspace with icon buttons, a **View** menu, a **Paint Target** bar, an **Add Layer** menu, and **Layer** and **Brush** tabs. Groups can edit their paths together, and wrinkle maps can be edited in the painter.
+- **Hair Card Editor:** the **Groom Outliner** replaces Hair Nodes, and Scene tools move to a floating toolbar.
+- **Plugins page:** **Install all plugins** and **Remove all plugins** buttons. Installs keep running while Unity is in the background. See [UMA official plugins](UMAPlugins.md).
+- **Configure UMA:** the speed and fidelity presets can turn expression wrinkles off or on.
+- **Documentation:** a rewritten [Getting Started](!GettingStarted.md) guide, and new guides for hair animation, expression wrinkles, slot rig conversion, blendshape transfer, weight copying, Texture Tools and placeholder slots. The Documentation Browser can sort A to Z.
+
+### Changes to know about when upgrading
+
+- **`using UMA;` may be needed.** 42 UMA scripts moved into the `UMA` namespace, among them `DynamicExpressionPlayer`, `DNAEditor` and `UMATextureSaver`. Scenes and prefabs load unchanged.
+- **`UMAAssetIndexer.ForceSave()` saves only the Global Library.** Scripts that relied on it to save other assets must now save those themselves.
+- **Objects tagged UMAIgnore** are now always kept when the skeleton is rebuilt, if they are active.
+- **ElfEars DNA** now runs from 0 (none) to 1 (full), with a default of 0. A character saved at the old default of 0.5 shows half elf ears.
+- **Elf and Sylvan males** now use the male base recipe and body DNA. Saved characters lose their breast and high-heel values.
+- **Bone Transform DNA effect** values are now offsets, not a target transform.
+- **Hair Card Tests** now installs to `Assets/UMA/HairCardsTests`, beside the plugin.
 
 ## UMA 3.1f5 — changes since 3.1f3
 

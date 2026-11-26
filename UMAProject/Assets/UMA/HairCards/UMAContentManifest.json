@@ -177,1200 +177,1200 @@
             "guid": "e505f88ccf81d5c4b9aa48f2987878ea",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "39786594e85b5cd729651d16ac64f14fc7c44243b3434c90adea7f7cd92e30da"
+            "metaBytes": 180,
+            "metaSha256": "0f56a1ab436baebc053cf0ce45c89ff59e331b72016b19c5814c3c62d2ba9125"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairAtlasProfileAsset.cs",
             "guid": "d79e0ce9bdf7dc9e09634a124ac29ec5",
-            "bytes": 5386,
-            "sha256": "2832d8edae6100edd6b989f19738b4c2b30c9b8362f12ce1a598df89cfc20227",
-            "metaBytes": 60,
-            "metaSha256": "b4e152629d55ccf52dab24cb4c6f6b882990ea7963ee52d855e8f24a07823dd4"
+            "bytes": 5520,
+            "sha256": "937343b37dc8a6828c2d9654b9fe63b2d980a976263c42b8d753d8146850d90f",
+            "metaBytes": 62,
+            "metaSha256": "338f7d2cc9ff7ba6b682406f5633d14e4620018164a2a8797a54257a5cee7e4c"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairBraidSpline.cs",
             "guid": "e9401be399af1dd449d8e2d0fd8bddd5",
-            "bytes": 11444,
-            "sha256": "a137c0040814642bf6a517770e2bc320184baaf05f9cff6a9bab7cf1ab3f1478",
-            "metaBytes": 59,
-            "metaSha256": "280384cf0b1036179da85098ed0fa1e66e8a9f7b4a9131f684fd35dd6a541c91"
+            "bytes": 11637,
+            "sha256": "6c278c99dbf3d5e1f2b49116c4bbd26862b7d55a564be485021459c263213b01",
+            "metaBytes": 60,
+            "metaSha256": "ca1eae402752a0ef01d003d4be812c28bb6b3c1c3fbea996d05eb8e3b909be49"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairBun.cs",
             "guid": "9f874527439e4c2f8c9747ea8176dcd1",
-            "bytes": 4986,
-            "sha256": "2438656ff298f035fea8761a801019fe8f2adc5756dbc3156bf5c89f50ec38de",
-            "metaBytes": 60,
-            "metaSha256": "47274bc5a95fd12dcd9a15ee5c175ab7223f7cacd13287c2c73316b1ba47b6cc"
+            "bytes": 5078,
+            "sha256": "8123f4207d4eef7d8af85003e1700692665b912cbff35b58303a88e7832b0db2",
+            "metaBytes": 62,
+            "metaSha256": "2ed975d04d1718235c6cb0e21986898420be5a56adda13e6cdd6289bb06c84d9"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairCardMeshGenerator.cs",
             "guid": "d64d61f0516ff3f4bb5570b8c6ecfb68",
-            "bytes": 30893,
-            "sha256": "0f7da85c525d320fe8835f8ec94fbc468016cf5896a248dfe93bfa8d1092439b",
-            "metaBytes": 59,
-            "metaSha256": "e17249c9ffa99bb9579c6f165c8661ef750bdbe8202be4b4701f0caeb1ba7aad"
+            "bytes": 31479,
+            "sha256": "34f28f7ea89f0e5d3ed81b35df4146e7c3cc016c42be028d0564dc0ed3217b53",
+            "metaBytes": 60,
+            "metaSha256": "355c796bef97fb9d4e6ab87ecece859644c6d9638267812b2b82cdd6c01e6ed9"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairCardProfileAsset.cs",
             "guid": "736c1b9c1586de0439e395967efc374d",
-            "bytes": 6231,
-            "sha256": "0cf0f31b168ec9f270b5d253c471ccf73b206a0c01900fee82a501a647fc7232",
-            "metaBytes": 60,
-            "metaSha256": "271ab05a340a0e798449b55526e20631f2c44da3b09aa147ff4312a907a1dd31"
+            "bytes": 6351,
+            "sha256": "45030dcd44c1b0faabd4f8d92cea573897230d6934fd1a0ae0f16b010f0637ca",
+            "metaBytes": 62,
+            "metaSha256": "770d35c937668c09c8731bb389c1132056b185fb07272f1497728bfadd6751eb"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairCardProfiles.cs",
             "guid": "08aeb02d208469f4921093836cc3010b",
-            "bytes": 922,
-            "sha256": "30acfc295a518152f63363ce52f4649ffe355baf523e5a2df16fac79f763de6e",
-            "metaBytes": 60,
-            "metaSha256": "0ae191c39ca77a1ddc880a35ef42ba5753fcb20e58e085dfa3b3fc68b5e6a75e"
+            "bytes": 953,
+            "sha256": "e12c38b0188092b3de607e6c59bf42616f3928f42fb184283e0c57351c62afa7",
+            "metaBytes": 62,
+            "metaSha256": "1ead02b31113eb67dc96db0dfb371592416022ed6ae9d724956a1f899d7a8008"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairCardSurfaceClearance.cs",
             "guid": "3d2f4ad4fbe6433aba709c2c14194f82",
-            "bytes": 13423,
-            "sha256": "56b7c2f3a639c68011f33c278b2581a3b52605cb921b1da589e5fd6508f8e709",
-            "metaBytes": 60,
-            "metaSha256": "fd547c5b2c7024c3c250cac33586fe20e1057bd8cca21bc7722c700c96301fe4"
+            "bytes": 13674,
+            "sha256": "3eee9225c04ada181e0acd4c644992b0b7eb267e7c0de4f92aac9d1fe04e10a9",
+            "metaBytes": 62,
+            "metaSha256": "496dbe86555c3d1c708920928025e63e73f2e84404ceae62a49389172573d908"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairCharacterBindingAsset.cs",
             "guid": "37bce8a22a3d401997012a895e9c22ea",
-            "bytes": 2191,
-            "sha256": "384ce99f73b28fcec1cf7a0bfbd73e9ec78bc074aefbd387ae5d5da08d96df7a",
-            "metaBytes": 240,
-            "metaSha256": "e697141a68adf1421e692473df30db1b0010aaba60239356e2d6e38af622b756"
+            "bytes": 2240,
+            "sha256": "e871dfa4e743b19031f2e29bd0452011e109fbf667623ea20b1f1ab849e24319",
+            "metaBytes": 251,
+            "metaSha256": "7bc97ee1a06215fd3860d453e94223b804a8a3d07ac8205c5663ba2ed32547ab"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairChildGenerator.cs",
             "guid": "ad1354b6d03a29043bb2f4077a8795b1",
-            "bytes": 20688,
-            "sha256": "872c14f91bdefd19c7a12df305e20aaec6fa9893da7e09fdd1a580a3d50badfd",
-            "metaBytes": 59,
-            "metaSha256": "376f4e111c4d1dee1b928d62878dcf1e80d1e11b7114d6ff806efb8d9caf3a42"
+            "bytes": 21068,
+            "sha256": "4ecf5b13a2dceffc91b51a31b7969619fe2ba59e7b6907fd4da3edb1811ce736",
+            "metaBytes": 60,
+            "metaSha256": "c42d057e39cc3e902eee62cf217673e2864149aa27bb3c13696a3ce149e11385"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairClumpField.cs",
             "guid": "9f7ca625e0414c7d83a9fdd6c8c8a3ce",
-            "bytes": 2667,
-            "sha256": "36b9cdfb7e84100d513702de2bf2198b57dd5278f20141fd1ee13fad88e22d93",
-            "metaBytes": 243,
-            "metaSha256": "22c653ab1058804ec0b57271235ddb543bd7b8130cd95b546e564cc770493026"
+            "bytes": 2721,
+            "sha256": "9ccf7b5d110bbb179cd3081be76554834856dd775617e745cb6d7d7e8cc99cd2",
+            "metaBytes": 254,
+            "metaSha256": "cf572f80b77d2f4570e5e2ef168b4ebfc8cfeade1696042374f03c3c661648ce"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairCoordinateUtility.cs",
             "guid": "31839f293c14487d97540a1041932c6d",
-            "bytes": 1474,
-            "sha256": "8fc77c76a0a036b02271f75733ac3b9a15787c778315356b2c266a14408cdc81",
-            "metaBytes": 60,
-            "metaSha256": "6637b80da6eadefc0ba9570f7b453db2c1ddf0a17d2f973b186222bbeadf5254"
+            "bytes": 1501,
+            "sha256": "461e42bfc05fbbcf1616532d5b00045bc0d6f6d22a2b5d215e028a1d45bcb320",
+            "metaBytes": 62,
+            "metaSha256": "536431462d1854729a28e2d0f56a3ce725e961c69686a7b9f96b8b4ae216aed4"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairCurveUtility.cs",
             "guid": "83e332c1129a0bf4ab1e9a7dcdb55f86",
-            "bytes": 25517,
-            "sha256": "4bb8dec5114850f92ab955cc3761c8006a91579660e5893fdbdccc6df1e7cfea",
-            "metaBytes": 59,
-            "metaSha256": "f6d367f265746eb5b491d0842436bbbac35535ceb10b70088b0f20942b790dcb"
+            "bytes": 25997,
+            "sha256": "2ecc48929b0e6bb04b8953c6373fefb79ada602a4d2c56be3d841d8adb25570b",
+            "metaBytes": 60,
+            "metaSha256": "ad0ddd6fec282c239b47a656918ddb48e6bc10d6816c8c0f3b6e02b99dcf622a"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairEvaluation.cs",
             "guid": "149d0b8b4329aff49b37575e98ded454",
-            "bytes": 17021,
-            "sha256": "5cdc01b9085fe7309bfa83ee1702ca0433cc3127a2e4b402f56515c7abe14402",
-            "metaBytes": 59,
-            "metaSha256": "bd7bbe7a45d271a8e940d974757fccb8df56e7b2acea08e9303e8b5202b7bde8"
+            "bytes": 17369,
+            "sha256": "c6f8f08256a8d6f1b4cd05f7199ca869b6c26e88c14eefd06be0b6b135807224",
+            "metaBytes": 60,
+            "metaSha256": "cfd300b8ebcc9f1fa6655b53ce29be1a0e74832dda3bc631f5b7fe9443954f1f"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairForms.cs",
             "guid": "1cf4270f8b16421fa34fc2da0e1b2779",
-            "bytes": 24050,
-            "sha256": "ddc576474ea37e2dc0495a3efcbef30264e94a8658e2209edc39886c4d17bef2",
-            "metaBytes": 60,
-            "metaSha256": "32d21e47563141b4442146652b2d5fb7c7375a460be1f5c51a3d49ef16068c95"
+            "bytes": 24415,
+            "sha256": "bf7b339ef04c9331b660cd30e1144b18acbb639225618a9b3c180db81f6df115",
+            "metaBytes": 62,
+            "metaSha256": "ac67a67d3d17b923a5b1dd926aa1371e71da2680e64dc2f5738149ce41f9481a"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairGather.cs",
             "guid": "05d6675a0934401593db23a55e1b860f",
-            "bytes": 36875,
-            "sha256": "50b096742e7ad780cb23ff267f046cb0de005a19bca1ee9d390b6e200d1d3a4b",
-            "metaBytes": 60,
-            "metaSha256": "f1373c8cdc19f08781f53c60de46cf0f6ebc69dc78333aff96011b6c3c6ac670"
+            "bytes": 37460,
+            "sha256": "d66df196cac089b1aa50bd4575bfc4ed766a63f9e23a0b7a25ab7b4808638852",
+            "metaBytes": 62,
+            "metaSha256": "fe65cacbd4f3f218738bcf2ed59389b871c330775a7a33336ac44e1e1e6cbf28"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairGeneration.cs",
             "guid": "7f8cd2874eecaab6ccf045e588f23642",
-            "bytes": 7892,
-            "sha256": "4c143933b426c8f4f65b2b05e0ffaba74f825883d1d1eea7ea6a7a14b4e72b19",
-            "metaBytes": 60,
-            "metaSha256": "dff220955b1d6e1c5d06a890fd924fcbef25b706d34c9083c11ada1b5ee012fc"
+            "bytes": 8052,
+            "sha256": "1dd1d4fcee908c7cdc0d76a3ad0a4777c7519429124ef9fc17bca04b07ca18fa",
+            "metaBytes": 62,
+            "metaSha256": "a7eeddf26265d8293da9616bbe432cfcedf2f94639280fce22966c3966b8d8af"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairGroomAsset.cs",
             "guid": "230c8f5c97805f24f8739d4a84890178",
-            "bytes": 9413,
-            "sha256": "16c4c55ba0228cf4409bda3d745d66a43f4fa593278f54b60eb2322cbefcac0a",
-            "metaBytes": 59,
-            "metaSha256": "f7853b259dd7b6c99e70d023cce2ba42f1ff1644bb947b2b55bcd58f5d2f2a7f"
+            "bytes": 9626,
+            "sha256": "5a9ee4388c98189064adaafa731b99579ade8b75ebf4efdf90f5fec52cfe5d46",
+            "metaBytes": 60,
+            "metaSha256": "72723f0d1d80d3af6ab1cbc3cfb78c29df40144c6335ce82c8aea226df50dace"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairGroomData.cs",
             "guid": "4552e2a72b52ccb41a05aa209eda12f5",
-            "bytes": 31195,
-            "sha256": "3255871cd9466f24242dcd1e59a1cece3298230b695423a425095c35bda1f0f7",
-            "metaBytes": 59,
-            "metaSha256": "4883102bf9786589dbc7a52f45d433e268e11f61902860e98df8869d6a1d3d57"
+            "bytes": 32001,
+            "sha256": "3d2cd8667faeb23dc0abf7d6c66079459f84d2d16721424badcb6ae1d7844e1a",
+            "metaBytes": 60,
+            "metaSha256": "dc1773d13d72f8c1c97511c9cec1183cd6c70a7e2ba254e5e88c1a577ae46931"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairGroomEvaluator.cs",
             "guid": "c6608064111ce3c4b8b6defcfcb4dddb",
-            "bytes": 69581,
-            "sha256": "70821dc888cd008edb46a399032d34922d535c4ecd384022342521ff85edf291",
-            "metaBytes": 59,
-            "metaSha256": "49c652c34e4e310dd031ecef984195070263d0c67a8cd51d9b7b785912207a34"
+            "bytes": 70798,
+            "sha256": "5abf7a6d23a8bc112ca1e8a27d87bba29233303c5a00d67a1a4f74a95a941184",
+            "metaBytes": 60,
+            "metaSha256": "2e93f37f403f20e1e9b9e6f879f0c50f06bb990102b68807e8f55daf117e8000"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairGuideGenerator.cs",
             "guid": "7d89aa8ea80af6745bda31fbda732b4e",
-            "bytes": 22486,
-            "sha256": "f27723ca76af54b3d00fde2e82926c4d23767f46f0f6c458eb4bb81b25e2b297",
-            "metaBytes": 59,
-            "metaSha256": "1df2a62c3a107017d72ed30385b8b61c33769b648ea0181bd62ede5de1a88fd3"
+            "bytes": 22901,
+            "sha256": "3c9a31932e7289defe10701973bc48c16541d92d029837c7587c6f90cc4baab9",
+            "metaBytes": 60,
+            "metaSha256": "1a5666033ff5ec2554b3d8714fb5651d606135af7c6ac41d36523e74b61102e6"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairMeshUtility.cs",
             "guid": "6918c848f82cf9c4db93ccf5a5ad1fa3",
-            "bytes": 30307,
-            "sha256": "58325eedb8873496ac72a2d4ff5ab07b14bb32212b96fed4dd78d15a0e9b1e7b",
-            "metaBytes": 59,
-            "metaSha256": "d11666ffd0a080542198c1e15fe50ca7b9323e55c27edf24ae34cf74d4dd49b3"
+            "bytes": 30958,
+            "sha256": "3c63285b065031a76e154a173b89533631ea47bcb3215092818887ed31f774cf",
+            "metaBytes": 60,
+            "metaSha256": "c65b6a7a0df426bcdfc7466483a225e3587404be4bda94858f99d3768d979f5e"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairModifierMaskUtility.cs",
             "guid": "8e7e10c9802f01b6292112d19af39dd5",
-            "bytes": 1919,
-            "sha256": "e7a20182605e349e5af85f208ec898eea745d8fd3771f5530919153a1199e822",
-            "metaBytes": 60,
-            "metaSha256": "d4e1951885c36054eb3d7b458b97f3765e53a55857309cfa0e60ea1a976fa553"
+            "bytes": 1957,
+            "sha256": "9df3ecd774f17043f483b1ba863b87a126430d2ecd66f449d0b25a25bc5278eb",
+            "metaBytes": 62,
+            "metaSha256": "f4709f2fc3038c42b29e132a87b4b294d480a006ce1e30fdd0125189e67a34d4"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairPopulationGenerator.cs",
             "guid": "b367396c0d9854ac6df147cbfdbfe345",
-            "bytes": 29742,
-            "sha256": "852a0869d340b94c9ed07526a4316dbdd151767941adf0422d504bf19793f4da",
-            "metaBytes": 60,
-            "metaSha256": "bf4bf530dc44198f8d79a842c6f402e8e17eeb3da96235747eefea887a6031a1"
+            "bytes": 30157,
+            "sha256": "527c15f03ec8445165b614cba3a8a76f086b04342456330d362c59b0f4fab6a9",
+            "metaBytes": 62,
+            "metaSha256": "78fdf7edee708b898dad3d214a7fd3275bad11521ef2a636e7704862dee9571d"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairRibbonReduction.cs",
             "guid": "18c7c6c3ad604a5189f86f301f30d18f",
-            "bytes": 9135,
-            "sha256": "7e494a89e4f9e4e642efbcc0485d6387d7c2f14e8614b47a24d5e144398e1006",
-            "metaBytes": 60,
-            "metaSha256": "52e0e932298bcd27930e8a279d43ef04cdcf43d7c50401515d77f65801c821ad"
+            "bytes": 9290,
+            "sha256": "a813ec46818a16424d79c44a3d859216afc4b2d631745eb7b1343d5cf36621a3",
+            "metaBytes": 62,
+            "metaSha256": "3eb75a08aa91050c98970de6ad5ab908fa48384958866d7285f5ba6eb8a57841"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairRinglets.cs",
             "guid": "d2b130f9f2f44d37abda3924915274d9",
-            "bytes": 11597,
-            "sha256": "d96be405cab7c519d3b862da53c438c8ef0ee667b36b88414cfd4b63a7dc74fb",
-            "metaBytes": 60,
-            "metaSha256": "19096a2334f1edf23cd9b68733b46226c4e050383ef82d13fc40619eb3705f7c"
+            "bytes": 11771,
+            "sha256": "69078b52fe2be8c865df692ce5e40478549646ecdaeca59d3273d274ec49ad3d",
+            "metaBytes": 62,
+            "metaSha256": "153bc0b28c9f720a45a6eeda8188801ebd603f8671264172356220f15208404a"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairScalpShadingUtility.cs",
             "guid": "84d61c266c54fce7a587b22e5fcef960",
-            "bytes": 2897,
-            "sha256": "d7b8bb1c4183043f10464ec3a2b673304df42ab0419ca45660b527e8ba61669f",
-            "metaBytes": 60,
-            "metaSha256": "d644b1fb2578bdeff3ad705a5bf9bd5fb44a3f8d355a6162d305df68965b795a"
+            "bytes": 2952,
+            "sha256": "9bde161768a826803804d2491c61967b17e5d2b0b0702e07e31fc415551737fd",
+            "metaBytes": 62,
+            "metaSha256": "6d4638c555d3687055bc532cde22c926014e78690f7eddd665f7bfe4b37a8928"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairSkinningUtility.cs",
             "guid": "aef7ceae3b65e1545adcf997ef2cfb04",
-            "bytes": 5041,
-            "sha256": "356ea593adc54a61b93b547fb843a995760a0d5fcaf7c6e1c5e4b59baa58ffa6",
-            "metaBytes": 59,
-            "metaSha256": "07c35a6a4f9467e7818034c6eca623b9746b58d4b3fbe7a92ddad983d9aec088"
+            "bytes": 5165,
+            "sha256": "0355844062e18a6f54073b38fcc40c68e79879019816eec7e7acb9e52689b238",
+            "metaBytes": 60,
+            "metaSha256": "d4756f0843171b183b96168ed33c6b9c1e05da21855633893870d7447d7530d1"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairSplineFlow.cs",
             "guid": "78922abcf26b4d49927562040e7b93f3",
-            "bytes": 14332,
-            "sha256": "7ef92db2e1e7c2c8983fd25527f6d11feeb61d3777bb00f5111162dce42447de",
-            "metaBytes": 60,
-            "metaSha256": "f70c456213a38dc5b2e6945f214e4f135023f56f1a3dcd1de6d9ac1c2939d4e3"
+            "bytes": 14590,
+            "sha256": "0cc6995203236b059c03cf1e5ae03afb4717c2aa6522d2c49392e315150a9c78",
+            "metaBytes": 62,
+            "metaSha256": "f5de04d5cb2aac33f2c36f0659f22d42a66c5d06349b1860cf4f4d2108dae330"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairStrandDeformation.cs",
             "guid": "58d327ed8e92424b874377b8b898fbd8",
-            "bytes": 4972,
-            "sha256": "ba315d0687f60cddfd1c6afeeb007c5d8502a1ad04b512bf8c30a26d44fbed20",
-            "metaBytes": 60,
-            "metaSha256": "de894cd3347c68ed734046f452b8e208fb647fe76339d950bcce7aa6e88a8718"
+            "bytes": 5062,
+            "sha256": "34269e213a8589b5a1d25e7baed1498133ae488477e9a48c09a8d1372c9a2a67",
+            "metaBytes": 62,
+            "metaSha256": "7c6b0f7c0c56651a06db1507fce864efc84ba7cd4a1088c12f3242a27845f811"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairSurfaceFields.cs",
             "guid": "2c092bcbbf2db3cb0bad48bde3644d5b",
-            "bytes": 25162,
-            "sha256": "73b64dd39a59791b494c721d1682028b2e738900dd4b445bc77d5e8e5ca91824",
-            "metaBytes": 60,
-            "metaSha256": "f37e87a5541a2f3629f44baefadc1943545083dd4f223746fe968fb78252d2c8"
+            "bytes": 25629,
+            "sha256": "53858dfec529574b312f997a46580f13e5246517eeea4b2a045d5f3383346d65",
+            "metaBytes": 62,
+            "metaSha256": "5283834c9fd11f5607a9de01f15b3ece3b60f85cefe7a16b621acde1885b2210"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairSurfaceSkinning.cs",
             "guid": "488c17ea63794c72823f2c3ed9cf3c1e",
-            "bytes": 6512,
-            "sha256": "36ac5e49f778de96b64682932e318657915f87659c686525a9f02fb839470a19",
-            "metaBytes": 240,
-            "metaSha256": "e27869c77b4fe507312450e560a221c7877359fe359471920347fefe1d1d6a64"
+            "bytes": 6610,
+            "sha256": "736b9b2f3197e7712ed2dde94f8f2e8ede38b4858cdd9ae24e227730a110e226",
+            "metaBytes": 251,
+            "metaSha256": "4992ca2d5589568dc7dd4efc23eae28c3883e1cd4765457159cc241b17ccb07f"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairTextureField.cs",
             "guid": "d61eddb1b6424d17b13608205420dca3",
-            "bytes": 7499,
-            "sha256": "8e968bbfcc679547a22dc0a28a4c7015fc0919d352415c30d42d6a3a81d7e3be",
-            "metaBytes": 60,
-            "metaSha256": "7d202d237594dba844a887cf5f1bbf378415bf20fbb4702b3261ff0a02b83af8"
+            "bytes": 7608,
+            "sha256": "d5f7fcec64810f12f66b87a71a3a59e62ecf16c880bfb46d0d95d16c99ad5939",
+            "metaBytes": 62,
+            "metaSha256": "04742f529aa6ceabe54b042f2abf05eab5362a75ffc99b174c22fa16d5dc82e9"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairTextureMap.cs",
             "guid": "904831cdfd064f2fac1d6ad1a715c3a7",
-            "bytes": 7742,
-            "sha256": "d7c2b6d439d2ac59b95487f2e8f2e446b6e0b91207bdee3809a03959ced7c437",
-            "metaBytes": 60,
-            "metaSha256": "954ce0c6b0c0c8c9cc8328bcd369c25b408f9eb08c4cf224c5fd41bb21479ce9"
+            "bytes": 7901,
+            "sha256": "0a44f29de649cbaf8203204df6eba041d9e0ed07918677e9d4fe78952e88d676",
+            "metaBytes": 62,
+            "metaSha256": "8adc7bc3366926653fd13a51037bbdd0bb3eb7c8dbda30c2d58cc0cb886a1182"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairTexturePainting.cs",
             "guid": "b6c7188508054e70a580cbfe6d58bd84",
-            "bytes": 10078,
-            "sha256": "d96f7a49ff984705f899df9b40158dfdfce0b5ae8adaa961d4a60c38cc4395a1",
-            "metaBytes": 60,
-            "metaSha256": "7df1438f98627dbe19477b22b867b9fe6aaf9e1b4635d5cdf5f48de6a208cc60"
+            "bytes": 10245,
+            "sha256": "6fbaba5d4f948b6b571a5aaa4dff9dca88c295cac3f8f6e2a456e21a3a3aa866",
+            "metaBytes": 62,
+            "metaSha256": "19c109cd37cd88c8a65f8b7ed05fc8e6eaf9c7ed8971317f2eddbe6f01c95732"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairValidation.cs",
             "guid": "a8929902a2ff1264db1bfb10317fea4a",
-            "bytes": 22132,
-            "sha256": "e95ec71143b254dab1804aa7db4595c850e9427dbcdd568be832311c16e37722",
-            "metaBytes": 59,
-            "metaSha256": "8ab9b2cb120d5f9f08c3da738aeddb6a6be2b7abd8c28f92a514befd9704d18f"
+            "bytes": 22542,
+            "sha256": "8b22e000082c1b0187fab140117de2f67daeaac52759712ac04121d6f358f037",
+            "metaBytes": 60,
+            "metaSha256": "356d4ba3f6f6902a3b77b331c2493e380d6f89687ccb1e29560c4edd928c05f2"
         },
         {
             "path": "Assets/UMA/HairCards/Core/HairVertexSpatialIndex.cs",
             "guid": "0e621fd22f933694794173f2dbf583e4",
-            "bytes": 11331,
-            "sha256": "10f400e7133a0a8acc10fbf56057d1d811897413089bac4650b51cd24e4a5449",
-            "metaBytes": 59,
-            "metaSha256": "2162f9ef47359c4ca9886e3ac69566b1d1ae92779624e668c5cd05891313f453"
+            "bytes": 11583,
+            "sha256": "3fe7c12d3d5820621f4daa8d4021f1e729b22f9c8898ce4a792082da91aa6bbd",
+            "metaBytes": 60,
+            "metaSha256": "6384cb1414ae8e969944b1b1fea0f00652c47e0f93622f7e0785e087092cbbab"
         },
         {
             "path": "Assets/UMA/HairCards/Core/UMA.HairCards.Core.asmdef",
             "guid": "bb10599c405f97549b08b5ea92cc6250",
-            "bytes": 365,
-            "sha256": "457a6ce7e8f2723d0c1d5d951fdca53edcf394d785601967505e3bac4a1e6a0b",
-            "metaBytes": 166,
-            "metaSha256": "4de3264a3f883c0a180ca374450d915328d325acfa343004481a9011df2043c1"
+            "bytes": 379,
+            "sha256": "e4825c6470cda1c0119024fa38fca45518fbd7be81646040cf3b12fb0c734a00",
+            "metaBytes": 173,
+            "metaSha256": "086291141b5fd6230b07e89f6db40a4d0c20ecb75490d23d9ef32a492f155e1e"
         },
         {
             "path": "Assets/UMA/HairCards/Documentation",
             "guid": "aaf01d9fc413f7f43ae1e7ab91eff3c3",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "31c5693e6da17e037a6f4561d46af2bf3b0fa240d39b0e94bcbf5a01eb23d80e"
+            "metaBytes": 180,
+            "metaSha256": "5a68d6a81ee1f9eb93beca80ca9ab3d9c2d2513744fd3334a82f93f3c43391f9"
         },
         {
             "path": "Assets/UMA/HairCards/Documentation/BraidedBunGuide.md",
             "guid": "a5a14eb5602f4c6dbabefafac60ed012",
-            "bytes": 18493,
-            "sha256": "aefcf539fa3b1f56929b274796ea94c0140b599fe1b5a14568e8e17300e1d374",
-            "metaBytes": 60,
-            "metaSha256": "170e62717109fd9e7a6feda309acd7d5a20da2b00bf248dfa6ce60007ce94618"
+            "bytes": 18665,
+            "sha256": "89d528571b07da52de4a22cdba68d865bde00515d2cfbf8a3e7284446214d6ed",
+            "metaBytes": 62,
+            "metaSha256": "c1d539263855585236cb2d8fb76e887823a1d5c3675ba6000712bdda7a631f44"
         },
         {
             "path": "Assets/UMA/HairCards/Documentation/CurlyVolumeGuide.md",
             "guid": "203f4d68a8b94f82b647119c0b109721",
-            "bytes": 10083,
-            "sha256": "8a24493ce1ee02a9f21e600bd30d6c6f78705ff6df2948264c5315b0ab75730e",
-            "metaBytes": 60,
-            "metaSha256": "35b087c014a610831588f2135202f5adfc9b2032d0585d4dcbb39c3382bb7f5a"
+            "bytes": 10253,
+            "sha256": "aeb07fe74423c01ca46facb4792b339589cfe3a79aab4a586463b654c6ef5794",
+            "metaBytes": 62,
+            "metaSha256": "603cf89c2ae58c7bb51f41611bd6b65e9f145d7e40c6a1bac286f55db9b38cfc"
         },
         {
             "path": "Assets/UMA/HairCards/Documentation/Hair Cards - Quick Start.md",
             "guid": "fb258c7980cb15e42a4b05ac99de484e",
-            "bytes": 72400,
-            "sha256": "4dc4035a2f453aa277df02191563b7a6eec61b15367da39dd0318853f1d21906",
-            "metaBytes": 158,
-            "metaSha256": "b020e4b6792b0836226288021a08c3c94dc9d71630cf80aa781ff24f1b49a7f8"
+            "bytes": 72945,
+            "sha256": "5801495a72851a900c3fa2cb06b35a3fef783b019d4303345c046d956c836170",
+            "metaBytes": 165,
+            "metaSha256": "8e9fa7cb6342e1a7bb9a3616aad7ee5951226acd0bcccc20aec44c90b28da933"
         },
         {
             "path": "Assets/UMA/HairCards/Documentation/README.md",
             "guid": "5defd2914c2b3934ca59e7568a6546e7",
-            "bytes": 30621,
-            "sha256": "969701f630a4c2f9c81fd8f1738228599fa5151bf4f47c65b9ddd5a1e35fd04e",
-            "metaBytes": 158,
-            "metaSha256": "7b7e4f549c3e5802bda4718116e03aed4f882e6e32c5f84bc5d36bfa416c5d38"
+            "bytes": 30973,
+            "sha256": "c5a9683697fc2ccc3eb9a25afdb8329d50111a5b8a2d9525452f8d7aeaa387f9",
+            "metaBytes": 165,
+            "metaSha256": "261895a6a03a5a2cb3b2b7d2b86a8cbf0dfb79603b9bb00618413c4cdc8a45d7"
         },
         {
             "path": "Assets/UMA/HairCards/Documentation/ShortHairPartGuide.md",
             "guid": "2c5fcefa2fc0499ba32216b1da516dcd",
-            "bytes": 18483,
-            "sha256": "f9f79e225fe538bfb6acde954e1e6f23321914aa87403c6c583545245a8a24bd",
-            "metaBytes": 155,
-            "metaSha256": "a4c9a612e8c94d082a8dacafc840f205dd64e3b80c62b326f6f174898094e308"
+            "bytes": 18787,
+            "sha256": "2d546388179f20b6604a7227967c69c8056659a51d82cac9c58f2f6dc3be2384",
+            "metaBytes": 162,
+            "metaSha256": "97cd148793799384f5a95e4d2eb0920da261b9a252130c84b6bf49d13318d66c"
         },
         {
             "path": "Assets/UMA/HairCards/Documentation/SweptClumpsGuide.md",
             "guid": "7dacbfcbdc72463a8e45a56748c9daf7",
-            "bytes": 19048,
-            "sha256": "eeb888b7888eb93c9e0f551c27b889071d5f64d03e4f16c635de025fc7e73038",
-            "metaBytes": 155,
-            "metaSha256": "b4826b89fc0df1550b3d6dab5c62f0baa8570e0d42549a5454ca7cd299473fac"
+            "bytes": 19359,
+            "sha256": "49001276b72d90b22f0c28170ce25bdfe21e73082e1789f8165fd091f7a113ca",
+            "metaBytes": 162,
+            "metaSha256": "ef33807ede9d732190631a6febef04e94ae69d189baf592d17e2fc4e6d7d961e"
         },
         {
             "path": "Assets/UMA/HairCards/Editor",
             "guid": "66052ae8881de7c4c87c914e803f248f",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "aa099ee81e61f20380c9fc8137da68eb9e71c04b471b164008527632361fab83"
+            "metaBytes": 180,
+            "metaSha256": "8b0e1d7350a660919b7cf55d65dd946238b512eace31fe956f7310346424ccd7"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairAtlasRegionEditorWindow.cs",
             "guid": "c8758fd8a86c5c94c9e035d2cc719793",
-            "bytes": 48486,
-            "sha256": "f035ca1a4d349459ac78720903b2119a7dc303c7ef1ae88560bf3f74b78cca78",
-            "metaBytes": 59,
-            "metaSha256": "d53df1ee17a9cf97a8586949ed830a0fdd25b465b5c6d9dc3ddcfd423abcb728"
+            "bytes": 49413,
+            "sha256": "6b3a73bf753ac95eb6aad655bfa9c5511ddd58ae2185e27e903bc978e35266c2",
+            "metaBytes": 60,
+            "metaSha256": "a50bf1da05d154985807023f862a1d05a61da9f6d70d8f6844c6855c16c470b5"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairAvatarPreview.cs",
             "guid": "611b06ab970a16a4f8d69fc4e9743458",
-            "bytes": 59369,
-            "sha256": "eb05cabc96a4be09a0240a1e015ce51359219064b9c993b48d74e19a9da59619",
-            "metaBytes": 59,
-            "metaSha256": "66e6e9d5107ca74d2ae428e6ea298757a9e055db9d65788ce627cef7c26164c6"
+            "bytes": 60545,
+            "sha256": "ddc21857ae3615a3f6fa28c7c555976346ec89f993d8d7e86b7974088cadacfe",
+            "metaBytes": 60,
+            "metaSha256": "3fb4a7f5a1d1f72854da354ea3da2645cff9a651c8eaf888e368fa950a7af6e3"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairBakePipeline.cs",
             "guid": "2970fa933f9b01c48ba3a0b174cd2367",
-            "bytes": 31036,
-            "sha256": "1992397dcb5f4bc41c7a36849cfb87c937d67495265bfe841d47942e94b13874",
-            "metaBytes": 59,
-            "metaSha256": "519e704a3deea1c7b814e4a74ed96c985dfb5a2eae447a7f19a3442f97ce7ee3"
+            "bytes": 32897,
+            "sha256": "674f19a9e04c9ba438e8bd4d03d802ae3788eac85fc99df36505093e9b648bdd",
+            "metaBytes": 60,
+            "metaSha256": "398e9c96200e37edd73e4ffda683f6eea80c5843342d86e9a9b37ca6bffd4cdc"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairBraidSplineEditor.cs",
             "guid": "71a88eea15ae407dbd6e0a864accd58c",
-            "bytes": 15955,
-            "sha256": "97d98d33c2479c2e95953ab364f584505562a71787dd01143eed07c2c8b958c2",
-            "metaBytes": 60,
-            "metaSha256": "0f082c81e68b941ed923a1dc2142c692e21657cf5657a484dc1921fa366aeca7"
+            "bytes": 16189,
+            "sha256": "e2b203bdd575559877012a65803b36174e3ae128492609c088c040a78264b97e",
+            "metaBytes": 62,
+            "metaSha256": "e718ec6e9f442104bdd314f42a64032c24658f847a54c21656552b2855738aa1"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardMenu.cs",
             "guid": "4947976d4ad6c8040a3ab5e55818aac2",
-            "bytes": 24073,
-            "sha256": "ed649837032663cbdbd56066d3e1d9e94d1e0bacf6d95f594ad511a579aae6dd",
-            "metaBytes": 59,
-            "metaSha256": "c6b1fe16ec1f82401f7d3221867449e83d946f1dc67a9991d02ace2087ee5773"
+            "bytes": 24531,
+            "sha256": "0e9c50ab126aeba07fa21d07a1626b661f63933121bc6f1a4466affc63313c42",
+            "metaBytes": 60,
+            "metaSha256": "3c0aa0354fc81843950dfa2f246ea46060975079289d8c7d17fb8c8ca4009965"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardProfileEditor.cs",
             "guid": "d6829f4a2d5e4a9c9fe0d1635f0d1b62",
-            "bytes": 5833,
-            "sha256": "dd013b94e3bf6965e5c8e6244930450f8c645874a2ef181a9c294f6ccabf2038",
-            "metaBytes": 60,
-            "metaSha256": "e3c8c69fb1a00fecaddc0aecaee0cffd3afe8a28e7c68ad6c1f7a75a1060da71"
+            "bytes": 5908,
+            "sha256": "4bf14208f8dbb8d2cd536b3e6be4e2beb017d8070a982189bb71ee112ba61a51",
+            "metaBytes": 62,
+            "metaSha256": "34a1c1a3b5b1cb50bed32f7240f87067a92afcb12b24d3566a69d19c6a1b316a"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardStage.Binding.cs",
             "guid": "cb419c9c2648469bb80c1ea7d185498a",
-            "bytes": 2745,
-            "sha256": "79a0395283393fc3216435dd0eb9b3662293153c700de9b09160ad2f5ef0a7f0",
-            "metaBytes": 240,
-            "metaSha256": "711a9ed71ba46c2d4b89dfd2e758d345728c9907f86bb611a3aad79ab60776f8"
+            "bytes": 2791,
+            "sha256": "da3e0cf70a8c83e6bc1331f84bd325cdc1ed7ff2eedea3ba91d6d865e2fbabf9",
+            "metaBytes": 251,
+            "metaSha256": "a20f511b9e0b14d8e5d5d12570fe665746473d63a54a2e99b8a7bac78c2ed900"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardStage.Erase.cs",
             "guid": "0dbf5ba9605d40568713cde574506ab7",
-            "bytes": 6184,
-            "sha256": "ce5bfd15e5b74ab0f0d0520be0bd20b590c70e0430c8de9aacb36d629647ef07",
-            "metaBytes": 60,
-            "metaSha256": "0b8c58a9aef684cf17f36493d3a16875e9b3a24ccd53ccd601d541749713dccf"
+            "bytes": 6297,
+            "sha256": "3c284f8bebea6ca90df07ac1a3573827a165af121efbf06e7e081704ee123dd8",
+            "metaBytes": 62,
+            "metaSha256": "b5f2a729a060ef1e8ffed6503473c283277e40d7939b1bfeca6bedea711148f4"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardStage.Flow.cs",
             "guid": "97ca58bd13e84d4c88869a1d7cff4ce6",
-            "bytes": 24524,
-            "sha256": "f985355e81ce35a67becf2b4ebf36e4d03064a2a3646819e44c63a292d32beb7",
-            "metaBytes": 60,
-            "metaSha256": "675aa6f4dceb7cfd7a890c015ba69bdeb24ca038e807132d20ae3f94bbf92769"
+            "bytes": 24898,
+            "sha256": "06860bbe162de090bf6fb61a53dbdc907e4fb4b53567b08b4f87808bf3b80bc5",
+            "metaBytes": 62,
+            "metaSha256": "988f9beb5929a159c2e859ecbabb51d80db540bdf2e27729cf502b65f091366b"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardStage.Nodes.cs",
             "guid": "9a8ea508db164f6086291287ad7c7e01",
-            "bytes": 5066,
-            "sha256": "4088e5974fa5d447032f82acd7c8311d8cbeb112146ae7d0df3ed7f56798584e",
-            "metaBytes": 60,
-            "metaSha256": "fbb05ada4bdd676bfcb724df25da16fcf448efa62a66992f099d82b92684316f"
+            "bytes": 5158,
+            "sha256": "d51de3f599d403bec38ed0443777a1d65e2662fe96bb62ee4d7f320d0da91c79",
+            "metaBytes": 62,
+            "metaSha256": "8bb5245ce5c79b9bf5ca9992e1b41e1847eb919f2766340f225f9137c4d378cb"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardStage.Populations.cs",
             "guid": "a31aec9083f6cb34b02296d3d05ea769",
-            "bytes": 4558,
-            "sha256": "5f3fd5c376bdb41be695556528b8206c45074bdec5f55b7da7e2b8fedfa51981",
-            "metaBytes": 60,
-            "metaSha256": "1a01e1eccf03d7f73578460c225489d10b06ee54881237cd770ad0dfe5c4d5de"
+            "bytes": 4641,
+            "sha256": "7410abe422bde0b668a257126511e8b31f4eea714e921af5d3de573269e49d59",
+            "metaBytes": 62,
+            "metaSha256": "0a0b789a8af6339045cad374c204322ef4fe9bf5d0ae892ed8589510fe0b0be3"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardStage.SceneDrawing.cs",
             "guid": "b93c28eb8fe291b4ab72ab5fb5c79e8a",
-            "bytes": 11495,
-            "sha256": "5682852c50e627f1b48e3b9f7300e09ad52a3513d184b87dae00a0cc64e3c2ec",
-            "metaBytes": 59,
-            "metaSha256": "83b1de31009762466b2d9816ffa8a798e4f0468b851a9baefa28815f9410a541"
+            "bytes": 11758,
+            "sha256": "c641203b7cd376c95a4f9b23b239c13adfcb2ebdffff3a191d0993d57f0f2e7e",
+            "metaBytes": 60,
+            "metaSha256": "109344afb27dac97e4439e2a45e0755f89b774a9b1c0da958daa531b31f916b2"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardStage.SculptEditing.cs",
             "guid": "d537a54b1927465b9cb2d0d58a33e7d1",
-            "bytes": 8631,
-            "sha256": "d4ffc0595f6927d5eef3eee31fa986ff463a9238b272786972a45681f8bd23c0",
-            "metaBytes": 60,
-            "metaSha256": "6e402e60ae2290bcd0e2dd940f4d077098fc2804b8913145c571e5a91b14f994"
+            "bytes": 8794,
+            "sha256": "8a906bf76ec2a97086d61d17aab9517d432c596f2dac6fff99c50893ab15577f",
+            "metaBytes": 62,
+            "metaSha256": "133710c25cac680d03b400d164efb6f10caf8933a959ac6103b95908c5bf38a0"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardStage.cs",
             "guid": "05940a197f404364093a52c77b344582",
-            "bytes": 241097,
-            "sha256": "7b5fc7bcf4b9f70549a4cc7ae0dd34a76ab6b9650bed493ec1048a77b54c3f96",
-            "metaBytes": 59,
-            "metaSha256": "37add35d459428b3d15c436e646a3c2ed8f35d6498b58b24ae51e2ec1e564b0a"
+            "bytes": 245740,
+            "sha256": "e6bbb226d3e06aa423d090209b85584250f09f7b8298682deb325347d7aa72cb",
+            "metaBytes": 60,
+            "metaSha256": "ca6e7ff50d2753a666a26b02cf6182f49d769f26ffa0009aee49c7c37b6ac7b1"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCardsPluginActions.cs",
             "guid": "71ed5da8e3607c440b29df11d676a0b8",
-            "bytes": 950,
-            "sha256": "e007648a1d7c2307b538faf04aaea40831e0a59e8a94adfaf142522af0cf087b",
-            "metaBytes": 59,
-            "metaSha256": "7674a06797c1ed561246a0f3871be740eef1a482a0069f14cadc97b4d9afc6c7"
+            "bytes": 974,
+            "sha256": "86aa3ebda39b87942e4f98e2197cd7863e0d05e21bf4f12cc01e8d4bd811d488",
+            "metaBytes": 60,
+            "metaSha256": "4d0ae6346c019bebf9e1bc0f3b8a3621ef2be07f41bf339550d42e100855efa9"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCharacterBindingBuilder.cs",
             "guid": "8d0e3e53288242c892abe353ad8e997b",
-            "bytes": 21390,
-            "sha256": "0c173004c616799a31fee4f607ff534af8b1957fd699a4f2617ee93b9d2b6886",
-            "metaBytes": 240,
-            "metaSha256": "42856f4bf7664567999bb649fb4522424c8f453e7bfee8a6615ec3b76903d0bc"
+            "bytes": 21681,
+            "sha256": "a4d6aeecfe36ab3d98c8e8657e8cd6fb37f198d644ec260b4681d9803e44a16d",
+            "metaBytes": 251,
+            "metaSha256": "8f2482728bab0988d3f501c1e17d1a00119714e78198a46523cffa9e7909009f"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCharacterBindingEditor.cs",
             "guid": "af68c8f92b014967859d1c2fb043e5a9",
-            "bytes": 10483,
-            "sha256": "8c897ea5430bdb15d7c35398bbfbc715dba40292a7bcabfde31d20790c72f9e1",
-            "metaBytes": 240,
-            "metaSha256": "09874e4af4cee9a832a45ef761fe6a9b78435fd99b706d5e9cc4f54409ab4353"
+            "bytes": 10618,
+            "sha256": "d021f10cf4455335fed12520109b31cfebd6a4f451f7bfba56c25bdb62e6a2e9",
+            "metaBytes": 251,
+            "metaSha256": "55f69b1562a6b6284308895147d3a13e640e4f42d2c16e3d52bbbd4fab2a5326"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairCharacterBindingUtility.cs",
             "guid": "63d414ab5c154515894f298211887f43",
-            "bytes": 4594,
-            "sha256": "a554cdb37c6982c04989d74b4ddfdb285d8b9344902675d954e986a9827f532b",
-            "metaBytes": 240,
-            "metaSha256": "03bc5f0454661d5831c036f7882c5f5c70f5edd108ba6766a8eb8b051bb1fd72"
+            "bytes": 4664,
+            "sha256": "34d897432adad05ec1cd33559b207bc0005a5d5c970a96febfebc1d7b2fe2ef3",
+            "metaBytes": 251,
+            "metaSha256": "f2c4df7deccb1294d8c58c8c3fbf62fc74645ba9c19b4a5fbd3129adc8df9090"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairEditorPreferences.cs",
             "guid": "c688c11d74ae40e79cdd45f730da25cb",
-            "bytes": 18914,
-            "sha256": "597652d74b31913871cc818221f3a3fee38dd290e85ee82f5e99dfd00225744f",
-            "metaBytes": 60,
-            "metaSha256": "bb278f423d129901dec6d5700a583f390299df05a8ce3edba450bae4c76cb984"
+            "bytes": 19248,
+            "sha256": "1343905ab834dfa6d2ee25122e6751f5ca620635213752b19540d5cbdee271e3",
+            "metaBytes": 62,
+            "metaSha256": "470f04633d9dc55ce133af6cd5f95c51a410258100a5ce127c6c556044ebcd66"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairEditorTypes.cs",
             "guid": "f0e536c418e8d2d4583708119786f419",
-            "bytes": 32842,
-            "sha256": "86ceba08ae983c5d494c185def3d3ebc9af83445d53ac3a594860433ee2fb99e",
-            "metaBytes": 59,
-            "metaSha256": "47b17dcda448d05cda004161ae34861b8690a872e8c93d7688781218ba3dc5e6"
+            "bytes": 33554,
+            "sha256": "ed1b1799c5fa0b98fe9c53f4f15843e93e5a0bd811966029ef493c0e460ee10c",
+            "metaBytes": 60,
+            "metaSha256": "1b2f88dedbee8e54d825f5e934275e5db92de5a1518fbe991e7deadd506cd7d4"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairExamplesMenu.cs",
             "guid": "1e8691bda6294fb5b5dac942a0f853fe",
-            "bytes": 2725,
-            "sha256": "1c95ab28ff3b1e6166bee09031393ff10e550f0b7120b80cc1318cac044f2ab9",
-            "metaBytes": 60,
-            "metaSha256": "8d9a7dc0617650fcb759ec76e5e3480fa2b55859bcd70a64155fd74880f9aac7"
+            "bytes": 2774,
+            "sha256": "e6132e98cf1189d8cd42d4a44636756c8c55324054307be0bece70b6f64cbe68",
+            "metaBytes": 62,
+            "metaSha256": "fdde145f23894534ad3c3d58e475c586c0ff5542b2a0745b0d6790205d037cfc"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairFormEditor.cs",
             "guid": "971cbef4b7d440109d8308b41872325c",
-            "bytes": 27533,
-            "sha256": "e2a291b101c10bdbdb295d7ae0c5b97729bc9525ecdabcc41c0b76a48b021561",
-            "metaBytes": 60,
-            "metaSha256": "4fceefc679c9dc92095cc01ead4de765622522ad494e6ff5080dd37ddf307048"
+            "bytes": 27853,
+            "sha256": "986660d031ad9eada12517df0be91c1c8f729d37fdebd79c1f562db0c6732c59",
+            "metaBytes": 62,
+            "metaSha256": "773ecc7c533e3e0705d147d2dee65aa10209df9d1c76222a885f2c2d9e9001fd"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGatherEditor.cs",
             "guid": "25d236aa92bf4b078a4ff9926e3414b2",
-            "bytes": 17700,
-            "sha256": "1900e2c87f0d1ca8cdbb352b90035eda82a1b2312511fda6bd7c217af99c8f8d",
-            "metaBytes": 60,
-            "metaSha256": "16a7f1507aa599d8df89397ce4c3da030db6a3034bec9145a498f63066312dff"
+            "bytes": 17916,
+            "sha256": "96f17ebe274aea56c6920fef7b40b9d8f470b08a14cecf28cb519c3081258912",
+            "metaBytes": 62,
+            "metaSha256": "431bd25f6e06f2269d45fd6075dee24f90b3986d7523ad02c7d587f2dcad64a9"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGenerationEditor.Actions.cs",
             "guid": "1cd2d91de9b83b15c4c40dae29842472",
-            "bytes": 14060,
-            "sha256": "336770004014415a284a9d165d7256bcfd0d90b106500bdcbbd9076dc65dd6ff",
-            "metaBytes": 60,
-            "metaSha256": "f6cd159f5703154361f0bbbc8e0cc0c7c7379cdc989dca68272887da039ac753"
+            "bytes": 14241,
+            "sha256": "4cc83f015ccf876eae6b2c0f2b2f4b3ebf821446f6b3918f5cd4d4a75409777c",
+            "metaBytes": 62,
+            "metaSha256": "d80bea550d301960ebac4829e11cca1c55c4f23a58868ab6d6a6d188aff3089e"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGenerationEditor.Regular.cs",
             "guid": "4c22b7d79d4f48ecbad6b14f2e18d164",
-            "bytes": 4332,
-            "sha256": "6b486151c36b6050e86a150c2293b2f6cb2919d4a869c2c490a12fb265153049",
-            "metaBytes": 60,
-            "metaSha256": "678f8d790faf272c38e231ad14fd95d4edbaf110c789bf7d7987fb5b03f9827c"
+            "bytes": 4407,
+            "sha256": "104f771e5bd193791da2af0a4207f2d1f83af1a3eccc6b2c52956ba2d6f81007",
+            "metaBytes": 62,
+            "metaSha256": "c145556dd4e0c2945b1b2cb04f5e2a792ef8999964ae8ab9ca2ac579cbf30ed6"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGenerationEditor.cs",
             "guid": "ce114f05e3c4b287361328db889a843d",
-            "bytes": 29105,
-            "sha256": "25aeeb758a5d14944fd3a9bf125535da193dc75dfc0e559586068bf28af125af",
-            "metaBytes": 60,
-            "metaSha256": "008bfd00add71bdaaee297eab8f9c4f4c90f8319f8521a8d12acfc65d0da5510"
+            "bytes": 29434,
+            "sha256": "491d6bdf002c14b60dce24b174ee30ed9a9011cb137b18ec5ac075f2ce2ffbfc",
+            "metaBytes": 62,
+            "metaSha256": "e4e16e00b7d626487515d85919aeca22408eead47b4f8dc9c61b7a95995613d1"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGroomCommands.cs",
             "guid": "efe80bd1c32f67b4cbc8d80a421058a2",
-            "bytes": 38577,
-            "sha256": "41db7b036077b372e57ad6f1abe3aad34495a9e95df4496fb37ab0c10c7be9b0",
-            "metaBytes": 59,
-            "metaSha256": "0e9fd2567b5ca9fc6905603445af0fc7ed1bdde1dfa2d4bb78c5983d7c0926bd"
+            "bytes": 39324,
+            "sha256": "3f9ac3768f87742f1608c0fd093069332f36c9c49cc67624e9b017fbc78bcabc",
+            "metaBytes": 60,
+            "metaSha256": "1bb9857c86ca698ecc00733fb8a8e41776d0cd771911967621b74e3d6c2ad679"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGroomNodeCommands.cs",
             "guid": "cb0d864e265d1da48988d4bd7a4c64a2",
-            "bytes": 21389,
-            "sha256": "3aa3bcef25c852e27284753ca2aeeab70d21bafec123d43bd2a52de1c03ae0c2",
-            "metaBytes": 59,
-            "metaSha256": "e1653ead176eb3b8da5b9842773c8badb1b1304d634532f53df2c77d722e5417"
+            "bytes": 21776,
+            "sha256": "cc359189629d17d88221b54b99565ad0f41f268f47c1190a13f83ec116458b44",
+            "metaBytes": 60,
+            "metaSha256": "03bcaca9401702a450507ba95692ee74d5f334fd64220aa1d1f585e4e22faae6"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGroomNodeHandlers.cs",
             "guid": "994d70e7e70b0d84f9f53a5866078bf8",
-            "bytes": 28837,
-            "sha256": "20b035cae116b5d598d96a8fe03c1d49a8a52de87d39f21c3957d4800fafe50f",
-            "metaBytes": 59,
-            "metaSha256": "aef346eaf2b6dd77a228391ebcacefef65e80410c6a023d683331eef8390bae1"
+            "bytes": 29286,
+            "sha256": "fd7449b2399e4df09e8ceef0a71997701bd97ab874c42206002bfa298e12a139",
+            "metaBytes": 60,
+            "metaSha256": "127155c1660a16ab1e2cf242dbd07ec021bec9184353980eae4b4dd5097b5060"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGroomNodeReferences.cs",
             "guid": "e1820b0c61092a4499f02e9da3aa7c34",
-            "bytes": 10486,
-            "sha256": "d00eedbb40c097ee7e1e45e23237fc8664a504f93b5aa177e2710991fd8be007",
-            "metaBytes": 59,
-            "metaSha256": "eee8ce687386b2724ea6316d57542d98c5e9f82307d3ddaac362bef147f3f1e8"
+            "bytes": 10664,
+            "sha256": "0987969b0fec022864a3434cd7a893726f8bf4fa372a68d9d8817414fff74927",
+            "metaBytes": 60,
+            "metaSha256": "6250ba91e8d495d74e3ea051aad58987322892cdfa3b677b8e0aa7c2d493d33c"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGroomNodeWindow.Actions.cs",
             "guid": "d2933d0d270d4a148c9a5b752269a87d",
-            "bytes": 9897,
-            "sha256": "3bc605f9bef0e957a43ef2c3a136e525c592bdb5012ed5cc86b2080015663fec",
-            "metaBytes": 60,
-            "metaSha256": "a3eed52cbc55e704936e2f5fac6fd5e760aa3210b238233db9bdbfdd13f7e91b"
+            "bytes": 10103,
+            "sha256": "9c834baf751e975c819f5aa764688347866cc25509399c0caa3453a573045756",
+            "metaBytes": 62,
+            "metaSha256": "990a0cd823b9ee9027475404b8969b08b0486312422188146e0772a21bcd90a0"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGroomNodeWindow.cs",
             "guid": "ef3aba79d45149e1b2941c1825ff1b8d",
-            "bytes": 29853,
-            "sha256": "a0b393ff15f3136b062717884a43de7c9190f7b7a32e55b0ee2b647fcf5bcf8b",
-            "metaBytes": 60,
-            "metaSha256": "e3ad742b40f6058542c650de15c115c5f64065ed1f5a2eab99eed512e424867f"
+            "bytes": 30442,
+            "sha256": "f9a7f3d6d2e970507820233f09c3b1639c731323d365ac33b33917e37e7f2ff1",
+            "metaBytes": 62,
+            "metaSha256": "438f7ff77e56f9d424801e0bbf2a741e0b070c3bd67756eca2508e9aeb87c33c"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGroomNodes.cs",
             "guid": "28bf86ff29954a3fba09933135ccf981",
-            "bytes": 13390,
-            "sha256": "5a3045cab99382bc17a3d47590ce4fb1f186dc060ae90c2da1577ea972a5744d",
-            "metaBytes": 60,
-            "metaSha256": "4b8518f367c7fa720b0bd2b60af7b8881abf37326365008b6663b4cefb8c7015"
+            "bytes": 13572,
+            "sha256": "16c49c3afb6eb029f2fcdb1e8667aac01603aeda5a7aa42ce4adb539c0006ea3",
+            "metaBytes": 62,
+            "metaSha256": "96ae5a3336d4df82a6555703d5b66390ee8fd7c73605dc90fc049cb7e902d69d"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGroomPreviewWindow.cs",
             "guid": "89dd7bedc9204d2781dff7fe5c304f22",
-            "bytes": 21519,
-            "sha256": "46e7dfa06905368b24c39ce8b2197fb1c2daed109222c5a87a545183c0c72984",
-            "metaBytes": 60,
-            "metaSha256": "f2a428bb7fe37074e4061eb922f2ef7e4b11e32eea96351d079a22b905eaec03"
+            "bytes": 21883,
+            "sha256": "6c9a5e3046a3b9dde1e8d29e5f008b971bed8000a360c95caad304e4d879391c",
+            "metaBytes": 62,
+            "metaSha256": "a2061883559ac9303b1564ea9f6267adf7fc41cc277e14035db1915117855823"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGroomWorkspace.Nodes.cs",
             "guid": "e53a9f2fd0ba4f3197371c792e910ac4",
-            "bytes": 15337,
-            "sha256": "4b38c59a794820ec54178b1eeb7197bf4b3cb01f2f90a3ce73a9f35f72f66974",
-            "metaBytes": 60,
-            "metaSha256": "9bcf71f4d61a5b2399acdacd1c80660d70e04e2f0011e7052cf518c0eda1c00d"
+            "bytes": 15544,
+            "sha256": "4e27406980e79e80d689f4c7f21745864c35ce4978f7671bdd0209ef24e4c102",
+            "metaBytes": 62,
+            "metaSha256": "dd3ec0834aae54bc6dad84cf4bc88bfa3c222df4a6f69f30090b5e37dcb05a6e"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGroomWorkspace.cs",
             "guid": "d624933ccfe824044b74093c0e6865a8",
-            "bytes": 104524,
-            "sha256": "a5be832d837225ec3ac4e601cf608ee5c15314aac1cd2d332147ae4f3365ddcc",
-            "metaBytes": 59,
-            "metaSha256": "ae5450f2a714170648829b9dc691456ace760044a6724c80bdbc7dc173ae4a6e"
+            "bytes": 106012,
+            "sha256": "2351aa2dcaa2325779b134089d2a48876c61883ade9c76d63d071ecbc55b68a9",
+            "metaBytes": 60,
+            "metaSha256": "e9e46a59ae89cc45065c850672e2b85f34ece90dde664fc8dc06639c90c3191d"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGuideDepth.shader",
             "guid": "3a7209a826834a1e862810431f762e6a",
-            "bytes": 1433,
-            "sha256": "7191a0f2b3ae62e519754c17fd270158254c76cfa5ddeaae6b5e023eef962559",
-            "metaBytes": 201,
-            "metaSha256": "10341d66e9a7cd1a1a4351b6d512473ad8c0d9f0a0b0ec3797b625c9088ce5be"
+            "bytes": 1478,
+            "sha256": "8d0931e6a65dc493eb1df5d884d75dc92503b9756113fc318a623476b8436736",
+            "metaBytes": 210,
+            "metaSha256": "5a2e4a1d57731a5e0838715c110bfef65326089426c8e59e67e2f864f2eb0a7e"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairGuideImport.cs",
             "guid": "a08b29e6fd5b476785d94a1927d52de7",
-            "bytes": 11184,
-            "sha256": "89fc822ce2fbfc663ba1d92ed5cd4b2a095268fe96393943b9d5a90800554516",
-            "metaBytes": 243,
-            "metaSha256": "3b8c43e2ee658c040b3f0864ddc99959ef6bf3937e9712db72ea7d6c3868d36e"
+            "bytes": 11341,
+            "sha256": "5afece2fc06065f7366b5439c8b9ca630eb0f69c061c169a9bbc5891f9d5ae63",
+            "metaBytes": 254,
+            "metaSha256": "9051b4338ab41cf4d748065b7f6dfe7c368b077b4fe49a2ccdfffb5440ac92b9"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairNamedItemDrawer.cs",
             "guid": "c845bc3e2d6942f0ae102ef1c6b1bade",
-            "bytes": 3410,
-            "sha256": "39f9bec875fd7b050a625603a1488edc92180fcaac2e0b07d686e6cdc1b6ce80",
-            "metaBytes": 60,
-            "metaSha256": "4e6c537158a3e53d4edd3413148a9fe2795a5acbcc0d6865e0d0567cdc6e2223"
+            "bytes": 3474,
+            "sha256": "2b3725166bd72efbaee6fb45e4d495f154c0456e20a74249d1e06d8fca15d667",
+            "metaBytes": 62,
+            "metaSha256": "9081e33d264a596fc0c9ae785bc78f2f51b7522a808825f73a2f4eaec70576de"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairScalpShadingEditor.cs",
             "guid": "25cfbe9a8fddb421ad26fd757525fca9",
-            "bytes": 12167,
-            "sha256": "6a39cbd4fc75a70d2f4a676153769e1f1f4c19d7e5f544198d716e001fdff9a7",
-            "metaBytes": 60,
-            "metaSha256": "383596026d7ad69cfd40b7caa3c044ab80917d3280c9f8c06983d9fc320706c8"
+            "bytes": 12348,
+            "sha256": "44cfe9715fd6595b3b5aa7d980baf52bd657199a94d49b53a6ccd9bbde07408a",
+            "metaBytes": 62,
+            "metaSha256": "c6ff33cc9c66e33038cbc343f9a4b50779958a14678e314c3ed727e6c9db1369"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairSweptAtlasSetup.cs",
             "guid": "f11ab503608f4bd2a2b6b6a53de1227c",
-            "bytes": 5428,
-            "sha256": "cdc5a66cdc5e0b5d1444746fa94f25a9646a18388b8925c061d95c6cffe2fbe0",
-            "metaBytes": 243,
-            "metaSha256": "51f3ccb3af675821046d78221c5d74309511ae2a4b1a51f385a102aa857f3f3a"
+            "bytes": 5503,
+            "sha256": "0e03b477f63433e7ccbdc1fcd25a44c3a3c9f8628f97164c39c80a8b9835ba7d",
+            "metaBytes": 254,
+            "metaSha256": "a78c25659aa038eb08453b87db4590f86aae6b95cc92fe8cc95a1b4e568261c2"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairSweptShaderGUI.cs",
             "guid": "f659dc90f70e245fd7bb10b4158999c4",
-            "bytes": 19039,
-            "sha256": "0eab1553ae81d9f347d68d678780a042ebba87e609cd4daf75368c1094727a0b",
-            "metaBytes": 242,
-            "metaSha256": "65cd39b6f8cfffb8455e58c82d9ac13db7ccdc8f18da05bbba348472f2a282ee"
+            "bytes": 19244,
+            "sha256": "0eb5fd205d67580972f940cced107ed4671e2c7416e50c4a9669096fc9ce6f04",
+            "metaBytes": 253,
+            "metaSha256": "d873905cbcaba98459feb95fa3b491813cdc041c2fa60dc043e1efd21f0f4601"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/HairTextureMapPreview.cs",
             "guid": "4581fd5c24ee4e77b9e0f8e1d67c8c93",
-            "bytes": 7608,
-            "sha256": "f2162fef51c79c9d4197f20f0b461f2e6aaeb259988b075e7bf42ed0653424ce",
-            "metaBytes": 60,
-            "metaSha256": "71cccb6101f7686689f4b47a4bc26a6a3302f07b384d3eb914efcf32e771aeb5"
+            "bytes": 7734,
+            "sha256": "8b7f864b06b1658d488a73c27cd91e1efa98c7e59a26b74f234197394f606a56",
+            "metaBytes": 62,
+            "metaSha256": "e4910a4f161945318c5b793f2d2d7ce3afe6849ae5ac932772bbcc36b503a5be"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons",
             "guid": "3072e567a54f745489433a39dd4134f7",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "0030792da70003593e716aa90e759b2f8f6a64567f3f56ab0940b71581864faa"
+            "metaBytes": 180,
+            "metaSha256": "b3624a24c2ac4a50ded44165eb4b6ea32925288853b979c03a6f3816419b79ad"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Clump.png",
             "guid": "4325aef70e54a1c40b2bfc91c76881c2",
             "bytes": 821,
             "sha256": "1738110284e3464e2566321e21e26da7e84676380a7e1160598f6ccb2c29f980",
-            "metaBytes": 3364,
-            "metaSha256": "333176fa2576b8d9120dba2501cc418fcb13eda79dfef04ec9a851dab01c2ab7"
+            "metaBytes": 3507,
+            "metaSha256": "a7155cd5113cca0c4c8b20df149a836b93d12e804e069ac199e675c35bc9cd0b"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Clump@2x.png",
             "guid": "767fbeb8e24a470409e9dffa8f03ff1e",
             "bytes": 1780,
             "sha256": "e6b1f43a572da1b09adac553d5ad9eb9c72110d2ec40bbf9428ed78b9ede2f24",
-            "metaBytes": 3364,
-            "metaSha256": "551625e8a05ae6288adec15eb59049bd2aa140847fd64483ed223f73bfb52371"
+            "metaBytes": 3507,
+            "metaSha256": "80270173e6fe823c7bfce5ed40e6f327e7c7f866bbb5c783c14823497d5e6801"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Comb.png",
             "guid": "ddfce4f229733b941a10ef575303c570",
             "bytes": 397,
             "sha256": "7b75423d82f4abc45eef51feee460f6d10fe7113697c54f1554937c8dfcd614e",
-            "metaBytes": 3364,
-            "metaSha256": "6e589a60ff59f6ad7c1db215f1db3462b3ed6680cea8e1d5517280a6443cfc9d"
+            "metaBytes": 3507,
+            "metaSha256": "52cf6982a61a50f0f4d5290dcc27cded63c0d12388546aed7f459189a5e4689d"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Comb@2x.png",
             "guid": "6134b66b5e984a74e907268216f90359",
             "bytes": 547,
             "sha256": "43f57a538d2a966701e5cf3d7c1e2b66fcd1c379c8cb6f2e36d98e994a7261d9",
-            "metaBytes": 3364,
-            "metaSha256": "bc92f558a8ccbbcc339698e6ee48ff1efb1c77e281211a2b6b1057e91f5e37c8"
+            "metaBytes": 3507,
+            "metaSha256": "c6a998bd9acf43739f1df06e7bb2701c6f43051eef8cd9765713d63eafd8557c"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Cut.png",
             "guid": "9acef522e259dfd49a5fa1f8d4e6dfed",
             "bytes": 797,
             "sha256": "14b86a778d190c07e03b4e24b27eb6f431164defb59a5bcd94d87ebb9c4d7399",
-            "metaBytes": 3364,
-            "metaSha256": "527f8f7a8f3bf8bbf4d9c8e1584b4df31adf324dac098eeb6490319bd7011e9b"
+            "metaBytes": 3507,
+            "metaSha256": "0f8fb2b548af60f97f2d36f6c6a90da01e0a96513152ba587e166ba61fe6ac7f"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Cut@2x.png",
             "guid": "e50e338a81c3a444e80c8b6f5c1fd886",
             "bytes": 1331,
             "sha256": "c3a57a488ae58b91eee28a418acc213fe800f6f689a426f296d773930fb376bd",
-            "metaBytes": 3364,
-            "metaSha256": "53a36d172eb98bc886611e67fc768c1c52c226d7aeaa483ed39f19d5348ac530"
+            "metaBytes": 3507,
+            "metaSha256": "342ef1fee6ae61ba71ff4f71f9cc43a12c3f551fe06226fae2ef7463ba9c2e94"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_DrawFlow.png",
             "guid": "d56baf1ee958dc64f9fa147aa96b53f4",
             "bytes": 487,
             "sha256": "9f6402225183ce0bd0543c2c5ad03092262c840a3e10376d7c9faf04b7049668",
-            "metaBytes": 3364,
-            "metaSha256": "4025188a5b698fea38b06b98aff254a35546ac51605d29ea52501ba094a33160"
+            "metaBytes": 3507,
+            "metaSha256": "23d39d3aad3e1e80e5e3aacdaf53409d1cf389345dd34362e5b881e3c768b78c"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_DrawFlow@2x.png",
             "guid": "e73e4614c0b70394587b2972c372c05a",
             "bytes": 905,
             "sha256": "0a00cc3ef648a68b15596191eebe38d96bdd8ec68a6c52d5cdc5df762d908e0f",
-            "metaBytes": 3364,
-            "metaSha256": "b51a4989c9dcc9816f6c321a4a14f53562716f15b2488fb0a51539b1bb2077c0"
+            "metaBytes": 3507,
+            "metaSha256": "4c47f16dad2732c9f00533ca97c72dcbc3bcc86a2c133254ab033f0429643d3e"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_DrawGuide.png",
             "guid": "05956c7c5def60847abe85258b0a75e8",
             "bytes": 445,
             "sha256": "e7fdfa342947d51016a172cb4492a04a237628185309682970a2661dd3c3174d",
-            "metaBytes": 3364,
-            "metaSha256": "17c2ee4c2980f8710a889c8e1792fb74181daf7caf9d509c6c57b0a352152178"
+            "metaBytes": 3507,
+            "metaSha256": "031bdc19b3baec7149c459ca3cec21250335c56c3b6d1d3343253128cfc19358"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_DrawGuide@2x.png",
             "guid": "213121b54bfdfc1499b0ab44f8676c45",
             "bytes": 756,
             "sha256": "c9922fa6ff029f56e48a725575d77fe4e5ead66e0e841074f388949d7654a35b",
-            "metaBytes": 3364,
-            "metaSha256": "570266f75c205e3da1f0035c4768dc70e87d1be2b3c7607e00773af73170b2bd"
+            "metaBytes": 3507,
+            "metaSha256": "233e0b3408077c05b4571b46617156ff1ae3d2f15dbbc1da433d642cc761ad8f"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_EditFlow.png",
             "guid": "f942cf356d7a6c3459ed25815efd825b",
             "bytes": 513,
             "sha256": "39e789433c9aad706ff1a6edd3aad2b566ea2222b2d93c2faa3a719b548bacd6",
-            "metaBytes": 3364,
-            "metaSha256": "f7221e406e3d1cc2cde3f78b2b016685bad69b48cfc91de9d66f651f69eb102f"
+            "metaBytes": 3507,
+            "metaSha256": "6cc8bd4436ba199f2bc65b6aaa584b780deb6a6ebc16d78bf18cc42b828729e0"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_EditFlow@2x.png",
             "guid": "e58b879339c416540b9dcea58aa55461",
             "bytes": 818,
             "sha256": "deb79a33cff4e871d9c8e29bebbe05c6866427234dec255e53c38058dbbcfb9c",
-            "metaBytes": 3364,
-            "metaSha256": "ad80804e4594b64561566f3a4a3df5fa2401e6eb9e4a8d28848afcc3d0f52f1b"
+            "metaBytes": 3507,
+            "metaSha256": "00d9d61b98352c96dbdb572bbdba6e6d6c8284a956e0c41df5e2fe7dcd849d54"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Erase.png",
             "guid": "b8a3a5a620f49484ca9ee0053706dae9",
             "bytes": 418,
             "sha256": "a19aa406f3c6add899575abf7c157e2edaa178a91a10e6f0c0379739bfef04de",
-            "metaBytes": 3364,
-            "metaSha256": "eaa31a4377c3256a686e372a8db4701248181f0243a40d6a0813a99f2fcc76de"
+            "metaBytes": 3507,
+            "metaSha256": "0d9cc0307c227d09750bbe235f8f302323b2fc67f55ddeb0127a5457e768a9f8"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Erase@2x.png",
             "guid": "1df20812463b04f49b83db3d8a0226c4",
             "bytes": 608,
             "sha256": "c3220cffc8bc0e411348f956be7f5bd043e2d1a4223f2d795693abafc97740b2",
-            "metaBytes": 3364,
-            "metaSha256": "41c94c2c6a78dc46f56a4c14ffad7f094b38c773114ffa24a497b4d66c861014"
+            "metaBytes": 3507,
+            "metaSha256": "8511871a82c559365bd400496a86e1bccd355aa73f07b2a9f2ee61f15678fd45"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Freeze.png",
             "guid": "8294b86f9d5cf174a93ad1967e348474",
             "bytes": 628,
             "sha256": "9b7b58b5ceee93b3f0fe41090455f29368a5b74d9fbfe29e02780118b9c16584",
-            "metaBytes": 3364,
-            "metaSha256": "1e437e9ab82334e41f78e97748edceed94a97c6c64cbb66e9287d10c2a7bbca7"
+            "metaBytes": 3507,
+            "metaSha256": "22e31440159d5467bd5217c761bb1945da2b7b0f6c495360d7431dd82478f99c"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Freeze@2x.png",
             "guid": "097ca1b7ce99e7243aeb3047a5c00665",
             "bytes": 1169,
             "sha256": "ceb13bfb0594c657bf5b2d23b5e62edcec3f5f36103e1a018b04e2fefc3ffee9",
-            "metaBytes": 3364,
-            "metaSha256": "fcea32d81e59d6b5dc1bd49eb60ba12cb50c5983413b2cddd5639bfe6cb0080b"
+            "metaBytes": 3507,
+            "metaSha256": "c096c53d8ac4b56a5c7c49d8f093e0bfc60da3f4af4de6892582d44bbbd6b266"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Grab.png",
             "guid": "c3b5aa9eb4b9f90478ec5d87ff798138",
             "bytes": 441,
             "sha256": "bbdc07ed30af912f6d8424ed8642fb9274f3f5c01e457469b6d76bc6bc337477",
-            "metaBytes": 3364,
-            "metaSha256": "3d7ea29175a4bd247891079325deddde8a83f338f87f52a21bc5fc0c3fefbdb8"
+            "metaBytes": 3507,
+            "metaSha256": "d5b4634165a79ad069f1c1bdc1fea346a22be621e4b95f043146fb87f72c6636"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Grab@2x.png",
             "guid": "58640715e9283a14c8c4ac3c327f7cd9",
             "bytes": 745,
             "sha256": "f8ef7ebdb53a2586df0daccf2544043d6f648daa10cb7124ea292dc1ebe4bb4e",
-            "metaBytes": 3364,
-            "metaSha256": "640a645dfd35b0c59c6445f930c4e603498507b1072ac93012e7745e4197489d"
+            "metaBytes": 3507,
+            "metaSha256": "e3d4465bca2ec0f42809afeb233b4c9bcd21bf3f4ff4e913c2996ad50c312fc0"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Helper.png",
             "guid": "22ed0479b5e10194c885d1fd06b2894f",
             "bytes": 1107,
             "sha256": "3bcf56680b287ecdffbad31192f6d2ba81b68912dd16f06094f6a730894e72e1",
-            "metaBytes": 3364,
-            "metaSha256": "e1f98cce137124338beaac540791be47e15e3a442affd207ac66028dc24a1da5"
+            "metaBytes": 3507,
+            "metaSha256": "43667fe4cd5b9d97d4376929c683cda167c3b64e8ab5c8796cc54a06749ea9a1"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Helper@2x.png",
             "guid": "4066a7b02e31fe44881ac7d38498c3ce",
             "bytes": 2573,
             "sha256": "c1e62ffa2ef53a58e03d3c3813f91bc7e9388c165bbdbc3103c427b9be7f9b15",
-            "metaBytes": 3364,
-            "metaSha256": "d3514e9bffcdc178b84582860213b2a7f525de0b6e2a6eac77581acbc3ecc07b"
+            "metaBytes": 3507,
+            "metaSha256": "f5a8849d85c1322ab804c4fc2f2b08d9fb512e9a542f82c745f50cc4d1dbe115"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Length.png",
             "guid": "22e3d5871e8bace48bfaf228e55d8da8",
             "bytes": 555,
             "sha256": "455b1c95453a7fb8b76b8eeede4ca70518cafe553a2d6f284fcefd4cf37d0895",
-            "metaBytes": 3364,
-            "metaSha256": "e3f61c252703852d607fa6be7b195812e6c2554a89f12cafc7f1a934bae3db5d"
+            "metaBytes": 3507,
+            "metaSha256": "9943e03775b7ecf9b7a56913d7c0a870e39bf49b8d2bb355bb88d24dab7c9aab"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Length@2x.png",
             "guid": "4ce4dead4c91d4b4e8817f6870a2e0db",
             "bytes": 1054,
             "sha256": "71dcea0a33436e4c92ac8a40fa690a7271a383c896001c207a4fac419bc8d12d",
-            "metaBytes": 3364,
-            "metaSha256": "9fc8d6d5a0098348af3438430a2569b8b09c0fb31251eceb377f2a6988b08cb5"
+            "metaBytes": 3507,
+            "metaSha256": "5f844e608bf60712980e24eced19d2e9042fc38d55b322a813708e998544329b"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_PaintGrowth.png",
             "guid": "38ef24c2ef51dfb4ca32d64466f7adb9",
             "bytes": 619,
             "sha256": "34acd4b65c161b2722d1572dda6084a1a87c84ad8e7284188ad45041d2371333",
-            "metaBytes": 3364,
-            "metaSha256": "67df53a973ea91904b35890621de5222e8083f7a7259a079515a46c287dc8517"
+            "metaBytes": 3507,
+            "metaSha256": "d17f4f61712580623cc3bd155f6627dc0b2242930c767f0764f5015154a55cc9"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_PaintGrowth@2x.png",
             "guid": "90b8fd239abb4dd4d8cae795eda9ea79",
             "bytes": 1077,
             "sha256": "38a71b674814c129f809b957f6fda5b3c17f40b1476a57a44039a5ea46d43025",
-            "metaBytes": 3364,
-            "metaSha256": "bedc48da5e3166717a6346bd52aa53588d4c91f3cf89ee539beb932eba51cc3c"
+            "metaBytes": 3507,
+            "metaSha256": "bd147452b166502d9d19ebbf499df64c79eac79859468817137bb40807394614"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Part.png",
             "guid": "036ae0ec192f5cb4a9ffed5288b1e658",
             "bytes": 987,
             "sha256": "1f6dea43974af5febfce71193ada3626f9797fee9340a2a53f76ad349fa3f244",
-            "metaBytes": 3364,
-            "metaSha256": "81c4acded3debea5ecaba02c3d44b96189919ec8eb6014d69f274f5d30b72716"
+            "metaBytes": 3507,
+            "metaSha256": "efebe59d7fd8b9503e8f67dc703a2aebb6958365eb7a0bc1d0cebbf457d09a3f"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Part@2x.png",
             "guid": "e131d4330ef7eee41baa9e0469da4c20",
             "bytes": 2231,
             "sha256": "f046e9735b355a753de69e2bac574535989087ce82b9c6d8da4afc3e5e6d436a",
-            "metaBytes": 3364,
-            "metaSha256": "171bf98bf2effc89038ab6269ff1eebe48a54ca0c0ad29507d0be83c65ef463d"
+            "metaBytes": 3507,
+            "metaSha256": "e68d8be873ad204b6408e88f8b2c212a02aa02b4d1bf45612cb352705c4733ba"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_PlaceGuide.png",
             "guid": "f54adc1c819c8a148a76924a355f45d3",
             "bytes": 460,
             "sha256": "7ccb9239b88089b18a2dd251013a893064ccb05656d18ef8ed81fb1626d4fe9d",
-            "metaBytes": 3364,
-            "metaSha256": "33fb5000a209232ac0a24e6c2ed6a0b94a3e6b9bdacabbeac286369b282e8300"
+            "metaBytes": 3507,
+            "metaSha256": "0712fd304d59810e053d4d91511efce4f5070f851aee69531d6d794053c3def3"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_PlaceGuide@2x.png",
             "guid": "3e80038378197fb42906658ca3dc5838",
             "bytes": 808,
             "sha256": "b7cd0b233eca3db8ae4ed2d0b34d3436a45a0404be7a20f6b97ba15b1b9a96a3",
-            "metaBytes": 3364,
-            "metaSha256": "a608f8e1ecdbef7a73b8a7778b544abbf6e66c52d870e9654f8c147c737e5eae"
+            "metaBytes": 3507,
+            "metaSha256": "60275f0202ee00b14ba5f049d3e62bd4a76d256ba27e92ab932c3a4669905098"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Select.png",
             "guid": "ff9d6a125dbcadb45b4ad4f69adb9a70",
             "bytes": 481,
             "sha256": "578c24495c45bfb661f22a9899ee1714771a03c61541d87ce7067ef55147b1b9",
-            "metaBytes": 3364,
-            "metaSha256": "230da20672d8ebaa0805f068a35c1c7db79705e9956f1d34c315c04f6be649ba"
+            "metaBytes": 3507,
+            "metaSha256": "6c0aadd69bffeb1eced8f39ffc68a6a12ab5d23494298ec704e3cabbc78caa73"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Select@2x.png",
             "guid": "6e8c7a24191eee644875b19097b6b672",
             "bytes": 852,
             "sha256": "a271703e581d9f36b056d46ca0c5727608b02c69b9efd3002d8d8e97b24d2a43",
-            "metaBytes": 3364,
-            "metaSha256": "d252fc8492948fb65b291bf87a83039274bc4efd32e32496a751737202111370"
+            "metaBytes": 3507,
+            "metaSha256": "fb6ab88b0363ea8a6fea6ddf10f947d009bb0b7b9f7acff2ea031affa3338f3a"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Smooth.png",
             "guid": "1521f26993273eb41acffbbbf021f0bd",
             "bytes": 441,
             "sha256": "42f6faae4c1b5b4de3f4fe0f371967b99d928b97df8ea240b56366b8354d087f",
-            "metaBytes": 3364,
-            "metaSha256": "be59fb92f7fccb30a64b7b48bf17314185a6fdd8fc42b5eb16a066eb09ad185f"
+            "metaBytes": 3507,
+            "metaSha256": "85fefbe94ad46457725a8f61e0d7e674d091f4e2c19dea098e416edf2dfc34f5"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Smooth@2x.png",
             "guid": "b7dc9353f97f3764a9861fce14e5aed7",
             "bytes": 803,
             "sha256": "7ee84b59f3edaad18ccfc29ff50d581566c2953adaeb529b78d4c166aeeb178f",
-            "metaBytes": 3364,
-            "metaSha256": "75dc4844d0fbc17c697f65891e5275c67c4a85641df66d32a7d6b33b42758fa9"
+            "metaBytes": 3507,
+            "metaSha256": "13eb0afbec64e3106ec0f0d33250ad398238cd4bfffb95b5cd7634ac3673113a"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Width.png",
             "guid": "f62789832fb13a04790a71600ea12a5a",
             "bytes": 425,
             "sha256": "6e428805fb98e76b86b2d59a2547413a6927a454d896a7983e5b4f590ed8c532",
-            "metaBytes": 3364,
-            "metaSha256": "acfc6f960c325faca0af895692c45e3512fb5381688dd4b927173eff62259f54"
+            "metaBytes": 3507,
+            "metaSha256": "0cf9a64cd4bf58177e0244b9f5cc194058ccf10f2bb975c27cb4e5940392489d"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/Icons/UMAHair_Width@2x.png",
             "guid": "1171ef646bc1c4243a6703821923a6c0",
             "bytes": 650,
             "sha256": "e01e4b4e54f23a035c0180b95ed9014c67afba64ffe693f7a1892d22e277745c",
-            "metaBytes": 3364,
-            "metaSha256": "1dd7560b6d2478308404064e49a8de21662021f80f1675142b924a0ba9e3bf2f"
+            "metaBytes": 3507,
+            "metaSha256": "f961916e8d58f80efc71f35ba9882413dd72ef3f548e2891c173789517186ee0"
         },
         {
             "path": "Assets/UMA/HairCards/Editor/UMA.HairCards.Editor.asmdef",
             "guid": "0fa4683855ec9c14ab00b07817de9993",
-            "bytes": 532,
-            "sha256": "32d3f6e058dbc16d9579ea453898870579a46014e8649ef07e09d7a08a41647e",
-            "metaBytes": 166,
-            "metaSha256": "e83895472dbfc467eda0292810067cab1297d931c0459c7ec63d562dcc0f38b4"
+            "bytes": 554,
+            "sha256": "08171a19da1657318c2f12ff1e82566f3e4cef5de67edfef4d1e22b2b8efb948",
+            "metaBytes": 173,
+            "metaSha256": "bce3a283aad05f27170b5d87583a70435acccd2f84998e55892995aa75b81629"
         },
         {
             "path": "Assets/UMA/HairCards/QA",
             "guid": "f097d14700670224bb75764bf21deb4c",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "40e3b201a768d2574132f91e4d4e66cdac332576e6ebc393d71a7e165c89c8b8"
+            "metaBytes": 180,
+            "metaSha256": "b79d25d00a8ecf10105323a3c493612972b3e8e23df72a7f9ae36a970e2c33ea"
         },
         {
             "path": "Assets/UMA/HairCards/QA/BraidSplineValidation.md",
             "guid": "be5206388ed9452f984cbd169aa3350f",
-            "bytes": 4799,
-            "sha256": "420ac6015c4fd1a924aabba823deb5656e9f87c41139714028bf7347e5a95579",
-            "metaBytes": 60,
-            "metaSha256": "8e00e06d6abf3a8c78412a32954307ff655ad8ad408a5cd5f8868866f06bba81"
+            "bytes": 4838,
+            "sha256": "855f15efadbbca5d0605c16681dd546c3f558e576dceef76341287f1fe9e9424",
+            "metaBytes": 62,
+            "metaSha256": "fe885fb706715b728b865a42bbe6365ef96d1fe7cd0ac2a97551180989f1b1a2"
         },
         {
             "path": "Assets/UMA/HairCards/QA/BraidedBunValidation.md",
             "guid": "3b318c6f5a874113b0fe63d64871172a",
-            "bytes": 7537,
-            "sha256": "ac8b497f38820dc4765d77511e917c6c5a7480c0b1286f83cf5d5960d9183477",
-            "metaBytes": 60,
-            "metaSha256": "459afd83cc2cecbae0db31b3c251b51c2c9f6ae6f0c30b8e79dffbe3da031235"
+            "bytes": 7603,
+            "sha256": "ce58ac90eecf517f129598eee5439732c6aecad1e2b7175139153ac3c3cf7dda",
+            "metaBytes": 62,
+            "metaSha256": "ec2363dc61a461b17dacf4956597e417b1cd6612883c7953900dcf966cfb72c0"
         },
         {
             "path": "Assets/UMA/HairCards/QA/CardScalpClearanceValidation.md",
             "guid": "f347f553ebc24952ad1b6d34291d9c6d",
-            "bytes": 4720,
-            "sha256": "1906ef7b354419cf3df1a314a8db246f688f6a82b6169896190a1591ecc74e86",
-            "metaBytes": 60,
-            "metaSha256": "1422c8b9287dcf40fe40f01de96d69f4f87c9608e4ad4c031529a480784e1c83"
+            "bytes": 4801,
+            "sha256": "8f0398e08f1b6e3b3e0949124492bc88bf5b846e8dfbf9d008e26e94cecf80cb",
+            "metaBytes": 62,
+            "metaSha256": "d3701f4a5f6e27a7393e0a2febcf50df922b09fa867dd19340e4fda34b4c8ffe"
         },
         {
             "path": "Assets/UMA/HairCards/QA/CurlyVolumeValidation.md",
             "guid": "b6b04c62c39f44e3b531d82ed15c43c8",
-            "bytes": 7620,
-            "sha256": "67db1e5639b3ef649418020563a65a2d47ac1504604b2c706ddfa8f79a1b3790",
-            "metaBytes": 60,
-            "metaSha256": "71df203ffef488c75303c7fa272f9ae2bd8976727ff6f9df5c8199de0209d480"
+            "bytes": 7742,
+            "sha256": "d546f3777c724d9f7129761c0cd43ae467226886df6fcd75ba3c12ebe17ab6c7",
+            "metaBytes": 62,
+            "metaSha256": "09e0ea7d6670aca736f6b5c73fb060c75311b2d12d8319684902390bbc682b4c"
         },
         {
             "path": "Assets/UMA/HairCards/QA/HairCardsManualQA.md",
             "guid": "c03ab034dd10b8949a94f723024dbd6a",
-            "bytes": 53470,
-            "sha256": "d61fb4aa9ef3e204109ceb0807a86bcefb4eee0b380eefa7a94dd8d87e730930",
-            "metaBytes": 158,
-            "metaSha256": "ed9dac4c1061048073f92881859f4a1853c029c1d0fccfd921f66b9d8aaf24be"
+            "bytes": 53760,
+            "sha256": "7926679ba83d0687ab6b27eb51b34de2a464347c19ca757211e112ef090c2952",
+            "metaBytes": 165,
+            "metaSha256": "41895b6cdd71cdbff78f77e83a09917fe90c134f9fe68b6c108465571827dc26"
         },
         {
             "path": "Assets/UMA/HairCards/QA/HairModifierCoordinateReview.md",
             "guid": "f69bd716ea63411cabd217a757d0b021",
-            "bytes": 6419,
-            "sha256": "7d9b6da9f350d2fdbe0d7a5a8cee49c58f14e15100b34996c63d32fa3e715676",
-            "metaBytes": 60,
-            "metaSha256": "3883ff4063dd452cb061d9e2ec5c15169ec0f814806da4fb24fa86964bac7d35"
+            "bytes": 6466,
+            "sha256": "43ec848d4784f823f593164923a2ba5ef267e5324a1ee245b123c743a1d114af",
+            "metaBytes": 62,
+            "metaSha256": "1d7b541d719daf144451f5eedf3f33880a59ea8aa331f493ea25c700bf22466a"
         },
         {
             "path": "Assets/UMA/HairCards/QA/NaturalHairValidation.md",
             "guid": "1a55cba9ba5542a3848f34ffae4f2e41",
-            "bytes": 5560,
-            "sha256": "78a370b79f92319be5ab134576a5c993b613eec930d9f57b58e870ff6c3b7498",
-            "metaBytes": 60,
-            "metaSha256": "de358c5412ccd218b5935811056ec56aa9f795c74e88a78c315b34f6a382a911"
+            "bytes": 5656,
+            "sha256": "63af9ce164a36f7b980abf7e2a5540c8f073846a874e50719131a75f3c2f7175",
+            "metaBytes": 62,
+            "metaSha256": "b4da93774cc8a91719485fb4fa779a46d3ba181bf8226f07240db377dd19af8a"
         },
         {
             "path": "Assets/UMA/HairCards/QA/NodeWorkspaceReview.md",
             "guid": "5cb43e3f00f648a7ab045431e1de5a53",
-            "bytes": 19219,
-            "sha256": "c41254c7814daafad96d945deafbb4b8ff3e35c4116254407afbec1d54d7682e",
-            "metaBytes": 60,
-            "metaSha256": "8dd144323e1806ce5372b770718a3f97a11a9297e467c4d8e8f489bb7f107470"
+            "bytes": 19339,
+            "sha256": "680ddb53e201564c9ff91d83ac14692898bf0c5763ef6a5fd8ccdfd965050a2c",
+            "metaBytes": 62,
+            "metaSha256": "b353f2f0771fbbfbf35674e36ea49bee9523f648b29020ca8b1bc7fd10620537"
         },
         {
             "path": "Assets/UMA/HairCards/QA/PaintPreviewValidation.md",
             "guid": "43d1f672e9cf456b98ebc712309ad028",
-            "bytes": 2777,
-            "sha256": "fd227ea8f4860896a719f0b6cd03d35eede8bff0ef39eb40f7d509fce13c6ffb",
-            "metaBytes": 60,
-            "metaSha256": "5cd51901886ce9364a25efd5bde0af7743ca7aa675ca1127f366dcade67280ff"
+            "bytes": 2828,
+            "sha256": "385948d2d00d895ee21bb190c732c8f89d15f3d6849850dc9cfbe225bbd6989c",
+            "metaBytes": 62,
+            "metaSha256": "611e2452102517ef4636f307e2a1742deee5c228cb57affc763c3dfb30dfb998"
         },
         {
             "path": "Assets/UMA/HairCards/QA/ProfileOpacityValidation.md",
             "guid": "812e8d71fef14296b0cae2dcb59e311b",
-            "bytes": 3352,
-            "sha256": "48551e490ea31b9f26fe652d3456c1d64ac70542218f63fdff996cab42428d9f",
-            "metaBytes": 60,
-            "metaSha256": "e11e32eeb247ff7b9b9a395387fd4e04af4716758655b247351fe5b9174c3a00"
+            "bytes": 3410,
+            "sha256": "35f40f162448669dcd5762b2f19d399efb3d4a1f6a79dabf6e81275e161bdac2",
+            "metaBytes": 62,
+            "metaSha256": "03a91740f18a9ef9843c514312b9df51a4aa092dc3da717167100a49c2c6b5d1"
         },
         {
             "path": "Assets/UMA/HairCards/QA/RegularHaircutValidation.md",
             "guid": "cd205576635848c79e439f2948e031ea",
-            "bytes": 8954,
-            "sha256": "0613d8d1e2497d978b693f544ddea9ecd5d035198a19724943d11aaa591a9235",
-            "metaBytes": 155,
-            "metaSha256": "fdcf4058ff28244626ec6a851acb29fe6ccadbe235497958d2a971692f22d9e7"
+            "bytes": 9103,
+            "sha256": "d6fbb96f54616d5a0511e51eca9fdfcc49721d5c1724d3c9b15f0e41bba1ed2a",
+            "metaBytes": 162,
+            "metaSha256": "55a0e53938983e8d1fe326e80ce7633ee1a531453a6b8605a07fefb63f3a0526"
         },
         {
             "path": "Assets/UMA/HairCards/QA/Run-HairCardsReleaseGate.ps1",
             "guid": "bbc6a0b9ac6945c99f0f3147a2068f19",
-            "bytes": 6176,
-            "sha256": "b55bac9f58addb44fced10c4df19d46e52ddabe78794669dc5170b1e862d66da",
-            "metaBytes": 60,
-            "metaSha256": "1a28f05cb0b3d8e68134a0b3949514a4bb5c6cec38db73c04630277b361570ad"
+            "bytes": 6277,
+            "sha256": "6adf28ba2a06d63518abaf2295fae8ad999351032899c0b56a1b8166a3f2f683",
+            "metaBytes": 62,
+            "metaSha256": "230df52d6a3f0c405a98ff84655492a99522854f12276b6e3686ddd496372dfd"
         },
         {
             "path": "Assets/UMA/HairCards/QA/SweptClumpsValidation.md",
             "guid": "bcd1b3b6ad4f48309b9cabd7bf7e5f36",
-            "bytes": 11921,
-            "sha256": "df4260cae8d9518d67130e2274278b1f86f6eaa6b35feb950f102ac09b0b8b67",
-            "metaBytes": 155,
-            "metaSha256": "a94fa589460dd081704f400b5a4afd19145fd7a9e78092da759f4b73d38d9865"
+            "bytes": 12115,
+            "sha256": "548f437770ac6f31cc73b630208f559a2dc2820fc00b906459e1e9e8b8ca6d08",
+            "metaBytes": 162,
+            "metaSha256": "5b09865d358be2da72a01d1cebabf1e083c22021858f450a13bdd6f0534020a5"
         },
         {
             "path": "Assets/UMA/HairCards/QA/TextureMapsValidation.md",
             "guid": "0531b63c027a441ebf3ae9aeb5560372",
-            "bytes": 6232,
-            "sha256": "f4e9c983c261689388fc3fb8934b14e739c53a2c544b090f2955e583ff665c59",
-            "metaBytes": 155,
-            "metaSha256": "ee37c7597480a5124bba766cf7db6b965bbda3197660b41b65506b0e39068b61"
+            "bytes": 6345,
+            "sha256": "caafd6f051a0caa67a56440cf61e503a63034be26bc142c7735c83ece04d6623",
+            "metaBytes": 162,
+            "metaSha256": "4ce37f78429865f815c82f78716975dc85475dd166447e345796c5b78a4ccb57"
         },
         {
             "path": "Assets/UMA/HairCards/Runtime",
             "guid": "16b84378af82419449b9c8bde229682f",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "50a86d50b8dc3b53b8ce907816186d0f215ca1592833cfaa94f96906fe073113"
+            "metaBytes": 180,
+            "metaSha256": "828c3848d4401199b708c40fc18871033daaa7da4d79367f77c0c9c9525d5dc7"
         },
         {
             "path": "Assets/UMA/HairCards/Runtime/HairGroomRuntimeAPI.cs",
             "guid": "81b45fc06322deb4eadd9bb55678c6e6",
-            "bytes": 4353,
-            "sha256": "2f59bcf1fa4eb23cf9756b0807740beca01551cf84e816141faf4815803ef8c1",
-            "metaBytes": 59,
-            "metaSha256": "47d38c6b5776ee642177169ce8b46ebae7569e90742baaa1170419012ff15fc5"
+            "bytes": 4451,
+            "sha256": "9107b32a27970c2a34989612523bccb267444f9a5b2c7e260d9514952038e502",
+            "metaBytes": 60,
+            "metaSha256": "2765daa281df4c427ae759fa50f90bb12d463fe17557a002da1699a5d3797923"
         },
         {
             "path": "Assets/UMA/HairCards/Runtime/HairGroomRuntimeComponent.cs",
             "guid": "91315dd7fdacd8c4d9f0f948b70cf0e0",
-            "bytes": 3155,
-            "sha256": "c136ae317ad909c1f5d26f1cf48391095f867e28549256e554d0b5c349d63d95",
-            "metaBytes": 59,
-            "metaSha256": "eeec54a521f8c8ad1779d45644c1881a1d13e7f19b2acc4f858b7e7a7ba8730f"
+            "bytes": 3241,
+            "sha256": "1f7a294c9a6ed0717b405755e83c579f676fcf2ac52352e019e2dc654cf1001b",
+            "metaBytes": 60,
+            "metaSha256": "5ddacc79c5d359df10b9edc9ac8087f8700301b177309e85832da089a472e5fa"
         },
         {
             "path": "Assets/UMA/HairCards/Runtime/HairHelperId.cs",
             "guid": "eac911151135e2043a06a8f26104eda1",
-            "bytes": 705,
-            "sha256": "e4c4ece3ca5ef9755e5eaaaded861c9934cef7d995d34125afcf75858dccd9a1",
-            "metaBytes": 59,
-            "metaSha256": "45502bc305813da6b6243fc1584e1ff56bd3541f1d5d8201d363e47429a26a57"
+            "bytes": 733,
+            "sha256": "dc960742e7f36e9a10fe66df8e28aeb4aa879a159594e4a64b1817f76292fcda",
+            "metaBytes": 60,
+            "metaSha256": "b1ebeb751f0f0e8ab99374e23725356daf68fdb9e943a79c91ebbd4926025246"
         },
         {
             "path": "Assets/UMA/HairCards/Runtime/UMA.HairCards.Runtime.asmdef",
             "guid": "c70e0f7aff1a1c64a8fac02948d54367",
-            "bytes": 430,
-            "sha256": "f03f02e06c3114bd82ef2ebbaf9fa478633fe626262c810d06eac831dea9a38c",
-            "metaBytes": 166,
-            "metaSha256": "5da351eef2338f118badfae912a10b1e988266b6ecaf5eaefb7df58645a90d7d"
+            "bytes": 447,
+            "sha256": "2b7819fc488f4a8b83575189fa615e056b4cfc96c0081957c2f76a3d75774711",
+            "metaBytes": 173,
+            "metaSha256": "82e697ed29bc4287f7574303c8595189d9bfd4cf1c34e0abc6fb4cbcfdcd4b83"
         },
         {
             "path": "Assets/UMA/HairCards/Shaders",
             "guid": "4246cf02be08b05ca395b597c826a45a",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 171,
-            "metaSha256": "332dfd115d0f50d17e6c834ba298b85d698015d5474a146e40f9c444d16f5fb6"
+            "metaBytes": 179,
+            "metaSha256": "ab00015cbd184f6fb04e9aaa4c277e78dd9c19163a837361ba5127870e36edfb"
         },
         {
             "path": "Assets/UMA/HairCards/Shaders/HairTextureMap.shader",
             "guid": "0976d5a9ed5c4cb195a1544b497a25da",
-            "bytes": 2683,
-            "sha256": "283051ee71bb7d823cb7d54221f075b7d5c89ac843793b8d1c1043d49be7df9d",
-            "metaBytes": 60,
-            "metaSha256": "2860fa094b65ed1936028ff2bac6ad8105024d1013313a49d95f1118cb446b4b"
+            "bytes": 2735,
+            "sha256": "2c54ec5b947c0aa6f8fdadc8158daf68221465d452e06e8a9951adcf8cec4781",
+            "metaBytes": 62,
+            "metaSha256": "ed5462baba2879c6400ec56b312bf6cca85c0c9017b344ac6de95f1c34c13fc0"
         },
         {
             "path": "Assets/UMA/HairCards/Tools",
             "guid": "08a48667a41d4d7193feee03f37a766c",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 169,
-            "metaSha256": "54e432668745af7beadeee5ae79422b942f76cae30dcde0e74dd262470057f07"
+            "metaBytes": 177,
+            "metaSha256": "427012ca1f7ddc4de376028c59ebf2f43511d095db1cc398d8a695c9e94e810b"
         },
         {
             "path": "Assets/UMA/HairCards/Tools/export_authored_guides.py",
             "guid": "63fd1d1b55d64fcebd991f936731f617",
-            "bytes": 6237,
-            "sha256": "d76f79382d206a3c41931bb36faee3c7111d622a056a9832f8f780956930a442",
-            "metaBytes": 152,
-            "metaSha256": "a461da194c0a7224e025158227b02dc92c3702a4ce8e0e51ea0b2320274ecf9b"
+            "bytes": 6350,
+            "sha256": "38fceb19fcce18c8758e8338624370df9f3d67fd029722feab03e3ad628027ba",
+            "metaBytes": 159,
+            "metaSha256": "0d6546fea71b6c4ad73fc11af83030626f068aeb2006366e43fc0a589773bed8"
         },
         {
             "path": "Assets/UMA/HairCards/UMAPluginDocumentation.json",
             "guid": "85a3027fb7caddc4cb924aad4a6b1540",
-            "bytes": 110,
-            "sha256": "22607581a2d22551850ba4b7025d290ce58412d373d8a3a7e2ec60d5115b1b80",
-            "metaBytes": 158,
-            "metaSha256": "50dcd33172aef5677db4a4f70cb4f08201867aebcb1879d2770120ac4ea670d1"
+            "bytes": 115,
+            "sha256": "354252c87dd020a95b373c03ccd4f7d37326332e98bbe24fdc11e3b70ed118ef",
+            "metaBytes": 165,
+            "metaSha256": "0eba9e5bb93b067e30a0f0b8f0dc3bcb87f59068bb53d691588acc72f824fe04"
         }
     ]
 }

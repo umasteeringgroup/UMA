@@ -1915,7 +1915,7 @@ namespace UMA.Editors
             Vector3[] normalSums = new Vector3[vertexCount];
             int processedTriangleCount = allTriangles.Count / 3;
             if (processedTriangleCount == 0 ||
-                new UMABuddyNormals(vertices, allTriangles.ToArray()).Recalculate(vertices, normalSums, weightNormalsByTriangleSize) == 0)
+                new UMABuddyNormals(vertices, allTriangles.ToArray()) { Sides = slotDataAsset.NormalSidesFor(vertices.Length) }.Recalculate(vertices, normalSums, weightNormalsByTriangleSize) == 0)
             {
                 return "No valid triangles found.";
             }

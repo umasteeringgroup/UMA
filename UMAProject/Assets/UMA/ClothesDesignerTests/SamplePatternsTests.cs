@@ -22,9 +22,9 @@ namespace UMA.ClothesDesigner.Editor.Tests
         }
 
         [Test]
-        public void Samples_AreTwenty_AndEachMeshesWithEverySeamSewn()
+        public void Samples_AreThirtyOne_AndEachMeshesWithEverySeamSewn()
         {
-            Assert.That(SamplePatterns.All.Length, Is.EqualTo(20));
+            Assert.That(SamplePatterns.All.Length, Is.EqualTo(31));
             var names = new HashSet<string>();
             foreach (var sample in SamplePatterns.All)
             {
@@ -38,8 +38,11 @@ namespace UMA.ClothesDesigner.Editor.Tests
                 for (int s = 0; s < pattern.seams.Count; s++) Assert.That(sewn.Contains(s), Is.True, sample.name + ": seam " + s + " has no stitches");
                 foreach (PatternSeam seam in pattern.seams)
                 {
-                    // Rib bands and cuffs are drawn shorter on purpose, to gather what they are sewn to.
-                    Assert.That(Mathf.Abs(PatternEditing.SeamMismatchCm(pattern, seam)), Is.LessThan(12f), sample.name + ": a seam's sides differ by more than a gather");
+                    // Rib bands and cuffs are drawn shorter on purpose, to gather what they are sewn to: by up to 12 cm, or a
+                    // gathered bodice or skirt taken in by up to half (the Elastic Waist Dress's skirt into its band).
+                    float la = PatternEditing.SpanLengthCm(pattern.FindPiece(seam.a.pieceId), seam.a), lb = PatternEditing.SpanLengthCm(pattern.FindPiece(seam.b.pieceId), seam.b);
+                    bool gather = Mathf.Abs(la - lb) < 12f || Mathf.Min(la, lb) >= 0.5f * Mathf.Max(la, lb);
+                    Assert.That(gather, Is.True, sample.name + ": a seam's sides differ by more than a gather (" + la.ToString("0.#") + " and " + lb.ToString("0.#") + " cm)");
                 }
             }
         }
@@ -66,7 +69,7 @@ namespace UMA.ClothesDesigner.Editor.Tests
             try
             {
                 List<string> first = SamplePatterns.SaveAll(folder);
-                Assert.That(first.Count, Is.EqualTo(20));
+                Assert.That(first.Count, Is.EqualTo(31));
                 string guid = UnityEditor.AssetDatabase.AssetPathToGUID(first[0]);
                 List<string> second = SamplePatterns.SaveAll(folder);
                 Assert.That(UnityEditor.AssetDatabase.AssetPathToGUID(second[0]), Is.EqualTo(guid));

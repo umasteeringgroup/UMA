@@ -387,7 +387,7 @@ The panel follows the selected layer type:
 | Path | Path shape and generator controls; channels use Path Strength and Lock Path Updates where applicable |
 | Projection | Placement and projection settings, symmetry, and projected channel sources |
 | Plugin | Generator parameters, output settings, and channel blending |
-| Group | Group opacity/blending, masks, region placement, and references; no authored-channel section |
+| Group | Group opacity/blending, masks, region placement, references, and **Edit Paths Together**; no authored-channel section |
 | Reference | Content source, UV placement, tint, masks, and channel preview/blending |
 
 Instances hide inherited content settings while retaining editable local placement and masks.
@@ -918,6 +918,14 @@ Use them for:
 - Controlled scars, cracks, or painted lines.
 
 Path layers are described in detail under [Surface Paths](#surface-paths).
+
+#### A group's paths together
+
+Put Path layers in a group to work on them as a set: a garment's trims, the stitching of one panel, the straps of a harness. While the group, or any Path layer in it, is selected, every visible path in the group is drawn faintly in the Scene view and in the UV window, and the one under the pointer brightens. Click a path to select its layer for editing, as clicking it in the Layers panel does; the others stay drawn, so you can click straight on to the next. The selected path's own points and handles take their clicks first, Shift-click and Ctrl-click still add and insert points, and paths can still be selected one by one in the Layers panel.
+
+This is the group's **Edit Paths Together** option, in its properties, on by default; turn it off for a group whose paths should stay out of the way. Paths in groups inside the group count too, unless their group is hidden. Paths laid on the model in 3D (rather than in UV) are drawn and picked in the Scene view only.
+
+Trims handed over by the Clothes Designer (**Publish and Open in Overlay Painter**) arrive in a group of their own named **Trim**, which is selected when the painter opens, so all of them show at once.
 
 ### Projection layer basics
 

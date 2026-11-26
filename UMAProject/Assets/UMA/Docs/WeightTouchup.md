@@ -71,6 +71,24 @@ Every painted result is normalized. **Replace** and **Add** can bind the selecte
 
 Enable **Selected Vertices Only** to use the Select mode selection as a paint mask. Enable **Auto-mask Connected Vertices** to protect co-located vertices on other visible slots; this helps prevent a correction from opening a cross-slot seam.
 
+## Copy Weights from the Body
+
+**Copy Weights from the Body** gives the slot new weights from the character's other slots in one step. Use it when clothing came from another rig, or when its weights were never good, before you touch up the details by hand. Click **Copy Weights from the Body...** under the Bones and Weights panels; it opens a window of its own, which closes with Touchup Weights. Make the window taller to see more slots: the **Copy From** list takes all the room the settings above it and the button below it do not use.
+
+1. Choose the **Method**. **Robust Inpaint** suits most clothes; hover over a method to see when to use it. The methods are explained in [Copying Bone Weights to Clothes](WeightTransfer.md). **Auto** tries three methods in seven test poses and keeps the best. Simulated Fit needs the cloth simulation, so it is only in the Clothes Designer.
+2. Under **Copy From**, untick any slot that should not give weights. For example, untick other clothes to copy from the body alone. **All** and **None** tick or untick the whole list. Every slot is ticked to start with; a slot you untick stays unticked the next time, on any character that has a slot of that name.
+3. With **Selected Vertices Only**, only the selected vertices get new weights. The others keep theirs, and the copied weights are filled in to meet them, so there is no step at the edge of the selection.
+4. Set **Match Distance**, **Match Angle**, **Max Bones** and **Mirror Left/Right** if needed.
+5. Click **Copy Weights**.
+
+The new weights are staged like painted ones. They show on the character at once, the whole copy is one Undo step, and **Revert** in Touchup Weights puts the slot's own weights back. Nothing is written to the slot until **Save Weights**. The copy is made in the character's own pose; bones you turned in Pose Mode are put back for it and turned again afterwards. Under the button, the window then shows how each tried method scored in the test poses, and what the vertices got (copied, filled in, from the field), including any vertices that were deep inside the body. Touchup Weights shows the same summary beside its button.
+
+The window remembers its method and settings, the unticked slots, and its size and place.
+
+## Remembered Between Sessions
+
+Touchup Weights opens at the size and place it had when it was last closed (when it was floating rather than docked), with the bone **Search** text you last used. When the character has the slot you last worked on, that slot is chosen again, and so is the bone you last weighted on it. Otherwise the first slot and its main bone are chosen, as before.
+
 ## Pose Mode and the Skeleton
 
 Weights can only be judged in a pose that bends the joint in question. **Pose Mode** turns the bones of the character you are editing, without leaving Touchup Weights.
@@ -149,4 +167,4 @@ This is expected for numeric editing. The first selected vertex supplies the val
 
 Weight Touchup saves to the shared source `SlotDataAsset`. This is intentional. Duplicate the slot and update the relevant recipes first when the correction should apply only to a content variant.
 
-See also [Content Creation](ContentCreation.md) and [SlotDataAsset](SlotDataAsset.md).
+See also [Copying Bone Weights to Clothes](WeightTransfer.md), [Content Creation](ContentCreation.md) and [SlotDataAsset](SlotDataAsset.md).

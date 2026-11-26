@@ -39,11 +39,11 @@ namespace UMA.ClothesDesigner.Editor
         public int[] SourceTriangles => slotTriangles;
         private int[] weldGroup;
 
-        /// <summary>The clothing slot's place in the stage character's combined mesh.</summary>
-        private static bool FindWorn(VertexEditorStage stage, SlotDataAsset slot, out SlotData worn, out int index)
+        /// <summary>The clothing slot's place in a character's combined mesh.</summary>
+        private static bool FindWorn(UMA.CharacterSystem.DynamicCharacterAvatar character, SlotDataAsset slot, out SlotData worn, out int index)
         {
             worn = null; index = -1;
-            SlotData[] slots = stage.Character != null && stage.Character.umaData != null ? stage.Character.umaData.umaRecipe.slotDataList : null;
+            SlotData[] slots = character != null && character.umaData != null ? character.umaData.umaRecipe.slotDataList : null;
             if (slots == null) return false;
             for (int i = 0; i < slots.Length; i++)
             {
@@ -52,9 +52,8 @@ namespace UMA.ClothesDesigner.Editor
             return false;
         }
 
-        private static Vector3[] WornVertices(VertexEditorStage stage, SlotData worn, int count)
+        private static Vector3[] WornVertices(SkinnedMeshRenderer renderer, SlotData worn, int count)
         {
-            SkinnedMeshRenderer renderer = stage.CharacterRenderer;
             var baked = new Mesh();
             try
             {
@@ -79,18 +78,21 @@ namespace UMA.ClothesDesigner.Editor
         }
 
         /// <summary>Binds the slot as it is worn now. Call this before changing the body.</summary>
-        public bool Bind(VertexEditorStage stage, BodyReference body, SlotDataAsset slot)
+        public bool Bind(VertexEditorStage stage, BodyReference body, SlotDataAsset slot) => Bind(stage.Character, stage.CharacterRenderer, body, slot);
+
+        /// <summary>Binds the slot as a character wears it now, through the renderer that draws it.</summary>
+        public bool Bind(UMA.CharacterSystem.DynamicCharacterAvatar character, SkinnedMeshRenderer renderer, BodyReference body, SlotDataAsset slot)
         {
             Messages.Clear();
             IsBound = false;
             Source = slot;
-            if (slot == null || !FindWorn(stage, slot, out SlotData worn, out slotIndex))
+            if (slot == null || !FindWorn(character, slot, out SlotData worn, out slotIndex))
             {
                 Messages.Add("The slot is not on the character.");
                 return false;
             }
             VertexCount = slot.meshData.vertexCount;
-            Bound = WornVertices(stage, worn, VertexCount);
+            Bound = WornVertices(renderer, worn, VertexCount);
             Current = (Vector3[])Bound.Clone();
             slotTriangles = slot.meshData.submeshes != null && slot.meshData.submeshes.Length > 0 ? slot.meshData.submeshes[0].GetBaseTriangles() : new int[0];
             weldGroup = WeldByPosition(Bound);
@@ -109,13 +111,33 @@ namespace UMA.ClothesDesigner.Editor
             }
             BodyRevision = body.Revision;
             IsBound = true;
-            CurrentInBindSpace(stage, out BindRoundTrip);
+            CurrentInBindSpace(character, renderer, out BindRoundTrip);
             if (BindRoundTrip > 0.001f)
             {
                 Messages.Add("This slot's mesh does not match how it is worn here (" + (BindRoundTrip * 1000f).ToString("0.0") + " mm apart): a refit saved from it may be offset. Was it converted from another rig?");
             }
             if (Unbound > 0) Messages.Add(Unbound + " vertices are more than " + Mathf.RoundToInt(BindingDistance * 100f) + " cm from the body and keep their place. They are drawn in magenta.");
             return true;
+        }
+
+        /// <summary>The slot's vertices as a character wears it now (renderer space), or null when it does not wear it.</summary>
+        public static Vector3[] WornPositions(UMA.CharacterSystem.DynamicCharacterAvatar character, SkinnedMeshRenderer renderer, SlotDataAsset slot)
+        {
+            if (slot == null || !FindWorn(character, slot, out SlotData worn, out _)) return null;
+            return WornVertices(renderer, worn, slot.meshData.vertexCount);
+        }
+
+        /// <summary>How many of the positions are inside the body (the bound slot left out), by more than <paramref name="tolerance"/> (m).</summary>
+        public int CountInside(BodyReference body, Vector3[] positions, float tolerance)
+        {
+            if (!IsBound || positions == null) return 0;
+            BodyCollider collider = BodyWithoutSlot(body);
+            int inside = 0;
+            foreach (Vector3 p in positions)
+            {
+                if (collider.Closest(p, out _, out _, out float d) && d < -tolerance) inside++;
+            }
+            return inside;
         }
 
         /// <summary>Like <see cref="BodyCollider.Closest"/> but searches further, for loose clothing.</summary>
@@ -192,11 +214,13 @@ namespace UMA.ClothesDesigner.Editor
         /// through the character's current skeleton.
         /// </summary>
         /// <remarks><paramref name="roundTripError"/> compares the bound shape, unskinned, with the slot's own vertices; it is only meaningful on the body the slot was bound on.</remarks>
-        public Vector3[] CurrentInBindSpace(VertexEditorStage stage, out float roundTripError)
+        public Vector3[] CurrentInBindSpace(VertexEditorStage stage, out float roundTripError) => CurrentInBindSpace(stage.Character, stage.CharacterRenderer, out roundTripError);
+
+        /// <summary>The current shape in the slot's bind space, through a character's current skeleton.</summary>
+        public Vector3[] CurrentInBindSpace(UMA.CharacterSystem.DynamicCharacterAvatar character, SkinnedMeshRenderer renderer, out float roundTripError)
         {
             roundTripError = 0f;
-            FindWorn(stage, Source, out SlotData worn, out _);
-            SkinnedMeshRenderer renderer = stage.CharacterRenderer;
+            FindWorn(character, Source, out SlotData worn, out _);
             Mesh shared = renderer.sharedMesh;
             var bonesPerVertex = shared.GetBonesPerVertex();
             var weights = shared.GetAllBoneWeights();
@@ -235,7 +259,7 @@ namespace UMA.ClothesDesigner.Editor
             if (beforeNormals != null && beforeNormals.Length == bind.Length)
             {
                 var normals = (Vector3[])beforeNormals.Clone();
-                new UMABuddyNormals(Source.meshData.vertices, slotTriangles).Follow(Source.meshData.vertices, bind, beforeNormals, normals);
+                new UMABuddyNormals(Source.meshData.vertices, slotTriangles) { Sides = Source.NormalSidesFor(Source.meshData.vertices.Length) }.Follow(Source.meshData.vertices, bind, beforeNormals, normals);
                 copy.meshData.normals = normals;
             }
             string folder = Path.GetDirectoryName(AssetDatabase.GetAssetPath(Source)).Replace('\\', '/');

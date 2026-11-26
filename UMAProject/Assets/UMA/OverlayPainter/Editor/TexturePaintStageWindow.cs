@@ -792,6 +792,8 @@ namespace UMA.TexturePaint.Editor
             TextureSet hoverSet = targetHover ? controller.Textures.FindSet(hoverSurface.index) : null;
             if (targetHover && !authoringSplineLayer && CanStartFreehandPaint(hoverSet)) DrawCursor();
             DrawVisibleSplines();
+            // After the selected path's own handles, which take their clicks first.
+            if (TryPickGroupScenePath(current)) return;
 
             if (!current.alt && current.button == 0)
             {
@@ -4925,6 +4927,7 @@ namespace UMA.TexturePaint.Editor
             if (controller?.Textures == null) return;
             if ((uint)selectedSurface >= (uint)controller.Textures.Sets.Count) return;
             TextureSet set = controller.Textures.Sets[selectedSurface];
+            DrawGroupScenePaths(set);
             int layerIndex = set.activeLayerIndex;
             if (!IsActiveSplineAuthoringLayer(set, layerIndex)) return;
             TexturePaintSpline layerSpline = set.layers[layerIndex].spline;

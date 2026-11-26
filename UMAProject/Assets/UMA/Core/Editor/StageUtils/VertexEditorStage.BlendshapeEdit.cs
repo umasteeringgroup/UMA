@@ -627,11 +627,22 @@ namespace UMA
         }
 
         /// <summary>
+        /// As <see cref="ShowStageForSlots(RaceData, IList{SlotDataAsset}, out string)"/>, with the overlay to
+        /// draw each slot with (<paramref name="overlays"/>[i] for <paramref name="slots"/>[i]; a missing or
+        /// null one is looked for near the slot). For slots whose overlay is known, such as clothes just
+        /// made, and which need not be in the Global Library.
+        /// </summary>
+        public static VertexEditorStage ShowStageForSlots(RaceData race, IList<SlotDataAsset> slots, IList<OverlayDataAsset> overlays, out string message)
+        {
+            return ShowStageOnTemporaryCharacter(race, slots, true, out message, overlays);
+        }
+
+        /// <summary>
         /// Builds the temporary character of a race, puts it in the modelled pose and opens the editor
         /// on it. With <paramref name="requireSlots"/> the given slots are added to the character and
         /// become the only editable ones; without it the character is the race's base recipe alone.
         /// </summary>
-        private static VertexEditorStage ShowStageOnTemporaryCharacter(RaceData race, IList<SlotDataAsset> slots, bool requireSlots, out string message)
+        private static VertexEditorStage ShowStageOnTemporaryCharacter(RaceData race, IList<SlotDataAsset> slots, bool requireSlots, out string message, IList<OverlayDataAsset> overlays = null)
         {
             message = null;
             if (!CloseOpenVertexEditor())
@@ -674,13 +685,16 @@ namespace UMA
                 var names = new HashSet<string>(StringComparer.Ordinal);
                 var added = new List<KeyValuePair<SlotDataAsset, OverlayDataAsset>>();
                 UMAData.UMARecipe recipe = avatar.umaData.umaRecipe;
-                foreach (SlotDataAsset slot in slots ?? (IList<SlotDataAsset>)Array.Empty<SlotDataAsset>())
+                IList<SlotDataAsset> wanted = slots ?? (IList<SlotDataAsset>)Array.Empty<SlotDataAsset>();
+                for (int s = 0; s < wanted.Count; s++)
                 {
+                    SlotDataAsset slot = wanted[s];
                     if (slot == null || UMAMeshData.IsNullOrEmptyMeshData(slot.meshData) || !names.Add(slot.slotName))
                     {
                         continue;
                     }
-                    OverlayDataAsset overlay = UMARigProfilePreview.FindOverlayFor(slot);
+                    OverlayDataAsset given = overlays != null && s < overlays.Count ? overlays[s] : null;
+                    OverlayDataAsset overlay = given != null ? given : UMARigProfilePreview.FindOverlayFor(slot);
                     if (overlay == null)
                     {
                         names.Remove(slot.slotName);

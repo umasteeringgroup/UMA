@@ -898,6 +898,7 @@ namespace UMA.Editors
 				umaMaterial.ShaderName = sourceMaterial.shader != null ? sourceMaterial.shader.name : string.Empty;
 				umaMaterial.channels = BuildChannelsForMaterial(sourceMaterial, GetSelectedTexturePropertyNames());
 				UMAMaterial.EnsureSupportedChannelTextureFormats(umaMaterial.channels);
+				UMAMaterial.EnsureChannelTypesForMaterialType(umaMaterial.materialType, umaMaterial.channels);
 
 				EditorUtility.SetDirty(umaMaterial);
 				AssetDatabase.SaveAssets();

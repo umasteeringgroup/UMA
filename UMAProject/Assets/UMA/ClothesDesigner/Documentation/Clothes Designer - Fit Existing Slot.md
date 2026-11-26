@@ -2,6 +2,8 @@
 
 Fit Existing Slot moves clothing you already have onto a different body shape, keeping everything else about it: its vertex order, UVs, bone weights and blendshapes are not changed.
 
+To turn modelled clothes into a pattern you can simulate and recut instead, use **From Clothes**: [Tutorial 5: Working from Existing Clothes](Clothes%20Designer%20-%20Tutorial%205%20-%20Working%20from%20Existing%20Clothes.md) covers both and says when to use which. All guides are listed in [Start Here](!Clothes%20Designer%20-%20Start%20Here.md).
+
 ## Steps
 
 1. Select the clothing's slot or wardrobe recipe and choose **Editors > Plugins > Clothes Designer**. The clothing is put on a default body of a race that wears it.
@@ -16,5 +18,5 @@ The original slot asset is never changed.
 ## Good to know
 
 - Bind on the body the clothing was made for. Binding checks that the slot's mesh matches how it is worn, and says so if it does not (for example clothing converted from another rig).
-- The refit follows the body's surface. Very loose parts, like a long skirt or a cape, keep their distance from the body rather than draping; use the pattern workflow for those.
+- The refit follows the body's surface. Very loose parts, like a long skirt or a cape, keep their distance from the body rather than draping; use the pattern workflow for those (**From Clothes**, or a new pattern).
 - Normals follow the change of shape, so authored normals keep their character.

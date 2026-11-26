@@ -377,12 +377,15 @@ namespace UMA
             pageInitialized = false;
             RefreshSkinningQualityLevels();
             EditorApplication.projectChanged += InvalidatePluginStatus;
+            // A plugin build rewrites installed manifests in place; show the built versions straight away.
+            UMA.Editors.PackageSupport.UMAPluginPackageBuilder.InstalledManifestsChanged += InvalidatePluginStatus;
             InvalidatePluginStatus();
         }
 
         public void OnDisable()
         {
             EditorApplication.projectChanged -= InvalidatePluginStatus;
+            UMA.Editors.PackageSupport.UMAPluginPackageBuilder.InstalledManifestsChanged -= InvalidatePluginStatus;
             Instance = null;
             if (Application.isBatchMode || isAssemblyReloadingOrQuitting)
                 return;

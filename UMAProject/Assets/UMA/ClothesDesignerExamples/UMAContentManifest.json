@@ -24,11 +24,20 @@
         "Assets/UMA/ClothesDesignerExamples/Patterns",
         "Assets/UMA/ClothesDesignerExamples/Patterns/A-Line Skirt.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Beanie.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Belted Dress.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Boxer Shorts.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Bra.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Briefs.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Circle Skirt.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Coif.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Crop Top.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Elastic Waist Dress.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Face Mask.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Forte Shirt.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Hauberk.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Hoodie.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Jeans.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Leather Armor.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Leggings.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Long-Sleeve Tee.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Oxford Shirt.asset",
@@ -41,8 +50,43 @@
         "Assets/UMA/ClothesDesignerExamples/Patterns/Socks.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Sundress.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Sweatpants.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Swimsuit.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/T-Shirt.asset",
         "Assets/UMA/ClothesDesignerExamples/Patterns/Tank Top.asset",
+        "Assets/UMA/ClothesDesignerExamples/Patterns/Tunic.asset",
+        "Assets/UMA/ClothesDesignerExamples/Previews",
+        "Assets/UMA/ClothesDesignerExamples/Previews/A-Line Skirt.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Beanie.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Belted Dress.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Boxer Shorts.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Bra.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Briefs.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Circle Skirt.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Coif.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Crop Top.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Elastic Waist Dress.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Face Mask.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Forte Shirt.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Hauberk.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Hoodie.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Jeans.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Leather Armor.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Leggings.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Long-Sleeve Tee.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Oxford Shirt.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Pencil Skirt.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Pleated Skirt.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Polo Shirt.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Sheath Dress.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Short Pants.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Sleeveless Vest.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Socks.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Sundress.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Sweatpants.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Swimsuit.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/T-Shirt.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Tank Top.png",
+        "Assets/UMA/ClothesDesignerExamples/Previews/Tunic.png",
         "Assets/UMA/ClothesDesignerExamples/README.md",
         "Assets/UMA/ClothesDesignerExamples/UMAContentManifest.json"
     ],
@@ -52,184 +96,536 @@
             "guid": "5bb85edf264e9b94c8aaca18157cf6ad",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 172,
-            "metaSha256": "eefa4dfd5f52e1f1e746fbafc776aa04eac8e63812cbe69c046c3346fd55ae9a"
+            "metaBytes": 180,
+            "metaSha256": "baf8571caa8b2fecb575fd097e2625a2e911d01ed8e2cc515c6df58bb9c711c8"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/A-Line Skirt.asset",
             "guid": "43ff44ae2c375b4478577bf161b0df50",
-            "bytes": 4724,
-            "sha256": "72a7ab624750076d20c7b256dccbd78e69c36bb4a96603757f7698de5b0dc8af",
-            "metaBytes": 189,
-            "metaSha256": "3548f70d11034c373034b005e221dcc1518232b6e649700d4c3d8b6e81e38979"
+            "bytes": 4826,
+            "sha256": "cf4011cac93f09e62c7b21fcbed844065bbd229a4384867f1b5f4375b0d25014",
+            "metaBytes": 197,
+            "metaSha256": "88ce4c8141e2fd33f8460d2eba04e67f3370cd67a069787b30883d7e5eacefdf"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Beanie.asset",
             "guid": "254bdc0d0186d9d4386ffc443acdc8c6",
-            "bytes": 7690,
-            "sha256": "0dca18abf6b60012cd517a5c6052d01d41ec5aa3f5a078293680359935db088d",
+            "bytes": 7894,
+            "sha256": "fc4459c65b8bc1f2d0449b9e3403a336fecfb89a82fe6b459fcd2a7ecac24f43",
+            "metaBytes": 197,
+            "metaSha256": "ac385d0ad60c26ea0810dbcb001124223e626085467ec2f40c7a427c78ee38c4"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Belted Dress.asset",
+            "guid": "46eb72f8fb8329241af19e599e02f5f0",
+            "bytes": 25418,
+            "sha256": "d6bcf2c5ca28f945b2b39221601332acea8bae8f6f7d12a7c3c26ab2f179e77d",
             "metaBytes": 189,
-            "metaSha256": "546e8c8d5a03d5af5f2b5e1f7b967aad7e978d133afa5ac72157293d5d658d5d"
+            "metaSha256": "13535b22504e3eee72ee35f7528db42a84473488c49cc4d137d0c5866e0adcdd"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Boxer Shorts.asset",
             "guid": "f5e9dbcf0535ecc4c993b8fdb8aa5dcf",
-            "bytes": 18641,
-            "sha256": "9fe62ac49a31ca2b936d062bc3075e1cfcc2b407093e9026c2a90e5e39a9def1",
+            "bytes": 19087,
+            "sha256": "aefe21076ee57d8dba73ac101c9a1b0568118cd836ad6659775d40d1943aba85",
+            "metaBytes": 197,
+            "metaSha256": "525a4d3059590cfd469ec5e0d95e023d4dfc962ba3b8c3777f0df07655de633c"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Bra.asset",
+            "guid": "76d252e3fba792f4aa5bf45e663ded80",
+            "bytes": 22572,
+            "sha256": "4b91d28c0a3a1465571a33382c26c69db2e547ab22d87ce3bb5755e94b4f1d7c",
             "metaBytes": 189,
-            "metaSha256": "c58e67c3885741955852e2bea7a9c260239ba3c6ef1edca7dc637c54633a3953"
+            "metaSha256": "d298abd9891c77b75343b0cef2aae65dcab33ed6ccdc8d8b763768c10654f1a3"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Briefs.asset",
+            "guid": "be1693b47a7455b4a8b0df16ca9523d9",
+            "bytes": 13808,
+            "sha256": "a8fbae97480b283b5b7b59246f7854ef6d397a668dce0ca04556fa4a6a696774",
+            "metaBytes": 189,
+            "metaSha256": "01c85eaa54b2f3fe51a6b3eeb9c96c9ff670a60ab5c08d68f7a515e9259b2bc2"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Circle Skirt.asset",
             "guid": "52311d1892c15cb4890132ad61489475",
-            "bytes": 8898,
-            "sha256": "44e58ddd04620c2ce93bdc6485655db6e7d1f49fd21459dafbbc33e43b93355d",
+            "bytes": 9102,
+            "sha256": "371467b6733daa4b64235fc0a17eb3aaf7122acadfe38d41dbbe6150937dd737",
+            "metaBytes": 197,
+            "metaSha256": "52d428fbe16bff4c9adf8661032d94f3fda3a03fe0493662eb8d48601a9d8f97"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Coif.asset",
+            "guid": "a35a45bb491f7eb4fa31b25f0cbb93b7",
+            "bytes": 8109,
+            "sha256": "98549a1ec0983afa0a04123c0b0ea709fb685f9f7bdf09371a82a47d1adb68b6",
             "metaBytes": 189,
-            "metaSha256": "1d78aa6ad4d6a98e6d55831e444bc1d0c87c1a8fb2541cd3af9870990504dd7b"
+            "metaSha256": "40fbfd5ef015f6fc34973a1cf1e7d831ede7d2fad017f38f145eda170f1e9ad6"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Crop Top.asset",
             "guid": "df793f016effc124d94f76fb3085e3b0",
-            "bytes": 7781,
-            "sha256": "1b5db13f2ad04485d2640a1206cbffe1a773eb61862fc92a2c4283bee068caf2",
+            "bytes": 7911,
+            "sha256": "c6e736084183f7eaae82cf44d81df90d187bc7bea6af1e15df424007c885499c",
+            "metaBytes": 197,
+            "metaSha256": "69e290553394ffbfc95e5f2025eaa9cdc449e87a3a9edd2bfdcf2e054e22305d"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Elastic Waist Dress.asset",
+            "guid": "39ac81a2ca9123d4bb91415e390d3916",
+            "bytes": 31506,
+            "sha256": "ff187ee6aaa8759577e3f735593b55014e0e5629638c8cbbce2c068a0d494906",
             "metaBytes": 189,
-            "metaSha256": "534ce88bb497045a0ac31e24e9cf3baff34537318327af91d90eea265e5ac785"
+            "metaSha256": "648297ee66bf5982294e78c3f4431f059a1c69a2c3cf488ee208a076a62386d3"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Face Mask.asset",
+            "guid": "9ae466bce9bce0641bc2696bc3794c4e",
+            "bytes": 8570,
+            "sha256": "58b7a68775ed286550e25c0889a988f82e4d8f977d7c1d9e91aeba1647e20c27",
+            "metaBytes": 189,
+            "metaSha256": "814aeb65af5e35e9919ef09e0c745bc86fd49ac374280405cc3fcae9ff46be7e"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Forte Shirt.asset",
+            "guid": "09fc8ac193004034796393b5cf178019",
+            "bytes": 22571,
+            "sha256": "dde3e668e9eedf0c5c1500120e0ef1ee822a30ae9878406cf50ac88ef9551b38",
+            "metaBytes": 189,
+            "metaSha256": "1e2113b76cf72291c402cf5d429a6ae3c596c509f8d6683f7be31ded9ea433c9"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Hauberk.asset",
+            "guid": "23012bc8e93115f4aa92a9fba650b006",
+            "bytes": 19978,
+            "sha256": "aa9b64014e9b8d2cade03938718b1ba017dcb9c0bac0cc618cebdff3c93d17ee",
+            "metaBytes": 189,
+            "metaSha256": "dc89b7605365b152dfc988d0625032b6174c8fff1fcaf8754cf67b94a8a9c19a"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Hoodie.asset",
             "guid": "7445e30f05a210943957f2f933cc4796",
-            "bytes": 28183,
-            "sha256": "ac4940cea83e1affd0feb61917aa0344727301af473b03ce7b11075f825e7b91",
-            "metaBytes": 189,
-            "metaSha256": "0a82dade2a349ad033c5d0e2bac4ef6ff622675ac30dcd3666c58e550a9ba402"
+            "bytes": 28889,
+            "sha256": "9cb213717d32c451c70f59dba41861c11b31da3b4bde2c8d22c03e30e1151a29",
+            "metaBytes": 197,
+            "metaSha256": "1d225c889c3131c30e16543520476e3c0b9f8bd750bd43704f3453e18a30d5c8"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Jeans.asset",
             "guid": "12e4a54e9b63f0c4da0af0c110d114b0",
-            "bytes": 19267,
-            "sha256": "19c463724c144c0bdf05a4b1581286e6676263896ac3fd65fc58ab1ec77c4b13",
+            "bytes": 19713,
+            "sha256": "e832407ddfd414e687e49153c907673e45e53af75da149054d85bc094b8b79fe",
+            "metaBytes": 197,
+            "metaSha256": "1955c72b6cde7f8c8d3ca70e12746e7ecf2134cda24ee041ae71823e35bb76c6"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Leather Armor.asset",
+            "guid": "834ec66e5b5700842863d1db4888ee3f",
+            "bytes": 27032,
+            "sha256": "30678631977251d544b3e6924619d3f738ebba8f851e952b4e127061f5ffeb26",
             "metaBytes": 189,
-            "metaSha256": "849946bed14d8743bcd9c1701b3184bdcf6c53bf6c9bcd3b35c8070bae2f9528"
+            "metaSha256": "a7bbc7a5f78dd28a4e1e523d7e44ce69a4f8cb862efbe47b0e2f74e0aa1edd9e"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Leggings.asset",
             "guid": "c0e984dc65f5f924186e04f7a6a802b8",
-            "bytes": 14150,
-            "sha256": "d729292810f5e91909e6c33c3adfcd5285de126c52f5e1bdfd5ee0fad02525c9",
-            "metaBytes": 189,
-            "metaSha256": "a357d2c820e9c00669ef83443bf6131c9b8a7f5bc72d90d89235b327c21718aa"
+            "bytes": 14438,
+            "sha256": "884847ee9a2f2ba97a376967ecb1d897e6f6597bd050c724b0849630a57f7140",
+            "metaBytes": 197,
+            "metaSha256": "489741dfdd2003c89fae9ef3582d951912235cdd31a1d138b0ecea1159918677"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Long-Sleeve Tee.asset",
             "guid": "95c1c0bcbead7f2439885b8b778472e5",
-            "bytes": 14177,
-            "sha256": "d0491ba6c61942da4af3f17446dd314c6eb88d59f5593336348e184560a53ff7",
-            "metaBytes": 189,
-            "metaSha256": "1145250bd87a3936f85377971bbee06e6f7ba3277d71f6c7f0a5c9cdb92889fa"
+            "bytes": 14465,
+            "sha256": "3d617810efde27f9393a60f88911512c583997dfaed93a87069c67673da97972",
+            "metaBytes": 197,
+            "metaSha256": "0b196294c5c02641711f428a9c32667d287741b9fa6f518aef04b842fffb6992"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Oxford Shirt.asset",
             "guid": "5d9ebcf4014d4a94b97805c09e7ba9fe",
-            "bytes": 24175,
-            "sha256": "f62d923250ad451c165a0342b5db5590d700387a9383a16323c0fe7c89634153",
-            "metaBytes": 189,
-            "metaSha256": "e3f61de3bc807bb7805c297d9df3e4d46a78e8342f19cfebf3753cd60a5aa774"
+            "bytes": 32204,
+            "sha256": "b13d1d4228d6458d4418704375fed8f0d68943fd61830a265236432b227829b2",
+            "metaBytes": 197,
+            "metaSha256": "0f62defd8e08c7ddef5d6628560f8dc28778feaa504b9566c04fa375fb46040c"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Pencil Skirt.asset",
             "guid": "3176403585fa3bf45b63759e63c2f160",
-            "bytes": 7318,
-            "sha256": "9f6aa5029edce97f3d043ef9ea593a1430547244e3aa81d47ce4c8bfe1867308",
-            "metaBytes": 189,
-            "metaSha256": "b53480fe02e838af4a0585a7e514aceec71f278270e8367830a731361e8097d0"
+            "bytes": 7448,
+            "sha256": "29049dc9979bcd911444012d7800205b787f63ca67d760243ac75fa4d9a23056",
+            "metaBytes": 197,
+            "metaSha256": "0bc8df8fc69b0f2f0744b645f69c7cd219b5d01b8897284a53b2aaac2b9a22b9"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Pleated Skirt.asset",
             "guid": "1461344adb89d674e9d7286f4b36c540",
-            "bytes": 8334,
-            "sha256": "fee7c4b793949062a671d6cf47da216025649f8798257f9e0c97a88b1940ea2d",
-            "metaBytes": 189,
-            "metaSha256": "994e67c587d78742cdad0fa2a856008fee878b34ae8ad42fc91fedd523057087"
+            "bytes": 8436,
+            "sha256": "bcaf2aca0775bd2455db5767f4ea5e78d102e961ba5c71591ac83ba015369c65",
+            "metaBytes": 197,
+            "metaSha256": "d6eebed9ee79cc56a1a5a9a1d98914f1b6ed1cc369d8aadae09473aec57f9166"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Polo Shirt.asset",
             "guid": "14ed2ca14a39d3645a500d5d51f25164",
-            "bytes": 16919,
-            "sha256": "f2368d8459c7d5e597d8454f574e8082750cd267cb664df307b5aa3783b5ff24",
-            "metaBytes": 189,
-            "metaSha256": "c69fd7cde2a35f7f98e69429d04fd3b8971e1e861231e30e1b9fc904125a9250"
+            "bytes": 25452,
+            "sha256": "94d8eccaea08faf3b197eb5b807f2261a03eeab0e3ef173e0fcb83b5ec01df91",
+            "metaBytes": 197,
+            "metaSha256": "befdda7fe175fd04480c42769421af122b3d2b3d482cc5f8c5f930e4d1df0ca5"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Sheath Dress.asset",
             "guid": "b50e51992067ec9438fead4af1a2ddd0",
-            "bytes": 10306,
-            "sha256": "6c07d7b70e8c0a8fccfa545132d66168b608e88c2c200d64731f8960b70e006d",
-            "metaBytes": 189,
-            "metaSha256": "627e5be87bd212456e7f457ded038dc386102e246fc9368023e99269e2335909"
+            "bytes": 10464,
+            "sha256": "1df36ba8c360ce9edb410ddfc4d6ddd58036680d7ff6593b839c734275bafdd3",
+            "metaBytes": 197,
+            "metaSha256": "d8b6c11a603097d0e4d9fa59fe1ab3b526f99dddc6a3a409abbde781bf57d0c3"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Short Pants.asset",
             "guid": "95484be78814b8d44851dde4111612f2",
-            "bytes": 13600,
-            "sha256": "09cc3ce017fa3824443567916b6c0cbb139b5b7a6b876bd648f7892538368175",
-            "metaBytes": 189,
-            "metaSha256": "4cddfdcf3db54af6f6f8d11e1be16acf5594e0321a06f3e03e15656949868714"
+            "bytes": 13888,
+            "sha256": "3f56cb3f24ade2f79ed30c23f91e253ba94ae33f511fc0deace59f4417b7c3c6",
+            "metaBytes": 197,
+            "metaSha256": "9e147f963f46ca56c5e95325485ce88986361df64fb9c4d79d493f93127a2306"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Sleeveless Vest.asset",
             "guid": "c0a78546b89fad947b91885a68f3a212",
-            "bytes": 7813,
-            "sha256": "b8e85ab13b44746b1e50e72690e38a4d9286b8f9ae5e4b8f6691c0ac0feddd2f",
-            "metaBytes": 189,
-            "metaSha256": "cc01d01dabcbb7771da327ec1f8f1cee56adeb3e2c349cf61cfa6ac825960427"
+            "bytes": 8106,
+            "sha256": "23abfe4bbe0ab57206a14ed3cc7bee55e557090a8f83f97d3cd818ce53979c7d",
+            "metaBytes": 197,
+            "metaSha256": "ae5f8a21077159ff5203b35f30f9bda1989913eabfb3907df2e8b68bbfcdb262"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Socks.asset",
             "guid": "3883fe90c970ea54f9896484cc53d6dd",
-            "bytes": 13667,
-            "sha256": "92917a6d536a8619353117753ccd30a4fc2909c7051abeb41ff660f21aabb936",
-            "metaBytes": 189,
-            "metaSha256": "b3ab4a8a6e2f8b6c316b3e352e8ce825d48f9fe6032a6078ae474f85b1c2f227"
+            "bytes": 18176,
+            "sha256": "b95f5f4902d69d57897f945f7b7ed66f453f3666e053b1b4962896728bbc0046",
+            "metaBytes": 197,
+            "metaSha256": "bc915db89a80d7a287155e680711bc2546b8d96baf23642996c42b5c1a0163b6"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Sundress.asset",
             "guid": "de703592b948f0f4e9f5f2d22a1ca2cf",
-            "bytes": 7897,
-            "sha256": "bfba5b29c84adbb014e582ed4ccd50f431b4f1b866e9b9db57ed0f6b5467367e",
-            "metaBytes": 189,
-            "metaSha256": "f5d0910f50f686db48b2e7b022c8cb45fe229c165f60a72fc7862a5bcbc86693"
+            "bytes": 8027,
+            "sha256": "5ca803c6ce33a64ba2d252ef6a744b798a13cb85d35e949a5a45c80182709b2c",
+            "metaBytes": 197,
+            "metaSha256": "ed8828d33344e0fc4e8479abcae4b45b22a59d88a6cb0c147d170e0d6df6b732"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Sweatpants.asset",
             "guid": "f2897a71032d6474f9c7015e236dc7c8",
-            "bytes": 24353,
-            "sha256": "7e657ab18f774066a2b438ae62d0e43e9f4ed42a59248b8e1f29c9065cb60bad",
+            "bytes": 36317,
+            "sha256": "44d70f21e9c6dca4930d0740eeb2cfbe35079afef995e31c90deec95362e2d5c",
+            "metaBytes": 197,
+            "metaSha256": "5ddd13a8e14449c7e2891100d2a1c9ad60c524b7debe7e7bef99a7db385bf928"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Swimsuit.asset",
+            "guid": "4ccad69ed356e284b87a9b243480d643",
+            "bytes": 13618,
+            "sha256": "2e7ae7d1ab57350fac87a2e198f24db6406f9dacdae0921a4cb8700558e26cc7",
             "metaBytes": 189,
-            "metaSha256": "a2565b8f5ece4c290dddc61405ce434431d7fd462aec84b1c45f381eb38999cd"
+            "metaSha256": "5095ca00cb399411cffac9b4b77aadde75d1ea5b8b74b424a1f6590b3394943b"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/T-Shirt.asset",
             "guid": "5e944cb64ba8c2b4ab0065d0ec98dc03",
-            "bytes": 13988,
-            "sha256": "9922a04a8f2e58b264e04d6b80bf817e8e103905fa9e20b11b3257bbbc73171f",
-            "metaBytes": 189,
-            "metaSha256": "2f6f88ad8c89caaa71fa1e4e85469a77229b08886f567c86a4028dd7deb6e96e"
+            "bytes": 14276,
+            "sha256": "94a7e80be7458f5464f15416d34fbeb363113419beda90ad91ca5d63c744bbe2",
+            "metaBytes": 197,
+            "metaSha256": "c21ea44ee886b09f48bf1e4ff47da6faf84cc3c1c93b5a4c47ae853086779aad"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Tank Top.asset",
             "guid": "d19ffdb1db1eb96408bdc61969fa8d04",
-            "bytes": 8004,
-            "sha256": "b59c505e5d21887f7823e4c734cfef163b16f9d97b3dbdbaa5273a5c7411a2c8",
+            "bytes": 8134,
+            "sha256": "d6bfced9c803a4d88dc433c54e06d084f9a0dc85d8ad2a5081fbbf168a3f6ee3",
+            "metaBytes": 197,
+            "metaSha256": "660d5f6635f0ae444794978e9200a2a15cad4bef073151281e0358a459725a74"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Patterns/Tunic.asset",
+            "guid": "b6bdc2c80337b8a4b8aa65cc45f837c4",
+            "bytes": 18169,
+            "sha256": "abb7857fbeb90fc33d7bbdfc3a082b8fe7bb151dd90fe9404d54298d24dbe912",
             "metaBytes": 189,
-            "metaSha256": "04d9de2a444a3ff3d15eb318a7d8d031d7c363ea55e817ab58467a0fbbd2979e"
+            "metaSha256": "3f824d5d303150919537c8337f627a47967baed36d7582cf41e5948be1bdb287"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews",
+            "guid": "b9bd64aeddaa1c64ea384ff8bb11035d",
+            "bytes": 0,
+            "sha256": "",
+            "metaBytes": 172,
+            "metaSha256": "98500412fab346e72611e64107ff6a50d77702dcc4fc6a8ee647acb62f94cbaa"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/A-Line Skirt.png",
+            "guid": "512215c8f2b4fbd4f8eed66be3685ad6",
+            "bytes": 29957,
+            "sha256": "b9461f2d58c6afa7539d6e35bd836c34b6c3fad24bab70ac0cba38f83ae5eeec",
+            "metaBytes": 3364,
+            "metaSha256": "2d1884f07c8174043781e106aaae52252d20940f5cd2798b2f406e7b47984d39"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Beanie.png",
+            "guid": "864cd618ebe21be43ac7baec036e2ba1",
+            "bytes": 23107,
+            "sha256": "3362f469f99b475e72f52a9ca4c6df4b7b7999ee9299a8191f9f4d08ae88f501",
+            "metaBytes": 3364,
+            "metaSha256": "83328e2d1716bbcd3ccf31a5dedeecd726c87194a2a4b7004b1e7e6493c6a12c"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Belted Dress.png",
+            "guid": "83677787c693c8640b3243edf5cd72fa",
+            "bytes": 31723,
+            "sha256": "edec2581522f88078d53045ec5e8fc3e06cc76a546a15cca862486690edab1c1",
+            "metaBytes": 3364,
+            "metaSha256": "fd443001f454c1387f2cd1affdb693ff288e51b65a770227fab8d898d0e4aebd"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Boxer Shorts.png",
+            "guid": "a3ab49767f351df4397bfc19a4a5ae41",
+            "bytes": 32450,
+            "sha256": "88406991e05fed6e58a8ff2d3a63070bd28e23754dcbc47c614e9e13ce988766",
+            "metaBytes": 3364,
+            "metaSha256": "ebfd44a52d40eb4d3907b98de0d7a4a868504d7561868236ae6810bc762e012a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Bra.png",
+            "guid": "de02ec8f701155845a4923a8d9ad4e7e",
+            "bytes": 42063,
+            "sha256": "9df65fcbf89e357987b37d93611ed29297aa674b7fd5bd1536f182428260721e",
+            "metaBytes": 3364,
+            "metaSha256": "cc3b1534c22b4c22a28fac378703ce5dc993710d85bf11a063e2f007a9949ad6"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Briefs.png",
+            "guid": "7b5e77f50a2db5f43a3266444fb4dce1",
+            "bytes": 36620,
+            "sha256": "6ba62a0dd8e7a15c0110e6b9259d0596a1ee05a22ee40d088660b578d07cfb45",
+            "metaBytes": 3364,
+            "metaSha256": "d43aae6a8e669731a3d814834de28bfbc22fa71d4b793459b22b5b1ddc298a64"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Circle Skirt.png",
+            "guid": "966e759525122d048b1a15e4f581e7db",
+            "bytes": 34266,
+            "sha256": "b4b9ad006de0fc550e314b2d34ed6059cf4edd8cc8489686195306af94fb054b",
+            "metaBytes": 3364,
+            "metaSha256": "1f6671a938c2e7093527c1ad27cc279adde9cb9ef7f2f941056bd1be6bddfef3"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Coif.png",
+            "guid": "7b941fc2778b9244ea75056a8bd7de40",
+            "bytes": 26073,
+            "sha256": "600aff2830db119ba8e612500bc51da3717e5e65f9cc648d7a3a23606960368b",
+            "metaBytes": 3364,
+            "metaSha256": "133b51529b07fa90b63e7d96ae6b2cc7a0d5c17c98557af2b5d48774bc8a466d"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Crop Top.png",
+            "guid": "48b548fbea3221745a303844ef8ff465",
+            "bytes": 36306,
+            "sha256": "3e7b1477ea4425949ff99aab042f4fdb073f1acd622ea70e8ccbfa994adeb6f4",
+            "metaBytes": 3364,
+            "metaSha256": "894831ce793b8b8e26417a1d9f7ec6f2341f15d7ab67a15d4593f9b250f7db17"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Elastic Waist Dress.png",
+            "guid": "4cd5cdbac406fb54798d1f9e0cc531a6",
+            "bytes": 30838,
+            "sha256": "f22d796b2662cc20444bfc4282d96f0f9b8cada21e3ec3e92d293b1fb15e8f5e",
+            "metaBytes": 3364,
+            "metaSha256": "67cbd2c2e33ed4df2b076ab882cd4fe2d5c1f11db150295e20e0f1930f00a325"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Face Mask.png",
+            "guid": "ddc15b29bf245e640ad226dd945b863f",
+            "bytes": 34298,
+            "sha256": "0d6bf57ec291402862effef2289210566fd92b53cfcc2feaa56095dba685e906",
+            "metaBytes": 3364,
+            "metaSha256": "d2795e8d9b09a0bdb8c8e3356902cccb2983005d73ea51b2323ad94c3cdf581a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Forte Shirt.png",
+            "guid": "38bd2148cabb41946a455ed4b0c5806d",
+            "bytes": 32430,
+            "sha256": "37887f4dcdfcebaee0ac00cd7b6b3fda82b71e8b6d1e4315c58c6b8ecc8822a6",
+            "metaBytes": 3364,
+            "metaSha256": "68f1628065fb3a547a4d952d80fb163e9b2a64a51e0bc699685b1c340b4dccdc"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Hauberk.png",
+            "guid": "4c527337331812141896529603693a3c",
+            "bytes": 24765,
+            "sha256": "009297a2b70ea29cc1f47a39200954f859f31c6e927b7b081f0d769329c0e597",
+            "metaBytes": 3364,
+            "metaSha256": "cb51a795f7936733991cb6819658ede09e7bf4a48a9fb61fad11ea6faacc5b5b"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Hoodie.png",
+            "guid": "43ad00ff194af4e4cb506dae9311f33d",
+            "bytes": 24095,
+            "sha256": "688cbe569af7cb35b1b768039849ff5beac7db7a4cd099e9f8aa3153b74f7d0d",
+            "metaBytes": 3364,
+            "metaSha256": "df0f6caff707665db62195d25576f9dbba61d3d6926e3bc7a89b2cac956707ad"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Jeans.png",
+            "guid": "370a7bf9e07ed4845908324b9d39171a",
+            "bytes": 24726,
+            "sha256": "a992915f08fce090b4eca3d40c29409e235f5dbe04dead8ae44775c035cbb43b",
+            "metaBytes": 3364,
+            "metaSha256": "99dbc38ea686c2e402d46290ce0f0c179118ff3301d7caed297cb36fb89e47f3"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Leather Armor.png",
+            "guid": "c333792331658984a8de0437eaf4e157",
+            "bytes": 32461,
+            "sha256": "1aa45e2d80c697c42c4f682c9dc5730dbb1c60eb6a06fb8c38f9bb6078c87391",
+            "metaBytes": 3364,
+            "metaSha256": "e819352eeb17031ebe4e1e6f6737004952174cca7423d3955bdb0a94028e4d06"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Leggings.png",
+            "guid": "9d9f56f1d3ba3544b8acf85ab3d56354",
+            "bytes": 23138,
+            "sha256": "8a421129c8e74ad59a896d67844dbac42ec5cea564b0178b8452214b8517f263",
+            "metaBytes": 3364,
+            "metaSha256": "93c5d44a1ccbff3de8e22d115cfb5d2f77da0ce6f2226c00c4f88e5f22d5e57a"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Long-Sleeve Tee.png",
+            "guid": "f6e8fe261d2a27c4ebb252299f613232",
+            "bytes": 23203,
+            "sha256": "0077540c6a23fca17172584001879ecb5d40971ef9358b7a1f796c6f3b910e28",
+            "metaBytes": 3364,
+            "metaSha256": "24a790d01327583aa87c254c7d702ac05a11479635d5805251e018f61941c7e6"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Oxford Shirt.png",
+            "guid": "b4c281c18ed4a6e418b138a75e8772a2",
+            "bytes": 24467,
+            "sha256": "33846a5756bede92ab6733fb01e5e2084faf486646630fc1cb7652580dceb641",
+            "metaBytes": 3364,
+            "metaSha256": "2df805ef9fa98b4ace1507446bf07c0642b72d294b7cb97cb963b36cb3b5128e"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Pencil Skirt.png",
+            "guid": "cc00311a4dbc89e43890c596649636b3",
+            "bytes": 33235,
+            "sha256": "8cbdd330f33daba28f30bec926c73647a426308348cc92e421957a1fe7f4a32f",
+            "metaBytes": 3364,
+            "metaSha256": "5c8798e0e191808e72f27442a7f5ec4943a8cf84458dffd1983e95dad1179d62"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Pleated Skirt.png",
+            "guid": "36c60e069367f22459ebfcb8d619a289",
+            "bytes": 47301,
+            "sha256": "f8a8896905cbddf2f0ce33254f73c0c73c08da21767b5c75c8e233841d4a3aeb",
+            "metaBytes": 3364,
+            "metaSha256": "bb599d093e7097c13286352f488ce6b111763d7efb15a357aa93eaa49012b3bb"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Polo Shirt.png",
+            "guid": "6e25c832d6da6f247bb8100ee27e8629",
+            "bytes": 32281,
+            "sha256": "56c58818e8293b824d41ca60cdef53eb942af2a8e707d2a8c500917f493e6bfc",
+            "metaBytes": 3364,
+            "metaSha256": "9ecde2de1b816b065ead0a5750025cbd63de2ddc93ade4cc0d7a80ce2e7b8fbd"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Sheath Dress.png",
+            "guid": "47d17ff04adebad44a891984fb7a8216",
+            "bytes": 29693,
+            "sha256": "06bf70431f3d991042ec0c63d4703c20aa38d40abb02baf2db1b8c31a5607895",
+            "metaBytes": 3364,
+            "metaSha256": "4232c25c68fb4c2763ed87d60b6680ab9c535f1885fd5967b8aa6ae4599d0975"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Short Pants.png",
+            "guid": "86270856d884f5f4d834366de56dcb3f",
+            "bytes": 33047,
+            "sha256": "279ff75e71e384caa9e8f78f4c545092413091e68b2fbf07d60c3db6014eabdd",
+            "metaBytes": 3364,
+            "metaSha256": "5182c08d2f01f1829ebe666699947b68c3e9780095c2e95cfbf786df45d545ca"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Sleeveless Vest.png",
+            "guid": "74dc6c17ae87df44696a668aecbf599e",
+            "bytes": 35944,
+            "sha256": "fb49cd1c9cf496733e259f6f2d49139f5e79bb3ccbd2ec59d61fe3bb3a63c257",
+            "metaBytes": 3364,
+            "metaSha256": "fa0ca45964c8a0b6d694b502ff96325f5fbc0048d79df11813cca4c9dc4b4a99"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Socks.png",
+            "guid": "4871a95da4c12c74bb9885b73fb2a7e1",
+            "bytes": 16715,
+            "sha256": "e20be46d3f688e45b06907a008cb9b4476472bb689fa86e735ea67db4a74baee",
+            "metaBytes": 3364,
+            "metaSha256": "1f3927c2cfcd66668af88f0dc1fa72faaa9c3d979eed18f491f7bfbd64fe8634"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Sundress.png",
+            "guid": "5ed3afe9cb513764286ae6f5336b0d49",
+            "bytes": 28153,
+            "sha256": "2c8c9e27a1a32926948d9d0890ec01acbaa958b70f7a33803d815d940fddd10a",
+            "metaBytes": 3364,
+            "metaSha256": "0bde9868b6c4cf096d9ee9846d21a271dd8ffd2a788d2e59f73d5835474076cb"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Sweatpants.png",
+            "guid": "8c7fb3540a96f7e49ae575c703082575",
+            "bytes": 25478,
+            "sha256": "a8b2148742082e96e7c627f18618678b941869c648856b57813a8d48c66fd230",
+            "metaBytes": 3364,
+            "metaSha256": "42221e24652cfe9edbc3f965a469664ecc7ebea4ca4be24656ad3c4a494f75a8"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Swimsuit.png",
+            "guid": "2dd7677558f5a1a4dac1c423cbac617a",
+            "bytes": 35774,
+            "sha256": "76c6be67f47574c036ec1e88bf6dd30a8581e32058e6d55360430f788d151f80",
+            "metaBytes": 3364,
+            "metaSha256": "69c4ce050164a93a18c542e1d537f082f54e7ae3a514a29ec6e5becdf9d22e9b"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/T-Shirt.png",
+            "guid": "7b3743848ebfd244d8947801677c178a",
+            "bytes": 33630,
+            "sha256": "0a3828b28dd91b86b59e4e8b0a791dcf3ebc0e377627601611af535d82972e20",
+            "metaBytes": 3364,
+            "metaSha256": "ebf1e45bd2eea9b75ed6d7825b3c36b098a81fda8d71d60f644d62d49b4073fa"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Tank Top.png",
+            "guid": "596894e6d7d0ce648a384ebaf43ded6c",
+            "bytes": 37170,
+            "sha256": "36bf982f73a9c82180e7cb379cc6dd0af8a2948ce8ed47ec5c7f6733e467799e",
+            "metaBytes": 3364,
+            "metaSha256": "b6cbc9369e4919e558c59dd601f7b1abb3c4f730890c4aa0baa8df3f35dee23c"
+        },
+        {
+            "path": "Assets/UMA/ClothesDesignerExamples/Previews/Tunic.png",
+            "guid": "0fbebe9ded4b8b34e9d68d832d3f9a0d",
+            "bytes": 24802,
+            "sha256": "a6e06fc4e58ed0827a7f31fcade37bb6f0f0706667479d90ec3bc44a901cb478",
+            "metaBytes": 3364,
+            "metaSha256": "63bac8861d4ff7fd65031e8f3f3819b1a95e32bf45a25b2a9959fa974337c872"
         },
         {
             "path": "Assets/UMA/ClothesDesignerExamples/README.md",
             "guid": "60ee5c5304cc38647a4e62a378074a60",
-            "bytes": 4307,
-            "sha256": "592516419ca67c7a2f3abb08ed8bfbe2dfa56e8d8421d91e29ccd4c32e9e0618",
-            "metaBytes": 158,
-            "metaSha256": "46bfb1094aa5e48391edc432ab3aedb66f6e0f48c67bc7bf1e112355c915af19"
+            "bytes": 6955,
+            "sha256": "29b21a7a0628b9f6da9497328a747ef5c0de3dcd03e771838a15b822b61e5968",
+            "metaBytes": 165,
+            "metaSha256": "fd1bfb55211839152073eec084e30e2f0f59b95d67416ae5c2688d0d02725dde"
         }
     ]
 }

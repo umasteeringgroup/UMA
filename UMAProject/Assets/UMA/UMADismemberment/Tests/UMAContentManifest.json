@@ -29,32 +29,32 @@
             "guid": "243a5a2fddf94d6bb323e8a55f7681ad",
             "bytes": 0,
             "sha256": "",
-            "metaBytes": 169,
-            "metaSha256": "07318cfd812a1ccbb7e524a2145343d896b593c093fb2dca753cdd1d659a44fc"
+            "metaBytes": 177,
+            "metaSha256": "d513b1731b25130c54a49d4fd7ccf015463871d67d23a5c5864931850cf7598d"
         },
         {
             "path": "Assets/UMA/UMADismemberment/Tests/Editor/DismembermentMeshBuilderTests.cs",
             "guid": "0d371f30f37c45358085157a1ce18c90",
-            "bytes": 90594,
-            "sha256": "7fb9e2559abc8c20917c4fc5e517f64f8b8e21c39ec94ca43e4e855570ef9bbd",
-            "metaBytes": 240,
-            "metaSha256": "825c095df8cdc7fe7dbfcbfd268d83a08d2c84d60b7fd633a30ec06e59185aa6"
+            "bytes": 92376,
+            "sha256": "5303c94a3ad839a9b2806c711b3550eacf57e53473f68b0bbe5ae89daf63fbb2",
+            "metaBytes": 251,
+            "metaSha256": "98af3bd7d42416dec2eaa606104f51da7471101ba248067ed256f2e31699dc97"
         },
         {
             "path": "Assets/UMA/UMADismemberment/Tests/Editor/SurfaceCutTests.cs",
             "guid": "8f50d92c09c849bf8728ba9d272ca2a1",
-            "bytes": 19593,
-            "sha256": "90ba25b95fe65efd0da8a3467cf049bdd05905f1892da830cc6d94abd05a052f",
-            "metaBytes": 60,
-            "metaSha256": "dbf8e74862c06ec3caa7a4ea653a2ae10e137357f44e40ddb5546a09cce64a9d"
+            "bytes": 20048,
+            "sha256": "b2d35fb7a3e449823110cb408ee3e127c0cd1e5c5a7eddf2c2950b15b81e830d",
+            "metaBytes": 62,
+            "metaSha256": "c9572c25146a5d4502a49aa249f86b4dfda52b9d78e21d340d460640469a9141"
         },
         {
             "path": "Assets/UMA/UMADismemberment/Tests/Editor/UMA.Dismemberment.Editor.Tests.asmdef",
             "guid": "d3fedf9d232a49f9958be21e4779b97d",
-            "bytes": 818,
-            "sha256": "bbf3bf40c54113763854524eb9738dbcf3ee9db4235d428cf9e51fe13c7988ba",
-            "metaBytes": 163,
-            "metaSha256": "b2c1034f17a300a3f1946697de1cd5b8750ce27158b7eabea5e1087fa966d195"
+            "bytes": 851,
+            "sha256": "d3e3bfe76cfe4c4343bfac6409ca26084b36becfa2e236db6bd78a5db640d68c",
+            "metaBytes": 170,
+            "metaSha256": "404c3a4e0bcac151b496ef43bc6d0d7e213e23497528780690611aa58ff2fea5"
         }
     ]
 }

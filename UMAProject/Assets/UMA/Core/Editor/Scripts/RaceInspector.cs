@@ -1492,6 +1492,17 @@ namespace UMA.Editors
 			// Automatic conversion of legacy slots built for the older rig this race replaces.
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("legacyRig"));
 			EditorGUILayout.PropertyField(serializedObject.FindProperty("legacyRigProfile"));
+			if (race.legacyRig == null || race.legacyRigProfile == null)
+			{
+				// An empty link is filled in from a cross-compatible race; say from where, so it is not a surprise.
+				UMARigRestPoseAsset usedRig = race.GetLegacyRig(out UMASlotRigConversionProfile usedProfile, out RaceData rigSource, null);
+				if (usedRig != null && (usedRig != race.legacyRig || usedProfile != race.legacyRigProfile))
+				{
+					string from = rigSource != null && rigSource != race ? rigSource.raceName : "a cross-compatible race";
+					EditorGUILayout.HelpBox($"Empty links are taken from {from}: Legacy Rig '{usedRig.name}', profile " +
+						(usedProfile != null ? $"'{usedProfile.name}'" : "none") + ".", MessageType.None);
+				}
+			}
 			if (GUILayout.Button(new GUIContent("Open Rig Profile Editor", "Adjust how legacy slots are aligned to this race's rig, against a live preview character.")))
 			{
 				serializedObject.ApplyModifiedProperties();

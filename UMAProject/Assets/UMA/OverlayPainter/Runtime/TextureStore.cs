@@ -354,6 +354,11 @@ namespace UMA.TexturePaint
         public bool pluginStale = true;
         public string pluginLastError;
         public string proceduralGroupKey;
+        /// <summary>
+        /// Groups: while the group, or a path layer in it, is selected, every visible path in the group is drawn in the
+        /// Scene view and the UV window, and clicking one selects it for editing. On by default.
+        /// </summary>
+        public bool editPathsTogether = true;
         public string sourceMaterialPresetId;
         public int sourceMaterialPresetRevision;
         public string sourceMaterialPresetLayerId;
@@ -1565,6 +1570,7 @@ namespace UMA.TexturePaint
                 pluginParameters = source.pluginParameters?.Clone() ?? new TexturePaintPluginParameterSet(),
                 pluginStale = source.pluginStale,
                 pluginLastError = source.pluginLastError,
+                editPathsTogether = source.editPathsTogether,
                 // A duplicate is independent. Sharing the procedural ownership key lets deleting
                 // either copy delete the other copy's generated peers.
                 proceduralGroupKey = preserveIdentity ? source.proceduralGroupKey : null,

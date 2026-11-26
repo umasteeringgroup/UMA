@@ -21,6 +21,9 @@
         "Assets/UMA2CompatibilityTests/Editor",
         "Assets/UMA2CompatibilityTests/Editor/UMA2Compatibility.Editor.Tests.asmdef",
         "Assets/UMA2CompatibilityTests/Editor/UMA2CompatibilityTests.cs",
+        "Assets/UMA2CompatibilityTests/Editor/UMA2FemaleBodyAreolaTests.cs",
+        "Assets/UMA2CompatibilityTests/Editor/UMA2LegacyRecipeLibraryHookTests.cs",
+        "Assets/UMA2CompatibilityTests/Editor/UMA2SkinDetailUVTests.cs",
         "Assets/UMA2CompatibilityTests/README.md",
         "Assets/UMA2CompatibilityTests/UMAContentManifest.json"
     ],
@@ -36,26 +39,50 @@
         {
             "path": "Assets/UMA2CompatibilityTests/Editor/UMA2Compatibility.Editor.Tests.asmdef",
             "guid": "0d1dfbd871bca854db0bf41eb55d31d5",
-            "bytes": 561,
-            "sha256": "4630200de29751f05e219b6e1fbb50f84279284925a01995bca0e0c1b9df4a2c",
-            "metaBytes": 166,
-            "metaSha256": "8f99a4e658f0169e3a68fde4e6832f80274f24d9ffdbf3d32992eadc89b76558"
+            "bytes": 572,
+            "sha256": "a6c9da918cfc904715935a7ad2b83108931f33d885667822a9081a7b4bf5a618",
+            "metaBytes": 173,
+            "metaSha256": "8b5306cfd35cd98ef2d9e2aa732213e8318bbd862df4a2ccdac05ecc7fc822cc"
         },
         {
             "path": "Assets/UMA2CompatibilityTests/Editor/UMA2CompatibilityTests.cs",
             "guid": "736b185f8736dc048aae7b822672102c",
-            "bytes": 10314,
-            "sha256": "883d9f955a766c2984b1208de6ffab26bd06c05efea9e7b5ec9cf5b55a09df21",
+            "bytes": 10504,
+            "sha256": "656d9c4fa6114379b5c34e3788e236403a1afc2783819f9011de1a33da6853e4",
+            "metaBytes": 60,
+            "metaSha256": "2b4d4dede6a0cb575f67c1fb309c839810dbfee3d606e766e6ef8956a53b2a5c"
+        },
+        {
+            "path": "Assets/UMA2CompatibilityTests/Editor/UMA2FemaleBodyAreolaTests.cs",
+            "guid": "5e92b3d9da49d1543a3018fcfa331dad",
+            "bytes": 7368,
+            "sha256": "c0790bdc54d6ef827368a54a73657f9ef342a27aec668f12a576960bd293790b",
             "metaBytes": 59,
-            "metaSha256": "a92fddbbba7f28a285c65d8d680b0da2aaa435ce678d10a66e81bc45a9d3da93"
+            "metaSha256": "9993c1ff5a92a9364d54abd819344c89bfb25a84c41a9539510f9ed7965b61fa"
+        },
+        {
+            "path": "Assets/UMA2CompatibilityTests/Editor/UMA2LegacyRecipeLibraryHookTests.cs",
+            "guid": "697c5370c22fd6c40896454220679c4e",
+            "bytes": 26479,
+            "sha256": "e61208b0ab684bf0b9623a682f676e5d6c50bc63e4871ec65c45015475a81d4d",
+            "metaBytes": 59,
+            "metaSha256": "375b3ffa2ed0de30561949300c44b4463c48baa797acb65e089283d17316bb5d"
+        },
+        {
+            "path": "Assets/UMA2CompatibilityTests/Editor/UMA2SkinDetailUVTests.cs",
+            "guid": "7d36ae13d9b54914cb942abb508dc163",
+            "bytes": 11243,
+            "sha256": "b4d46856837c391a232a6adba9971bd6c61a6c7d30c608a64fb947d4ef0a2384",
+            "metaBytes": 59,
+            "metaSha256": "4fa5a946f62d83fe9539f7f4de3cc3ca5ae19affd740c194b1dab686b136c695"
         },
         {
             "path": "Assets/UMA2CompatibilityTests/README.md",
             "guid": "d13cfe5583de483b8cb6c5562a38d0bc",
-            "bytes": 1157,
-            "sha256": "167522271ef2e24b9abb327fc2f7520ff421ebc3afb5ebfbe2b4e38af12a83e5",
-            "metaBytes": 158,
-            "metaSha256": "eeb36a7c4e974508fadc0c4a6c94ea9fdd0a605d309c135f8679d6a942f4f411"
+            "bytes": 2357,
+            "sha256": "761bb87c49665343545e7ceaf92ca567206b453fe1a4f6ab09666938178bf38f",
+            "metaBytes": 165,
+            "metaSha256": "284f1293e44237817bbabee9b343b5956b34b62ea8e01b15a25aec50bf69f40f"
         }
     ]
 }

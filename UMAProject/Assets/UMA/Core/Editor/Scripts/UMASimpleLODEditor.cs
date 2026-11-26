@@ -303,7 +303,7 @@ namespace UMA.Editors
                     for (int i = 0; i < slots.Length; i++)
                     {
                         var sd = slots[i];
-                        if (sd == null)
+                        if (sd == null || sd.isBlendShapeSource)
                         {
                             continue;
                         }
@@ -344,7 +344,7 @@ namespace UMA.Editors
                         for (int i = 0; i < slots.Length; i++)
                         {
                             var sd = slots[i];
-                            if (sd == null || sd.asset == null)
+                            if (sd == null || sd.isBlendShapeSource || sd.asset == null)
                             {
                                 continue;
                             }
@@ -424,7 +424,7 @@ namespace UMA.Editors
                 for (int i = 0; i < slots.Length; i++)
                 {
                     var sd = slots[i];
-                    if (sd == null)
+                    if (sd == null || sd.isBlendShapeSource)
                     {
                         continue;
                     }
@@ -458,7 +458,7 @@ namespace UMA.Editors
 
                 EditorGUILayout.Space(3);
                 EditorGUILayout.LabelField(
-                    string.Format("LOD variants: {0}  |  Base slots: {1}  |  Total: {2}", lodVariantCount, baseSlotCount, slots.Length),
+                    string.Format("LOD variants: {0}  |  Base slots: {1}  |  Total: {2}", lodVariantCount, baseSlotCount, lodVariantCount + baseSlotCount),
                     EditorStyles.miniLabel);
             }
         }

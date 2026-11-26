@@ -191,11 +191,103 @@ namespace UMA
 		[Tooltip("The compatibility pose for old UMA2 rigs. Old slots are converted to this race using this pose.")]		
 		public UMABonePose LegacyCompatibilityPose;
 
-		[Tooltip("Rest pose of the older rig this race replaces (for example the UMA 2 HumanMale rig on HumanMale30). Slots still flagged as legacy that were built for that rig are converted to this race's rig automatically when a character is built. Leave empty to turn this off for the race.")]
+		[Tooltip("Rest pose of the older rig this race replaces (for example the UMA 2 HumanMale rig on HumanMale30). Slots still flagged as legacy that were built for that rig are converted to this race's rig automatically when a character is built. Leave empty to use the Legacy Rig of a race this race is cross-compatible with; with none there, legacy slots are not converted for this race.")]
 		public UMARigRestPoseAsset legacyRig;
 
-		[Tooltip("Optional per-bone overrides used when legacy slots are converted for this race.")]
+		[Tooltip("Optional per-bone overrides used when legacy slots are converted for this race. Leave empty to use the profile of a cross-compatible race that has the same Legacy Rig.")]
 		public UMASlotRigConversionProfile legacyRigProfile;
+
+		/// <summary>
+		/// The Legacy Rig and conversion profile legacy slots are converted with for this race: the race's own
+		/// <see cref="legacyRig"/> and <see cref="legacyRigProfile"/>, each filled in, when empty, from the races this
+		/// race is cross-compatible with. A race cross-compatible with Human Male 3.0 that leaves both empty uses
+		/// Human Male 3.0's.
+		/// </summary>
+		/// <remarks>
+		/// An empty Legacy Rig comes, with its profile, from the first cross-compatible race (in list order) that has
+		/// one of its own or finds one the same way in turn. An empty profile next to the race's own Legacy Rig comes
+		/// from the first cross-compatible race that uses that same Legacy Rig; a profile made for another rig is never
+		/// used. Races are found by name in the Global Library, and a race that is not loaded (an addressable race at
+		/// runtime) is skipped, never loaded.
+		/// </remarks>
+		/// <param name="profile">The conversion profile, or null when there is none.</param>
+		/// <returns>The Legacy Rig, or null when neither this race nor a race it is cross-compatible with has one.</returns>
+		public UMARigRestPoseAsset GetLegacyRig(out UMASlotRigConversionProfile profile)
+		{
+			return GetLegacyRig(out profile, out _, null);
+		}
+
+		/// <inheritdoc cref="GetLegacyRig(out UMASlotRigConversionProfile)"/>
+		/// <param name="profile">The conversion profile, or null when there is none.</param>
+		/// <param name="rigSource">The race the Legacy Rig is set on: this race, or the cross-compatible race it came from. Null when there is none.</param>
+		/// <param name="findRace">Finds a race by name. Null finds it in the Global Library.</param>
+		public UMARigRestPoseAsset GetLegacyRig(out UMASlotRigConversionProfile profile, out RaceData rigSource, Func<string, RaceData> findRace)
+		{
+			// Both links set (the usual case): nothing to look up.
+			if (legacyRig != null && legacyRigProfile != null)
+			{
+				profile = legacyRigProfile;
+				rigSource = this;
+				return legacyRig;
+			}
+			if (findRace == null)
+			{
+				findRace = FindRaceForLegacyRig;
+			}
+			var visited = new HashSet<RaceData> { this };
+			return ResolveLegacyRig(this, findRace, visited, out profile, out rigSource);
+		}
+
+		private static RaceData FindRaceForLegacyRig(string name)
+		{
+			UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
+			return indexer != null ? indexer.GetRace(name) : null;
+		}
+
+		private static UMARigRestPoseAsset ResolveLegacyRig(RaceData race, Func<string, RaceData> findRace, HashSet<RaceData> visited,
+			out UMASlotRigConversionProfile profile, out RaceData rigSource)
+		{
+			UMARigRestPoseAsset rig = race.legacyRig;
+			profile = race.legacyRigProfile;
+			rigSource = rig != null ? race : null;
+			if (rig != null && profile != null)
+			{
+				return rig;
+			}
+
+			List<string> compatible = race.GetCrossCompatibleRaces();
+			for (int i = 0; i < compatible.Count; i++)
+			{
+				RaceData other = string.IsNullOrEmpty(compatible[i]) ? null : findRace(compatible[i]);
+				// Each race is asked once, so races that list each other cannot loop.
+				if (other == null || !visited.Add(other))
+				{
+					continue;
+				}
+				UMARigRestPoseAsset otherRig = ResolveLegacyRig(other, findRace, visited, out UMASlotRigConversionProfile otherProfile, out RaceData otherSource);
+				if (otherRig == null)
+				{
+					continue;
+				}
+				if (rig == null)
+				{
+					// No Legacy Rig of its own: take this one, with its profile unless the race has a profile of its own.
+					rigSource = otherSource;
+					if (profile == null)
+					{
+						profile = otherProfile;
+					}
+					return otherRig;
+				}
+				if (otherRig == rig && otherProfile != null)
+				{
+					// Its own Legacy Rig but no profile: use a profile made for the same rig.
+					profile = otherProfile;
+					return rig;
+				}
+			}
+			return rig;
+		}
 
 
         public DynamicDNAConverterController[] GetConverters(UMADnaBase DNA)

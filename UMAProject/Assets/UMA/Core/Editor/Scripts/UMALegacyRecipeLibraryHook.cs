@@ -70,6 +70,7 @@ namespace UMA.Editors
     /// A hidden slot with none is reported, never guessed.</item>
     /// <item>Adds the UMA 3 race that replaces the recipe's UMA 2 race: the race whose Legacy Rig was baked
     /// from it (<see cref="RaceData.legacyRig"/>, <c>sourceRaceName</c>), for example HumanMale to Human Male 3.0.
+    /// When several races share that Legacy Rig, it is the one the others are cross-compatible with (see <see cref="GetRaceMap(IEnumerable{RaceData}, List{string})"/>).
     /// Recipes that put a slot on the UMA 2 head (<see cref="LegacyHeadSlots"/>: face packs, eyebrows, hair
     /// painted on the head) are left without it, because on a UMA 3 character they would add a second, UMA 2 head.
     /// Their mesh hides are then left out too, as they only act on the UMA 3 race.</item>
@@ -199,14 +200,14 @@ namespace UMA.Editors
 
         /// <summary>
         /// UMA 2 race name to the UMA 3 race that replaces it, from the Global Library's races whose Legacy Rig
-        /// names a source race. A UMA 2 race claimed by two UMA 3 races is left out and reported.
+        /// names a source race. See <see cref="GetRaceMap(IEnumerable{RaceData}, List{string})"/> for races that
+        /// share a Legacy Rig.
         /// </summary>
         public static Dictionary<string, RaceData> GetRaceMap(List<string> problems = null)
         {
-            var map = new Dictionary<string, RaceData>(StringComparer.Ordinal);
-            var ambiguous = new HashSet<string>(StringComparer.Ordinal);
+            var races = new List<RaceData>();
             UMAAssetIndexer indexer = UMAAssetIndexer.Instance;
-            if (indexer == null) return map;
+            if (indexer == null) return new Dictionary<string, RaceData>(StringComparer.Ordinal);
 
             foreach (AssetItem ai in indexer.GetAssetDictionary(typeof(RaceData)).Values)
             {
@@ -214,22 +215,77 @@ namespace UMA.Editors
                 // Loaded through the AssetDatabase so the library's cached references are not changed.
                 string path = AssetDatabase.GUIDToAssetPath(ai._Guid);
                 RaceData race = string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<RaceData>(path);
+                if (race != null) races.Add(race);
+            }
+            return GetRaceMap(races, problems);
+        }
+
+        /// <summary>
+        /// UMA 2 race name to the UMA 3 race that replaces it, from <paramref name="races"/> whose Legacy Rig names
+        /// a source race. Several UMA 3 races may share one Legacy Rig (every female 3.0 race converts UMA 2
+        /// HumanFemale slots); the UMA 2 race then goes to the claiming race that all the others are
+        /// cross-compatible with, for example Human Female 3.0, whose recipes ElfFemale30 and SpriteFemale30 wear.
+        /// When no single race is that, the UMA 2 race is left out and reported. Only a race's own Legacy Rig counts
+        /// here: a race that leaves it empty and uses a cross-compatible race's (<see cref="RaceData.GetLegacyRig(out UMASlotRigConversionProfile)"/>)
+        /// does not claim the UMA 2 race.
+        /// </summary>
+        public static Dictionary<string, RaceData> GetRaceMap(IEnumerable<RaceData> races, List<string> problems = null)
+        {
+            var map = new Dictionary<string, RaceData>(StringComparer.Ordinal);
+            if (races == null) return map;
+
+            // Claiming races per UMA 2 race, in library order. The same race listed twice counts once.
+            var claims = new Dictionary<string, List<RaceData>>(StringComparer.Ordinal);
+            var order = new List<string>();
+            foreach (RaceData race in races)
+            {
                 if (race == null || race.legacyRig == null) continue;
                 string legacy = race.legacyRig.sourceRaceName;
                 if (string.IsNullOrEmpty(legacy) || legacy == race.raceName) continue;
-                if (map.TryGetValue(legacy, out RaceData other))
+                if (!claims.TryGetValue(legacy, out List<RaceData> claimants))
                 {
-                    if (other != race && other.raceName != race.raceName)
-                    {
-                        ambiguous.Add(legacy);
-                        problems?.Add($"UMA 2 race '{legacy}' is the Legacy Rig source of both '{other.raceName}' and '{race.raceName}'; neither is added.");
-                    }
+                    claimants = new List<RaceData>();
+                    claims.Add(legacy, claimants);
+                    order.Add(legacy);
+                }
+                if (!claimants.Exists(r => r == race || r.raceName == race.raceName)) claimants.Add(race);
+            }
+
+            foreach (string legacy in order)
+            {
+                List<RaceData> claimants = claims[legacy];
+                RaceData chosen = claimants.Count == 1 ? claimants[0] : FindBaseRace(claimants);
+                if (chosen == null)
+                {
+                    var names = claimants.ConvertAll(r => "'" + r.raceName + "'");
+                    problems?.Add($"UMA 2 race '{legacy}' is the Legacy Rig source of {string.Join(", ", names)}, and none of them is the race the others are cross-compatible with; none is added.");
                     continue;
                 }
-                map.Add(legacy, race);
+                map.Add(legacy, chosen);
             }
-            foreach (string legacy in ambiguous) map.Remove(legacy);
             return map;
+        }
+
+        /// <summary>The one race that every other race in <paramref name="claimants"/> is cross-compatible with, or null.</summary>
+        static RaceData FindBaseRace(List<RaceData> claimants)
+        {
+            RaceData found = null;
+            foreach (RaceData candidate in claimants)
+            {
+                bool isBase = true;
+                foreach (RaceData other in claimants)
+                {
+                    if (other != candidate && !other.IsCrossCompatibleWith(candidate.raceName))
+                    {
+                        isBase = false;
+                        break;
+                    }
+                }
+                if (!isBase) continue;
+                if (found != null) return null;
+                found = candidate;
+            }
+            return found;
         }
 
         /// <summary>True when the recipe is compatible with a UMA 2 race that a UMA 3 race replaces.</summary>
