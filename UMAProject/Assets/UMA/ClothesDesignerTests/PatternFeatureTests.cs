@@ -109,15 +109,24 @@ namespace UMA.ClothesDesigner.Editor.Tests
             FitMetrics m = session.Measure();
             Assert.That(m.maxStitchGapMm, Is.LessThan(3f), m.ToString());
             Assert.That(m.particlesInBody, Is.EqualTo(0), m.ToString());
-            // The pocket ends outside the front, not through it.
+            // The pocket ends outside the front, not through it: each of its inside points farther from the capsule's
+            // axis than the front under it (the nearest front point round the body and in height). A fixed radius for
+            // the front was too tight: the pocket lies flat on it, from 0.1 mm out (2026-11-23).
             Vector3[] x = session.SyncPositions();
             int outside = 0, inside = 0;
             for (int v = session.Mesh.pieceStart[2]; v < session.Mesh.pieceStart[2] + session.Mesh.pieceCount[2]; v++)
             {
                 if (session.Mesh.boundaryEdge[v] >= 0) continue;
-                Vector2 r = new Vector2(x[v].x, x[v].z);
-                // On the capsule the front lies about the clearance off the surface; the pocket beyond it.
-                if (r.magnitude > CapsuleBodyFixture.Radius + 0.006f + 0.001f) outside++; else inside++;
+                Vector2 pocketDir = new Vector2(x[v].x, x[v].z);
+                float best = float.MaxValue, frontR = 0f;
+                for (int f = session.Mesh.pieceStart[0]; f < session.Mesh.pieceStart[0] + session.Mesh.pieceCount[0]; f++)
+                {
+                    Vector2 frontDir = new Vector2(x[f].x, x[f].z);
+                    float across = (frontDir.normalized - pocketDir.normalized).magnitude * CapsuleBodyFixture.Radius, up = x[f].y - x[v].y;
+                    float d = across * across + up * up;
+                    if (d < best) { best = d; frontR = frontDir.magnitude; }
+                }
+                if (pocketDir.magnitude > frontR) outside++; else inside++;
             }
             Assert.That(outside, Is.GreaterThan(inside * 4), "pocket points outside the front: " + outside + " against " + inside);
         }

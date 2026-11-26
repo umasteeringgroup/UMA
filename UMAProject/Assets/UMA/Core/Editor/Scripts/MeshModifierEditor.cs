@@ -764,6 +764,11 @@ namespace UMA
 
         private void DrawWorkflowNavigation()
         {
+            if (vertexEditorStage != null && vertexEditorStage.WorkflowBarsHidden)
+            {
+                // The active plugin workflow is a tool of its own, left by closing the Vertex Editor.
+                return;
+            }
             GUILayout.Label("Authoring Workflow", centeredLabel);
             // While a plugin workflow is active none of the built-in buttons is lit.
             bool pluginWorkflowActive = vertexEditorStage != null && vertexEditorStage.ActiveWorkflow != null;

@@ -131,6 +131,7 @@
         "Assets/UMA/OverlayPainter/Editor/TexturePaintGarmentPreview.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintGettingStartedWindow.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintGettingStartedWindow.uss",
+        "Assets/UMA/OverlayPainter/Editor/TexturePaintGroupPaths.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintHemSeamEditing.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintLayerPreviewPanel.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintLightweightHistory.cs",
@@ -159,6 +160,7 @@
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSavedLayout.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSceneViewToolbar.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSceneViewToolbar.uss",
+        "Assets/UMA/OverlayPainter/Editor/TexturePaintScriptedSessions.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSelectionToolbar.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSessionLifecycle.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSpriteMaterialDrop.cs",
@@ -171,6 +173,7 @@
         "Assets/UMA/OverlayPainter/Editor/TexturePaintStubblePresets.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintSymmetryEditing.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintToolbarIcons.cs",
+        "Assets/UMA/OverlayPainter/Editor/TexturePaintTrimPainter.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintUdimTileOverlays.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintVDMEditing.cs",
         "Assets/UMA/OverlayPainter/Editor/TexturePaintWardrobeRecipeMenu.cs",
@@ -994,8 +997,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Documentation/OverlayPainter.md",
             "guid": "bebd4323bc7256043886b55d67c73ce4",
-            "bytes": 215950,
-            "sha256": "e5ff5da410204df31baee876e35773c4b81ca25de20da3b64630a3af16f71d35",
+            "bytes": 214077,
+            "sha256": "c559be7016213bbe0bd4939ea9412767859ef726149285a0dba58d967de92693",
             "metaBytes": 165,
             "metaSha256": "ead731a5d9d0258a25a0ad61e881a850465ca21e2a964a097a145d1cd4907537"
         },
@@ -1322,8 +1325,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintDocumentStorage.cs",
             "guid": "28b590056ecc4e18a5d837b096a41b25",
-            "bytes": 77287,
-            "sha256": "a3e612936836ef33deec9448f24d777fd24afb15baaf6cb6c98f6410a0caadbd",
+            "bytes": 76153,
+            "sha256": "7e21498b6904b12be3914120cb24a1ec4d14a5195397df0f12027c612ee74bdc",
             "metaBytes": 254,
             "metaSha256": "44dd944b2cec9575d6493c4fd32cd0f6966dbc593bdf704c027a5eb5c3f39bb8"
         },
@@ -1382,6 +1385,14 @@
             "sha256": "bbbcf0ace1c7b7ba5a282279997b504ea66da5cf9a3935e1cb0399e8c8c1130f",
             "metaBytes": 348,
             "metaSha256": "2879f507aafb77cd83cd10595a74929df36d570099c3068fac2bb14a103d70ef"
+        },
+        {
+            "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintGroupPaths.cs",
+            "guid": "7492a4dc3c4289e4bb32a5f5cec6b1c1",
+            "bytes": 13701,
+            "sha256": "6febe7c615f26865b7f97d16e3f6ddbe958e4d0433fd90e37a5421b1b7e330a6",
+            "metaBytes": 59,
+            "metaSha256": "81535c3ef0bea25fcde7108a778d576ab219380efe38ec9448602ff37a29428d"
         },
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintHemSeamEditing.cs",
@@ -1608,6 +1619,14 @@
             "metaSha256": "d2148a9618443533c459f9c2bbaab6ec0272c842a4aeb84b5e90e49bedc897c4"
         },
         {
+            "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintScriptedSessions.cs",
+            "guid": "3601846231dff1e42abe7199d79cfa69",
+            "bytes": 2592,
+            "sha256": "a73c7787219abfb0eca067fae7ac69a0e21c598fe6ca8ad4a96cbf8eba450dab",
+            "metaBytes": 59,
+            "metaSha256": "979560db79fe67eb513dea2c84b2cb74dc7318e7207d5efc66725cc83d6214bb"
+        },
+        {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintSelectionToolbar.cs",
             "guid": "e0171b2b70744a5b95fd94dc6ef25912",
             "bytes": 7214,
@@ -1618,8 +1637,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintSessionLifecycle.cs",
             "guid": "248f0da9de02453ea23ad5d29572b8f7",
-            "bytes": 29846,
-            "sha256": "6ae7d85bd158c5212551c6d8d17eed1a9b4a5cadc7ea2ac45c8a4d813fe801db",
+            "bytes": 29482,
+            "sha256": "bd4ac581eef2580ad7ae724a5753c9ae4ec272c0b5d6a66faf70eeedb850181a",
             "metaBytes": 62,
             "metaSha256": "f13fc2589e4c076b06f388c97be1a96f7fe42f2e44b0ef0e0d4612b23742a3ce"
         },
@@ -1650,8 +1669,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintStageWindow.cs",
             "guid": "92248d2bbffa09842a5269c18be4ba44",
-            "bytes": 369058,
-            "sha256": "64c6792c50001f8f14db299516b66117750621acc59fc6d0f9b7de91c5b17d0f",
+            "bytes": 362416,
+            "sha256": "da361b66366a0ba671a1c0b0cdb020897386b7b9e7b836248745d12e8a06a5cf",
             "metaBytes": 60,
             "metaSha256": "549c7af79347a5ec8dcea737c6a6a17f1a44a0c4e611cc65a15080f52ee6eee9"
         },
@@ -1704,6 +1723,14 @@
             "metaSha256": "a3d57ba299431f78112218f9368d2c92be68a5462420d4ac39e860a5093fe016"
         },
         {
+            "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintTrimPainter.cs",
+            "guid": "40e6a05beb5f8144eb5dcde89d7aae92",
+            "bytes": 9247,
+            "sha256": "ad753fdf2efd3ce90194d77f9d36d4289cd83d2762aaec626bd040aa6ad2b0fa",
+            "metaBytes": 59,
+            "metaSha256": "ba9acd3c61568c20b11112e5216dd8f99fe62e5878330f9f4cf65f151e5b53f8"
+        },
+        {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintUdimTileOverlays.cs",
             "guid": "bc273e938821c254982ac617ffd80882",
             "bytes": 4050,
@@ -1730,8 +1757,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Editor/TexturePaintWorkspace.cs",
             "guid": "b5e8e60c9f344d50a7a5f35a38eecb7a",
-            "bytes": 484191,
-            "sha256": "8d447fd6979f8966b896795262600605d9cf2c54701424af6108b64a00e1c6c4",
+            "bytes": 475711,
+            "sha256": "b16da9b94d8547fb2969f2eef2d9b26a925ef64fb8c3c06f363c262e4d0104bc",
             "metaBytes": 251,
             "metaSha256": "1887bdbd6583429c3a2acbee04ab1d11a47337b8a8a263e3258be9c34e3ad7d2"
         },
@@ -2658,8 +2685,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Runtime/TexturePaintDocument.cs",
             "guid": "14803d4e3bfa4b0d87e8ad6d50d2e17f",
-            "bytes": 61055,
-            "sha256": "6c56493b1a900ef1e3d81d51066fbb939cd75d8842f0fb2067093f901ee5cb4d",
+            "bytes": 59907,
+            "sha256": "979b553f044b0a5e723cd639f2bf1c24a72d6c8b545f00d964ac5c813969e77a",
             "metaBytes": 254,
             "metaSha256": "3145096bef133e998d2164522b99a0ecb2fd8a8564952d0d67b46260e2bcf829"
         },
@@ -2922,8 +2949,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Runtime/TextureStore.cs",
             "guid": "606b3c6546bba7a409e625bf60486b1c",
-            "bytes": 212762,
-            "sha256": "b5c0045a4a6510221ae5120ec9322e5d3f70d03c24313db89fd1a14ca221371c",
+            "bytes": 209275,
+            "sha256": "99aae3752511ffed5154c361f555c4d47693d7a2d044661b6a34e4c3ed3b8f85",
             "metaBytes": 60,
             "metaSha256": "e551517ef18180501122579a162c6c8fddecb0fca96760335fb729e3b4a2ec71"
         },
@@ -3290,8 +3317,8 @@
         {
             "path": "Assets/UMA/OverlayPainter/Textures/Tileable Materials/Aged Leather Sprite Set.asset",
             "guid": "8a96bd176cd9ce844be9935c28164221",
-            "bytes": 7099193,
-            "sha256": "79787b4dd5f43cd81256542c40e627f1c14de4542300f8d0afc5128ec7933fdb",
+            "bytes": 7098295,
+            "sha256": "84d76af190c4e5888ca73a4d4b1cb55b3417245291b398248ce7caff1467f34b",
             "metaBytes": 197,
             "metaSha256": "27e840b17f29a9ba168a19e05da74804626078108ecdc964a95f148e26a5794f"
         },

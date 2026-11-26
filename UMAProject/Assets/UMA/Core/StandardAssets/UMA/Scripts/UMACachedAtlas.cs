@@ -107,7 +107,7 @@ namespace UMA
             {
                 if (string.IsNullOrEmpty(property)) return;
                 foreach (var material in materials)
-                    if (material != null && material.HasProperty(property)) material.SetTexture(property, texture);
+                    if (material != null && material.HasTexture(property)) material.SetTexture(property, texture);
             }
             public void Dispose()
             {
@@ -121,8 +121,8 @@ namespace UMA
                 material.resultingAtlasList[channel] = texture;
             if (!string.IsNullOrEmpty(property))
             {
-                if (material.material != null) material.material.SetTexture(property, texture);
-                if (material.secondPassMaterial != null && material.secondPassMaterial.HasProperty(property)) material.secondPassMaterial.SetTexture(property, texture);
+                if (material.material != null && material.material.HasTexture(property)) material.material.SetTexture(property, texture);
+                if (material.secondPassMaterial != null && material.secondPassMaterial.HasTexture(property)) material.secondPassMaterial.SetTexture(property, texture);
             }
         }
         public void Dispose()

@@ -202,8 +202,9 @@ namespace UMA.Editors
                     EditorGUI.indentLevel--;
                 }
             }
+            UMARigRestPoseAsset newRaceLegacyRig = mapping.newRace != null ? mapping.newRace.GetLegacyRig(out _) : null;
             if (mapping.newRace != null && mapping.legacyRace != null &&
-                (mapping.newRace.legacyRig == null || mapping.newRace.legacyRig.sourceRaceName != mapping.legacyRace.raceName))
+                (newRaceLegacyRig == null || newRaceLegacyRig.sourceRaceName != mapping.legacyRace.raceName))
             {
                 EditorGUILayout.HelpBox($"{mapping.newRace.raceName} has no Legacy Rig baked from {mapping.legacyRace.raceName}. " +
                     "The hides are still made, but legacy clothing is not converted automatically on that race until it has one.", MessageType.None);

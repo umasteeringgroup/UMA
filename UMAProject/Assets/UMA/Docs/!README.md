@@ -73,6 +73,7 @@ You can open these guides inside Unity from `UMA > View Documentation`.
 - [Texture Tools](TextureTools.md)
 - [Texture Utilities](TextureUtilities.md)
 - [Weight Touchup](WeightTouchup.md)
+- [Copying Bone Weights to Clothes](WeightTransfer.md) — the weighting methods the Clothes Designer and Touchup Weights share (Robust Inpaint, Tight Surface, Volumetric, Exact Match, Simulated Fit, Auto), how they compare, and how a tool calls them.
 - [Hair Animation: An Artist's Guide](HairAnimation.md) - make UMA hair sway, give it root-to-tip vertex colors, and choose settings for short, medium and long hair.
 - [Normal Viewer Repair](NormalViewerRepair.md) — scan, preview, and repair normals across slot boundaries.
 - [Wardrobe Recipe Editor](WardrobeRecipeEditor.md)

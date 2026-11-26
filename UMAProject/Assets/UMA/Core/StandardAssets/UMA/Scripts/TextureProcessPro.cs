@@ -580,7 +580,13 @@ namespace UMA
                                                 }
                                                 catch { readbackHold.Dispose(); throw; }
                                             }
-                                            else rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, channels[textureChannelNumber].materialPropertyName, textureChannelNumber, umaGenerator, null, null, gpuFormat, neverCompress);
+                                            else
+                                            {
+                                                string textureProperty = channels[textureChannelNumber].NonShaderTexture
+                                                    ? null : channels[textureChannelNumber].materialPropertyName;
+                                                rt2cpu = new RenderTexToCPU(destinationTexture, generatedMaterial, textureProperty,
+                                                    textureChannelNumber, umaGenerator, null, null, gpuFormat, neverCompress);
+                                            }
                                             pendingTemporaryTexture = null;
                                             rt2cpu.DoAsyncCopy();
                                         }

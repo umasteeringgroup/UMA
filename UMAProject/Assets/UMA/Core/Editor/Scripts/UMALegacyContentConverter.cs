@@ -572,10 +572,11 @@ namespace UMA.Editors
             }
             UMARigRestPose legacyRig;
             UMASlotRigConversionProfile profile = null;
-            if (mapping.newRace.legacyRig != null && mapping.newRace.legacyRig.sourceRaceName == mapping.legacyRace.raceName)
+            UMARigRestPoseAsset newRaceLegacyRig = mapping.newRace.GetLegacyRig(out UMASlotRigConversionProfile newRaceProfile);
+            if (newRaceLegacyRig != null && newRaceLegacyRig.sourceRaceName == mapping.legacyRace.raceName)
             {
-                legacyRig = mapping.newRace.legacyRig.GetRestPose();
-                profile = mapping.newRace.legacyRigProfile;
+                legacyRig = newRaceLegacyRig.GetRestPose();
+                profile = newRaceProfile;
             }
             else if (!UMARigRestPose.TryFromRace(mapping.legacyRace, out legacyRig, out problem))
             {

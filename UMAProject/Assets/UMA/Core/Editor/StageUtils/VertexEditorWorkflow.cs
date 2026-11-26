@@ -45,6 +45,14 @@ namespace UMA.Editors
         /// <summary>False hides the button for this stage (for example a character the workflow cannot work on).</summary>
         public virtual bool IsAvailable(VertexEditorStage stage) => true;
 
+        /// <summary>
+        /// True hides both rows of workflow buttons (Sculpt, Vertex Paint, Advanced, Blendshapes and the
+        /// plugin workflows) while this workflow is active, in the Scene view panel and in the Vertex Editor
+        /// window. For a workflow that is a tool of its own: started from its own command and left by
+        /// closing the Vertex Editor.
+        /// </summary>
+        public virtual bool HidesWorkflowBars => false;
+
         /// <summary>The workflow became the active one.</summary>
         public virtual void OnActivate(VertexEditorStage stage) { }
 
@@ -146,6 +154,27 @@ namespace UMA.Editors
                 }
             }
             return workflows.Remove(workflow);
+        }
+
+        /// <summary>
+        /// True when <paramref name="workflow"/> is given and hides the workflow bars
+        /// (<see cref="VertexEditorWorkflow.HidesWorkflowBars"/>). A workflow that throws keeps them.
+        /// </summary>
+        internal static bool HidesBars(VertexEditorWorkflow workflow)
+        {
+            if (workflow == null)
+            {
+                return false;
+            }
+            try
+            {
+                return workflow.HidesWorkflowBars;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return false;
+            }
         }
 
         /// <summary>The workflow registered under an id, or null.</summary>

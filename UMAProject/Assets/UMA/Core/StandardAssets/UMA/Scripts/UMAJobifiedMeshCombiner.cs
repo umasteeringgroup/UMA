@@ -897,6 +897,7 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
 
                 var subMesh = mesh.GetSubMesh(cachedMesh ? _submeshBuffer.Count : i);
                 int firstPassSubmeshIndex = _submeshBuffer.Count;
+                cm.materialIndex = firstPassSubmeshIndex;
                 _submeshBuffer.Add(subMesh);
                 _materialBuffer.Add(firstPass);
 
@@ -979,22 +980,7 @@ private static Dictionary<string, float> BuildBakedBlendshapeDict(BlendShapeSett
 
         public static void CopyMaterialTextures(Material target, Material source, UMAMaterial umaMat)
         {
-            if (target == null || source == null || umaMat == null || umaMat.channels == null)
-                return;
-
-            var chans = umaMat.channels;
-            for (int i = 0; i < chans.Length; i++)
-            {
-                var ch = chans[i];
-                if (string.IsNullOrEmpty(ch.materialPropertyName))
-                    continue;
-                if (source.HasProperty(ch.materialPropertyName))
-                {
-                    var tex = source.GetTexture(ch.materialPropertyName);
-                    if (tex != null)
-                        target.SetTexture(ch.materialPropertyName, tex);
-                }
-            }
+            UMADefaultMeshCombiner.CopyMaterialTextures(target, source, umaMat);
         }
     }
 }

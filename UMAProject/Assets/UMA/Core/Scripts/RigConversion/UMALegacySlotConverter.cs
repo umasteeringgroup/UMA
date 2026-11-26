@@ -5,7 +5,8 @@ namespace UMA
 {
     /// <summary>
     /// Converts legacy slots automatically while a character is built. When a race names the older
-    /// rig it replaces (<see cref="RaceData.legacyRig"/>), every slot in the character's recipe that
+    /// rig it replaces (<see cref="RaceData.legacyRig"/>, or a cross-compatible race's when the race
+    /// leaves it empty: <see cref="RaceData.GetLegacyRig(out UMASlotRigConversionProfile)"/>), every slot in the character's recipe that
     /// is still flagged <see cref="SlotDataAsset.isLegacySlot"/> and was built for that older rig is
     /// swapped for a copy converted to the race's own rig by <see cref="UMASlotRigConverter"/>.
     /// </summary>
@@ -92,7 +93,7 @@ namespace UMA
         /// </summary>
         public static int ConvertLegacySlots(SlotData[] slots, RaceData race)
         {
-            if (!Enabled || slots == null || race == null || race.legacyRig == null)
+            if (!Enabled || slots == null || race == null)
             {
                 return 0;
             }
@@ -113,8 +114,9 @@ namespace UMA
                 }
                 if (entry == null)
                 {
+                    // Looked up once a legacy slot turns up, so races with none pay nothing.
                     entry = GetEntry(race);
-                    if (!entry.Usable)
+                    if (entry == null || !entry.Usable)
                     {
                         return 0;
                     }
@@ -198,20 +200,27 @@ namespace UMA
             Enabled = true;
         }
 
+        /// <summary>The race's conversion state, or null when it has no Legacy Rig of its own or from a cross-compatible race.</summary>
         private static RaceEntry GetEntry(RaceData race)
         {
-            if (races.TryGetValue(race, out RaceEntry entry) && entry.LegacyRigAsset == race.legacyRig && entry.Profile == race.legacyRigProfile)
+            UMARigRestPoseAsset legacyRigAsset = race.GetLegacyRig(out UMASlotRigConversionProfile profile);
+            if (legacyRigAsset == null)
+            {
+                races.Remove(race);
+                return null;
+            }
+            if (races.TryGetValue(race, out RaceEntry entry) && entry.LegacyRigAsset == legacyRigAsset && entry.Profile == profile)
             {
                 return entry;
             }
 
-            entry = new RaceEntry { LegacyRigAsset = race.legacyRig, Profile = race.legacyRigProfile };
+            entry = new RaceEntry { LegacyRigAsset = legacyRigAsset, Profile = profile };
             races[race] = entry;
 
-            entry.LegacyRig = race.legacyRig.GetRestPose();
+            entry.LegacyRig = legacyRigAsset.GetRestPose();
             if (entry.LegacyRig == null || entry.LegacyRig.BoneCount == 0)
             {
-                Debug.LogWarning($"[UMA] Race '{race.raceName}' has a legacy rig with no bones ('{race.legacyRig.name}'); legacy slots will not be converted.", race);
+                Debug.LogWarning($"[UMA] Race '{race.raceName}' has a legacy rig with no bones ('{legacyRigAsset.name}'); legacy slots will not be converted.", race);
                 return entry;
             }
             if (!UMARigRestPose.TryFromRace(race, out entry.TargetRig, out string reason))
@@ -220,7 +229,7 @@ namespace UMA
                 return entry;
             }
 
-            entry.Options = new UMASlotRigConversionOptions { Profile = race.legacyRigProfile };
+            entry.Options = new UMASlotRigConversionOptions { Profile = profile };
             entry.Usable = true;
             return entry;
         }

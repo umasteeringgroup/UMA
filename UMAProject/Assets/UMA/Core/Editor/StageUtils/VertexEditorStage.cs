@@ -4594,17 +4594,115 @@ namespace UMA
             newBindPoses[oldCount] = ResolveBindPoseForBone(boneHash, boneTransform);
             meshData.bindPoses = newBindPoses;
 
-            UMATransform[] newUmaBones = new UMATransform[oldCount + 1];
+            meshData.umaBones = BuildSlotSkeletonTable(meshData, boneHash);
+            meshData.umaBoneCount = meshData.umaBones.Length;
+            return true;
+        }
+
+        /// <summary>
+        /// Returns the slot's skeleton table (umaBones) covering every bound bone and its
+        /// ancestors, sorted by hash. umaBones is not parallel to boneNameHashes: it holds
+        /// the slot's hierarchy without its root bone (Global is bound but never listed), and
+        /// the mesh combiners merge these tables assuming hash order. Every existing entry is
+        /// kept; missing ones are taken from the rest pose another slot on the avatar stores
+        /// (the race's body slot), or, for the newly bound bone only, from the preview skeleton.
+        /// </summary>
+        private UMATransform[] BuildSlotSkeletonTable(UMAMeshData meshData, int newBoneHash)
+        {
+            var table = new Dictionary<int, UMATransform>();
             if (meshData.umaBones != null)
             {
-                Array.Copy(meshData.umaBones, newUmaBones, Mathf.Min(meshData.umaBones.Length, oldCount));
+                foreach (UMATransform bone in meshData.umaBones)
+                {
+                    if (bone != null && !table.ContainsKey(bone.hash))
+                    {
+                        table.Add(bone.hash, bone);
+                    }
+                }
             }
 
-            int parentHash = boneTransform.parent != null ? UMAUtils.StringToHash(boneTransform.parent.name) : 0;
-            newUmaBones[oldCount] = new UMATransform(boneTransform, boneHash, parentHash);
-            meshData.umaBones = newUmaBones;
-            meshData.umaBoneCount = newUmaBones.Length;
-            return true;
+            if (meshData.boneNameHashes != null)
+            {
+                foreach (int boneHash in meshData.boneNameHashes)
+                {
+                    AddSkeletonEntryAndAncestors(table, boneHash, meshData, boneHash == newBoneHash);
+                }
+            }
+
+            // Parents an existing entry lost (a table cut short by an older version of this tool).
+            var existing = new List<int>(table.Keys);
+            foreach (int boneHash in existing)
+            {
+                AddSkeletonEntryAndAncestors(table, boneHash, meshData, false);
+            }
+
+            var result = new UMATransform[table.Count];
+            table.Values.CopyTo(result, 0);
+            Array.Sort(result, UMATransform.TransformComparer);
+            return result;
+        }
+
+        private void AddSkeletonEntryAndAncestors(Dictionary<int, UMATransform> table, int boneHash, UMAMeshData editedMesh, bool allowPreviewSkeleton)
+        {
+            int rootHash = editedMesh.rootBoneHash;
+            for (int depth = 0; boneHash != 0 && boneHash != rootHash && depth < 256; depth++)
+            {
+                if (!table.TryGetValue(boneHash, out UMATransform entry))
+                {
+                    entry = FindRestSkeletonEntry(boneHash, editedMesh);
+                    if (entry == null && allowPreviewSkeleton)
+                    {
+                        Transform boneTransform = thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.skeleton != null
+                            ? thisDCA.umaData.skeleton.GetBoneTransform(boneHash)
+                            : null;
+                        if (boneTransform != null)
+                        {
+                            int parentHash = boneTransform.parent != null ? UMAUtils.StringToHash(boneTransform.parent.name) : 0;
+                            entry = new UMATransform(boneTransform, boneHash, parentHash);
+                        }
+                    }
+                    if (entry == null)
+                    {
+                        return;
+                    }
+                    table.Add(boneHash, entry);
+                }
+
+                boneHash = entry.parent;
+                allowPreviewSkeleton = false;
+            }
+        }
+
+        private UMATransform FindRestSkeletonEntry(int boneHash, UMAMeshData editedMesh)
+        {
+            SlotData[] slots = thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null
+                ? thisDCA.umaData.umaRecipe.slotDataList
+                : null;
+            if (slots == null)
+            {
+                return null;
+            }
+
+            foreach (SlotData slot in slots)
+            {
+                if (slot == null || slot.asset == null || slot.asset.meshData == null || slot.asset.meshData == editedMesh)
+                {
+                    continue;
+                }
+                UMATransform[] bones = slot.asset.meshData.umaBones;
+                if (bones == null)
+                {
+                    continue;
+                }
+                foreach (UMATransform bone in bones)
+                {
+                    if (bone != null && bone.hash == boneHash)
+                    {
+                        return bone.Duplicate();
+                    }
+                }
+            }
+            return null;
         }
 
         private Matrix4x4 ResolveBindPoseForBone(int boneHash, Transform boneTransform)
@@ -10793,6 +10891,7 @@ namespace UMA
             float toolsContentWidth = Mathf.Max(
                 120f,
                 leftPanelRect.width - scrollbarWidth - ToolsPanelRightPadding);
+            ToolsContentWidth = toolsContentWidth;
             GUILayout.BeginArea(new Rect(0, 0, toolsContentWidth, ToolsPos.y + ToolWindowAreaHeight));
             GUILayout.BeginVertical(GUILayout.Width(toolsContentWidth));
             SceneView sceneView = SceneView.lastActiveSceneView;
@@ -10803,7 +10902,7 @@ namespace UMA
                 return;
             }
 
-            if (!slotWeightEditorMode)
+            if (!slotWeightEditorMode && !WorkflowBarsHidden)
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Space(3f);

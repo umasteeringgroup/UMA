@@ -419,6 +419,148 @@ namespace UMA.Tests
             }
         }
 
+        // Two slots with different overlays on a two-pass material. Atlas packs them into one
+        // generated surface and No Atlas gives each its own. In every combiner each surface's
+        // two passes sit side by side on the renderer, draw the same triangles and sample the
+        // same generated textures, and materialIndex names the first pass (with two surfaces,
+        // the second one's first pass is renderer material 2, not 1).
+        [TestCase(UMAMaterial.MaterialType.Atlas, "Default")]
+        [TestCase(UMAMaterial.MaterialType.Atlas, "BoneBaking")]
+        [TestCase(UMAMaterial.MaterialType.Atlas, "Jobified")]
+        [TestCase(UMAMaterial.MaterialType.Atlas, "Incremental")]
+        [TestCase(UMAMaterial.MaterialType.NoAtlas, "Default")]
+        [TestCase(UMAMaterial.MaterialType.NoAtlas, "BoneBaking")]
+        [TestCase(UMAMaterial.MaterialType.NoAtlas, "Jobified")]
+        [TestCase(UMAMaterial.MaterialType.NoAtlas, "Incremental")]
+        public void TwoPassSurfacesShareGeneratedTexturesInEveryCombiner(UMAMaterial.MaterialType materialType, string combiner)
+        {
+            int expectedSurfaces = materialType == UMAMaterial.MaterialType.Atlas ? 1 : 2;
+            int entries = UMAGeneratedResourceCache.Shared.EntryCount;
+            SlotDataAsset secondSlot = null;
+            using (var f = new Fixture())
+            {
+                try
+                {
+                    f.Meshes.Material.materialType = materialType;
+                    using (var so = new UnityEditor.SerializedObject(f.Meshes.Material))
+                    {
+                        so.FindProperty("_secondPass").objectReferenceValue = f.Meshes.Keep(new Material(f.Meshes.Material.material));
+                        so.ApplyModifiedPropertiesWithoutUndo();
+                    }
+
+                    var first = f.Meshes.Slot.meshData;
+                    secondSlot = f.Meshes.Keep(ScriptableObject.CreateInstance<SlotDataAsset>());
+                    secondSlot.name = "CacheTestSlot2";
+                    secondSlot.meshData = new UMAMeshData
+                    {
+                        SlotName = secondSlot.slotName, vertexCount = first.vertexCount, subMeshCount = 1,
+                        vertices = (Vector3[])first.vertices.Clone(), normals = (Vector3[])first.normals.Clone(),
+                        tangents = (Vector4[])first.tangents.Clone(), uv = (Vector2[])first.uv.Clone(),
+                        submeshes = new[] { new SubMeshTriangles(new[] { 0, 1, 2 }) },
+                        bindPoses = (Matrix4x4[])first.bindPoses.Clone(), boneNameHashes = (int[])first.boneNameHashes.Clone(),
+                        umaBones = (UMATransform[])first.umaBones.Clone(), rootBoneHash = first.rootBoneHash,
+                        RootBoneName = first.RootBoneName, umaBoneCount = first.umaBoneCount,
+                        ManagedBonesPerVertex = (byte[])first.ManagedBonesPerVertex.Clone(),
+                        ManagedBoneWeights = (BoneWeight1[])first.ManagedBoneWeights.Clone()
+                    };
+                    var otherSource = f.Meshes.Keep(new Texture2D(32, 32, TextureFormat.RGBA32, false, true));
+                    var pixels = new Color[32 * 32];
+                    for (int i = 0; i < pixels.Length; i++) pixels[i] = new Color(.1f, (i / 32) / 31f, .7f, 1);
+                    otherSource.SetPixels(pixels); otherSource.Apply();
+                    UMAResourceReuse.SetDependencyRevision(otherSource, 1);
+                    var otherOverlay = f.Meshes.Keep(ScriptableObject.CreateInstance<OverlayDataAsset>());
+                    otherOverlay.name = "Cache overlay 2"; otherOverlay.material = f.Meshes.Material;
+                    otherOverlay.textureList = new Texture[] { otherSource };
+
+                    UMAData MakeAvatar()
+                    {
+                        var avatar = f.Avatar();
+                        var second = new SlotData(secondSlot);
+                        second.AddOverlay(new OverlayData(otherOverlay));
+                        avatar.umaRecipe.slotDataList = new[] { avatar.umaRecipe.slotDataList[0], second };
+                        return avatar;
+                    }
+
+                    void Combine(UMAData avatar)
+                    {
+                        switch (combiner)
+                        {
+                            case "Jobified": f.Meshes.BuildJobified(avatar); break;
+                            case "Incremental": f.Meshes.Build(avatar); break;
+                            default:
+                                UMAMeshCombiner component = combiner == "BoneBaking"
+                                    ? avatar.GetComponent<UMADefaultBoneBakingMeshCombiner>()
+                                    : avatar.GetComponent<UMADefaultMeshCombiner>();
+                                if (component == null)
+                                    component = combiner == "BoneBaking"
+                                        ? avatar.gameObject.AddComponent<UMADefaultBoneBakingMeshCombiner>()
+                                        : avatar.gameObject.AddComponent<UMADefaultMeshCombiner>();
+                                component.UpdateUMAMesh(true, avatar, 256);
+                                break;
+                        }
+                    }
+
+                    Texture[] BuildAndCheck(UMAData avatar)
+                    {
+                        f.Build(avatar);
+                        var surfaces = avatar.generatedMaterials.materials;
+                        Assert.That(surfaces, Has.Count.EqualTo(expectedSurfaces));
+                        if (expectedSurfaces == 1)
+                        {
+                            var fragments = surfaces[0].materialFragments;
+                            Assert.That(fragments, Has.Count.EqualTo(2));
+                            Assert.That(fragments[0].atlasRegion.Overlaps(fragments[1].atlasRegion), Is.False);
+                        }
+
+                        Combine(avatar);
+                        var renderer = avatar.GetRenderer(0);
+                        var materials = renderer.sharedMaterials;
+                        var mesh = renderer.sharedMesh;
+                        Assert.That(materials, Has.Length.EqualTo(expectedSurfaces * 2), combiner);
+                        Assert.That(mesh.subMeshCount, Is.EqualTo(expectedSurfaces * 2), combiner);
+                        var textures = new Texture[expectedSurfaces];
+                        for (int s = 0; s < surfaces.Count; s++)
+                        {
+                            var surface = surfaces[s];
+                            int firstPass = surface.materialIndex;
+                            Assert.That(firstPass, Is.EqualTo(s * 2), combiner + " materialIndex of surface " + s);
+                            Assert.That(materials[firstPass], Is.SameAs(surface.material), combiner);
+                            Assert.That(materials[firstPass + 1], Is.SameAs(surface.secondPassMaterial), combiner);
+                            Assert.That(mesh.GetIndices(firstPass + 1), Is.EqualTo(mesh.GetIndices(firstPass)).And.Not.Empty, combiner);
+                            Texture texture = surface.resultingAtlasList[0];
+                            Assert.That(texture, Is.Not.Null);
+                            Assert.That(surface.material.GetTexture("_BaseMap"), Is.SameAs(texture), combiner);
+                            Assert.That(surface.secondPassMaterial.GetTexture("_BaseMap"), Is.SameAs(texture), combiner);
+                            if (s > 0) Assert.That(texture, Is.Not.SameAs(textures[0]));
+                            textures[s] = texture;
+                        }
+                        return textures;
+                    }
+
+                    var avatarA = MakeAvatar();
+                    var avatarB = MakeAvatar();
+                    var shared = BuildAndCheck(avatarA);
+                    Assert.That(BuildAndCheck(avatarB), Is.EqualTo(shared), "Identical avatars share the generated textures.");
+                    Assert.That(BuildAndCheck(avatarA), Is.EqualTo(shared), "A rebuild keeps the shared textures.");
+                    avatarA.CleanTextures();
+                    UnityEngine.Object.DestroyImmediate(avatarA.gameObject);
+                    foreach (var texture in shared)
+                        Assert.That(texture != null && (!(texture is RenderTexture rt) || rt.IsCreated()), Is.True, "Still held by the other avatar.");
+                    avatarB.CleanTextures();
+                    UnityEngine.Object.DestroyImmediate(avatarB.gameObject);
+                    foreach (var texture in shared)
+                        Assert.That(texture == null || texture is RenderTexture rt && !rt.IsCreated(), Is.True, "Released with the last avatar.");
+                }
+                finally
+                {
+                    if (secondSlot != null && secondSlot.meshData?.submeshes != null)
+                        foreach (var submesh in secondSlot.meshData.submeshes)
+                            if (submesh.nativeTriangles.IsCreated) submesh.nativeTriangles.Dispose();
+                }
+            }
+            Assert.That(UMAGeneratedResourceCache.Shared.EntryCount, Is.EqualTo(entries));
+        }
+
         [TestCase(false)] [TestCase(true)]
         public void IdenticalAtlasesBuildOnceAndSeparateMaterialParametersDoNotPreventSharing(bool convert)
         {

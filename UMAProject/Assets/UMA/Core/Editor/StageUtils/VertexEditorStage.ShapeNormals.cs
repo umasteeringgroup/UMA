@@ -31,11 +31,37 @@ namespace UMA
             if (buddyNormals == null || !ReferenceEquals(buddyNormalsMesh, BakedMesh) ||
                 !ReferenceEquals(buddyNormalsTriangles, triangles) || buddyNormals.VertexCount != BakedMesh.vertexCount)
             {
-                buddyNormals = new UMABuddyNormals(BakedMesh.vertices, triangles);
+                buddyNormals = new UMABuddyNormals(BakedMesh.vertices, triangles) { Sides = BakedNormalSides() };
                 buddyNormalsMesh = BakedMesh;
                 buddyNormalsTriangles = triangles;
             }
             return buddyNormals;
+        }
+
+        /// <summary>
+        /// The slots' sharp edges (<see cref="SlotDataAsset.normalSides"/>) on the baked mesh: each slot's side ids at
+        /// its vertices, kept apart from other slots' ids; 0 where nothing is sharp, so slots still join with one
+        /// normal. Null when no slot has a sharp edge.
+        /// </summary>
+        private int[] BakedNormalSides()
+        {
+            SlotData[] slots = thisDCA != null && thisDCA.umaData != null && thisDCA.umaData.umaRecipe != null ? thisDCA.umaData.umaRecipe.slotDataList : null;
+            if (BakedMesh == null || slots == null) return null;
+            int count = BakedMesh.vertexCount;
+            int[] sides = null;
+            for (int s = 0; s < slots.Length; s++)
+            {
+                SlotData slot = slots[s];
+                if (slot == null || slot.asset == null || slot.asset.meshData == null || slot.vertexOffset < 0) continue;
+                int[] own = slot.asset.NormalSidesFor(slot.asset.meshData.vertexCount);
+                if (own == null) continue;
+                if (sides == null) sides = new int[count];
+                for (int i = 0; i < own.Length && slot.vertexOffset + i < count; i++)
+                {
+                    if (own[i] != 0) sides[slot.vertexOffset + i] = (s + 1) * 1000000 + own[i];
+                }
+            }
+            return sides;
         }
 
         /// <summary>True for every baked vertex of a slot that is not editable: its normal is not ours to change.</summary>

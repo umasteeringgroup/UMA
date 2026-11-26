@@ -64,7 +64,9 @@ namespace UMA.TexturePaint.Editor
             launchDocument = null;
             TexturePaintDocument recovered = null;
             bool deleteRecoveryAfterRequestedOpen = false;
-            if (TexturePaintRecoveryStore.HasRecovery(recoveryContextKey))
+            // A scripted session (OpenScripted) neither asks about nor touches a recovery asset.
+            scriptedSession = openingScripted;
+            if (!scriptedSession && TexturePaintRecoveryStore.HasRecovery(recoveryContextKey))
             {
                 int choice;
                 if (requested != null)
@@ -311,7 +313,7 @@ namespace UMA.TexturePaint.Editor
                 return;
             }
 
-            if (afterLinkedUpdates.Count > 0 || !TexturePaintProjectSettings.TexturePaintAutomaticRecovery || !recoveryDirty ||
+            if (scriptedSession || afterLinkedUpdates.Count > 0 || !TexturePaintProjectSettings.TexturePaintAutomaticRecovery || !recoveryDirty ||
                 controller == null || controller.Painting == null || controller.Painting.IsPainting ||
                 EditorApplication.isCompiling || EditorApplication.isUpdating ||
                 EditorApplication.timeSinceStartup < nextAutosaveTime) return;
@@ -440,7 +442,7 @@ namespace UMA.TexturePaint.Editor
 
         private void SaveEmergencyRecovery()
         {
-            if (!recoveryDirty || document == null || controller?.Textures == null) return;
+            if (scriptedSession || !recoveryDirty || document == null || controller?.Textures == null) return;
             TexturePaintDocument emergency = TexturePaintDocumentStorage.CreateTransient(avatar, launchContext);
             emergency.documentId = document.documentId;
             emergency.createdUtc = document.createdUtc;

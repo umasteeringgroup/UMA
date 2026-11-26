@@ -1,0 +1,87 @@
+// UMA weight field: spreads bone weights fixed at the body through a grid round it (Jacobi relaxation of
+// Laplace's equation, Neumann at the grid's edge), and carries a coarse grid's result to a finer one.
+// UMAWeightField.cs runs the same arithmetic on the CPU; keep the two in step.
+#pragma kernel CSRelax
+#pragma kernel CSProlong
+
+// Values are cell-major: cell * _Channels + channel.
+StructuredBuffer<float> _Source;
+RWStructuredBuffer<float> _Target;
+StructuredBuffer<uint> _Fixed;
+StructuredBuffer<float> _Coarse;
+
+int3 _Dims;
+int3 _CoarseDims;
+int _Channels;
+int _Cells;
+
+int CellIndex(int3 c) { return c.x + _Dims.x * (c.y + _Dims.y * c.z); }
+
+// A cell's grid coordinates (unsigned division is the fast kind).
+int3 CellCoords(uint cell)
+{
+    uint dx = (uint)_Dims.x, dy = (uint)_Dims.y;
+    return int3((int)(cell % dx), (int)((cell / dx) % dy), (int)(cell / (dx * dy)));
+}
+
+[numthreads(64, 1, 1)]
+void CSRelax(uint3 id : SV_DispatchThreadID)
+{
+    int cell = (int)id.x;
+    if (cell >= _Cells) return;
+    int3 xyz = CellCoords(id.x);
+    int x = xyz.x, y = xyz.y, z = xyz.z;
+    int xm = CellIndex(int3(max(x - 1, 0), y, z));
+    int xp = CellIndex(int3(min(x + 1, _Dims.x - 1), y, z));
+    int ym = CellIndex(int3(x, max(y - 1, 0), z));
+    int yp = CellIndex(int3(x, min(y + 1, _Dims.y - 1), z));
+    int zm = CellIndex(int3(x, y, max(z - 1, 0)));
+    int zp = CellIndex(int3(x, y, min(z + 1, _Dims.z - 1)));
+    uint isFixed = _Fixed[cell];
+    for (int c = 0; c < _Channels; c++)
+    {
+        float self = _Source[cell * _Channels + c];
+        float sum = _Source[xm * _Channels + c] + _Source[xp * _Channels + c];
+        sum += _Source[ym * _Channels + c] + _Source[yp * _Channels + c];
+        sum += _Source[zm * _Channels + c] + _Source[zp * _Channels + c];
+        float relaxed = sum * (1.0 / 6.0);
+        _Target[cell * _Channels + c] = isFixed != 0 ? self : relaxed;
+    }
+}
+
+float CoarseValue(int3 c, int channel)
+{
+    c = clamp(c, int3(0, 0, 0), _CoarseDims - 1);
+    return _Coarse[(c.x + _CoarseDims.x * (c.y + _CoarseDims.y * c.z)) * _Channels + channel];
+}
+
+// Fine cell i sits at coarse coordinate i / 2: trilinear between its two coarse neighbours on each axis.
+[numthreads(64, 1, 1)]
+void CSProlong(uint3 id : SV_DispatchThreadID)
+{
+    int cell = (int)id.x;
+    if (cell >= _Cells) return;
+    if (_Fixed[cell] != 0) return;
+    int3 xyz = CellCoords(id.x);
+    int x = xyz.x, y = xyz.y, z = xyz.z;
+    int3 lo = int3(x >> 1, y >> 1, z >> 1);
+    float3 f = float3((x & 1) * 0.5, (y & 1) * 0.5, (z & 1) * 0.5);
+    for (int c = 0; c < _Channels; c++)
+    {
+        float c000 = CoarseValue(lo, c);
+        float c100 = CoarseValue(lo + int3(1, 0, 0), c);
+        float c010 = CoarseValue(lo + int3(0, 1, 0), c);
+        float c110 = CoarseValue(lo + int3(1, 1, 0), c);
+        float c001 = CoarseValue(lo + int3(0, 0, 1), c);
+        float c101 = CoarseValue(lo + int3(1, 0, 1), c);
+        float c011 = CoarseValue(lo + int3(0, 1, 1), c);
+        float c111 = CoarseValue(lo + int3(1, 1, 1), c);
+        float x00 = c000 + (c100 - c000) * f.x;
+        float x10 = c010 + (c110 - c010) * f.x;
+        float x01 = c001 + (c101 - c001) * f.x;
+        float x11 = c011 + (c111 - c011) * f.x;
+        float y0 = x00 + (x10 - x00) * f.y;
+        float y1 = x01 + (x11 - x01) * f.y;
+        _Target[cell * _Channels + c] = y0 + (y1 - y0) * f.z;
+    }
+}

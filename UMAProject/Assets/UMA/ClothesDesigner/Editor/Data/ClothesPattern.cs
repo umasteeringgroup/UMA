@@ -14,6 +14,15 @@ namespace UMA.ClothesDesigner.Editor
         Custom = 4
     }
 
+    /// <summary>How the inside of a piece is meshed.</summary>
+    public enum MeshTopology
+    {
+        /// <summary>Even, nearly equilateral triangles: the most even cloth.</summary>
+        Even = 0,
+        /// <summary>Squares along the grain and across it, each split in two: rows and columns that follow the warp and the weft.</summary>
+        GrainGrid = 1
+    }
+
     /// <summary>A body measurement a pattern dimension can follow.</summary>
     public enum BodyMeasurement
     {
@@ -70,6 +79,13 @@ namespace UMA.ClothesDesigner.Editor
         public List<PatternTack> tacks = new List<PatternTack>();
         /// <summary>Small hard parts fixed to the cloth: buttons, buckles, zip pulls.</summary>
         public List<PatternPart> parts = new List<PatternPart>();
+        /// <summary>
+        /// Trims painted onto the clothes' texture along an edge or a line: zippers, stitching, piping, hems.
+        /// The Overlay Painter draws them, as editable layers, after the clothes are baked.
+        /// </summary>
+        public List<PatternTrim> trims = new List<PatternTrim>();
+        /// <summary>The fabrics the pieces can look like (<see cref="PatternPiece.lookId"/>); each becomes an overlay when baked.</summary>
+        public List<PieceLook> looks = new List<PieceLook>();
         /// <summary>A picture shown behind the pieces on the Pattern Canvas, to trace.</summary>
         public Texture2D referenceImage;
         /// <summary>The picture's lower left corner on the canvas (cm) and its height there (cm).</summary>
@@ -79,8 +95,15 @@ namespace UMA.ClothesDesigner.Editor
         public List<PatternDimension> dimensions = new List<PatternDimension>();
         public MeshLevel meshLevel = MeshLevel.Medium;
         [Min(0.3f)] public float customEdgeLengthCm = 2f;
+        /// <summary>How the inside of each piece is meshed: even triangles, or a grid along the grain.</summary>
+        public MeshTopology meshTopology = MeshTopology.Even;
         public UvLayoutSettings uvLayout = new UvLayoutSettings();
         [TextArea] public string notes;
+        /// <summary>
+        /// The garment generator's style this pattern was drafted from (<see cref="GarmentStyle"/> as JSON), so the
+        /// generator can open it again; empty for a pattern drawn by hand.
+        /// </summary>
+        [HideInInspector] public string generatorStyle;
 
         public static string NewId() => Guid.NewGuid().ToString("N");
 
@@ -103,6 +126,14 @@ namespace UMA.ClothesDesigner.Editor
             {
                 if (pieces[i] != null && pieces[i].id == id) return pieces[i];
             }
+            return null;
+        }
+
+        /// <summary>The look with this id, or null.</summary>
+        public PieceLook FindLook(string id)
+        {
+            if (looks == null || string.IsNullOrEmpty(id)) return null;
+            foreach (PieceLook look in looks) if (look != null && look.id == id) return look;
             return null;
         }
 
@@ -178,6 +209,8 @@ namespace UMA.ClothesDesigner.Editor
                 text.Append('\n');
             }
             text.Append(meshLevel).Append(customEdgeLengthCm.ToString("R"));
+            // Only when set, so drapes kept before there was a choice still match.
+            if (meshTopology != MeshTopology.Even) text.Append(meshTopology);
             unchecked
             {
                 ulong hash = 14695981039346656037UL;
@@ -341,6 +374,12 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>The piece this one was mirrored from, or empty.</summary>
         public string mirrorOf;
         public PiecePlacement placement = new PiecePlacement();
+        /// <summary>
+        /// For a piece made from a region painted on the body (Body Region): where each part of it lay on that body, so
+        /// on the same race it is laid exactly where it was painted. Empty for other pieces; ignored on other races,
+        /// which use <see cref="placement"/>.
+        /// </summary>
+        [HideInInspector] public BodyLayout bodyLayout = new BodyLayout();
         /// <summary>What this piece is made of. Pieces sewn together can be different fabrics.</summary>
         public FabricSettings fabric = new FabricSettings();
         /// <summary>Darts sewn on this piece: edge darts (a V from an edge) and double-pointed darts (a diamond inside).</summary>
@@ -353,6 +392,13 @@ namespace UMA.ClothesDesigner.Editor
         /// collars and cuffs need more triangles to hold a curve or a point than a body panel does.
         /// </summary>
         [Range(1f, 4f)] public float meshDetail = 1f;
+        /// <summary>
+        /// How many texels per centimetre the piece gets in the texture, against the pattern's (0.25 to 2):
+        /// less for pieces seldom seen (a collar stand, a waistband's inside), more for a printed front.
+        /// </summary>
+        [Range(0.25f, 2f)] public float textureDetail = 1f;
+        /// <summary>The look (<see cref="ClothesPattern.looks"/>) this piece is made of; empty shows the clothes' own overlay.</summary>
+        public string lookId;
         /// <summary>A stiffening layer fused to the piece: stands, collars, cuffs, waistbands and plackets.</summary>
         public InterfacingLevel interfacing;
         /// <summary>Lines drawn inside the piece: lines to sew other pieces onto (pockets, patches), folds and holes.</summary>
@@ -365,9 +411,20 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>A linked mirror keeps the shape of the piece it was mirrored from (<see cref="mirrorOf"/>): edit the original.</summary>
         public bool mirrorLinked;
         /// <summary>
+        /// Duplicate with Seams (or Sewn Round): the piece this one was copied from. A seam of the original's to another
+        /// piece is made between their copies, whichever is duplicated last.
+        /// </summary>
+        public string duplicateOf;
+        /// <summary>
         /// Pushes the piece out from the body like padding or air in a puffer jacket (0 none, 1 strong).
         /// </summary>
         [Range(0f, 1f)] public float pressure;
+        /// <summary>
+        /// How thick the piece is baked (mm): a belt, a waistband, a strap. 0 bakes it as thin as the rest. The thickness
+        /// is built outward from the draped cloth, so the piece stands out from what it is sewn to (see
+        /// <see cref="PieceThickness"/>). The simulation is not changed by it.
+        /// </summary>
+        [Range(0f, 30f)] public float thicknessMm;
 
         public PatternLine FindLine(string lineId)
         {
@@ -449,6 +506,8 @@ namespace UMA.ClothesDesigner.Editor
         [Range(0f, 170f)] public float foldAngle = 60f;
         /// <summary>Folds: the crease points in towards the body (a valley) instead of out (a ridge).</summary>
         public bool foldInward;
+        /// <summary>Folds: a sharp crease. The baked slot is split along it, with a normal for each side; the two sides stay one.</summary>
+        public bool sharp;
         /// <summary>For a linked mirror: the line of the original this one copies.</summary>
         public string mirrorOfLine;
     }
@@ -469,6 +528,60 @@ namespace UMA.ClothesDesigner.Editor
         public bool button;
         /// <summary>The button's diameter (mm).</summary>
         [Min(2f)] public float buttonDiameterMm = 12f;
+    }
+
+    /// <summary>
+    /// A trim along part of an edge, or a line inside a piece: a zipper, a row of stitching, piping, a hem. It is
+    /// texture, not geometry: the Overlay Painter draws it with one of its path generators, as an editable layer,
+    /// onto the baked clothes (Publish and Open in Overlay Painter, in the Publish window). The pattern keeps where it goes, so it follows the piece
+    /// when the piece is reshaped or the UVs are packed again.
+    /// </summary>
+    [Serializable]
+    public sealed class PatternTrim
+    {
+        public string id;
+        public string name = "Trim";
+        public string pieceId;
+        /// <summary>The edge, or the line inside the piece, the trim follows.</summary>
+        public string pathId;
+        /// <summary>The part of the edge or line it covers, as fractions of its length.</summary>
+        [Range(0f, 1f)] public float start, end = 1f;
+        /// <summary>The painter's construction (a path generator id), and its menu path to show when the painter is missing.</summary>
+        public string constructionId;
+        public string constructionName;
+        /// <summary>How wide the trim is on the cloth (cm).</summary>
+        [Min(0.05f)] public float widthCm = 1.2f;
+        /// <summary>How far inside the piece its middle runs from an edge (cm); 0 runs it along the edge itself. Lines ignore it.</summary>
+        public float insetCm = 0.8f;
+    }
+
+    /// <summary>
+    /// What a piece looks like: a fabric's textures, tiled over the piece at their real size and along its
+    /// grain, and its colour. Pieces with different looks share one slot and material: the bake makes an overlay
+    /// per look, masked to its pieces' places in the texture, so each look can also be recoloured on its own
+    /// (by its shared colour, when it has one).
+    /// </summary>
+    [Serializable]
+    public sealed class PieceLook
+    {
+        public string id;
+        public string name = "Fabric";
+        /// <summary>The fabric's colour texture; none paints the look's colour alone.</summary>
+        public Texture2D albedo;
+        /// <summary>The fabric's tangent-space normal map (its weave), or none.</summary>
+        public Texture2D normal;
+        /// <summary>The fabric's map for the material's other channel (specular or metallic and smoothness), or none.</summary>
+        public Texture2D mask;
+        /// <summary>The look's colour, multiplied with the colour texture by UMA, and changeable at run time.</summary>
+        public Color color = Color.white;
+        /// <summary>A shared colour name (such as "Shirt2") the recipe gives the look, so characters can recolour it; empty for none.</summary>
+        public string sharedColorName;
+        /// <summary>How much cloth one repeat of the textures covers (cm).</summary>
+        [Min(0.5f)] public float repeatCm = 20f;
+        /// <summary>The textures' turn against the piece's grain (degrees): 45 for a fabric cut on the bias.</summary>
+        public float rotation;
+        /// <summary>How strong the normal map is (0 flat, 1 as drawn).</summary>
+        [Range(0f, 2f)] public float normalStrength = 1f;
     }
 
     public enum PartShape
@@ -558,6 +671,11 @@ namespace UMA.ClothesDesigner.Editor
         /// The simulation holds the turn as it was laid out.
         /// </summary>
         public bool folded;
+        /// <summary>
+        /// A crisp seam (a welt, a panel line on leather): the baked slot keeps a normal for each side of it instead
+        /// of one shared normal. Its two sides stay at one position and move as one.
+        /// </summary>
+        public bool sharp;
         /// <summary>Topstitching drawn along the seam when the clothes are baked.</summary>
         public TopstitchKind topstitch;
         /// <summary>How far from the seam the topstitching runs (mm).</summary>
@@ -659,6 +777,8 @@ namespace UMA.ClothesDesigner.Editor
         public float stitchedCm;
         /// <summary>Pressed folds keep their crease all the way down; unpressed pleats open out below the stitching.</summary>
         public bool pressed = true;
+        /// <summary>Pressed folds baked sharp: the slot is split along each fold, with a normal for each side; the sides stay one.</summary>
+        public bool sharpFolds;
         /// <summary>How far the fold lines run into the piece (cm). 0 runs them across the whole piece.</summary>
         public float lengthCm;
     }
@@ -690,6 +810,25 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>Round the body's left leg, from the waist down: trouser legs, socks.</summary>
         LeftLeg = 4,
         RightLeg = 5
+    }
+
+    /// <summary>
+    /// Where a piece made from a painted body region lay on the body: its flattened source triangles as drawn (cm, in
+    /// the piece's canvas space when it was made) and on the body (metres, with the body's normals), the race it was
+    /// painted on, and one outline point to follow the piece if it is moved on the canvas.
+    /// </summary>
+    [Serializable]
+    public sealed class BodyLayout
+    {
+        public string race;
+        public string anchorPointId;
+        public Vector2 anchor;
+        public Vector2[] flat = new Vector2[0];
+        public Vector3[] positions = new Vector3[0];
+        public Vector3[] normals = new Vector3[0];
+        public int[] triangles = new int[0];
+
+        public bool Valid => flat != null && flat.Length > 2 && positions != null && positions.Length == flat.Length && normals != null && normals.Length == flat.Length && triangles != null && triangles.Length >= 3;
     }
 
     /// <summary>Where a piece is laid around the body before sewing.</summary>
@@ -772,6 +911,12 @@ namespace UMA.ClothesDesigner.Editor
         public float rotation;
         /// <summary>The UV rectangle reserved for the island, to see when a resize no longer fits.</summary>
         public Rect reserved;
+        /// <summary>
+        /// The id of the piece whose island this one uses, mirrored (a linked mirror with Mirrors Share Space),
+        /// or empty. A point of this piece maps to (<see cref="mirrorSumX"/> - x, y - <see cref="mirrorDy"/>) on that one.
+        /// </summary>
+        public string sharesWith;
+        public float mirrorSumX, mirrorDy;
     }
 
     [Serializable]
@@ -781,5 +926,17 @@ namespace UMA.ClothesDesigner.Editor
         [Min(0)] public int gutterPixels = 8;
         /// <summary>Width divided by height of the texture the slot uses.</summary>
         [Min(0.05f)] public float aspect = 1f;
+        /// <summary>Let the packing turn pieces a quarter or half turn (the grain stays along an axis) to fit them tighter.</summary>
+        public bool turnPieces = true;
+        /// <summary>
+        /// A linked mirror (a left and right sleeve) uses its original's place in the texture, mirrored, so both
+        /// cost the texels of one. Both sides then show the same texture: no different decal or wear on each.
+        /// </summary>
+        public bool shareMirrors;
+        /// <summary>
+        /// The pieces were laid out quickly by their bounding boxes (the garment generator does while the artist
+        /// changes the style); the bake packs them tightly first.
+        /// </summary>
+        [HideInInspector] public bool quickPacked;
     }
 }

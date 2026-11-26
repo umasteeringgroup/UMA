@@ -1160,8 +1160,22 @@ namespace UMA.Editors
                     image = imageTexture,
                     scaleMode = ScaleMode.ScaleToFit
                 };
-                image.style.maxWidth = Mathf.Max(160f, position.width - GetOutlineReservedWidth() - (ContentPadding * 4f));
-                image.style.maxHeight = Mathf.Max(96f, imageTexture.height);
+                // Drawn at its own size, or narrower when the column is: the height then follows the width, so a
+                // picture wider than the column is not left with an empty band above and below it.
+                float imageAspect = imageTexture.height / (float)Mathf.Max(1, imageTexture.width);
+                float imageWidth = Mathf.Min(imageTexture.width, Mathf.Max(160f, position.width - GetOutlineReservedWidth() - (ContentPadding * 4f)));
+                image.style.width = imageTexture.width;
+                image.style.maxWidth = Length.Percent(100f);
+                image.style.height = Mathf.Max(24f, imageWidth * imageAspect);
+                image.style.alignSelf = Align.Center;
+                image.RegisterCallback<GeometryChangedEvent>(evt =>
+                {
+                    float fitted = Mathf.Max(24f, evt.newRect.width * imageAspect);
+                    if (Mathf.Abs(evt.newRect.height - fitted) > 0.5f)
+                    {
+                        image.style.height = fitted;
+                    }
+                });
                 imageContainer.Add(image);
 
                 if (!string.IsNullOrEmpty(block.Text))

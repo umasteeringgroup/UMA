@@ -132,6 +132,12 @@ namespace UMA.ClothesDesigner.Editor
             Make("Jersey", "T-shirt knit: stretches a little, soft.", 0.05f, 3f, 0.18f, 0.4f),
             Make("Elastic", "Bands, cuffs and ribbing: stretches to fit and grips.", 0.08f, 1f, 0.3f, 0.6f),
             Make("Spandex", "Very elastic and soft: for tight-fitting pieces.", 0.1f, 10f, 0.2f, 0.5f),
+            // Measured on the sweatpants (Human Female 3.0, 2026-11-23): with an Elastic band they slid 11.4 cm down
+            // the hips as the legs' weight came on; with this band and Fleece legs, 2.2 cm.
+            Make("Rib", "Waistbands that hold clothes up: firm rib that grips the body. Cut it shorter than the waist.", 0.002f, 1f, 0.3f, 1f),
+            Make("Fleece", "Sweatshirt fleece: firm like cotton, softer, grips the body more.", 1e-8f, 1e-3f, 0.25f, 0.8f),
+            // Riveted mail weighs 6 to 8 kg per square metre; 4 keeps a knee-length hauberk on the shoulders.
+            Make("Mail", "Chain mail: does not stretch, very heavy, hangs straight in limp folds.", 1e-8f, 30f, 4f, 0.3f),
         };
 
         private static FabricPreset Make(string name, string description, float stretch, float bend, float density, float friction) => new FabricPreset

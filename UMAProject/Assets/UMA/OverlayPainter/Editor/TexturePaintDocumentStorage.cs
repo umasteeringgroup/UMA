@@ -685,6 +685,7 @@ namespace UMA.TexturePaint.Editor
                 pluginStale = layer.pluginStale,
                 pluginLastError = layer.pluginLastError,
                 proceduralGroupKey = layer.proceduralGroupKey,
+                editPathsTogether = layer.editPathsTogether,
                 sourceMaterialPresetId = layer.sourceMaterialPresetId,
                 sourceMaterialPresetRevision = layer.sourceMaterialPresetRevision,
                 sourceMaterialPresetLayerId = layer.sourceMaterialPresetLayerId,
@@ -790,6 +791,7 @@ namespace UMA.TexturePaint.Editor
                 pluginStale = source.pluginStale,
                 pluginLastError = source.pluginLastError,
                 proceduralGroupKey = source.proceduralGroupKey,
+                editPathsTogether = source.editPathsTogether,
                 sourceMaterialPresetId = source.sourceMaterialPresetId,
                 sourceMaterialPresetRevision = source.sourceMaterialPresetRevision,
                 sourceMaterialPresetLayerId = source.sourceMaterialPresetLayerId,
@@ -984,6 +986,7 @@ namespace UMA.TexturePaint.Editor
             layer.pluginStale = saved.pluginStale;
             layer.pluginLastError = saved.pluginLastError;
             layer.proceduralGroupKey = saved.proceduralGroupKey;
+            layer.editPathsTogether = saved.editPathsTogether;
             layer.sourceMaterialPresetId = saved.sourceMaterialPresetId;
             layer.sourceMaterialPresetRevision = saved.sourceMaterialPresetRevision;
             layer.sourceMaterialPresetLayerId = saved.sourceMaterialPresetLayerId;
@@ -1143,6 +1146,7 @@ namespace UMA.TexturePaint.Editor
                 layer.pluginLastError = source.kind == TexturePaintLayerKind.Plugin
                     ? null : source.pluginLastError;
                 layer.proceduralGroupKey = source.proceduralGroupKey;
+                layer.editPathsTogether = source.editPathsTogether;
                 layer.sourceMaterialPresetId = source.sourceMaterialPresetId;
                 layer.sourceMaterialPresetRevision = source.sourceMaterialPresetRevision;
                 layer.sourceMaterialPresetLayerId = source.sourceMaterialPresetLayerId;

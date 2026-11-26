@@ -204,6 +204,19 @@ namespace UMA.ClothesDesigner.Editor
 
         private static float Cross(Vector2 o, Vector2 a, Vector2 b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 
+        /// <summary>The shortest distance between segments ab and cd (0 where they cross).</summary>
+        public static float SegmentDistance(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            if (SegmentsCross(a, b, c, d)) return 0f;
+            float PointToSegment(Vector2 p, Vector2 s0, Vector2 s1)
+            {
+                Vector2 s = s1 - s0;
+                float t = s.sqrMagnitude > 1e-12f ? Mathf.Clamp01(Vector2.Dot(p - s0, s) / s.sqrMagnitude) : 0f;
+                return (s0 + s * t - p).magnitude;
+            }
+            return Mathf.Min(Mathf.Min(PointToSegment(a, c, d), PointToSegment(b, c, d)), Mathf.Min(PointToSegment(c, a, b), PointToSegment(d, a, b)));
+        }
+
         /// <summary>Where the outline crosses a horizontal line: the leftmost and rightmost x. False when it does not.</summary>
         public static bool WidthAt(IList<Vector2> polygon, float y, out float minX, out float maxX)
         {

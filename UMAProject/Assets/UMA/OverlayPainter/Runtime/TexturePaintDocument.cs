@@ -1153,6 +1153,8 @@ namespace UMA.TexturePaint
         public bool pluginStale = true;
         public string pluginLastError;
         public string proceduralGroupKey;
+        /// <summary>A group's Edit Paths Together (<see cref="TexturePaintLayer.editPathsTogether"/>); on in documents saved before it.</summary>
+        public bool editPathsTogether = true;
         public string sourceMaterialPresetId;
         public int sourceMaterialPresetRevision;
         public string sourceMaterialPresetLayerId;

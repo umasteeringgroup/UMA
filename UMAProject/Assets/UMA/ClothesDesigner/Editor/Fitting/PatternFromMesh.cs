@@ -169,7 +169,7 @@ namespace UMA.ClothesDesigner.Editor
         public static Result FromWardrobeRecipe(RaceData race, UMA.CharacterSystem.UMAWardrobeRecipe recipe, BodyLandmarks body, Settings settings = null)
         {
             if (race == null || recipe == null) return null;
-            var go = new GameObject("Clothes Designer Converter (temporary)") { hideFlags = HideFlags.HideAndDontSave };
+            GameObject go = DesignerTemporaryObjects.Create(DesignerTemporaryObjects.ConverterName, HideFlags.HideAndDontSave);
             go.transform.position = new Vector3(300f, 0f, 0f);
             var temporary = new List<UnityEngine.Object> { go };
             var baked = new Mesh();

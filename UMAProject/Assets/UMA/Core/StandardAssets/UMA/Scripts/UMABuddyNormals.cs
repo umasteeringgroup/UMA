@@ -24,6 +24,12 @@ namespace UMA
     /// A locked vertex is one whose normal may not be changed here (it belongs to a slot that is not
     /// being edited). Its buddies take its normal, so the connection still has one normal.
     /// </para>
+    /// <para>
+    /// The other exception is an edge marked sharp (<see cref="Sides"/>, kept on a slot as
+    /// <c>SlotDataAsset.normalSides</c>): buddies with different side ids each get the normal of their
+    /// own side's faces, so a crease or a sharp seam stays crisp. They stay buddies otherwise: one
+    /// position, moved and tracked as one.
+    /// </para>
     /// </remarks>
     public sealed class UMABuddyNormals
     {
@@ -37,7 +43,41 @@ namespace UMA
         private readonly int[] faceStart;
         private readonly int[] faces;
         private readonly List<int> side = new List<int>(8);
+        private readonly List<int> members = new List<int>(8);
+        private readonly List<int> sideIds = new List<int>(4);
         private bool[] affected;
+
+        /// <summary>
+        /// Optional side id per vertex (null, or an empty array, for none). Buddies with different ids are
+        /// two sides of a sharp edge and get a normal each; buddies with the same id share one, as always.
+        /// </summary>
+        public int[] Sides { get; set; }
+
+        /// <summary>
+        /// Fills <see cref="members"/> with the group's vertices on its <paramref name="part"/>-th side (the
+        /// whole group when there are no sides). False when there is no such side.
+        /// </summary>
+        private bool SideOfGroup(int first, int end, int part)
+        {
+            members.Clear();
+            int[] sides = Sides;
+            if (sides == null || sides.Length != groupOf.Length)
+            {
+                if (part > 0) return false;
+                for (int m = first; m < end; m++) members.Add(groupMembers[m]);
+                return true;
+            }
+            sideIds.Clear();
+            for (int m = first; m < end; m++)
+            {
+                int id = sides[groupMembers[m]];
+                if (!sideIds.Contains(id)) sideIds.Add(id);
+            }
+            if (part >= sideIds.Count) return false;
+            int wanted = sideIds[part];
+            for (int m = first; m < end; m++) if (sides[groupMembers[m]] == wanted) members.Add(groupMembers[m]);
+            return true;
+        }
 
         public int VertexCount => groupOf.Length;
         public int GroupCount => groupStart.Length - 1;
@@ -142,31 +182,34 @@ namespace UMA
             for (int g = 0; g < GroupCount; g++)
             {
                 int first = groupStart[g], end = groupStart[g + 1];
-                if (TakeLockedNormal(first, end, normals, normals, locked, ref written))
+                for (int part = 0; SideOfGroup(first, end, part); part++)
                 {
-                    continue;
-                }
-                side.Clear();
-                for (int m = first; m < end; m++) side.Add(groupMembers[m]);
-                if (RecalculateSide(positions, normals, weightByArea, ref written))
-                {
-                    continue;
-                }
-                // The faces cancel: two sides of double-sided geometry. One normal for each side.
-                Vector3 reference = Vector3.zero;
-                for (int m = first; m < end && reference == Vector3.zero; m++)
-                {
-                    reference = VertexSum(groupMembers[m], positions, weightByArea, out _);
-                }
-                for (int pass = 0; pass < 2; pass++)
-                {
-                    side.Clear();
-                    for (int m = first; m < end; m++)
+                    if (TakeLockedNormal(normals, normals, locked, ref written))
                     {
-                        bool front = Vector3.Dot(VertexSum(groupMembers[m], positions, weightByArea, out _), reference) >= 0f;
-                        if (front == (pass == 0)) side.Add(groupMembers[m]);
+                        continue;
                     }
-                    RecalculateSide(positions, normals, weightByArea, ref written);
+                    side.Clear();
+                    side.AddRange(members);
+                    if (RecalculateSide(positions, normals, weightByArea, ref written))
+                    {
+                        continue;
+                    }
+                    // The faces cancel: two sides of double-sided geometry. One normal for each side.
+                    Vector3 reference = Vector3.zero;
+                    for (int i = 0; i < members.Count && reference == Vector3.zero; i++)
+                    {
+                        reference = VertexSum(members[i], positions, weightByArea, out _);
+                    }
+                    for (int pass = 0; pass < 2; pass++)
+                    {
+                        side.Clear();
+                        foreach (int v in members)
+                        {
+                            bool front = Vector3.Dot(VertexSum(v, positions, weightByArea, out _), reference) >= 0f;
+                            if (front == (pass == 0)) side.Add(v);
+                        }
+                        RecalculateSide(positions, normals, weightByArea, ref written);
+                    }
                 }
             }
             return written;
@@ -208,52 +251,54 @@ namespace UMA
             {
                 if (!affected[g]) continue;
                 int first = groupStart[g], end = groupStart[g + 1];
-                if (TakeLockedNormal(first, end, beforeNormals, normals, locked, ref written))
+                for (int part = 0; SideOfGroup(first, end, part); part++)
                 {
-                    continue;
-                }
-                side.Clear();
-                for (int m = first; m < end; m++) side.Add(groupMembers[m]);
-                if (FollowSide(before, after, beforeNormals, normals, ref written))
-                {
-                    continue;
-                }
-                // Opposed buddies: the two sides of double-sided geometry each follow their own faces.
-                Vector3 reference = beforeNormals[groupMembers[first]];
-                for (int pass = 0; pass < 2; pass++)
-                {
-                    side.Clear();
-                    for (int m = first; m < end; m++)
+                    if (TakeLockedNormal(beforeNormals, normals, locked, ref written))
                     {
-                        bool front = Vector3.Dot(beforeNormals[groupMembers[m]], reference) >= 0f;
-                        if (front == (pass == 0)) side.Add(groupMembers[m]);
+                        continue;
                     }
-                    FollowSide(before, after, beforeNormals, normals, ref written);
+                    side.Clear();
+                    side.AddRange(members);
+                    if (FollowSide(before, after, beforeNormals, normals, ref written))
+                    {
+                        continue;
+                    }
+                    // Opposed buddies: the two sides of double-sided geometry each follow their own faces.
+                    Vector3 reference = beforeNormals[members[0]];
+                    for (int pass = 0; pass < 2; pass++)
+                    {
+                        side.Clear();
+                        foreach (int v in members)
+                        {
+                            bool front = Vector3.Dot(beforeNormals[v], reference) >= 0f;
+                            if (front == (pass == 0)) side.Add(v);
+                        }
+                        FollowSide(before, after, beforeNormals, normals, ref written);
+                    }
                 }
             }
             return written;
         }
 
-        /// <summary>When a group has a locked vertex, gives its normal to the unlocked ones. True when the group is done.</summary>
-        private bool TakeLockedNormal(int first, int end, Vector3[] source, Vector3[] normals, bool[] locked, ref int written)
+        /// <summary>When the vertices in <see cref="members"/> include a locked one, gives its normal to the unlocked ones. True when they are done.</summary>
+        private bool TakeLockedNormal(Vector3[] source, Vector3[] normals, bool[] locked, ref int written)
         {
             if (locked == null)
             {
                 return false;
             }
             int keeper = -1;
-            for (int m = first; m < end && keeper < 0; m++)
+            for (int i = 0; i < members.Count && keeper < 0; i++)
             {
-                if (locked[groupMembers[m]]) keeper = groupMembers[m];
+                if (locked[members[i]]) keeper = members[i];
             }
             if (keeper < 0)
             {
                 return false;
             }
             Vector3 normal = source[keeper];
-            for (int m = first; m < end; m++)
+            foreach (int v in members)
             {
-                int v = groupMembers[m];
                 if (!locked[v] && normals[v] != normal)
                 {
                     normals[v] = normal;

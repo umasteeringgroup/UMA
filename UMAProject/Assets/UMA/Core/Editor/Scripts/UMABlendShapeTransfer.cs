@@ -187,12 +187,13 @@ namespace UMA.Editors
             {
                 return false;
             }
+            UMARigRestPoseAsset legacyRigAsset = race.GetLegacyRig(out UMASlotRigConversionProfile legacyProfile);
             context = new UMABlendShapeRigContext
             {
                 Race = race,
                 Rig = rig,
-                LegacyRig = race.legacyRig != null ? race.legacyRig.GetRestPose() : null,
-                Profile = race.legacyRigProfile,
+                LegacyRig = legacyRigAsset != null ? legacyRigAsset.GetRestPose() : null,
+                Profile = legacyProfile,
             };
             if (context.LegacyRig != null && context.LegacyRig.BoneCount == 0)
             {

@@ -196,15 +196,41 @@ namespace UMA.ClothesDesigner.Editor
         {
             var points = new List<Vector2>();
             float limit = pleat.lengthCm > 0f ? pleat.lengthCm : float.MaxValue;
-            for (int j = 1; j < 1000; j++)
+            const int MaxSteps = 1000;
+            float stop = spacing * 0.5f;
+            // Only outline segments that come within the stopping distance of the whole line can stop it by
+            // distance; the rest are left out of that test. Same answer, without measuring every point of the
+            // line against the whole outline (tens of milliseconds a frame on a long box pleat).
+            Vector2 last = start + shape.inward * Mathf.Min(limit + 1e-3f, spacing * MaxSteps);
+            var near = new List<Vector2>();
+            for (int i = 0; i < outline.Count; i++)
+            {
+                Vector2 a = outline[i], b = outline[(i + 1) % outline.Count];
+                if (PatternGeometry.SegmentDistance(start, last, a, b) < stop + 0.01f) { near.Add(a); near.Add(b); }
+            }
+            for (int j = 1; j < MaxSteps; j++)
             {
                 float along = spacing * j;
                 if (along > limit + 1e-3f) break;
                 Vector2 q = start + shape.inward * along;
-                if (!PatternGeometry.PointInPolygon(outline, q) || PatternGeometry.DistanceToPolyline(outline, q) < spacing * 0.5f) break;
+                if (CloserThan(near, q, stop) || !PatternGeometry.PointInPolygon(outline, q)) break;
                 points.Add(q);
             }
             return points;
+        }
+
+        /// <summary>Whether a point is closer than <paramref name="distance"/> to any of the segments (pairs of points).</summary>
+        private static bool CloserThan(List<Vector2> segments, Vector2 p, float distance)
+        {
+            // The same sums as PatternGeometry.DistanceToPolyline, so the answer matches it exactly.
+            float best = float.MaxValue;
+            for (int i = 0; i + 1 < segments.Count; i += 2)
+            {
+                Vector2 a = segments[i], ab = segments[i + 1] - a;
+                float t = ab.sqrMagnitude > 1e-12f ? Mathf.Clamp01(Vector2.Dot(p - a, ab) / ab.sqrMagnitude) : 0f;
+                best = Mathf.Min(best, (a + ab * t - p).sqrMagnitude);
+            }
+            return Mathf.Sqrt(best) < distance;
         }
 
         // ---- What the edges lose -----------------------------------------------------------------

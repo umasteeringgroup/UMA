@@ -1,6 +1,9 @@
 #if UNITY_EDITOR
+using System;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace UMA.Editors.Tests
 {
@@ -26,6 +29,20 @@ namespace UMA.Editors.Tests
             public override string Id => id;
             public override GUIContent ToolbarContent => content;
             public override int Order => order;
+        }
+
+        private sealed class BarHidingWorkflow : VertexEditorWorkflow
+        {
+            private readonly bool fails;
+
+            public BarHidingWorkflow(bool fails)
+            {
+                this.fails = fails;
+            }
+
+            public override string Id => IdB;
+            public override GUIContent ToolbarContent { get; } = new GUIContent("Hides Bars");
+            public override bool HidesWorkflowBars => fails ? throw new InvalidOperationException("bar check failed") : true;
         }
 
         private const string IdA = "uma.tests.workflow-a";
@@ -97,6 +114,23 @@ namespace UMA.Editors.Tests
             Assert.That(VertexEditorWorkflows.Unregister(IdA), Is.True);
             Assert.That(VertexEditorWorkflows.Find(IdA), Is.Null);
             Assert.That(VertexEditorWorkflows.Unregister(IdA), Is.False);
+        }
+
+        [Test]
+        public void WorkflowBars_AreShownUnlessTheActiveWorkflowHidesThem()
+        {
+            Assert.That(new TestWorkflow(IdA).HidesWorkflowBars, Is.False, "a workflow keeps the bars unless it asks");
+            Assert.That(VertexEditorWorkflows.HidesBars(new TestWorkflow(IdA)), Is.False);
+            Assert.That(VertexEditorWorkflows.HidesBars(null), Is.False, "no plugin workflow is active");
+            Assert.That(VertexEditorWorkflows.HidesBars(new BarHidingWorkflow(false)), Is.True);
+        }
+
+        [Test]
+        public void WorkflowBars_AreShown_WhenTheWorkflowFailsToSay()
+        {
+            // A failing plugin must not take the way back to the built-in workflows with it.
+            LogAssert.Expect(LogType.Exception, new Regex("bar check failed"));
+            Assert.That(VertexEditorWorkflows.HidesBars(new BarHidingWorkflow(true)), Is.False);
         }
 
         [Test]

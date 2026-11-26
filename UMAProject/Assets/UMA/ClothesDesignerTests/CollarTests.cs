@@ -154,6 +154,39 @@ namespace UMA.ClothesDesigner.Editor.Tests
             Assert.That(top, Is.LessThan(neck * 0.99f));
             Assert.That(shirt.FindProblems(), Is.Empty);
         }
+
+        [Test]
+        public void PoloShirt_TurnsItsCollarDown_TheForteShirtKeepsAStandCollar()
+        {
+            // A polo collar falls over: a firm stand with a leaf turned down over it on a folded seam. Its one-piece
+            // band collar stood straight up; that shirt is kept as the Forte Shirt.
+            ClothesPattern polo = SamplePatterns.Create("Polo Shirt"), forte = SamplePatterns.Create("Forte Shirt");
+            made.Add(polo);
+            made.Add(forte);
+            PatternPiece stand = polo.pieces.Find(p => p.name == "Collar Stand"), leaf = polo.pieces.Find(p => p.name == "Collar");
+            Assert.That(stand, Is.Not.Null);
+            Assert.That(leaf, Is.Not.Null);
+            Assert.That(stand.interfacing, Is.EqualTo(InterfacingLevel.Firm));
+            Assert.That(leaf.layer, Is.GreaterThan(stand.layer), "the leaf lies over the stand and the shirt");
+            PatternSeam fold = polo.seams.Find(s => s.folded);
+            Assert.That(fold, Is.Not.Null);
+            Assert.That(new[] { fold.a.pieceId, fold.b.pieceId }, Is.EquivalentTo(new[] { stand.id, leaf.id }));
+            // Turned down, the leaf reaches past the neck seam: its points hang 6.5 cm, against a 3 cm stand.
+            Assert.That(leaf.Bounds().height, Is.GreaterThan(6f));
+            Assert.That(polo.FindProblems(), Is.Empty);
+
+            PatternPiece band = forte.pieces.Find(p => p.name == "Collar");
+            Assert.That(band, Is.Not.Null);
+            Assert.That(forte.pieces.Find(p => p.name == "Collar Stand"), Is.Null);
+            Assert.That(forte.seams.Exists(s => s.folded), Is.False, "nothing is turned over");
+            Assert.That(forte.seams.FindAll(s => s.a.pieceId == band.id || s.b.pieceId == band.id).Count, Is.EqualTo(4), "sewn along the four neckline edges");
+            Assert.That(forte.FindProblems(), Is.Empty);
+            // The same shirt below the collar.
+            foreach (string name in new[] { "Front", "Back", "Right Sleeve", "Left Sleeve" })
+            {
+                Assert.That(polo.pieces.Exists(p => p.name == name) && forte.pieces.Exists(p => p.name == name), Is.True, name);
+            }
+        }
     }
 }
 #endif

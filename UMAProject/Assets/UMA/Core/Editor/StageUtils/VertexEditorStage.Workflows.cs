@@ -27,6 +27,12 @@ namespace UMA
         /// <summary>The plugin workflow that is active, or null while a built-in workflow is.</summary>
         public VertexEditorWorkflow ActiveWorkflow => activeWorkflow;
 
+        /// <summary>
+        /// True while the active plugin workflow hides the workflow bars
+        /// (<see cref="VertexEditorWorkflow.HidesWorkflowBars"/>): it is left by closing the editor.
+        /// </summary>
+        internal bool WorkflowBarsHidden => VertexEditorWorkflows.HidesBars(activeWorkflow);
+
         /// <summary>The character the stage is editing.</summary>
         public DynamicCharacterAvatar Character => thisDCA;
 
@@ -55,6 +61,13 @@ namespace UMA
 
         /// <summary>The tools panel's place in the Scene view, in GUI points.</summary>
         public Rect ToolsPanelRect => leftPanelRect;
+
+        /// <summary>
+        /// The width the tools panel lays its controls out in (GUI points): the panel less its scrollbar and padding.
+        /// A workflow's controls are clipped beyond it, and a control wider than it widens everything laid out with
+        /// it, so rows of buttons should fit it.
+        /// </summary>
+        public float ToolsContentWidth { get; private set; } = 300f;
 
         /// <summary>
         /// Generates the character again, for example after its DNA was changed. The stage then shows the
@@ -115,6 +128,21 @@ namespace UMA
             }
             RepaintEditors();
             return true;
+        }
+
+        /// <summary>
+        /// Switches to the Sculpt workflow, as its button does, ending any plugin workflow. For tools that
+        /// hand a character over to be touched up by hand.
+        /// </summary>
+        public void SelectSculpt()
+        {
+            if (closing)
+            {
+                return;
+            }
+            DeactivateWorkflow();
+            SelectAuthoringWorkflow(MeshModifierEditor.AuthoringWorkflow.Sculpt);
+            RepaintEditors();
         }
 
         /// <summary>Ends the plugin workflow; the stage is left in the Advanced workflow's selection mode.</summary>

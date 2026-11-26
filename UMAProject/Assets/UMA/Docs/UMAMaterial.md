@@ -65,6 +65,12 @@ Use it when:
 - Each slot already has final textures.
 - Layered overlays are not required.
 
+### Second Pass
+
+Atlas, No Atlas and Use Existing Textures materials can name a **Second Pass** (and an **HDRP Second Pass**, used in HDRP when set). UMA draws the same triangles twice, first with the Default Material and then with the second pass, for example a cutout pass followed by a blended pass for hair or brows. Both passes get the same textures: the generated atlas or No Atlas textures, or the overlay's own textures for Use Existing Textures. A channel's texture reaches the second pass only when its shader has the same texture property name. Atlas packs compatible slots into one texture set and one pair of materials. No Atlas makes one texture set and pair for each distinct overlay list.
+
+Use Existing Material has no second pass. Switching a material to it clears both second-pass fields; switching between the other three types keeps them.
+
 ## Hair materials and Configure UMA
 
 **UMA > Welcome to UMA > Configure UMA** lists skin and hair materials separately. Maximum Speed switches selected compatible skin materials to Atlas and keeps only an existing opaque Alpha Clip pass for selected compatible hair materials. It backs up the default and HDRP material references, including both second-pass fields, on the UMAMaterial before changing assignments. Repeated Speed setup preserves the first backup.

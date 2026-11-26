@@ -18,7 +18,21 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>Move a piece round the body, up and down, and out from it, before sewing.</summary>
         Place = 3,
         /// <summary>Measure between two points on the cloth or the body, and round them at a height.</summary>
-        Measure = 4
+        Measure = 4,
+        /// <summary>Roll the cloth in front out over the cloth behind it, where they lie too close or have crossed.</summary>
+        Roll = 5,
+        /// <summary>Put a dart on the cloth where it is worn: press at its point, release towards the edge it opens on.</summary>
+        Dart = 6,
+        /// <summary>Put a pleat on the cloth where it is worn: click near the edge it folds from.</summary>
+        Pleat = 7,
+        /// <summary>Draw a new piece's outline on the body, point by point.</summary>
+        DrawPiece = 8,
+        /// <summary>Paint where the cloth hugs the body, smooths out, puffs up or slims in (<see cref="FitPaint"/>).</summary>
+        FitBrush = 9,
+        /// <summary>Paint a region on the body anywhere and make pattern pieces from it (<see cref="RegionUnfold"/>).</summary>
+        BodyRegion = 10,
+        /// <summary>Make a piece wider, narrower, longer or shorter on the body (<see cref="PieceSizing"/>).</summary>
+        Size = 11
     }
 
     /// <summary>How the cloth is coloured in the Scene view.</summary>
@@ -29,7 +43,9 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>How much longer the cloth is than the flat pattern: blue none, green 5%, red 20% or more.</summary>
         Stretch = 1,
         /// <summary>How far the cloth is from the body: red inside it, orange within the clearance, then green to blue at 3 cm.</summary>
-        BodyDistance = 2
+        BodyDistance = 2,
+        /// <summary>The Fit Brush's paint: green hug, blue smooth, orange puff, purple slim (always shown while painting).</summary>
+        FitPaint = 3
     }
 
     /// <summary>
@@ -37,7 +53,7 @@ namespace UMA.ClothesDesigner.Editor
     /// being edited (working copies of their assets), the simulation, the cloth drawn in the stage, the
     /// tools and their Undo, and the try-on character.
     /// </summary>
-    public sealed class DesignerSession : IDisposable
+    public sealed partial class DesignerSession : IDisposable
     {
         public readonly VertexEditorStage Stage;
         public ClothesDesignerWorkflow.Mode Mode = ClothesDesignerWorkflow.Mode.NewClothes;
@@ -247,12 +263,21 @@ namespace UMA.ClothesDesigner.Editor
             return Color.Lerp(new Color(0.2f, 0.85f, 0.3f), new Color(0.2f, 0.4f, 1f), Mathf.Clamp01((distance - clearance) / 0.03f));
         }
 
-        /// <summary>Each point's colour in the Stretch or Body Distance view.</summary>
+        /// <summary>
+        /// Each point's colour in the Fit Brush paint, Stretch or Body Distance view. The paint is multiplied over
+        /// the lit cloth, so unpainted cloth is white.
+        /// </summary>
         public Color[] MapColors(ClothView view)
         {
             Vector3[] x = Fit.Positions;
             var colors = new Color[x.Length];
-            if (view == ClothView.Stretch)
+            if (view == ClothView.FitPaint)
+            {
+                bool painted = Fit.PaintHug.Length == x.Length;
+                bool five = painted && Fit.PaintStiff.Length == x.Length && Fit.PaintWeight.Length == x.Length;
+                for (int i = 0; i < x.Length; i++) colors[i] = painted ? FitPaint.Color(Fit.PaintHug[i], Fit.PaintSmooth[i], Fit.PaintInflate[i], five ? Fit.PaintStiff[i] : 0f, five ? Fit.PaintWeight[i] : 0f, Color.white) : Color.white;
+            }
+            else if (view == ClothView.Stretch)
             {
                 var most = new float[x.Length];
                 foreach (ClothConstraint c in Fit.Model.Constraints)
@@ -275,12 +300,25 @@ namespace UMA.ClothesDesigner.Editor
         }
 
         /// <summary>Puts the view's colours on the preview, or the texture back.</summary>
+        /// <summary>The view in effect: the paint while the Fit Brush is the tool, otherwise the chosen one.</summary>
+        public ClothView EffectiveView => Tool == ClothTool.FitBrush ? ClothView.FitPaint : View;
+
         private void ApplyView(MeshRenderer renderer)
         {
-            ClothView view = View;
+            ClothView view = EffectiveView;
             if (view == ClothView.Texture || !Fit.HasCloth)
             {
-                if (renderer.sharedMaterial != previewMaterial) renderer.sharedMaterial = previewMaterial;
+                SetMaterials(renderer, previewMaterial, null);
+                return;
+            }
+            Color[] colors = WithShellValues(MapColors(view));
+            previewMesh.SetColors(previewBackFaces ? Doubled(colors) : colors);
+            if (view == ClothView.FitPaint)
+            {
+                // Lit while painting, so the folds and where the cloth stands off the body still show: a plain lit
+                // copy of the cloth, with the paint multiplied over it in a second pass.
+                EnsurePaintMaterials();
+                SetMaterials(renderer, paintLitMaterial, paintMaterial);
                 return;
             }
             if (mapMaterial == null)
@@ -288,9 +326,53 @@ namespace UMA.ClothesDesigner.Editor
                 // Unlit and showing the points' colours in every render pipeline.
                 mapMaterial = new Material(Shader.Find("Sprites/Default")) { hideFlags = HideFlags.DontSave };
             }
-            renderer.sharedMaterial = mapMaterial;
-            Color[] colors = MapColors(view);
-            previewMesh.SetColors(previewBackFaces ? Doubled(colors) : colors);
+            SetMaterials(renderer, mapMaterial, null);
+        }
+
+        private Material paintLitMaterial, paintMaterial;
+
+        /// <summary>
+        /// The Fit Brush's materials: the preview's own lit material without the UV check texture, and a pass that
+        /// multiplies the points' colours over it (drawn again on the mesh as the renderer's second material, which
+        /// works in every render pipeline), pulled a little towards the camera so it never flickers.
+        /// </summary>
+        private void EnsurePaintMaterials()
+        {
+            if (paintLitMaterial == null)
+            {
+                paintLitMaterial = previewMaterial != null ? new Material(previewMaterial) : new Material(UMAUtils.GetDefaultDiffuseMaterial());
+                paintLitMaterial.name = "Clothes Designer Paint (lit)";
+                paintLitMaterial.hideFlags = HideFlags.DontSave;
+                foreach (string property in new[] { "_BaseMap", "_MainTex", "_BaseColorMap" })
+                {
+                    if (paintLitMaterial.HasProperty(property)) paintLitMaterial.SetTexture(property, null);
+                }
+                if (paintLitMaterial.HasProperty("_Cull")) paintLitMaterial.SetFloat("_Cull", 0f);
+                if (paintLitMaterial.HasProperty("_CullMode")) paintLitMaterial.SetFloat("_CullMode", 0f);
+                if (paintLitMaterial.HasProperty("_BaseColor")) paintLitMaterial.SetColor("_BaseColor", Color.white);
+                if (paintLitMaterial.HasProperty("_Color")) paintLitMaterial.SetColor("_Color", Color.white);
+            }
+            if (paintMaterial == null)
+            {
+                paintMaterial = new Material(Shader.Find("Hidden/Internal-Colored")) { name = "Clothes Designer Paint", hideFlags = HideFlags.DontSave };
+                paintMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.DstColor);
+                paintMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                paintMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+                paintMaterial.SetInt("_ZWrite", 0);
+                paintMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
+                paintMaterial.SetFloat("_ZBias", -1f);
+            }
+        }
+
+        /// <summary>Gives the renderer one material, or two (the second drawn again over the first), when they differ.</summary>
+        private static void SetMaterials(MeshRenderer renderer, Material first, Material second)
+        {
+            Material[] now = renderer.sharedMaterials;
+            if (second == null)
+            {
+                if (now.Length != 1 || now[0] != first) renderer.sharedMaterials = new[] { first };
+            }
+            else if (now.Length != 2 || now[0] != first || now[1] != second) renderer.sharedMaterials = new[] { first, second };
         }
 
         public void RefreshView()
@@ -482,13 +564,13 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>Draws the refitted slot over the character, in the designer's cloth colours.</summary>
         public void ShowRefitPreview()
         {
-            if (!Refit.IsBound || Refit.Current == null) return;
+            if (IsDisposed || !Refit.IsBound || Refit.Current == null) return;
             if (preview == null)
             {
-                preview = new GameObject("Clothes Designer Refit") { hideFlags = HideFlags.DontSave | HideFlags.NotEditable };
+                preview = DesignerTemporaryObjects.CreateInScene(DesignerTemporaryObjects.RefitName, Stage.scene);
+                if (preview == null) return;
                 preview.AddComponent<MeshFilter>();
                 preview.AddComponent<MeshRenderer>();
-                if (Stage.scene.IsValid()) SceneManager.MoveGameObjectToScene(preview, Stage.scene);
             }
             if (previewMesh == null) previewMesh = new Mesh { name = "Refit", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32, hideFlags = HideFlags.DontSave };
             previewMesh.Clear();
@@ -544,6 +626,7 @@ namespace UMA.ClothesDesigner.Editor
         public void OpenPattern(ClothesPattern asset)
         {
             EnsureFit();
+            ClothesPattern previous = Pattern;
             PatternAsset = asset;
             Pattern = asset != null ? UnityEngine.Object.Instantiate(asset) : null;
             if (Pattern != null)
@@ -556,11 +639,13 @@ namespace UMA.ClothesDesigner.Editor
             savedPatternJson = Pattern != null ? JsonUtility.ToJson(Pattern) : null;
             FitData.pattern = asset;
             RebuildCloth(false);
+            ReleaseWorkingCopy(previous, Pattern);
         }
 
         public void NewPattern(ClothesPattern startFrom)
         {
             EnsureFit();
+            ClothesPattern previous = Pattern;
             PatternAsset = null;
             Pattern = startFrom != null ? startFrom : ScriptableObject.CreateInstance<ClothesPattern>();
             Pattern.hideFlags = HideFlags.DontSave;
@@ -572,11 +657,31 @@ namespace UMA.ClothesDesigner.Editor
             savedPatternJson = null;
             FitData.pattern = null;
             RebuildCloth(false);
+            ReleaseWorkingCopy(previous, Pattern);
+        }
+
+        /// <summary>
+        /// Puts a redrafted pattern in place of the one being edited (the garment generator's redraft of its own
+        /// pattern), keeping the asset it was saved to, so Save Pattern writes that asset. The cloth is laid out again.
+        /// </summary>
+        public void ReplacePattern(ClothesPattern pattern)
+        {
+            if (pattern == null) return;
+            EnsureFit();
+            ClothesPattern previous = Pattern;
+            Pattern = pattern;
+            Pattern.hideFlags = HideFlags.DontSave;
+            if (PatternAsset != null) Pattern.name = PatternAsset.name;
+            FitData.pattern = PatternAsset;
+            RebuildCloth(false);
+            ReleaseWorkingCopy(previous, Pattern);
         }
 
         public void OpenFit(ClothesFit asset)
         {
             if (asset == null) return;
+            ClothesPattern previousPattern = Pattern;
+            ClothesFit previousFit = FitData;
             FitAsset = asset;
             FitData = UnityEngine.Object.Instantiate(asset);
             FitData.name = asset.name;
@@ -604,6 +709,20 @@ namespace UMA.ClothesDesigner.Editor
             ApplyFitDna();
             ApplyWornUnder();
             RebuildCloth(false);
+            ReleaseWorkingCopy(previousPattern, Pattern);
+            ReleaseWorkingCopy(previousFit, FitData);
+        }
+
+        /// <summary>
+        /// Destroys a working copy the session has stopped editing: a pattern or fit replaced by another one, or
+        /// both when the designer closes. Its Undo steps go with it, so Undo never changes a pattern that is no
+        /// longer shown. Saved assets are never destroyed.
+        /// </summary>
+        private static void ReleaseWorkingCopy(ScriptableObject copy, ScriptableObject stillUsed)
+        {
+            if (copy == null || copy == stillUsed || EditorUtility.IsPersistent(copy)) return;
+            Undo.ClearUndo(copy);
+            UnityEngine.Object.DestroyImmediate(copy);
         }
 
         public bool PatternDirty => Pattern != null && (savedPatternJson == null || JsonUtility.ToJson(Pattern) != savedPatternJson);
@@ -701,12 +820,22 @@ namespace UMA.ClothesDesigner.Editor
         /// Builds the cloth again from the pattern and fit. With <paramref name="keepShape"/> the current
         /// drape is carried over through the flat pattern (a new mesh level keeps the folds).
         /// </summary>
-        public void RebuildCloth(bool keepShape)
+        public void RebuildCloth(bool keepShape) => RebuildCloth(keepShape, null);
+
+        /// <summary>
+        /// As <see cref="RebuildCloth(bool)"/>, after some pieces' outlines were scaled: <paramref name="drawnBefore"/> gives,
+        /// for a piece and a point of it as drawn now, where it was drawn before, so the drape is carried over from there.
+        /// </summary>
+        public void RebuildCloth(bool keepShape, Func<int, Vector2, Vector2> drawnBefore)
         {
+            if (IsDisposed) return;
             Running = false;
             Settled = false;
             CancelDrag();
             placing = false;
+            sizing = false;
+            sizePreviewing = false;
+            blendFrom = null;
             if (Pattern == null || FitData == null || Body == null)
             {
                 Fit.DisposeSolver();
@@ -723,7 +852,7 @@ namespace UMA.ClothesDesigner.Editor
             Fit.Body = Body;
             try
             {
-                Fit.Rebuild();
+                RebuildWithProgress();
             }
             catch (Exception ex)
             {
@@ -732,8 +861,8 @@ namespace UMA.ClothesDesigner.Editor
             }
             if (Fit.HasCloth && oldMesh != null && oldPositions != null && wasSewn)
             {
-                Vector3[] carried = Resample(oldMesh, oldPositions, Fit.Mesh);
-                Fit.Restore(carried, FitSession.SewSeconds + FitSession.GravityRampSeconds);
+                Vector3[] carried = new PatternMeshSampler(oldMesh).Carry(oldPositions, Fit.Mesh, drawnBefore);
+                Fit.Restore(carried, Fit.SettledTime);
                 Fit.Messages.Add("Kept the drape on the new mesh; simulate to let it settle.");
             }
             weldGroup = Fit.HasCloth ? GarmentBaker.WeldGroups(Fit.Mesh.VertexCount, Fit.Mesh.stitches) : null;
@@ -743,6 +872,40 @@ namespace UMA.ClothesDesigner.Editor
             RememberBuiltData();
             RebuildPreviewMesh();
             NotifyChanged();
+        }
+
+        /// <summary>When meshing has taken this long, a progress bar shows the rebuild's remaining stages.</summary>
+        public const long RebuildProgressAfterMs = 200;
+        private static readonly string[] RebuildStages = { "Meshing the pattern...", "Laying the pieces round the body...", "Building the cloth..." };
+
+        /// <summary>
+        /// The cloth's build stages (mesh, arrangement round the body, model and solver), with a progress bar when meshing
+        /// has already taken long enough to show a big garment. The Editor is blocked while they run, so a Scene view
+        /// notification would only be drawn after them; a progress bar is drawn at once. The bar starts only before the
+        /// arrangement, the slow stage: started before the model and solver (0.06 to 0.14 s) it only flashed once the wait
+        /// was over. Measured on an edited Belted Dress of 8254 points: meshing 0.3 to 0.45 s, arranging 1.8 s (0.9 s since
+        /// its belt is laid out again at the first layout's gap), the model and solver 0.09 s. The sample Belted Dress
+        /// (4000 to 4800 points) meshes in 0.15 to 0.2 s and arranges in 0.4 s; one-layer dresses of 3300 to 4400 points
+        /// take about 0.25 s in all. Neither gets a bar.
+        /// </summary>
+        private void RebuildWithProgress()
+        {
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            IEnumerator<bool> steps = Fit.RebuildInSteps();
+            bool shown = false;
+            try
+            {
+                for (int stage = 0; ; stage++)
+                {
+                    if (!shown && stage == 1 && clock.ElapsedMilliseconds >= RebuildProgressAfterMs) shown = true;
+                    if (shown) EditorUtility.DisplayProgressBar("Clothes Designer", RebuildStages[Mathf.Min(stage, RebuildStages.Length - 1)], (stage + 0.5f) / RebuildStages.Length);
+                    if (!steps.MoveNext()) break;
+                }
+            }
+            finally
+            {
+                if (shown) EditorUtility.ClearProgressBar();
+            }
         }
 
         // ---- Keeping the cloth in step with the pattern and fit (edits, Undo, Redo) ----------------
@@ -767,6 +930,7 @@ namespace UMA.ClothesDesigner.Editor
             var kept = new FabricSettings[Pattern.pieces.Count];
             var keptLayer = new int[kept.Length];
             var keptPressure = new float[kept.Length];
+            var keptThickness = new float[kept.Length];
             var keptElastic = new List<(PatternEdge edge, bool on, float percent)>();
             for (int i = 0; i < kept.Length; i++)
             {
@@ -774,13 +938,15 @@ namespace UMA.ClothesDesigner.Editor
                 kept[i] = piece.fabric; piece.fabric = blankFabric;
                 keptLayer[i] = piece.layer; piece.layer = 0;
                 keptPressure[i] = piece.pressure; piece.pressure = 0f;
+                // A piece's thickness only changes the bake and how the live cloth is drawn (see SyncToData).
+                keptThickness[i] = piece.thicknessMm; piece.thicknessMm = 0f;
                 foreach (PatternEdge e in piece.edges) { keptElastic.Add((e, e.elastic, e.elasticPercent)); e.elastic = false; e.elasticPercent = 75f; }
             }
             string pattern;
             try { pattern = JsonUtility.ToJson(Pattern); }
             finally
             {
-                for (int i = 0; i < kept.Length; i++) { Pattern.pieces[i].fabric = kept[i]; Pattern.pieces[i].layer = keptLayer[i]; Pattern.pieces[i].pressure = keptPressure[i]; }
+                for (int i = 0; i < kept.Length; i++) { Pattern.pieces[i].fabric = kept[i]; Pattern.pieces[i].layer = keptLayer[i]; Pattern.pieces[i].pressure = keptPressure[i]; Pattern.pieces[i].thicknessMm = keptThickness[i]; }
                 foreach (var k in keptElastic) { k.edge.elastic = k.on; k.edge.elasticPercent = k.percent; }
             }
             return pattern + "|" + FitPlacementKey() + "|" + FitData.overrideMeshLevel + FitData.meshLevel + FitData.customEdgeLengthCm.ToString("R");
@@ -822,7 +988,7 @@ namespace UMA.ClothesDesigner.Editor
         /// </summary>
         public void SyncToData()
         {
-            if (Pattern == null || FitData == null) return;
+            if (IsDisposed || Pattern == null || FitData == null) return;
             if (ShapeKey() != builtShapeKey)
             {
                 bool onlyMeshLevel = Pattern.ComputeRevision() == builtRevision && FitPlacementKey() == builtFitPlacementKey;
@@ -830,6 +996,8 @@ namespace UMA.ClothesDesigner.Editor
                 return;
             }
             if (FabricKey() != builtFabricKey) ApplyFabric();
+            // A changed thickness: the live cloth is drawn again with it (nothing is simulated differently).
+            if (ShellKey() != builtShellKey && Fit.HasCloth && previewMesh != null) RebuildPreviewMesh();
         }
 
         /// <summary>Takes up changed fabrics without losing the drape.</summary>
@@ -1001,6 +1169,14 @@ namespace UMA.ClothesDesigner.Editor
             }
             else lastTryOnTick = 0;
             if (Stage == null || !Fit.HasCloth) return;
+            // Cloth laid out again after a Size release is not simulated: its blend from the preview still plays.
+            if (blendFrom != null && !Running && !dragging)
+            {
+                Fit.SyncPositions();
+                BlendFromSizePreview();
+                UpdatePreview();
+                SceneView.RepaintAll();
+            }
             if (Running || dragging)
             {
                 // Several frames a tick: the GPU queues them without waiting; the CPU runs as many as fit in a
@@ -1031,12 +1207,16 @@ namespace UMA.ClothesDesigner.Editor
                 gpu.RequestPositions(positions =>
                 {
                     if (!Fit.HasCloth || positions.Length != Fit.Model.ParticleCount) return;
+                    // A Size drag shows its preview: a reading asked for before the drag must not draw over it.
+                    if (sizing && sizePreviewing) return;
                     Fit.Positions = positions;
+                    BlendFromSizePreview();
                     UpdatePreview();
                 });
                 return;
             }
             Fit.SyncPositions();
+            BlendFromSizePreview();
             UpdatePreview();
         }
 
@@ -1053,7 +1233,8 @@ namespace UMA.ClothesDesigner.Editor
             // simulated frames, so the test holds however fast the frames come.
             Vector3[] p = Fit.Positions;
             float frames = (Fit.SimTime - lastSettleSimTime) * 60f;
-            if (Running && Fit.Sewn && !dragging && lastSettleCheck != null && lastSettleCheck.Length == p.Length && frames >= 5f)
+            // Not while a resize is still being eased in: the cloth may barely move between steps of it.
+            if (Running && Fit.AllSewn && !dragging && !Fit.PreviewEasing && lastSettleCheck != null && lastSettleCheck.Length == p.Length && frames >= 5f)
             {
                 double moved = 0;
                 for (int i = 0; i < p.Length; i++) moved += (p[i] - lastSettleCheck[i]).magnitude;
@@ -1068,17 +1249,18 @@ namespace UMA.ClothesDesigner.Editor
 
         private void RebuildPreviewMesh()
         {
-            if (!Fit.HasCloth)
+            if (IsDisposed || !Fit.HasCloth)
             {
                 DestroyPreview();
                 return;
             }
             if (preview == null)
             {
-                preview = new GameObject("Clothes Designer Cloth") { hideFlags = HideFlags.DontSave | HideFlags.NotEditable };
+                // Only in the stage's own scene: with the stage gone it would land in the artist's scene.
+                preview = DesignerTemporaryObjects.CreateInScene(DesignerTemporaryObjects.ClothName, Stage.scene);
+                if (preview == null) return;
                 preview.AddComponent<MeshFilter>();
                 preview.AddComponent<MeshRenderer>();
-                if (Stage.scene.IsValid()) SceneManager.MoveGameObjectToScene(preview, Stage.scene);
             }
             if (previewMesh == null) previewMesh = new Mesh { name = "Clothes Designer Cloth", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32, hideFlags = HideFlags.DontSave };
             previewMesh.Clear();
@@ -1089,11 +1271,16 @@ namespace UMA.ClothesDesigner.Editor
             }
             // With back faces shown, a second copy of every point faces the other way: drawn whatever the
             // material's culling, and lit from its own side.
-            int n = Fit.Positions.Length;
             previewBackFaces = ShowBackFaces;
-            previewMesh.SetVertices(previewBackFaces ? Doubled(Fit.Positions) : Fit.Positions);
-            previewMesh.SetTriangles(previewBackFaces ? WithBackFaces(previewTriangles, n) : previewTriangles, 0);
-            previewMesh.SetUVs(0, previewBackFaces ? Doubled(Fit.Mesh.uv.ToArray()) : Fit.Mesh.uv.ToArray());
+            // Pieces with a thickness of their own are drawn with it: their outer copy and walls follow the cloth.
+            BuildShell();
+            int total = Fit.Positions.Length + shellSource.Length;
+            Vector3[] vertices = WithShell(Fit.Positions, null, out _);
+            int[] triangles = WithShellTriangles(previewTriangles);
+            Vector2[] uvs = WithShellValues(Fit.Mesh.uv.ToArray());
+            previewMesh.SetVertices(previewBackFaces ? Doubled(vertices) : vertices);
+            previewMesh.SetTriangles(previewBackFaces ? WithBackFaces(triangles, total) : triangles, 0);
+            previewMesh.SetUVs(0, previewBackFaces ? Doubled(uvs) : uvs);
             preview.GetComponent<MeshFilter>().sharedMesh = previewMesh;
             if (previewTexture != null) UnityEngine.Object.DestroyImmediate(previewTexture);
             previewTexture = UvCheckTexture.Draw(Pattern, Fit.Mesh, 512);
@@ -1118,23 +1305,23 @@ namespace UMA.ClothesDesigner.Editor
 
         private void UpdatePreview()
         {
-            int n = Fit.Positions.Length;
-            if (previewMesh == null || !Fit.HasCloth || n * (previewBackFaces ? 2 : 1) != previewMesh.vertexCount) return;
-            Vector3[] normals = WeldedNormals(Fit.Positions);
+            int total = Fit.Positions.Length + shellSource.Length;
+            if (previewMesh == null || !Fit.HasCloth || total * (previewBackFaces ? 2 : 1) != previewMesh.vertexCount) return;
+            Vector3[] vertices = WithShell(Fit.Positions, WeldedNormals(Fit.Positions), out Vector3[] normals);
             if (previewBackFaces)
             {
-                previewMesh.SetVertices(Doubled(Fit.Positions));
+                previewMesh.SetVertices(Doubled(vertices));
                 previewMesh.SetNormals(WithBackFaceNormals(normals));
             }
             else
             {
-                previewMesh.SetVertices(Fit.Positions);
+                previewMesh.SetVertices(vertices);
                 previewMesh.SetNormals(normals);
             }
             previewMesh.RecalculateBounds();
             // The colour views are worked out from the whole cloth: a few times a second while it moves.
             double now = EditorApplication.timeSinceStartup;
-            if (preview != null && (View == ClothView.Texture || now - lastMapTime > 0.25 || !Running))
+            if (preview != null && (EffectiveView == ClothView.Texture || now - lastMapTime > 0.25 || !Running))
             {
                 lastMapTime = now;
                 ApplyView(preview.GetComponent<MeshRenderer>());
@@ -1178,7 +1365,7 @@ namespace UMA.ClothesDesigner.Editor
         /// <summary>Draws the preview again, for a change in how it is shown (back faces).</summary>
         public void RefreshPreview()
         {
-            if (Fit.HasCloth && previewMesh != null) RebuildPreviewMesh();
+            if (!IsDisposed && Fit.HasCloth && previewMesh != null) RebuildPreviewMesh();
             SceneView.RepaintAll();
         }
 
@@ -1207,12 +1394,15 @@ namespace UMA.ClothesDesigner.Editor
 
         private void DestroyPreview()
         {
-            if (preview != null) UnityEngine.Object.DestroyImmediate(preview);
+            DesignerTemporaryObjects.Destroy(preview);
             if (previewMesh != null) UnityEngine.Object.DestroyImmediate(previewMesh);
             if (previewMaterial != null) UnityEngine.Object.DestroyImmediate(previewMaterial);
             if (previewTexture != null) UnityEngine.Object.DestroyImmediate(previewTexture);
             if (mapMaterial != null) UnityEngine.Object.DestroyImmediate(mapMaterial);
+            if (paintLitMaterial != null) UnityEngine.Object.DestroyImmediate(paintLitMaterial);
+            if (paintMaterial != null) UnityEngine.Object.DestroyImmediate(paintMaterial);
             preview = null; previewMesh = null; previewMaterial = null; previewTexture = null; mapMaterial = null;
+            paintLitMaterial = null; paintMaterial = null;
         }
 
         // ---- Undo -----------------------------------------------------------------------------
@@ -1237,7 +1427,7 @@ namespace UMA.ClothesDesigner.Editor
 
         private void OnUndoRedo()
         {
-            if (undoState == null) return;
+            if (IsDisposed || undoState == null) return;
             if (undoState.version != seenUndoVersion && Fit.HasCloth && undoState.positions.Length == Fit.Model.ParticleCount)
             {
                 seenUndoVersion = undoState.version;
@@ -1246,6 +1436,14 @@ namespace UMA.ClothesDesigner.Editor
                 PullPositions(true);
             }
             if (Fit.HasCloth) Fit.RefreshPins();
+            // Fit Brush paint undone or redone: into the cloth again.
+            if (Fit.HasCloth && PaintSignature() != paintSeen)
+            {
+                paintSeen = PaintSignature();
+                Fit.ResolvePaint();
+                Fit.ApplyPaint();
+                RefreshView();
+            }
             // A pattern, fabric, placement or size change undone or redone: bring the cloth up to date.
             SyncToData();
             NotifyChanged();
@@ -1255,9 +1453,21 @@ namespace UMA.ClothesDesigner.Editor
 
         public void OnSceneGUI(SceneView view, bool pointerOverPanel)
         {
+            // A Size drag shown live on the cloth is put back if the tool changes before it is released.
+            if (sizing && Tool != ClothTool.Size) CancelSize();
+            // Drawing a piece on the body needs no cloth: it can start a pattern.
+            if (Tool == ClothTool.DrawPiece) { DrawPieceSceneGUI(view, pointerOverPanel); return; }
+            if (Tool == ClothTool.BodyRegion) { BodyRegionSceneGUI(view, pointerOverPanel); return; }
             if (!Fit.HasCloth) return;
             Event e = Event.current;
             int id = GUIUtility.GetControlID(FocusType.Passive);
+            // The Fit Brush shows the paint; switching to or from it changes the cloth's colours.
+            if (Tool != viewedTool)
+            {
+                bool paintViewChanged = (Tool == ClothTool.FitBrush) != (viewedTool == ClothTool.FitBrush);
+                viewedTool = Tool;
+                if (paintViewChanged) RefreshView();
+            }
             DrawSeams(view);
             DrawPins();
             if (Tool == ClothTool.Place)
@@ -1281,15 +1491,38 @@ namespace UMA.ClothesDesigner.Editor
                 PlaceSceneGUI(view, e, id);
                 return;
             }
+            if (Tool == ClothTool.Size)
+            {
+                SizeSceneGUI(view, e, id);
+                return;
+            }
             if (Tool == ClothTool.Measure)
             {
                 MeasureSceneGUI(e, id);
                 return;
             }
+            if (Tool == ClothTool.Dart || Tool == ClothTool.Pleat)
+            {
+                PatternToolSceneGUI(view, e, id);
+                return;
+            }
             if (e.type == EventType.Repaint && hoverValid && !dragging)
             {
-                Handles.color = Tool == ClothTool.Grab ? new Color(1f, 0.8f, 0.2f) : Tool == ClothTool.Pin ? new Color(0.3f, 0.9f, 1f) : new Color(1f, 0.35f, 0.35f);
+                Handles.color = Tool == ClothTool.Grab ? new Color(1f, 0.8f, 0.2f) : Tool == ClothTool.Pin ? new Color(0.3f, 0.9f, 1f)
+                    : Tool == ClothTool.Roll ? new Color(0.45f, 1f, 0.45f)
+                    : Tool == ClothTool.FitBrush ? (e.control ? FitPaintInfo.EraseColor : FitPaintInfo.PaintColor(PaintMode))
+                    : new Color(1f, 0.35f, 0.35f);
                 Handles.DrawWireDisc(hoverPoint, hoverNormal, BrushRadius);
+            }
+            if (Tool == ClothTool.FitBrush)
+            {
+                FitBrushSceneGUI(e, id);
+                return;
+            }
+            if (Tool == ClothTool.Roll)
+            {
+                RollSceneGUI(e, id);
+                return;
             }
 
             switch (e.GetTypeForControl(id))
@@ -1817,15 +2050,32 @@ namespace UMA.ClothesDesigner.Editor
             Fit.SyncPositions();
             preDrag = (Vector3[])Fit.Positions.Clone();
             preDragTime = Fit.SimTime;
-            RecordUndo("Grab Cloth");
+            // Recorded on release, with the shape before: recorded here, the change seen only in a later frame was lost.
             dragging = true;
             dragHit = hit;
             Vector3 facing = view != null && view.camera != null ? -view.camera.transform.forward : Vector3.forward;
             dragPlane = new Plane(facing, hit);
-            dragWeights = Fit.ConnectedWithin(particle, BrushRadius);
+            // One layer: only cloth on the pressed piece's layer moves, and the other layers are held where they are.
+            int layer = GrabOneLayer && Fit.Model != null && Fit.Model.Layer != null && particle >= 0 && particle < Fit.Model.Layer.Length ? Fit.Model.Layer[particle] : -1;
+            dragWeights = Fit.ConnectedWithin(particle, BrushRadius, layer);
+            dragHeld = layer >= 0 ? Fit.ParticlesOffLayer(layer) : null;
             dragStart = Fit.Positions;
             UpdateDragTargets(hit);
         }
+
+        /// <summary>
+        /// Grab moves only cloth on the layer of the piece pressed on (its Layer on the Pattern Canvas) and holds the cloth
+        /// of the other layers where it is while dragging: a bodice pulled up to blouse over a belt leaves the belt in place.
+        /// </summary>
+        public bool GrabOneLayer
+        {
+            get => SessionState.GetBool(GrabOneLayerKey, false);
+            set => SessionState.SetBool(GrabOneLayerKey, value);
+        }
+
+        private const string GrabOneLayerKey = "UMA.ClothesDesigner.GrabOneLayer";
+        /// <summary>During a one-layer grab: the particles on other layers, held at their place when the drag began.</summary>
+        private List<int> dragHeld;
 
         public void UpdateDrag(Ray ray)
         {
@@ -1842,6 +2092,11 @@ namespace UMA.ClothesDesigner.Editor
             {
                 Fit.GrabPins.Add(new SolverPin { particle = kv.Key, target = dragStart[kv.Key] + offset, weight = Mathf.Clamp01(kv.Value * BrushStrength) * 0.5f });
             }
+            if (dragHeld != null && preDrag != null)
+            {
+                // Held at the copy taken when the drag began.
+                foreach (int i in dragHeld) if (i < preDrag.Length) Fit.GrabPins.Add(new SolverPin { particle = i, target = preDrag[i], weight = 1f });
+            }
             Fit.RefreshPins();
         }
 
@@ -1850,7 +2105,8 @@ namespace UMA.ClothesDesigner.Editor
             dragging = false;
             Fit.GrabPins.Clear();
             Fit.RefreshPins();
-            CommitUndo();
+            Fit.SyncPositions();
+            if (preDrag != null) RecordClothChange("Grab Cloth", preDrag, preDragTime);
             if (!Running) { Running = true; Settled = false; }
             NotifyChanged();
         }
@@ -1862,9 +2118,200 @@ namespace UMA.ClothesDesigner.Editor
             Fit.GrabPins.Clear();
             Fit.RefreshPins();
             if (preDrag != null) Fit.Restore(preDrag, preDragTime);
-            Undo.RevertAllInCurrentGroup();
             PullPositions(true);
             NotifyChanged();
+        }
+
+        // ---- Roller ----------------------------------------------------------------------------------
+
+        private bool rolling;
+        private int rollPiece = -1;
+        private Vector3 rollFacing;
+        private Vector3[] preRoll;
+        private float preRollTime;
+
+        /// <summary>Points the last roller stroke lifted (for the panel).</summary>
+        public int LastRollLifted { get; private set; }
+        public bool Rolling => rolling;
+
+        /// <summary>The gap the roller leaves between the cloth in front and behind (m): the cloth thickness, at least 1 mm.</summary>
+        public float RollGapM => Mathf.Max(0.001f, FitData != null ? FitData.clothThicknessMm * 0.001f : 0.002f);
+
+        private void RollSceneGUI(Event e, int id)
+        {
+            switch (e.GetTypeForControl(id))
+            {
+                case EventType.MouseDown:
+                    if (e.button != 0) break;
+                    if (!RaycastSheet(HandleUtility.GUIPointToWorldRay(e.mousePosition), -1, Vector3.zero, out _, out Vector3 facing, out int particle)) break;
+                    BeginRoll(particle, facing);
+                    GUIUtility.hotControl = id;
+                    e.Use();
+                    break;
+                case EventType.MouseDrag:
+                    if (GUIUtility.hotControl != id) break;
+                    if (rolling) RollAlong(HandleUtility.GUIPointToWorldRay(e.mousePosition));
+                    e.Use();
+                    break;
+                case EventType.MouseUp:
+                    if (GUIUtility.hotControl != id) break;
+                    if (rolling) EndRoll();
+                    GUIUtility.hotControl = 0;
+                    e.Use();
+                    break;
+                case EventType.KeyDown:
+                    if (e.keyCode == KeyCode.Escape && rolling)
+                    {
+                        CancelRoll();
+                        GUIUtility.hotControl = 0;
+                        e.Use();
+                    }
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Starts a roller stroke on the sheet of cloth at <paramref name="particle"/> (its piece, facing
+        /// <paramref name="facing"/> as meshed), and rolls once there.
+        /// </summary>
+        public void BeginRoll(int particle, Vector3 facing)
+        {
+            if (IsDisposed || !Fit.HasCloth || particle < 0) return;
+            Fit.SyncPositions();
+            preRoll = (Vector3[])Fit.Positions.Clone();
+            preRollTime = Fit.SimTime;
+            rolling = true;
+            rollPiece = Fit.Mesh.piece[particle];
+            rollFacing = facing;
+            LastRollLifted = 0;
+            rollMoves.Clear();
+            RollAt(particle);
+        }
+
+        /// <summary>Rolls where the ray meets the stroke's sheet: its piece, facing the same way, even under other cloth.</summary>
+        public void RollAlong(Ray ray)
+        {
+            if (!rolling) return;
+            if (RaycastSheet(ray, rollPiece, rollFacing, out _, out _, out int particle)) RollAt(particle);
+        }
+
+        // Each point's largest move in this stroke, from the cloth as it was when the stroke began.
+        private readonly Dictionary<int, Vector3> rollMoves = new Dictionary<int, Vector3>();
+
+        /// <summary>
+        /// One dab of the roller at a particle of the stroke's sheet. It is worked out from the cloth as it was
+        /// when the stroke began, and each point keeps its largest move of the stroke, so passing over the same
+        /// place again does not lift it further.
+        /// </summary>
+        public ClothRoller.Result RollAt(int particle)
+        {
+            if (!Fit.HasCloth || !rolling || preRoll == null) return default;
+            ClothRoller.Result r = ClothRoller.Lifts(preRoll, Fit.Model.Triangles, Fit.Model.Neighbours, OutwardFromBody, particle, BrushRadius, RollGapM, BrushStrength, out Dictionary<int, Vector3> moves);
+            bool changed = false;
+            foreach (var kv in moves)
+            {
+                if (rollMoves.TryGetValue(kv.Key, out Vector3 old) && old.sqrMagnitude >= kv.Value.sqrMagnitude) continue;
+                rollMoves[kv.Key] = kv.Value;
+                changed = true;
+            }
+            if (changed)
+            {
+                Vector3[] p = (Vector3[])preRoll.Clone();
+                foreach (var kv in rollMoves) p[kv.Key] += kv.Value;
+                Fit.Restore(p, Fit.SimTime);
+                PullPositions(true);
+                LastRollLifted = rollMoves.Count;
+            }
+            return r;
+        }
+
+        /// <summary>Ends the stroke as one Undo step ("Roll Cloth"). The simulation is not started: rolling is a finishing pass.</summary>
+        public void EndRoll()
+        {
+            if (!rolling) return;
+            rolling = false;
+            Fit.SyncPositions();
+            if (preRoll != null && LastRollLifted > 0) RecordClothChange("Roll Cloth", preRoll, preRollTime);
+            preRoll = null;
+            NotifyChanged();
+        }
+
+        public void CancelRoll()
+        {
+            if (!rolling) return;
+            rolling = false;
+            if (preRoll != null) Fit.Restore(preRoll, preRollTime);
+            preRoll = null;
+            LastRollLifted = 0;
+            PullPositions(true);
+            NotifyChanged();
+        }
+
+        /// <summary>
+        /// One Undo step for a change of the cloth's shape already made: the state before is recorded and the
+        /// state now set in the same call, so Unity sees the change at once (a change seen only in a later
+        /// frame is not recorded).
+        /// </summary>
+        private void RecordClothChange(string label, Vector3[] before, float beforeTime)
+        {
+            if (undoState == null) return;
+            Undo.IncrementCurrentGroup();
+            undoState.positions = (Vector3[])before.Clone();
+            undoState.simTime = beforeTime;
+            Undo.RecordObject(undoState, label);
+            Undo.SetCurrentGroupName(label);
+            undoState.positions = (Vector3[])Fit.Positions.Clone();
+            undoState.simTime = Fit.SimTime;
+            undoState.version++;
+            seenUndoVersion = undoState.version;
+            Undo.IncrementCurrentGroup();
+        }
+
+        /// <summary>Away from the body at a point (zero where the body is not found).</summary>
+        private Vector3 OutwardFromBody(Vector3 p)
+        {
+            if (Body == null || Body.Collider == null || !Body.Collider.Closest(p, out _, out Vector3 onBody, out float signed)) return Vector3.zero;
+            Vector3 d = p - onBody;
+            return signed < 0f ? -d : d;
+        }
+
+        /// <summary>
+        /// The nearest cloth along a ray; with <paramref name="piece"/> at 0 or more, only that piece's cloth
+        /// facing the same way as <paramref name="facing"/> (as meshed), so a stroke keeps to its sheet even
+        /// where other cloth pokes through it. <paramref name="sheetFacing"/> is the hit triangle's normal as meshed.
+        /// </summary>
+        public bool RaycastSheet(Ray ray, int piece, Vector3 facing, out Vector3 point, out Vector3 sheetFacing, out int particle)
+        {
+            point = Vector3.zero; sheetFacing = Vector3.zero; particle = -1;
+            if (!Fit.HasCloth || previewTriangles == null) return false;
+            Vector3[] p = Fit.Positions;
+            float best = float.MaxValue;
+            for (int t = 0; t < previewTriangles.Length; t += 3)
+            {
+                if (piece >= 0 && Fit.Mesh.piece[previewTriangles[t]] != piece) continue;
+                Vector3 a = p[previewTriangles[t]], b = p[previewTriangles[t + 1]], c = p[previewTriangles[t + 2]];
+                Vector3 e1 = b - a, e2 = c - a;
+                Vector3 face = Vector3.Cross(e1, e2);
+                if (piece >= 0 && Vector3.Dot(face, facing) <= 0f) continue;
+                Vector3 h = Vector3.Cross(ray.direction, e2);
+                float det = Vector3.Dot(e1, h);
+                if (Mathf.Abs(det) < 1e-12f) continue;
+                float inv = 1f / det;
+                Vector3 s = ray.origin - a;
+                float u = inv * Vector3.Dot(s, h);
+                if (u < 0f || u > 1f) continue;
+                Vector3 q = Vector3.Cross(s, e1);
+                float w = inv * Vector3.Dot(ray.direction, q);
+                if (w < 0f || u + w > 1f) continue;
+                float dist = inv * Vector3.Dot(e2, q);
+                if (dist <= 0f || dist >= best) continue;
+                best = dist;
+                point = ray.origin + ray.direction * dist;
+                sheetFacing = face.normalized;
+                float da = (a - point).sqrMagnitude, db = (b - point).sqrMagnitude, dc = (c - point).sqrMagnitude;
+                particle = da <= db && da <= dc ? previewTriangles[t] : (db <= dc ? previewTriangles[t + 1] : previewTriangles[t + 2]);
+            }
+            return particle >= 0;
         }
 
         /// <summary>Adds pins round a particle (soft at the edge of the brush), or removes the pins there.</summary>
@@ -1901,6 +2348,104 @@ namespace UMA.ClothesDesigner.Editor
             }
             Fit.RefreshPins();
             NotifyChanged();
+        }
+
+        // ---- Fit Brush ---------------------------------------------------------------------------------
+
+        /// <summary>What the Fit Brush paints.</summary>
+        public FitPaintMode PaintMode = FitPaintMode.Hug;
+        private ClothTool viewedTool = (ClothTool)(-1);
+        private int paintGroup = -1;
+        private bool painting;
+        private int paintSeen;
+
+        private void FitBrushSceneGUI(Event e, int id)
+        {
+            switch (e.GetTypeForControl(id))
+            {
+                case EventType.MouseDown:
+                    if (e.button != 0) break;
+                    if (!Raycast(HandleUtility.GUIPointToWorldRay(e.mousePosition), out _, out _, out int particle)) break;
+                    BeginFitStroke();
+                    ApplyFitBrush(particle, e.control);
+                    GUIUtility.hotControl = id;
+                    e.Use();
+                    break;
+                case EventType.MouseDrag:
+                    if (GUIUtility.hotControl != id) break;
+                    if (Raycast(HandleUtility.GUIPointToWorldRay(e.mousePosition), out _, out _, out int under)) ApplyFitBrush(under, e.control);
+                    e.Use();
+                    break;
+                case EventType.MouseUp:
+                    if (GUIUtility.hotControl != id) break;
+                    EndFitStroke();
+                    GUIUtility.hotControl = 0;
+                    e.Use();
+                    break;
+            }
+        }
+
+        /// <summary>Starts a stroke: everything it paints is one Undo step.</summary>
+        public void BeginFitStroke()
+        {
+            Undo.IncrementCurrentGroup();
+            paintGroup = Undo.GetCurrentGroup();
+            painting = true;
+        }
+
+        /// <summary>Paints round a particle (soft at the edge of the brush). <paramref name="erase"/> takes the current mode's paint off (Ctrl).</summary>
+        public void ApplyFitBrush(int particle, bool erase)
+        {
+            if (!Fit.HasCloth || particle < 0 || particle >= Fit.Model.ParticleCount) return;
+            Undo.RecordObject(FitData, erase || PaintMode == FitPaintMode.Erase ? "Erase Fit Paint" : "Fit Brush (" + PaintMode + ")");
+            Fit.SyncPositions();
+            if (Fit.PaintHug.Length != Fit.Model.ParticleCount || Fit.PaintStiff.Length != Fit.Model.ParticleCount) Fit.ResolvePaint();
+            foreach (KeyValuePair<int, float> kv in Fit.ConnectedWithin(particle, BrushRadius))
+            {
+                int v = kv.Key;
+                FitPaint.Brush(PaintMode, erase, kv.Value * BrushStrength, ref Fit.PaintHug[v], ref Fit.PaintSmooth[v], ref Fit.PaintInflate[v], ref Fit.PaintStiff[v], ref Fit.PaintWeight[v]);
+            }
+            Fit.StorePaint();
+            paintSeen = PaintSignature();
+            RefreshView();
+            NotifyChanged();
+        }
+
+        /// <summary>Ends a stroke: the paint goes into the cloth (hug's shorter cloth, the pressure, the frame pins) and it simulates.</summary>
+        public void EndFitStroke()
+        {
+            if (!painting) return;
+            painting = false;
+            if (paintGroup >= 0) Undo.CollapseUndoOperations(paintGroup);
+            Fit.ApplyPaint();
+            paintSeen = PaintSignature();
+            Settled = false;
+            SetRunning(true);
+            RefreshView();
+            NotifyChanged();
+        }
+
+        public void ClearPaint()
+        {
+            Undo.RecordObject(FitData, "Clear Fit Paint");
+            FitData.paint.Clear();
+            Fit.ResolvePaint();
+            Fit.ApplyPaint();
+            paintSeen = PaintSignature();
+            Settled = false;
+            RefreshView();
+            NotifyChanged();
+        }
+
+        /// <summary>A fingerprint of the fit's paint, to notice an Undo or Redo of it.</summary>
+        private int PaintSignature()
+        {
+            unchecked
+            {
+                int h = FitData != null ? FitData.paint.Count : 0;
+                if (FitData != null) foreach (FitPaintPoint p in FitData.paint) h = h * 31 + (p.flatPosition.GetHashCode() ^ (p.hug + 2f * p.smooth + 4f * p.inflate + 8f * p.stiff + 16f * p.weight).GetHashCode());
+                return h;
+            }
         }
 
         public void ClearPins()
@@ -1968,6 +2513,7 @@ namespace UMA.ClothesDesigner.Editor
 
             UnityEngine.Rendering.CompareFunction oldZTest = Handles.zTest;
             var threads = new List<Vector3>();
+            var screen = new List<Vector2>();
             for (int pass = 0; pass < 2; pass++)
             {
                 Handles.zTest = pass == 0 ? UnityEngine.Rendering.CompareFunction.Greater : UnityEngine.Rendering.CompareFunction.LessEqual;
@@ -1982,9 +2528,13 @@ namespace UMA.ClothesDesigner.Editor
                     threads.Clear();
                     for (int k = start; k < end; k++)
                     {
-                        Vector3 a = p[mesh.stitches[k].x], b = p[mesh.stitches[k].y];
-                        sideA[k - start] = Lift(a);
-                        sideB[k - start] = Lift(b);
+                        int ia = mesh.stitches[k].x, ib = mesh.stitches[k].y;
+                        Vector3 a = p[ia], b = p[ib];
+                        // At a thick piece (its Thickness) the cloth's own surface is inside the solid drawn round it, and
+                        // a line there flickered through its walls: both sides are drawn on its outside instead.
+                        Vector3 outA = OutsideOffset(ia), outB = OutsideOffset(ib);
+                        sideA[k - start] = Lift(a + (outA != Vector3.zero ? outA : outB));
+                        sideB[k - start] = Lift(b + (outB != Vector3.zero ? outB : outA));
                         if ((a - b).sqrMagnitude > 0.003f * 0.003f) { threads.Add(sideA[k - start]); threads.Add(sideB[k - start]); }
                     }
                     // The Pattern Canvas hue, stronger: the canvas is dark, the Scene view light grey.
@@ -1993,8 +2543,8 @@ namespace UMA.ClothesDesigner.Editor
                     Handles.color = new Color(c.r, c.g, c.b, alpha);
                     if (sideA.Length > 1)
                     {
-                        Handles.DrawAAPolyLine(6f, sideA);
-                        Handles.DrawAAPolyLine(6f, sideB);
+                        DrawLineInRuns(6f, sideA, screen);
+                        DrawLineInRuns(6f, sideB, screen);
                     }
                     for (int t = 0; t < threads.Count; t += 2)
                     {
@@ -2004,6 +2554,57 @@ namespace UMA.ClothesDesigner.Editor
                 }
             }
             Handles.zTest = oldZTest;
+        }
+
+        /// <summary>
+        /// Splits a line through these screen points into runs whose segments never turn by more than a right angle, and
+        /// leaves out segments shorter than a pixel (their direction is noise). An anti-aliased polyline joins its segments
+        /// with mitres that grow without limit as the line turns back on itself: a seam running round the body turns back
+        /// on screen at the body's outline, and its mitre shot out there as a long spike that flickered as the view moved.
+        /// Returns the first point and the point count of each run of two or more points.
+        /// </summary>
+        public static List<(int start, int count)> ScreenRuns(IReadOnlyList<Vector2> screen)
+        {
+            var runs = new List<(int start, int count)>();
+            int start = 0;
+            Vector2 direction = Vector2.zero;
+            for (int i = 1; i < screen.Count; i++)
+            {
+                Vector2 d = screen[i] - screen[i - 1];
+                float length = d.magnitude;
+                if (!(length >= 1f))
+                {
+                    // Too short to have a direction: the run ends before it and the next one starts after it.
+                    if (i - start >= 2) runs.Add((start, i - start));
+                    start = i;
+                    direction = Vector2.zero;
+                    continue;
+                }
+                d /= length;
+                if (direction != Vector2.zero && Vector2.Dot(direction, d) < 0f)
+                {
+                    // Turns back: the run ends at the turning point and the next one starts there.
+                    runs.Add((start, i - start));
+                    start = i - 1;
+                }
+                direction = d;
+            }
+            if (screen.Count - start >= 2) runs.Add((start, screen.Count - start));
+            return runs;
+        }
+
+        /// <summary>Draws an anti-aliased line through the points in runs that do not turn back on screen (<see cref="ScreenRuns"/>).</summary>
+        private static void DrawLineInRuns(float width, Vector3[] points, List<Vector2> screen)
+        {
+            screen.Clear();
+            foreach (Vector3 point in points) screen.Add(HandleUtility.WorldToGUIPoint(point));
+            foreach ((int first, int count) in ScreenRuns(screen))
+            {
+                if (count == points.Length) { Handles.DrawAAPolyLine(width, points); continue; }
+                var run = new Vector3[count];
+                Array.Copy(points, first, run, 0, count);
+                Handles.DrawAAPolyLine(width, run);
+            }
         }
 
         private void DrawPins()
@@ -2049,13 +2650,186 @@ namespace UMA.ClothesDesigner.Editor
             NotifyChanged();
         }
 
+        /// <summary>
+        /// Publishes what <paramref name="choice"/> says (the Publish window's answers): bakes the slot, overlay and
+        /// wardrobe recipe into its folder under its name and wardrobe region, adds them to the Global Library, makes the
+        /// recipe compatible with the choice's race (the character's), saves the pattern and fit, and shows the clothes on
+        /// the try-on character. False, with <see cref="LastBakeError"/> saying why, when it was not all done.
+        /// </summary>
+        public bool Publish(PublishChoice choice)
+        {
+            if (choice == null || FitData == null) return false;
+            List<string> problems = choice.Problems();
+            if (problems.Count > 0) { LastBakeError = string.Join(" ", problems); NotifyChanged(); return false; }
+            Undo.RecordObject(FitData, "Publish Clothes");
+            PublishSettings p = FitData.publish;
+            p.slotName = choice.name.Trim();
+            p.wardrobeSlot = choice.wardrobeSlot;
+            if (choice.material != null) p.material = choice.material;
+            p.folder = choice.folder.Replace('\\', '/').TrimEnd('/');
+            p.addToGlobalLibrary = true;
+            p.createWardrobeRecipe = true;
+            if (choice.race != null) FitData.race = choice.race;
+            if (!BakeAndSaveForHandOver(null, "Publish"))
+            {
+                if (LastBake != null && FitData.output.slot != null)
+                {
+                    LastBakeError = "Published '" + p.slotName + "', but the pattern and fit were not saved. Save them with Save Pattern and Save Fit.";
+                }
+                NotifyChanged();
+                return false;
+            }
+            ShowTryOn();
+            NotifyChanged();
+            return true;
+        }
+
+        public const string PublishAndSculptQuestion =
+            "Publish and Sculpt bakes the clothes, saves the pattern and fit, closes the Clothes Designer and opens Sculpt on a character wearing them, to touch them up by hand.\n\n" +
+            "Sculpting edits the baked slot itself. Baking again from the Clothes Designer replaces the slot's mesh, so sculpted changes would be lost.";
+
+        /// <summary>
+        /// Bakes the clothes, saves the pattern and fit, and hands over to the Vertex Editor's Sculpt on a
+        /// character of the race wearing the baked recipe (see <see cref="OpenSculpt"/>), once this GUI pass
+        /// is over: the designer's own stage cannot close while it draws. With <paramref name="ask"/> the
+        /// artist confirms first. Returns false, with <see cref="LastBakeError"/> saying why, when it stays.
+        /// </summary>
+        public bool PublishAndSculpt(bool ask = true)
+        {
+            if (!BakeAndSaveForHandOver(ask ? PublishAndSculptQuestion : null, "Publish and Sculpt")) return false;
+            RaceData race = FitData.race != null ? FitData.race : Stage.CharacterRace;
+            SlotDataAsset slot = FitData.output.slot;
+            OverlayDataAsset overlay = FitData.output.overlay;
+            RunAfterThisFrame(() => OpenSculpt(race, slot, overlay));
+            return true;
+        }
+
+        /// <summary>
+        /// The first half of Publish and Sculpt (and the bake and save of Publish): validates, asks
+        /// <paramref name="question"/> (none when null), bakes, and saves the pattern and fit. False, with
+        /// <see cref="LastBakeError"/> saying why, when the designer should stay open.
+        /// </summary>
+        private bool BakeAndSaveForHandOver(string question, string action)
+        {
+            LastBake = null;
+            LastBakeError = null;
+            List<string> problems = GarmentBaker.Validate(Fit);
+            if (problems.Count > 0) { LastBakeError = string.Join(" ", problems); NotifyChanged(); return false; }
+            if (question != null && !EditorUtility.DisplayDialog("Clothes Designer", question, action, "Cancel")) return false;
+            try
+            {
+                EditorUtility.DisplayProgressBar("Clothes Designer", "Baking '" + FitData.publish.slotName + "'...", 0.5f);
+                LastBake = GarmentBaker.Bake(Fit);
+            }
+            catch (Exception ex)
+            {
+                LastBakeError = ex.Message;
+                Debug.LogException(ex);
+                NotifyChanged();
+                return false;
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+            // Saved, so the fit keeps what was baked and closing the designer asks nothing.
+            if (HasUnsavedChanges && (!SaveAll() || HasUnsavedChanges))
+            {
+                LastBakeError = "Baked, but the pattern and fit were not saved, so the Clothes Designer stayed open. Save them, then press " + action + " again.";
+                NotifyChanged();
+                return false;
+            }
+            if (FitData.output.slot == null)
+            {
+                LastBakeError = "The bake made no slot.";
+                NotifyChanged();
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// After a publish (Publish and Open in Overlay Painter in the Publish window): closes the Clothes Designer and
+        /// opens the Overlay Painter on the published slot and its overlay, to texture them, with the pattern's trims
+        /// (zippers, stitching, piping) as editable path layers, once this GUI pass is over. The Overlay Painter registers
+        /// itself with core UMA (<see cref="UMATrimPainting"/>) when installed. False, with <see cref="LastBakeError"/>
+        /// saying why, when it is not installed or nothing was published.
+        /// </summary>
+        public bool OpenInOverlayPainter()
+        {
+            LastBakeError = null;
+            if (UMATrimPainting.Painter == null) { LastBakeError = "The Overlay Painter is not installed: install it from Welcome to UMA > Plugins."; NotifyChanged(); return false; }
+            if (FitData == null || FitData.output.slot == null || FitData.output.overlay == null) { LastBakeError = "Nothing has been published yet."; NotifyChanged(); return false; }
+            var missing = new List<string>();
+            List<UMATrimPath> trims = Pattern != null && Pattern.trims != null && Pattern.trims.Count > 0 ? GarmentTrims.UvPaths(Pattern, missing) : new List<UMATrimPath>();
+            if (missing.Count > 0) Debug.LogWarning("[UMA] Clothes Designer: trims left out, their edge or line no longer exists: " + string.Join(", ", missing));
+            SlotDataAsset slot = FitData.output.slot;
+            OverlayDataAsset overlay = FitData.output.overlay;
+            RunAfterThisFrame(() => OpenOverlayPainter(slot, overlay, trims));
+            return true;
+        }
+
+        /// <summary>
+        /// Closes the open Vertex Editor (the designer) and opens the Overlay Painter on the slot, drawn with the overlay,
+        /// with one path layer per trim (none is fine). False, with the reason in <paramref name="message"/>, when the
+        /// painter is not installed, the designer stayed open, or the painter could not open the slot.
+        /// </summary>
+        public static bool OpenOverlayPainter(SlotDataAsset slot, OverlayDataAsset overlay, IReadOnlyList<UMATrimPath> trims, out string message)
+        {
+            message = null;
+            IUMATrimPainter painter = UMATrimPainting.Painter;
+            if (painter == null) { message = "The Overlay Painter is not installed."; return false; }
+            if (!VertexEditorStage.CloseOpenVertexEditor()) { message = "The Clothes Designer was kept open."; return false; }
+            return painter.PaintTrims(slot, overlay, trims ?? new List<UMATrimPath>(), out message);
+        }
+
+        private static void OpenOverlayPainter(SlotDataAsset slot, OverlayDataAsset overlay, IReadOnlyList<UMATrimPath> trims)
+        {
+            bool opened = OpenOverlayPainter(slot, overlay, trims, out string message);
+            if (!opened) EditorUtility.DisplayDialog("Clothes Designer", "The clothes were published, but the Overlay Painter could not open them: " + message, "OK");
+            else if (!string.IsNullOrEmpty(message)) Debug.LogWarning("[UMA] Clothes Designer: " + message);
+        }
+
+        /// <summary>
+        /// Closes the open Vertex Editor (the designer) and opens Sculpt on a temporary character of
+        /// <paramref name="race"/> wearing <paramref name="slot"/> drawn with <paramref name="overlay"/>, with
+        /// only that slot editable. The slot and overlay are put on directly, so they need not be in the
+        /// Global Library (a wardrobe recipe is dressed by name through it). Returns the new stage, or null
+        /// with the reason in <paramref name="message"/>.
+        /// </summary>
+        public static VertexEditorStage OpenSculpt(RaceData race, SlotDataAsset slot, OverlayDataAsset overlay, out string message)
+        {
+            VertexEditorStage stage = VertexEditorStage.ShowStageForSlots(race, new[] { slot }, new[] { overlay }, out message);
+            if (stage != null) stage.SelectSculpt();
+            return stage;
+        }
+
+        private static void OpenSculpt(RaceData race, SlotDataAsset slot, OverlayDataAsset overlay)
+        {
+            VertexEditorStage stage = OpenSculpt(race, slot, overlay, out string message);
+            if (stage == null) EditorUtility.DisplayDialog("Clothes Designer", "The clothes were baked and saved, but Sculpt could not be opened: " + message, "OK");
+            else if (!string.IsNullOrEmpty(message)) Debug.Log("[UMA] Clothes Designer: " + message);
+        }
+
+        /// <summary>Runs once on the next editor update (not delayCall, which waits while the editor is in the background).</summary>
+        private static void RunAfterThisFrame(Action action)
+        {
+            EditorApplication.CallbackFunction once = null;
+            once = () =>
+            {
+                EditorApplication.update -= once;
+                action();
+            };
+            EditorApplication.update += once;
+        }
+
         /// <summary>Shows a second character of the race beside the body, wearing the baked recipe through the normal wardrobe.</summary>
         public void ShowTryOn()
         {
             HideTryOn();
-            if (FitData == null || FitData.output.recipe == null) return;
+            if (IsDisposed || FitData == null || FitData.output.recipe == null) return;
             RaceData race = FitData.race != null ? FitData.race : Stage.CharacterRace;
-            var go = new GameObject("Clothes Designer Try-On (temporary)") { hideFlags = HideFlags.HideAndDontSave };
+            GameObject go = DesignerTemporaryObjects.Create(DesignerTemporaryObjects.TryOnName, HideFlags.HideAndDontSave);
             go.transform.position = new Vector3(1000f, 0f, 0f);
             tryOn = go.AddComponent<DynamicCharacterAvatar>();
             tryOn.editorTimeGeneration = false;
@@ -2131,10 +2905,10 @@ namespace UMA.ClothesDesigner.Editor
             renderers[0].BakeMesh(tryOnMesh, true);
             if (tryOnView == null)
             {
-                tryOnView = new GameObject("Clothes Designer Try-On View") { hideFlags = HideFlags.DontSave | HideFlags.NotEditable };
+                tryOnView = DesignerTemporaryObjects.CreateInScene(DesignerTemporaryObjects.TryOnViewName, Stage.scene);
+                if (tryOnView == null) return;
                 tryOnView.AddComponent<MeshFilter>();
                 tryOnView.AddComponent<MeshRenderer>();
-                if (Stage.scene.IsValid()) SceneManager.MoveGameObjectToScene(tryOnView, Stage.scene);
             }
             float side = Body != null ? Body.Bounds.extents.x * 2f + 0.3f : 1.6f;
             tryOnView.transform.position = new Vector3(side, 0f, 0f);
@@ -2182,6 +2956,21 @@ namespace UMA.ClothesDesigner.Editor
             Frame(b);
         }
 
+        /// <summary>
+        /// Points the Scene view at the cloth as it is laid out round the body (or draped): after a pattern is loaded,
+        /// so the new clothes are in view. Without cloth, at the body.
+        /// </summary>
+        public void FrameCloth()
+        {
+            Renderer cloth = preview != null && preview.activeInHierarchy ? preview.GetComponent<Renderer>() : null;
+            if (cloth == null || !Fit.HasCloth || previewMesh == null || previewMesh.vertexCount == 0)
+            {
+                FrameFittingBody();
+                return;
+            }
+            Frame(cloth.bounds);
+        }
+
         private static void Frame(Bounds bounds)
         {
             SceneView view = SceneView.lastActiveSceneView;
@@ -2192,9 +2981,9 @@ namespace UMA.ClothesDesigner.Editor
 
         public void HideTryOn()
         {
-            if (tryOnView != null) UnityEngine.Object.DestroyImmediate(tryOnView);
+            DesignerTemporaryObjects.Destroy(tryOnView);
             if (tryOnMesh != null) UnityEngine.Object.DestroyImmediate(tryOnMesh);
-            if (tryOn != null) UnityEngine.Object.DestroyImmediate(tryOn.gameObject);
+            if (tryOn != null) DesignerTemporaryObjects.Destroy(tryOn.gameObject);
             tryOnView = null; tryOnMesh = null; tryOn = null; tryOnArmRest = null; tryOnSampled = false; TryOnPlaying = false;
         }
 
@@ -2230,8 +3019,15 @@ namespace UMA.ClothesDesigner.Editor
             Stage?.RepaintEditors();
         }
 
+        /// <summary>
+        /// The designer closed (or scripts are reloading): the session builds and shows nothing more. A Pattern
+        /// Canvas still open lets it go.
+        /// </summary>
+        public bool IsDisposed { get; private set; }
+
         public void Dispose()
         {
+            IsDisposed = true;
             AssemblyReloadEvents.beforeAssemblyReload -= Dispose;
             EditorApplication.update -= Tick;
             Undo.undoRedoPerformed -= OnUndoRedo;
@@ -2242,6 +3038,17 @@ namespace UMA.ClothesDesigner.Editor
             HideTryOn();
             if (undoState != null) { Undo.ClearUndo(undoState); UnityEngine.Object.DestroyImmediate(undoState); }
             undoState = null;
+            // The working copies of the pattern and fit. A normal close has saved or discarded them by now. Unsaved
+            // work here means the designer was closed without asking (scripts reloading): leave it in memory, where
+            // it can still be found, rather than destroy it.
+            if (!HasUnsavedChanges)
+            {
+                ReleaseWorkingCopy(Pattern, null);
+                ReleaseWorkingCopy(FitData, null);
+            }
+            Pattern = null;
+            FitData = null;
+            DesignerTemporaryObjects.QueueCheck();
         }
     }
 }

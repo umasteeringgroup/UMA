@@ -34,6 +34,10 @@
 #define SELF_MAX_PUSH 0.01
 #define SELF_GROWTH 0.0005
 #define SELF_BESIDE 0.0002
+// Layers, one way (ClothSolverShared.LayerReach, LayerMaxPush, LayerFacing).
+#define LAYER_REACH 0.03
+#define LAYER_MAX_PUSH 0.004
+#define LAYER_FACING 0.5
 
 struct Constraint
 {
@@ -56,6 +60,14 @@ RWStructuredBuffer<float3> _Prev;
 RWStructuredBuffer<float3> _V;
 StructuredBuffer<float> _W;
 StructuredBuffer<float> _Fric;
+// The nearest sewn point and the point it is sewn to, or (-1, -1): cloth near a seam still open does not grip the body
+// (ClothModel.SeamPair).
+StructuredBuffer<int2> _Partner;
+#define OPEN_SEAM_M 0.002
+// ClothSolverShared.CollisionTieM.
+#define COLLISION_TIE_M 0.0005
+// ClothSolverShared.SharpEdgeCos.
+#define SHARP_EDGE_COS 0.9
 StructuredBuffer<Constraint> _Constraints;
 StructuredBuffer<int2> _Colors;
 StructuredBuffer<Pin> _Pins;
@@ -77,11 +89,13 @@ RWStructuredBuffer<int> _HashStart;
 RWStructuredBuffer<int> _HashTris;
 RWStructuredBuffer<float3> _SelfDelta;
 RWStructuredBuffer<float> _SelfTarget;
+RWStructuredBuffer<int> _LayerCand;
 StructuredBuffer<float2> _Flat;
 StructuredBuffer<int> _Layer;
 StructuredBuffer<float> _Pressure;
 int _TriCount;
 int _SelfCollide;
+int _Layered;
 int _SelfWithin;
 int _OutSign;
 float _MinFlat;
@@ -96,6 +110,7 @@ int _Substeps;
 float _H;
 float _Keep;
 float _Closure;
+float _LateClosure;
 float _InvH2;
 float _AlphaStitch;
 float _MaxSpeed;
@@ -125,9 +140,10 @@ void Predict(int i)
 void SolveConstraint(int index)
 {
     Constraint con = _Constraints[index];
-    float rest = con.kind == 2 ? con.rest * _Closure : con.rest;
+    // Stitches close over the sewing; a free piece's late stitches (kind 3) after it. Chosen by value, without branches.
+    float rest = con.rest * (con.kind == 2 ? _Closure : (con.kind == 3 ? _LateClosure : 1.0));
     // Stretch and bend take the compliance of their piece's fabric.
-    float alpha = con.kind == 2 ? _AlphaStitch : con.compliance * _InvH2;
+    float alpha = con.kind >= 2 ? _AlphaStitch : con.compliance * _InvH2;
     float wa = _W[con.a];
     float wb = _W[con.b];
     float wsum = wa + wb;
@@ -177,7 +193,8 @@ void Collide(int i)
 {
     if (_W[i] <= 0.0) return;
     float3 pos = _X[i];
-    float best = _Range * _Range;
+    float bestD = _Range;
+    float bestS = 0.0;
     int bestTri = -1;
     float3 bestPoint = pos;
     for (int k = 0; k < CANDIDATES; k++)
@@ -185,18 +202,23 @@ void Collide(int i)
         int t = _Cand[i * CANDIDATES + k];
         if (t < 0) break;
         float3 q = ClosestOnTriangle(pos, _TA[t], _TB[t], _TC[t]);
-        float3 dq = q - pos;
-        float d2 = dot(dq, dq);
-        if (d2 < best)
-        {
-            best = d2;
-            bestTri = t;
-            bestPoint = q;
-        }
+        float d = length(q - pos);
+        float s = dot(pos - q, _TN[t]);
+        // As ClothSolverShared.Replaces: the nearer wins, but at a sharp edge near-ties go by its shape (convex: the more
+        // outside reading, concave: the more inside). Choices on values only (no branch on data around a barrier).
+        int prior = max(bestTri, 0);
+        bool sharp = dot(_TN[t], _TN[prior]) < SHARP_EDGE_COS;
+        bool convex = dot((_TA[t] + _TB[t] + _TC[t]) / 3.0 - _TA[prior], _TN[prior]) < 0.0;
+        bool tiedBetter = (d <= bestD + COLLISION_TIE_M) && (convex ? (s > bestS) : (s < bestS));
+        bool take = d < _Range && (bestTri < 0 || d < bestD - COLLISION_TIE_M || (sharp ? tiedBetter : (d < bestD)));
+        bestTri = take ? t : bestTri;
+        bestPoint = take ? q : bestPoint;
+        bestS = take ? s : bestS;
+        bestD = take ? d : bestD;
     }
     if (bestTri < 0) return;
     float3 nrm = _TN[bestTri];
-    float dist = dot(pos - bestPoint, nrm);
+    float dist = bestS;
     if (dist >= _Clearance) return;
     float push = _Clearance - dist;
     pos += nrm * push;
@@ -204,7 +226,12 @@ void Collide(int i)
     float3 moved = pos - _Prev[i];
     float3 tangential = moved - nrm * dot(moved, nrm);
     float slide = length(tangential);
-    float grip = _Fric[i] * push;
+    // No grip while this point's seam is open, measured at the substep's start (as the CPU solver does). Written
+    // without a data-dependent branch, which CSFrame cannot have.
+    int2 seam = _Partner[i];
+    float3 apart = _Prev[max(seam.x, 0)] - _Prev[max(seam.y, 0)];
+    float open = (seam.x >= 0 && dot(apart, apart) > OPEN_SEAM_M * OPEN_SEAM_M) ? 1.0 : 0.0;
+    float grip = _Fric[i] * push * (1.0 - open);
     if (slide > 1e-12) pos -= tangential * min(1.0, grip / slide);
     _X[i] = pos;
 }
@@ -252,6 +279,37 @@ float3 ClothPush(int i)
         // Half: the other layer's particles are pushed the other way by as much.
         float amount = min(0.5 * (target - d), SELF_MAX_PUSH);
         if (amount > best) { best = amount; push = n * (side * amount); }
+    }
+    // Layers, moving only this cloth: under a higher layer it is kept the thickness inside it; over a lower layer that
+    // lies against the body (so cannot go further in) it is kept the thickness outside it (ClothSolverCpu.ClothPush).
+    int lcode = _Layered != 0 ? _LayerCand[i] : 0;
+    if (lcode != 0)
+    {
+        int lt = abs(lcode) - 1;
+        float3 la = _X[_Tris[lt * 3]];
+        float3 lb = _X[_Tris[lt * 3 + 1]];
+        float3 lc = _X[_Tris[lt * 3 + 2]];
+        float3 ln = cross(lb - la, lc - la);
+        float llen = length(ln);
+        if (llen > 1e-12)
+        {
+            ln = ln / llen * _OutSign;
+            float3 lq = ClosestOnTriangle(pos, la, lb, lc);
+            float ld = dot(pos - lq, ln);
+            if (lcode > 0)
+            {
+                if (ld + _Thickness > 0.0) push -= ln * min(ld + _Thickness, LAYER_MAX_PUSH);
+            }
+            else
+            {
+                int bt = _Cand[i * CANDIDATES];
+                if (bt >= 0 && _Thickness - ld > 0.0)
+                {
+                    float under = dot(lq - ClosestOnTriangle(lq, _TA[bt], _TB[bt], _TC[bt]), _TN[bt]);
+                    if (under < _Clearance + _Thickness) push += ln * min(_Thickness - ld, LAYER_MAX_PUSH);
+                }
+            }
+        }
     }
     return push;
 }
@@ -513,6 +571,60 @@ void CSSelfCandidates(uint3 id : SV_DispatchThreadID)
         float len2 = length(n2);
         if (len2 > 1e-12) _SelfTarget[i] = min(_SelfTarget[i], max(0.0, dot(pos - q2, n2 / len2) * side) + SELF_GROWTH);
     }
+    // Layers: the nearest triangle of a higher layer over this particle, or else of a lower layer under it, within reach,
+    // facing the way the body under it does and lying between it and the body, not at its seam: t + 1, -(t + 1) or 0
+    // (ClothSolverCpu.FindLayerCandidate).
+    _LayerCand[i] = 0;
+    int bodyTri = _Cand[i * CANDIDATES];
+    if (_Layered == 0 || bodyTri < 0) return;
+    float3 bodyN = _TN[bodyTri];
+    float3 bodyQ = ClosestOnTriangle(pos, _TA[bodyTri], _TB[bodyTri], _TC[bodyTri]);
+    float lr = LAYER_REACH;
+    float bestUp = lr * lr, bestDown = lr * lr;
+    int upT = -1, downT = -1;
+    int myLayer = _Layer[i];
+    int3 l0 = (int3)floor((pos - lr) / SELF_CELL);
+    int3 l1 = (int3)floor((pos + lr) / SELF_CELL);
+    for (int lz = l0.z; lz <= l1.z; lz++)
+    for (int ly = l0.y; ly <= l1.y; ly++)
+    for (int lx = l0.x; lx <= l1.x; lx++)
+    {
+        uint lbucket = SelfHash(int3(lx, ly, lz));
+        int lend = _HashStart[lbucket + 1];
+        for (int lj = _HashStart[lbucket]; lj < lend; lj++)
+        {
+            int lt = _HashTris[lj];
+            int ta0 = _Tris[lt * 3], tb0 = _Tris[lt * 3 + 1], tc0 = _Tris[lt * 3 + 2];
+            int otherLayer = _Layer[ta0];
+            if (otherLayer == myLayer) continue;
+            bool up = otherLayer > myLayer;
+            float lbest = up ? bestUp : bestDown;
+            int lbestT = up ? upT : downT;
+            float3 pa = _X[ta0], pb = _X[tb0], pc = _X[tc0];
+            float3 lq = ClosestOnTriangle(pos, pa, pb, pc);
+            float3 lo = lq - pos;
+            float ld2 = dot(lo, lo);
+            if (ld2 > lbest || (lbestT >= 0 && ld2 == lbest && lt >= lbestT)) continue;
+            float3 ln = cross(pb - pa, pc - pa);
+            float llen = length(ln);
+            if (llen < 1e-12) continue;
+            ln = ln / llen * _OutSign;
+            if (!Overlaps(pos, lq, ln)) continue;
+            if (dot(ln, bodyN) < LAYER_FACING) continue;
+            if (dot(bodyQ - lq, ln) >= 0.0) continue;
+            bool lnear = false;
+            int lnearEnd = _NearStart[i + 1];
+            for (int nk = _NearStart[i]; nk < lnearEnd; nk++)
+            {
+                int g = _Near[nk];
+                if (g == _Weld[ta0] || g == _Weld[tb0] || g == _Weld[tc0]) lnear = true;
+            }
+            if (lnear) continue;
+            if (up) { bestUp = ld2; upT = lt; }
+            else { bestDown = ld2; downT = lt; }
+        }
+    }
+    _LayerCand[i] = upT >= 0 ? upT + 1 : (downT >= 0 ? -(downT + 1) : 0);
 }
 
 [numthreads(64, 1, 1)]

@@ -622,7 +622,8 @@ namespace UMA.Examples
             for (int i = 0; i < slots.Length; i++)
             {
                 var sd = slots[i];
-                if (sd == null) continue;
+                // The combiner reads the donor's blendshapes but never assigns it a range in the renderer.
+                if (sd == null || sd.isBlendShapeSource) continue;
 
                 string key = sd.slotName;
                 if (string.IsNullOrEmpty(key)) continue;
@@ -726,7 +727,7 @@ namespace UMA.Examples
                 for (int i = 0; i < slots.Length; i++)
                 {
                     var sd = slots[i];
-                    if (sd == null || sd.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sd.asset.meshData)) continue;
+                    if (sd == null || sd.isBlendShapeSource || sd.asset == null || UMAMeshData.IsNullOrEmptyMeshData(sd.asset.meshData)) continue;
                     if (sd.skinnedMeshRenderer != r) continue; // only this renderer
                     if (sd.Suppressed) continue; // dropped by LOD rules
 
@@ -1117,7 +1118,7 @@ namespace UMA.Examples
             for (int i = 0; i < _umaData.umaRecipe.slotDataList.Length; i++)
             {
                 var slot = _umaData.umaRecipe.slotDataList[i];
-                if (slot != null)
+                if (slot != null && !slot.isBlendShapeSource)
                 {
                     if (useSlotDropping)
                     {

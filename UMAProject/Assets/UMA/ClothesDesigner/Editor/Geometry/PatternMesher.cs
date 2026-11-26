@@ -47,6 +47,8 @@ namespace UMA.ClothesDesigner.Editor
         /// (a fold line drawn inside a piece), or -1 for a pleat's fold, which rests folded as laid out.
         /// </summary>
         public readonly List<float> creaseAngle = new List<float>();
+        /// <summary>Per crease: baked sharp (a normal for each side; see <see cref="PatternLine.sharp"/> and <see cref="PatternPleat.sharpFolds"/>).</summary>
+        public readonly List<bool> creaseSharp = new List<bool>();
         /// <summary>Per vertex: on the rim of a hole cut in a piece. A hole's rim is an opening.</summary>
         public readonly List<bool> onHole = new List<bool>();
         /// <summary>Indices into <see cref="stitches"/> of the single stitches (tacks and buttons).</summary>
@@ -55,6 +57,12 @@ namespace UMA.ClothesDesigner.Editor
         public readonly List<Vector2Int> tackVertices = new List<Vector2Int>();
         /// <summary>Mesh edges that run along a piece's outline: the two vertices and the edge's index on the piece.</summary>
         public readonly List<Vector3Int> outlineSegments = new List<Vector3Int>();
+        /// <summary>
+        /// For a mesh made of quads (<see cref="QuadRemesher"/>): four vertices per quad, counter-clockwise as
+        /// drawn. Each quad is also two of the first triangles, in order; any triangles left over follow them.
+        /// </summary>
+        public readonly List<int> quads = new List<int>();
+        public int QuadCount => quads.Count / 4;
 
         /// <summary>A piece's edge length (cm).</summary>
         public float EdgeCmOf(int piece) => pieceEdgeCm != null && piece >= 0 && piece < pieceEdgeCm.Length ? pieceEdgeCm[piece] : edgeLengthCm;
@@ -76,14 +84,26 @@ namespace UMA.ClothesDesigner.Editor
     {
         private const float Eps = 2e-5f;
 
-        public static PatternMesh Build(ClothesPattern pattern, PieceScale[] scales, float edgeLengthCm)
+        public static PatternMesh Build(ClothesPattern pattern, PieceScale[] scales, float edgeLengthCm) =>
+            Build(pattern, scales, edgeLengthCm, pattern.meshTopology, false);
+
+        /// <param name="topology">How the inside of each piece is filled (the pattern's own setting is not read).</param>
+        /// <param name="outlineLoop">
+        /// Also a row of points one spacing in from every outline, so the cloth next to an outline is a strip of
+        /// near-squares: an edge loop following the hem or seam (<see cref="QuadRemesher"/>).
+        /// </param>
+        /// <param name="pleatSpacingScale">
+        /// How much coarser than usual pleated pieces may be meshed: 2 for a mesh that will be split in two again
+        /// (<see cref="QuadRemesher"/>'s all quads), which would otherwise come out twice as fine as its pleats need.
+        /// </param>
+        public static PatternMesh Build(ClothesPattern pattern, PieceScale[] scales, float edgeLengthCm, MeshTopology topology, bool outlineLoop, float pleatSpacingScale = 1f)
         {
             float h = Mathf.Max(0.3f, edgeLengthCm);
             PatternMesh mesh = null;
             float boundaryFactor = 1f;
             for (int attempt = 0; attempt < 5; attempt++)
             {
-                mesh = TryBuild(pattern, scales, h, boundaryFactor, out bool recovered);
+                mesh = TryBuild(pattern, scales, h, boundaryFactor, topology, outlineLoop, pleatSpacingScale, out bool recovered);
                 if (recovered) break;
                 boundaryFactor *= 0.8f;
                 if (attempt == 4)
@@ -113,16 +133,17 @@ namespace UMA.ClothesDesigner.Editor
             public int dart = -1; // index into the piece's edge darts: the opening, replaced by the legs
         }
 
-        private static PatternMesh TryBuild(ClothesPattern pattern, PieceScale[] scales, float hBase, float boundaryFactor, out bool recovered)
+        private static PatternMesh TryBuild(ClothesPattern pattern, PieceScale[] scales, float hBase, float boundaryFactor, MeshTopology topology, bool outlineLoop, float pleatSpacingScale, out bool recovered)
         {
             recovered = true;
             var mesh = new PatternMesh();
             int pieceTotal = pattern.pieces.Count;
             mesh.pieceStart = new int[pieceTotal];
             mesh.pieceCount = new int[pieceTotal];
-            // Each piece's spacing: the Mesh Level's, finer for pieces with more detail.
+            // Each piece's spacing: the Mesh Level's, finer for pieces with more detail, and fine enough for its
+            // pleats (see PleatEdgeCm).
             var pieceH = new float[pieceTotal];
-            for (int p = 0; p < pieceTotal; p++) pieceH[p] = hBase / PatternPiece.DetailOf(pattern.pieces[p]);
+            for (int p = 0; p < pieceTotal; p++) pieceH[p] = Mathf.Min(hBase / PatternPiece.DetailOf(pattern.pieces[p]), PleatEdgeCm(pattern.pieces[p]) * Mathf.Max(1f, pleatSpacingScale));
             mesh.pieceEdgeCm = (float[])pieceH.Clone();
 
             // Curves, darts, pleats and what they take out of each edge.
@@ -447,21 +468,71 @@ namespace UMA.ClothesDesigner.Editor
                 foreach (List<Vector2> hole in holePolygons) near.AddPolyline(hole, true);
                 foreach (List<Vector2> line in linePolylines) near.AddPolyline(line, false);
                 foreach (Vector2 q in tackPoints) near.AddPolyline(new List<Vector2> { q }, false);
-                float rowStep = h * 0.8660254f;
-                int row = 0;
-                for (float y = bounds.yMin + rowStep * 0.5f; y < bounds.yMax; y += rowStep, row++)
+                bool TakeInterior(Vector2 q)
                 {
-                    float offset = (row & 1) == 0 ? 0f : h * 0.5f;
-                    for (float x = bounds.xMin + offset; x < bounds.xMax; x += h)
+                    if (near.Near(q)) return false;
+                    if (!PatternGeometry.PointInPolygon(outline, q)) return false;
+                    foreach (List<Vector2> hole in holePolygons) if (PatternGeometry.PointInPolygon(hole, q)) return false;
+                    points.Add(q);
+                    pointEdge.Add(-1);
+                    return true;
+                }
+                if (outlineLoop)
+                {
+                    // A loop one spacing in from the outline, a point opposite each outline sample: the strip between
+                    // is near-squares, an edge loop along every hem and seam. Points that would come too close to
+                    // anything (a sharp corner, a dart, a narrow part) are left out.
+                    var loop = new List<Vector2>();
+                    for (int i = 0; i < outlineCount; i++)
                     {
-                        var q = new Vector2(x, y);
-                        if (near.Near(q)) continue;
-                        if (!PatternGeometry.PointInPolygon(outline, q)) continue;
-                        bool inHole = false;
-                        foreach (List<Vector2> hole in holePolygons) if (PatternGeometry.PointInPolygon(hole, q)) { inHole = true; break; }
-                        if (inHole) continue;
+                        Vector2 prev = outline[(i + outlineCount - 1) % outlineCount], here = outline[i], next = outline[(i + 1) % outlineCount];
+                        Vector2 dPrev = (here - prev).normalized, dNext = (next - here).normalized;
+                        // Inward is left of the direction for a counter-clockwise outline.
+                        Vector2 nPrev = new Vector2(-dPrev.y, dPrev.x), nNext = new Vector2(-dNext.y, dNext.x);
+                        if (clockwise) { nPrev = -nPrev; nNext = -nNext; }
+                        Vector2 inward = (nPrev + nNext).normalized;
+                        if (inward.sqrMagnitude < 0.5f) continue;
+                        float depth = 0.9f * h / Mathf.Max(0.5f, Vector2.Dot(inward, nPrev));
+                        Vector2 q = here + inward * depth;
+                        if (!PatternGeometry.PointInPolygon(outline, q) || PatternGeometry.DistanceToPolyline(outline, q) < 0.6f * h) continue;
+                        bool clear = true;
+                        foreach (List<Vector2> hole in holePolygons) if (PatternGeometry.PointInPolygon(hole, q) || PatternGeometry.DistanceToPolyline(hole, q) < 0.6f * h) { clear = false; break; }
+                        foreach (List<Vector2> line in linePolylines) if (clear && PatternGeometry.DistanceToPolyline(line, q) < 0.6f * h) clear = false;
+                        foreach (Vector2 other in loop) if (clear && (other - q).sqrMagnitude < 0.36f * h * h) clear = false;
+                        foreach (Vector2 t in tackPoints) if (clear && (t - q).sqrMagnitude < 0.36f * h * h) clear = false;
+                        if (!clear) continue;
+                        loop.Add(q);
                         points.Add(q);
                         pointEdge.Add(-1);
+                    }
+                    foreach (Vector2 q in loop) near.AddPolyline(new List<Vector2> { q }, false);
+                }
+                if (topology == MeshTopology.GrainGrid)
+                {
+                    // Squares along the grain and across it, split in two: triangles that pair into quads running
+                    // with the warp and the weft.
+                    float g = piece.grainAngle * Mathf.Deg2Rad;
+                    Vector2 along = new Vector2(-Mathf.Sin(g), Mathf.Cos(g)), across = new Vector2(along.y, -along.x);
+                    Vector2 middle = bounds.center;
+                    float reach = (bounds.size.magnitude * 0.5f) / h + 1f;
+                    int cells = Mathf.CeilToInt(reach);
+                    for (int j = -cells; j <= cells; j++)
+                    {
+                        for (int i = -cells; i <= cells; i++)
+                        {
+                            Vector2 q = middle + across * ((i + 0.5f) * h) + along * ((j + 0.5f) * h);
+                            if (bounds.Contains(q)) TakeInterior(q);
+                        }
+                    }
+                }
+                else
+                {
+                    float rowStep = h * 0.8660254f;
+                    int row = 0;
+                    for (float y = bounds.yMin + rowStep * 0.5f; y < bounds.yMax; y += rowStep, row++)
+                    {
+                        float offset = (row & 1) == 0 ? 0f : h * 0.5f;
+                        for (float x = bounds.xMin + offset; x < bounds.xMax; x += h) TakeInterior(new Vector2(x, y));
                     }
                 }
 
@@ -555,7 +626,13 @@ namespace UMA.ClothesDesigner.Editor
                     foreach (Vector2Int pair in s.stitchedLines)
                     {
                         List<int> la = lines[pair.x], lb = lines[pair.y];
-                        for (int k = 0; k <= down && k < la.Count && k < lb.Count; k++) AddStitch(mesh, baseIndex + la[k], baseIndex + lb[k], group);
+                        for (int k = 0; k <= down && k < la.Count && k < lb.Count; k++)
+                        {
+                            // Held folded, as a folded seam is (see ClothModel's folds): a stitch is otherwise a
+                            // free hinge, and the fold it closes swung out over the pleat.
+                            AddStitch(mesh, baseIndex + la[k], baseIndex + lb[k], group);
+                            mesh.foldedStitches.Add(mesh.stitches.Count - 1);
+                        }
                         group++;
                     }
                     if (!pleat.pressed) continue;
@@ -566,6 +643,7 @@ namespace UMA.ClothesDesigner.Editor
                         {
                             mesh.creases.Add(new Vector2Int(baseIndex + lines[l][k], baseIndex + lines[l][k + 1]));
                             mesh.creaseAngle.Add(-1f);
+                            mesh.creaseSharp.Add(pleat.sharpFolds);
                         }
                     }
                 }
@@ -579,6 +657,7 @@ namespace UMA.ClothesDesigner.Editor
                 edgeSamplesAll[p] = global;
 
                 LayOutPleats(mesh, p, pleats[p], curves[p]);
+                CatchPleatLayers(mesh, p, pleats[p], bh, ref group);
 
                 // Fold lines: a crease that rests folded by the line's angle, laid out a little off flat so
                 // the crease turns the way it was drawn (a ridge out from the body, or a valley in).
@@ -594,6 +673,7 @@ namespace UMA.ClothesDesigner.Editor
                         {
                             mesh.creases.Add(new Vector2Int(baseIndex + vertices[i], baseIndex + vertices[i + 1]));
                             mesh.creaseAngle.Add(line.foldAngle);
+                            mesh.creaseSharp.Add(line.sharp);
                         }
                         // Not the ends on the outline: they are sewn or hemmed with the rest of their edge.
                         if (vertices[i] >= outlineCount) mesh.layoutDepth[baseIndex + vertices[i]] += nudge;
@@ -634,6 +714,76 @@ namespace UMA.ClothesDesigner.Editor
                 }
             }
             return mesh;
+        }
+
+        /// <summary>How many triangles the cloth between two of a pleat's folds needs across.</summary>
+        public const float PleatEdgesPerFold = 2f;
+        /// <summary>The finest spacing a pleat asks for (cm), however shallow it is.</summary>
+        public const float FinestPleatEdgeCm = 0.3f;
+
+        /// <summary>
+        /// The coarsest spacing a piece's pleats allow (cm): half the shallowest pleat's depth, so the cloth
+        /// between two folds is at least two triangles across. With one, the folds do not hold: measured on the
+        /// shirt's 2 cm box pleat at a 2 cm mesh, an inner fold had come out over the box in every one of 10
+        /// rows; at 1 cm both stayed under it in 18 of 19. No limit for a piece without pleats.
+        /// </summary>
+        public static float PleatEdgeCm(PatternPiece piece)
+        {
+            float edge = float.MaxValue;
+            if (piece?.pleats == null) return edge;
+            foreach (PatternPleat pleat in piece.pleats)
+            {
+                if (pleat == null) continue;
+                edge = Mathf.Min(edge, Mathf.Max(FinestPleatEdgeCm, pleat.depthCm / PleatEdgesPerFold));
+            }
+            return edge;
+        }
+
+        /// <summary>
+        /// Catches every layer of each pleat in the edge it opens on, as sewing that edge does: each folded
+        /// layer's point on the edge is stitched to the top layer's point over it (as laid out, folded), held
+        /// folded. A seam on a pleated edge skips what the pleat takes in, so the folded layers' top edges were
+        /// sewn to nothing. Measured on the shirt's box pleat, stitched down 4 cm: with the stitched lines
+        /// swinging freely the folds came out over the box under the yoke; held folded, most of the box showed;
+        /// held folded and caught here, the box was whole to the yoke and both folds stayed under it in 19 of 19
+        /// rows (18 before). A catch stitch's ends start up to three quarters of an edge apart, so the drape's
+        /// widest seam gap is a little wider (4.5 against 3.4 mm), under the seam; the bake welds them.
+        /// </summary>
+        private static void CatchPleatLayers(PatternMesh mesh, int p, List<(PatternPleat pleat, DartGeometry.PleatShape shape)> pleats, float edgeCm, ref int group)
+        {
+            if (pleats.Count == 0) return;
+            int start = mesh.pieceStart[p], end = start + mesh.pieceCount[p];
+            var stitched = new HashSet<long>();
+            foreach (Vector2Int s in mesh.stitches) stitched.Add(s.x < s.y ? ((long)s.x << 32) | (uint)s.y : ((long)s.y << 32) | (uint)s.x);
+            foreach (var pl in pleats)
+            {
+                var top = new List<int>();
+                var folded = new List<int>();
+                for (int v = start; v < end; v++)
+                {
+                    if (mesh.boundaryEdge[v] != pl.shape.edge) continue;
+                    (mesh.layoutDepth[v] > 0.01f ? folded : top).Add(v);
+                }
+                folded.Sort((a, b) => Vector2.Dot(mesh.layout[a], pl.shape.tangent).CompareTo(Vector2.Dot(mesh.layout[b], pl.shape.tangent)));
+                bool any = false;
+                foreach (int f in folded)
+                {
+                    int best = -1;
+                    float bestDistance = edgeCm * 0.75f;
+                    foreach (int t in top)
+                    {
+                        float d = (mesh.layout[f] - mesh.layout[t]).magnitude;
+                        if (d < bestDistance) { bestDistance = d; best = t; }
+                    }
+                    if (best < 0) continue;
+                    long key = best < f ? ((long)best << 32) | (uint)f : ((long)f << 32) | (uint)best;
+                    if (!stitched.Add(key)) continue;
+                    AddStitch(mesh, best, f, group);
+                    mesh.foldedStitches.Add(mesh.stitches.Count - 1);
+                    any = true;
+                }
+                if (any) group++;
+            }
         }
 
         private static void AddStitch(PatternMesh mesh, int a, int b, int group)

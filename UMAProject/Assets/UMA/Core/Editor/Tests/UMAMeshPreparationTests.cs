@@ -444,6 +444,64 @@ namespace UMA.Tests
             finally { UnityEngine.Object.DestroyImmediate(mesh); }
         }
 
+        // A baked value is normalized (1 = 100%) and may be negative or above 1, as a live shape's is.
+        // Every combiner's bake must move the vertex the same way: the managed bake (default
+        // combiner and slot prebakes), the Mesh API bake (jobified, incremental, and the default
+        // combiner with the Mesh API on) and the bone-baking combiner's retargeting bake.
+        [TestCase(-0.5f, 100f, -5f)]
+        [TestCase(0f, 100f, 0f)]
+        [TestCase(0.5f, 100f, 5f)]
+        [TestCase(1.5f, 100f, 15f)]
+        [TestCase(-1.5f, 100f, -15f)]
+        [TestCase(-0.5f, -100f, 5f)]
+        [TestCase(-1f, -100f, 10f)]
+        [TestCase(0.5f, -100f, -5f)]
+        public void EveryCombinerBakesSignedBlendshapeWeights(float weight, float frameWeight, float expectedMillimeters)
+        {
+            using var generator = new GeneratorScope();
+            using var fixture = new UMAResourceReuseMeshTests.Fixture();
+            var source = fixture.Slot.meshData;
+            var frame = new UMABlendFrame(source.vertexCount) { frameWeight = frameWeight };
+            frame.deltaVertices[0] = Vector3.right * 0.01f;
+            source.blendShapes = new[] { new UMABlendShape { shapeName = "SignedCheck", frames = new[] { frame } } };
+            var failures = new List<string>();
+            void Check(string path, float millimeters)
+            {
+                if (Mathf.Abs(millimeters - expectedMillimeters) > 1e-4f)
+                    failures.Add($"{path}: {millimeters:F3} mm, expected {expectedMillimeters:F3} mm");
+            }
+
+            foreach (bool jobified in new[] { true, false })
+            {
+                var avatar = fixture.Avatar(false);
+                avatar.SetBlendShapeData("SignedCheck", bake: true);
+                avatar.SetBlendShape("SignedCheck", weight, bakedOnly: true);
+                if (jobified) fixture.BuildJobified(avatar); else fixture.Build(avatar);
+                var mesh = avatar.GetRenderer(0).sharedMesh;
+                string path = jobified ? "Jobified" : "Incremental";
+                Assert.AreEqual(-1, mesh.GetBlendShapeIndex("SignedCheck"), path + " kept a baked shape live.");
+                Check(path, (mesh.vertices[0].x - source.vertices[0].x) * 1000f);
+            }
+
+            var baked = new Dictionary<string, BlendShapeData> { { "SignedCheck", new BlendShapeData { isBaked = true, value = weight } } };
+            var vertices = (Vector3[])source.vertices.Clone();
+            int vertexIndex = 0;
+            SkinnedMeshCombiner.BakeBlendShape(baked, source.blendShapes[0], ref vertexIndex, vertices, null, null, false, false);
+            Check("Managed", (vertices[0].x - source.vertices[0].x) * 1000f);
+
+            var settings = new BlendShapeSettings();
+            settings.blendShapes.Add("SignedCheck", new BlendShapeData { isBaked = true, value = weight });
+            var target = new MeshBuilder();
+            SkinnedMeshCombinerRetargeting.CombineMeshes(target, new[] { new SkinnedMeshCombinerRetargeting.CombineInstance
+            {
+                meshData = source, targetSubmeshIndices = new[] { 0 },
+                resolvedBoneMatrixes = new[] { Matrix4x4.identity }, targetBoneIndices = new[] { 0 }
+            } }, new[] { Matrix4x4.identity }, settings, true);
+            Check("Bone baking", (target.vertices[0].x - source.vertices[0].x) * 1000f);
+
+            Assert.IsEmpty(failures, string.Join("\n", failures));
+        }
+
         [TestCase(false)] [TestCase(true)]
         public void AutomaticAndPersistedBakesMatchAllChannelsAndPreservePreviousFrame(bool jobified)
         {

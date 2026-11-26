@@ -50,6 +50,9 @@ namespace UMA.ClothesDesigner.Editor
         public override string Id => WorkflowId;
         public override GUIContent ToolbarContent => toolbarContent;
         public override int Order => 100;
+        // The designer opens from its own commands and needs none of the other workflows; it is left by
+        // closing the Vertex Editor (or by Publish and Sculpt, which opens a Vertex Editor of its own).
+        public override bool HidesWorkflowBars => true;
         public override string SaveLabel => "Save Pattern and Fit";
         public override string SaveHelp => "Save the pattern and the fit as assets (you choose where the first time).";
 
@@ -161,6 +164,13 @@ namespace UMA.ClothesDesigner.Editor
         public override void OnToolsGUI(VertexEditorStage stage)
         {
             EnsureStyles();
+            // The width the panel's rows must fit: the stage's content width less where this content starts in it.
+            // A row wider than that (the tool grid, the Pattern buttons) widened everything in the panel and cut it off.
+            // Where it starts is read on a repaint and used from the next event, so a layout pass and its repaint
+            // lay out the same rows.
+            Rect start = GUILayoutUtility.GetRect(0f, 0f, GUILayout.ExpandWidth(true));
+            panelWidth = Mathf.Max(120f, stage.ToolsContentWidth - contentLeft - 2f);
+            if (Event.current.type == EventType.Repaint) contentLeft = Mathf.Max(0f, start.x);
             DesignerSession session = GetSession(stage);
             GUILayout.Label(session.Mode == Mode.FitExistingSlot ? "Clothes Designer: Fit Existing Slot" : "Clothes Designer", titleStyle);
             DrawBodyLine(stage, session);
@@ -199,8 +209,17 @@ namespace UMA.ClothesDesigner.Editor
                 return;
             }
             BodyLandmarks m = session.Body.Landmarks;
-            EditorGUILayout.LabelField(new GUIContent("Body", "Measured round the chest, waist and hips, arms left out."),
-                new GUIContent("chest " + m.chestCm.ToString("0") + ", waist " + m.waistCm.ToString("0") + ", hip " + m.hipCm.ToString("0") + " cm"));
+            var bodyLabel = new GUIContent("Body", "Measured round the chest, waist and hips, arms left out.");
+            var measured = new GUIContent("chest " + m.chestCm.ToString("0") + ", waist " + m.waistCm.ToString("0") + ", hip " + m.hipCm.ToString("0") + " cm");
+            // On a narrow panel the measurements go on a line of their own rather than being cut off.
+            if (EditorGUIUtility.labelWidth + EditorStyles.label.CalcSize(measured).x <= panelWidth) EditorGUILayout.LabelField(bodyLabel, measured);
+            else
+            {
+                EditorGUILayout.LabelField(bodyLabel, GUIContent.none);
+                EditorGUI.indentLevel++;
+                EditorGUILayout.LabelField(measured, wrapStyle);
+                EditorGUI.indentLevel--;
+            }
         }
 
         private void DrawPatternSection(DesignerSession session)
@@ -209,37 +228,36 @@ namespace UMA.ClothesDesigner.Editor
             EditorGUI.BeginChangeCheck();
             var picked = (ClothesPattern)EditorGUILayout.ObjectField(new GUIContent("Pattern" + (session.PatternDirty ? " *" : ""), "The sewing pattern being fitted. * means it has changes that are not saved."),
                 session.PatternAsset, typeof(ClothesPattern), false);
-            if (EditorGUI.EndChangeCheck() && ConfirmLosingWork(session)) session.OpenPattern(picked);
+            if (EditorGUI.EndChangeCheck() && ConfirmLosingWork(session)) { session.OpenPattern(picked); session.FrameCloth(); }
             if (session.Pattern != null && session.PatternAsset == null)
             {
                 EditorGUILayout.LabelField(" ", "'" + session.Pattern.name + "' (not saved yet)", EditorStyles.miniLabel);
             }
+            // Pattern Canvas goes on a row of its own when the four buttons do not fit the panel.
+            bool oneRow = RowWidth("New", "Samples", "Generator", "Pattern Canvas") <= panelWidth;
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button(new GUIContent("New", "Start a blank pattern.")) && ConfirmLosingWork(session)) session.NewPattern(null);
-            if (EditorGUILayout.DropdownButton(new GUIContent("Samples", "Start from a sample pattern: the sleeveless vest, tops, trousers, skirts, dresses, socks or a beanie."), FocusType.Passive))
+            if (GUILayout.Button(new GUIContent("New", "Start a blank pattern."), Shrinkable) && ConfirmLosingWork(session)) { session.NewPattern(null); session.FrameCloth(); }
+            if (GUILayout.Button(new GUIContent("Samples", "Browse the sample patterns, with pictures of each pattern and its drape: tops, bottoms, dresses and skirts, underwear and swimwear, accessories and medieval clothes."), Shrinkable))
             {
-                var menu = new GenericMenu();
-                void Add(string name)
-                {
-                    menu.AddItem(new GUIContent(name), false, () =>
-                    {
-                        if (!ConfirmLosingWork(session)) return;
-                        session.NewPattern(SamplePatterns.Create(name));
-                    });
-                }
-                Add("Sleeveless Vest");
-                menu.AddSeparator("");
-                foreach (var sample in SamplePatterns.All) Add(sample.name);
-                menu.ShowAsContext();
+                SampleBrowserWindow.Open(session);
+            }
+            if (GUILayout.Button(new GUIContent("Generator", "Draft a garment to this body from a type and its style: tops, dresses, kimonos, trousers, skirts and jumpsuits, with sliders for length, fit, neck, sleeves, collars and bands. Changes drape as you make them."), Shrinkable))
+            {
+                GarmentGeneratorWindow.Open(session);
+            }
+            if (!oneRow)
+            {
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
             }
             using (new EditorGUI.DisabledScope(!session.HasPattern))
             {
-                if (GUILayout.Button(new GUIContent("Pattern Canvas", "Draw and sew the pieces in a 2D window."))) PatternCanvasWindow.Open(session);
+                if (GUILayout.Button(new GUIContent("Pattern Canvas", "Draw and sew the pieces in a 2D window."), Shrinkable)) PatternCanvasWindow.Open(session);
             }
             EditorGUILayout.EndHorizontal();
             if (!session.HasPattern)
             {
-                EditorGUILayout.HelpBox("Start from one of the Samples, a new pattern, or pick a saved one above.", MessageType.Info);
+                EditorGUILayout.HelpBox("Start from the Generator (pick a garment and its style), one of the Samples, a new pattern, or pick a saved one above.", MessageType.Info);
             }
             DrawConvertRow(session);
         }
@@ -275,6 +293,7 @@ namespace UMA.ClothesDesigner.Editor
                         convertMessages.Add(result.Pieces + " pieces and " + result.Seams + " seams from " + result.Islands + " UV islands.");
                         convertMessages.AddRange(result.Messages);
                         session.NewPattern(result.Pattern);
+                        session.FrameCloth();
                     }
                     GUIUtility.ExitGUI();
                 }
@@ -287,7 +306,7 @@ namespace UMA.ClothesDesigner.Editor
             }
         }
 
-        private static bool ConfirmLosingWork(DesignerSession session)
+        internal static bool ConfirmLosingWork(DesignerSession session)
         {
             if (!session.HasUnsavedChanges) return true;
             int choice = EditorUtility.DisplayDialogComplex("Clothes Designer", session.DescribeUnsavedChanges(), "Save", "Cancel", "Discard");
@@ -308,17 +327,18 @@ namespace UMA.ClothesDesigner.Editor
                 return;
             }
             string status = session.Running
-                ? (!fit.Sewn ? "Sewing " + Mathf.RoundToInt((1f - fit.Closure) * 100f) + "%" : "Settling")
+                ? (!fit.Sewn ? "Sewing " + Mathf.RoundToInt((1f - fit.Closure) * 100f) + "%"
+                    : !fit.AllSewn ? "Tightening free pieces " + Mathf.RoundToInt((1f - fit.LateClosure) * 100f) + "%" : "Settling")
                 : (session.Settled ? "Settled" : (fit.SimTime <= 0f ? "Laid out round the body" : "Paused"));
             EditorGUILayout.LabelField("Cloth", status, EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button(new GUIContent(session.Running ? "Pause" : "Simulate", session.Running ? ClothFitButtons.PauseTip : ClothFitButtons.SimulateTip)))
+            if (GUILayout.Button(new GUIContent(session.Running ? "Pause" : "Simulate", session.Running ? ClothFitButtons.PauseTip : ClothFitButtons.SimulateTip), Shrinkable))
             {
                 session.SetRunning(!session.Running);
             }
-            if (GUILayout.Button(new GUIContent("Step", ClothFitButtons.StepTip))) session.StepOnce();
-            if (GUILayout.Button(new GUIContent("Reset", ClothFitButtons.ResetTip))) session.ResetToArrangement();
-            if (GUILayout.Button(new GUIContent("Keep Drape", ClothFitButtons.KeepDrapeTip))) session.KeepDrape();
+            if (GUILayout.Button(new GUIContent("Step", ClothFitButtons.StepTip), Shrinkable)) session.StepOnce();
+            if (GUILayout.Button(new GUIContent("Reset", ClothFitButtons.ResetTip), Shrinkable)) session.ResetToArrangement();
+            if (GUILayout.Button(new GUIContent("Keep Drape", ClothFitButtons.KeepDrapeTip), Shrinkable)) session.KeepDrape();
             EditorGUILayout.EndHorizontal();
 
             bool gpuOk = ClothSolverGpu.Supported;
@@ -354,6 +374,14 @@ namespace UMA.ClothesDesigner.Editor
                 data.overrideMeshLevel = true;
                 data.meshLevel = newLevel;
                 data.customEdgeLengthCm = custom;
+                session.RebuildCloth(true);
+                GUIUtility.ExitGUI();
+            }
+            var topology = (MeshTopology)EditorGUILayout.EnumPopup(new GUIContent("Mesh Topology", "Even: nearly equilateral triangles, the most even cloth. Grain Grid: squares along each piece's grain and across it, split in two, so the mesh's rows and columns follow the warp and the weft: cleaner to sculpt, weight and read, and pairs of triangles make quads. The UVs come from the pattern either way. The drape is carried over."), session.Pattern.meshTopology);
+            if (topology != session.Pattern.meshTopology)
+            {
+                Undo.RecordObject(session.Pattern, "Mesh Topology");
+                session.Pattern.meshTopology = topology;
                 session.RebuildCloth(true);
                 GUIUtility.ExitGUI();
             }
@@ -417,11 +445,18 @@ namespace UMA.ClothesDesigner.Editor
         {
             if (!Section("Tools", "Cloth Tools")) return;
             int toolIndex = Mathf.Max(0, Array.IndexOf(toolOrder, session.Tool));
-            int pickedTool = GUILayout.Toolbar(toolIndex, toolContents);
+            // As many tools a row as fit the panel (it is a third of the Scene view, 320 to 460 px): a fixed five a
+            // row was wider than a narrow panel and pushed everything in it off the right edge.
+            int pickedTool = GUILayout.SelectionGrid(toolIndex, toolContents, ToolColumns(panelWidth), GUILayout.MaxWidth(panelWidth));
             if (pickedTool != toolIndex) { session.Tool = toolOrder[pickedTool]; SceneView.RepaintAll(); }
             if (session.Tool == ClothTool.Place)
             {
                 DrawPlaceTool(session);
+                return;
+            }
+            if (session.Tool == ClothTool.Size)
+            {
+                DrawSizeTool(session);
                 return;
             }
             if (session.Tool == ClothTool.Measure)
@@ -436,8 +471,44 @@ namespace UMA.ClothesDesigner.Editor
                 }
                 return;
             }
-            session.BrushRadius = EditorGUILayout.Slider(new GUIContent("Radius (cm)", "How much cloth around the point is moved or pinned."), session.BrushRadius * 100f, 1f, 30f) / 100f;
+            if (session.Tool == ClothTool.BodyRegion)
+            {
+                DrawBodyRegion(session);
+                return;
+            }
+            if (session.Tool == ClothTool.Dart || session.Tool == ClothTool.Pleat || session.Tool == ClothTool.DrawPiece)
+            {
+                GUILayout.Label(ClothToolInfo.Tooltip(session.Tool), wrapStyle);
+                if (session.Tool == ClothTool.DrawPiece)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label(session.BodyOutline.Count + " points", EditorStyles.miniLabel);
+                    using (new EditorGUI.DisabledScope(session.BodyOutline.Count < 3))
+                    {
+                        if (GUILayout.Button("Finish Piece", GUILayout.Width(100f))) session.FinishBodyPiece();
+                    }
+                    using (new EditorGUI.DisabledScope(session.BodyOutline.Count == 0))
+                    {
+                        if (GUILayout.Button("Clear", GUILayout.Width(60f))) { session.BodyOutline.Clear(); SceneView.RepaintAll(); }
+                    }
+                    EditorGUILayout.EndHorizontal();
+                }
+                if (!string.IsNullOrEmpty(session.PatternToolMessage)) EditorGUILayout.HelpBox(session.PatternToolMessage, MessageType.Info);
+                return;
+            }
+            session.BrushRadius = EditorGUILayout.Slider(new GUIContent("Radius (cm)", "How much cloth around the point is moved, pinned, painted or rolled."), session.BrushRadius * 100f, 1f, 30f) / 100f;
             session.BrushStrength = EditorGUILayout.Slider(new GUIContent("Strength"), session.BrushStrength, 0.05f, 1f);
+            if (session.Tool == ClothTool.FitBrush)
+            {
+                DrawFitBrush(session);
+                return;
+            }
+            if (session.Tool == ClothTool.Roll)
+            {
+                GUILayout.Label("Press on the cloth that belongs in front and drag over where it sinks into, or lies flush with, the cloth behind it. It is lifted out until it is " + (session.RollGapM * 1000f).ToString("0.#") + " mm clear (the Cloth Thickness, at least 1 mm). The stroke keeps to the piece and side you pressed on, even where other cloth pokes through it, and stops at folds. Each stroke is one Undo step; Escape puts it back. Rolling does not start the simulation: roll as a last step, then Keep Drape. A folded seam's two pieces (a collar's leaf and stand) are not kept apart by the simulation, so simulating again may undo the rolling there.", wrapStyle);
+                if (session.LastRollLifted > 0) GUILayout.Label("Last stroke lifted " + session.LastRollLifted + " points.", EditorStyles.miniLabel);
+                return;
+            }
             if (session.Tool == ClothTool.Pin)
             {
                 session.NewPinKind = (PinKind)EditorGUILayout.EnumPopup(new GUIContent("Pins Follow", "Body: the pin moves with the body when its shape changes. Placement: it holds a point in space."), session.NewPinKind);
@@ -449,12 +520,105 @@ namespace UMA.ClothesDesigner.Editor
                 if (GUILayout.Button("Clear Pins", GUILayout.Width(90f))) session.ClearPins();
             }
             EditorGUILayout.EndHorizontal();
+            if (session.Tool == ClothTool.Grab)
+            {
+                session.GrabOneLayer = EditorGUILayout.ToggleLeft(new GUIContent("Grab One Layer", "Move only the cloth on the layer of the piece you press on (its Layer on the Pattern Canvas), and hold the cloth on the other layers where it is while you drag: pull a bodice up to blouse over a belt on a higher layer, and the belt stays put."), session.GrabOneLayer);
+            }
             GUILayout.Label(session.Tool == ClothTool.Grab
                 ? "Drag the cloth in the Scene view. Release to let it settle; Escape puts it back. Alt-drag still orbits."
                 : session.Tool == ClothTool.Pin ? "Click or drag on the cloth to pin it. Pins are stored on the pattern, so they survive a new mesh level."
                 : "Click or drag on pinned cloth to release it.", wrapStyle);
             int broken = session.Fit.CountBrokenBodyPins();
             if (broken > 0) EditorGUILayout.HelpBox(broken + " body pins point at a part of the body that no longer exists. Erase and pin them again.", MessageType.Warning);
+        }
+
+        /// <summary>Where this panel's content starts in the stage's tools area, and the width it has (GUI points), measured on a repaint.</summary>
+        private float contentLeft, panelWidth = 300f;
+
+        /// <summary>A button that may be narrower than its text, so a row of them never widens the panel.</summary>
+        private static readonly GUILayoutOption Shrinkable = GUILayout.MinWidth(24f);
+
+        /// <summary>How wide a row of buttons would like to be (GUI points).</summary>
+        private static float RowWidth(params string[] labels)
+        {
+            GUIStyle style = GUI.skin.button;
+            float width = 0f;
+            foreach (string label in labels) width += style.CalcSize(new GUIContent(label)).x + Mathf.Max(style.margin.left, style.margin.right);
+            return width;
+        }
+
+        /// <summary>How many tool buttons fit a row of a panel this wide, each as wide as the widest name needs.</summary>
+        internal static int ToolColumns(float width)
+        {
+            GUIStyle style = GUI.skin.button;
+            float widest = 0f;
+            foreach (GUIContent c in toolContents) widest = Mathf.Max(widest, style.CalcSize(new GUIContent(c.text)).x);
+            float spacing = Mathf.Max(style.margin.left, style.margin.right);
+            return Mathf.Clamp(Mathf.FloorToInt((width + spacing) / (widest + spacing)), 2, toolContents.Length);
+        }
+
+        /// <summary>The paint modes as buttons, shared with the Fit Tools toolbar (<see cref="FitPaintInfo"/>).</summary>
+        private static readonly GUIContent[] paintModes = FitPaintInfo.PanelContents();
+
+        /// <summary>The paint modes in the order their buttons are shown (Erase last).</summary>
+        private static readonly FitPaintMode[] paintOrder = FitPaintInfo.Order;
+
+        private void DrawFitBrush(DesignerSession session)
+        {
+            int shown = Mathf.Max(0, Array.IndexOf(paintOrder, session.PaintMode));
+            // Seven buttons: on one row when the panel is wide enough, otherwise four and three.
+            var names = new string[paintModes.Length];
+            for (int i = 0; i < names.Length; i++) names[i] = paintModes[i].text;
+            int columns = RowWidth(names) <= panelWidth ? paintModes.Length : 4;
+            int picked = GUILayout.SelectionGrid(shown, paintModes, columns, GUILayout.MaxWidth(panelWidth));
+            session.PaintMode = paintOrder[picked];
+            GUILayout.Label(paintModes[picked].tooltip + (session.PaintMode != FitPaintMode.Erase ? " Ctrl-drag takes this paint off." : ""), wrapStyle);
+            GUILayout.Label("Green hugs, blue smooths, orange puffs, purple slims, teal stiffens, brown weights. Each stroke is one Undo step; the cloth simulates when you let go. The paint is kept on the pattern, so it survives a new mesh level, and it bakes into the drape.", EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.BeginHorizontal();
+            int painted = 0;
+            foreach (FitPaintPoint p in session.FitData.paint) if (p.hug > 0f || p.smooth > 0f || p.inflate != 0f || p.stiff > 0f || p.weight > 0f) painted++;
+            GUILayout.Label(painted + " painted points", EditorStyles.miniLabel);
+            using (new EditorGUI.DisabledScope(session.FitData.paint.Count == 0))
+            {
+                if (GUILayout.Button("Clear Paint", GUILayout.Width(90f))) session.ClearPaint();
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawBodyRegion(DesignerSession session)
+        {
+            GUILayout.Label(ClothToolInfo.Tooltip(ClothTool.BodyRegion), wrapStyle);
+            session.RegionRadius = EditorGUILayout.Slider(new GUIContent("Radius (cm)", "How much of the body each dab of the brush paints."), session.RegionRadius * 100f, 1f, 20f) / 100f;
+            session.RegionMirror = EditorGUILayout.Toggle(new GUIContent("Mirror", "Paint the other side of the body too."), session.RegionMirror);
+            session.RegionEase = EditorGUILayout.Slider(new GUIContent("Ease (%)", "How much bigger (or, negative, smaller) than the body the pieces are cut: below 0 for stretch fabrics that grip, above 0 for room."), session.RegionEase * 100f, -15f, 20f) / 100f;
+            string[] fabrics = FabricPresets.Names();
+            int fabric = Mathf.Max(0, Array.IndexOf(fabrics, session.RegionFabric));
+            fabric = EditorGUILayout.Popup(new GUIContent("Fabric", "What the new pieces are made of."), fabric, fabrics);
+            session.RegionFabric = fabrics[fabric];
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(session.BodyRegion.Count + " body triangles painted", EditorStyles.miniLabel);
+            using (new EditorGUI.DisabledScope(session.BodyRegion.Count == 0))
+            {
+                if (GUILayout.Button(new GUIContent("Make Pieces", "Make pattern pieces from the painted region and add them to the pattern (a new pattern if none is open)."), GUILayout.Width(100f))) session.MakeRegionPieces();
+                if (GUILayout.Button("Clear", GUILayout.Width(60f))) session.ClearRegion();
+            }
+            EditorGUILayout.EndHorizontal();
+            if (!string.IsNullOrEmpty(session.RegionMessage)) EditorGUILayout.HelpBox(session.RegionMessage, MessageType.Info);
+        }
+
+        /// <summary>Lists the hair slots UMA would not hold down and offers to make them smooshable (only those slots are saved).</summary>
+        private static void CheckHair()
+        {
+            List<SlotDataAsset> hair = HairSmoosh.HairNotSmooshable();
+            if (hair.Count == 0) { EditorUtility.DisplayDialog("Holds Hair Down", "Every hair slot in the Global Library is smooshable and tagged '" + HairSmoosh.SmooshableTag + "'.", "OK"); return; }
+            var names = new List<string>();
+            foreach (SlotDataAsset s in hair) names.Add(s.slotName);
+            string list = string.Join("\n", names.Count > 25 ? names.GetRange(0, 25) : names) + (names.Count > 25 ? "\n... and " + (names.Count - 25) + " more" : "");
+            if (EditorUtility.DisplayDialog("Holds Hair Down", hair.Count + " hair slots will not be held down by a hat:\n\n" + list + "\n\nMake them smooshable and tag them '" + HairSmoosh.SmooshableTag + "'? Only these slot assets are changed and saved.", "Make Smooshable", "Cancel"))
+            {
+                int changed = HairSmoosh.MakeSmooshable(hair);
+                EditorUtility.DisplayDialog("Holds Hair Down", changed + " hair slots are now smooshable.", "OK");
+            }
         }
 
         private void DrawPlaceTool(DesignerSession session)
@@ -473,6 +637,40 @@ namespace UMA.ClothesDesigner.Editor
                 return;
             }
             DrawPlacementFields(session, index, true);
+        }
+
+        private void DrawSizeTool(DesignerSession session)
+        {
+            GUILayout.Label("Click a piece for its handles: drag a side handle (red) out or in to make it wider or narrower, both sides moving, or the hem handle (green) down or up to make it longer or shorter. Dragging anywhere on the piece works too, across or down it. The cloth shows the new size as you drag; release to keep it and it settles into it, or press Escape to put it back. Shift keeps its proportions. Or type the size here.", wrapStyle);
+            int index = session.PlacePiece;
+            if (index < 0 || index >= session.Pattern.pieces.Count)
+            {
+                GUILayout.Label(session.HoverPiece >= 0 ? "Click to select '" + session.Pattern.pieces[session.HoverPiece].name + "'." : "No piece selected.", EditorStyles.miniLabel);
+                if (!string.IsNullOrEmpty(session.SizeMessage)) EditorGUILayout.HelpBox(session.SizeMessage, MessageType.Info);
+                return;
+            }
+            PatternPiece piece = session.Pattern.pieces[index];
+            EditorGUILayout.LabelField("Piece", piece.name, EditorStyles.boldLabel);
+            Vector2 size = session.Sizing ? session.SizeDragTo : session.CutSizeOf(index);
+            float shownWidth = Mathf.Round(size.x * 10f) / 10f, shownLength = Mathf.Round(size.y * 10f) / 10f;
+            float width = EditorGUILayout.DelayedFloatField(new GUIContent("Width (cm)", "Across the piece as it is cut on this body: the widest point of its outline, sized by the pattern's sizes."), shownWidth);
+            SizeNote(session.SizeNote(index, DimensionKind.Width));
+            float length = EditorGUILayout.DelayedFloatField(new GUIContent("Length (cm)", "Down the piece as it is cut on this body, from its top to its hem. The top stays where it is laid."), shownLength);
+            SizeNote(session.SizeNote(index, DimensionKind.Length));
+            bool matching = EditorGUILayout.ToggleLeft(new GUIContent("Resize Matching Pieces", "Also resize the pieces that share a size with this one (the other sleeve, a belt's other half) the same way, so the seams between them still match. A width or length that one of the pattern's sizes sets changes that size, and so every piece it sizes, either way."), DesignerSession.SizeMatchingPieces);
+            if (matching != DesignerSession.SizeMatchingPieces) DesignerSession.SizeMatchingPieces = matching;
+            if (!session.Sizing && (!Mathf.Approximately(width, shownWidth) || !Mathf.Approximately(length, shownLength)))
+            {
+                // The field left alone keeps its exact value, so rounding for display changes nothing.
+                session.ResizePiece(index, Mathf.Approximately(width, shownWidth) ? size.x : width, Mathf.Approximately(length, shownLength) ? size.y : length);
+                GUIUtility.ExitGUI();
+            }
+            if (!string.IsNullOrEmpty(session.SizeMessage)) EditorGUILayout.HelpBox(session.SizeMessage, MessageType.Info);
+        }
+
+        private static void SizeNote(string note)
+        {
+            if (!string.IsNullOrEmpty(note)) GUILayout.Label("    " + note + ".", EditorStyles.wordWrappedMiniLabel);
         }
 
         /// <summary>Faces, Above Shoulders and Distance for one piece, editing the placement in effect.</summary>
@@ -544,6 +742,12 @@ namespace UMA.ClothesDesigner.Editor
         private void DrawPublishSection(DesignerSession session)
         {
             if (!Section("Publish", "Publish")) return;
+            if (GUILayout.Button(new GUIContent("Publish...", PublishClothesWindow.Tip), GUILayout.Height(26f)))
+            {
+                PublishClothesWindow.AskAndPublish(session);
+                GUIUtility.ExitGUI();
+            }
+            EditorGUILayout.Space(2f);
             PublishSettings p = session.FitData.publish;
             EditorGUI.BeginChangeCheck();
             p.slotName = EditorGUILayout.TextField(new GUIContent("Name", "The slot, overlay and recipe are named after it."), p.slotName);
@@ -572,6 +776,16 @@ namespace UMA.ClothesDesigner.Editor
             p.addToGlobalLibrary = EditorGUILayout.Toggle(new GUIContent("Add to Global Library", "Register the slot, overlay and recipe so characters and wardrobe tools find them by name."), p.addToGlobalLibrary);
             p.generateMeshHide = EditorGUILayout.Toggle(new GUIContent("Hide Body Underneath", "Also make a mesh hide for the body triangles the clothes fully cover. Off by default: loose clothes show skin at the openings."), p.generateMeshHide);
             p.makeUvCheckTexture = EditorGUILayout.Toggle(new GUIContent("UV Check Texture", "Draw the pieces' outlines, grain and names on the clothes, to check the UVs."), p.makeUvCheckTexture);
+            if (HairSmoosh.HasHeadPieces(session.Pattern))
+            {
+                p.holdsHairDown = EditorGUILayout.Toggle(new GUIContent("Holds Hair Down", "Publish a plane across the openings of the pieces round the head, and tag the slot, so UMA squashes smooshable hair inside the hat or hood when a character is built."), p.holdsHairDown);
+                if (p.holdsHairDown)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    if (GUILayout.Button(new GUIContent("Check Hair...", "List the hair slots in the Global Library that UMA will not hold down (not smooshable, or not tagged), and offer to fix them."), GUILayout.Width(110f))) CheckHair();
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
             p.addFacing = EditorGUILayout.Toggle(new GUIContent("Inside Facing", "A turned-in copy of the cloth inside the neck, armholes and hem, facing inwards, so a material that hides back faces still shows cloth when you look into an opening."), p.addFacing);
             if (p.addFacing) p.facingDepthCm = EditorGUILayout.Slider(new GUIContent("  Facing Depth (cm)", "How far into the clothes the facing reaches from each opening, measured along the cloth."), p.facingDepthCm, 0.5f, 30f);
             p.addRim = EditorGUILayout.Toggle(new GUIContent("Rim", "A narrow band round each opening joining the outside to the facing, so the edge shows the cloth's thickness."), p.addRim);
@@ -583,9 +797,18 @@ namespace UMA.ClothesDesigner.Editor
             p.addParts = EditorGUILayout.Toggle(new GUIContent("Buttons and Parts", "Add the pattern's buttons (tacks marked Button) and parts to the slot, moving with the cloth."), p.addParts);
             p.addTopstitch = EditorGUILayout.Toggle(new GUIContent("Topstitching", "Draw the seams' topstitching (set on each seam on the Pattern Canvas) into a texture overlay on the clothes."), p.addTopstitch);
             if (p.addTopstitch) p.topstitchColor = EditorGUILayout.ColorField(new GUIContent("  Thread Colour"), p.topstitchColor);
+            p.bakeLooks = EditorGUILayout.Toggle(new GUIContent("Piece Looks", "Bake each look the pieces use (set per piece on the Pattern Canvas) into its own overlay, masked to those pieces, over the clothes' own: several fabrics on one slot and material, each recoloured on its own."), p.bakeLooks);
+            DrawBodyShapes(session, p);
+            p.clothMotion = EditorGUILayout.Toggle(new GUIContent("Cloth Motion", "Let the clothes move at run time with Unity's Cloth: a skirt or coat swings while cloth that is held by the body (a waistband, shoulders) stays. The slot gets a renderer of its own, so only the clothes are simulated, not the body. Add UMA's Physics Avatar to the character to give the cloth colliders."), p.clothMotion);
+            if (p.clothMotion)
+            {
+                p.motionHeldCm = EditorGUILayout.Slider(new GUIContent("  Held Within (cm)", "Cloth this close to the body moves only with the bones."), p.motionHeldCm, 0f, 5f);
+                p.motionGain = EditorGUILayout.Slider(new GUIContent("  Swing per cm", "How far cloth may swing for each centimetre of cloth between it and where it is held: 0.3 lets a hem 30 cm below the waist swing 9 cm."), p.motionGain, 0f, 1f);
+                p.motionMaxCm = EditorGUILayout.Slider(new GUIContent("  Most Swing (cm)", "The most any cloth may move from where the bones put it."), p.motionMaxCm, 0f, 40f);
+            }
             if (EditorGUI.EndChangeCheck()) session.MarkFitChanged();
 
-            List<string> problems = GarmentBaker.Validate(session.Fit);
+            List<string> problems = PublishProblems(session);
             using (new EditorGUI.DisabledScope(problems.Count > 0))
             {
                 if (GUILayout.Button(new GUIContent(session.FitData.output.slot != null ? "Bake Again and Try On" : "Bake and Try On",
@@ -594,7 +817,14 @@ namespace UMA.ClothesDesigner.Editor
                     session.BakeAndTryOn();
                     GUIUtility.ExitGUI();
                 }
+                if (GUILayout.Button(new GUIContent("Publish and Sculpt",
+                    problems.Count > 0 ? string.Join(" ", problems) : "Bake, save the pattern and fit, close the Clothes Designer and open Sculpt on a character wearing the clothes, to touch up small problems by hand. Sculpting edits the baked slot; baking again from the Clothes Designer replaces it, so sculpted changes would be lost.")))
+                {
+                    session.PublishAndSculpt();
+                    GUIUtility.ExitGUI();
+                }
             }
+            // Painting is in the Publish window: Publish and Open in Overlay Painter, shown when it is installed.
             foreach (string problem in problems) GUILayout.Label("• " + problem, EditorStyles.wordWrappedMiniLabel);
             if (!string.IsNullOrEmpty(session.LastBakeError)) EditorGUILayout.HelpBox(session.LastBakeError, MessageType.Error);
             if (session.LastBake != null)
@@ -641,7 +871,19 @@ namespace UMA.ClothesDesigner.Editor
             }
         }
 
-        private static readonly string[] slotLevelNames = { "Same as the Drape", "Draft (3 cm)", "Medium (2 cm)", "Fine (1.5 cm)", "Very Fine (1 cm)", "Custom" };
+        private List<string> publishProblems;
+
+        /// <summary>
+        /// What stops a bake, worked out at each Layout and reused for the events that follow it, so a Layout and
+        /// its Repaint draw the same rows and the checks run once a frame rather than for every GUI event.
+        /// </summary>
+        private List<string> PublishProblems(DesignerSession session)
+        {
+            if (publishProblems == null || Event.current.type == EventType.Layout) publishProblems = GarmentBaker.Validate(session.Fit);
+            return publishProblems;
+        }
+
+        private static readonly string[] slotLevelNames ={ "Same as the Drape", "Draft (3 cm)", "Medium (2 cm)", "Fine (1.5 cm)", "Very Fine (1 cm)", "Custom" };
         private static readonly int[] normalMapSizes = { 0, 512, 1024, 2048, 4096 };
 
         /// <summary>
@@ -660,6 +902,13 @@ namespace UMA.ClothesDesigner.Editor
             if (p.bakeAtOwnLevel && p.bakeMeshLevel == MeshLevel.Custom)
             {
                 p.bakeCustomEdgeLengthCm = EditorGUILayout.Slider(new GUIContent("  Slot Edge Length (cm)"), p.bakeCustomEdgeLengthCm, 0.3f, 6f);
+            }
+            p.slotTopology = (SlotTopology)EditorGUILayout.Popup(new GUIContent("Slot Topology",
+                "Triangles: the slot is meshed as the cloth was simulated. Quads: remeshed from the pattern (as Retopo Planes does from a garment's flat layout) - a grid along each piece's grain and an edge loop along every outline, a few triangles where they meet. All Quads: only quads (made at twice the spacing, then each face split into quads). Seams, darts and lines stay matched, the UVs come from the pattern, and the drape is carried onto the new mesh. In the slot each quad is two triangles, split along its shorter diagonal."),
+                (int)p.slotTopology, new[] { "Triangles", "Quads", "All Quads" });
+            if (p.slotTopology != SlotTopology.Triangles)
+            {
+                p.writeQuadObj = EditorGUILayout.Toggle(new GUIContent("  Quad OBJ for Other Tools", "Also write the quads, as draped, to <Name>_Quads.obj beside the slot: one object per piece, sewn points joined, UVs from the pattern, X negated for right-handed tools such as Blender."), p.writeQuadObj);
             }
             float drapeEdge = session.Fit.Mesh != null ? session.Fit.Mesh.edgeLengthCm : 0f;
             float slotEdge = p.BakeEdgeLengthCm(drapeEdge);
@@ -689,20 +938,20 @@ namespace UMA.ClothesDesigner.Editor
             EditorGUILayout.BeginHorizontal();
             using (new EditorGUI.DisabledScope(!session.HasPattern))
             {
-                if (GUILayout.Button(new GUIContent("Save Pattern" + (session.PatternDirty ? " *" : ""), "Save the pattern. The first time, choose where."))) session.SavePattern(false);
-                if (GUILayout.Button(new GUIContent("Save Pattern As", "Save an independent copy with a new asset. Fits keep pointing at the original."))) session.SavePattern(true);
+                if (GUILayout.Button(new GUIContent("Save Pattern" + (session.PatternDirty ? " *" : ""), "Save the pattern. The first time, choose where."), Shrinkable)) session.SavePattern(false);
+                if (GUILayout.Button(new GUIContent("Save Pattern As", "Save an independent copy with a new asset. Fits keep pointing at the original."), Shrinkable)) session.SavePattern(true);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             using (new EditorGUI.DisabledScope(!session.HasPattern))
             {
-                if (GUILayout.Button(new GUIContent("Save Fit" + (session.FitDirty ? " *" : ""), "Save the fit: race, placement, pins, kept drape and publish settings."))) session.SaveFit(false);
-                if (GUILayout.Button("Save Fit As")) session.SaveFit(true);
+                if (GUILayout.Button(new GUIContent("Save Fit" + (session.FitDirty ? " *" : ""), "Save the fit: race, placement, pins, kept drape and publish settings."), Shrinkable)) session.SaveFit(false);
+                if (GUILayout.Button("Save Fit As", Shrinkable)) session.SaveFit(true);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUI.BeginChangeCheck();
             var openFit = (ClothesFit)EditorGUILayout.ObjectField(new GUIContent("Open Fit", "Open a saved fit with its pattern, pins and kept drape."), session.FitAsset, typeof(ClothesFit), false);
-            if (EditorGUI.EndChangeCheck() && openFit != null && openFit != session.FitAsset && ConfirmLosingWork(session)) session.OpenFit(openFit);
+            if (EditorGUI.EndChangeCheck() && openFit != null && openFit != session.FitAsset && ConfirmLosingWork(session)) { session.OpenFit(openFit); session.FrameCloth(); }
         }
 
         // ---- Fit Existing Slot --------------------------------------------------------------------
@@ -872,16 +1121,112 @@ namespace UMA.ClothesDesigner.Editor
             float damping = EditorGUILayout.Slider(new GUIContent("Damping", "How quickly movement dies down. Changes how fast the cloth settles, not where."), session.FitData.damping, 0f, 10f);
             float clearance = EditorGUILayout.Slider(new GUIContent("Clearance (mm)", "The gap kept between the cloth and the skin."), session.FitData.clearanceCm * 10f, 0f, 20f);
             float thickness = EditorGUILayout.Slider(new GUIContent("Cloth Thickness (mm)", "The least distance kept between pieces once they are sewn, so a collar lies on the shirt instead of through it. 0 lets pieces pass through each other. A piece does not collide with itself."), session.FitData.clothThicknessMm, 0f, 10f);
-            bool torsoOnly = EditorGUILayout.Toggle(new GUIContent("Weights from Torso Only", "The clothes take their bone weights from the body without the arms. Clothes with a piece laid round an arm (sleeves) always take them from the arms too."), session.FitData.donorsExcludeArms);
+            ClothesFit fitData = session.FitData;
+            GUILayout.Space(4f);
+            GUILayout.Label(new GUIContent("Bone Weights (this fit)", "How the baked clothes get their bone weights from the body."), EditorStyles.boldLabel);
+            var methods = (UMA.Editors.Weighting.UMAWeightMethod[])Enum.GetValues(typeof(UMA.Editors.Weighting.UMAWeightMethod));
+            var methodLabels = new GUIContent[methods.Length];
+            int methodIndex = 0;
+            for (int i = 0; i < methods.Length; i++)
+            {
+                methodLabels[i] = new GUIContent(UMA.Editors.Weighting.UMAWeightSettings.DisplayName(methods[i]), UMA.Editors.Weighting.UMAWeightSettings.Describe(methods[i]));
+                if (methods[i] == fitData.weightMethod) methodIndex = i;
+            }
+            methodIndex = EditorGUILayout.Popup(new GUIContent("Weighting", "How the clothes get their bone weights from the body. Hover over a method for when to use it."), methodIndex, methodLabels);
+            UMA.Editors.Weighting.UMAWeightMethod method = methods[methodIndex];
+            GUILayout.Label(UMA.Editors.Weighting.UMAWeightSettings.Describe(method), EditorStyles.wordWrappedMiniLabel);
+            bool torsoOnly = EditorGUILayout.Toggle(new GUIContent("Weights from Torso Only", "Pieces not laid round an arm take their bone weights from the body without the arms, so a vest's side does not follow the arm next to it. Pieces laid round an arm (sleeves) always take them from the arms."), fitData.donorsExcludeArms);
+            float matchCm = fitData.weightMatchCm, matchAngle = fitData.weightMatchAngle;
+            if (method == UMA.Editors.Weighting.UMAWeightMethod.RobustInpaint || method == UMA.Editors.Weighting.UMAWeightMethod.Auto || method == UMA.Editors.Weighting.UMAWeightMethod.SimulatedFit)
+            {
+                matchCm = EditorGUILayout.Slider(new GUIContent("  Match Distance (cm)", "Cloth this close to the body, facing the same way and not deep inside it, copies the body's weights. Cloth further out is filled in smoothly over the cloth from there."), matchCm, 0.5f, 15f);
+                matchAngle = EditorGUILayout.Slider(new GUIContent("  Match Angle", "How far the cloth's normal may turn from the body's and still copy it (degrees)."), matchAngle, 5f, 90f);
+            }
+            int maxBones = EditorGUILayout.IntSlider(new GUIContent("  Max Bones", "The most bones a vertex keeps (Unity's default skin quality is 4)."), fitData.weightMaxBones, 1, 8);
+            bool mirror = EditorGUILayout.Toggle(new GUIContent("  Mirror Left/Right", "Make the two sides' weights match: each vertex averages with its mirror image, Left and Right bones swapped by name. For clothes cut the same on both sides."), fitData.weightMirror);
+            if (method == UMA.Editors.Weighting.UMAWeightMethod.SimulatedFit)
+            {
+                GUILayout.Label("The bake drapes the clothes in " + UMA.Editors.Weighting.UMAWeightPoses.StandardPoseCount + " poses (" + GarmentWeights.SettleFrames + " frames each) before weighting, so it takes longer.", EditorStyles.wordWrappedMiniLabel);
+            }
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObject(session.FitData, "Simulation Settings");
-                session.FitData.damping = damping;
-                session.FitData.clearanceCm = clearance / 10f;
-                session.FitData.clothThicknessMm = thickness;
-                session.FitData.donorsExcludeArms = torsoOnly;
+                Undo.RecordObject(fitData, "Simulation Settings");
+                fitData.damping = damping;
+                fitData.clearanceCm = clearance / 10f;
+                fitData.clothThicknessMm = thickness;
+                fitData.donorsExcludeArms = torsoOnly;
+                fitData.weightMethod = method;
+                fitData.weightMatchCm = matchCm;
+                fitData.weightMatchAngle = matchAngle;
+                fitData.weightMaxBones = maxBones;
+                fitData.weightMirror = mirror;
                 session.MarkFitChanged();
             }
+        }
+
+        // The race's DNA names, for the body shape popups: read once per race, not on every GUI event.
+        private RaceData bodyShapeRace;
+        private string[] bodyShapeDna = new string[0];
+
+        /// <summary>
+        /// Body Shapes: other DNA the clothes are fitted to as well as the fit's own, each baked as a blendshape on the
+        /// slot that its DNA drives once the DNA asset has the effect for it.
+        /// </summary>
+        private void DrawBodyShapes(DesignerSession session, PublishSettings p)
+        {
+            ClothesFit fit = session.FitData;
+            if (fit.bodyShapes == null) fit.bodyShapes = new List<BodyShapeTarget>();
+            p.bakeBodyShapes = EditorGUILayout.Toggle(new GUIContent("Body Shapes", "Fit the clothes to other body shapes as well: for each, one DNA at the top or bottom of its range. The bake moves the slot with the body under it there and keeps what the bones do not carry (a bigger belly or chest under the cloth) as a blendshape on the slot named after the DNA (DNA_belly_Up). Every garment uses the same names, so one effect on the DNA drives them all."), p.bakeBodyShapes);
+            if (!p.bakeBodyShapes) return;
+            RaceData race = fit.race != null ? fit.race : session.Stage != null ? session.Stage.CharacterRace : null;
+            if (race != bodyShapeRace) { bodyShapeRace = race; bodyShapeDna = BodyShapes.DnaNames(race).ToArray(); }
+            EditorGUI.indentLevel++;
+            if (bodyShapeDna.Length == 0)
+            {
+                EditorGUILayout.LabelField(" ", "The race has no DNA in UMA's DNA assets to drive shapes.", EditorStyles.wordWrappedMiniLabel);
+                EditorGUI.indentLevel--;
+                return;
+            }
+            string[] ends = { "Top (1)", "Bottom (0)" };
+            for (int i = 0; i < fit.bodyShapes.Count; i++)
+            {
+                BodyShapeTarget t = fit.bodyShapes[i];
+                EditorGUILayout.BeginHorizontal();
+                int at = Mathf.Max(0, Array.IndexOf(bodyShapeDna, t.dna));
+                t.dna = bodyShapeDna[EditorGUILayout.Popup(at, bodyShapeDna)];
+                t.value = EditorGUILayout.Popup(t.value >= 0.5f ? 0 : 1, ends, GUILayout.Width(110f)) == 0 ? 1f : 0f;
+                if (GUILayout.Button(new GUIContent("x", "Remove this body shape."), GUILayout.Width(22f))) { fit.bodyShapes.RemoveAt(i); GUIUtility.ExitGUI(); }
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(EditorGUI.indentLevel * 15f);
+            if (GUILayout.Button(new GUIContent("Add Body Shape", "Fit the clothes to one more DNA at one end of its range.")))
+            {
+                string first = Array.IndexOf(bodyShapeDna, "belly") >= 0 ? "belly" : bodyShapeDna[0];
+                fit.bodyShapes.Add(new BodyShapeTarget { dna = first, value = 1f });
+            }
+            var missing = new List<BodyShapeTarget>();
+            foreach (BodyShapeTarget t in fit.bodyShapes) if (t != null && !BodyShapes.HasEffect(BodyShapes.FindDna(race, t.dna), BodyShapes.ShapeName(t.dna, t.value))) missing.Add(t);
+            using (new EditorGUI.DisabledScope(missing.Count == 0))
+            {
+                if (GUILayout.Button(new GUIContent(missing.Count > 0 ? "Drive Shapes from DNA (" + missing.Count + ")" : "Shapes Driven by DNA",
+                    "Add a blendshape effect for each body shape to its DNA asset, so a character's DNA sets the clothes' shape. This changes the shared DNA assets, for every character of the race and every garment with these shapes.")))
+                {
+                    var names = new List<string>();
+                    foreach (BodyShapeTarget t in missing) names.Add(BodyShapes.ShapeName(t.dna, t.value));
+                    if (EditorUtility.DisplayDialog("Drive Shapes from DNA", "Add blendshape effects to the DNA assets of '" + race.raceName + "' for:\n\n" + string.Join("\n", names) +
+                        "\n\nThe DNA assets are shared: every character of the race, and every garment with these shapes, follows them.", "Add Effects", "Cancel"))
+                    {
+                        var skipped = new List<string>();
+                        int added = BodyShapes.AddEffects(race, missing, skipped);
+                        EditorUtility.DisplayDialog("Drive Shapes from DNA", "Added " + added + " blendshape effects to DNA assets." +
+                            (skipped.Count > 0 ? "\n\nNot changed, because they have unsaved changes (save or revert them first): " + string.Join(", ", skipped) + "." : ""), "OK");
+                    }
+                    GUIUtility.ExitGUI();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUI.indentLevel--;
         }
 
         /// <summary>

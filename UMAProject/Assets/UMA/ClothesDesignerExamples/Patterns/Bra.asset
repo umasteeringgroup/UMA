@@ -1,0 +1,949 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84502f13ce032214195115124a93b406, type: 3}
+  m_Name: Bra
+  m_EditorClassIdentifier: UMA.ClothesDesigner.Editor::UMA.ClothesDesigner.Editor.ClothesPattern
+  schemaVersion: 3
+  pieces:
+  - id: dc34d6e7606444ec808a1bcd960c11ae
+    name: Front Band
+    points:
+    - id: 0d90aad9207c49e6958886cb293732dc
+      position: {x: 0, y: 0}
+    - id: 07b48d2b72d143189e1dd5f49d6a4385
+      position: {x: 35, y: 0}
+    - id: dd8ef9f4b0a14af79b6fde46394d6ec7
+      position: {x: 35, y: 4.5}
+    - id: e0068918dc34459f9969dca0616ff7d6
+      position: {x: 0, y: 4.5}
+    edges:
+    - id: f3be2635c68f44168f19ed83a8641e38
+      name: Bottom
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 2c9c21ba414c4e1ca11f89107431fa51
+      name: Right end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: c6e84a7affef4216b2e422b5dc9a5b81
+      name: Top
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 662169123ba6412189030f53a4acb167
+      name: Left end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 0
+      topAboveShoulderCm: -30
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+      tiltDeg: 0
+      endDistanceCm: 0
+    fabric:
+      preset: Elastic
+      stretchCompliance: 0.08
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.6
+      crossStretchCompliance: -1
+      biasStretchCompliance: -1
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: 0.5922655, y: 0.007812506}
+      scale: 0.028098911
+      rotation: 90
+      reserved:
+        serializedVersion: 2
+        x: 0.4658203
+        y: 0.0078125
+        width: 0.12644514
+        height: 0.98346186
+      sharesWith: 
+      mirrorSumX: 0
+      mirrorDy: 0
+    meshDetail: 1
+    textureDetail: 1
+    lookId: 
+    interfacing: 0
+    lines: []
+    layer: 0
+    mirrorLinked: 0
+    pressure: 0
+  - id: f45d258aaa3f4589b89d487db746aed0
+    name: Back Band
+    points:
+    - id: ef53de0b76fc4ae89134b501877faeb5
+      position: {x: 43, y: 0}
+    - id: fe69329fcade4a5e856b51fb9552bd11
+      position: {x: 78, y: 0}
+    - id: 61bdd336e6684cba9d47d9c2c9f96361
+      position: {x: 78, y: 4.5}
+    - id: fefa4775a00443efa23395e57adcce42
+      position: {x: 43, y: 4.5}
+    edges:
+    - id: 1005404f3beb47fcbc5ba61ebd353090
+      name: Bottom
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 0eae13ab861e4d369560748c0d03baed
+      name: Right end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: c1cfa9c26135421f9014fb4e719cb6e3
+      name: Top
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 72f4542c91ef4e2cb7068a49b81eb1da
+      name: Left end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 180
+      topAboveShoulderCm: -30
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+      tiltDeg: 0
+      endDistanceCm: 0
+    fabric:
+      preset: Elastic
+      stretchCompliance: 0.08
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.6
+      crossStretchCompliance: -1
+      biasStretchCompliance: -1
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: 0.7270311, y: -1.2004406}
+      scale: 0.028098911
+      rotation: 90
+      reserved:
+        serializedVersion: 2
+        x: 0.60058594
+        y: 0.0078125
+        width: 0.12644513
+        height: 0.98346186
+      sharesWith: 
+      mirrorSumX: 0
+      mirrorDy: 0
+    meshDetail: 1
+    textureDetail: 1
+    lookId: 
+    interfacing: 0
+    lines: []
+    layer: 0
+    mirrorLinked: 0
+    pressure: 0
+  - id: fd7c2d5a99cc4947bb353a217ba222e9
+    name: Left Cup
+    points:
+    - id: c6655747b13545dda22bda807227781a
+      position: {x: 86, y: 0}
+    - id: 6e2c990062804247ac5555944ed3074a
+      position: {x: 102, y: 0}
+    - id: 153029c20a164f5c865dc25b665fe94d
+      position: {x: 94.75, y: 17}
+    - id: fbaa8ba2936d43d6880b5e3d1c5012c9
+      position: {x: 93.25, y: 17}
+    edges:
+    - id: 0604d1f535cb4596ab9da48ee68ee1ee
+      name: Bottom
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 6ad8b06388ac463487c11cc8e0ed03fd
+      name: Right side
+      curved: 1
+      handleA: {x: -1, y: 6}
+      handleB: {x: 2, y: -5}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 0569091a7ba24b53985d7b1b4171d4df
+      name: Strap
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: bde60f4e848343aebfcbc39114927131
+      name: Left side
+      curved: 1
+      handleA: {x: -2, y: -5}
+      handleB: {x: 1, y: 6}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 30
+      topAboveShoulderCm: -13
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+      tiltDeg: 0
+      endDistanceCm: 0
+    fabric:
+      preset: Spandex
+      stretchCompliance: 0.1
+      bendCompliance: 10
+      density: 0.2
+      friction: 0.5
+      crossStretchCompliance: -1
+      biasStretchCompliance: -1
+    darts:
+    - id: f420694aabbc46ac89d63672febbe99d
+      kind: 0
+      edgeId: 0604d1f535cb4596ab9da48ee68ee1ee
+      position: 0.5
+      widthCm: 3
+      tip: {x: 94, y: 7}
+      tip2: {x: 94, y: 0}
+      curveCm: 0
+      widestAt: 0.5
+      roundness: 0.5
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -2.4086938, y: 0.49414062}
+      scale: 0.028098911
+      rotation: 0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.49414062
+        width: 0.44958258
+        height: 0.4776815
+      sharesWith: 
+      mirrorSumX: 0
+      mirrorDy: 0
+    meshDetail: 1
+    textureDetail: 1
+    lookId: 
+    interfacing: 0
+    lines: []
+    layer: 0
+    mirrorLinked: 0
+    pressure: 0
+  - id: 7327e052ed9a472fa8f6cb4e849dae6f
+    name: Right Cup
+    points:
+    - id: ed15fb1586c2450c972db207453b8614
+      position: {x: 110, y: 0}
+    - id: e19aa283c7a442bebc6c829cd1947849
+      position: {x: 126, y: 0}
+    - id: de0a35183f5c4985b24df343460e8e86
+      position: {x: 118.75, y: 17}
+    - id: 55143663090d41b0937efba1b35d8bb9
+      position: {x: 117.25, y: 17}
+    edges:
+    - id: 7f79fe3852b343d2933cd5b12bffc873
+      name: Bottom
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 28efb8cbff6046cd9f47da55233e6a1a
+      name: Right side
+      curved: 1
+      handleA: {x: -1, y: 6}
+      handleB: {x: 2, y: -5}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 5ad196fe74634eed9c187ff975ea3e32
+      name: Strap
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 25b7dfb115184f25ac3cb3a2b9ca7bf8
+      name: Left side
+      curved: 1
+      handleA: {x: -2, y: -5}
+      handleB: {x: 1, y: 6}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: -30
+      topAboveShoulderCm: -13
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+      tiltDeg: 0
+      endDistanceCm: 0
+    fabric:
+      preset: Spandex
+      stretchCompliance: 0.1
+      bendCompliance: 10
+      density: 0.2
+      friction: 0.5
+      crossStretchCompliance: -1
+      biasStretchCompliance: -1
+    darts:
+    - id: 25057612300641049c3c1457be2754df
+      kind: 0
+      edgeId: 7f79fe3852b343d2933cd5b12bffc873
+      position: 0.5
+      widthCm: 3
+      tip: {x: 118, y: 7}
+      tip2: {x: 118, y: 0}
+      curveCm: 0
+      widestAt: 0.5
+      roundness: 0.5
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -3.0830677, y: 0.0078125}
+      scale: 0.028098911
+      rotation: 0
+      reserved:
+        serializedVersion: 2
+        x: 0.0078125
+        y: 0.0078125
+        width: 0.44958258
+        height: 0.4776815
+      sharesWith: 
+      mirrorSumX: 0
+      mirrorDy: 0
+    meshDetail: 1
+    textureDetail: 1
+    lookId: 
+    interfacing: 0
+    lines: []
+    layer: 0
+    mirrorLinked: 0
+    pressure: 0
+  - id: 87adaf50e0eb46cb9d6c7ae9413f71bb
+    name: Left Front Strap
+    points:
+    - id: 519210399fa5418796cf4ab3dcf6dff1
+      position: {x: 134, y: 0}
+    - id: 021995f771da42e393c89de2c4b14fcb
+      position: {x: 135.5, y: 0}
+    - id: a152459f82d24d49b22a4a653aca9835
+      position: {x: 135.5, y: 15}
+    - id: 3edf9cc08d9641389c875e137c8ee8e8
+      position: {x: 134, y: 15}
+    edges:
+    - id: 2161e54d8233413d9d3d178ecb0d7704
+      name: Bottom
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: c801a3eb7ffa48319bb514a5778c39ae
+      name: Right end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 114643e418f7461bb187b818ca523cc6
+      name: Top
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 8eddefe84ba64deaa25c52062ba63313
+      name: Left end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 30
+      topAboveShoulderCm: 2
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+      tiltDeg: 0
+      endDistanceCm: 0
+    fabric:
+      preset: Elastic
+      stretchCompliance: 0.08
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.6
+      crossStretchCompliance: -1
+      biasStretchCompliance: -1
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -2.92834, y: 0.0078125}
+      scale: 0.028098911
+      rotation: 0
+      reserved:
+        serializedVersion: 2
+        x: 0.83691406
+        y: 0.0078125
+        width: 0.04214835
+        height: 0.42148367
+      sharesWith: 
+      mirrorSumX: 0
+      mirrorDy: 0
+    meshDetail: 3
+    textureDetail: 1
+    lookId: 
+    interfacing: 0
+    lines: []
+    layer: 0
+    mirrorLinked: 0
+    pressure: 0
+  - id: f029a01b80bf4ab7ac06e7f7441dd602
+    name: Left Back Strap
+    points:
+    - id: b979f5888cde49f49542b4d35cc09b56
+      position: {x: 143.5, y: 0}
+    - id: 0c1df6fa00144d0589e1d42a259edde1
+      position: {x: 145, y: 0}
+    - id: 7e077628f6e047bc8bcb9ab44373be93
+      position: {x: 145, y: 29}
+    - id: 5afb75b79754431c8502faea2a72fef7
+      position: {x: 143.5, y: 29}
+    edges:
+    - id: 0db3dc13b1a940b5b9c0dbf4768f6724
+      name: Bottom
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: e3161999dff04e8db6b16a0eb317eefa
+      name: Right end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 4bd6c3a1b1b145e29af5d1bdd064f8cf
+      name: Top
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 09403f10cb2a4b2e9c936e9b9f9d96dd
+      name: Left end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 147
+      topAboveShoulderCm: 2
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+      tiltDeg: 0
+      endDistanceCm: 0
+    fabric:
+      preset: Elastic
+      stretchCompliance: 0.08
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.6
+      crossStretchCompliance: -1
+      biasStretchCompliance: -1
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -3.296842, y: 0.0078125}
+      scale: 0.028098911
+      rotation: 0
+      reserved:
+        serializedVersion: 2
+        x: 0.73535156
+        y: 0.0078125
+        width: 0.04214859
+        height: 0.81486845
+      sharesWith: 
+      mirrorSumX: 0
+      mirrorDy: 0
+    meshDetail: 3
+    textureDetail: 1
+    lookId: 
+    interfacing: 0
+    lines: []
+    layer: 0
+    mirrorLinked: 0
+    pressure: 0
+  - id: 0c7436c4b10b4973b0fb2c3bc24ca860
+    name: Right Front Strap
+    points:
+    - id: 7f179fd04f4a49d59c4916e4e2bdbb8d
+      position: {x: 153, y: 0}
+    - id: 9400fa0ac6d947a9ad5c1b20e06ffe29
+      position: {x: 154.5, y: 0}
+    - id: 22483f97014f4b91be15f90dc5cb725a
+      position: {x: 154.5, y: 15}
+    - id: 3347bb40b7a54d8193cfb3625fc59930
+      position: {x: 153, y: 15}
+    edges:
+    - id: 01ac8f3621954c83b8a21eae41dd270b
+      name: Bottom
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 55ade202963041beab137cd2a71c4e4f
+      name: Right end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 3e1dddf697a14e06aa7ccd96cfabeac8
+      name: Top
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 9d595601de154c8e953c95cc46d0a33c
+      name: Left end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: -30
+      topAboveShoulderCm: 2
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+      tiltDeg: 0
+      endDistanceCm: 0
+    fabric:
+      preset: Elastic
+      stretchCompliance: 0.08
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.6
+      crossStretchCompliance: -1
+      biasStretchCompliance: -1
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -3.411438, y: 0.0078125}
+      scale: 0.028098911
+      rotation: 0
+      reserved:
+        serializedVersion: 2
+        x: 0.8876953
+        y: 0.0078125
+        width: 0.04214859
+        height: 0.42148367
+      sharesWith: 
+      mirrorSumX: 0
+      mirrorDy: 0
+    meshDetail: 3
+    textureDetail: 1
+    lookId: 
+    interfacing: 0
+    lines: []
+    layer: 0
+    mirrorLinked: 0
+    pressure: 0
+  - id: 45e7c9c2852743508c5981c5840fcb24
+    name: Right Back Strap
+    points:
+    - id: bd683b1e8be74a75a01f976bedd6e105
+      position: {x: 162.5, y: 0}
+    - id: ca2f069330254cb2a295a4b85f6cc18b
+      position: {x: 164, y: 0}
+    - id: 80ad9f3f61fc48d2be157f3e4b16742c
+      position: {x: 164, y: 29}
+    - id: 002d76ded7b0413b9fd26647c3b09ca5
+      position: {x: 162.5, y: 29}
+    edges:
+    - id: 938a1706ab04460cb1b88d40f4f2da2a
+      name: Bottom
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 4d373c68e9a24e1cba989765c9d9b9f0
+      name: Right end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: 6b7b7018d90e4689808b9c16455e2b4a
+      name: Top
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 0
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    - id: ee343d267e5e4ee38652d22de321197d
+      name: Left end
+      curved: 0
+      handleA: {x: 0, y: 0}
+      handleB: {x: 0, y: 0}
+      opening: 1
+      elastic: 0
+      elasticPercent: 75
+      mirrorOfEdge: 
+    grainAngle: 0
+    mirrorOf: 
+    placement:
+      angle: 213
+      topAboveShoulderCm: 2
+      distanceCm: 0
+      part: 0
+      flat: 0
+      acrossCm: 0
+      tiltDeg: 0
+      endDistanceCm: 0
+    fabric:
+      preset: Elastic
+      stretchCompliance: 0.08
+      bendCompliance: 1
+      density: 0.3
+      friction: 0.6
+      crossStretchCompliance: -1
+      biasStretchCompliance: -1
+    darts: []
+    pleats: []
+    uvIsland:
+      placed: 1
+      offset: {x: -3.7799401, y: 0.0078125}
+      scale: 0.028098911
+      rotation: 0
+      reserved:
+        serializedVersion: 2
+        x: 0.7861328
+        y: 0.0078125
+        width: 0.04214859
+        height: 0.81486845
+      sharesWith: 
+      mirrorSumX: 0
+      mirrorDy: 0
+    meshDetail: 3
+    textureDetail: 1
+    lookId: 
+    interfacing: 0
+    lines: []
+    layer: 0
+    mirrorLinked: 0
+    pressure: 0
+  seams:
+  - id: 893b2c0da6f944dc9be34e368fa76d17
+    a:
+      pieceId: dc34d6e7606444ec808a1bcd960c11ae
+      edgeId: 2c9c21ba414c4e1ca11f89107431fa51
+      start: 0
+      end: 1
+    b:
+      pieceId: f45d258aaa3f4589b89d487db746aed0
+      edgeId: 72f4542c91ef4e2cb7068a49b81eb1da
+      start: 0
+      end: 1
+    reversed: 1
+    folded: 0
+    topstitch: 0
+    topstitchOffsetMm: 3
+  - id: ae8091caec36452c8e242102175206c0
+    a:
+      pieceId: dc34d6e7606444ec808a1bcd960c11ae
+      edgeId: 662169123ba6412189030f53a4acb167
+      start: 0
+      end: 1
+    b:
+      pieceId: f45d258aaa3f4589b89d487db746aed0
+      edgeId: 0eae13ab861e4d369560748c0d03baed
+      start: 0
+      end: 1
+    reversed: 1
+    folded: 0
+    topstitch: 0
+    topstitchOffsetMm: 3
+  - id: 161e222afee14f5e94ab3466863f2165
+    a:
+      pieceId: fd7c2d5a99cc4947bb353a217ba222e9
+      edgeId: 0604d1f535cb4596ab9da48ee68ee1ee
+      start: 0
+      end: 1
+    b:
+      pieceId: dc34d6e7606444ec808a1bcd960c11ae
+      edgeId: c6e84a7affef4216b2e422b5dc9a5b81
+      start: 0.071428575
+      end: 0.47142857
+    reversed: 1
+    folded: 0
+    topstitch: 0
+    topstitchOffsetMm: 3
+  - id: a380fb7c01654ed5a8446a88b65f5f5e
+    a:
+      pieceId: 7327e052ed9a472fa8f6cb4e849dae6f
+      edgeId: 7f79fe3852b343d2933cd5b12bffc873
+      start: 0
+      end: 1
+    b:
+      pieceId: dc34d6e7606444ec808a1bcd960c11ae
+      edgeId: c6e84a7affef4216b2e422b5dc9a5b81
+      start: 0.5285714
+      end: 0.9285714
+    reversed: 1
+    folded: 0
+    topstitch: 0
+    topstitchOffsetMm: 3
+  - id: 7a8844cee546498a8bc0012c0a9f855b
+    a:
+      pieceId: 87adaf50e0eb46cb9d6c7ae9413f71bb
+      edgeId: 2161e54d8233413d9d3d178ecb0d7704
+      start: 0
+      end: 1
+    b:
+      pieceId: fd7c2d5a99cc4947bb353a217ba222e9
+      edgeId: 0569091a7ba24b53985d7b1b4171d4df
+      start: 0
+      end: 1
+    reversed: 1
+    folded: 0
+    topstitch: 0
+    topstitchOffsetMm: 3
+  - id: 81a5debb44b34af587e036b480997fdb
+    a:
+      pieceId: 87adaf50e0eb46cb9d6c7ae9413f71bb
+      edgeId: 114643e418f7461bb187b818ca523cc6
+      start: 0
+      end: 1
+    b:
+      pieceId: f029a01b80bf4ab7ac06e7f7441dd602
+      edgeId: 4bd6c3a1b1b145e29af5d1bdd064f8cf
+      start: 0
+      end: 1
+    reversed: 1
+    folded: 0
+    topstitch: 0
+    topstitchOffsetMm: 3
+  - id: 588174034eec4fb4b8c9b8acd49a2792
+    a:
+      pieceId: f029a01b80bf4ab7ac06e7f7441dd602
+      edgeId: 0db3dc13b1a940b5b9c0dbf4768f6724
+      start: 0
+      end: 1
+    b:
+      pieceId: f45d258aaa3f4589b89d487db746aed0
+      edgeId: c1cfa9c26135421f9014fb4e719cb6e3
+      start: 0.69285715
+      end: 0.73571426
+    reversed: 1
+    folded: 0
+    topstitch: 0
+    topstitchOffsetMm: 3
+  - id: 91f4b77c18a247e9b5e2f32a20404a01
+    a:
+      pieceId: 0c7436c4b10b4973b0fb2c3bc24ca860
+      edgeId: 01ac8f3621954c83b8a21eae41dd270b
+      start: 0
+      end: 1
+    b:
+      pieceId: 7327e052ed9a472fa8f6cb4e849dae6f
+      edgeId: 5ad196fe74634eed9c187ff975ea3e32
+      start: 0
+      end: 1
+    reversed: 1
+    folded: 0
+    topstitch: 0
+    topstitchOffsetMm: 3
+  - id: fc5b4c5e5ce54170a02246c56c290885
+    a:
+      pieceId: 0c7436c4b10b4973b0fb2c3bc24ca860
+      edgeId: 3e1dddf697a14e06aa7ccd96cfabeac8
+      start: 0
+      end: 1
+    b:
+      pieceId: 45e7c9c2852743508c5981c5840fcb24
+      edgeId: 6b7b7018d90e4689808b9c16455e2b4a
+      start: 0
+      end: 1
+    reversed: 1
+    folded: 0
+    topstitch: 0
+    topstitchOffsetMm: 3
+  - id: aba94614739d4d5f84ee9ffe16fe5c9d
+    a:
+      pieceId: 45e7c9c2852743508c5981c5840fcb24
+      edgeId: 938a1706ab04460cb1b88d40f4f2da2a
+      start: 0
+      end: 1
+    b:
+      pieceId: f45d258aaa3f4589b89d487db746aed0
+      edgeId: c1cfa9c26135421f9014fb4e719cb6e3
+      start: 0.2642857
+      end: 0.30714285
+    reversed: 1
+    folded: 0
+    topstitch: 0
+    topstitchOffsetMm: 3
+  tacks: []
+  parts: []
+  trims: []
+  looks: []
+  referenceImage: {fileID: 0}
+  referenceOrigin: {x: -50, y: 0}
+  referenceHeightCm: 100
+  referenceOpacity: 0.35
+  dimensions:
+  - id: 8d51247d283f42648b088f4c4c780854
+    name: Band
+    kind: 0
+    measurement: 1
+    fixedCm: 70
+    allowanceCm: -30
+    shareCount: 2
+    lineY: 2.25
+    pieceIds:
+    - dc34d6e7606444ec808a1bcd960c11ae
+    - f45d258aaa3f4589b89d487db746aed0
+  meshLevel: 2
+  customEdgeLengthCm: 2
+  meshTopology: 0
+  uvLayout:
+    bakeResolution: 1024
+    gutterPixels: 8
+    aspect: 1
+    turnPieces: 1
+    shareMirrors: 0
+    quickPacked: 0
+  notes: 'Triangle bra: two spandex cups shaped by a dart, an elastic band under
+    the bust cut 30 cm shorter than the chest so it grips, and narrow straps from
+    the cups over the shoulders to the back band.'
+  generatorStyle: 

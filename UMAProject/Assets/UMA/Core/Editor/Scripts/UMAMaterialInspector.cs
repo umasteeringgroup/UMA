@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
-using Unity.Collections.LowLevel.Unsafe;
 using UMA.CharacterSystem;
 using UnityEngine.Rendering;
 
@@ -113,14 +112,29 @@ namespace UMA.Editors
                 }
             }
             SerializedProperty materialTypeProperty = serializedObject.FindProperty("materialType");
-
-            UMAMaterial.MaterialType MatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
-
             showHelp = EditorGUILayout.Toggle("Show Help", showHelp);
+            // Drawn before any other serialized field, so a type change can be applied per asset at once.
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(materialTypeProperty, new GUIContent("Material Type", "How UMA prepares the textures for this material."));
+            if (EditorGUI.EndChangeCheck())
+            {
+                ApplyMaterialTypeChange(serializedObject, (UMAMaterial.MaterialType)materialTypeProperty.intValue);
+                Repaint();
+            }
+            var materialType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
+            if (showHelp)
+            {
+                EditorGUILayout.HelpBox("Atlas: Combine all textures using this material into a single atlas. Each channel will be a separate atlas - ie, normal maps will not be combine with albedo\nNo Atlas: Create a single texture for each channel, compositing all layers and colorizing as needed.\nAtlas and No Atlas channels can optionally use the existing overlay texture directly for a channel, skipping compositing, post-processing, compression, and render texture creation for that channel.\nIn Atlas, No Atlas and Use Existing Textures, an optional Second Pass draws the same triangles again with the same generated textures.\nUseExistingMaterial: use the material assigned directly. No channels, layering or colorizing will be done. This type has no texture channels.\nUseExistingTextures: Generates a new material, assigns the textures from the overlay to the appropriate channel. No layering can be done, but you can colorize the texture using Color 0 on the overlay. This will set all channels to type TintedTexture. Switching away from it sets them back to Texture.", MessageType.Info);
+            }
             EditorGUILayout.PropertyField(_supportsSourceUVCropping);
 
             DrawMaterialReference("_material", new GUIContent("Default Material", "The Unity Material to link to."));
             DrawMaterialReference("_HDRPMaterial", new GUIContent("HDRP Material", "The Unity Material for HDRP."));
+            if (CanEditSecondPass(materialTypeProperty))
+            {
+                DrawMaterialReference("_secondPass", new GUIContent("Second Pass", "Optional Unity material drawn after the first pass on the same triangles. Texture channels used by both passes must have matching shader property names. Usually empty."));
+                DrawMaterialReference("_HDRPSecondPass", new GUIContent("HDRP Second Pass", "Optional second-pass material for HDRP. Leave empty to use the Second Pass."));
+            }
             if (showHelp)
             {
                 EditorGUILayout.HelpBox("Default Material: This is the material that will be used if no other material is found.", MessageType.Info);
@@ -250,17 +264,6 @@ namespace UMA.Editors
                 previewSync.Reset();
             }
 
-            EditorGUILayout.PropertyField(materialTypeProperty, new GUIContent( "Material Type", "To atlas or not to atlas- that is the question."));
-            if (showHelp)
-            {
-                EditorGUILayout.HelpBox("Atlas: Combine all textures using this material into a single atlas. Each channel will be a separate atlas - ie, normal maps will not be combine with albedo\nNo Atlas: Create a single texture for each channel, compositing all layers and colorizing as needed.\nAtlas and No Atlas channels can optionally use the existing overlay texture directly for a channel, skipping compositing, post-processing, compression, and render texture creation for that channel.\nUseExistingMaterial: use the material assigned directly. No channels, layering or colorizing will be done. This type has no texture channels.\nUseExistingTextures: Generates a new material, assigns the textures from the overlay to the appropriate channel. No layering can be done, but you can colorize the texture using Color 0 on the overlay. This will set all channels to type TintedTexture.", MessageType.Info);
-            }
-            if (MatType == UMAMaterial.MaterialType.UseExistingTextures)
-            {
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("_secondPass"), new GUIContent("Second Pass", "The Unity Material for a second pass. Usually NULL."));
-                EditorGUILayout.PropertyField(serializedObject.FindProperty("_HDRPSecondPass"), new GUIContent("HDRP Second Pass", "The Unity Material for a second pass in HDRP. Usually NULL."));
-            }
-
             GUILayout.Space(20);
             EditorGUILayout.LabelField("Generated Texture Settings", _centeredStyle);
             EditorGUILayout.BeginVertical("HelpBox");
@@ -305,7 +308,7 @@ namespace UMA.Editors
 
                 GUILayout.Space(20);
 
-                if (MatType == UMAMaterial.MaterialType.UseExistingMaterial)
+                if (materialType == UMAMaterial.MaterialType.UseExistingMaterial)
                 {
                     EditorGUILayout.HelpBox("Materials of type 'Use Existing Material' do not have texture channels, and do not allow compositing.", MessageType.Info);
                 }
@@ -316,7 +319,7 @@ namespace UMA.Editors
                     {
                         serializedObject.ApplyModifiedProperties();
                     }
-                    DrawChannelList(serializedObject.FindProperty("channels"), (UMAMaterial.MaterialType)materialTypeProperty.intValue);
+                    DrawChannelList(serializedObject.FindProperty("channels"), materialType);
                 }
 
                 GUILayout.Space(20);
@@ -334,47 +337,6 @@ namespace UMA.Editors
             bool wasChanged = serializedObject.ApplyModifiedProperties();
             if (wasChanged)
             {
-                serializedObject.ApplyModifiedProperties();
-                UMAMaterial.MaterialType NewMatType = (UMAMaterial.MaterialType)materialTypeProperty.intValue;
-                if (MatType != NewMatType)
-                {
-                    if (MatType == UMAMaterial.MaterialType.UseExistingTextures)
-                    {
-                        // When changing from UseExistingTexture, all channels are forced to Texture type and the second pass is cleared since they aren't used in that mode.
-                        var list = serializedObject.FindProperty("channels");
-                        for (int i = 0; i < list.arraySize; i++)
-                        {
-                            SerializedProperty channel = list.GetArrayElementAtIndex(i);
-                            var channelProperty = channel.FindPropertyRelative("channelType");
-                            channelProperty.intValue = (int)UMAMaterial.ChannelType.Texture;
-                        }
-                        serializedObject.ApplyModifiedProperties();
-                    }
-                    if (NewMatType != UMAMaterial.MaterialType.UseExistingTextures)
-                    {
-                        // second Pass only used for UseExistingTextures
-                        var secondPassProperty = serializedObject.FindProperty("_secondPass");
-                        secondPassProperty.SetValue<Object>(null);
-                        if (MatType == UMAMaterial.MaterialType.UseExistingTextures)
-                        {
-                            var list = serializedObject.FindProperty("channels");
-                            for (int i = 0; i < list.arraySize; i++)
-                            {
-                                SerializedProperty channel = list.GetArrayElementAtIndex(i);
-                                var channelProperty = channel.FindPropertyRelative("channelType");
-                                channelProperty.intValue = (int)UMAMaterial.ChannelType.Texture;
-                            }
-                            serializedObject.ApplyModifiedProperties();
-                        }
-                    }
-                    if (NewMatType == UMAMaterial.MaterialType.UseExistingMaterial)
-                    {
-                        var channelsProperty = serializedObject.FindProperty("channels");
-                        channelsProperty.ClearArray();
-                        serializedObject.ApplyModifiedProperties();
-                    }
-                    Repaint();
-                }
                 // Not only on a type change: channels added while the type is already Use Existing Textures
                 // must become TintedTexture too (the first channels of an empty list are created as Texture).
                 if (ApplyUseExistingTexturesChannelRule(serializedObject))
@@ -382,6 +344,84 @@ namespace UMA.Editors
                     Repaint();
                 }
             }
+        }
+
+        private bool CanEditSecondPass(SerializedProperty materialTypeProperty)
+        {
+            if (!materialTypeProperty.hasMultipleDifferentValues)
+            {
+                return SupportsSecondPass((UMAMaterial.MaterialType)materialTypeProperty.intValue);
+            }
+
+            foreach (Object selectedMaterial in targets)
+            {
+                if (selectedMaterial is UMAMaterial umaMaterial && !SupportsSecondPass(umaMaterial.materialType))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Material types that draw an optional second pass: the generated-texture types (Atlas, No Atlas)
+        /// and Use Existing Textures. Use Existing Material draws its own material only.
+        /// </summary>
+        internal static bool SupportsSecondPass(UMAMaterial.MaterialType materialType)
+        {
+            return materialType == UMAMaterial.MaterialType.Atlas ||
+                materialType == UMAMaterial.MaterialType.NoAtlas ||
+                materialType == UMAMaterial.MaterialType.UseExistingTextures;
+        }
+
+        /// <summary>
+        /// Changes the material type of every selected UMAMaterial, each from its own previous type: Use Existing
+        /// Material clears the channels and both second passes, switching to Use Existing Textures sets the
+        /// channels to TintedTexture, and switching away from it sets them back to Texture. The second passes
+        /// are kept for the types that draw them.
+        /// </summary>
+        internal static void ApplyMaterialTypeChange(SerializedObject selection, UMAMaterial.MaterialType newType)
+        {
+            // Called right after the type field, before any other serialized edit is pending; a mixed
+            // selection must use each asset's own previous type and complete channel list.
+            selection.Update();
+            foreach (Object selectedMaterial in selection.targetObjects)
+            {
+                using var material = new SerializedObject(selectedMaterial);
+                var typeProperty = material.FindProperty("materialType");
+                var previousType = (UMAMaterial.MaterialType)typeProperty.intValue;
+                if (previousType == newType)
+                {
+                    continue;
+                }
+
+                typeProperty.intValue = (int)newType;
+                if (!SupportsSecondPass(newType))
+                {
+                    material.FindProperty("_secondPass").objectReferenceValue = null;
+                    material.FindProperty("_HDRPSecondPass").objectReferenceValue = null;
+                }
+
+                var channels = material.FindProperty("channels");
+                if (newType == UMAMaterial.MaterialType.UseExistingMaterial)
+                {
+                    channels.ClearArray();
+                }
+                else if (newType == UMAMaterial.MaterialType.UseExistingTextures ||
+                    previousType == UMAMaterial.MaterialType.UseExistingTextures)
+                {
+                    var channelType = newType == UMAMaterial.MaterialType.UseExistingTextures
+                        ? UMAMaterial.ChannelType.TintedTexture
+                        : UMAMaterial.ChannelType.Texture;
+                    for (int i = 0; i < channels.arraySize; i++)
+                    {
+                        channels.GetArrayElementAtIndex(i).FindPropertyRelative("channelType").intValue = (int)channelType;
+                    }
+                }
+
+                material.ApplyModifiedProperties();
+            }
+            selection.Update();
         }
 
         /// <summary>

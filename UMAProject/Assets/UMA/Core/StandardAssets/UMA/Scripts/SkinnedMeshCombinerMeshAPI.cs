@@ -630,8 +630,10 @@ namespace UMA
             if (vertexOffset < 0 || vertexOffset > vPos.Length - sourceVertexCount)
                 throw new InvalidOperationException($"Blendshape '{shape.shapeName}' has an invalid output vertex range.");
 
-            float weight = (weightInput <= 1f) ? weightInput * 100f : weightInput; // allow 0..1 or 0..100
-            if (weight <= 0f || Mathf.Approximately(weight, 0f)) return; // Early out: nothing to bake
+            // The baked value is normalized (1 = 100%), as in the managed and bone-baking bakes and a live
+            // shape. It may be negative or above 1: frames are extrapolated, so -0.5 moves against the frame.
+            float weight = weightInput * 100f;
+            if (Mathf.Approximately(weight, 0f)) return; // Early out: nothing to bake
 
             // Find the first frame whose declared frameWeight >= requested weight
             int frameIndex;
@@ -649,7 +651,7 @@ namespace UMA
                 // Beyond last frame: clamp to last but scale proportionally
                 frameIndex = shape.frames.Length - 1;
                 float fw = shape.frames[frameIndex].frameWeight;
-                curFactor = (fw > 0f) ? (weight / fw) : 1f;
+                curFactor = (fw != 0f) ? (weight / fw) : 1f;
             }
             else if (frameIndex > 0)
             {
@@ -666,12 +668,13 @@ namespace UMA
             {
                 // We are before or at the first frame
                 float fw = shape.frames[frameIndex].frameWeight;
-                if (fw <= 0f)
+                if (fw == 0f)
                 {
-                    // First frame weight is 0; baking weight > 0 cannot be represented => treat as no deformation rather than full.
+                    // First frame weight is 0; a nonzero weight cannot be represented => treat as no deformation rather than full.
                     return;
                 }
-                curFactor = Mathf.Clamp01(weight / fw);
+                // Extrapolate from the rest position for weights below the first frame, negative ones included.
+                curFactor = weight / fw;
             }
 
             int prevIndex = (frameIndex > 0) ? frameIndex - 1 : frameIndex;
@@ -5392,7 +5395,20 @@ namespace UMA
         }
         private static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int len1, UMATransform[] umaTransforms, string slotName)
         {
-            int newBones = 0, pos1 = 0, pos2 = 0, len2 = umaTransforms.Length; while (pos1 < len1 && pos2 < len2) { long diff = (long)mergedTransforms[pos1].hash - umaTransforms[pos2].hash; if (diff == 0) { pos1++; pos2++; } else if (diff < 0) pos1++; else { pos2++; newBones++; } }
+            if (umaTransforms == null || umaTransforms.Length == 0) return;
+            int len2 = umaTransforms.Length;
+            // The skeleton merge runs before ValidateSourceMeshData. With a bone table out of
+            // hash order its forward count and backward write disagree and the write runs off
+            // the front of the buffer, so reject such a slot here with the validator's message.
+            for (int i = 0; i < len2; i++)
+            {
+                if (umaTransforms[i] == null)
+                    throw new InvalidOperationException($"Combine source '{slotName}' has a null UMA bone transform at index {i}.");
+                if (i > 0 && umaTransforms[i].hash < umaTransforms[i - 1].hash)
+                    throw new InvalidOperationException($"Combine source '{slotName}' UMA bone hierarchy is not sorted by hash at index {i}.");
+            }
+
+            int newBones = 0, pos1 = 0, pos2 = 0; while (pos1 < len1 && pos2 < len2) { long diff = (long)mergedTransforms[pos1].hash - umaTransforms[pos2].hash; if (diff == 0) { pos1++; pos2++; } else if (diff < 0) pos1++; else { pos2++; newBones++; } }
             newBones += len2 - pos2; pos1 = len1 - 1; pos2 = len2 - 1; len1 += newBones; int dest = len1 - 1;
             while (pos1 >= 0 && pos2 >= 0)
             {
@@ -5401,7 +5417,7 @@ namespace UMA
                 else if (diff > 0) mergedTransforms[dest--] = mergedTransforms[pos1--];
                 else mergedTransforms[dest--] = umaTransforms[pos2--];
             }
-            while (pos2 >= 0) { if (pos2 < umaTransforms.Length && dest >= 0 && dest < mergedTransforms.Length) mergedTransforms[dest--] = umaTransforms[pos2--]; else break; }
+            while (pos2 >= 0 && dest >= 0) mergedTransforms[dest--] = umaTransforms[pos2--];
         }
         public static Bounds RotateBoundsAABBFixUp(Bounds b) => RotateBoundsAABB(b, FixupRotation);
         private static Bounds RotateBoundsAABB(Bounds b, Quaternion rot)

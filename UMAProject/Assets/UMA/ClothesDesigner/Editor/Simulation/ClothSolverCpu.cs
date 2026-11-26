@@ -12,6 +12,38 @@ namespace UMA.ClothesDesigner.Editor
     {
         /// <summary>Body triangles kept per particle each frame for the substeps' collision tests.</summary>
         public const int Candidates = 8;
+
+        /// <summary>Body triangles nearer to a point than the nearest by less than this (m) tie for which side it is on.</summary>
+        public const float CollisionTieM = 0.0005f;
+        /// <summary>Faces at a sharper angle than this (the cosine between their normals, about 25 degrees) make a sharp edge.</summary>
+        public const float SharpEdgeCos = 0.9f;
+
+        /// <summary>
+        /// Whether a body triangle at distance <paramref name="d"/> with the side reading <paramref name="signedNew"/>
+        /// replaces the one chosen so far. The nearer wins, except where the two meet at a sharp edge and are about
+        /// equally near (within <see cref="CollisionTieM"/>): there, at a convex edge (the new triangle bends away behind
+        /// the chosen one's plane) a point outside either face is outside, so the more outside reading wins, and at a
+        /// concave edge (a crease) the more inside one. Before, on the test capsule's 90-degree top rim a point 6 mm
+        /// outside its side read as 6 mm inside its top, and was pushed and measured as inside.
+        /// </summary>
+        public static bool Replaces(float d, float signedNew, Vector3 newNormal, Vector3 newCentre, float chosenD, float signedChosen, Vector3 chosenNormal, Vector3 chosenCorner)
+        {
+            if (d < chosenD - CollisionTieM) return true;
+            if (Vector3.Dot(newNormal, chosenNormal) >= SharpEdgeCos) return d < chosenD;
+            if (d > chosenD + CollisionTieM) return false;
+            bool convex = Vector3.Dot(newCentre - chosenCorner, chosenNormal) < 0f;
+            return convex ? signedNew > signedChosen : signedNew < signedChosen;
+        }
+
+        /// <summary>Each particle's seam pair (<see cref="ClothModel.SeamPair"/>), or (-1, -1) for all when the model has none.</summary>
+        public static int2[] SeamPairs(ClothModel model)
+        {
+            int n = model.InverseMass != null ? model.InverseMass.Length : 0;
+            var result = new int2[n];
+            bool has = model.SeamPair != null && model.SeamPair.Length == n;
+            for (int i = 0; i < n; i++) result[i] = has ? new int2(model.SeamPair[i].x, model.SeamPair[i].y) : new int2(-1, -1);
+            return result;
+        }
         /// <summary>How much farther than the collision range candidates are gathered, for movement within a frame (m).</summary>
         public const float CandidateMargin = 0.03f;
 
@@ -48,6 +80,20 @@ namespace UMA.ClothesDesigner.Editor
         /// apart on the flat piece (m): nearer, they are neighbours, not a fold lying on the cloth.
         /// </summary>
         public const float SelfMinFlatDistance = 0.04f;
+
+        // Layers, each particle moving only itself: cloth of a lower layer that has got outside a higher layer's cloth over
+        // it is put back inside it; cloth of a higher layer over a lower layer that lies against the body (and so cannot go
+        // further in) is kept outside it. The other layer's triangle is found within reach once a frame (deep crossings
+        // too, not only cloth in contact), and counts only where it faces the way the body under the particle does and lies
+        // between the particle and the body: a sleeve beside the torso is not under the front.
+        /// <summary>How far a particle looks for a higher layer's cloth over it (m).</summary>
+        public const float LayerReach = 0.03f;
+        /// <summary>The most a particle is moved back under a higher layer in one substep (m).</summary>
+        public const float LayerMaxPush = 0.004f;
+        /// <summary>The least cosine between the higher layer's outward normal and the body's normal under the particle.</summary>
+        public const float LayerFacing = 0.5f;
+        /// <summary>The one-way layer pass is on (both solvers read it when they start). Off only to compare drapes without it.</summary>
+        public static bool OneWayLayers = true;
 
         /// <summary>
         /// The velocity after a substep in which a particle was pushed away from cloth: the push may stop
@@ -95,6 +141,7 @@ namespace UMA.ClothesDesigner.Editor
     {
         private NativeArray<float3> x, prev, v;
         private NativeArray<float> w, friction;
+        private NativeArray<int2> seamPair;
         private NativeArray<ClothConstraint> constraints;
         private NativeArray<int2> colors;
         private NativeArray<SolverPin> pins;
@@ -106,8 +153,9 @@ namespace UMA.ClothesDesigner.Editor
         private NativeArray<float> selfTarget;
         private NativeArray<float2> flat;
         private NativeArray<int> layer;
+        private NativeArray<int> layerCand;
         private NativeArray<float> pressure;
-        private bool hasSelf, selfWithin;
+        private bool hasSelf, selfWithin, layered;
         private int outSign;
         private float3 gridOrigin;
         private float cellSize;
@@ -127,6 +175,7 @@ namespace UMA.ClothesDesigner.Editor
             v = new NativeArray<float3>(n, Allocator.Persistent);
             w = new NativeArray<float>(model.InverseMass, Allocator.Persistent);
             friction = new NativeArray<float>(model.Friction, Allocator.Persistent);
+            seamPair = new NativeArray<int2>(ClothSolverShared.SeamPairs(model), Allocator.Persistent);
             constraints = new NativeArray<ClothConstraint>(model.Constraints, Allocator.Persistent);
             colors = new NativeArray<int2>(model.Colors, Allocator.Persistent);
             pins = new NativeArray<SolverPin>(0, Allocator.Persistent);
@@ -145,6 +194,7 @@ namespace UMA.ClothesDesigner.Editor
             selfTarget = new NativeArray<float>(math.max(1, n), Allocator.Persistent);
             flat = new NativeArray<float2>(math.max(1, n), Allocator.Persistent);
             layer = new NativeArray<int>(math.max(1, n), Allocator.Persistent);
+            layerCand = new NativeArray<int>(math.max(1, n), Allocator.Persistent);
             pressure = new NativeArray<float>(math.max(1, n), Allocator.Persistent);
             for (int i = 0; i < n; i++)
             {
@@ -152,6 +202,8 @@ namespace UMA.ClothesDesigner.Editor
                 if (model.Layer != null && i < model.Layer.Length) layer[i] = model.Layer[i];
                 if (model.Pressure != null && i < model.Pressure.Length) pressure[i] = model.Pressure[i];
             }
+            layered = false;
+            for (int i = 0; i < layerCand.Length; i++) { layerCand[i] = 0; if (i > 0 && i < n && layer[i] != layer[0]) layered = ClothSolverShared.OneWayLayers; }
             selfWithin = model.SelfWithinPieces && model.Flat != null;
             outSign = model.OutSign >= 0 ? 1 : -1;
             SetPositions(positions);
@@ -190,15 +242,21 @@ namespace UMA.ClothesDesigner.Editor
             }
         }
 
+        public void SetConstraints(ClothConstraint[] list)
+        {
+            if (!constraints.IsCreated || list == null || list.Length != constraints.Length) return;
+            constraints.CopyFrom(list);
+        }
+
         public void Step(SimParams p, int frames)
         {
             if (!ready || frames <= 0) return;
             var job = new StepJob
             {
-                x = x, prev = prev, v = v, w = w, friction = friction, constraints = constraints, colors = colors, pins = pins,
+                x = x, prev = prev, v = v, w = w, friction = friction, seamPair = seamPair, constraints = constraints, colors = colors, pins = pins,
                 ta = ta, tb = tb, tc = tc, tn = tn, cellStart = cellStart, cellTris = cellTris, candidates = candidates,
                 tris = tris, piece = piece, weld = weld, nearStart = nearStart, near = near, selfCandidates = selfCandidates, hashStart = hashStart, hashCursor = hashCursor, hashTris = hashTris, selfDelta = selfDelta, selfTarget = selfTarget,
-                flat = flat, layer = layer, pressure = pressure, selfWithin = selfWithin, outSign = outSign,
+                flat = flat, layer = layer, layerCand = layerCand, layered = layered, pressure = pressure, selfWithin = selfWithin, outSign = outSign,
                 self = hasSelf && p.selfCollide != 0 && p.thickness > 0f,
                 gridOrigin = gridOrigin, cellSize = cellSize, dims = dims, p = p, frames = frames
             };
@@ -218,6 +276,7 @@ namespace UMA.ClothesDesigner.Editor
             if (v.IsCreated) v.Dispose();
             if (w.IsCreated) w.Dispose();
             if (friction.IsCreated) friction.Dispose();
+            if (seamPair.IsCreated) seamPair.Dispose();
             if (constraints.IsCreated) constraints.Dispose();
             if (colors.IsCreated) colors.Dispose();
             if (pins.IsCreated) pins.Dispose();
@@ -239,6 +298,7 @@ namespace UMA.ClothesDesigner.Editor
             if (selfTarget.IsCreated) selfTarget.Dispose();
             if (flat.IsCreated) flat.Dispose();
             if (layer.IsCreated) layer.Dispose();
+            if (layerCand.IsCreated) layerCand.Dispose();
             if (pressure.IsCreated) pressure.Dispose();
         }
 
@@ -247,6 +307,7 @@ namespace UMA.ClothesDesigner.Editor
         {
             public NativeArray<float3> x, prev, v;
             [ReadOnly] public NativeArray<float> w, friction;
+            [ReadOnly] public NativeArray<int2> seamPair;
             [ReadOnly] public NativeArray<ClothConstraint> constraints;
             [ReadOnly] public NativeArray<int2> colors;
             [ReadOnly] public NativeArray<SolverPin> pins;
@@ -259,8 +320,9 @@ namespace UMA.ClothesDesigner.Editor
             public NativeArray<float> selfTarget;
             [ReadOnly] public NativeArray<float2> flat;
             [ReadOnly] public NativeArray<int> layer;
+            public NativeArray<int> layerCand;
             [ReadOnly] public NativeArray<float> pressure;
-            public bool self, selfWithin;
+            public bool self, selfWithin, layered;
             public int outSign;
             public float3 gridOrigin;
             public float cellSize;
@@ -284,6 +346,7 @@ namespace UMA.ClothesDesigner.Editor
                     {
                         BuildClothGrid();
                         for (int i = 0; i < x.Length; i++) FindClothCandidates(i);
+                        if (layered) for (int i = 0; i < x.Length; i++) FindLayerCandidate(i);
                     }
                     for (int s = 0; s < sub; s++)
                     {
@@ -295,7 +358,8 @@ namespace UMA.ClothesDesigner.Editor
                             float3 vel = (v[i] + g * h) * keep;
                             // Padding or air: a push out from the body, along the nearest body triangle's normal.
                             int near0 = candidates[i * ClothSolverShared.Candidates];
-                            if (pressure[i] > 0f && near0 >= 0) vel += tn[near0] * (pressure[i] * h);
+                            // Painted slim pressure is negative: a pull in towards the body (the GPU kernel takes either sign).
+                            if (pressure[i] != 0f && near0 >= 0) vel += tn[near0] * (pressure[i] * h);
                             v[i] = vel;
                             x[i] = x[i] + vel * h;
                         }
@@ -306,8 +370,9 @@ namespace UMA.ClothesDesigner.Editor
                             for (int k = range.x; k < range.x + range.y; k++)
                             {
                                 ClothConstraint con = constraints[k];
-                                float rest = con.kind == 2 ? con.rest * p.closure : con.rest;
-                                float alpha = con.kind == 2 ? alphaStitch : con.compliance * invH2;
+                                // Stitches close over the sewing; a free piece's late stitches (kind 3) after it.
+                                float rest = con.kind == 2 ? con.rest * p.closure : con.kind == 3 ? con.rest * p.lateClosure : con.rest;
+                                float alpha = con.kind >= 2 ? alphaStitch : con.compliance * invH2;
                                 SolveDistance(con.a, con.b, rest, alpha);
                             }
                         }
@@ -494,6 +559,59 @@ namespace UMA.ClothesDesigner.Editor
                 }
             }
 
+            /// <summary>
+            /// The layers either side of this particle, within reach (<see cref="ClothSolverShared.LayerReach"/>): the nearest
+            /// triangle of a higher layer over it, or else of a lower layer under it. Each counts only where it faces the way
+            /// the body under the particle does, lies between the particle and the body, and is not at this particle's seam.
+            /// Stored as t + 1 (a higher layer: this cloth is kept inside it), -(t + 1) (a lower layer: kept outside it where
+            /// that cloth lies against the body) or 0. Kept by distance, then triangle number.
+            /// </summary>
+            private void FindLayerCandidate(int i)
+            {
+                layerCand[i] = 0;
+                if (w[i] <= 0f) return;
+                int bodyTri = candidates[i * ClothSolverShared.Candidates];
+                if (bodyTri < 0) return;
+                float3 pos = x[i];
+                float3 bodyN = tn[bodyTri];
+                float3 bodyQ = ClosestOnTriangle(pos, ta[bodyTri], tb[bodyTri], tc[bodyTri]);
+                float r = ClothSolverShared.LayerReach;
+                float bestUp = r * r, bestDown = r * r;
+                int upT = -1, downT = -1;
+                int3 q0 = (int3)math.floor((pos - r) / ClothSolverShared.SelfCell);
+                int3 q1 = (int3)math.floor((pos + r) / ClothSolverShared.SelfCell);
+                for (int cz = q0.z; cz <= q1.z; cz++)
+                    for (int cy = q0.y; cy <= q1.y; cy++)
+                        for (int cx = q0.x; cx <= q1.x; cx++)
+                        {
+                            int bucket = (int)ClothSolverShared.Hash(cx, cy, cz);
+                            for (int j = hashStart[bucket]; j < hashStart[bucket + 1]; j++)
+                            {
+                                int t = hashTris[j];
+                                int va = tris[t * 3], vb = tris[t * 3 + 1], vc = tris[t * 3 + 2];
+                                if (layer[va] == layer[i]) continue;
+                                bool up = layer[va] > layer[i];
+                                float best = up ? bestUp : bestDown;
+                                int bestT = up ? upT : downT;
+                                float3 a = x[va], b = x[vb], c = x[vc];
+                                float3 q = ClosestOnTriangle(pos, a, b, c);
+                                float d2 = math.lengthsq(q - pos);
+                                if (d2 > best || (bestT >= 0 && d2 == best && t >= bestT)) continue;
+                                float3 n = math.cross(b - a, c - a);
+                                float len = math.length(n);
+                                if (len < 1e-12f) continue;
+                                n = n / len * outSign;
+                                if (!ClothSolverShared.Overlaps(pos, q, n)) continue;
+                                if (math.dot(n, bodyN) < ClothSolverShared.LayerFacing) continue;
+                                if (math.dot(bodyQ - q, n) >= 0f) continue;
+                                if (NearSeam(i, weld[va], weld[vb], weld[vc])) continue;
+                                if (up) { bestUp = d2; upT = t; }
+                                else { bestDown = d2; downT = t; }
+                            }
+                        }
+                layerCand[i] = upT >= 0 ? upT + 1 : downT >= 0 ? -(downT + 1) : 0;
+            }
+
             private bool FlatNear(int i, int j) => math.lengthsq(flat[i] - flat[j]) < ClothSolverShared.SelfMinFlatDistance * ClothSolverShared.SelfMinFlatDistance;
 
             /// <summary>Whether a triangle touches cloth within two rings of the particle's seam (see ClothModel.Near).</summary>
@@ -534,6 +652,38 @@ namespace UMA.ClothesDesigner.Editor
                     float amount = math.min(0.5f * (target - d), ClothSolverShared.SelfMaxPush);
                     if (amount > best) { best = amount; push = n * (side * amount); }
                 }
+                // Layers, moving only this cloth: under a higher layer it is kept the thickness inside it; over a lower layer
+                // that lies against the body (so cannot go further in) it is kept the thickness outside it.
+                if (layered)
+                {
+                    int code = layerCand[i];
+                    if (code != 0)
+                    {
+                        int lt = math.abs(code) - 1;
+                        float3 la = x[tris[lt * 3]], lb = x[tris[lt * 3 + 1]], lc = x[tris[lt * 3 + 2]];
+                        float3 ln = math.cross(lb - la, lc - la);
+                        float llen = math.length(ln);
+                        if (llen > 1e-12f)
+                        {
+                            ln = ln / llen * outSign;
+                            float3 lq = ClosestOnTriangle(pos, la, lb, lc);
+                            float d = math.dot(pos - lq, ln);
+                            if (code > 0)
+                            {
+                                if (d + p.thickness > 0f) push -= ln * math.min(d + p.thickness, ClothSolverShared.LayerMaxPush);
+                            }
+                            else
+                            {
+                                int bt = candidates[i * ClothSolverShared.Candidates];
+                                if (bt >= 0 && p.thickness - d > 0f)
+                                {
+                                    float under = math.dot(lq - ClosestOnTriangle(lq, ta[bt], tb[bt], tc[bt]), tn[bt]);
+                                    if (under < p.clearance + p.thickness) push += ln * math.min(p.thickness - d, ClothSolverShared.LayerMaxPush);
+                                }
+                            }
+                        }
+                    }
+                }
                 return push;
             }
 
@@ -541,7 +691,8 @@ namespace UMA.ClothesDesigner.Editor
             {
                 const int K = ClothSolverShared.Candidates;
                 float3 pos = x[i];
-                float best = p.collisionRange * p.collisionRange;
+                const float tie = ClothSolverShared.CollisionTieM;
+                float bestD = p.collisionRange, bestS = 0f;
                 int bestTri = -1;
                 float3 bestPoint = pos;
                 for (int k = 0; k < K; k++)
@@ -549,12 +700,22 @@ namespace UMA.ClothesDesigner.Editor
                     int t = candidates[i * K + k];
                     if (t < 0) break;
                     float3 q = ClosestOnTriangle(pos, ta[t], tb[t], tc[t]);
-                    float d2 = math.lengthsq(q - pos);
-                    if (d2 < best) { best = d2; bestTri = t; bestPoint = q; }
+                    float d = math.length(q - pos);
+                    if (d >= p.collisionRange) continue;
+                    float s = math.dot(pos - q, tn[t]);
+                    // As ClothSolverShared.Replaces: the nearer wins, but at a sharp edge near-ties go by its shape.
+                    bool take = bestTri < 0 || d < bestD - tie;
+                    if (!take && math.dot(tn[t], tn[bestTri]) >= ClothSolverShared.SharpEdgeCos) take = d < bestD;
+                    else if (!take && d <= bestD + tie)
+                    {
+                        bool convex = math.dot((ta[t] + tb[t] + tc[t]) / 3f - ta[bestTri], tn[bestTri]) < 0f;
+                        take = convex ? s > bestS : s < bestS;
+                    }
+                    if (take) { bestTri = t; bestPoint = q; bestS = s; bestD = d; }
                 }
                 if (bestTri < 0) return;
                 float3 nrm = tn[bestTri];
-                float dist = math.dot(pos - bestPoint, nrm);
+                float dist = bestS;
                 if (dist >= p.clearance) return;
                 float push = p.clearance - dist;
                 pos += nrm * push;
@@ -563,6 +724,10 @@ namespace UMA.ClothesDesigner.Editor
                 float3 tangential = moved - nrm * math.dot(moved, nrm);
                 float slide = math.length(tangential);
                 float grip = friction[i] * push;
+                // Cloth near a seam still open does not grip (see ClothModel.SeamPair); measured at the substep's
+                // start, which nothing changes during collision, as the GPU solver does.
+                int2 seam = seamPair[i];
+                if (seam.x >= 0 && math.lengthsq(prev[seam.x] - prev[seam.y]) > ClothModel.OpenSeamM * ClothModel.OpenSeamM) grip = 0f;
                 if (slide > 1e-12f) pos -= tangential * math.min(1f, grip / slide);
                 x[i] = pos;
             }

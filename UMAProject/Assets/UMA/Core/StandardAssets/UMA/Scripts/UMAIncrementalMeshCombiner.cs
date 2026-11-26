@@ -814,7 +814,9 @@ namespace UMA
                 {
                     generatedMaterial.secondPassMaterial = null;
                 }
-                plan.CaptureConfiguredMaterial(generatedMaterial);
+                plan.CaptureConfiguredMaterial(
+                    generatedMaterial,
+                    firstPassSubmesh);
             }
 
 #if UNITY_2023_1_OR_NEWER
@@ -1090,7 +1092,8 @@ namespace UMA
         }
 
         public void CaptureConfiguredMaterial(
-            UMAData.GeneratedMaterial material)
+            UMAData.GeneratedMaterial material,
+            int materialIndex)
         {
             UMAIncrementalMaterialMetadataState state =
                 FindMaterialState(material);
@@ -1098,6 +1101,7 @@ namespace UMA
             {
                 return;
             }
+            state.PlannedMaterialIndex = materialIndex;
             state.PlannedSecondPass =
                 material.secondPassMaterial;
             material.secondPassMaterial =

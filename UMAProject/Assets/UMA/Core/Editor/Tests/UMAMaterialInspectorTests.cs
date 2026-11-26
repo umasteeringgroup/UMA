@@ -130,6 +130,118 @@ namespace UMA.Editors.Tests
             Assert.That(channels.Select(c => c.channelType), Is.All.EqualTo(UMAMaterial.ChannelType.TintedTexture));
         }
 
+        [TestCase(UMAMaterial.MaterialType.Atlas, true)]
+        [TestCase(UMAMaterial.MaterialType.UseExistingTextures, true)]
+        [TestCase(UMAMaterial.MaterialType.NoAtlas, true)]
+        [TestCase(UMAMaterial.MaterialType.UseExistingMaterial, false)]
+        public void SecondPassFieldsSupportGeneratedAndExistingTextures(UMAMaterial.MaterialType type, bool supported)
+        {
+            Assert.That(UMAMaterialInspector.SupportsSecondPass(type), Is.EqualTo(supported));
+        }
+
+        [TestCase(UMAMaterial.MaterialType.UseExistingTextures, UMAMaterial.MaterialType.Atlas, true)]
+        [TestCase(UMAMaterial.MaterialType.UseExistingTextures, UMAMaterial.MaterialType.NoAtlas, true)]
+        [TestCase(UMAMaterial.MaterialType.UseExistingTextures, UMAMaterial.MaterialType.UseExistingMaterial, false)]
+        [TestCase(UMAMaterial.MaterialType.Atlas, UMAMaterial.MaterialType.NoAtlas, true)]
+        [TestCase(UMAMaterial.MaterialType.NoAtlas, UMAMaterial.MaterialType.Atlas, true)]
+        [TestCase(UMAMaterial.MaterialType.NoAtlas, UMAMaterial.MaterialType.UseExistingMaterial, false)]
+        public void MaterialTypeChangesPreserveThePassPairForSupportedModes(
+            UMAMaterial.MaterialType source, UMAMaterial.MaterialType destination, bool keepSecondPass)
+        {
+            var shader = Shader.Find("Hidden/InternalErrorShader");
+            Assert.That(shader, Is.Not.Null);
+            var first = new Material(shader);
+            var second = new Material(shader);
+            var hdrpFirst = new Material(shader);
+            var hdrpSecond = new Material(shader);
+            try
+            {
+                material.materialType = source;
+                bool usesExistingTextures = source == UMAMaterial.MaterialType.UseExistingTextures;
+                var initialChannelType = usesExistingTextures ? UMAMaterial.ChannelType.TintedTexture : UMAMaterial.ChannelType.NormalMap;
+                material.channels = new[]
+                {
+                    new UMAMaterial.MaterialChannel
+                    {
+                        channelType = initialChannelType,
+                        materialPropertyName = "_MainTex"
+                    }
+                };
+                using var serialized = new SerializedObject(material);
+                serialized.FindProperty("_material").objectReferenceValue = first;
+                serialized.FindProperty("_secondPass").objectReferenceValue = second;
+                serialized.FindProperty("_HDRPMaterial").objectReferenceValue = hdrpFirst;
+                serialized.FindProperty("_HDRPSecondPass").objectReferenceValue = hdrpSecond;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+
+                UMAMaterialInspector.ApplyMaterialTypeChange(serialized, destination);
+
+                Assert.That(material.materialType, Is.EqualTo(destination));
+                Assert.That(serialized.FindProperty("_material").objectReferenceValue, Is.SameAs(first));
+                Assert.That(serialized.FindProperty("_HDRPMaterial").objectReferenceValue, Is.SameAs(hdrpFirst));
+                Assert.That(serialized.FindProperty("_secondPass").objectReferenceValue, Is.SameAs(keepSecondPass ? second : null));
+                Assert.That(serialized.FindProperty("_HDRPSecondPass").objectReferenceValue, Is.SameAs(keepSecondPass ? hdrpSecond : null));
+                if (destination == UMAMaterial.MaterialType.UseExistingMaterial)
+                {
+                    Assert.That(material.channels, Is.Empty);
+                }
+                else
+                {
+                    var expectedChannelType = usesExistingTextures ? UMAMaterial.ChannelType.Texture : initialChannelType;
+                    Assert.That(material.channels[0].channelType, Is.EqualTo(expectedChannelType));
+                    Assert.That(material.channels[0].materialPropertyName, Is.EqualTo("_MainTex"));
+                }
+
+                if (usesExistingTextures && keepSecondPass)
+                {
+                    UMAMaterialInspector.ApplyMaterialTypeChange(serialized, UMAMaterial.MaterialType.UseExistingTextures);
+
+                    Assert.That(material.channels[0].channelType, Is.EqualTo(UMAMaterial.ChannelType.TintedTexture));
+                    Assert.That(serialized.FindProperty("_secondPass").objectReferenceValue, Is.SameAs(second));
+                    Assert.That(serialized.FindProperty("_HDRPSecondPass").objectReferenceValue, Is.SameAs(hdrpSecond));
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(first);
+                Object.DestroyImmediate(second);
+                Object.DestroyImmediate(hdrpFirst);
+                Object.DestroyImmediate(hdrpSecond);
+            }
+        }
+
+        [Test]
+        public void MixedSelectionConvertsChannelsPerAsset()
+        {
+            var secondMaterial = ScriptableObject.CreateInstance<UMAMaterial>();
+            try
+            {
+                material.materialType = UMAMaterial.MaterialType.Atlas;
+                material.channels = new[]
+                {
+                    new UMAMaterial.MaterialChannel { channelType = UMAMaterial.ChannelType.NormalMap }
+                };
+                secondMaterial.materialType = UMAMaterial.MaterialType.UseExistingTextures;
+                secondMaterial.channels = new[]
+                {
+                    new UMAMaterial.MaterialChannel { channelType = UMAMaterial.ChannelType.TintedTexture, materialPropertyName = "_MainTex" },
+                    new UMAMaterial.MaterialChannel { channelType = UMAMaterial.ChannelType.TintedTexture, materialPropertyName = "_OtherTex" }
+                };
+                using var serialized = new SerializedObject(new Object[] { material, secondMaterial });
+
+                UMAMaterialInspector.ApplyMaterialTypeChange(serialized, UMAMaterial.MaterialType.Atlas);
+
+                Assert.That(material.channels[0].channelType, Is.EqualTo(UMAMaterial.ChannelType.NormalMap));
+                Assert.That(secondMaterial.materialType, Is.EqualTo(UMAMaterial.MaterialType.Atlas));
+                Assert.That(secondMaterial.channels.Select(channel => channel.channelType), Is.All.EqualTo(UMAMaterial.ChannelType.Texture));
+                Assert.That(secondMaterial.channels.Select(channel => channel.materialPropertyName), Is.EqualTo(new[] { "_MainTex", "_OtherTex" }));
+            }
+            finally
+            {
+                Object.DestroyImmediate(secondMaterial);
+            }
+        }
+
         [UnityTest]
         public IEnumerator ValidRequestOpensOneLockedInspectorWithoutRepeatingOnLaterUpdates()
         {

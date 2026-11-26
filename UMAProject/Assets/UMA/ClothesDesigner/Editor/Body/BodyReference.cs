@@ -102,6 +102,14 @@ namespace UMA.ClothesDesigner.Editor
 
         private bool TriangleIsArm(UMASlotSkinTransfer.TriangleInfo t) => ArmVertex[t.Index0] && ArmVertex[t.Index1];
 
+        /// <summary>Whether a triangle of <see cref="Surface"/> (by index) is arm.</summary>
+        public bool IsArmTriangle(int triangle) => triangle >= 0 && triangle < Surface.Triangles.Length && TriangleIsArm(Surface.Triangles[triangle]);
+
+        private UMA.Editors.Weighting.UMAWeightDonor weightDonor;
+
+        /// <summary>The body as a weight donor (worked out once): its triangles in <see cref="Surface"/>'s order, bones in <see cref="Skin"/>'s.</summary>
+        public UMA.Editors.Weighting.UMAWeightDonor WeightDonor => weightDonor ?? (weightDonor = UMA.Editors.Weighting.UMAWeightDonor.FromSurface(Surface, Skin, FallbackBone));
+
         /// <summary>A triangle of clothes worn underneath: collided with, not measured.</summary>
         public bool IsWorn(UMASlotSkinTransfer.TriangleInfo t) => WornSlots.Count > 0 && t.SlotName != null && WornSlots.Contains(t.SlotName);
 
@@ -415,20 +423,6 @@ namespace UMA.ClothesDesigner.Editor
             }
             return new Vector2(halfX, halfZ);
         }
-
-        /// <summary>A copy of the surface without arm triangles, for weight donors on clothes with no sleeves.</summary>
-        public UMASlotSkinTransfer.TargetSurface SurfaceWithoutArms()
-        {
-            var kept = new List<UMASlotSkinTransfer.TriangleInfo>();
-            foreach (UMASlotSkinTransfer.TriangleInfo t in Surface.Triangles) if (!TriangleIsArm(t)) kept.Add(t);
-            return new UMASlotSkinTransfer.TargetSurface
-            {
-                Triangles = kept.ToArray(),
-                VertexWeights = Surface.VertexWeights,
-                CurrentSkinMatrices = Surface.CurrentSkinMatrices,
-                SampledRendererCount = Surface.SampledRendererCount
-            };
-        }
     }
 
     /// <summary>The body's triangles in a uniform grid, for cloth collision and closest-point queries.</summary>
@@ -529,7 +523,8 @@ namespace UMA.ClothesDesigner.Editor
             Vector3 h = new Vector3(near, near, near);
             if (near > 0f && near < CellSize
                 && Search(p, Cell(p - h), Cell(p + h), out triangle, out point, out signedDistance, out float best)
-                && best <= near * near)
+                // Exact only when every triangle that could tie with the hit lies in the cells searched too.
+                && Mathf.Sqrt(best) + ClothSolverShared.CollisionTieM <= near)
             {
                 return true;
             }
@@ -540,7 +535,8 @@ namespace UMA.ClothesDesigner.Editor
         {
             triangle = -1; point = p; signedDistance = float.MaxValue;
             best = float.MaxValue;
-            float bestAlong = 0f;
+            float bestDistance = float.MaxValue, bestSigned = 0f;
+            const float tie = ClothSolverShared.CollisionTieM;
             for (int z = lo.z; z <= hi.z; z++)
                 for (int y = lo.y; y <= hi.y; y++)
                     for (int x = lo.x; x <= hi.x; x++)
@@ -551,23 +547,22 @@ namespace UMA.ClothesDesigner.Editor
                             int t = CellTriangles[k];
                             // A triangle whose plane is already farther than the best cannot be nearer.
                             float plane = Vector3.Dot(p - A[t], N[t]);
-                            float tie = best * 1e-4f + 1e-12f;
-                            if (plane * plane > best + tie) continue;
+                            if (Mathf.Abs(plane) > bestDistance + tie) continue;
                             Vector3 q = UMASlotSkinTransfer.ClosestPointOnTriangle(p, A[t], B[t], C[t]);
-                            float d = (q - p).sqrMagnitude;
-                            if (d > best + tie) continue;
-                            // Nearest points on a shared edge or corner tie, and the triangles there can
-                            // disagree on the side. Keep the one whose normal lines up best with the offset,
-                            // so inside or outside does not depend on the order the cells are searched.
-                            float along = Mathf.Abs(Vector3.Dot(p - q, N[t]));
-                            if (d < best - tie || along > bestAlong)
+                            float d = (q - p).magnitude;
+                            if (d > bestDistance + tie) continue;
+                            float signedD = Vector3.Dot(p - q, N[t]);
+                            // Nearest points on (or near) a shared edge or corner tie, and the triangles there can
+                            // disagree on the side; see ClothSolverShared.Replaces.
+                            if (triangle < 0 || ClothSolverShared.Replaces(d, signedD, N[t], (A[t] + B[t] + C[t]) / 3f, bestDistance, bestSigned, N[triangle], A[triangle]))
                             {
-                                best = Mathf.Min(best, d); bestAlong = along; triangle = t; point = q;
+                                triangle = t; point = q; bestSigned = signedD; bestDistance = d;
                             }
                         }
                     }
             if (triangle < 0) return false;
-            signedDistance = Vector3.Dot(p - point, N[triangle]);
+            best = bestDistance * bestDistance;
+            signedDistance = bestSigned;
             return true;
         }
     }

@@ -469,7 +469,8 @@ namespace UMA.Editors
             {
                 return occluders;
             }
-            UMARigRestPose legacyRig = race.legacyRig != null ? race.legacyRig.GetRestPose() : null;
+            UMARigRestPoseAsset legacyRigAsset = race.GetLegacyRig(out _);
+            UMARigRestPose legacyRig = legacyRigAsset != null ? legacyRigAsset.GetRestPose() : null;
             var options = new UMASlotRigConversionOptions { Profile = profile, BodySurface = bodySurface };
             foreach (SlotData slot in cached.slotDataList)
             {

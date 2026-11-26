@@ -115,7 +115,16 @@ namespace UMA.ClothesDesigner.Editor
         /// width lines (heights on the pieces) stay where they were written. Where a piece is drawn does not
         /// change the cloth.
         /// </summary>
-        public ClothesPattern Finish()
+        public ClothesPattern Finish() => Finish(!QuickUvs);
+
+        /// <summary>
+        /// While true, <see cref="Finish()"/> lays the UVs out quickly by bounding box, as for a live draft: for pictures
+        /// and information about samples, where the tight packing (up to a third of a second each) is not needed.
+        /// </summary>
+        [ThreadStatic] public static bool QuickUvs;
+
+        /// <param name="tightUvs">False lays the UVs out quickly by bounding box (<see cref="UvLayout.QuickPack"/>), for drafts redone while the artist watches.</param>
+        public ClothesPattern Finish(bool tightUvs)
         {
             float x = 0f;
             foreach (PatternPiece piece in Pattern.pieces)
@@ -127,7 +136,8 @@ namespace UMA.ClothesDesigner.Editor
                 x += b.width + 8f;
             }
             Pattern.Migrate();
-            UvLayout.Repack(Pattern);
+            if (tightUvs) UvLayout.Repack(Pattern);
+            else UvLayout.QuickPack(Pattern);
             return Pattern;
         }
     }
@@ -186,6 +196,9 @@ namespace UMA.ClothesDesigner.Editor
 
         /// <summary>Which layer of the clothes the piece is: a higher layer is kept outside a lower one where they cross.</summary>
         public PieceBuilder Layer(int layer) { Piece.layer = layer; return this; }
+
+        /// <summary>How thick the piece is baked (mm): a belt or a waistband standing out from the cloth.</summary>
+        public PieceBuilder Thickness(float mm) { Piece.thicknessMm = mm; return this; }
 
         /// <summary>Stiffens the piece (collar stands, cuffs) and meshes it finer than the rest.</summary>
         public PieceBuilder Stiffen(InterfacingLevel interfacing, float meshDetail)

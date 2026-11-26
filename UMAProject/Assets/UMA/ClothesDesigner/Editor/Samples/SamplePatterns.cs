@@ -20,6 +20,7 @@ namespace UMA.ClothesDesigner.Editor
             ("Tank Top", TankTop),
             ("Crop Top", CropTop),
             ("Polo Shirt", PoloShirt),
+            ("Forte Shirt", ForteShirt),
             ("Oxford Shirt", OxfordShirt),
             ("Hoodie", Hoodie),
             ("Short Pants", ShortPants),
@@ -33,9 +34,36 @@ namespace UMA.ClothesDesigner.Editor
             ("Circle Skirt", CircleSkirt),
             ("Sheath Dress", SheathDress),
             ("Sundress", Sundress),
+            ("Elastic Waist Dress", ElasticWaistDress),
+            ("Belted Dress", BeltedDress),
             ("Socks", Socks),
             ("Beanie", Beanie),
+            ("Bra", Bra),
+            ("Swimsuit", Swimsuit),
+            ("Briefs", Briefs),
+            ("Face Mask", FaceMask),
+            ("Hauberk", Hauberk),
+            ("Leather Armor", LeatherArmor),
+            ("Tunic", Tunic),
+            ("Coif", Coif),
         };
+
+        /// <summary>The sample browser's groups, in the order they are shown.</summary>
+        public static readonly string[] Categories = { "Tops", "Bottoms", "Dresses and Skirts", "Underwear and Swim", "Accessories", "Medieval" };
+
+        /// <summary>The group a sample is shown in.</summary>
+        public static string Category(string name)
+        {
+            switch (name)
+            {
+                case "Short Pants": case "Jeans": case "Sweatpants": case "Leggings": return "Bottoms";
+                case "Pleated Skirt": case "A-Line Skirt": case "Pencil Skirt": case "Circle Skirt": case "Sheath Dress": case "Sundress": case "Elastic Waist Dress": case "Belted Dress": return "Dresses and Skirts";
+                case "Boxer Shorts": case "Bra": case "Swimsuit": case "Briefs": return "Underwear and Swim";
+                case "Socks": case "Beanie": case "Face Mask": return "Accessories";
+                case "Hauberk": case "Leather Armor": case "Tunic": case "Coif": return "Medieval";
+                default: return "Tops";
+            }
+        }
 
         public static ClothesPattern Create(string name)
         {
@@ -44,16 +72,27 @@ namespace UMA.ClothesDesigner.Editor
             return null;
         }
 
+        /// <summary>A sample with its UVs laid out quickly (by bounding box): for pictures and information, not to edit.</summary>
+        public static ClothesPattern CreateQuick(string name)
+        {
+            bool was = PatternBuilder.QuickUvs;
+            PatternBuilder.QuickUvs = true;
+            try { return Create(name); }
+            finally { PatternBuilder.QuickUvs = was; }
+        }
+
         /// <summary>
         /// Writes every sample as a pattern asset in a folder (Clothes Designer Examples ships them in
         /// Assets/UMA/ClothesDesignerExamples/Patterns). An existing asset is updated in place and keeps its
         /// GUID. Saves only the samples. Returns the paths written.
         /// </summary>
-        public static List<string> SaveAll(string folder)
+        /// <param name="only">The samples to write, by name; null for all of them.</param>
+        public static List<string> SaveAll(string folder, ICollection<string> only = null)
         {
             var written = new List<string>();
             foreach (var sample in All)
             {
+                if (only != null && !only.Contains(sample.name)) continue;
                 ClothesPattern made = sample.make();
                 string path = folder.TrimEnd('/') + "/" + sample.name + ".asset";
                 var existing = UnityEditor.AssetDatabase.LoadAssetAtPath<ClothesPattern>(path);
@@ -325,7 +364,24 @@ namespace UMA.ClothesDesigner.Editor
 
         public static ClothesPattern PoloShirt()
         {
-            var b = new PatternBuilder("Polo Shirt", "Short-sleeved cotton polo with a stand collar. The placket and buttons are left out: a pattern piece cannot yet be sewn onto the middle of another.");
+            var b = new PatternBuilder("Polo Shirt", "Short-sleeved cotton polo: front, back, two sleeves and a collar turned down over a stand, as a knit polo collar folds (a firm stand round the neck and a leaf over it on a folded seam). The placket and buttons are left out.");
+            Bodice d = TeeBodice(true), bd = TeeBodice(false);
+            d.neckDepth = 7f;
+            PieceBuilder front = BodicePiece(b, "Front", d, 0f, "Cotton");
+            PieceBuilder back = BodicePiece(b, "Back", bd, 180f, "Cotton");
+            SewBodice(b, front, back);
+            Sleeves(b, front, back, 19.5f, 13f, 9f, 17f, "Cotton");
+            // A polo collar is one knit band folded about 3 cm up; cut here as the stand and the leaf, so the
+            // fold is held as laid out. The leaf is 5.5 cm deep at the back to reach the neck seam: 4.5 cm rode
+            // up on the default male (its edge 7 cm above the seam) and showed the stand (measured 2026-11-24).
+            ShirtCollar(b, front, back, 3f, 5.5f, 6.5f, "Cotton");
+            TopSizes(b, front, back, d, 12f, 35f);
+            return b.Finish();
+        }
+
+        public static ClothesPattern ForteShirt()
+        {
+            var b = new PatternBuilder("Forte Shirt", "Short-sleeved cotton shirt with a stand collar: one straight band that stands up round the neck and is not turned down (the Polo Shirt's collar is). Front, back and two sleeves.");
             Bodice d = TeeBodice(true), bd = TeeBodice(false);
             d.neckDepth = 7f;
             PieceBuilder front = BodicePiece(b, "Front", d, 0f, "Cotton");
@@ -551,16 +607,24 @@ namespace UMA.ClothesDesigner.Editor
             var b = new PatternBuilder("Sweatpants", "Loose joggers in cotton fleece with a rib waistband and rib ankle cuffs. (In jersey the legs hang heavier than the band holds.)");
             Leg g = Classic(78f, 11f, 12f);
             g.frontHip = 16f; g.backHip = 17.5f; g.frontTop = 13f; g.backTop = 15f;
-            var (lf, rf, lb, rb) = Trousers(b, g, "Cotton", false);
-            // The rib band is gathered to 70%: tight enough at the hips to hold up the legs' weight.
-            Waistband(b, lf, rf, lb, rb, 5f, "Elastic", 0.7f);
-            // Ankle cuffs, centred on the inside of each leg, sewn along the front hem then the back hem.
-            float cuffLength = (lf.Length("Hem") + lb.Length("Hem")) * 0.8f, along = TrouserTop - g.inseam - g.rise;
-            PieceBuilder leftCuff = Band(b, "Left Cuff", cuffLength, 7f, "Elastic").Opening("Bottom").Place(BodyPart.LeftLeg, -90f, along);
-            PieceBuilder rightCuff = b.Mirror(leftCuff, "Right Cuff").Place(BodyPart.RightLeg, 90f, along);
-            b.SewAlong(leftCuff, "Top", (lf, "Hem"), (lb, "Hem"));
-            b.SewAlong(rightCuff, "Top", (rb, "Hem"), (rf, "Hem"));
-            foreach (PieceBuilder cuff in new[] { leftCuff, rightCuff }) b.Sew(cuff, "Right end", cuff, "Left end");
+            var (lf, rf, lb, rb) = Trousers(b, g, "Fleece", false);
+            // The rib band is cut to 70% of the waist: firm and gripping, it holds up the legs' weight (an Elastic band
+            // stretched over the hips and slid 11 cm).
+            Waistband(b, lf, rf, lb, rb, 5f, "Rib", 0.7f);
+            // Ankle cuffs gathered to 80% of the hem, each cut as a front and a back half (like the waistband), laid under
+            // the hem it is sewn to and joined at the inseam and outseam. A cuff cut in one piece was laid as a short arc
+            // inside the leg, its ends far from the outseam where they meet; sewing dragged them round the leg and they
+            // stopped 33 mm apart (Human Female 3.0, 2026-11-23).
+            float along = TrouserTop - g.inseam - g.rise;
+            foreach ((PieceBuilder front, PieceBuilder back, BodyPart leg, string side) in new[] { (lf, lb, BodyPart.LeftLeg, "Left"), (rf, rb, BodyPart.RightLeg, "Right") })
+            {
+                PieceBuilder cuffFront = Band(b, side + " Front Cuff", front.Length("Hem") * 0.8f, 7f, "Elastic").Opening("Bottom").Place(leg, 0f, along);
+                PieceBuilder cuffBack = Band(b, side + " Back Cuff", back.Length("Hem") * 0.8f, 7f, "Elastic").Opening("Bottom").Place(leg, 180f, along);
+                b.Sew(cuffFront, "Top", front, "Hem");
+                b.Sew(cuffBack, "Top", back, "Hem");
+                b.Sew(cuffFront, "Right end", cuffBack, "Left end");
+                b.Sew(cuffFront, "Left end", cuffBack, "Right end");
+            }
             foreach (PieceBuilder p in new[] { lf, rf, lb, rb }) p.Opening("Hem", false);
             TrouserSizes(b, g, 7f, 19f, true, lf, rf, lb, rb);
             return b.Finish();
@@ -581,6 +645,7 @@ namespace UMA.ClothesDesigner.Editor
             var b = new PatternBuilder("Boxer Shorts", "Loose cotton boxer shorts with an elastic waistband.");
             Leg g = Classic(12f, 16f, 17f);
             var (lf, rf, lb, rb) = Trousers(b, g, "Cotton", false);
+            // Elastic holds these: light legs (a Rib band measured no better, 3.0 against 3.3 cm of slide).
             Waistband(b, lf, rf, lb, rb, 4f, "Elastic", 0.85f);
             TrouserSizes(b, g, 3f, 17f, false, lf, rf, lb, rb);
             return b.Finish();
@@ -739,6 +804,102 @@ namespace UMA.ClothesDesigner.Editor
             return b.Finish();
         }
 
+        public static ClothesPattern ElasticWaistDress()
+        {
+            var b = new PatternBuilder("Elastic Waist Dress", "Short-sleeved jersey dress with a thick elastic waistband: a V-neck bodice and a skirt to above the knee, both cut wider than the band and gathered into it. The band is cut to the waist, kept outside the gathers (a higher layer) and baked 4 mm thick.");
+            // The band is 8 cm tall round the waist line (37 cm below the top of the shoulders); the bodice stops at its top.
+            const float bandHeight = 8f, bandTop = -33f, skirtLength = 60f, skirtTopHalf = 32f, skirtHemHalf = 34f;
+            var d = new Bodice { halfWidth = 26f, hemHalfWidth = 24f, length = 37f, shoulderX = 18f, shoulderDrop = 4.5f, neckX = 8.5f, neckDepth = 12f, underarmY = 12.5f };
+            Bodice bd = d; bd.neckDepth = 2.5f;
+            PieceBuilder front = BodicePiece(b, "Front", d, 0f, "Jersey");
+            PieceBuilder back = BodicePiece(b, "Back", bd, 180f, "Jersey");
+            // A V neck: straight front necklines.
+            front.Edge("Right neckline").curved = false;
+            front.Edge("Left neckline").curved = false;
+            SewBodice(b, front, back);
+            Sleeves(b, front, back, 19.5f, 13f, 9f, 17f, "Jersey");
+            // The band, in a front and a back half sewn into a ring at the sides: rib, firmly interfaced so it does not
+            // roll, laid a centimetre out and kept outside the gathered cloth (layer 1), baked 4 mm thick.
+            PieceBuilder Half(string name, float angle) => Band(b, name, 35f, bandHeight, "Rib")
+                .Place(BodyPart.Torso, angle, bandTop, 1f).Stiffen(InterfacingLevel.Firm, 2f).Layer(1).Thickness(4f);
+            PieceBuilder bandFront = Half("Front Band", 0f), bandBack = Half("Back Band", 180f);
+            b.Sew(bandFront, "Right end", bandBack, "Left end");
+            b.Sew(bandFront, "Left end", bandBack, "Right end");
+            PieceBuilder Skirt(string name, float angle) => b.Piece(name)
+                .Point(-skirtHemHalf, 0f, "Hem", true)
+                .Point(skirtHemHalf, 0f, "Right side")
+                .Point(skirtTopHalf, skirtLength, "Waist")
+                .Point(-skirtTopHalf, skirtLength, "Left side")
+                .Place(BodyPart.Torso, angle, bandTop - bandHeight).Fabric("Jersey");
+            PieceBuilder skirtFront = Skirt("Skirt Front", 0f), skirtBack = Skirt("Skirt Back", 180f);
+            b.Sew(skirtFront, "Right side", skirtBack, "Left side");
+            b.Sew(skirtFront, "Left side", skirtBack, "Right side");
+            // Gathered into the band: the bodice's hem along its top, the skirt's waist along its bottom.
+            b.Sew(bandFront, "Top", front, "Hem");
+            b.Sew(bandBack, "Top", back, "Hem");
+            b.Sew(bandFront, "Bottom", skirtFront, "Waist");
+            b.Sew(bandBack, "Bottom", skirtBack, "Waist");
+            front.Opening("Hem", false);
+            back.Opening("Hem", false);
+            b.Width("Chest", BodyMeasurement.Chest, 104f, 4f, 2, d.underarmY - 3f, front, back);
+            b.Length("Bodice Length", BodyMeasurement.ShoulderToWaist, d.length, d.length - 35f, front, back);
+            b.Width("Waist", BodyMeasurement.Waist, 70f, 3f, 2, bandHeight * 0.5f, bandFront, bandBack);
+            // The skirt keeps its ease over the hips, 20 cm below its top.
+            float hipLine = skirtLength - 20f, hipCm = 4f * Mathf.Lerp(skirtHemHalf, skirtTopHalf, hipLine / skirtLength);
+            b.Width("Hip", BodyMeasurement.Hip, hipCm, hipCm - 117f, 2, hipLine, skirtFront, skirtBack);
+            return b.Finish();
+        }
+
+        public static ClothesPattern BeltedDress()
+        {
+            var b = new PatternBuilder("Belted Dress", "Short-sleeved jersey dress in two loose panels, a front and a back from the shoulder to above the knee, gathered in at the waist by a separate thick elastic belt. The belt is on a higher layer and sewn to nothing but two belt loops a side: it is laid outside the dress, tightens round it once the dress is sewn, and keeps the gathered cloth under it. It is baked 5 mm thick.");
+            // Cut straight from the chest (108 round) to the hem (124), about 116 round the waist: the belt, cut to the
+            // waist, gathers it by nearly half. The layers keep the gathered dress under the belt: the dress is pushed in
+            // under it and, where the dress lies against the body, the belt rides on it (ClothSolverShared.LayerReach).
+            var d = new Bodice { halfWidth = 27f, hemHalfWidth = 31f, length = 100f, shoulderX = 18f, shoulderDrop = 4.5f, neckX = 8.5f, neckDepth = 12f, underarmY = 75.5f };
+            Bodice bd = d; bd.neckDepth = 2.5f;
+            PieceBuilder front = BodicePiece(b, "Front", d, 0f, "Jersey");
+            PieceBuilder back = BodicePiece(b, "Back", bd, 180f, "Jersey");
+            // A V neck: straight front necklines.
+            front.Edge("Right neckline").curved = false;
+            front.Edge("Left neckline").curved = false;
+            SewBodice(b, front, back);
+            Sleeves(b, front, back, 19.5f, 13f, 9f, 17f, "Jersey");
+            // The belt: a front and a back half sewn into a ring at the sides, 6 cm tall round the waist line (37 cm below
+            // the top of the shoulders), cut 1 cm shorter than the waist so it grips; rib, firmly interfaced so it does not
+            // roll. On a higher layer and sewn to nothing on the dress, it is a free piece: laid outside the dress, its own
+            // seams and loops close after the dress is sewn, so it tightens round the dress and gathers it.
+            const float beltHeight = 6f;
+            PieceBuilder Half(string name, float angle) => Band(b, name, 33f, beltHeight, "Rib").Opening("Top").Opening("Bottom")
+                .Place(BodyPart.Torso, angle, -37f + beltHeight * 0.5f, 1f).Stiffen(InterfacingLevel.Firm, 2f).Layer(1).Thickness(5f);
+            PieceBuilder beltFront = Half("Front Belt", 0f), beltBack = Half("Back Belt", 180f);
+            b.Sew(beltFront, "Right end", beltBack, "Left end");
+            b.Sew(beltFront, "Left end", beltBack, "Right end");
+            b.Width("Chest", BodyMeasurement.Chest, 108f, 8f, 2, d.underarmY - 3f, front, back);
+            b.Length("Length", BodyMeasurement.ShoulderToWaist, d.length, d.length - 35f, front, back);
+            b.Width("Waist", BodyMeasurement.Waist, 66f, -1f, 2, beltHeight * 0.5f, beltFront, beltBack);
+            ClothesPattern pattern = b.Finish();
+            // Belt loops: a tack near each end of each half, at the belt's middle, to the dress just inside its side seams
+            // at the waist line (41 cm below the dress's top, laid 4 cm above the shoulders). Without them the belt slid
+            // 12 to 26 cm down Human Male 3.0, whose waist is nearly as wide as his hips; tacks across the whole belt
+            // stopped the dress gathering evenly under it.
+            float waistY = d.length - 41f, dressHalf = Mathf.Lerp(d.hemHalfWidth, d.halfWidth, waistY / d.underarmY) - 1f;
+            foreach ((PieceBuilder belt, PieceBuilder panel) in new[] { (beltFront, front), (beltBack, back) })
+            {
+                Rect beltBox = belt.Piece.Bounds(), panelBox = panel.Piece.Bounds();
+                foreach (float f in new[] { 0.06f, 0.94f })
+                {
+                    pattern.tacks.Add(new PatternTack
+                    {
+                        id = ClothesPattern.NewId(),
+                        pieceA = belt.Piece.id, a = new Vector2(Mathf.Lerp(beltBox.xMin, beltBox.xMax, f), beltBox.center.y),
+                        pieceB = panel.Piece.id, b = new Vector2(panelBox.center.x + (f - 0.5f) * 2f * dressHalf, waistY)
+                    });
+                }
+            }
+            return pattern;
+        }
+
         // ---- Accessories ---------------------------------------------------------------------------
 
         public static ClothesPattern Socks()
@@ -746,16 +907,20 @@ namespace UMA.ClothesDesigner.Editor
             var b = new PatternBuilder("Socks", "A pair of knitted socks to mid-calf. Each sock is two halves laid flat beside the foot, outside and inside, sewn all round but the top.");
             // The outer half of the left sock, seen from the body's left: the toe points to the left as drawn.
             // Drawn for a 28 cm foot and a 19 cm ankle: each half reaches from under the sole to over the
-            // instep (about half the foot's girth). The top sits 30 cm above the floor, 101 cm below the waist.
+            // instep (about half the foot's girth). Its top is laid 101 cm below the waist. The foot part is cut
+            // snug (13 cm to the instep) and the leg part long, so the halves are laid with their soles below the
+            // foot: the sole seam then closes by drawing them in under it. Laid beside the foot instead, each sole
+            // edge had to wrap round under the foot, gripped it, and one point stayed 45 mm short of its partner
+            // (Human Female 3.0, 2026-11-23); now every seam closes to within 0.6 mm.
             const float top = -101f;
             PieceBuilder leftOuter = b.Piece("Left Sock Outside")
                 .Point(-25f, 0f, "Sole")
                 .Point(8f, 0f, "Heel")
-                .Point(5.5f, 13f, "Back")
-                .Point(5.5f, 30f, "Top", true)
-                .Point(-5f, 30f, "Front")
-                .Point(-6f, 16f, "Instep")
-                .Point(-25f, 8f, "Toe")
+                .Point(5.5f, 10f, "Back")
+                .Point(5.5f, 31f, "Top", true)
+                .Point(-5f, 31f, "Front")
+                .Point(-6f, 13f, "Instep")
+                .Point(-25f, 5f, "Toe")
                 .Curve("Heel", 3f, 4f, 0.5f, -4f)
                 .Curve("Instep", -6f, -1f, 6f, 2f)
                 .Curve("Toe", -5f, 0f, -5f, 0f)
@@ -792,6 +957,273 @@ namespace UMA.ClothesDesigner.Editor
             }
             for (int i = 0; i < 4; i++) b.Sew(panels[i], "Right seam", panels[(i + 1) % 4], "Left seam");
             b.Width("Head", BodyMeasurement.Head, 60f, -4f, 4, 2f, panels.ToArray());
+            b.Pattern.meshLevel = MeshLevel.Fine;
+            return b.Finish();
+        }
+
+        public static ClothesPattern FaceMask()
+        {
+            var b = new PatternBuilder("Face Mask", "Cotton face mask over the nose, mouth and chin: two halves sewn down a curved centre seam that shapes it, held by an elastic band round the back of the head.");
+            const float top = -10f;
+            // The body's left half, seen from the front: the centre seam on its left as drawn, the ear end on its right.
+            // The centre seam bows out at the nose and the chin, so sewn to its mirror the mask stands off the face.
+            PieceBuilder left = b.Piece("Left Half")
+                .Point(0f, 0f, "Bottom", true)
+                .Point(11.5f, 1.5f, "Side", true)
+                .Point(11.5f, 11.5f, "Top", true)
+                .Point(0f, 14f, "Centre")
+                .Curve("Bottom", 4f, -0.5f, -4f, 0f)
+                .Curve("Top", -4f, 1.5f, 4f, 0f)
+                .Curve("Centre", -2f, -2f, -1.5f, 2.5f)
+                .Place(BodyPart.Head, 45f, top).Fabric("Cotton");
+            PieceBuilder right = b.Piece("Right Half")
+                .Point(-11.5f, 1.5f, "Bottom", true)
+                .Point(0f, 0f, "Centre")
+                .Point(0f, 14f, "Top", true)
+                .Point(-11.5f, 11.5f, "Side", true)
+                .Curve("Bottom", 4f, 0f, -4f, -0.5f)
+                .Curve("Centre", 1.5f, 2.5f, 2f, -2f)
+                .Curve("Top", -4f, 0f, 4f, 1.5f)
+                .Place(BodyPart.Head, -45f, top).Fabric("Cotton");
+            b.Sew(left, "Centre", right, "Centre");
+            // The band runs round the back of the head below the ears, about 10% shorter than that half of the head,
+            // its ends sewn to the middle of the mask's sides.
+            PieceBuilder band = Band(b, "Band", 24f, 2.5f, "Elastic").Opening("Bottom").Opening("Top").Place(BodyPart.Head, 180f, -16f);
+            b.Sew(band, "Right end", 0f, 1f, right, "Side", 0.375f, 0.625f);
+            b.Sew(band, "Left end", 0f, 1f, left, "Side", 0.375f, 0.625f);
+            b.Pattern.meshLevel = MeshLevel.Fine;
+            return b.Finish();
+        }
+
+        // ---- Underwear and swim --------------------------------------------------------------------
+
+        public static ClothesPattern Bra()
+        {
+            var b = new PatternBuilder("Bra", "Triangle bra: two spandex cups shaped by a dart, an elastic band under the bust cut 30 cm shorter than the chest so it grips, and narrow straps from the cups over the shoulders to the back band.");
+            const float bandTop = -30f, bandHeight = 4.5f, bandLength = 35f;
+            // A cup: a triangle 16 cm across the bottom and 17 cm high, its point cut square for the strap, with a dart
+            // in the middle of the bottom edge to shape it over the bust. Both cups are cut alike.
+            PieceBuilder Cup(string name, float angle) => b.Piece(name)
+                .Point(-8f, 0f, "Bottom")
+                .Point(8f, 0f, "Right side", true)
+                .Point(0.75f, 17f, "Strap")
+                .Point(-0.75f, 17f, "Left side", true)
+                .Curve("Right side", -1f, 6f, 2f, -5f)
+                .Curve("Left side", -2f, -5f, 1f, 6f)
+                .Dart("Bottom", 0.5f, 3f, 0f, 7f)
+                .Place(BodyPart.Torso, angle, -13f).Fabric("Spandex");
+            PieceBuilder front = Band(b, "Front Band", bandLength, bandHeight, "Elastic").Opening("Bottom").Opening("Top").Place(BodyPart.Torso, 0f, bandTop);
+            PieceBuilder back = Band(b, "Back Band", bandLength, bandHeight, "Elastic").Opening("Bottom").Opening("Top").Place(BodyPart.Torso, 180f, bandTop);
+            b.Sew(front, "Right end", back, "Left end");
+            b.Sew(front, "Left end", back, "Right end");
+            // The front band's top runs from the body's left to its right: each cup takes 14 cm of it, 2 cm apart.
+            float F(float x) => (bandLength * 0.5f - x) / bandLength;
+            PieceBuilder leftCup = Cup("Left Cup", 30f), rightCup = Cup("Right Cup", -30f);
+            b.Sew(leftCup, "Bottom", 0f, 1f, front, "Top", F(15f), F(1f));
+            b.Sew(rightCup, "Bottom", 0f, 1f, front, "Top", F(-1f), F(-15f));
+            // Each strap is a front part from the cup's point to the top of the shoulder and a back part from there down
+            // to the back band, sewn over the shoulder (one strap laid in front would have to pass through the shoulder).
+            // Seen from behind, the body's left is on the left of the back band.
+            foreach ((PieceBuilder cup, float angle, string side, float backX) in new[] { (leftCup, 30f, "Left", -7.5f), (rightCup, -30f, "Right", 7.5f) })
+            {
+                PieceBuilder strapFront = Band(b, side + " Front Strap", 1.5f, 15f, "Elastic").Opening("Right end").Opening("Left end").Place(BodyPart.Torso, angle, 2f);
+                PieceBuilder strapBack = Band(b, side + " Back Strap", 1.5f, 29f, "Elastic").Opening("Right end").Opening("Left end").Place(BodyPart.Torso, angle > 0f ? 147f : 213f, 2f);
+                strapFront.Piece.meshDetail = 3f;
+                strapBack.Piece.meshDetail = 3f;
+                b.Sew(strapFront, "Bottom", cup, "Strap");
+                b.Sew(strapFront, "Top", strapBack, "Top");
+                b.Sew(strapBack, "Bottom", 0f, 1f, back, "Top", F(backX + 0.75f), F(backX - 0.75f));
+            }
+            b.Width("Band", BodyMeasurement.Chest, 2f * bandLength, 2f * bandLength - 100f, 2, bandHeight * 0.5f, front, back);
+            b.Pattern.meshLevel = MeshLevel.Fine;
+            return b.Finish();
+        }
+
+        public static ClothesPattern Swimsuit()
+        {
+            var b = new PatternBuilder("Swimsuit", "One-piece spandex swimsuit with high-cut legs, a scoop neck and a low back, cut about 14% smaller round the chest than the body so it grips. The front and back are sewn at the sides, over the shoulders and under the crotch.");
+            // A panel from the crotch (y 0) to the top of the shoulder straps (y 74). The leg openings rise to the hip bone;
+            // the front's are cut in (high legs), the back's bow out over the seat.
+            PieceBuilder Panel(string name, float angle, float neckDepth, Vector4 leg)
+            {
+                return b.Piece(name)
+                    .Point(-4.5f, 0f, "Crotch")
+                    .Point(4.5f, 0f, "Right leg", true)
+                    .Point(20.5f, 26f, "Right hip side")
+                    .Point(15.5f, 37f, "Right waist side")
+                    .Point(22f, 53f, "Right armhole", true)
+                    .Point(11f, 74f, "Right strap")
+                    .Point(7f, 74f, "Right neckline", true)
+                    .Point(0f, 74f - neckDepth, "Left neckline", true)
+                    .Point(-7f, 74f, "Left strap")
+                    .Point(-11f, 74f, "Left armhole", true)
+                    .Point(-22f, 53f, "Left waist side")
+                    .Point(-15.5f, 37f, "Left hip side")
+                    .Point(-20.5f, 26f, "Left leg", true)
+                    .Curve("Right leg", leg.x, leg.y, leg.z, leg.w)
+                    .Curve("Left leg", -leg.z, leg.w, -leg.x, leg.y)
+                    .Curve("Right waist side", 1.5f, 5f, 1.5f, -5f)
+                    .Curve("Left waist side", -1.5f, -5f, -1.5f, 5f)
+                    .Curve("Right armhole", -6f, 1f, 0f, -7f)
+                    .Curve("Left armhole", 0f, -7f, 6f, 1f)
+                    .Curve("Right neckline", -0.7f, -0.55f * neckDepth, 3.85f, 0f)
+                    .Curve("Left neckline", -3.85f, 0f, 0.7f, -0.55f * neckDepth)
+                    .Place(BodyPart.Torso, angle, 1f).Fabric("Spandex");
+            }
+            PieceBuilder front = Panel("Front", 0f, 14f, new Vector4(2f, 8f, -8f, -4f));
+            PieceBuilder back = Panel("Back", 180f, 30f, new Vector4(6f, 2f, -2f, -9f));
+            foreach (string side in new[] { "hip side", "waist side", "strap" })
+            {
+                b.Sew(front, "Right " + side, back, "Left " + side);
+                b.Sew(front, "Left " + side, back, "Right " + side);
+            }
+            b.Sew(front, "Crotch", back, "Crotch");
+            b.Width("Chest", BodyMeasurement.Chest, 86f, -14f, 2, 49f, front, back);
+            return b.Finish();
+        }
+
+        public static ClothesPattern Briefs()
+        {
+            var b = new PatternBuilder("Briefs", "Spandex briefs sitting on the hips, with leg openings along the leg crease and an elastic waistband, cut about 10% smaller round than the body so they grip. The back rises 2 cm higher and bows out over the seat.");
+            PieceBuilder Panel(string name, float angle, float top, float height, float topHalf, float sideHalf, Vector4 leg)
+            {
+                return b.Piece(name)
+                    .Point(-4.5f, 0f, "Crotch")
+                    .Point(4.5f, 0f, "Right leg", true)
+                    .Point(sideHalf, height - 6f, "Right side")
+                    .Point(topHalf, height, "Waist")
+                    .Point(-topHalf, height, "Left side")
+                    .Point(-sideHalf, height - 6f, "Left leg", true)
+                    .Curve("Right leg", leg.x, leg.y, leg.z, leg.w)
+                    .Curve("Left leg", -leg.z, leg.w, -leg.x, leg.y)
+                    .Place(BodyPart.Torso, angle, top).Fabric("Spandex");
+            }
+            const float frontTop = -45f, backTop = -43f, band = 2.5f;
+            PieceBuilder front = Panel("Front", 0f, frontTop, 29f, 18f, 19.5f, new Vector4(2f, 9f, -8f, -3f));
+            PieceBuilder back = Panel("Back", 180f, backTop, 31f, 21f, 22f, new Vector4(7f, 2f, -1f, -10f));
+            b.Sew(front, "Right side", back, "Left side");
+            b.Sew(front, "Left side", back, "Right side");
+            b.Sew(front, "Crotch", back, "Crotch");
+            // An elastic band 2.5 cm high, 85% of the top so it gathers it in.
+            PieceBuilder bandFront = Band(b, "Front Waistband", front.Length("Waist") * 0.85f, band, "Elastic").Opening("Top").Place(BodyPart.Torso, 0f, frontTop + band);
+            PieceBuilder bandBack = Band(b, "Back Waistband", back.Length("Waist") * 0.85f, band, "Elastic").Opening("Top").Place(BodyPart.Torso, 180f, backTop + band);
+            b.Sew(bandFront, "Bottom", front, "Waist");
+            b.Sew(bandBack, "Bottom", back, "Waist");
+            b.Sew(bandFront, "Right end", bandBack, "Left end");
+            b.Sew(bandFront, "Left end", bandBack, "Right end");
+            // The front and back go round the hips together: each half of the body round takes its own share.
+            b.Width("Hip (front)", BodyMeasurement.Hip, 76f, 76f - 117f, 2, 25f, front);
+            b.Width("Hip (back)", BodyMeasurement.Hip, 86.67f, 86.67f - 117f, 2, 27f, back);
+            return b.Finish();
+        }
+
+        // ---- Medieval ------------------------------------------------------------------------------
+
+        /// <summary>Cuts a slit up from the middle of a piece's hem (a narrow open V), as a riding coat has.</summary>
+        private static PieceBuilder Slit(PieceBuilder p, float height, float halfWidth)
+        {
+            int hem = p.Index("Hem");
+            p.Piece.edges[hem].curved = false;
+            Vector2[] at = { new Vector2(-halfWidth, 0f), new Vector2(0f, height), new Vector2(halfWidth, 0f) };
+            string[] names = { "Slit left", "Slit right", "Hem right" };
+            for (int i = 0; i < 3; i++)
+            {
+                p.Piece.points.Insert(hem + 1 + i, new PatternPoint { id = ClothesPattern.NewId(), position = at[i] });
+                p.Piece.edges.Insert(hem + 1 + i, new PatternEdge { id = ClothesPattern.NewId(), name = names[i], opening = true });
+            }
+            return p;
+        }
+
+        public static ClothesPattern Hauberk()
+        {
+            var b = new PatternBuilder("Hauberk", "Knee-length mail shirt with long sleeves, slit at the front and back from the hem for riding. Mail is very heavy and limp: it hangs straight from the shoulders in narrow folds.");
+            var d = new Bodice { halfWidth = 30f, hemHalfWidth = 33f, length = 100f, shoulderX = 20f, shoulderDrop = 4f, neckX = 9f, neckDepth = 8f, underarmY = 75f };
+            Bodice bd = d; bd.neckDepth = 3f;
+            // The slits reach 3 cm above the crotch.
+            PieceBuilder front = Slit(BodicePiece(b, "Front", d, 0f, "Mail"), 26f, 3f);
+            PieceBuilder back = Slit(BodicePiece(b, "Back", bd, 180f, "Mail"), 26f, 3f);
+            SewBodice(b, front, back);
+            var (right, left) = Sleeves(b, front, back, 22f, 12f, 44f, 12f, "Mail");
+            TopSizes(b, front, back, d, 20f, d.length - 37f);
+            b.Length("Sleeve length", BodyMeasurement.ArmLength, 56f, -1f, right, left);
+            return b.Finish();
+        }
+
+        public static ClothesPattern LeatherArmor()
+        {
+            var b = new PatternBuilder("Leather Armor", "A leather jerkin to the hip with shoulder guards and four hanging tassets. The guards are interfaced firm so they keep their curve over the shoulders; the tassets hang from short seams at the hem.");
+            var d = new Bodice { halfWidth = 27f, hemHalfWidth = 27f, length = 60f, shoulderX = 18f, shoulderDrop = 4f, neckX = 8.5f, neckDepth = 8f, underarmY = 34f };
+            Bodice bd = d; bd.neckDepth = 3f;
+            PieceBuilder front = BodicePiece(b, "Front", d, 0f, "Leather");
+            PieceBuilder back = BodicePiece(b, "Back", bd, 180f, "Leather");
+            SewBodice(b, front, back);
+            // A shoulder guard: a short stiff cap over the top of the arm (drawn like a sleeve for the right arm, its front
+            // to the right), sewn along the upper half of the armhole and open underneath.
+            PieceBuilder rightGuard = b.Piece("Right Guard")
+                .Point(-13f, 0f, "Hem", true)
+                .Point(13f, 0f, "Right underarm", true)
+                .Point(9f, 5f, "Right cap")
+                .Point(0f, 13f, "Left cap")
+                .Point(-9f, 5f, "Left underarm", true)
+                .Curve("Hem", 6f, -2f, -6f, -2f)
+                .Curve("Right cap", -1.5f, 4f, 4f, 0f)
+                .Curve("Left cap", -4f, 0f, 1.5f, 4f)
+                .Place(BodyPart.RightArm, 0f, 3f).Fabric("Leather").Stiffen(InterfacingLevel.Firm, 2f).Layer(1);
+            PieceBuilder leftGuard = b.Mirror(rightGuard, "Left Guard").Place(BodyPart.LeftArm, 0f, 3f);
+            // The front's body-right armhole runs down from the shoulder; its body-left one runs up to it (and the
+            // back's the other way round), so the upper halves are 0 to 0.5 and 0.5 to 1 in turn.
+            b.Sew(rightGuard, "Right cap", 0f, 1f, front, "Left armhole", 0f, 0.5f);
+            b.Sew(rightGuard, "Left cap", 0f, 1f, back, "Right armhole", 0.5f, 1f);
+            b.Sew(leftGuard, "Right cap", 0f, 1f, front, "Right armhole", 0.5f, 1f);
+            b.Sew(leftGuard, "Left cap", 0f, 1f, back, "Left armhole", 0f, 0.5f);
+            // Tassets: four strips hanging from the hem, two in front and two behind (seen from behind, the body's left
+            // is on the left of the back's hem).
+            float hemLength = front.Length("Hem");
+            foreach ((string name, PieceBuilder body, float angle, float at) in new[]
+                { ("Front Right Tasset", front, -25f, 0.18f), ("Front Left Tasset", front, 25f, 0.58f), ("Back Left Tasset", back, 155f, 0.18f), ("Back Right Tasset", back, 205f, 0.58f) })
+            {
+                PieceBuilder t = Band(b, name, 13f, 20f, "Leather").Opening("Bottom").Opening("Right end").Opening("Left end").Curve("Bottom", 3f, -2f, -3f, -2f)
+                    .Place(BodyPart.Torso, angle, 4f - d.length).Layer(1);
+                b.Sew(t, "Top", 0f, 1f, body, "Hem", at, at + 13f / hemLength);
+            }
+            TopSizes(b, front, back, d, 8f, d.length - 37f);
+            return b.Finish();
+        }
+
+        public static ClothesPattern Tunic()
+        {
+            var b = new PatternBuilder("Tunic", "Knee-length wool T-tunic with long sleeves, a narrow V neck slit at the front and a skirt that flares from the hips, as worn through the Middle Ages.");
+            var d = new Bodice { halfWidth = 30f, hemHalfWidth = 42f, length = 112f, shoulderX = 20f, shoulderDrop = 4f, neckX = 7.5f, neckDepth = 15f, underarmY = 86f };
+            Bodice bd = d; bd.neckDepth = 3f;
+            PieceBuilder front = BodicePiece(b, "Front", d, 0f, "Wool");
+            PieceBuilder back = BodicePiece(b, "Back", bd, 180f, "Wool");
+            foreach (PieceBuilder p in new[] { front, back }) p.Curve("Hem", 14f, -3f, -14f, -3f);
+            SewBodice(b, front, back);
+            var (right, left) = Sleeves(b, front, back, 22f, 12f, 44f, 11f, "Wool");
+            TopSizes(b, front, back, d, 20f, d.length - 37f);
+            b.Length("Sleeve length", BodyMeasurement.ArmLength, 56f, -1f, right, left);
+            return b.Finish();
+        }
+
+        public static ClothesPattern Coif()
+        {
+            var b = new PatternBuilder("Coif", "Close-fitting linen cap of two halves sewn over the crown from the forehead to the nape, covering the ears and framing the face, held by a strap under the chin.");
+            // The body's left half, seen from the body's left with the face to the left: the crown seam runs from the nape
+            // up the back of the head, over the top and down to the forehead.
+            PieceBuilder left = b.Piece("Left Half")
+                .Point(-7f, 0f, "Bottom", true)
+                .Point(6f, 0f, "Crown seam")
+                .Point(-14f, 29f, "Face", true)
+                .Curve("Crown seam", 7.5f, 14f, 14f, 4f)
+                .Curve("Face", 3f, -9f, -1f, 10f)
+                .Place(BodyPart.Head, 90f, 2f).Fabric("Cotton");
+            PieceBuilder right = b.Mirror(left, "Right Half").Place(BodyPart.Head, -90f, 2f);
+            b.Sew(left, "Crown seam", right, "Crown seam");
+            // Tied under the chin, as a coif is worn: a strap from one lower front corner to the other holds it forward
+            // (without it the cap rides back onto the crown). The left half's face edge runs down; its mirror's runs up.
+            PieceBuilder strap = Band(b, "Chin Strap", 22f, 2f, "Cotton").Opening("Bottom").Opening("Top").Place(BodyPart.Head, 0f, -25f);
+            b.Sew(strap, "Right end", 0f, 1f, left, "Face", 0.9f, 0.965f);
+            b.Sew(strap, "Left end", 0f, 1f, right, "Face", 0.035f, 0.1f);
             b.Pattern.meshLevel = MeshLevel.Fine;
             return b.Finish();
         }

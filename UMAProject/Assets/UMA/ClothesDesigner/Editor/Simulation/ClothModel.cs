@@ -9,7 +9,13 @@ namespace UMA.ClothesDesigner.Editor
     {
         Stretch = 0,
         Bend = 1,
-        Stitch = 2
+        Stitch = 2,
+        /// <summary>
+        /// A seam of a free piece (a belt round a dress: on a higher layer and sewn to no other layer). It stays as laid
+        /// out while the rest is sewn, and closes once the pieces keep apart (<see cref="SimParams.lateClosure"/>), so the
+        /// piece tightens round the cloth under it instead of passing through it.
+        /// </summary>
+        LateStitch = 3
     }
 
     /// <summary>A distance constraint between two particles. Both solvers read the same list; the GPU buffer's stride is 20 bytes.</summary>
@@ -45,6 +51,8 @@ namespace UMA.ClothesDesigner.Editor
         public float clearance;
         /// <summary>1 when sewing starts, 0 when every stitch is closed.</summary>
         public float closure;
+        /// <summary>The same for the free pieces' late stitches (<see cref="ConstraintKind.LateStitch"/>), which close after the rest.</summary>
+        public float lateClosure;
         public float stitchCompliance;
         public float maxSpeed;
         public float collisionRange;
@@ -65,6 +73,22 @@ namespace UMA.ClothesDesigner.Editor
         public float[] InverseMass;
         /// <summary>How much each particle grips the body, from its piece's fabric.</summary>
         public float[] Friction;
+        /// <summary>
+        /// For each particle, the nearest sewn point within <see cref="SeamReachM"/> on its piece (itself, on a seam) and
+        /// the point that one is sewn to, or (-1, -1). While that seam is more than <see cref="OpenSeamM"/> open the
+        /// particle does not grip the body: cloth pulled across the body by a stitch is pressed into it, grips hard
+        /// enough to lock the seam open, and stays so. Measured on Human Female 3.0 (2026-11-23): the hoodie's underarm
+        /// seams stayed 11.5 mm open (now 1.8), the beanie's brim corners 5.1 mm (now 0), the A-line skirt's 2.3 mm
+        /// (now 0). Once the seam closes it grips. Folded stitches (pleats, turned seams) are left out.
+        /// </summary>
+        public Vector2Int[] SeamPair;
+        /// <summary>How far apart a sewn pair may be and still count as sewn, for <see cref="SeamPair"/> (m).</summary>
+        public const float OpenSeamM = 0.002f;
+        /// <summary>
+        /// How far from a seam, over the piece as cut, cloth stops gripping while the seam is open (m). Farther (3 cm)
+        /// closed no more of the samples' seams, and on the test capsule let panels slide onto its sharp top rim.
+        /// </summary>
+        public const float SeamReachM = 0.01f;
         public ClothConstraint[] Constraints;
         /// <summary>(start, count) of each colour in <see cref="Constraints"/>.</summary>
         public int2[] Colors;
@@ -86,13 +110,62 @@ namespace UMA.ClothesDesigner.Editor
         public int[] NearStart, Near;
         /// <summary>Stiffening constraints from interfaced pieces, and those holding folded seams turned.</summary>
         public int InterfacingConstraints, FoldConstraints;
+        /// <summary>Ties from the Fit Brush's Stiffen paint (see <see cref="FitPaint.StiffTieCompliance"/>).</summary>
+        public int StiffenedConstraints;
         public int[] Triangles;
         /// <summary>Particles next to each particle along the mesh and across stitches, for grabbing and pin brushes.</summary>
         public List<int>[] Neighbours;
         /// <summary>Each particle's place on its flat piece (m). Cloth of one piece only collides with itself where it is far apart on the flat piece.</summary>
         public Vector2[] Flat;
+        /// <summary>
+        /// How far under the top each particle lies as laid out (m): the layers of a pleat folded under. A
+        /// stitch between two layers is closed when they lie this far apart (see FitMetrics). Null: none.
+        /// </summary>
+        public float[] LayerDepth;
         /// <summary>Each particle's layer (its piece's): where layers cross, the higher one is kept outside.</summary>
         public int[] Layer;
+        /// <summary>Particles of free pieces (<see cref="FreePieces"/>): laid out outside the cloth under them, their seams closing late.</summary>
+        public bool[] Free;
+        /// <summary>How many stitches close late (<see cref="ConstraintKind.LateStitch"/>).</summary>
+        public int LateStitchCount;
+
+        /// <summary>
+        /// The pattern's free pieces: on a layer above the lowest and sewn to no piece of another layer, like a belt worn
+        /// over a dress. (A collar's leaf, a pocket or a shoulder guard is sewn to the layer under it, so is not free.)
+        /// Tacks do not count: a belt tacked to the dress at points round it, like belt loops, is still free, and its
+        /// tacks close late with its seams, drawing the dress in to it.
+        /// </summary>
+        public static bool[] FreePieces(ClothesPattern pattern)
+        {
+            if (pattern == null) return new bool[0];
+            int count = pattern.pieces.Count, lowest = int.MaxValue;
+            foreach (PatternPiece piece in pattern.pieces) if (piece != null) lowest = Mathf.Min(lowest, piece.layer);
+            var free = new bool[count];
+            for (int p = 0; p < count; p++) free[p] = pattern.pieces[p] != null && pattern.pieces[p].layer > lowest;
+            foreach (PatternSeam seam in pattern.seams)
+            {
+                if (seam == null) continue;
+                int a = pattern.IndexOfPiece(seam.a.pieceId), b = pattern.IndexOfPiece(seam.b.pieceId);
+                if (a < 0 || b < 0 || pattern.pieces[a].layer == pattern.pieces[b].layer) continue;
+                // A piece and its copy sewn round it (Duplicate Sewn Round) are two plies of one part: that seam does not count.
+                if (IsPly(pattern.pieces[a], pattern.pieces[b])) continue;
+                free[a] = false;
+                free[b] = false;
+            }
+            // A ply is free only when the piece it was copied from is: the outside of a lined garment is not, a two-ply belt is.
+            for (int p = 0; p < count; p++)
+            {
+                PatternPiece piece = pattern.pieces[p];
+                if (piece == null || string.IsNullOrEmpty(piece.duplicateOf)) continue;
+                int original = pattern.IndexOfPiece(piece.duplicateOf);
+                if (original >= 0 && IsPly(piece, pattern.pieces[original])) free[p] &= free[original];
+            }
+            return free;
+        }
+        /// <summary>Whether one piece is a copy of the other on another layer (Duplicate Sewn Round): two plies of one part.</summary>
+        private static bool IsPly(PatternPiece x, PatternPiece y) =>
+            x != null && y != null && x.layer != y.layer && (x.duplicateOf == y.id || y.duplicateOf == x.id);
+
         /// <summary>How hard each particle is pushed out from the body (m/s^2), from its piece's pressure. Null when no piece has any.</summary>
         public float[] Pressure;
         /// <summary>Whether cloth of one piece is kept apart from itself (folds, gathers), not only from other pieces.</summary>
@@ -256,14 +329,25 @@ namespace UMA.ClothesDesigner.Editor
                 float m = areaM2 * FabricOf(mesh.triangles[t]).density / 3f;
                 mass[mesh.triangles[t]] += m; mass[mesh.triangles[t + 1]] += m; mass[mesh.triangles[t + 2]] += m;
             }
+            // Painted weight: a weighted hem hangs heavier.
+            float[] weight = options.Weight != null && options.Weight.Length == n ? options.Weight : null;
+            if (weight != null) for (int i = 0; i < n; i++) mass[i] *= 1f + FitPaint.MaxExtraWeight * Mathf.Clamp01(weight[i]);
+            float[] stiff = options.Stiff != null && options.Stiff.Length == n ? options.Stiff : null;
+            float Firmer(int a, int b) => stiff == null ? 1f : FitPaint.StiffFactor(stiff[a], stiff[b]);
             model.InverseMass = new float[n];
             model.Friction = new float[n];
+            model.SeamPair = SeamPairs(mesh, n);
             model.Flat = new Vector2[n];
             model.Layer = new int[n];
             model.SelfWithinPieces = options.SelfWithinPieces;
             model.OutSign = options.TrianglesFaceIn ? -1 : 1;
             bool anyPressure = false;
             if (pattern != null) foreach (PatternPiece piece in pattern.pieces) if (piece != null && piece.pressure > 0f) anyPressure = true;
+            float[] inflate = options.Inflate != null && options.Inflate.Length == n ? options.Inflate : null;
+            if (inflate != null) foreach (float f in inflate) if (f != 0f) anyPressure = true;
+            float[] hug = options.Hug != null && options.Hug.Length == n ? options.Hug : null;
+            // Hugged cloth rests shorter: an edge by the mean of its ends' hug.
+            float Shrink(int a, int b) => hug == null ? 1f : 1f - FitPaint.MaxHugShrink * 0.5f * (hug[a] + hug[b]);
             if (anyPressure) model.Pressure = new float[n];
             for (int i = 0; i < n; i++)
             {
@@ -274,9 +358,14 @@ namespace UMA.ClothesDesigner.Editor
                 model.Friction[i] = FabricOf(i).friction;
                 // Pieces lie apart on the flat pattern as far as the solver cares: only a piece's own cloth is compared.
                 model.Flat[i] = mesh.flat[i] * 0.01f;
+                if (i < mesh.layoutDepth.Count && mesh.layoutDepth[i] > 0f)
+                {
+                    if (model.LayerDepth == null) model.LayerDepth = new float[n];
+                    model.LayerDepth[i] = mesh.layoutDepth[i] * 0.01f;
+                }
                 PatternPiece owner = pattern != null && p < pattern.pieces.Count ? pattern.pieces[p] : null;
                 if (owner != null) model.Layer[i] = owner.layer;
-                if (anyPressure && owner != null) model.Pressure[i] = owner.pressure * FullPressure;
+                if (anyPressure) model.Pressure[i] = ((owner != null ? owner.pressure : 0f) + (inflate != null ? inflate[i] : 0f)) * FullPressure;
             }
             // Elastic along an edge: its segments rest shorter and stretch back.
             var elastic = new Dictionary<long, float>(EdgeKeyComparer.Instance);
@@ -330,10 +419,10 @@ namespace UMA.ClothesDesigner.Editor
                 FabricSettings fabric = FabricOf(a);
                 if (elastic.TryGetValue(kv.Key, out float ratio))
                 {
-                    list0.Add(new ClothConstraint { a = a, b = b, rest = FlatDistance(mesh, a, b) * ratio, kind = (int)ConstraintKind.Stretch, compliance = Mathf.Max(fabric.stretchCompliance, ElasticCompliance) });
+                    list0.Add(new ClothConstraint { a = a, b = b, rest = FlatDistance(mesh, a, b) * ratio * Shrink(a, b), kind = (int)ConstraintKind.Stretch, compliance = Mathf.Max(fabric.stretchCompliance, ElasticCompliance) * Firmer(a, b) });
                     model.ElasticConstraints++;
                 }
-                else list0.Add(new ClothConstraint { a = a, b = b, rest = FlatDistance(mesh, a, b), kind = (int)ConstraintKind.Stretch, compliance = StretchAlong(mesh, pattern, fabric, a, b) });
+                else list0.Add(new ClothConstraint { a = a, b = b, rest = FlatDistance(mesh, a, b) * Shrink(a, b), kind = (int)ConstraintKind.Stretch, compliance = StretchAlong(mesh, pattern, fabric, a, b) * Firmer(a, b) });
                 model.Neighbours[a].Add(b); model.Neighbours[b].Add(a);
                 if (kv.Value.Count == 2)
                 {
@@ -343,14 +432,22 @@ namespace UMA.ClothesDesigner.Editor
                         float rest = foldAngle < 0f ? Vector3.Distance(Folded(c), Folded(d)) : LineGeometry.FoldedDistance(mesh.flat[a], mesh.flat[b], mesh.flat[c], mesh.flat[d], foldAngle) * 0.01f;
                         list0.Add(new ClothConstraint { a = c, b = d, rest = rest, kind = (int)ConstraintKind.Bend, compliance = PressedCreaseCompliance });
                     }
-                    else list0.Add(new ClothConstraint { a = c, b = d, rest = FlatDistance(mesh, c, d), kind = (int)ConstraintKind.Bend, compliance = Mathf.Max(fabric.bendCompliance, FloorOf(a)) });
+                    else list0.Add(new ClothConstraint { a = c, b = d, rest = FlatDistance(mesh, c, d) * Shrink(c, d), kind = (int)ConstraintKind.Bend, compliance = Mathf.Max(fabric.bendCompliance * Firmer(c, d), FloorOf(a)) });
                 }
             }
             model.InterfacingConstraints = AddInterfacing(mesh, model, list0, interfacing);
+            model.StiffenedConstraints = AddPaintedStiffness(mesh, model, list0, stiff);
+            // Free pieces (a belt round a dress) close their own seams late, once the pieces keep apart.
+            bool[] freePiece = FreePieces(pattern);
+            model.Free = new bool[n];
+            for (int i = 0; i < n; i++) model.Free[i] = mesh.piece[i] >= 0 && mesh.piece[i] < freePiece.Length && freePiece[mesh.piece[i]];
             foreach (Vector2Int s in mesh.stitches)
             {
                 float start = arranged != null ? Vector3.Distance(arranged[s.x], arranged[s.y]) : 0f;
-                list0.Add(new ClothConstraint { a = s.x, b = s.y, rest = start, kind = (int)ConstraintKind.Stitch });
+                // A free piece's own seams, and its tacks to the cloth under it (belt loops), close late.
+                bool late = model.Free[s.x] || model.Free[s.y];
+                if (late) model.LateStitchCount++;
+                list0.Add(new ClothConstraint { a = s.x, b = s.y, rest = start, kind = (int)(late ? ConstraintKind.LateStitch : ConstraintKind.Stitch) });
                 model.Neighbours[s.x].Add(s.y); model.Neighbours[s.y].Add(s.x);
                 model.StitchCount++;
             }
@@ -384,6 +481,37 @@ namespace UMA.ClothesDesigner.Editor
                         if (Mathf.Abs(d.y) < Mathf.Abs(d.x) * 0.75f) continue;
                         long key = a < c ? ((long)a << 32) | (uint)c : ((long)c << 32) | (uint)a;
                         if (!done.Add(key)) continue;
+                        list.Add(new ClothConstraint { a = a, b = c, rest = FlatDistance(mesh, a, c), kind = (int)ConstraintKind.Bend, compliance = compliance });
+                        added++;
+                    }
+                }
+            }
+            return added;
+        }
+
+        /// <summary>
+        /// Painted stiffness: each painted point is tied to the painted points two edges away on its piece, in every
+        /// direction, at a compliance from the two points' paint (<see cref="FitPaint.StiffTieCompliance"/>): firm
+        /// interfacing's where fully painted, light's at half. (Interfacing ties only up and down the piece, so a collar
+        /// still curves round the neck; tied that way, a stiffened skirt kept its vertical folds: hem spread 5.1 to 4.8 cm.)
+        /// </summary>
+        private static int AddPaintedStiffness(PatternMesh mesh, ClothModel model, List<ClothConstraint> list, float[] stiff)
+        {
+            if (stiff == null) return 0;
+            int added = 0;
+            var done = new HashSet<long>(EdgeKeyComparer.Instance);
+            for (int a = 0; a < mesh.VertexCount; a++)
+            {
+                if (stiff[a] < FitPaint.Keep) continue;
+                int p = mesh.piece[a];
+                foreach (int b in model.Neighbours[a])
+                {
+                    foreach (int c in model.Neighbours[b])
+                    {
+                        if (c == a || mesh.piece[c] != p || stiff[c] < FitPaint.Keep || model.Neighbours[a].Contains(c)) continue;
+                        long key = a < c ? ((long)a << 32) | (uint)c : ((long)c << 32) | (uint)a;
+                        if (!done.Add(key)) continue;
+                        float compliance = FitPaint.StiffTieCompliance(0.5f * (stiff[a] + stiff[c]));
                         list.Add(new ClothConstraint { a = a, b = c, rest = FlatDistance(mesh, a, c), kind = (int)ConstraintKind.Bend, compliance = compliance });
                         added++;
                     }
@@ -458,8 +586,10 @@ namespace UMA.ClothesDesigner.Editor
             }
             model.InverseMass = new float[rest.Length];
             model.Friction = new float[rest.Length];
+            model.SeamPair = new Vector2Int[rest.Length];
             for (int i = 0; i < rest.Length; i++)
             {
+                model.SeamPair[i] = new Vector2Int(-1, -1);
                 model.InverseMass[i] = mass[i] > 0f ? 1f / mass[i] : 0f;
                 model.Friction[i] = fabric.friction;
             }
@@ -517,7 +647,7 @@ namespace UMA.ClothesDesigner.Editor
                 if (pass == 1) firstStitchColor = colors;
                 for (int i = 0; i < list0.Count; i++)
                 {
-                    bool stitch = list0[i].kind == (int)ConstraintKind.Stitch;
+                    bool stitch = list0[i].kind == (int)ConstraintKind.Stitch || list0[i].kind == (int)ConstraintKind.LateStitch;
                     if (stitch != (pass == 1)) continue;
                     int a = list0[i].a, b = list0[i].b;
                     int color = firstStitchColor;
@@ -575,6 +705,55 @@ namespace UMA.ClothesDesigner.Editor
         }
 
         /// <summary>The settings for a step, from the fit. The fabric is already in the model.</summary>
+        /// <summary>
+        /// Each particle's <see cref="SeamPair"/>: the nearest sewn point over its piece as cut (within
+        /// <see cref="SeamReachM"/>, through the mesh's edges, never across a seam) and the point that one is sewn to.
+        /// </summary>
+        public static Vector2Int[] SeamPairs(PatternMesh mesh, int n)
+        {
+            var pair = new Vector2Int[n];
+            var reach = new float[n];
+            for (int i = 0; i < n; i++) { pair[i] = new Vector2Int(-1, -1); reach[i] = float.MaxValue; }
+            var heap = new SortedSet<(float d, int i)>();
+            // Folded stitches hold layers together (pleats, turned seams) rather than close a seam across the body, and
+            // some keep their layers apart on purpose: they never count as open seams.
+            var folded = new HashSet<int>(mesh.foldedStitches);
+            for (int k = 0; k < mesh.stitches.Count; k++)
+            {
+                Vector2Int s = mesh.stitches[k];
+                if (folded.Contains(k) || s.x < 0 || s.y < 0 || s.x >= n || s.y >= n || s.x == s.y) continue;
+                pair[s.x] = s; pair[s.y] = new Vector2Int(s.y, s.x);
+                reach[s.x] = 0f; reach[s.y] = 0f;
+            }
+            for (int i = 0; i < n; i++) if (reach[i] == 0f) heap.Add((0f, i));
+            var neighbours = new List<int>[n];
+            for (int t = 0; t + 2 < mesh.triangles.Count; t += 3)
+            {
+                for (int e = 0; e < 3; e++)
+                {
+                    int a = mesh.triangles[t + e], b = mesh.triangles[t + (e + 1) % 3];
+                    (neighbours[a] ??= new List<int>(6)).Add(b);
+                    (neighbours[b] ??= new List<int>(6)).Add(a);
+                }
+            }
+            float limit = SeamReachM * 100f;
+            while (heap.Count > 0)
+            {
+                var top = heap.Min; heap.Remove(top);
+                if (top.d > reach[top.i] || neighbours[top.i] == null) continue;
+                foreach (int j in neighbours[top.i])
+                {
+                    float d = top.d + (mesh.flat[top.i] - mesh.flat[j]).magnitude;
+                    if (d > limit || d >= reach[j]) continue;
+                    if (reach[j] < float.MaxValue) heap.Remove((reach[j], j));
+                    reach[j] = d;
+                    pair[j] = pair[top.i];
+                    heap.Add((d, j));
+                }
+            }
+            return pair;
+        }
+
         public static SimParams Params(float damping, float clearanceM, float closure, float gravityScale, Vector3 gravity, bool final, float edgeLengthCm = 2f)
         {
             return new SimParams
@@ -606,6 +785,14 @@ namespace UMA.ClothesDesigner.Editor
         public bool SelfWithinPieces;
         /// <summary>The mesh's triangles face into the body (the arrangement's flipTriangles).</summary>
         public bool TrianglesFaceIn;
+        /// <summary>Painted hug per point (0 to 1), or null: the cloth there rests up to <see cref="FitPaint.MaxHugShrink"/> shorter.</summary>
+        public float[] Hug;
+        /// <summary>Painted puff (positive) or slim (negative) per point, or null: added to the piece's pressure.</summary>
+        public float[] Inflate;
+        /// <summary>Painted stiffness per point (0 to 1), or null: see <see cref="FitPaint.StiffFactor"/> and <see cref="FitPaint.StiffTieCompliance"/>.</summary>
+        public float[] Stiff;
+        /// <summary>Painted weight per point (0 to 1), or null: the point weighs up to <see cref="FitPaint.MaxExtraWeight"/> times more.</summary>
+        public float[] Weight;
     }
 
     /// <summary>A cloth solver: the GPU one, or the CPU one that is also the tests' reference.</summary>
@@ -617,6 +804,11 @@ namespace UMA.ClothesDesigner.Editor
         void SetBody(BodyCollider body);
         void SetPins(IList<SolverPin> pins);
         void SetPositions(Vector3[] positions);
+        /// <summary>
+        /// Takes the model's constraints again, the same ones in the same order with new rest lengths (a piece resized
+        /// while it is simulated); the cloth carries on from where it is.
+        /// </summary>
+        void SetConstraints(ClothConstraint[] constraints);
         /// <summary>Advances whole frames of <see cref="SimParams.frameTime"/>.</summary>
         void Step(SimParams parameters, int frames);
         /// <summary>The positions after the last finished step (the GPU solver waits for them).</summary>

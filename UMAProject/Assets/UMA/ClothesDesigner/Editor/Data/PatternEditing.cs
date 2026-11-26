@@ -22,6 +22,18 @@ namespace UMA.ClothesDesigner.Editor
             return piece;
         }
 
+        /// <summary>
+        /// Moves an edge: both its end points by the same amount. A curved edge keeps its shape (its handles are kept
+        /// relative to its ends); the edges either side stretch to follow, as when a point is dragged.
+        /// </summary>
+        public static void MoveEdge(PatternPiece piece, int edgeIndex, Vector2 delta)
+        {
+            int n = piece != null ? piece.points.Count : 0;
+            if (n < 2 || edgeIndex < 0 || edgeIndex >= n) return;
+            piece.points[edgeIndex].position += delta;
+            piece.points[(edgeIndex + 1) % n].position += delta;
+        }
+
         /// <summary>Splits an edge at a fraction of its length. Returns the new point's index.</summary>
         public static int SplitEdge(ClothesPattern pattern, PatternPiece piece, int edgeIndex, float fraction)
         {
@@ -95,6 +107,7 @@ namespace UMA.ClothesDesigner.Editor
                 b = onA ? thereSecond : hereSecond,
                 reversed = seam.reversed,
                 folded = seam.folded,
+                sharp = seam.sharp,
                 topstitch = seam.topstitch,
                 topstitchOffsetMm = seam.topstitchOffsetMm
             };
@@ -118,17 +131,161 @@ namespace UMA.ClothesDesigner.Editor
             }
         }
 
-        /// <summary>Deletes a point, joining its two edges. Seams on the removed edge go too.</summary>
+        /// <summary>
+        /// Deletes a point, joining its two edges into one (the edge before it then runs on to the next point). What was
+        /// on either edge stays where it was along the joined edge: seams keep their stretch (a seam the point had split
+        /// in two becomes one again), darts and pleats keep their places, and the joined edge keeps the curve of both. A
+        /// linked mirror's seams are carried over the same way. False when the piece would have fewer than three points.
+        /// </summary>
         public static bool DeletePoint(ClothesPattern pattern, PatternPiece piece, int pointIndex)
         {
-            if (piece.points.Count <= 3) return false;
-            PatternEdge removed = piece.edges[pointIndex];
-            pattern.seams.RemoveAll(s => (s.a.pieceId == piece.id && s.a.edgeId == removed.id) || (s.b.pieceId == piece.id && s.b.edgeId == removed.id));
-            piece.darts.RemoveAll(d => d.kind == DartKind.Edge && d.edgeId == removed.id);
-            piece.pleats.RemoveAll(p => p.edgeId == removed.id);
+            int n = piece.points.Count;
+            if (n <= 3 || pointIndex < 0 || pointIndex >= n) return false;
+            int before = (pointIndex - 1 + n) % n;
+            PatternEdge first = piece.edges[before], second = piece.edges[pointIndex];
+            float la = PatternGeometry.EdgeLength(piece, before, PieceScale.Identity);
+            float lb = PatternGeometry.EdgeLength(piece, pointIndex, PieceScale.Identity);
+            float share = la + lb > 1e-6f ? la / (la + lb) : 0.5f;
+            JoinEdgeShape(first, second, piece.points[before].position, piece.points[pointIndex].position, piece.points[(pointIndex + 1) % n].position, la, lb, share);
+            JoinEdgeSpans(pattern, piece.id, first.id, first.id, second.id, share);
+            // A linked mirror runs the other way round: the mirror of the second edge comes first along its joined edge.
+            foreach (PatternPiece other in pattern.pieces)
+            {
+                if (other == null || other == piece || !other.mirrorLinked || other.mirrorOf != piece.id) continue;
+                PatternEdge mirrorFirst = other.edges.Find(e => e.mirrorOfEdge == first.id), mirrorSecond = other.edges.Find(e => e.mirrorOfEdge == second.id);
+                if (mirrorFirst != null && mirrorSecond != null) JoinEdgeSpans(pattern, other.id, mirrorFirst.id, mirrorSecond.id, mirrorFirst.id, 1f - share);
+            }
+            foreach (PatternDart dart in piece.darts)
+            {
+                if (dart.kind != DartKind.Edge) continue;
+                if (dart.edgeId == first.id) dart.position *= share;
+                else if (dart.edgeId == second.id) { dart.edgeId = first.id; dart.position = share + dart.position * (1f - share); }
+            }
+            foreach (PatternPleat pleat in piece.pleats)
+            {
+                if (pleat.edgeId == first.id) pleat.position *= share;
+                else if (pleat.edgeId == second.id) { pleat.edgeId = first.id; pleat.position = share + pleat.position * (1f - share); }
+            }
+            foreach (PatternTrim trim in pattern.trims)
+            {
+                if (trim == null || trim.pieceId != piece.id) continue;
+                if (trim.pathId == first.id) { trim.start *= share; trim.end *= share; }
+                else if (trim.pathId == second.id) { trim.pathId = first.id; trim.start = share + trim.start * (1f - share); trim.end = share + trim.end * (1f - share); }
+            }
             piece.points.RemoveAt(pointIndex);
             piece.edges.RemoveAt(pointIndex);
             return true;
+        }
+
+        /// <summary>
+        /// Stitch Points: an edge's two points become one, at its middle. The edge goes, with what was on it (seams,
+        /// darts, pleats); the edges either side meet at the new point and keep theirs. False when the piece would have
+        /// fewer than three points.
+        /// </summary>
+        public static bool MergePoints(ClothesPattern pattern, PatternPiece piece, int edgeIndex)
+        {
+            int n = piece.points.Count;
+            if (n <= 3 || edgeIndex < 0 || edgeIndex >= n) return false;
+            PatternEdge gone = piece.edges[edgeIndex];
+            Vector2 middle = new PatternGeometry.EdgeCurve(piece, edgeIndex, PieceScale.Identity).At(0.5f);
+            pattern.seams.RemoveAll(s => (s.a.pieceId == piece.id && s.a.edgeId == gone.id) || (s.b.pieceId == piece.id && s.b.edgeId == gone.id));
+            piece.darts.RemoveAll(d => d.kind == DartKind.Edge && d.edgeId == gone.id);
+            piece.pleats.RemoveAll(p => p.edgeId == gone.id);
+            pattern.trims.RemoveAll(tr => tr != null && tr.pieceId == piece.id && tr.pathId == gone.id);
+            piece.points[edgeIndex].position = middle;
+            piece.points[(edgeIndex + 1) % n].position = middle;
+            // The edge now has no length: deleting its first point joins it to the edge before, which keeps everything.
+            return DeletePoint(pattern, piece, edgeIndex);
+        }
+
+        /// <summary>The curve of two edges joined into the first (its start, the point between them, the second's end).</summary>
+        private static void JoinEdgeShape(PatternEdge first, PatternEdge second, Vector2 start, Vector2 middle, Vector2 end, float la, float lb, float share)
+        {
+            if (lb < 1e-4f) return;
+            if (la < 1e-4f)
+            {
+                first.curved = second.curved; first.handleA = second.handleA; first.handleB = second.handleB;
+                first.opening = second.opening; first.elastic = second.elastic; first.elasticPercent = second.elasticPercent;
+                return;
+            }
+            if (first.curved || second.curved)
+            {
+                // The outer handles, stretched to the joined length (the inverse of splitting an edge).
+                Vector2 handleA = first.curved ? first.handleA : (middle - start) / 3f;
+                Vector2 handleB = second.curved ? second.handleB : (middle - end) / 3f;
+                first.curved = true;
+                first.handleA = handleA / share;
+                first.handleB = handleB / (1f - share);
+            }
+            first.opening = first.opening && second.opening;
+            if (!first.elastic && second.elastic) { first.elastic = true; first.elasticPercent = second.elasticPercent; }
+        }
+
+        /// <summary>
+        /// Two edges of a piece become one with id <paramref name="keepId"/>: seam spans on <paramref name="startId"/> are
+        /// squeezed into [0, share] of it, those on <paramref name="endId"/> into [share, 1]. A seam the join had split in
+        /// two becomes one again; a seam left with no length, or sewing the joined edge onto itself, goes.
+        /// </summary>
+        private static void JoinEdgeSpans(ClothesPattern pattern, string pieceId, string keepId, string startId, string endId, float share)
+        {
+            void Remap(ref SeamSpan s)
+            {
+                if (s.pieceId != pieceId) return;
+                if (s.edgeId == startId) { s.edgeId = keepId; s.start *= share; s.end *= share; }
+                else if (s.edgeId == endId) { s.edgeId = keepId; s.start = share + s.start * (1f - share); s.end = share + s.end * (1f - share); }
+            }
+            foreach (PatternSeam seam in pattern.seams) { Remap(ref seam.a); Remap(ref seam.b); }
+            bool OnJoined(SeamSpan s) => s.pieceId == pieceId && s.edgeId == keepId;
+            pattern.seams.RemoveAll(s => (OnJoined(s.a) && s.a.end - s.a.start < 1e-4f) || (OnJoined(s.b) && s.b.end - s.b.start < 1e-4f)
+                || (OnJoined(s.a) && OnJoined(s.b) && s.a.start < s.b.end && s.b.start < s.a.end));
+            bool joined = true;
+            while (joined)
+            {
+                joined = false;
+                for (int i = 0; i < pattern.seams.Count && !joined; i++)
+                {
+                    for (int j = 0; j < pattern.seams.Count && !joined; j++)
+                    {
+                        if (i != j && TryJoinSeams(pattern.seams[i], pattern.seams[j], pieceId, keepId, share)) { pattern.seams.RemoveAt(j); joined = true; }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// When <paramref name="x"/> ends and <paramref name="y"/> starts at <paramref name="at"/> on the same edge, and
+        /// their other sides run on from one to the other along one edge, <paramref name="x"/> becomes the whole of both.
+        /// </summary>
+        private static bool TryJoinSeams(PatternSeam x, PatternSeam y, string pieceId, string edgeId, float at)
+        {
+            if (x == null || y == null || x.reversed != y.reversed || x.folded != y.folded) return false;
+            for (int sx = 0; sx < 2; sx++)
+            {
+                for (int sy = 0; sy < 2; sy++)
+                {
+                    SeamSpan h1 = sx == 0 ? x.a : x.b, t1 = sx == 0 ? x.b : x.a;
+                    SeamSpan h2 = sy == 0 ? y.a : y.b, t2 = sy == 0 ? y.b : y.a;
+                    if (h1.pieceId != pieceId || h1.edgeId != edgeId || h2.pieceId != pieceId || h2.edgeId != edgeId) continue;
+                    if (Mathf.Abs(h1.end - at) > 1e-3f || Mathf.Abs(h2.start - at) > 1e-3f) continue;
+                    if (t1.pieceId != t2.pieceId || t1.edgeId != t2.edgeId) continue;
+                    SeamSpan there = t1;
+                    if (!x.reversed)
+                    {
+                        if (Mathf.Abs(t1.end - t2.start) > 1e-3f) continue;
+                        there.end = t2.end;
+                    }
+                    else
+                    {
+                        if (Mathf.Abs(t1.start - t2.end) > 1e-3f) continue;
+                        there.start = t2.start;
+                    }
+                    SeamSpan here = h1;
+                    here.end = h2.end;
+                    if (sx == 0) { x.a = here; x.b = there; } else { x.b = here; x.a = there; }
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>Sets an edge's straight length by moving its end point along the edge's direction.</summary>
@@ -151,6 +308,150 @@ namespace UMA.ClothesDesigner.Editor
             e.handleB = (a - b) / 3f;
         }
 
+        /// <summary>How close a point must be to another's mirror image to count as its partner (cm).</summary>
+        public const float MirrorToleranceCm = 0.5f;
+
+        /// <summary>A point reflected across the vertical line x = <paramref name="axisX"/>.</summary>
+        public static Vector2 Mirror(Vector2 p, float axisX) => new Vector2(2f * axisX - p.x, p.y);
+
+        /// <summary>The point of a piece nearest another point's mirror image, within <see cref="MirrorToleranceCm"/>; -1 when none.</summary>
+        public static int MirrorPartnerPoint(PatternPiece piece, Vector2 p, float axisX)
+        {
+            Vector2 image = Mirror(p, axisX);
+            int best = -1;
+            float bestDistance = MirrorToleranceCm;
+            for (int i = 0; i < piece.points.Count; i++)
+            {
+                float d = Vector2.Distance(piece.points[i].position, image);
+                if (d <= bestDistance) { bestDistance = d; best = i; }
+            }
+            return best;
+        }
+
+        /// <summary>
+        /// The edge that mirrors an edge across x = <paramref name="axisX"/> (it runs the other way: from the mirror of the
+        /// edge's end to the mirror of its start); the edge itself when it crosses the axis symmetrically; -1 when none.
+        /// </summary>
+        public static int MirrorEdge(PatternPiece piece, int edgeIndex, float axisX)
+        {
+            int n = piece.points.Count;
+            if (edgeIndex < 0 || edgeIndex >= n) return -1;
+            int start = MirrorPartnerPoint(piece, piece.points[edgeIndex].position, axisX);
+            int end = MirrorPartnerPoint(piece, piece.points[(edgeIndex + 1) % n].position, axisX);
+            if (start < 0 || end < 0) return -1;
+            // The mirror edge runs from the end's partner to the start's partner.
+            return (end + 1) % n == start ? end : -1;
+        }
+
+        /// <summary>
+        /// A copy of a dart, added to its piece: beside it (a diamond its width and 2 cm across; an edge dart further along
+        /// its edge, or back along it near the end), or with <paramref name="mirrorAxisX"/> reflected across the piece's
+        /// middle (an edge dart on the mirror edge). New id. Null when an edge dart's edge is gone.
+        /// </summary>
+        public static PatternDart DuplicateDart(PatternPiece piece, PatternDart dart, float? mirrorAxisX)
+        {
+            var copy = JsonUtility.FromJson<PatternDart>(JsonUtility.ToJson(dart));
+            copy.id = ClothesPattern.NewId();
+            if (dart.kind == DartKind.Double)
+            {
+                bool onAxis = mirrorAxisX.HasValue && Mathf.Abs(dart.tip.x - mirrorAxisX.Value) <= MirrorToleranceCm && Mathf.Abs(dart.tip2.x - mirrorAxisX.Value) <= MirrorToleranceCm;
+                if (mirrorAxisX.HasValue && !onAxis) { copy.tip = Mirror(dart.tip, mirrorAxisX.Value); copy.tip2 = Mirror(dart.tip2, mirrorAxisX.Value); }
+                else { var shift = new Vector2(dart.widthCm + 2f, 0f); copy.tip += shift; copy.tip2 += shift; }
+                piece.darts.Add(copy);
+                return copy;
+            }
+            int edge = piece.IndexOfEdge(dart.edgeId);
+            if (edge < 0) return null;
+            if (mirrorAxisX.HasValue)
+            {
+                int mirror = MirrorEdge(piece, edge, mirrorAxisX.Value);
+                if (mirror >= 0)
+                {
+                    copy.edgeId = piece.edges[mirror].id;
+                    copy.position = 1f - dart.position;
+                    copy.tip = Mirror(dart.tip, mirrorAxisX.Value);
+                    // On an edge that mirrors itself, the copy is the dart's own reflection along it.
+                    if (mirror != edge || Mathf.Abs(copy.position - dart.position) > 0.01f)
+                    {
+                        piece.darts.Add(copy);
+                        return copy;
+                    }
+                }
+            }
+            var curve = new PatternGeometry.EdgeCurve(piece, edge, PieceScale.Identity);
+            float length = Mathf.Max(0.01f, curve.Length);
+            float step = (dart.widthCm + 2f) / length, half = dart.widthCm * 0.5f / length;
+            float position = dart.position + step <= 1f - half - 0.02f ? dart.position + step : dart.position - step;
+            position = Mathf.Clamp(position, half + 0.02f, 1f - half - 0.02f);
+            copy.edgeId = dart.edgeId;
+            copy.position = position;
+            copy.tip = dart.tip + curve.At(position) - curve.At(dart.position);
+            piece.darts.Add(copy);
+            return copy;
+        }
+
+        /// <summary>A copy of a pleat, added to its piece: further along its edge, or mirrored onto the mirror edge (its fold turned the other way). Null when its edge is gone.</summary>
+        public static PatternPleat DuplicatePleat(PatternPiece piece, PatternPleat pleat, float? mirrorAxisX)
+        {
+            int edge = piece.IndexOfEdge(pleat.edgeId);
+            if (edge < 0) return null;
+            var copy = JsonUtility.FromJson<PatternPleat>(JsonUtility.ToJson(pleat));
+            copy.id = ClothesPattern.NewId();
+            int mirror = mirrorAxisX.HasValue ? MirrorEdge(piece, edge, mirrorAxisX.Value) : -1;
+            if (mirror >= 0 && (mirror != edge || Mathf.Abs(0.5f - pleat.position) > 0.01f))
+            {
+                copy.edgeId = piece.edges[mirror].id;
+                copy.position = 1f - pleat.position;
+                copy.kind = pleat.kind == PleatKind.KnifeLeft ? PleatKind.KnifeRight : pleat.kind == PleatKind.KnifeRight ? PleatKind.KnifeLeft : pleat.kind;
+            }
+            else
+            {
+                float length = Mathf.Max(0.01f, PatternGeometry.EdgeLength(piece, edge, PieceScale.Identity));
+                float step = (pleat.depthCm * 2f + pleat.boxWidthCm + 2f) / length;
+                copy.position = Mathf.Clamp(pleat.position + step <= 0.98f ? pleat.position + step : pleat.position - step, 0.02f, 0.98f);
+            }
+            piece.pleats.Add(copy);
+            return copy;
+        }
+
+        /// <summary>A copy of a line inside a piece, added to it: 2 cm across, or reflected across the piece's middle. New id; not a linked mirror's line.</summary>
+        public static PatternLine DuplicateLine(PatternPiece piece, PatternLine line, float? mirrorAxisX)
+        {
+            var copy = JsonUtility.FromJson<PatternLine>(JsonUtility.ToJson(line));
+            copy.id = ClothesPattern.NewId();
+            copy.mirrorOfLine = null;
+            // A line that is its own mirror image (on the middle) would be copied onto itself: it goes beside instead.
+            bool mirrored = mirrorAxisX.HasValue && !MirrorsItself(line.points, mirrorAxisX.Value);
+            for (int i = 0; i < copy.points.Count; i++)
+                copy.points[i] = mirrored ? Mirror(copy.points[i], mirrorAxisX.Value) : copy.points[i] + new Vector2(2f, 0f);
+            piece.lines.Add(copy);
+            return copy;
+        }
+
+        /// <summary>Whether a set of points is its own mirror image across <paramref name="axisX"/>: each has a mirror partner among them.</summary>
+        private static bool MirrorsItself(List<Vector2> points, float axisX)
+        {
+            foreach (Vector2 p in points)
+            {
+                Vector2 image = Mirror(p, axisX);
+                bool found = false;
+                foreach (Vector2 q in points) if (Vector2.Distance(q, image) <= MirrorToleranceCm) { found = true; break; }
+                if (!found) return false;
+            }
+            return points.Count > 0;
+        }
+
+        /// <summary>A copy of a part (a button, a plate), added to the pattern: 2 cm across, or reflected across its piece's middle (beside it when it is on the middle).</summary>
+        public static PatternPart DuplicatePart(ClothesPattern pattern, PatternPart part, float? mirrorAxisX)
+        {
+            var copy = JsonUtility.FromJson<PatternPart>(JsonUtility.ToJson(part));
+            copy.id = ClothesPattern.NewId();
+            bool mirrored = mirrorAxisX.HasValue && Mathf.Abs(part.position.x - mirrorAxisX.Value) > MirrorToleranceCm;
+            copy.position = mirrored ? Mirror(part.position, mirrorAxisX.Value) : part.position + new Vector2(2f, 0f);
+            pattern.parts.Add(copy);
+            return copy;
+        }
+
         /// <summary>A mirrored copy of a piece (left-right), with new ids. Seams are not copied.</summary>
         public static PatternPiece MirrorCopy(PatternPiece source, string name)
         {
@@ -160,6 +461,8 @@ namespace UMA.ClothesDesigner.Editor
                 name = name,
                 grainAngle = -source.grainAngle,
                 mirrorOf = source.id,
+                textureDetail = source.textureDetail,
+                lookId = source.lookId,
                 placement = source.placement.Clone(),
                 fabric = source.fabric != null ? source.fabric.Clone() : new FabricSettings()
             };
@@ -229,6 +532,7 @@ namespace UMA.ClothesDesigner.Editor
             copy.interfacing = source.interfacing;
             copy.layer = source.layer;
             copy.pressure = source.pressure;
+            copy.thicknessMm = source.thicknessMm;
             foreach (KeyValuePair<string, string> kv in edgeMap) copy.edges[copy.IndexOfEdge(kv.Value)].mirrorOfEdge = kv.Key;
             foreach (PatternEdge e in source.edges)
             {
@@ -269,6 +573,102 @@ namespace UMA.ClothesDesigner.Editor
             copy.uvIsland = new UvIsland();
             return copy;
         }
+
+        /// <summary>
+        /// Duplicate with Seams: a copy of a piece (added after it), sewn as the piece is to the copies of the pieces it is
+        /// sewn to, and to itself where the piece is. A set of pieces duplicated one by one (a lining, a second layer)
+        /// comes out sewn together as the originals are: a seam whose other piece has no copy yet is made when that piece
+        /// is duplicated the same way. <paramref name="sewn"/> counts the seams made, <paramref name="waiting"/> those left
+        /// for later.
+        /// </summary>
+        public static PatternPiece DuplicateWithSeams(ClothesPattern pattern, PatternPiece source, string name, Vector2 offset, out int sewn, out int waiting)
+        {
+            PatternPiece copy = Duplicate(source, name, offset);
+            copy.duplicateOf = source.id;
+            pattern.pieces.Insert(pattern.pieces.IndexOf(source) + 1, copy);
+            sewn = waiting = 0;
+            foreach (PatternSeam seam in pattern.seams.ToArray())
+            {
+                bool onA = seam.a.pieceId == source.id, onB = seam.b.pieceId == source.id;
+                if (!onA && !onB) continue;
+                SeamSpan a = seam.a, b = seam.b;
+                bool ok = true;
+                if (onA) ok &= ToCopy(source, copy, ref a);
+                if (onB) ok &= ToCopy(source, copy, ref b);
+                if (ok && !onA) ok = ToPartnerCopy(pattern, copy, ref a);
+                if (ok && !onB) ok = ToPartnerCopy(pattern, copy, ref b);
+                if (!ok) { waiting++; continue; }
+                pattern.seams.Add(new PatternSeam
+                {
+                    id = ClothesPattern.NewId(), a = a, b = b, reversed = seam.reversed, folded = seam.folded, sharp = seam.sharp,
+                    topstitch = seam.topstitch, topstitchOffsetMm = seam.topstitchOffsetMm
+                });
+                sewn++;
+            }
+            return copy;
+        }
+
+        /// <summary>
+        /// Duplicate Sewn Round: <see cref="DuplicateWithSeams"/>, on the layer above, and sewn to the piece (start to start)
+        /// along every stretch of its outline the piece has free, its openings too, which are then no longer openings: a
+        /// two-ply collar, cuff, flap or belt; or, with each piece of a garment done the same way, a lined garment (the
+        /// copies its outside, the originals its lining). <paramref name="sewnRound"/> counts the seams to the piece.
+        /// </summary>
+        public static PatternPiece DuplicateSewnRound(ClothesPattern pattern, PatternPiece source, string name, Vector2 offset, out int sewnRound, out int sewn, out int waiting)
+        {
+            PatternPiece copy = DuplicateWithSeams(pattern, source, name, offset, out sewn, out waiting);
+            copy.layer = Mathf.Min(source.layer + 1, 5);
+            sewnRound = 0;
+            for (int i = 0; i < source.edges.Count && i < copy.edges.Count; i++)
+            {
+                PatternEdge mine = source.edges[i], theirs = copy.edges[i];
+                for (int guard = 0; guard < 16 && pattern.FreeSpan(source.id, mine.id, out float s0, out float s1); guard++)
+                {
+                    mine.opening = false;
+                    theirs.opening = false;
+                    pattern.seams.Add(new PatternSeam { id = ClothesPattern.NewId(), a = new SeamSpan(source.id, mine.id, s0, s1), b = new SeamSpan(copy.id, theirs.id, s0, s1) });
+                    sewnRound++;
+                }
+            }
+            return copy;
+        }
+
+        /// <summary>A seam side on a piece moved to the same edge or line of its copy (made by <see cref="Duplicate"/>, so in the same order).</summary>
+        private static bool ToCopy(PatternPiece source, PatternPiece copy, ref SeamSpan span)
+        {
+            int edge = source.IndexOfEdge(span.edgeId);
+            if (edge >= 0 && edge < copy.edges.Count) { span.pieceId = copy.id; span.edgeId = copy.edges[edge].id; return true; }
+            string lineId = span.edgeId;
+            int line = source.lines.FindIndex(l => l.id == lineId);
+            if (line >= 0 && line < copy.lines.Count) { span.pieceId = copy.id; span.edgeId = copy.lines[line].id; return true; }
+            return false;
+        }
+
+        /// <summary>A seam side moved to a copy (Duplicate with Seams) of its piece, where that copy is still free there; false when there is none.</summary>
+        private static bool ToPartnerCopy(ClothesPattern pattern, PatternPiece made, ref SeamSpan span)
+        {
+            PatternPiece partner = pattern.FindPiece(span.pieceId);
+            if (partner == null) return false;
+            foreach (PatternPiece candidate in pattern.pieces)
+            {
+                if (candidate == null || candidate == made || candidate.duplicateOf != partner.id) continue;
+                if (candidate.edges.Count != partner.edges.Count || candidate.lines.Count != partner.lines.Count) continue;
+                SeamSpan moved = span;
+                if (!ToCopy(partner, candidate, ref moved)) continue;
+                bool used = false;
+                foreach (PatternSeam s in pattern.seams)
+                {
+                    if (SameStretch(s.a, moved) || SameStretch(s.b, moved)) { used = true; break; }
+                }
+                if (used) continue;
+                span = moved;
+                return true;
+            }
+            return false;
+        }
+
+        private static bool SameStretch(SeamSpan x, SeamSpan y) =>
+            x.pieceId == y.pieceId && x.edgeId == y.edgeId && x.start < y.end - 1e-4f && y.start < x.end - 1e-4f;
 
         /// <summary>
         /// Sews two edges: all of each, or of an edge that is already sewn along part of its length, the
@@ -523,6 +923,35 @@ namespace UMA.ClothesDesigner.Editor
             return dart;
         }
 
+        /// <summary>
+        /// Adds two diamond darts mirrored across <paramref name="axisX"/>, each halfway between the middle and the side, at
+        /// the piece's middle height and as long as fits inside it (up to the length of <see cref="AddDoubleDart"/>'s).
+        /// Returns them (the one left of the middle first), or null with nothing added when the piece has no room.
+        /// </summary>
+        public static PatternDart[] AddDoubleDartPair(PatternPiece piece, float axisX)
+        {
+            if (piece == null || piece.points.Count < 3) return null;
+            Rect b = piece.Bounds();
+            float quarter = Mathf.Min(axisX - b.xMin, b.xMax - axisX) * 0.5f;
+            if (quarter < 1f) return null;
+            List<Vector2> outline = PatternGeometry.SampleOutline(piece, 0.5f, null);
+            float width = Mathf.Min(3f, b.width * 0.2f, quarter);
+            var left = new Vector2(axisX - quarter, b.center.y);
+            Vector2 right = Mirror(left, axisX);
+            bool Inside(Vector2 q) => PatternGeometry.PointInPolygon(outline, q) && PatternGeometry.DistanceToPolyline(outline, q) >= 1f;
+            bool Fits(Vector2 c, float h) =>
+                Inside(c + new Vector2(0f, h)) && Inside(c - new Vector2(0f, h)) && Inside(c + new Vector2(width * 0.5f, 0f)) && Inside(c - new Vector2(width * 0.5f, 0f));
+            float half = b.height * 0.3f;
+            while (half > 1f && !(Fits(left, half) && Fits(right, half))) half *= 0.85f;
+            if (!(Fits(left, half) && Fits(right, half))) return null;
+            PatternDart first = AddDoubleDart(piece, left);
+            first.widthCm = width;
+            first.tip = left + new Vector2(0f, half);
+            first.tip2 = left - new Vector2(0f, half);
+            PatternDart second = DuplicateDart(piece, first, axisX);
+            return new[] { first, second };
+        }
+
         /// <summary>Adds a pressed knife pleat on an edge at a fraction of its length, 2 cm deep. Returns it.</summary>
         public static PatternPleat AddPleat(PatternPiece piece, int edgeIndex, float fraction)
         {
@@ -550,12 +979,34 @@ namespace UMA.ClothesDesigner.Editor
         /// </summary>
         public static PatternPiece CutPiece(ClothesPattern pattern, PatternPiece piece, Vector2 from, Vector2 to, bool sewTogether, out string problem)
         {
-            problem = null;
             Vector2 dir = to - from;
             if (dir.sqrMagnitude < 0.01f) { problem = "Draw the cut longer."; return null; }
-            // Every crossing of the (endless) line with the outline: edge and fraction.
-            var crossings = new List<(int edge, float fraction, Vector2 at)>();
-            Vector2 far0 = from - dir.normalized * 10000f, far1 = from + dir.normalized * 10000f;
+            // Straight across the whole piece, endless both ways.
+            Vector2 far = dir.normalized * 10000f;
+            return CutPieceAlong(pattern, piece, new List<Vector2> { from - far, from + far }, false, sewTogether, out problem);
+        }
+
+        /// <summary>
+        /// The knife: cuts a piece in two along a path (cm, as drawn), straight from point to point or, with
+        /// <paramref name="smooth"/>, curving through them. The path must cross the outline exactly twice; an end inside
+        /// the piece runs on in a straight line to the outline. Seams, darts, pleats, lines and tacks go with the half they
+        /// are on; the new half keeps the original's UVs and placement and, with <paramref name="sewTogether"/>, is sewn
+        /// back along the cut. Returns the new half, or null with a reason.
+        /// </summary>
+        public static PatternPiece CutPieceAlong(ClothesPattern pattern, PatternPiece piece, IList<Vector2> path, bool smooth, bool sewTogether, out string problem)
+        {
+            problem = null;
+            var route = new List<Vector2>();
+            if (path != null) foreach (Vector2 q in path) if (route.Count == 0 || (q - route[route.Count - 1]).sqrMagnitude > 1e-4f) route.Add(q);
+            float routeLength = 0f;
+            for (int s = 1; s < route.Count; s++) routeLength += (route[s] - route[s - 1]).magnitude;
+            if (route.Count < 2 || routeLength < 0.1f) { problem = "Draw the cut longer."; return null; }
+            List<Vector2> outlineSamples = PatternGeometry.SampleOutline(piece, 0.5f, null);
+            route[0] = RunOnToOutline(outlineSamples, route[0], route[0] - route[1]);
+            route[route.Count - 1] = RunOnToOutline(outlineSamples, route[route.Count - 1], route[route.Count - 1] - route[route.Count - 2]);
+
+            // Every crossing of the path with the outline: how far along the path, and the edge and fraction.
+            var crossings = new List<(float along, int edge, float fraction, Vector2 at)>();
             for (int e = 0; e < piece.points.Count; e++)
             {
                 var curve = new PatternGeometry.EdgeCurve(piece, e, PieceScale.Identity);
@@ -564,24 +1015,38 @@ namespace UMA.ClothesDesigner.Editor
                 for (int k = 1; k <= steps; k++)
                 {
                     Vector2 next = curve.At(k / (float)steps);
-                    if (LineGeometry.SegmentIntersection(previous, next, far0, far1, out float along, out _) && (k < steps || along < 0.999f))
+                    for (int s = 0; s + 1 < route.Count; s++)
                     {
-                        float fraction = (k - 1 + along) / steps;
-                        crossings.Add((e, fraction, curve.At(fraction)));
+                        if (LineGeometry.SegmentIntersection(previous, next, route[s], route[s + 1], out float alongEdge, out float alongPath) && (k < steps || alongEdge < 0.999f))
+                        {
+                            float fraction = (k - 1 + alongEdge) / steps;
+                            crossings.Add((s + alongPath, e, fraction, curve.At(fraction)));
+                        }
                     }
                     previous = next;
                 }
             }
-            // A crossing at a corner is found on both edges that meet there.
+            // A crossing at a corner is found on both edges that meet there, and at a path point on both its segments.
             for (int i = crossings.Count - 1; i > 0; i--) for (int j = 0; j < i; j++) if ((crossings[i].at - crossings[j].at).sqrMagnitude < 0.0025f) { crossings.RemoveAt(i); break; }
             if (crossings.Count != 2) { problem = "A cut must cross the piece's outline exactly twice; this one crosses it " + crossings.Count + " times."; return null; }
+            crossings.Sort((x, y) => x.along.CompareTo(y.along));
+            // The path's own points between the two crossings, in order along it.
+            var inner = new List<Vector2>();
+            for (int s = 1; s + 1 < route.Count; s++)
+            {
+                if (s <= crossings[0].along + 1e-4f || s >= crossings[1].along - 1e-4f) continue;
+                if ((route[s] - crossings[0].at).sqrMagnitude < 0.0025f || (route[s] - crossings[1].at).sqrMagnitude < 0.0025f) continue;
+                inner.Add(route[s]);
+            }
+            Vector2 atFirst = crossings[0].at;
 
             // Points at the crossings (at a corner, the corner itself); the later edge first, so indices hold.
-            crossings.Sort((x, y) => y.edge != x.edge ? y.edge.CompareTo(x.edge) : y.fraction.CompareTo(x.fraction));
-            var cutPointIds = new List<string>();
+            var bySplit = new List<(float along, int edge, float fraction, Vector2 at)>(crossings);
+            bySplit.Sort((x, y) => y.edge != x.edge ? y.edge.CompareTo(x.edge) : y.fraction.CompareTo(x.fraction));
+            string firstId = null, secondId = null;
             int splitEdge = -1;
             float splitAt = 1f;
-            foreach (var c in crossings)
+            foreach (var c in bySplit)
             {
                 // Twice on one edge: after the later split the edge's first part is what is left of it.
                 float fraction = c.edge == splitEdge ? c.fraction / splitAt : c.fraction;
@@ -589,13 +1054,16 @@ namespace UMA.ClothesDesigner.Editor
                 if (fraction < 0.01f) index = c.edge;
                 else if (fraction > 0.99f) index = (c.edge + 1) % piece.points.Count;
                 else { index = SplitEdge(pattern, piece, c.edge, fraction); splitEdge = c.edge; splitAt = c.fraction; }
-                cutPointIds.Add(piece.points[index].id);
+                if ((c.at - atFirst).sqrMagnitude < 1e-8f) firstId = piece.points[index].id; else secondId = piece.points[index].id;
             }
-            int i1 = piece.IndexOfPoint(cutPointIds[0]), i2 = piece.IndexOfPoint(cutPointIds[1]);
+            int i1 = piece.IndexOfPoint(firstId), i2 = piece.IndexOfPoint(secondId);
+            // The cut runs from the point at i2 to the point at i1 on this piece: the path's points the other way when
+            // its first crossing is at i1.
             if (i1 > i2) { int t = i1; i1 = i2; i2 = t; }
-            if (i2 - i1 < 1 || i1 + piece.points.Count - i2 < 1 || i2 - i1 == piece.points.Count) { problem = "The cut runs along the outline."; return null; }
-            Rect before = piece.Bounds();
+            else inner.Reverse();
             int n = piece.points.Count;
+            if (i1 < 0 || i2 - i1 < 1 || i2 - i1 == n || (inner.Count == 0 && (i2 - i1 == 1 || i1 + n - i2 == 1))) { problem = "The cut runs along the outline."; return null; }
+            Rect before = piece.Bounds();
 
             // The new half: points i2 .. i1 (round the end), its edges, then the cut from i1 back to i2.
             var half = new PatternPiece
@@ -606,6 +1074,8 @@ namespace UMA.ClothesDesigner.Editor
                 placement = piece.placement.Clone(),
                 fabric = piece.fabric != null ? piece.fabric.Clone() : new FabricSettings(),
                 meshDetail = piece.meshDetail,
+                textureDetail = piece.textureDetail,
+                lookId = piece.lookId,
                 interfacing = piece.interfacing,
                 layer = piece.layer,
                 pressure = piece.pressure,
@@ -621,10 +1091,35 @@ namespace UMA.ClothesDesigner.Editor
                 half.points.Add(k == 0 || k == n - (i2 - i1) ? new PatternPoint { id = ClothesPattern.NewId(), position = piece.points[i].position } : piece.points[i]);
                 if (k < n - (i2 - i1)) { half.edges.Add(piece.edges[i]); movedEdgeIds.Add(piece.edges[i].id); }
             }
-            var cutOnHalf = new PatternEdge { id = ClothesPattern.NewId(), name = "Cut" };
-            half.edges.Add(cutOnHalf);
-            var cutOnPiece = new PatternEdge { id = ClothesPattern.NewId(), name = "Cut" };
-            keptEdges.Add(cutOnPiece);
+            // The cut's edges on this piece: from i2 through the path's points to i1, curving through them when smooth.
+            var along = new List<Vector2> { piece.points[i2].position };
+            along.AddRange(inner);
+            along.Add(piece.points[i1].position);
+            int m = along.Count - 1;
+            var cutOnPiece = new List<PatternEdge>();
+            for (int j = 0; j < m; j++)
+            {
+                var edge = new PatternEdge { id = ClothesPattern.NewId(), name = "Cut" };
+                if (smooth && m > 1)
+                {
+                    edge.curved = true;
+                    edge.handleA = PathTangent(along, j) / 3f;
+                    edge.handleB = -PathTangent(along, j + 1) / 3f;
+                }
+                cutOnPiece.Add(edge);
+            }
+            for (int j = 1; j < m; j++) keptPoints.Add(new PatternPoint { id = ClothesPattern.NewId(), position = along[j] });
+            keptEdges.AddRange(cutOnPiece);
+            // On the half the same edges run the other way: from i1 back through the path's points to i2.
+            var cutOnHalf = new List<PatternEdge>();
+            for (int j = m - 1; j >= 1; j--) half.points.Add(new PatternPoint { id = ClothesPattern.NewId(), position = along[j] });
+            for (int j = m - 1; j >= 0; j--)
+            {
+                PatternEdge mine = cutOnPiece[j];
+                var edge = new PatternEdge { id = ClothesPattern.NewId(), name = "Cut", curved = mine.curved, handleA = mine.handleB, handleB = mine.handleA };
+                half.edges.Add(edge);
+                cutOnHalf.Add(edge);
+            }
             piece.points = keptPoints;
             piece.edges = keptEdges;
 
@@ -676,10 +1171,216 @@ namespace UMA.ClothesDesigner.Editor
             pattern.pieces.Insert(pattern.pieces.IndexOf(piece) + 1, half);
             if (sewTogether)
             {
-                // The two cut edges run opposite ways along the same line: the start of one meets the end of the other.
-                pattern.seams.Add(new PatternSeam { id = ClothesPattern.NewId(), a = new SeamSpan(piece.id, cutOnPiece.id), b = new SeamSpan(half.id, cutOnHalf.id), reversed = true });
+                // The two cuts run opposite ways along the same path: the start of each edge meets the end of its twin.
+                for (int j = 0; j < m; j++)
+                    pattern.seams.Add(new PatternSeam { id = ClothesPattern.NewId(), a = new SeamSpan(piece.id, cutOnPiece[j].id), b = new SeamSpan(half.id, cutOnHalf[m - 1 - j].id), reversed = true });
             }
             return half;
+        }
+
+        /// <summary>The direction a path runs at its point <paramref name="j"/> (Catmull-Rom: from the point before to the point after).</summary>
+        private static Vector2 PathTangent(List<Vector2> path, int j)
+        {
+            if (j <= 0) return path[1] - path[0];
+            if (j >= path.Count - 1) return path[path.Count - 1] - path[path.Count - 2];
+            return (path[j + 1] - path[j - 1]) * 0.5f;
+        }
+
+        /// <summary>
+        /// An end of a cut: inside the piece it runs on in <paramref name="direction"/> to just past the outline; on the
+        /// outline a little past it, so the cut crosses it cleanly; outside it stays.
+        /// </summary>
+        private static Vector2 RunOnToOutline(List<Vector2> outline, Vector2 end, Vector2 direction)
+        {
+            Vector2 dir = direction.sqrMagnitude > 1e-12f ? direction.normalized : Vector2.right;
+            if (PatternGeometry.DistanceToPolyline(outline, end) < 0.05f) return end + dir * 0.5f;
+            if (!PatternGeometry.PointInPolygon(outline, end)) return end;
+            float nearest = float.MaxValue;
+            Vector2 far = end + dir * 10000f;
+            for (int i = 0; i < outline.Count; i++)
+            {
+                if (LineGeometry.SegmentIntersection(end, far, outline[i], outline[(i + 1) % outline.Count], out float t, out _)) nearest = Mathf.Min(nearest, t * 10000f);
+            }
+            return nearest < float.MaxValue ? end + dir * (nearest + 0.5f) : end;
+        }
+
+        /// <summary>
+        /// Cuts a piece along one of its open lines (a princess seam or a yoke drawn as a seam line), which then goes; its
+        /// ends run on to the outline when short of it. With <paramref name="sewTogether"/> the halves are sewn back along
+        /// it. Returns the new half, or null with a reason.
+        /// </summary>
+        public static PatternPiece CutAlongLine(ClothesPattern pattern, PatternPiece piece, PatternLine line, bool sewTogether, out string problem)
+        {
+            problem = null;
+            if (line == null || line.points.Count < 2 || LineGeometry.IsClosed(line)) { problem = "Only an open line can be cut along."; return null; }
+            if (pattern.FindSeamsOn(piece.id, line.id).Count > 0) { problem = "Something is sewn onto this line. Unsew it first."; return null; }
+            if (pattern.trims.Exists(tr => tr != null && tr.pieceId == piece.id && tr.pathId == line.id)) { problem = "A trim runs along this line. Delete it first."; return null; }
+            int index = piece.lines.IndexOf(line);
+            if (index < 0) { problem = "The line is not on this piece."; return null; }
+            var path = new List<Vector2>(line.points);
+            piece.lines.RemoveAt(index);
+            PatternPiece half = CutPieceAlong(pattern, piece, path, false, sewTogether, out problem);
+            if (half == null) piece.lines.Insert(index, line);
+            return half;
+        }
+
+        // ---- Cut in Half and Symmetrize --------------------------------------------------------------
+
+        /// <summary>
+        /// Cut in Half: cuts a piece along the upright line x = <paramref name="axisX"/>, keeps one half (with the piece's
+        /// id and name) and puts a linked mirror of it where the other half was, sewn to it along the cut. The other half's
+        /// seams go to the mirror's edge lying where theirs did; those with none, and those on its lines, are dropped
+        /// (<paramref name="dropped"/>). Its darts, pleats and lines give way to the kept half's, mirrored; its tacks and
+        /// parts go onto the mirror. Returns the mirror, or null with a reason.
+        /// </summary>
+        public static PatternPiece CutInHalf(ClothesPattern pattern, PatternPiece piece, float axisX, bool keepLeft, out string problem, out int dropped)
+        {
+            dropped = 0;
+            problem = null;
+            if (piece.mirrorLinked) { problem = "'" + piece.name + "' is a linked mirror: work on its original, or unlink it first."; return null; }
+            Rect b = piece.Bounds();
+            if (axisX <= b.xMin + 0.5f || axisX >= b.xMax - 0.5f) { problem = "The middle line must run through the piece."; return null; }
+            string id = piece.id, name = piece.name;
+            PatternPiece other = CutPiece(pattern, piece, new Vector2(axisX, b.yMin - 1f), new Vector2(axisX, b.yMax + 1f), true, out problem);
+            if (other == null) return null;
+            bool pieceIsLeft = piece.Bounds().center.x < axisX;
+            PatternPiece kept = pieceIsLeft == keepLeft ? piece : other, gone = kept == piece ? other : piece;
+
+            PatternPiece mirror = MirrorCopy(kept, name + " Mirrored");
+            mirror.mirrorLinked = true;
+            // MirrorCopy reflects about the kept half's own middle; this puts it about the axis instead.
+            float shift = 2f * (axisX - kept.Bounds().center.x);
+            foreach (PatternPoint p in mirror.points) p.position.x += shift;
+            foreach (PatternDart d in mirror.darts) { d.tip.x += shift; d.tip2.x += shift; }
+            foreach (PatternLine l in mirror.lines) for (int i = 0; i < l.points.Count; i++) l.points[i] += new Vector2(shift, 0f);
+            pattern.pieces.Insert(pattern.pieces.IndexOf(gone), mirror);
+
+            dropped = MoveSeamsByPlace(pattern, gone, mirror);
+            foreach (PatternTack tack in pattern.tacks)
+            {
+                if (tack.pieceA == gone.id) tack.pieceA = mirror.id;
+                if (tack.pieceB == gone.id) tack.pieceB = mirror.id;
+            }
+            foreach (PatternPart part in pattern.parts) if (part.pieceId == gone.id) part.pieceId = mirror.id;
+            foreach (PatternTrim trim in pattern.trims) if (trim != null && trim.pieceId == gone.id) trim.pieceId = null;
+            pattern.trims.RemoveAll(tr => tr != null && tr.pieceId == null);
+            foreach (PatternDimension dim in pattern.dimensions) if (dim.pieceIds.Remove(gone.id) && !dim.pieceIds.Contains(mirror.id)) dim.pieceIds.Add(mirror.id);
+            pattern.pieces.Remove(gone);
+            // The kept half carries on as the piece: its id (so linked mirrors of it, and the fit, keep following it) and name.
+            if (kept != piece) ReplacePieceId(pattern, kept, id);
+            kept.name = name;
+            return mirror;
+        }
+
+        /// <summary>
+        /// Symmetrize: makes a piece the mirror image of one of its halves about x = <paramref name="axisX"/>, still one
+        /// piece with its id. The other half's seams go to the edge lying where theirs did (<paramref name="dropped"/>
+        /// counts those with none); its darts, pleats and lines give way to the kept half's, mirrored. A point left on the
+        /// middle between two straight edges in line (a straight hem) is taken out again. Returns the piece, or null with a
+        /// reason; <paramref name="problem"/> may hold a warning even when it succeeds.
+        /// </summary>
+        public static PatternPiece Symmetrize(ClothesPattern pattern, PatternPiece piece, float axisX, bool keepLeft, out string problem, out int dropped)
+        {
+            string id = piece.id;
+            PatternPiece mirror = CutInHalf(pattern, piece, axisX, keepLeft, out problem, out dropped);
+            if (mirror == null) return null;
+            PatternPiece kept = pattern.FindPiece(id);
+            PatternSeam middle = null;
+            foreach (PatternSeam s in pattern.seams)
+            {
+                bool joins = (s.a.pieceId == kept.id && s.b.pieceId == mirror.id) || (s.a.pieceId == mirror.id && s.b.pieceId == kept.id);
+                if (!joins) continue;
+                SeamSpan mine = s.a.pieceId == kept.id ? s.a : s.b;
+                int edge = kept.IndexOfEdge(mine.edgeId);
+                if (edge < 0) continue;
+                Vector2 p0 = kept.points[edge].position, p1 = kept.points[(edge + 1) % kept.points.Count].position;
+                if (Mathf.Abs(p0.x - axisX) < 0.01f && Mathf.Abs(p1.x - axisX) < 0.01f) { middle = s; break; }
+            }
+            if (middle == null) { problem = "The halves could not be joined again."; return null; }
+            if (middle.a.pieceId != kept.id) { SeamSpan swap = middle.a; middle.a = middle.b; middle.b = swap; }
+            mirror.mirrorLinked = false;
+            mirror.mirrorOf = null;
+            PatternPiece merged = MergePieces(pattern, middle, out problem);
+            if (merged == null) return null;
+            // The ends of the join: a point between two straight edges in line is not needed.
+            for (int i = merged.points.Count - 1; i >= 0 && merged.points.Count > 3; i--)
+            {
+                if (i >= merged.points.Count || Mathf.Abs(merged.points[i].position.x - axisX) > 0.01f) continue;
+                int n = merged.points.Count, prev = (i - 1 + n) % n;
+                if (merged.edges[prev].curved || merged.edges[i].curved) continue;
+                Vector2 d0 = merged.points[i].position - merged.points[prev].position, d1 = merged.points[(i + 1) % n].position - merged.points[i].position;
+                if (d0.sqrMagnitude < 1e-6f || d1.sqrMagnitude < 1e-6f) continue;
+                if (Mathf.Abs(d0.normalized.x * d1.normalized.y - d0.normalized.y * d1.normalized.x) < 0.01f && Vector2.Dot(d0, d1) > 0f) DeletePoint(pattern, merged, i);
+            }
+            return merged;
+        }
+
+        /// <summary>
+        /// Moves the seams on one piece's edges to the edge of another lying in the same place (either way round, the
+        /// stretch turned to match); seams with no edge there, or on the first piece's lines, are removed. Returns how many
+        /// were removed.
+        /// </summary>
+        private static int MoveSeamsByPlace(ClothesPattern pattern, PatternPiece from, PatternPiece to)
+        {
+            int removed = 0;
+            int nf = from.points.Count, nt = to.points.Count;
+            foreach (PatternSeam seam in pattern.seams.ToArray())
+            {
+                bool onA = seam.a.pieceId == from.id, onB = seam.b.pieceId == from.id;
+                if (!onA && !onB) continue;
+                bool ok = true;
+                for (int side = 0; side < 2 && ok; side++)
+                {
+                    if ((side == 0 && !onA) || (side == 1 && !onB)) continue;
+                    SeamSpan span = side == 0 ? seam.a : seam.b;
+                    int e = from.IndexOfEdge(span.edgeId);
+                    if (e < 0) { ok = false; break; }
+                    var curve = new PatternGeometry.EdgeCurve(from, e, PieceScale.Identity);
+                    Vector2 e0 = from.points[e].position, e1 = from.points[(e + 1) % nf].position, em = curve.At(0.5f);
+                    // Generous: Symmetrize is for pieces that are a little lopsided, a shoulder a centimetre or two off.
+                    float tolerance = Mathf.Max(1.5f, curve.Length * 0.25f);
+                    int best = -1;
+                    bool flipped = false;
+                    float bestError = float.MaxValue;
+                    for (int f = 0; f < nt; f++)
+                    {
+                        Vector2 f0 = to.points[f].position, f1 = to.points[(f + 1) % nt].position;
+                        Vector2 fm = new PatternGeometry.EdgeCurve(to, f, PieceScale.Identity).At(0.5f);
+                        float same = Mathf.Max((f0 - e0).magnitude, (f1 - e1).magnitude), opposite = Mathf.Max((f0 - e1).magnitude, (f1 - e0).magnitude);
+                        float error = Mathf.Max(Mathf.Min(same, opposite), (fm - em).magnitude);
+                        if (error < bestError) { bestError = error; best = f; flipped = opposite < same; }
+                    }
+                    if (best < 0 || bestError > tolerance) { ok = false; break; }
+                    span.pieceId = to.id;
+                    span.edgeId = to.edges[best].id;
+                    if (flipped) { float s0 = span.start; span.start = 1f - span.end; span.end = 1f - s0; seam.reversed = !seam.reversed; }
+                    if (side == 0) seam.a = span; else seam.b = span;
+                }
+                if (!ok) { pattern.seams.Remove(seam); removed++; }
+            }
+            return removed;
+        }
+
+        /// <summary>Gives a piece another id, and everything that refers to it (seams, tacks, parts, trims, sizes, mirrors and copies of it).</summary>
+        private static void ReplacePieceId(ClothesPattern pattern, PatternPiece piece, string newId)
+        {
+            string old = piece.id;
+            foreach (PatternSeam s in pattern.seams)
+            {
+                if (s.a.pieceId == old) s.a.pieceId = newId;
+                if (s.b.pieceId == old) s.b.pieceId = newId;
+            }
+            foreach (PatternTack t in pattern.tacks) { if (t.pieceA == old) t.pieceA = newId; if (t.pieceB == old) t.pieceB = newId; }
+            foreach (PatternPart part in pattern.parts) if (part.pieceId == old) part.pieceId = newId;
+            foreach (PatternTrim trim in pattern.trims) if (trim != null && trim.pieceId == old) trim.pieceId = newId;
+            foreach (PatternDimension dim in pattern.dimensions) for (int i = 0; i < dim.pieceIds.Count; i++) if (dim.pieceIds[i] == old) dim.pieceIds[i] = newId;
+            foreach (PatternPiece other in pattern.pieces)
+            {
+                if (other == null) continue;
+                if (other.mirrorOf == old) other.mirrorOf = newId;
+                if (other.duplicateOf == old) other.duplicateOf = newId;
+            }
+            piece.id = newId;
         }
 
         /// <summary>

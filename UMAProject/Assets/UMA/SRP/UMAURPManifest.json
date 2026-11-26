@@ -238,6 +238,7 @@
         "Assets/UMA/SRP/ShaderGraphs/Graphs/Helpers/default_masks.png",
         "Assets/UMA/SRP/ShaderGraphs/Graphs/Helpers/default_normal.png",
         "Assets/UMA/SRP/ShaderGraphs/Graphs/Helpers/default_vfx_msk.png",
+        "Assets/UMA/SRP/ShaderGraphs/Graphs/LitBasic.shadergraph",
         "Assets/UMA/SRP/ShaderGraphs/Graphs/LitShaderAlpha.mat",
         "Assets/UMA/SRP/ShaderGraphs/Graphs/LitShaderAlpha.shadergraph",
         "Assets/UMA/SRP/ShaderGraphs/Graphs/LitShaderOpaque.shadergraph",
@@ -348,6 +349,8 @@
         "Assets/UMA/SRP/Shaders/Skin/Examples",
         "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealisticSSS_Natural.asset",
         "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealisticSSS_Natural.mat",
+        "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealisticSSS_Wrinkles.asset",
+        "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealisticSSS_Wrinkles.mat",
         "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealistic_Dewy.asset",
         "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealistic_Dewy.mat",
         "Assets/UMA/SRP/Shaders/Skin/Examples/UMA3_SkinRealistic_Matte.asset",
@@ -361,9 +364,11 @@
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinRealistic.shader",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinRealisticSSS.shader",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinRealisticSSSDebug.shader",
+        "Assets/UMA/SRP/Shaders/Skin/UMA3SkinRealisticSSSWrinkles.shader",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinSSSInput.hlsl",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinSSSLighting.hlsl",
         "Assets/UMA/SRP/Shaders/Skin/UMA3SkinScatterLUT.exr",
+        "Assets/UMA/SRP/Shaders/Skin/UMA3SkinWrinkles.hlsl",
         "Assets/UMA/SRP/UMAURPManifest.json"
     ]
 }

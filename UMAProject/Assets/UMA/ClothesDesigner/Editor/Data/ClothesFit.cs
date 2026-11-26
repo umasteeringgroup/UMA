@@ -41,11 +41,25 @@ namespace UMA.ClothesDesigner.Editor
         public bool overrideMeshLevel;
         public MeshLevel meshLevel = MeshLevel.Medium;
         [Min(0.3f)] public float customEdgeLengthCm = 2f;
-        /// <summary>Weight donors leave out the arms (right for a vest; turn off for sleeves).</summary>
+        /// <summary>Pieces not laid round an arm take their weights from the body without the arms (sleeves always use the arms).</summary>
         public bool donorsExcludeArms = true;
+        /// <summary>How the clothes get their bone weights from the body (<see cref="UMA.Editors.Weighting.UMAWeightTransfer"/>).</summary>
+        public UMA.Editors.Weighting.UMAWeightMethod weightMethod = UMA.Editors.Weighting.UMAWeightMethod.RobustInpaint;
+        /// <summary>Cloth nearer the body than this (and facing the same way) copies the body's weights (cm).</summary>
+        [Min(0.5f)] public float weightMatchCm = 4f;
+        /// <summary>How far the cloth's normal may turn from the body's and still copy it (degrees).</summary>
+        [Range(5f, 90f)] public float weightMatchAngle = 35f;
+        /// <summary>The most bones a vertex keeps.</summary>
+        [Range(1, 8)] public int weightMaxBones = 4;
+        /// <summary>Make the two sides' weights match (Left and Right bones swapped by name).</summary>
+        public bool weightMirror;
+        /// <summary>Other body shapes the clothes are fitted to, each kept as a blendshape driven by its DNA.</summary>
+        public List<BodyShapeTarget> bodyShapes = new List<BodyShapeTarget>();
         /// <summary>An animation to play on the try-on character, to see the clothes move.</summary>
         public AnimationClip tryOnClip;
         public List<ClothPin> pins = new List<ClothPin>();
+        /// <summary>Where the Fit Brush has painted the cloth to hug the body, smooth out, puff up or slim down.</summary>
+        public List<FitPaintPoint> paint = new List<FitPaintPoint>();
         public AcceptedDrape drape = new AcceptedDrape();
         public PublishSettings publish = new PublishSettings();
         public OutputRecord output = new OutputRecord();
@@ -80,6 +94,19 @@ namespace UMA.ClothesDesigner.Editor
     {
         public string name;
         public float value;
+    }
+
+    /// <summary>
+    /// A body shape the clothes are fitted to as well as the fit's own: one DNA at one end of its range. The
+    /// bake drapes the clothes onto it and keeps what the bones do not carry as a blendshape on the slot
+    /// (<see cref="BodyShapes.ShapeName"/>), which that DNA then drives.
+    /// </summary>
+    [Serializable]
+    public sealed class BodyShapeTarget
+    {
+        public string dna;
+        /// <summary>The DNA value fitted to: 1 for the top of its range, 0 for the bottom.</summary>
+        [Range(0f, 1f)] public float value = 1f;
     }
 
     /// <summary>The heights the pattern is placed and measured at, and what was measured there (all in metres, renderer space).</summary>
@@ -196,6 +223,47 @@ namespace UMA.ClothesDesigner.Editor
         public string bodySlot;
     }
 
+    /// <summary>What the Fit Brush paints.</summary>
+    public enum FitPaintMode
+    {
+        /// <summary>The cloth tightens (cut up to <see cref="FitPaint.MaxHugShrink"/> smaller) and is drawn onto the body.</summary>
+        Hug = 0,
+        /// <summary>Wrinkles and bumps flatten out (after hugging, round a collar or under the arms).</summary>
+        Smooth = 1,
+        /// <summary>The cloth is pushed out from the body, as padding or air would.</summary>
+        Puff = 2,
+        /// <summary>The cloth is drawn in towards the body.</summary>
+        Slim = 3,
+        /// <summary>Takes the paint off.</summary>
+        Erase = 4,
+        /// <summary>The cloth is firmer: it stretches and bends less (a firm cuff or band without a separate piece).</summary>
+        Stiffen = 5,
+        /// <summary>The cloth is heavier, up to <see cref="FitPaint.MaxExtraWeight"/> times more (a weighted hem).</summary>
+        Weight = 6
+    }
+
+    /// <summary>
+    /// One painted point of the cloth, stored on the flat pattern (like a pin) so the paint survives a new mesh
+    /// level: the values at a mesh vertex, and the spacing of the mesh it was painted on.
+    /// </summary>
+    [Serializable]
+    public sealed class FitPaintPoint
+    {
+        public string pieceId;
+        /// <summary>Where on the flat piece, as drawn (cm).</summary>
+        public Vector2 flatPosition;
+        [Range(0f, 1f)] public float hug;
+        [Range(0f, 1f)] public float smooth;
+        /// <summary>Positive puffs the cloth out, negative slims it in.</summary>
+        [Range(-1f, 1f)] public float inflate;
+        /// <summary>How much firmer the cloth is here (1: about as firm as firm interfacing).</summary>
+        [Range(0f, 1f)] public float stiff;
+        /// <summary>How much heavier the cloth is here (1: <see cref="FitPaint.MaxExtraWeight"/> times its weight more).</summary>
+        [Range(0f, 1f)] public float weight;
+        /// <summary>The mesh's edge length where it was painted (cm): how far the point reaches on another mesh.</summary>
+        public float spacingCm = 2f;
+    }
+
     /// <summary>The drape the artist kept, so reopening the fit restores the folds.</summary>
     [Serializable]
     public sealed class AcceptedDrape
@@ -228,6 +296,11 @@ namespace UMA.ClothesDesigner.Editor
         [Min(0.1f)] public float facingDepthCm = 5f;
         /// <summary>A narrow band joining each opening's edge to the facing, so the edge shows a thickness.</summary>
         public bool addRim;
+        /// <summary>
+        /// For hats and hoods (pieces laid round the head): publish a clipping plane across their openings and tag the
+        /// slot, so UMA holds smooshable hair down inside them (<see cref="HairSmoosh"/>).
+        /// </summary>
+        public bool holdsHairDown = true;
         /// <summary>The rim's width: how far inside the cloth the facing lies when there is a rim (mm).</summary>
         [Min(0.1f)] public float rimThicknessMm = 3f;
         /// <summary>Bake the slot at its own mesh level (usually coarser than the drape) instead of the drape's.</summary>
@@ -253,6 +326,22 @@ namespace UMA.ClothesDesigner.Editor
         public bool addTopstitch = true;
         /// <summary>The topstitching's colour.</summary>
         public Color topstitchColor = new Color(0.92f, 0.85f, 0.6f, 1f);
+        /// <summary>Bake each look the pieces use into its own overlay, masked to those pieces, over the clothes' own.</summary>
+        public bool bakeLooks = true;
+        /// <summary>How the slot is meshed: the simulated triangles, or quads made from the pattern (<see cref="QuadRemesher"/>).</summary>
+        public SlotTopology slotTopology = SlotTopology.Triangles;
+        /// <summary>With quads: also write them, as draped, to an OBJ beside the slot for other tools.</summary>
+        public bool writeQuadObj = true;
+        /// <summary>Fit the slot to the fit's other body shapes (<see cref="ClothesFit.bodyShapes"/>) as blendshapes.</summary>
+        public bool bakeBodyShapes = true;
+        /// <summary>Let the clothes move at run time with Unity's Cloth, on a renderer of their own (<see cref="ClothMotion"/>).</summary>
+        public bool clothMotion;
+        /// <summary>Cloth this close to the body is held: it moves only with the bones (cm).</summary>
+        [Min(0f)] public float motionHeldCm = 1.5f;
+        /// <summary>How far cloth may swing per centimetre of cloth between it and where it is held.</summary>
+        [Range(0f, 1f)] public float motionGain = 0.3f;
+        /// <summary>The most any cloth may swing from where the bones put it (cm).</summary>
+        [Min(0f)] public float motionMaxCm = 10f;
 
         /// <summary>The edge length the slot is baked at (cm), given the drape's.</summary>
         public float BakeEdgeLengthCm(float drapeEdgeCm) => bakeAtOwnLevel ? ClothesPattern.EdgeLengthCm(bakeMeshLevel, bakeCustomEdgeLengthCm) : drapeEdgeCm;

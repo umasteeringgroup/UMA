@@ -1,0 +1,174 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 576b41e9a2937b5419395b42c02866d7, type: 3}
+  m_Name: Sleeveless Vest on SpriteFemale30
+  m_EditorClassIdentifier: UMA.ClothesDesigner.Editor::UMA.ClothesDesigner.Editor.ClothesFit
+  schemaVersion: 2
+  pattern: {fileID: 11400000, guid: bc5c9d542fee1e847af78b18e4d23c77, type: 2}
+  sourceSlot: {fileID: 0}
+  race: {fileID: 11400000, guid: 21be16e9c71751f4f8f6846b42f1b6de, type: 2}
+  dna: []
+  landmarks:
+    valid: 1
+    shoulderTopY: 1.3405209
+    chestY: 1.1935297
+    waistY: 1.0470906
+    hipY: 0.8015896
+    chestCm: 82.03229
+    waistCm: 53.31834
+    hipCm: 87.871735
+    heightCm: 159.5311
+    torsoCenter: {x: -0.000000014901161, y: 0.0055193976}
+    limbs: 1
+    leftShoulder: {x: -0.14398511, y: 1.2968986, z: -0.051619053}
+    rightShoulder: {x: 0.14398503, y: 1.2968987, z: -0.051619053}
+    leftWrist: {x: -0.4859597, y: 0.97202015, z: -0.06005764}
+    rightWrist: {x: 0.48595974, y: 0.97202075, z: -0.06005752}
+    leftHip: {x: -0.09084435, y: 0.8525279, z: -0.025618553}
+    rightHip: {x: 0.09084421, y: 0.85252833, z: -0.025618553}
+    leftAnkle: {x: -0.18013269, y: 0.07962395, z: -0.05154729}
+    rightAnkle: {x: 0.18013203, y: 0.079624385, z: -0.051546782}
+    head: {x: -8.1763124e-10, y: 1.428673, z: -0.044745922}
+    neckY: 1.3596284
+    headTopY: 1.5980372
+    crotchY: 0.7865896
+    headCenter: {x: 0.00000026077032, y: -0.013123862}
+    headHalf: {x: 0.128055, y: 0.11339435}
+    armRadius: 0.042851627
+    legRadius: 0.074922465
+    leftArmProfile:
+    - 0.058687206
+    - 0.061242845
+    - 0.06373422
+    - 0.08601428
+    - 0.08601428
+    - 0.08601428
+    - 0.06573008
+    - 0.048580643
+    - 0.04643246
+    - 0.04575095
+    - 0.044827867
+    - 0.043618888
+    - 0.041899655
+    - 0.039397605
+    - 0.038351584
+    - 0.037308093
+    - 0.036179297
+    - 0.037482534
+    - 0.037717115
+    - 0.037717115
+    - 0.037717115
+    - 0.037019428
+    - 0.035459172
+    - 0.032794815
+    - 0.030063802
+    - 0.039184574
+    - 0.039184574
+    rightArmProfile:
+    - 0.06565933
+    - 0.06565933
+    - 0.06565933
+    - 0.07074966
+    - 0.07074966
+    - 0.07074966
+    - 0.06596342
+    - 0.048580866
+    - 0.04643273
+    - 0.04575121
+    - 0.044828124
+    - 0.043619182
+    - 0.041899946
+    - 0.0399956
+    - 0.038959652
+    - 0.037597325
+    - 0.036626358
+    - 0.03680169
+    - 0.03701343
+    - 0.03701343
+    - 0.03701343
+    - 0.03635335
+    - 0.034896534
+    - 0.032492947
+    - 0.029456705
+    - 0.039184675
+    - 0.039184675
+    armLengthCm: 47.176662
+    waistToAnkleCm: 96.74665
+    inseamCm: 70.69655
+    neckCm: 36.448036
+    headCm: 65.841354
+    thighCm: 48.888836
+    upperArmCm: 25.084427
+  placements: []
+  allowances: []
+  damping: 1.5
+  clearanceCm: 0.6
+  clothThicknessMm: 2
+  selfCollideWithinPieces: 1
+  frozenPieces: []
+  wornUnder: []
+  sizeOverWorn: 1
+  overrideMeshLevel: 0
+  meshLevel: 1
+  customEdgeLengthCm: 2
+  donorsExcludeArms: 1
+  looseWeights: 1
+  looseFromCm: 3
+  looseBlendCm: 4
+  bodyShapes: []
+  tryOnClip: {fileID: 0}
+  pins: []
+  paint: []
+  drape:
+    positions: []
+    sourceRevision: 
+    vertexCount: 0
+  publish:
+    slotName: SleevelessVest
+    folder: Assets/UMAProjectData/ClothesDesigner/Output
+    material: {fileID: 11400000, guid: daedee5c6bbb2fb4fbd7095622987734, type: 2}
+    existingOverlay: {fileID: 0}
+    wardrobeSlot: Chest
+    createWardrobeRecipe: 1
+    generateMeshHide: 0
+    addToGlobalLibrary: 1
+    makeUvCheckTexture: 1
+    addFacing: 1
+    facingDepthCm: 5
+    addRim: 0
+    holdsHairDown: 1
+    rimThicknessMm: 3
+    bakeAtOwnLevel: 0
+    bakeMeshLevel: 1
+    bakeCustomEdgeLengthCm: 2
+    bakeNormalMap: 1
+    normalMapSize: 0
+    lodLevels: 0
+    fullThickness: 0
+    thicknessMm: 2
+    addParts: 1
+    addTopstitch: 1
+    topstitchColor: {r: 0.92, g: 0.85, b: 0.6, a: 1}
+    bakeLooks: 1
+    slotTopology: 0
+    writeQuadObj: 1
+    bakeBodyShapes: 1
+    clothMotion: 0
+    motionHeldCm: 1.5
+    motionGain: 0.3
+    motionMaxCm: 10
+  output:
+    slot: {fileID: 11400000, guid: d8beb0f10dcb55545b30c6faf554a908, type: 2}
+    overlay: {fileID: 11400000, guid: 12af2b52265615745a1b0835535a4e83, type: 2}
+    recipe: {fileID: 11400000, guid: e9c384f73be45ad469b4348faccff593, type: 2}
+    bakeRevision: a8a4e66feeeb1c33/2
+    bakedAt: 2026-11-25 12:30

@@ -24,13 +24,19 @@ namespace UMA
         private MessageType statusType = MessageType.Info;
         private int selectionSignature = int.MinValue;
         private bool weightsDirty;
+        /// <summary>The slot and bone last worked on are chosen again once the stage has picked its first slot.</summary>
+        [NonSerialized] private bool pendingRestore;
+
+        private const string PrefsPrefix = "UMA.TouchupWeights.";
 
         internal static UmaTouchupWeightsWindow Open(VertexEditorStage stage)
         {
+            bool existed = HasOpenInstances<UmaTouchupWeightsWindow>();
             UmaTouchupWeightsWindow window = GetWindow<UmaTouchupWeightsWindow>(false, "Touchup Weights", true);
             window.minSize = new Vector2(660f, 520f);
             window.Initialize(stage);
             window.Show();
+            if (!existed) UmaEditorWindowPlacement.Restore(window, PrefsPrefix + "Window", new Vector2(660f, 760f));
             window.Focus();
             return window;
         }
@@ -39,8 +45,85 @@ namespace UMA
         {
             stage = owner;
             titleContent = new GUIContent("Touchup Weights", EditorGUIUtility.IconContent("SkinnedMeshRenderer Icon").image);
+            boneFilter = EditorPrefs.GetString(PrefsPrefix + "BoneFilter", string.Empty);
+            pendingRestore = true;
             RefreshSlots();
             RefreshSelection(true);
+        }
+
+        private void OnDisable()
+        {
+            UmaEditorWindowPlacement.Save(this, PrefsPrefix + "Window");
+            SaveChoices();
+        }
+
+        private void OnDestroy()
+        {
+            // Copy Weights from the Body works on this window's stage: it goes with it.
+            UmaTouchupCopyWeightsWindow.CloseIfOpen();
+        }
+
+        /// <summary>Remembers the slot and the bone being weighted, by name, for the next time Touchup Weights opens.</summary>
+        private void SaveChoices()
+        {
+            if (stage == null || !stage.IsTouchupWeightsMode || stage.TouchupWeightSlot == null)
+            {
+                return;
+            }
+            EditorPrefs.SetString(PrefsPrefix + "Slot", stage.TouchupWeightSlot.slotName);
+            for (int i = 0; i < bones.Count; i++)
+            {
+                if (bones[i].boneHash == selectedBoneHash)
+                {
+                    EditorPrefs.SetString(PrefsPrefix + "Bone", bones[i].boneName);
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Chooses the slot worked on last time, when this character has it, and then the bone weighted last time on
+        /// it, when there is one of that name. Otherwise the stage's own choice (its first slot, the dominant bone) stays.
+        /// </summary>
+        private void RestoreChoices()
+        {
+            string lastSlot = EditorPrefs.GetString(PrefsPrefix + "Slot", string.Empty);
+            if (string.IsNullOrEmpty(lastSlot) || stage.HasPendingTouchupPaintWeights)
+            {
+                return;
+            }
+            bool restored = stage.TouchupWeightSlot != null && stage.TouchupWeightSlot.slotName == lastSlot;
+            if (!restored)
+            {
+                foreach (SlotData slot in stage.GetTouchupWeightSlots())
+                {
+                    if (slot != null && slot.slotName == lastSlot)
+                    {
+                        stage.SetTouchupWeightSlot(slot);
+                        restored = true;
+                        break;
+                    }
+                }
+            }
+            if (!restored)
+            {
+                return;
+            }
+            string lastBone = EditorPrefs.GetString(PrefsPrefix + "Bone", string.Empty);
+            if (!string.IsNullOrEmpty(lastBone))
+            {
+                foreach (VertexEditorStage.BoneOption bone in stage.GetTouchupBoneOptions())
+                {
+                    if (bone.boneName == lastBone)
+                    {
+                        stage.TouchupWeightBoneHash = bone.boneHash;
+                        break;
+                    }
+                }
+            }
+            editableWeights.Clear();
+            selectionSignature = int.MinValue;
+            RefreshSlots();
         }
 
         private void OnInspectorUpdate()
@@ -60,6 +143,11 @@ namespace UMA
                 return;
             }
 
+            if (pendingRestore)
+            {
+                pendingRestore = false;
+                RestoreChoices();
+            }
             RefreshSlots();
             RefreshSelection(false);
 
@@ -76,6 +164,8 @@ namespace UMA
             DrawBonePanel();
             DrawWeightPanel();
             EditorGUILayout.EndHorizontal();
+
+            DrawCopyFromBodyButton();
 
             if (!string.IsNullOrEmpty(statusMessage))
             {
@@ -114,6 +204,7 @@ namespace UMA
                     selectionSignature = int.MinValue;
                     weightsDirty = false;
                     statusMessage = string.Empty;
+                    SaveChoices();
                 }
             }
             EditorGUILayout.LabelField(
@@ -161,7 +252,12 @@ namespace UMA
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(BonePanelWidth));
             EditorGUILayout.LabelField("Bones", EditorStyles.boldLabel);
-            boneFilter = EditorGUILayout.TextField(new GUIContent("Search"), boneFilter);
+            string filter = EditorGUILayout.TextField(new GUIContent("Search"), boneFilter);
+            if (filter != boneFilter)
+            {
+                boneFilter = filter;
+                EditorPrefs.SetString(PrefsPrefix + "BoneFilter", boneFilter ?? string.Empty);
+            }
             DrawWeightLegend();
 
             boneScroll = EditorGUILayout.BeginScrollView(boneScroll);
@@ -186,6 +282,7 @@ namespace UMA
                 {
                     selectedBoneHash = bone.boneHash;
                     stage.TouchupWeightBoneHash = selectedBoneHash;
+                    SaveChoices();
                     GUI.FocusControl(null);
                 }
                 GUI.backgroundColor = previousBackground;
@@ -506,6 +603,25 @@ namespace UMA
                 stage.SetTouchupWeightPreview(editableWeights);
                 return;
             }
+        }
+
+        // --- Copy Weights from the Body ----------------------------------------------------------------
+
+        /// <summary>Opens Copy Weights from the Body in its own window, and says what the last copy did.</summary>
+        private void DrawCopyFromBodyButton()
+        {
+            EditorGUILayout.Space(2f);
+            EditorGUILayout.BeginHorizontal();
+            using (new EditorGUI.DisabledScope(stage.TouchupWeightSlot == null))
+            {
+                if (GUILayout.Button(new GUIContent("Copy Weights from the Body...", "Give this slot (or the selected vertices) new weights from the character's other slots, by one of the weighting methods, in a window of its own. The result is staged like painted weights: Undo, Revert and Save work as usual."), GUILayout.Height(22f), GUILayout.Width(220f)))
+                {
+                    UmaTouchupCopyWeightsWindow.Open(stage);
+                }
+            }
+            UMA.Editors.Weighting.UMAWeightReport report = stage.LastTouchupCopyReport;
+            if (report != null) EditorGUILayout.LabelField(new GUIContent(report.Summary(), report.Summary()), EditorStyles.miniLabel);
+            EditorGUILayout.EndHorizontal();
         }
 
         private float GetWeightTotal()

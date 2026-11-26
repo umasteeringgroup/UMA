@@ -369,6 +369,54 @@ namespace UMA.Editors
             };
         }
 
+        /// <summary>
+        /// Weights a mesh from the captured character by one of the shared weighting methods
+        /// (<see cref="Weighting.UMAWeightTransfer"/>: Robust Inpaint, Tight Surface, Volumetric, Exact Match, Auto).
+        /// The source is in the target renderer's space, as for <see cref="BuildSlotMesh"/>. Auto puts a humanoid
+        /// character in the standard test poses (and back) to compare the methods.
+        /// </summary>
+        /// <param name="fallbackBoneIndex">The bone for vertices no body is found for.</param>
+        /// <param name="report">What each vertex got, and for Auto how each method scored.</param>
+        public static WeightTransferResult TransferWeights(SourceGeometry source, TargetData target, TargetSurface targetSurface, Weighting.UMAWeightSettings settings, int fallbackBoneIndex, out Weighting.UMAWeightReport report)
+        {
+            settings = (settings ?? new Weighting.UMAWeightSettings()).Clone();
+            Weighting.UMAWeightDonor donor = Weighting.UMAWeightDonor.FromSurface(targetSurface, target, fallbackBoneIndex);
+            Vector2[] uv = source.ChannelSourceMesh != null ? source.ChannelSourceMesh.uv : null;
+            if (uv == null || uv.Length != source.VertexCount) uv = null;
+            bool tryExact = settings.Method == Weighting.UMAWeightMethod.ExactMatch || settings.Method == Weighting.UMAWeightMethod.Auto;
+            if (tryExact && settings.ExactUseUV && uv != null) donor.SetSlotUVs(target, targetSurface);
+            var mesh = new Weighting.UMAWeightTarget
+            {
+                Positions = source.TargetLocalVertices,
+                Triangles = source.Triangles,
+                Normals = source.TargetLocalNormals != null && source.TargetLocalNormals.Length == source.VertexCount ? source.TargetLocalNormals : null,
+                UVs = uv
+            };
+            if (settings.MirrorLeftRight && target.Avatar != null && target.Renderer != null) settings.SetMirrorFrom(target.Renderer.transform, target.Avatar.transform);
+            if (settings.Poses == null && settings.Method == Weighting.UMAWeightMethod.Auto && Weighting.UMAWeightPoses.CanPose(target))
+            {
+                settings.Poses = Weighting.UMAWeightPoses.Capture(target, donor, null, out _);
+            }
+            Weighting.UMAWeightResult result = Weighting.UMAWeightTransfer.Transfer(donor, mesh, settings);
+            report = result.Report;
+            return result.ToTransferResult();
+        }
+
+        /// <summary>Where a renderer's vertices start in a captured surface (as <see cref="BuildTargetSurface"/> numbers them), or -1.</summary>
+        public static int RendererVertexBase(TargetData target, SkinnedMeshRenderer renderer)
+        {
+            SkinnedMeshRenderer[] renderers = target.SurfaceRenderers != null && target.SurfaceRenderers.Length > 0 ? target.SurfaceRenderers : new[] { target.Renderer };
+            int vertexBase = 0;
+            foreach (SkinnedMeshRenderer r in renderers)
+            {
+                Mesh mesh = r != null ? r.sharedMesh : null;
+                if (r == null || mesh == null || mesh.vertexCount == 0) continue;
+                if (r == renderer) return vertexBase;
+                vertexBase += mesh.vertexCount;
+            }
+            return -1;
+        }
+
         public static WeightTransferResult BuildManualWeights(int vertexCount, int boneIndex)
         {
             byte[] bonesPerVertex = new byte[vertexCount];
@@ -561,6 +609,11 @@ namespace UMA.Editors
             public bool RecalculateMissingNormals = true;
             /// <summary>Work tangents out from the normals and UVs.</summary>
             public bool RecalculateTangents;
+            /// <summary>
+            /// Optional side id per vertex for edges marked sharp: buddies with different ids get a normal
+            /// each (see <see cref="UMABuddyNormals.Sides"/>). Null for none.
+            /// </summary>
+            public int[] NormalSides;
         }
 
         /// <summary>
@@ -647,7 +700,7 @@ namespace UMA.Editors
 
             if ((bindNormals == null || clearNormals) && recalculateMissingNormals)
             {
-                mesh.SetNormals(CalculateMissingNormals(source.TargetLocalVertices, bindVertices, source.Triangles));
+                mesh.SetNormals(CalculateMissingNormals(source.TargetLocalVertices, bindVertices, source.Triangles, options.NormalSides));
             }
             if (recalculateTangents && !clearTangents)
             {
@@ -679,11 +732,12 @@ namespace UMA.Editors
         /// <param name="sourceVertices">The source positions, which decide which vertices are buddies.</param>
         /// <param name="bindVertices">The shape the normals are for: the same vertices in bind space.</param>
         /// <param name="triangles">Three indices for each triangle.</param>
-        public static Vector3[] CalculateMissingNormals(Vector3[] sourceVertices, Vector3[] bindVertices, int[] triangles)
+        /// <param name="sides">Optional side id per vertex: buddies on different sides of a sharp edge get a normal each.</param>
+        public static Vector3[] CalculateMissingNormals(Vector3[] sourceVertices, Vector3[] bindVertices, int[] triangles, int[] sides = null)
         {
             var normals = new Vector3[bindVertices.Length];
             Vector3[] buddyPositions = sourceVertices != null && sourceVertices.Length == bindVertices.Length ? sourceVertices : bindVertices;
-            new UMABuddyNormals(buddyPositions, triangles).Recalculate(bindVertices, normals);
+            new UMABuddyNormals(buddyPositions, triangles) { Sides = sides }.Recalculate(bindVertices, normals);
             return normals;
         }
 

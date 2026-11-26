@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UMA.Editors;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace UMA.ClothesDesigner.Editor
     /// mark openings, set the grain, mirror pieces, size them with dimensions, and see the UV layout.
     /// It edits the pattern open in the Clothes Designer; the cloth is rebuilt after each change.
     /// </summary>
-    public sealed class PatternCanvasWindow : EditorWindow
+    public sealed partial class PatternCanvasWindow : EditorWindow
     {
         private enum CanvasMode { Edit, Sew, Draw, UVs }
         private enum DrawTool { Line, Fold, Hole, Tack, Cut, Part }
@@ -110,8 +111,22 @@ namespace UMA.ClothesDesigner.Editor
             }
         }
 
+        /// <summary>
+        /// Lets go of a designer that has closed. Editing its pattern here would rebuild a cloth with no stage
+        /// to hold it, and the cloth would appear in the open scene.
+        /// </summary>
+        private void ReleaseClosedSession()
+        {
+            if (session == null || !session.IsDisposed) return;
+            session.SelectedPieceChanged -= Repaint;
+            session = null;
+            dragging = false;
+            checks = null;
+        }
+
         private void OnUndoRedo()
         {
+            ReleaseClosedSession();
             if (Pattern == null) return;
             CommitIfChanged();
             Repaint();
@@ -191,12 +206,15 @@ namespace UMA.ClothesDesigner.Editor
 
         private void OnGUI()
         {
+            ReleaseClosedSession();
             if (session == null || Pattern == null)
             {
                 EditorGUILayout.HelpBox("Open the Clothes Designer in the Vertex Editor and choose a pattern, then press Pattern Canvas there.", MessageType.Info);
                 return;
             }
             SyncSelection();
+            EndTypingOnSelectionChange();
+            if (HandleEditingKeys(Event.current)) { EndTypingOnSelectionChange(); Repaint(); }
             try
             {
                 DrawCanvasGUI();
@@ -208,13 +226,28 @@ namespace UMA.ClothesDesigner.Editor
             }
         }
 
+        /// <summary>The editor's window background, under the toolbar and the side panel.</summary>
+        private static Color WindowBackground => EditorGUIUtility.isProSkin ? new Color(0.22f, 0.22f, 0.22f) : new Color(0.76f, 0.76f, 0.76f);
+
         private void DrawCanvasGUI()
         {
-            DrawToolbar();
             Rect canvas = CanvasRect;
             EditorGUI.DrawRect(canvas, new Color(0.17f, 0.17f, 0.19f));
-            GUI.BeginClip(canvas);
-            GUI.EndClip();
+            // The canvas first, then the toolbar and the side panel over it: pieces panned or dragged past the canvas's
+            // edge are not clipped, and drawn after them they showed through the side panel's controls.
+            DrawCanvasContent(canvas);
+            EditorGUI.DrawRect(new Rect(0f, 0f, position.width, canvas.y), WindowBackground);
+            DrawToolbar();
+            Rect side = new Rect(canvas.xMax, 22f, SideWidth, position.height - 22f);
+            EditorGUI.DrawRect(side, WindowBackground);
+            // A click on the canvas may have selected something else: a half-typed field of the last selection is dropped.
+            EndTypingOnSelectionChange();
+            DrawSidePanel(side);
+            if (!string.IsNullOrEmpty(status)) GUI.Label(new Rect(canvas.x + 8f, canvas.yMax - 22f, canvas.width - 16f, 20f), status, EditorStyles.whiteMiniLabel);
+        }
+
+        private void DrawCanvasContent(Rect canvas)
+        {
             if (mode == CanvasMode.UVs) DrawUvView();
             else
             {
@@ -223,11 +256,11 @@ namespace UMA.ClothesDesigner.Editor
                 DrawPieces();
                 DrawSeams();
                 DrawTacks();
+                DrawTrims();
                 DrawInProgress();
+                DrawMoveAids();
                 HandleCanvasInput(canvas);
             }
-            DrawSidePanel(new Rect(canvas.xMax, 22f, SideWidth, position.height - 22f));
-            if (!string.IsNullOrEmpty(status)) GUI.Label(new Rect(canvas.x + 8f, canvas.yMax - 22f, canvas.width - 16f, 20f), status, EditorStyles.whiteMiniLabel);
         }
 
         private void DrawToolbar()
@@ -240,7 +273,17 @@ namespace UMA.ClothesDesigner.Editor
                 var tool = (DrawTool)EditorGUILayout.Popup((int)drawTool, drawToolNames, EditorStyles.toolbarPopup, GUILayout.Width(110f));
                 if (tool != drawTool) { drawTool = tool; CancelDrawing(); }
                 if (drawTool == DrawTool.Tack) newTackIsButton = GUILayout.Toggle(newTackIsButton, new GUIContent("Button", "The tack is a button: the bake adds a button on the first piece."), EditorStyles.toolbarButton);
-                if (drawTool == DrawTool.Cut) cutAndSew = GUILayout.Toggle(cutAndSew, new GUIContent("Sew Back", "Sew the two halves back together along the cut (Cut & Sew)."), EditorStyles.toolbarButton);
+                if (drawTool == DrawTool.Cut)
+                {
+                    cutAndSew = GUILayout.Toggle(cutAndSew, new GUIContent("Sew Back", "Sew the two halves back together along the cut (Cut & Sew)."), EditorStyles.toolbarButton);
+                    bool path = GUILayout.Toggle(KnifePath, new GUIContent("Path", "The knife follows the points you click (a princess seam, a curved yoke) instead of cutting straight across: double-click or Enter cuts, Backspace takes the last point back. An end inside the piece runs on to the outline."), EditorStyles.toolbarButton);
+                    if (path != KnifePath) { KnifePath = path; CancelDrawing(); }
+                    if (KnifePath)
+                    {
+                        bool smooth = GUILayout.Toggle(KnifeSmooth, new GUIContent("Smooth", "The cut curves through the clicked points; off, it runs straight from one to the next."), EditorStyles.toolbarButton);
+                        if (smooth != KnifeSmooth) KnifeSmooth = smooth;
+                    }
+                }
             }
             GUILayout.Space(8f);
             if (GUILayout.Button(new GUIContent("Add Piece", "A new rectangular piece to shape."), EditorStyles.toolbarButton))
@@ -270,13 +313,9 @@ namespace UMA.ClothesDesigner.Editor
                     selectedPiece = Pattern.pieces.Count - 1;
                     CommitIfChanged();
                 }
-                if (GUILayout.Button(new GUIContent("Duplicate"), EditorStyles.toolbarButton))
+                if (GUILayout.Button(new GUIContent("Duplicate", "Copies what is selected: a dart, a pleat, a line or a part, beside it (with Mirror X, mirrored across the piece's middle); with only a piece selected, the piece. Ctrl+D (Cmd+D)."), EditorStyles.toolbarButton))
                 {
-                    Record("Duplicate Piece");
-                    PatternPiece src = Pattern.pieces[selectedPiece];
-                    Pattern.pieces.Add(PatternEditing.Duplicate(src, src.name + " Copy", new Vector2(src.Bounds().width + 10f, 0f)));
-                    selectedPiece = Pattern.pieces.Count - 1;
-                    CommitIfChanged();
+                    DuplicateSelection();
                 }
                 if (GUILayout.Button(new GUIContent("Delete Piece"), EditorStyles.toolbarButton))
                 {
@@ -301,13 +340,23 @@ namespace UMA.ClothesDesigner.Editor
             }
             using (new EditorGUI.DisabledScope(selectedPiece < 0))
             {
-                if (GUILayout.Button(new GUIContent("Add Diamond Dart", "A double-pointed (fish-eye) dart inside the selected piece, for shaping the waist of a longer bodice or dress."), EditorStyles.toolbarButton))
+                if (GUILayout.Button(new GUIContent("Add Diamond Dart", "A double-pointed (fish-eye) dart inside the selected piece, for shaping the waist of a longer bodice or dress. With Mirror X on, a mirrored pair, one each side of the middle."), EditorStyles.toolbarButton))
                 {
                     Record("Add Diamond Dart");
                     PatternPiece piece = Pattern.pieces[selectedPiece];
-                    PatternEditing.AddDoubleDart(piece);
-                    SelectDart(piece.darts.Count - 1);
-                    status = "Drag either point, or the dart itself. Set its width in the side panel.";
+                    // With Mirror X, waist darts come in pairs: one each side, halfway to the side seam.
+                    PatternDart[] pair = MirrorX ? PatternEditing.AddDoubleDartPair(piece, piece.Bounds().center.x) : null;
+                    if (pair != null)
+                    {
+                        SelectDart(piece.darts.Count - 2);
+                        status = "Two diamond darts added, mirrored across the middle (Mirror X is on): drag either and its twin follows. Set the width in the side panel.";
+                    }
+                    else
+                    {
+                        PatternEditing.AddDoubleDart(piece);
+                        SelectDart(piece.darts.Count - 1);
+                        status = "Drag either point, or the dart itself. Set its width in the side panel.";
+                    }
                     CommitIfChanged();
                 }
             }
@@ -323,6 +372,7 @@ namespace UMA.ClothesDesigner.Editor
                     CommitIfChanged();
                 }
             }
+            DrawMoveToolbar();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(new GUIContent("Frame All", "Fit every piece in the canvas."), EditorStyles.toolbarButton)) FrameAll();
             if (GUILayout.Button(new GUIContent("Save Pattern" + (session.PatternDirty ? " *" : "")), EditorStyles.toolbarButton)) session.SavePattern(false);
@@ -498,19 +548,25 @@ namespace UMA.ClothesDesigner.Editor
             if (Event.current.type != EventType.Repaint || mode != CanvasMode.Draw) return;
             Handles.BeginGUI();
             Color c = drawTool == DrawTool.Hole ? HoleColor : drawTool == DrawTool.Fold ? FoldColor : drawTool == DrawTool.Cut ? Color.red : LineColor;
+            // Where a click would land: on a point, onto the outline or lined up with others.
+            Vector2 snapped = DrawSnap(Event.current.mousePosition, Event.current.shift, EditorGUI.actionKey, out int hoverPiece, out _, out _, out bool onPoint);
+            Vector2 cursor = ToScreen(snapped);
             Handles.color = c;
+            var cm = new List<Vector2>(drawPoints);
+            if (cm.Count > 0) cm.Add(snapped);
+            if (drawTool == DrawTool.Hole && cm.Count > 2) cm.Add(cm[0]);
+            if (drawTool == DrawTool.Cut && KnifePath && KnifeSmooth && cm.Count > 2) cm = SmoothPath(cm, 8);
             var pts = new List<Vector3>();
-            foreach (Vector2 q in drawPoints) pts.Add(ToScreen(q));
-            if (pts.Count > 0) pts.Add(Event.current.mousePosition);
-            if (drawTool == DrawTool.Hole && pts.Count > 2) pts.Add(pts[0]);
+            foreach (Vector2 q in cm) pts.Add(ToScreen(q));
             if (pts.Count > 1) Handles.DrawAAPolyLine(2f, pts.ToArray());
             foreach (Vector2 q in drawPoints) DrawDot(ToScreen(q), 3.5f, c);
             if (drawTool == DrawTool.Tack && tackFromPiece >= 0)
             {
                 Handles.color = TackColor;
-                Handles.DrawDottedLine(ToScreen(tackFrom), Event.current.mousePosition, 3f);
+                Handles.DrawDottedLine(ToScreen(tackFrom), cursor, 3f);
                 DrawDot(ToScreen(tackFrom), 4f, TackColor);
             }
+            DrawSnapAids(cursor, onPoint, hoverPiece >= 0);
             Handles.EndGUI();
             Repaint();
         }
@@ -769,6 +825,22 @@ namespace UMA.ClothesDesigner.Editor
                     e.Use(); Repaint();
                     return;
                 }
+                // Shift: the whole piece moves, whatever on it is nearer (an edge, a point, a tack, a line). At a far zoom
+                // most of a small piece is within reach of an edge (measured on the Belted Dress's belt at Frame All: only
+                // 8 to 48% of it picked the piece).
+                if (e.shift)
+                {
+                    int under = PieceInside(e.mousePosition);
+                    if (under < 0) under = piece;
+                    if (under >= 0)
+                    {
+                        selectedPiece = under; selectedPart = -1; selectedTack = -1; selectedLine = -1; lineHandle = -1;
+                        selectedDart = -1; selectedPleat = -1; dartHandle = -1; selectedPoint = -1; selectedEdge = -1; selectedHandle = -1;
+                        StartDrag("Move Piece");
+                        e.Use(); Repaint();
+                        return;
+                    }
+                }
                 int pickedPart = PickPart(e.mousePosition);
                 if (pickedPart >= 0)
                 {
@@ -818,6 +890,12 @@ namespace UMA.ClothesDesigner.Editor
                         selectedEdge = -1;
                         CommitIfChanged();
                     }
+                    else
+                    {
+                        // Dragged, the edge moves (both its ends); a click alone only selects it.
+                        StartDrag("Move Edge");
+                        status = "Drag to move the edge. Hold Shift as you press to move the whole piece.";
+                    }
                 }
                 else if (piece >= 0) { selectedPiece = piece; selectedPoint = -1; selectedEdge = -1; selectedHandle = -1; StartDrag("Move Piece"); }
                 else { selectedPiece = -1; selectedPoint = -1; selectedEdge = -1; selectedHandle = -1; }
@@ -825,64 +903,26 @@ namespace UMA.ClothesDesigner.Editor
             }
             else if (e.type == EventType.MouseDrag && dragging && e.button == 0)
             {
-                Vector2 delta = new Vector2(e.delta.x, -e.delta.y) / zoom;
-                if (selectedPart >= 0 && selectedPart < Pattern.parts.Count)
-                {
-                    Pattern.parts[selectedPart].position += delta;
-                    changedDuringDrag = true;
-                    e.Use(); Repaint();
-                    return;
-                }
-                if (selectedTack >= 0 && selectedTack < Pattern.tacks.Count)
-                {
-                    PatternTack tack = Pattern.tacks[selectedTack];
-                    if (lineHandle == 0) tack.a += delta; else if (lineHandle == 1) tack.b += delta; else { tack.a += delta; tack.b += delta; }
-                    changedDuringDrag = true;
-                    e.Use(); Repaint();
-                    return;
-                }
-                PatternPiece piece = Pattern.pieces[selectedPiece];
-                if (selectedLine >= 0 && selectedLine < piece.lines.Count)
-                {
-                    PatternLine line = piece.lines[selectedLine];
-                    if (lineHandle >= 0 && lineHandle < line.points.Count)
-                    {
-                        Vector2 q = line.points[lineHandle] + delta;
-                        line.points[lineHandle] = e.shift ? new Vector2(Mathf.Round(q.x), Mathf.Round(q.y)) : q;
-                    }
-                    else for (int i = 0; i < line.points.Count; i++) line.points[i] += delta;
-                    changedDuringDrag = true;
-                    e.Use(); Repaint();
-                    return;
-                }
-                if (selectedDart >= 0 && selectedDart < piece.darts.Count) DragDart(piece, piece.darts[selectedDart], delta, ToCm(e.mousePosition));
-                else if (selectedPleat >= 0 && selectedPleat < piece.pleats.Count) DragPleat(piece, piece.pleats[selectedPleat], ToCm(e.mousePosition));
-                else if (selectedHandle >= 0 && selectedEdge >= 0)
-                {
-                    PatternEdge edge = piece.edges[selectedEdge];
-                    if (selectedHandle == 0) edge.handleA += delta; else edge.handleB += delta;
-                }
-                else if (selectedPoint >= 0)
-                {
-                    Vector2 p = piece.points[selectedPoint].position + delta;
-                    piece.points[selectedPoint].position = e.shift ? new Vector2(Mathf.Round(p.x), Mathf.Round(p.y)) : p;
-                }
-                else
-                {
-                    // The whole piece, with what is drawn on it.
-                    foreach (PatternPoint p in piece.points) p.position += delta;
-                    foreach (PatternLine l in piece.lines) for (int i = 0; i < l.points.Count; i++) l.points[i] += delta;
-                    foreach (PatternDart d in piece.darts) { d.tip += delta; d.tip2 += delta; }
-                    foreach (PatternTack t in Pattern.tacks) { if (t.pieceA == piece.id) t.a += delta; if (t.pieceB == piece.id) t.b += delta; }
-                    foreach (PatternPart part in Pattern.parts) if (part.pieceId == piece.id) part.position += delta;
-                }
+                // Recorded before every change, not only at mouse-down: Unity compares a recorded object at the
+                // end of the frame it was recorded in, and a drag's moves come in later frames, so a drag recorded
+                // once was lost from Undo (or kept only as far as its first frame).
+                Record(dragLabel);
+                // The whole move from where the drag began, kept to an axis and snapped; applied to what was there then.
+                Vector2 total = MoveSoFar(ToCm(e.mousePosition), e);
+                RestoreDragSnapshot();
+                ApplyMove(total, dragStartCm + total, e.shift);
+                ApplyMirror();
                 changedDuringDrag = true;
                 e.Use(); Repaint();
             }
             else if (e.type == EventType.MouseUp && dragging)
             {
                 dragging = false;
+                dragGuides.Clear();
+                if (dragGroup >= 0) Undo.CollapseUndoOperations(dragGroup);
+                Undo.IncrementCurrentGroup();
                 if (changedDuringDrag) CommitIfChanged();
+                NoteMoveEnded();
                 e.Use();
             }
             else if (e.type == EventType.KeyDown && (e.keyCode == KeyCode.Delete || e.keyCode == KeyCode.Backspace) && (selectedPart >= 0 || selectedTack >= 0 || (selectedPiece >= 0 && selectedLine >= 0)))
@@ -903,6 +943,17 @@ namespace UMA.ClothesDesigner.Editor
                 CommitIfChanged();
                 e.Use();
             }
+        }
+
+        /// <summary>The topmost piece whose outline contains the pointer, or -1.</summary>
+        private int PieceInside(Vector2 mouse)
+        {
+            Vector2 cm = ToCm(mouse);
+            for (int p = Pattern.pieces.Count - 1; p >= 0; p--)
+            {
+                if (Pattern.pieces[p].points.Count >= 3 && PatternGeometry.PointInPolygon(PatternGeometry.SampleOutline(Pattern.pieces[p], 1f, null), cm)) return p;
+            }
+            return -1;
         }
 
         private int PickPart(Vector2 mouse)
@@ -960,12 +1011,16 @@ namespace UMA.ClothesDesigner.Editor
         {
             if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Escape) { CancelDrawing(); status = null; e.Use(); Repaint(); return true; }
             if (e.type == EventType.KeyDown && (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)) { FinishDrawing(); e.Use(); Repaint(); return true; }
+            if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Backspace && drawPoints.Count > 0)
+            {
+                drawPoints.RemoveAt(drawPoints.Count - 1);
+                if (drawPoints.Count == 0) drawPiece = -1;
+                e.Use(); Repaint();
+                return true;
+            }
             if (e.type != EventType.MouseDown || e.button != 0 || e.alt) return false;
-            Pick(e.mousePosition, out int piece, out _, out int edge, out float fraction, out _);
-            Vector2 at = ToCm(e.mousePosition);
-            if (e.shift) at = new Vector2(Mathf.Round(at.x), Mathf.Round(at.y));
-            // On the outline: exactly on it, so a line can end there.
-            if (edge >= 0) at = new PatternGeometry.EdgeCurve(Pattern.pieces[piece], edge, PieceScale.Identity).At(fraction);
+            // On a point, exactly on the outline (so a line can end there), or lined up with other points.
+            Vector2 at = DrawSnap(e.mousePosition, e.shift, EditorGUI.actionKey, out int piece, out int edge, out float fraction, out _);
             if (piece < 0) { status = "Click on a piece."; e.Use(); return true; }
             if (drawTool == DrawTool.Part)
             {
@@ -999,7 +1054,7 @@ namespace UMA.ClothesDesigner.Editor
             if (drawPiece >= 0 && piece != drawPiece) { status = "A line stays on one piece. Press Enter to finish this one first."; e.Use(); return true; }
             drawPiece = piece;
             drawPoints.Add(at);
-            if (drawTool == DrawTool.Cut && drawPoints.Count == 2)
+            if (drawTool == DrawTool.Cut && !KnifePath && drawPoints.Count == 2)
             {
                 Record("Cut Piece");
                 PatternPiece half = PatternEditing.CutPiece(Pattern, Pattern.pieces[drawPiece], drawPoints[0], drawPoints[1], cutAndSew, out string problem);
@@ -1009,16 +1064,30 @@ namespace UMA.ClothesDesigner.Editor
                 CommitIfChanged();
             }
             else if (e.clickCount == 2) FinishDrawing();
-            else status = drawTool == DrawTool.Cut ? "Click where the cut ends; it runs straight across the whole piece." : "Click the next point. Double-click or Enter finishes, Escape cancels.";
+            else status = drawTool == DrawTool.Cut
+                ? (KnifePath ? "Click the next point of the cut. Double-click or Enter cuts, Backspace takes the last point back, Escape cancels." : "Click where the cut ends; it runs straight across the whole piece.")
+                : "Click the next point. Double-click or Enter finishes, Backspace takes the last point back, Escape cancels.";
             e.Use(); Repaint();
             return true;
         }
 
         private void FinishDrawing()
         {
-            if (drawTool == DrawTool.Tack || drawTool == DrawTool.Cut || drawPiece < 0) { CancelDrawing(); return; }
             // A double-click adds the same point twice.
             for (int i = drawPoints.Count - 1; i > 0; i--) if ((drawPoints[i] - drawPoints[i - 1]).sqrMagnitude < 0.01f) drawPoints.RemoveAt(i);
+            if (drawTool == DrawTool.Cut && KnifePath && drawPiece >= 0 && drawPiece < Pattern.pieces.Count)
+            {
+                if (drawPoints.Count < 2) { status = "Click at least two points for the cut."; CancelDrawing(); return; }
+                Record("Cut Piece");
+                PatternPiece target = Pattern.pieces[drawPiece];
+                PatternPiece half = PatternEditing.CutPieceAlong(Pattern, target, drawPoints, KnifeSmooth, cutAndSew, out string problem);
+                status = half != null ? "Cut into '" + target.name + "' and '" + half.name + "'" + (cutAndSew ? ", sewn back together along the cut." : ".") : problem;
+                if (half == null) Undo.RevertAllInCurrentGroup();
+                CancelDrawing();
+                CommitIfChanged();
+                return;
+            }
+            if (drawTool == DrawTool.Tack || drawTool == DrawTool.Cut || drawPiece < 0) { CancelDrawing(); return; }
             int least = drawTool == DrawTool.Hole ? 3 : 2;
             if (drawPoints.Count < least) { status = "Draw at least " + least + " points."; CancelDrawing(); return; }
             Record(drawTool == DrawTool.Hole ? "Add Hole" : drawTool == DrawTool.Fold ? "Add Fold Line" : "Add Line");
@@ -1129,10 +1198,19 @@ namespace UMA.ClothesDesigner.Editor
 
         private void StartDrag(string what)
         {
+            // Each drag is one Undo step: its own group, every change during it recorded into that group.
+            Undo.IncrementCurrentGroup();
+            Undo.SetCurrentGroupName(what);
+            dragGroup = Undo.GetCurrentGroup();
+            dragLabel = what;
             Record(what);
             dragging = true;
             changedDuringDrag = false;
+            BeginMoveSession(ToCm(Event.current.mousePosition));
         }
+
+        private string dragLabel = "Move";
+        private int dragGroup = -1;
 
         private void HandleSewClick(int piece, int edge, int linePiece, int line, bool shift)
         {
@@ -1182,6 +1260,33 @@ namespace UMA.ClothesDesigner.Editor
             CommitIfChanged();
         }
 
+        /// <summary>
+        /// How near the pointer must be to an edge, in pixels, to pick it: from outside its piece, and from inside it
+        /// while editing. Zoomed out, a narrow piece is mostly within the full reach of an edge: at Frame All only 8 to 48%
+        /// of the Belted Dress's belt picked the piece; with the short reach inside, 50 to 73% (the rest is its corner
+        /// points and belt-loop tacks).
+        /// </summary>
+        public const float EdgePickPixels = 8f, EdgePickPixelsInside = 3f;
+
+        /// <summary>
+        /// The first edge of the piece within reach of a point (cm) at this zoom (pixels a cm): <see cref="EdgePickPixels"/>
+        /// from outside the piece, <paramref name="insidePixels"/> from inside it. -1 if none.
+        /// </summary>
+        public static int EdgeInReach(PatternPiece piece, Vector2 cm, float zoom, float insidePixels, out float fraction)
+        {
+            fraction = 0f;
+            if (piece == null || piece.points.Count < 2 || zoom <= 0f) return -1;
+            bool within = piece.points.Count >= 3 && PatternGeometry.PointInPolygon(PatternGeometry.SampleOutline(piece, 1f, null), cm);
+            float reach = (within ? insidePixels : EdgePickPixels) / zoom;
+            for (int e = 0; e < piece.edges.Count; e++)
+            {
+                var curve = new PatternGeometry.EdgeCurve(piece, e, PieceScale.Identity);
+                float f = curve.Nearest(cm, out float d);
+                if (d < reach) { fraction = f; return e; }
+            }
+            return -1;
+        }
+
         private void Pick(Vector2 mouse, out int piece, out int point, out int edge, out float fraction, out int handle)
         {
             piece = -1; point = -1; edge = -1; fraction = 0f; handle = -1;
@@ -1202,15 +1307,13 @@ namespace UMA.ClothesDesigner.Editor
                 }
             }
             Vector2 cm = ToCm(mouse);
+            // Editing, an edge is in reach only close to it from inside its piece, so pressing inside moves the piece;
+            // sewing and drawing are about edges, so they keep the full reach both sides.
+            float inside = mode == CanvasMode.Edit ? EdgePickPixelsInside : EdgePickPixels;
             for (int p = Pattern.pieces.Count - 1; p >= 0; p--)
             {
-                PatternPiece pc = Pattern.pieces[p];
-                for (int e = 0; e < pc.edges.Count; e++)
-                {
-                    var curve = new PatternGeometry.EdgeCurve(pc, e, PieceScale.Identity);
-                    float f = curve.Nearest(cm, out float d);
-                    if (d * zoom < pickPixels) { piece = p; edge = e; fraction = f; return; }
-                }
+                int e = EdgeInReach(Pattern.pieces[p], cm, zoom, inside, out float f);
+                if (e >= 0) { piece = p; edge = e; fraction = f; return; }
             }
             for (int p = Pattern.pieces.Count - 1; p >= 0; p--)
             {
@@ -1253,13 +1356,17 @@ namespace UMA.ClothesDesigner.Editor
             GUILayout.Label("UV Layout", EditorStyles.boldLabel);
             Pattern.uvLayout.bakeResolution = EditorGUILayout.IntPopup("Texture", Pattern.uvLayout.bakeResolution, new[] { "512", "1024", "2048", "4096" }, new[] { 512, 1024, 2048, 4096 });
             Pattern.uvLayout.gutterPixels = EditorGUILayout.IntSlider("Gutter (px)", Pattern.uvLayout.gutterPixels, 0, 32);
-            if (GUILayout.Button(new GUIContent("Repack UVs", "Lay the pieces out again. Painted textures made for the old layout will no longer line up.")))
+            bool turn = EditorGUILayout.ToggleLeft(new GUIContent("Turn Pieces", "Let Repack turn pieces a quarter or half turn to fit them tighter. The grain stays along an axis of the texture."), Pattern.uvLayout.turnPieces);
+            if (turn != Pattern.uvLayout.turnPieces) { Record("Turn Pieces"); Pattern.uvLayout.turnPieces = turn; }
+            bool share = EditorGUILayout.ToggleLeft(new GUIContent("Mirrors Share Space", "A linked mirror (a left and right sleeve) uses its original's place in the texture, mirrored, so the pair costs the texels of one. Both then show the same texture: no different decal or wear on each side. Takes effect on Repack."), Pattern.uvLayout.shareMirrors);
+            if (share != Pattern.uvLayout.shareMirrors) { Record("Mirrors Share Space"); Pattern.uvLayout.shareMirrors = share; }
+            if (GUILayout.Button(new GUIContent("Repack UVs", "Lay the pieces out again: their outlines packed tightly, at one texel density (times each piece's Texture Detail). Painted textures made for the old layout will no longer line up.")))
             {
                 if (EditorUtility.DisplayDialog("Repack UVs", "Lay the pieces out again in the texture? Any texture painted for the current layout will no longer line up with the pieces.", "Repack", "Cancel"))
                 {
                     Record("Repack UVs");
-                    float density = UvLayout.Repack(Pattern);
-                    status = "Packed at " + density.ToString("0.0") + " texels per cm of the pattern as drawn.";
+                    float density = UvLayout.Repack(Pattern, out float coverage);
+                    status = "Packed at " + density.ToString("0.0") + " texels per cm of the pattern as drawn; the cloth covers " + (coverage * 100f).ToString("0") + "% of the texture.";
                     CommitIfChanged();
                 }
             }
@@ -1294,6 +1401,7 @@ namespace UMA.ClothesDesigner.Editor
                 if (selectedLine >= 0 && selectedLine < Pattern.pieces[selectedPiece].lines.Count) DrawLineInspector(Pattern.pieces[selectedPiece], Pattern.pieces[selectedPiece].lines[selectedLine]);
                 DrawPieceInspector(Pattern.pieces[selectedPiece]);
                 DrawDartsAndPleatsInspector(Pattern.pieces[selectedPiece]);
+                DrawTrimsInspector(Pattern.pieces[selectedPiece]);
             }
 
             GUILayout.Space(6f);
@@ -1303,11 +1411,34 @@ namespace UMA.ClothesDesigner.Editor
 
             GUILayout.Space(6f);
             GUILayout.Label("Checks", EditorStyles.boldLabel);
-            List<string> problems = Pattern.FindProblems();
+            List<string> problems = Checks();
+            if (problems.Count == 0) GUILayout.Label("Ready to simulate.", EditorStyles.wordWrappedMiniLabel);
+            foreach (string problem in problems) EditorGUILayout.HelpBox(problem, MessageType.Warning);
+            if (EditorGUI.EndChangeCheck()) CommitIfChanged();
+            GUILayout.EndScrollView();
+            GUILayout.EndArea();
+        }
+
+        // The Checks list and the pattern it was made for. A full check takes tens of milliseconds on a
+        // pattern with diamond darts, too slow to run for every GUI event.
+        private List<string> checks;
+        private string checksJson;
+
+        /// <summary>
+        /// The pattern's problems, worked out again only when the pattern has changed, at a Layout event (so
+        /// Layout and Repaint draw the same list) and not while something is being dragged.
+        /// </summary>
+        private List<string> Checks()
+        {
+            if (checks != null && (dragging || Event.current.type != EventType.Layout)) return checks;
+            string json = JsonUtility.ToJson(Pattern);
+            if (checks != null && json == checksJson) return checks;
+            checksJson = json;
+            checks = Pattern.FindProblems();
             foreach (PatternSeam seam in Pattern.seams)
             {
                 float mismatch = PatternEditing.SeamMismatchCm(Pattern, seam);
-                if (Mathf.Abs(mismatch) > 1f) problems.Add("A seam's sides differ by " + Mathf.Abs(mismatch).ToString("0.0") + " cm; the longer side will gather.");
+                if (Mathf.Abs(mismatch) > 1f) checks.Add("A seam's sides differ by " + Mathf.Abs(mismatch).ToString("0.0") + " cm; the longer side will gather.");
             }
             int unsewn = 0;
             int partly = 0;
@@ -1320,13 +1451,80 @@ namespace UMA.ClothesDesigner.Editor
                     else if (Pattern.FreeSpan(piece.id, e.id, out float f0, out float f1) && f1 - f0 > 0.05f) partly++;
                 }
             }
-            if (unsewn > 0) problems.Add(unsewn + " edges are neither sewn nor marked as openings.");
-            if (partly > 0) problems.Add(partly + " edges are sewn along only part of their length; the rest is left open.");
-            if (problems.Count == 0) GUILayout.Label("Ready to simulate.", EditorStyles.wordWrappedMiniLabel);
-            foreach (string problem in problems) EditorGUILayout.HelpBox(problem, MessageType.Warning);
-            if (EditorGUI.EndChangeCheck()) CommitIfChanged();
-            GUILayout.EndScrollView();
-            GUILayout.EndArea();
+            if (unsewn > 0) checks.Add(unsewn + " edges are neither sewn nor marked as openings.");
+            if (partly > 0) checks.Add(partly + " edges are sewn along only part of their length; the rest is left open.");
+            return checks;
+        }
+
+        /// <summary>
+        /// The piece's look: the clothes' own overlay, or one of the pattern's looks (a fabric's textures at their
+        /// real size and a colour), edited here for every piece that uses it.
+        /// </summary>
+        private void DrawLookField(PatternPiece piece)
+        {
+            if (Pattern.looks == null) Pattern.looks = new List<PieceLook>();
+            var names = new List<string> { "Clothes' Own Overlay" };
+            int current = 0;
+            for (int i = 0; i < Pattern.looks.Count; i++)
+            {
+                names.Add((i + 1) + ". " + (string.IsNullOrEmpty(Pattern.looks[i].name) ? "Look" : Pattern.looks[i].name));
+                if (Pattern.looks[i].id == piece.lookId) current = i + 1;
+            }
+            names.Add("New Look...");
+            int picked = EditorGUILayout.Popup(new GUIContent("Look", "What the piece is made of in the texture. A look is a fabric's textures, tiled at their real size along the grain, and a colour; the bake makes an overlay per look, masked to its pieces, so pieces can be different fabrics on one slot and material and be recoloured separately."), current, names.ToArray());
+            if (picked != current)
+            {
+                Record("Look");
+                if (picked == names.Count - 1)
+                {
+                    var created = new PieceLook { id = ClothesPattern.NewId(), name = "Fabric " + (Pattern.looks.Count + 1) };
+                    Pattern.looks.Add(created);
+                    piece.lookId = created.id;
+                }
+                else piece.lookId = picked == 0 ? null : Pattern.looks[picked - 1].id;
+            }
+            PieceLook look = Pattern.FindLook(piece.lookId);
+            if (look == null) return;
+            EditorGUI.indentLevel++;
+            string lookName = EditorGUILayout.DelayedTextField("Name", look.name);
+            if (lookName != look.name) { Record("Look Name"); look.name = lookName; }
+            var albedo = (Texture2D)EditorGUILayout.ObjectField(new GUIContent("Colour Texture", "The fabric's colour, a tileable texture. None paints the look's colour alone."), look.albedo, typeof(Texture2D), false);
+            if (albedo != look.albedo) { Record("Look Texture"); look.albedo = albedo; }
+            var normal = (Texture2D)EditorGUILayout.ObjectField(new GUIContent("Normal Map", "The fabric's weave, a tileable tangent-space normal map. It is combined with the drape's baked folds."), look.normal, typeof(Texture2D), false);
+            if (normal != look.normal) { Record("Look Normal Map"); look.normal = normal; }
+            var mask = (Texture2D)EditorGUILayout.ObjectField(new GUIContent("Mask Texture", "For the material's third channel (specular, or metallic and smoothness), tileable. None leaves the clothes' own."), look.mask, typeof(Texture2D), false);
+            if (mask != look.mask) { Record("Look Mask"); look.mask = mask; }
+            Color color = EditorGUILayout.ColorField(new GUIContent("Colour", "Multiplied with the colour texture; characters can change it at run time."), look.color);
+            if (color != look.color) { Record("Look Colour"); look.color = color; }
+            string sharedName = EditorGUILayout.DelayedTextField(new GUIContent("Shared Colour", "A shared colour name for the recipe (for example \"Shirt2\"), so characters set this look's colour by name. Empty keeps the colour above."), look.sharedColorName ?? "");
+            if (sharedName != (look.sharedColorName ?? "")) { Record("Look Shared Colour"); look.sharedColorName = sharedName; }
+            float repeat = Mathf.Max(0.5f, EditorGUILayout.DelayedFloatField(new GUIContent("Repeat (cm)", "How much cloth one repeat of the textures covers: the fabric's real size."), look.repeatCm));
+            if (!Mathf.Approximately(repeat, look.repeatCm)) { Record("Look Repeat"); look.repeatCm = repeat; }
+            float rotation = EditorGUILayout.Slider(new GUIContent("Rotation", "The textures' turn against each piece's grain: 45 for fabric cut on the bias."), look.rotation, -180f, 180f);
+            if (!Mathf.Approximately(rotation, look.rotation)) { Record("Look Rotation"); look.rotation = rotation; }
+            if (look.normal != null)
+            {
+                float strength = EditorGUILayout.Slider(new GUIContent("Normal Strength"), look.normalStrength, 0f, 2f);
+                if (!Mathf.Approximately(strength, look.normalStrength)) { Record("Look Normal Strength"); look.normalStrength = strength; }
+            }
+            int users = 0;
+            foreach (PatternPiece p in Pattern.pieces) if (p.lookId == look.id) users++;
+            EditorGUILayout.LabelField(" ", users == 1 ? "Used by this piece." : "Used by " + users + " pieces.", EditorStyles.miniLabel);
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(EditorGUI.indentLevel * 15f);
+            if (GUILayout.Button(new GUIContent("Use on All Pieces", "Give every piece this look.")))
+            {
+                Record("Look on All Pieces");
+                foreach (PatternPiece p in Pattern.pieces) p.lookId = look.id;
+            }
+            if (GUILayout.Button(new GUIContent("Delete Look", "Remove the look; its pieces show the clothes' own overlay again.")))
+            {
+                Record("Delete Look");
+                foreach (PatternPiece p in Pattern.pieces) if (p.lookId == look.id) p.lookId = null;
+                Pattern.looks.Remove(look);
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUI.indentLevel--;
         }
 
         private void DrawPieceInspector(PatternPiece piece)
@@ -1347,13 +1545,21 @@ namespace UMA.ClothesDesigner.Editor
                 "A stiffening layer fused to the piece. It resists folding across the piece's height (as drawn) but still curves round the neck or wrist. Firm: collar stands, cuffs, waistbands. Light: collar leaves, plackets."), piece.interfacing);
             if (interfacing != piece.interfacing) { Record("Interfacing"); piece.interfacing = interfacing; }
             float detail = EditorGUILayout.Slider(new GUIContent("Mesh Detail",
-                "How much finer than the Mesh Level this piece is meshed. Small pieces (collars, cuffs, bands) need 2 to 3 to hold a curve or a point."), PatternPiece.DetailOf(piece), 1f, 4f);
+                "How much finer than the Mesh Level this piece is meshed. Small pieces (collars, cuffs, bands) need 2 to 3 to hold a curve or a point. A piece with pleats is meshed at least as finely as half its shallowest pleat's depth, whatever this says, so its folds hold."), PatternPiece.DetailOf(piece), 1f, 4f);
             detail = Mathf.Round(detail * 2f) / 2f;
             if (!Mathf.Approximately(detail, PatternPiece.DetailOf(piece))) { Record("Mesh Detail"); piece.meshDetail = detail; }
+            float textureDetail = EditorGUILayout.Slider(new GUIContent("Texture Detail",
+                "How many texels per centimetre this piece gets in the texture, against the others: less for pieces seldom seen (a collar stand, a waistband's inside), more for a printed front. Takes effect on Repack UVs."), piece.textureDetail <= 0f ? 1f : piece.textureDetail, 0.25f, 2f);
+            textureDetail = Mathf.Round(textureDetail * 4f) / 4f;
+            if (!Mathf.Approximately(textureDetail, piece.textureDetail)) { Record("Texture Detail"); piece.textureDetail = textureDetail; }
+            DrawLookField(piece);
             int layer = EditorGUILayout.IntSlider(new GUIContent("Layer", "Where pieces cross, a higher layer is kept outside a lower one: a pocket over its panel, a jacket front over a shirt. Pieces sewn edge to edge are best on one layer."), piece.layer, 0, 5);
             if (layer != piece.layer) { Record("Layer"); piece.layer = layer; }
             float pressure = EditorGUILayout.Slider(new GUIContent("Pressure", "Pushes the piece out from the body, like padding or the air in a puffer jacket. It shows most on stretchy fabric or pieces cut with room to spare."), piece.pressure, 0f, 1f);
             if (!Mathf.Approximately(pressure, piece.pressure)) { Record("Pressure"); piece.pressure = pressure; }
+            float thickness = EditorGUILayout.Slider(new GUIContent("Thickness (mm)", "How thick the piece is baked: a belt, a waistband, a strap. 0 bakes it as thin as the rest. The thickness is built outward, so the piece stands out from what it is sewn to; the drape is not changed."), piece.thicknessMm, 0f, 30f);
+            thickness = Mathf.Round(thickness * 2f) / 2f;
+            if (!Mathf.Approximately(thickness, piece.thicknessMm)) { Record("Thickness"); piece.thicknessMm = thickness; }
             PatternPiece original = string.IsNullOrEmpty(piece.mirrorOf) ? null : Pattern.FindPiece(piece.mirrorOf);
             if (original != null)
             {
@@ -1363,6 +1569,7 @@ namespace UMA.ClothesDesigner.Editor
             }
             DrawAttachFields(piece);
             DrawMergeButtons(piece);
+            DrawPieceTools(piece);
             if (selectedPiece >= 0 && session.ClothReady)
             {
                 GUILayout.Space(4f);
@@ -1406,6 +1613,14 @@ namespace UMA.ClothesDesigner.Editor
                         status = "Now click the edge to sew it to, or shift-click several and press Enter.";
                     }
                 }
+                if (GUILayout.Button(new GUIContent("Add Trim", "A zipper, stitching, piping or hem along this edge, a little inside it. Publish and Open in Overlay Painter (in the Publish window) lays it out there as an editable layer.")))
+                {
+                    AddTrim(piece, edge.id);
+                }
+                if (GUILayout.Button(new GUIContent("Merge Its Points", "Stitch Points: the edge's two points become one, at its middle. The edge goes, with anything sewn to it; the edges either side keep theirs.")))
+                {
+                    MergeSelectedEdgePoints(piece);
+                }
             }
             else if (selectedPoint >= 0 && selectedPoint < piece.points.Count)
             {
@@ -1414,7 +1629,7 @@ namespace UMA.ClothesDesigner.Editor
                 Vector2 p = piece.points[selectedPoint].position;
                 Vector2 np = EditorGUILayout.Vector2Field("Position (cm)", p);
                 if (np != p) { Record("Move Point"); piece.points[selectedPoint].position = np; }
-                GUILayout.Label("Delete removes the point. Double-click an edge to add one.", EditorStyles.wordWrappedMiniLabel);
+                GUILayout.Label("Delete removes the point: its two edges become one, and what was sewn along them stays sewn. Double-click an edge to add one.", EditorStyles.wordWrappedMiniLabel);
             }
             else GUILayout.Label("Click a point or an edge to edit it. Double-click an edge to split it.", EditorStyles.wordWrappedMiniLabel);
         }
@@ -1509,6 +1724,9 @@ namespace UMA.ClothesDesigner.Editor
             bool folded = EditorGUILayout.ToggleLeft(new GUIContent("Folded (turned over)",
                 "The second piece is turned over the first along this seam, like a collar's leaf over its stand. Draw it as it looks turned over, lay it out turned over a little farther out, and the simulation keeps it turned."), seam.folded);
             if (folded != seam.folded) { Record("Fold Seam"); seam.folded = folded; }
+            bool sharpSeam = EditorGUILayout.ToggleLeft(new GUIContent("Sharp",
+                "A crisp seam: the baked slot keeps a normal for each side of it (a welt, a panel line on leather) instead of one shared, smooth normal. The two sides stay at one position and move as one."), seam.sharp);
+            if (sharpSeam != seam.sharp) { Record("Sharp Seam"); seam.sharp = sharpSeam; }
             var stitch = (TopstitchKind)EditorGUILayout.Popup(new GUIContent("Topstitch", "Stitching beside the seam, drawn into the clothes' texture when they are baked."), (int)seam.topstitch, topstitchNames);
             if (stitch != seam.topstitch) { Record("Topstitch"); seam.topstitch = stitch; }
             if (seam.topstitch != TopstitchKind.None)
@@ -1538,6 +1756,8 @@ namespace UMA.ClothesDesigner.Editor
                 if (!Mathf.Approximately(angle, line.foldAngle)) { Record("Fold Angle"); line.foldAngle = angle; }
                 bool inward = EditorGUILayout.Toggle(new GUIContent("Folds Inward", "The crease points in towards the body (a valley) instead of out (a ridge)."), line.foldInward);
                 if (inward != line.foldInward) { Record("Fold Direction"); line.foldInward = inward; }
+                bool sharpLine = EditorGUILayout.Toggle(new GUIContent("Sharp", "Bake the crease sharp: the slot is split along it with a normal for each side, so it shows as a crisp edge. The two sides stay one."), line.sharp);
+                if (sharpLine != line.sharp) { Record("Sharp Fold"); line.sharp = sharpLine; }
             }
             EditorGUILayout.LabelField("Length", LineGeometry.Length(line).ToString("0.0") + " cm, " + line.points.Count + " points");
             foreach (PatternSeam seam in Pattern.FindSeamsOn(piece.id, line.id))
@@ -1550,7 +1770,118 @@ namespace UMA.ClothesDesigner.Editor
                 EditorGUILayout.EndHorizontal();
             }
             GUILayout.Label("Drag a point to move it, or the line to move it all. Delete removes it.", EditorStyles.wordWrappedMiniLabel);
+            if (line.kind != PatternLineKind.Hole && GUILayout.Button(new GUIContent("Add Trim", "A zipper, stitching, piping or hem along this line. Publish and Open in Overlay Painter (in the Publish window) lays it out there as an editable layer.")))
+            {
+                AddTrim(piece, line.id);
+            }
+            if (!LineGeometry.IsClosed(line) && GUILayout.Button(new GUIContent("Cut Piece Along Line", "Cuts the piece in two along this line (a princess seam, a curved yoke) and sews the halves back together along it; the line goes. Its ends run on to the outline when short of it.")))
+            {
+                CutAlongSelectedLine(piece, line);
+            }
             if (GUILayout.Button("Delete Line")) { DeleteSelectedLineOrTack(); GUIUtility.ExitGUI(); }
+        }
+
+        // ---- Trims ---------------------------------------------------------------------------
+
+        private int selectedTrim = -1;
+
+        private void AddTrim(PatternPiece piece, string pathId)
+        {
+            Record("Add Trim");
+            if (Pattern.trims == null) Pattern.trims = new List<PatternTrim>();
+            Pattern.trims.Add(GarmentTrims.Create(piece, pathId, 0f, 1f));
+            selectedTrim = Pattern.trims.Count - 1;
+            status = UMATrimPainting.Painter != null
+                ? "Trim added. Set its construction, width and inset in the side panel; Publish and Open in Overlay Painter, in the Publish window, hands it to the Overlay Painter."
+                : "Trim added. Install the Overlay Painter (Welcome to UMA > Plugins) to paint it.";
+            CommitIfChanged();
+        }
+
+        /// <summary>The trims on a piece: pick one to edit its construction, width, inset and span.</summary>
+        private void DrawTrimsInspector(PatternPiece piece)
+        {
+            if (Pattern.trims == null) return;
+            var onPiece = new List<int>();
+            for (int i = 0; i < Pattern.trims.Count; i++) if (Pattern.trims[i] != null && Pattern.trims[i].pieceId == piece.id) onPiece.Add(i);
+            if (onPiece.Count == 0) return;
+            GUILayout.Space(6f);
+            GUILayout.Label(new GUIContent("Trims", "Zippers, stitching, piping and hems painted along edges and lines by the Overlay Painter (Publish and Open in Overlay Painter, in the Publish window). Texture, not geometry."), EditorStyles.boldLabel);
+            foreach (int i in onPiece)
+            {
+                bool on = GUILayout.Toggle(i == selectedTrim, Pattern.trims[i].name, EditorStyles.radioButton);
+                if (on && i != selectedTrim) { selectedTrim = i; Repaint(); }
+            }
+            if (selectedTrim < 0 || selectedTrim >= Pattern.trims.Count || Pattern.trims[selectedTrim].pieceId != piece.id) return;
+            PatternTrim trim = Pattern.trims[selectedTrim];
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            string name = EditorGUILayout.DelayedTextField("Name", trim.name ?? "");
+            if (name != trim.name) { Record("Rename Trim"); trim.name = name; }
+            IUMATrimPainter painter = UMATrimPainting.Painter;
+            if (painter != null)
+            {
+                IReadOnlyList<UMATrimConstruction> constructions = painter.Constructions;
+                var labels = new string[constructions.Count];
+                int current = -1;
+                for (int c = 0; c < constructions.Count; c++) { labels[c] = constructions[c].menuPath; if (constructions[c].id == trim.constructionId) current = c; }
+                int picked = EditorGUILayout.Popup(new GUIContent("Construction", "How the Overlay Painter draws it: one of its path generators. Fine-tune it there after publishing."), current, labels);
+                if (picked != current && picked >= 0)
+                {
+                    Record("Trim Construction");
+                    bool renamed = string.IsNullOrEmpty(trim.name) || trim.name == GarmentTrims.ShortName(trim.constructionName) || trim.name == "Trim";
+                    trim.constructionId = constructions[picked].id;
+                    trim.constructionName = constructions[picked].menuPath;
+                    if (renamed) trim.name = GarmentTrims.ShortName(trim.constructionName);
+                }
+            }
+            else
+            {
+                EditorGUILayout.LabelField("Construction", string.IsNullOrEmpty(trim.constructionName) ? "(none)" : trim.constructionName);
+                EditorGUILayout.HelpBox("Install the Overlay Painter (Welcome to UMA > Plugins) to choose a construction and paint trims.", MessageType.Info);
+            }
+            float width = EditorGUILayout.Slider(new GUIContent("Width (cm)", "How wide the trim is on the cloth."), trim.widthCm, 0.05f, 10f);
+            if (!Mathf.Approximately(width, trim.widthCm)) { Record("Trim Width"); trim.widthCm = width; }
+            bool onEdge = piece.IndexOfEdge(trim.pathId) >= 0;
+            if (onEdge)
+            {
+                float inset = EditorGUILayout.Slider(new GUIContent("Inset (cm)", "How far inside the piece the trim's middle runs from the edge. Half the width keeps it all on this piece; 0 centres it on the edge."), trim.insetCm, -5f, 10f);
+                if (!Mathf.Approximately(inset, trim.insetCm)) { Record("Trim Inset"); trim.insetCm = inset; }
+            }
+            float start = trim.start, end = trim.end;
+            EditorGUILayout.MinMaxSlider(new GUIContent("Span", "The part of the " + (onEdge ? "edge" : "line") + " the trim covers."), ref start, ref end, 0f, 1f);
+            if (!Mathf.Approximately(start, trim.start) || !Mathf.Approximately(end, trim.end)) { Record("Trim Span"); trim.start = start; trim.end = end; }
+            if (LineGeometry.CurveOf(piece, trim.pathId, PieceScale.Identity) == null)
+                EditorGUILayout.HelpBox("The edge or line this trim followed no longer exists; it is left out when publishing.", MessageType.Warning);
+            if (GUILayout.Button("Delete Trim"))
+            {
+                Record("Delete Trim");
+                Pattern.trims.RemoveAt(selectedTrim);
+                selectedTrim = -1;
+                CommitIfChanged();
+                GUIUtility.ExitGUI();
+            }
+            EditorGUILayout.EndVertical();
+        }
+
+        private static readonly Color TrimColor = new Color(1f, 0.55f, 0.85f);
+
+        /// <summary>Each trim as a band of its width along its path, brighter when selected.</summary>
+        private void DrawTrims()
+        {
+            if (Event.current.type != EventType.Repaint || Pattern.trims == null || Pattern.trims.Count == 0) return;
+            Handles.BeginGUI();
+            for (int i = 0; i < Pattern.trims.Count; i++)
+            {
+                List<Vector2> path = GarmentTrims.DrawnPath(Pattern, Pattern.trims[i], out _);
+                if (path.Count < 2) continue;
+                var line = new Vector3[path.Count];
+                for (int k = 0; k < path.Count; k++) line[k] = ToScreen(path[k]);
+                bool selected = i == selectedTrim;
+                Handles.color = new Color(TrimColor.r, TrimColor.g, TrimColor.b, selected ? 0.55f : 0.3f);
+                Handles.DrawAAPolyLine(Mathf.Max(2f, Pattern.trims[i].widthCm * zoom), line);
+                Handles.color = selected ? Color.yellow : TrimColor;
+                Handles.DrawAAPolyLine(selected ? 2.5f : 1.5f, line);
+            }
+            Handles.EndGUI();
         }
 
         private void DrawTackInspector(PatternTack tack)
@@ -1635,6 +1966,10 @@ namespace UMA.ClothesDesigner.Editor
         private void DrawDartFields(PatternPiece piece, PatternDart dart)
         {
             GUILayout.Space(4f);
+            // With Mirror X, what is changed here is made to the dart's twin too.
+            int twin = SidePanelDartTwin(piece, piece.darts.IndexOf(dart), out bool twinSwapped, out float twinAxis);
+            string before = twin >= 0 ? JsonUtility.ToJson(dart) : null;
+            if (twin >= 0) EditorGUILayout.LabelField("Mirror X: changes here are made to its twin, dart " + (twin + 1) + ", too.", EditorStyles.miniLabel);
             if (dart.kind == DartKind.Edge)
             {
                 int edge = piece.IndexOfEdge(dart.edgeId);
@@ -1675,6 +2010,7 @@ namespace UMA.ClothesDesigner.Editor
                 float round = EditorGUILayout.Slider(new GUIContent("Roundness", "0 a straight-sided diamond, 1 rounded sides (a fish-eye)."), dart.roundness, 0f, 1f);
                 if (!Mathf.Approximately(round, dart.roundness)) { Record("Dart Shape"); dart.roundness = round; }
             }
+            MirrorSidePanelDart(piece, dart, before, twin, twinSwapped, twinAxis);
             if (GUILayout.Button("Delete Dart")) { DeleteSelectedDartOrPleat(); GUIUtility.ExitGUI(); }
         }
 
@@ -1702,6 +2038,11 @@ namespace UMA.ClothesDesigner.Editor
             if (!Mathf.Approximately(stitched, pleat.stitchedCm)) { Record("Pleat Stitching"); pleat.stitchedCm = Mathf.Max(0f, stitched); }
             bool pressed = EditorGUILayout.Toggle(new GUIContent("Pressed", "Pressed folds keep a crease and fall in pleats; unpressed ones open out into soft folds below the stitching."), pleat.pressed);
             if (pressed != pleat.pressed) { Record("Pleat Pressed"); pleat.pressed = pressed; }
+            using (new EditorGUI.DisabledScope(!pleat.pressed))
+            {
+                bool sharpFolds = EditorGUILayout.Toggle(new GUIContent("Sharp Folds", "Bake the pressed folds sharp: the slot is split along each fold with a normal for each side, so the pleats show crisp edges. The two sides stay one."), pleat.sharpFolds);
+                if (sharpFolds != pleat.sharpFolds) { Record("Sharp Pleat Folds"); pleat.sharpFolds = sharpFolds; }
+            }
             float fold = EditorGUILayout.DelayedFloatField(new GUIContent("Fold Length (cm)", "How far the fold lines run into the piece. 0 runs them across the whole piece."), pleat.lengthCm);
             if (!Mathf.Approximately(fold, pleat.lengthCm)) { Record("Pleat Length"); pleat.lengthCm = Mathf.Max(0f, fold); }
             if (DartGeometry.Pleat(piece, pleat, PieceScale.Identity, out DartGeometry.PleatShape shape))

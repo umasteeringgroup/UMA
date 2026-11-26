@@ -381,15 +381,24 @@ namespace UMA
             {
                 try
                 {
-                    if (newTexture == null || texture == null || generatedMaterial.resultingAtlasList == null ||
-                        textureIndex < 0 || textureIndex >= generatedMaterial.resultingAtlasList.Length)
+                    if (newTexture == null || texture == null)
                     {
                         throw new InvalidOperationException("Asynchronous atlas copy target is no longer valid.");
                     }
+                    Texture[] atlas = generatedMaterial.resultingAtlasList;
+                    // A rebuild can replace this channel before its queued readback applies.
+                    if (!IsCurrentAtlasTexture(atlas))
+                    {
+                        DestroyNewTexture();
+                        renderTexturesCleanedMissed++;
+                        return;
+                    }
 
                     GeneratorTextureQuality.FinishConvertedTexture(newTexture, applyMips, qualityCompression, keepReadable);
-                    generatedMaterial.material.SetTexture(textureName, newTexture);
-                    generatedMaterial.resultingAtlasList[textureIndex] = newTexture;
+                    ReplaceSourceBinding(generatedMaterial.material, newTexture);
+                    ReplaceSourceBinding(generatedMaterial.secondPassMaterial, newTexture);
+                    atlas[textureIndex] = newTexture;
+                    newTexture = null; // ownership transferred to the generated atlas
                     if (generatedMaterial.skinnedMeshRenderer != null &&
                         generatedMaterial.skinnedMeshRenderer.TryGetComponent<UMAResourceLeaseOwner>(out var owner))
                         owner.AdoptPrivateStaticResources(generatedMaterial);
@@ -425,6 +434,22 @@ namespace UMA
             }
         }
 
+        private bool IsCurrentAtlasTexture(Texture[] atlas)
+        {
+            return atlas != null && textureIndex >= 0 && textureIndex < atlas.Length &&
+                ReferenceEquals(atlas[textureIndex], texture);
+        }
+
+        private void ReplaceSourceBinding(Material material, Texture replacement)
+        {
+            // A pass can omit this channel or have its own renderer-side override.
+            if (material != null && !string.IsNullOrEmpty(textureName) && material.HasTexture(textureName) &&
+                ReferenceEquals(material.GetTexture(textureName), texture))
+            {
+                material.SetTexture(textureName, replacement);
+            }
+        }
+
         private void ReleaseSourceTexture()
         {
             if (sourceTextureReleased)
@@ -454,11 +479,12 @@ namespace UMA
             // atlas still points at this texture. It is going back to Unity's pool, so the atlas
             // must forget it, or UMAData teardown would later try to destroy a pooled texture.
             Texture[] atlas = generatedMaterial?.resultingAtlasList;
-            if (atlas != null && textureIndex >= 0 && textureIndex < atlas.Length &&
-                ReferenceEquals(atlas[textureIndex], texture))
+            if (IsCurrentAtlasTexture(atlas))
             {
                 atlas[textureIndex] = null;
             }
+            ReplaceSourceBinding(generatedMaterial?.material, null);
+            ReplaceSourceBinding(generatedMaterial?.secondPassMaterial, null);
             UMARenderTextureTracker.ReleaseTemporary(texture);
             texture = null;
         }

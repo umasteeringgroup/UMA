@@ -167,7 +167,8 @@ namespace UMA
 					for(int i = 0; i < source.meshData.blendShapes.Length; i++)
 					{
 						var blendShape = source.meshData.blendShapes[i];
-						if (blendShapeNames[blendShape.shapeName] == -1 && blendShapeSettings.blendShapes[blendShape.shapeName].value >= 0f)
+						// -1 marks a baked shape. Negative values are baked too, as in the other combiners.
+						if (blendShapeNames[blendShape.shapeName] == -1)
 						{
 							isBakingBlendShapesOnThisSource = true;
 							break;
@@ -195,12 +196,12 @@ namespace UMA
 						{
 							var currentShape = source.meshData.blendShapes[i];
 							var blendShapeData = blendShapeSettings.blendShapes[currentShape.shapeName];
-							if (blendShapeNames[currentShape.shapeName] >= 0 || blendShapeData.value <= 0f)
+							if (blendShapeNames[currentShape.shapeName] >= 0)
 							{
-								continue; // this blendshape isn't being baked (or is baked at zero).
+								continue; // this blendshape isn't being baked.
 							}
 							var weight = blendShapeData.value * 100f;
-							if (weight <= 0) continue;
+							if (Mathf.Abs(weight) <= Mathf.Epsilon) continue; // baked at zero
 
 							// Let's find the frame this weight is in
 							int frameIndex;
@@ -617,10 +618,29 @@ namespace UMA
 
 		public static void MergeSortedTransforms(UMATransform[] mergedTransforms, ref int transformCount, UMATransform[] umaTransforms)
 		{
+			if (umaTransforms == null || umaTransforms.Length == 0)
+			{
+				return;
+			}
+
 			int newBones = 0;
 			int pos1 = 0;
 			int pos2 = 0;
 			int len2 = umaTransforms.Length;
+
+			// The forward count and backward write below only agree on input sorted by hash;
+			// an unsorted slot bone table would make the write run off the front of the buffer.
+			for (int t = 0; t < len2; t++)
+			{
+				if (umaTransforms[t] == null)
+				{
+					throw new InvalidOperationException($"UMA bone hierarchy has a null transform at index {t}.");
+				}
+				if (t > 0 && umaTransforms[t].hash < umaTransforms[t - 1].hash)
+				{
+					throw new InvalidOperationException($"UMA bone hierarchy is not sorted by hash at index {t} ({umaTransforms[t].name}).");
+				}
+			}
 
 			while(pos1 < transformCount && pos2 < len2 )
 			{
@@ -668,7 +688,7 @@ namespace UMA
 				}
 				dest--;
 			}
-			while (pos2 >= 0)
+			while (pos2 >= 0 && dest >= 0)
 			{
 				mergedTransforms[dest] = umaTransforms[pos2];
 				pos2--;

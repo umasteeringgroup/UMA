@@ -18,9 +18,10 @@ namespace UMA.ClothesDesigner.Editor
         private ComputeShader shader;
         private int kPredict, kSolve, kPins, kCollide, kVelocity, kCandidates, kFrame;
         private int kSelfClear, kSelfCount, kSelfScan, kSelfInsert, kSelfCandidates, kSelfPush, kSelfApply;
-        private ComputeBuffer x, prev, v, w, fric, constraints, pins, colorRanges;
+        private ComputeBuffer x, prev, v, w, fric, partner, constraints, pins, colorRanges;
         private ComputeBuffer tris, piece, weld, nearStart, near, selfCandidates, hashCount, hashStart, hashTris, selfDelta, selfTarget;
-        private ComputeBuffer flatBuffer, layerBuffer, pressureBuffer;
+        private ComputeBuffer flatBuffer, layerBuffer, pressureBuffer, layerCandBuffer;
+        private bool layered;
         private bool selfWithin;
         private int outSign = 1;
         private int triCount;
@@ -42,7 +43,7 @@ namespace UMA.ClothesDesigner.Editor
             get
             {
                 long total = 0;
-                foreach (ComputeBuffer b in new[] { x, prev, v, w, fric, constraints, pins, colorRanges, ta, tb, tc, tn, cellStart, cellTris, candidates, tris, piece, weld, nearStart, near, selfCandidates, hashCount, hashStart, hashTris, selfDelta, selfTarget, flatBuffer, layerBuffer, pressureBuffer })
+                foreach (ComputeBuffer b in new[] { x, prev, v, w, fric, partner, constraints, pins, colorRanges, ta, tb, tc, tn, cellStart, cellTris, candidates, tris, piece, weld, nearStart, near, selfCandidates, hashCount, hashStart, hashTris, selfDelta, selfTarget, flatBuffer, layerBuffer, pressureBuffer, layerCandBuffer })
                 {
                     if (b != null && b.IsValid()) total += (long)b.count * b.stride;
                 }
@@ -148,6 +149,11 @@ namespace UMA.ClothesDesigner.Editor
             }
             flatBuffer = new ComputeBuffer(flatData.Length, 8); flatBuffer.SetData(flatData);
             layerBuffer = new ComputeBuffer(layerData.Length, 4); layerBuffer.SetData(layerData);
+            // Each particle's higher-layer triangle (ClothSolverShared.LayerReach), or -1; found once a frame.
+            var noLayerCand = new int[layerData.Length];
+            layered = false;
+            for (int i = 0; i < noLayerCand.Length; i++) { noLayerCand[i] = 0; if (i > 0 && i < count && layerData[i] != layerData[0]) layered = ClothSolverShared.OneWayLayers; }
+            layerCandBuffer = new ComputeBuffer(noLayerCand.Length, 4); layerCandBuffer.SetData(noLayerCand);
             pressureBuffer = new ComputeBuffer(pressureData.Length, 4); pressureBuffer.SetData(pressureData);
             selfWithin = model.SelfWithinPieces && model.Flat != null;
             outSign = model.OutSign >= 0 ? 1 : -1;
@@ -159,6 +165,8 @@ namespace UMA.ClothesDesigner.Editor
             w.SetData(model.InverseMass);
             fric = new ComputeBuffer(count, 4);
             fric.SetData(model.Friction);
+            partner = new ComputeBuffer(count, 8);
+            partner.SetData(ClothSolverShared.SeamPairs(model));
             // a, b, rest, kind, compliance: 20 bytes, the layout of ClothConstraint and the shader's Constraint.
             constraints = new ComputeBuffer(Math.Max(1, model.Constraints.Length), 20);
             if (model.Constraints.Length > 0) constraints.SetData(model.Constraints);
@@ -210,6 +218,13 @@ namespace UMA.ClothesDesigner.Editor
             readbackGeneration++;
         }
 
+        public void SetConstraints(ClothConstraint[] list)
+        {
+            // The buffer holds at least one entry even for a model without constraints.
+            if (constraints == null || list == null || list.Length == 0 || list.Length != constraints.count) return;
+            constraints.SetData(list);
+        }
+
         public void Step(SimParams p, int frames)
         {
             if (shader == null || frames <= 0) return;
@@ -220,6 +235,7 @@ namespace UMA.ClothesDesigner.Editor
             shader.SetFloat("_H", h);
             shader.SetFloat("_Keep", Mathf.Max(0f, 1f - p.damping * h));
             shader.SetFloat("_Closure", p.closure);
+            shader.SetFloat("_LateClosure", p.lateClosure);
             shader.SetFloat("_InvH2", 1f / (h * h));
             shader.SetFloat("_AlphaStitch", p.stitchCompliance / (h * h));
             shader.SetFloat("_MaxSpeed", p.maxSpeed);
@@ -247,6 +263,7 @@ namespace UMA.ClothesDesigner.Editor
             shader.SetBuffer(kCollide, "_TA", ta); shader.SetBuffer(kCollide, "_TB", tb); shader.SetBuffer(kCollide, "_TC", tc); shader.SetBuffer(kCollide, "_TN", tn);
             shader.SetBuffer(kCollide, "_Cand", candidates);
             shader.SetBuffer(kCollide, "_Fric", fric);
+            shader.SetBuffer(kCollide, "_Partner", partner);
             shader.SetBuffer(kCandidates, "_X", x);
             shader.SetBuffer(kCandidates, "_TA", ta); shader.SetBuffer(kCandidates, "_TB", tb); shader.SetBuffer(kCandidates, "_TC", tc); shader.SetBuffer(kCandidates, "_TN", tn);
             shader.SetBuffer(kCandidates, "_CellStart", cellStart); shader.SetBuffer(kCandidates, "_CellTris", cellTris);
@@ -265,6 +282,11 @@ namespace UMA.ClothesDesigner.Editor
             shader.SetBuffer(kSelfCandidates, "_Piece", piece); shader.SetBuffer(kSelfCandidates, "_Weld", weld); shader.SetBuffer(kSelfCandidates, "_NearStart", nearStart); shader.SetBuffer(kSelfCandidates, "_Near", near);
             shader.SetBuffer(kSelfCandidates, "_HashStart", hashStart); shader.SetBuffer(kSelfCandidates, "_HashTris", hashTris); shader.SetBuffer(kSelfCandidates, "_SelfCand", selfCandidates); shader.SetBuffer(kSelfCandidates, "_SelfTarget", selfTarget);
             shader.SetBuffer(kSelfCandidates, "_Flat", flatBuffer); shader.SetBuffer(kSelfCandidates, "_Layer", layerBuffer);
+            shader.SetInt("_Layered", layered ? 1 : 0);
+            shader.SetBuffer(kSelfCandidates, "_LayerCand", layerCandBuffer); shader.SetBuffer(kSelfCandidates, "_Cand", candidates);
+            shader.SetBuffer(kSelfCandidates, "_TA", ta); shader.SetBuffer(kSelfCandidates, "_TB", tb); shader.SetBuffer(kSelfCandidates, "_TC", tc); shader.SetBuffer(kSelfCandidates, "_TN", tn);
+            shader.SetBuffer(kSelfPush, "_LayerCand", layerCandBuffer); shader.SetBuffer(kSelfPush, "_Cand", candidates);
+            shader.SetBuffer(kSelfPush, "_TA", ta); shader.SetBuffer(kSelfPush, "_TB", tb); shader.SetBuffer(kSelfPush, "_TC", tc); shader.SetBuffer(kSelfPush, "_TN", tn);
             shader.SetBuffer(kSelfPush, "_X", x); shader.SetBuffer(kSelfPush, "_W", w); shader.SetBuffer(kSelfPush, "_Tris", tris); shader.SetBuffer(kSelfPush, "_SelfCand", selfCandidates); shader.SetBuffer(kSelfPush, "_SelfDelta", selfDelta); shader.SetBuffer(kSelfPush, "_SelfTarget", selfTarget);
             shader.SetBuffer(kSelfApply, "_X", x); shader.SetBuffer(kSelfApply, "_SelfDelta", selfDelta);
             void ClothCandidates()
@@ -282,11 +304,11 @@ namespace UMA.ClothesDesigner.Editor
                 shader.SetInt("_Substeps", sub);
                 shader.SetInt("_ColorCount", colors.Length);
                 shader.SetBuffer(kFrame, "_X", x); shader.SetBuffer(kFrame, "_Prev", prev); shader.SetBuffer(kFrame, "_V", v); shader.SetBuffer(kFrame, "_W", w);
-                shader.SetBuffer(kFrame, "_Fric", fric); shader.SetBuffer(kFrame, "_Constraints", constraints); shader.SetBuffer(kFrame, "_Colors", colorRanges);
+                shader.SetBuffer(kFrame, "_Fric", fric); shader.SetBuffer(kFrame, "_Partner", partner); shader.SetBuffer(kFrame, "_Constraints", constraints); shader.SetBuffer(kFrame, "_Colors", colorRanges);
                 shader.SetBuffer(kFrame, "_Pins", pins); shader.SetBuffer(kFrame, "_Cand", candidates);
                 shader.SetBuffer(kFrame, "_TA", ta); shader.SetBuffer(kFrame, "_TB", tb); shader.SetBuffer(kFrame, "_TC", tc); shader.SetBuffer(kFrame, "_TN", tn);
                 shader.SetBuffer(kFrame, "_Tris", tris); shader.SetBuffer(kFrame, "_SelfCand", selfCandidates); shader.SetBuffer(kFrame, "_SelfDelta", selfDelta); shader.SetBuffer(kFrame, "_SelfTarget", selfTarget);
-                shader.SetBuffer(kFrame, "_Pressure", pressureBuffer);
+                shader.SetBuffer(kFrame, "_Pressure", pressureBuffer); shader.SetBuffer(kFrame, "_LayerCand", layerCandBuffer);
                 for (int f = 0; f < frames; f++)
                 {
                     shader.Dispatch(kCandidates, particleGroups, 1, 1);
@@ -349,10 +371,10 @@ namespace UMA.ClothesDesigner.Editor
         public void Dispose()
         {
             readbackGeneration++;
-            foreach (ComputeBuffer b in new[] { x, prev, v, w, fric, constraints, pins, colorRanges, ta, tb, tc, tn, cellStart, cellTris, candidates, tris, piece, weld, nearStart, near, selfCandidates, hashCount, hashStart, hashTris, selfDelta, selfTarget, flatBuffer, layerBuffer, pressureBuffer }) b?.Release();
-            x = prev = v = w = fric = constraints = colorRanges = pins = ta = tb = tc = tn = cellStart = cellTris = candidates = null;
+            foreach (ComputeBuffer b in new[] { x, prev, v, w, fric, partner, constraints, pins, colorRanges, ta, tb, tc, tn, cellStart, cellTris, candidates, tris, piece, weld, nearStart, near, selfCandidates, hashCount, hashStart, hashTris, selfDelta, selfTarget, flatBuffer, layerBuffer, pressureBuffer, layerCandBuffer }) b?.Release();
+            x = prev = v = w = fric = partner = constraints = colorRanges = pins = ta = tb = tc = tn = cellStart = cellTris = candidates = null;
             tris = piece = weld = nearStart = near = selfCandidates = hashCount = hashStart = hashTris = selfDelta = selfTarget = null;
-            flatBuffer = layerBuffer = pressureBuffer = null;
+            flatBuffer = layerBuffer = pressureBuffer = layerCandBuffer = null;
         }
     }
 }
